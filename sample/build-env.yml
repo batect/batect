@@ -1,0 +1,14 @@
+---
+
+containers:
+  build-env:
+    build_dir: build-env
+    environment:
+      - GRADLE_OPTS=-Dorg.gradle.daemon=false
+      - BOOL_VALUE
+    working_dir: /code
+    volumes:
+      - ../:/code
+      - ../_caches/gradle:/root/.gradle
+    ports:
+      - "5005:5005"

@@ -1,0 +1,52 @@
+---
+
+project_name: decompose-sample
+
+tasks:
+  build:
+    run:
+      container: build-env
+      command: echo This is the build running!
+
+  unitTest:
+    run:
+      container: build-env
+      command: echo The tests are running!
+
+  continuousUnitTest:
+    run:
+      container: build-env
+      command: bash -c "while :; do echo 'Running tests...'; sleep 1; done"
+
+  integrationTest:
+    start:
+      - database
+      - downstream-dependency-fake
+    run:
+      container: build-env
+      command: echo The integration tests are running!
+
+  journeyTest:
+    start:
+      - sample-app
+      - downstream-dependency-fake
+      # Other dependencies (eg. database) are implied by dependencies declared in 'sample-app's definition.
+      # 'downstream-dependency-fake' is required to be given explicitly because 'sample-app' declares a dependency
+      # on a container providing 'downstream-dependency:implementation'. If we didn't provide it, we'd get an
+      # unsatisfied dependency error.
+    run:
+      container: build-env
+      command: echo The journey tests are running!
+
+  startWithFakes:
+    start:
+      - sample-app
+      - downstream-dependency-fake
+
+  startWithActuals:
+    start:
+      - sample-app
+      - downstream-dependency-actual
+
+include:
+- build-env.yml

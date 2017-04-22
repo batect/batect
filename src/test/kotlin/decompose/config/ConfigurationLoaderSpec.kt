@@ -9,9 +9,9 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 
-object ConfigLoaderSpec : Spek({
-    describe("a config loader") {
-        val loader = ConfigLoader()
+object ConfigurationLoaderSpec : Spek({
+    describe("a configuration loader") {
+        val loader = ConfigurationLoader()
         val testFileName = "theTestFile.yml"
 
         fun loadConfiguration(config: String): ConfigurationFile {

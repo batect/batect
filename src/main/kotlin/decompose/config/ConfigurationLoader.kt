@@ -10,7 +10,7 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
 import java.io.InputStream
 
-class ConfigLoader {
+class ConfigurationLoader {
     fun loadConfig(configurationStream: InputStream, fileName: String): ConfigurationFile {
         val mapper = ObjectMapper(YAMLFactory())
         mapper.propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE

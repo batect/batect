@@ -1,3 +1,8 @@
 package decompose.config
 
-data class Task(val command: String)
+import com.fasterxml.jackson.annotation.JsonProperty
+
+data class Task(val run: TaskRunConfiguration,
+                @JsonProperty("start") val dependencies: List<String> = emptyList())
+
+data class TaskRunConfiguration(val container: String, val command: String?)

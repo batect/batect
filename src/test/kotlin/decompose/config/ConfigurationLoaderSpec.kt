@@ -1,5 +1,6 @@
 package decompose.config
 
+import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assert
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
@@ -34,21 +35,72 @@ object ConfigurationLoaderSpec : Spek({
             }
         }
 
-        on("loading a valid configuration file with a task defined") {
+        on("loading a valid configuration file with a task with no dependencies") {
             it("should return a populated configuration object") {
                 val configString = """
                     |project_name: the_cool_project
                     |
                     |tasks:
                     |  first_task:
-                    |    command: thing
+                    |    run:
+                    |      container: build-env
+                    |      command: ./gradlew doStuff
                     """.trimMargin()
 
                 val config = loadConfiguration(configString)
-
                 assert.that(config.projectName, equalTo("the_cool_project"))
                 assert.that(config.tasks.keys, equalTo(setOf("first_task")))
-                assert.that(config.tasks["first_task"]!!.command, equalTo("thing"))
+
+                val task = config.tasks["first_task"]!!
+                assert.that(task.run.container, equalTo("build-env"))
+                assert.that(task.run.command, equalTo("./gradlew doStuff"))
+            }
+        }
+
+        on("loading a valid configuration file with a task with no command") {
+            it("should return a populated configuration object") {
+                val configString = """
+                    |project_name: the_cool_project
+                    |
+                    |tasks:
+                    |  first_task:
+                    |    run:
+                    |      container: build-env
+                    """.trimMargin()
+
+                val config = loadConfiguration(configString)
+                assert.that(config.projectName, equalTo("the_cool_project"))
+                assert.that(config.tasks.keys, equalTo(setOf("first_task")))
+
+                val task = config.tasks["first_task"]!!
+                assert.that(task.run.container, equalTo("build-env"))
+                assert.that(task.run.command, absent())
+            }
+        }
+
+        on("loading a valid configuration file with a task with some dependencies") {
+            it("should return a populated configuration object") {
+                val configString = """
+                    |project_name: the_cool_project
+                    |
+                    |tasks:
+                    |  first_task:
+                    |    run:
+                    |      container: build-env
+                    |      command: ./gradlew doStuff
+                    |    start:
+                    |      - dependency-1
+                    |      - dependency-2
+                    """.trimMargin()
+
+                val config = loadConfiguration(configString)
+                assert.that(config.projectName, equalTo("the_cool_project"))
+                assert.that(config.tasks.keys, equalTo(setOf("first_task")))
+
+                val task = config.tasks["first_task"]!!
+                assert.that(task.run.container, equalTo("build-env"))
+                assert.that(task.run.command, equalTo("./gradlew doStuff"))
+                assert.that(task.dependencies, equalTo(listOf("dependency-1", "dependency-2")))
             }
         }
 
@@ -100,10 +152,30 @@ object ConfigurationLoaderSpec : Spek({
                 val config = """
                     |tasks:
                     |  first_task:
-                    |    command: thing
+                    |    run:
+                    |      container: build-env
+                    |      command: ./gradlew doStuff
                     """.trimMargin()
 
                 assert.that({ loadConfiguration(config) }, throws(withMessage("Missing required field 'project_name'")))
+            }
+        }
+
+        on("loading a configuration file with a task defined twice") {
+            it("should fail with an error message") {
+                val config = """
+                    |project_name: the_cool_project
+                    |
+                    |tasks:
+                    |  first_task:
+                    |    run:
+                    |      container: build-env
+                    |  first_task:
+                    |    run:
+                    |      container: other-build-env
+                    """.trimMargin()
+
+                assert.that({ loadConfiguration(config) }, throws(withMessage("Duplicate field 'first_task'")))
             }
         }
     }

@@ -1,5 +1,6 @@
 package decompose.config
 
+import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -33,6 +34,7 @@ class ConfigurationLoader {
         e is UnrecognizedPropertyException -> "Unknown field '${e.propertyName}'"
         e is MissingKotlinParameterException -> "Missing required field '${e.path.last().fieldName}'"
         e.originalMessage == "No content to map due to end-of-input" -> "File '$fileName' is empty"
+        e.cause is JsonParseException -> (e.cause as JsonParseException).originalMessage
         else -> e.originalMessage
     }
 }

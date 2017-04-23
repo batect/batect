@@ -52,8 +52,8 @@ object ConfigurationLoaderSpec : Spek({
                 assert.that(config.tasks.keys, equalTo(setOf("first_task")))
 
                 val task = config.tasks["first_task"]!!
-                assert.that(task.run.container, equalTo("build-env"))
-                assert.that(task.run.command, equalTo("./gradlew doStuff"))
+                assert.that(task.runConfiguration.container, equalTo("build-env"))
+                assert.that(task.runConfiguration.command, equalTo("./gradlew doStuff"))
             }
         }
 
@@ -73,8 +73,8 @@ object ConfigurationLoaderSpec : Spek({
                 assert.that(config.tasks.keys, equalTo(setOf("first_task")))
 
                 val task = config.tasks["first_task"]!!
-                assert.that(task.run.container, equalTo("build-env"))
-                assert.that(task.run.command, absent())
+                assert.that(task.runConfiguration.container, equalTo("build-env"))
+                assert.that(task.runConfiguration.command, absent())
             }
         }
 
@@ -98,8 +98,8 @@ object ConfigurationLoaderSpec : Spek({
                 assert.that(config.tasks.keys, equalTo(setOf("first_task")))
 
                 val task = config.tasks["first_task"]!!
-                assert.that(task.run.container, equalTo("build-env"))
-                assert.that(task.run.command, equalTo("./gradlew doStuff"))
+                assert.that(task.runConfiguration.container, equalTo("build-env"))
+                assert.that(task.runConfiguration.command, equalTo("./gradlew doStuff"))
                 assert.that(task.dependencies, equalTo(listOf("dependency-1", "dependency-2")))
             }
         }

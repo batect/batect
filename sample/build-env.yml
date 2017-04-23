@@ -5,7 +5,7 @@ containers:
     build_directory: build-env
     environment:
       - GRADLE_OPTS=-Dorg.gradle.daemon=false
-      - BOOL_VALUE
+      - BOOL_VALUE=1
     working_directory: /code
     volumes:
       - ../:/code

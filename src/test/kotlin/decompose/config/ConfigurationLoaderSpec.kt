@@ -168,6 +168,45 @@ object ConfigurationLoaderSpec : Spek({
             }
         }
 
+        on("loading a valid configuration file with a container with all optional fields given") {
+            val configString = """
+                    |project_name: the_cool_project
+                    |
+                    |containers:
+                    |  container-1:
+                    |    build_directory: container-1-build-dir
+                    |    environment:
+                    |      - OPTS=-Dthing
+                    |      - BOOL_VALUE=1
+                    |    working_directory: /here
+                    |    volumes:
+                    |      - ../:/here
+                    |      - /somewhere:/else
+                    |    ports:
+                    |      - "1234:5678"
+                    |      - "9012:3456"
+                    """.trimMargin()
+
+            val config = loadConfiguration(configString)
+
+            it("should load the project name") {
+                assert.that(config.projectName, equalTo("the_cool_project"))
+            }
+
+            it("should load the single container specified") {
+                assert.that(config.containers.keys, equalTo(setOf("container-1")))
+            }
+
+            it("should load all of the configuration specified for the container") {
+                val container = config.containers["container-1"]!!
+                assert.that(container.buildDirectory, equalTo("container-1-build-dir"))
+                assert.that(container.environment, equalTo(mapOf("OPTS" to "-Dthing", "BOOL_VALUE" to "1")))
+                assert.that(container.workingDirectory, equalTo("/here"))
+                assert.that(container.volumeMounts, equalTo(setOf(VolumeMount("../", "/here"), VolumeMount("/somewhere", "/else"))))
+                assert.that(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
+            }
+        }
+
         on("loading a configuration file where the project name is given twice") {
             val config = """
                 |project_name: the_cool_project
@@ -256,6 +295,23 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should fail with an error message") {
                 assert.that({ loadConfiguration(config) }, throws(withMessage("Duplicate field 'container-1'") and withLineNumber(6)))
+            }
+        }
+
+        on("loading a configuration file with a container with an environment variable defined twice") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |containers:
+                |  container-1:
+                |    build_directory: container-1
+                |    environment:
+                |      - THING=value1
+                |      - THING=value2
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assert.that({ loadConfiguration(config) }, throws(withMessage("Duplicate environment variable 'THING'") and withLineNumber(8)))
             }
         }
     }

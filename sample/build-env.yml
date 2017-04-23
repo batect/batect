@@ -2,11 +2,11 @@
 
 containers:
   build-env:
-    build_dir: build-env
+    build_directory: build-env
     environment:
       - GRADLE_OPTS=-Dorg.gradle.daemon=false
       - BOOL_VALUE
-    working_dir: /code
+    working_directory: /code
     volumes:
       - ../:/code
       - ../_caches/gradle:/root/.gradle

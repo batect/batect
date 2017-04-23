@@ -104,6 +104,25 @@ object ConfigurationLoaderSpec : Spek({
             }
         }
 
+        on("loading a valid configuration file with a container with just a build directory configured") {
+            it("should return a populated configuration object") {
+                val configString = """
+                    |project_name: the_cool_project
+                    |
+                    |containers:
+                    |  container-1:
+                    |    build_directory: container-1-build-dir
+                    """.trimMargin()
+
+                val config = loadConfiguration(configString)
+                assert.that(config.projectName, equalTo("the_cool_project"))
+                assert.that(config.containers.keys, equalTo(setOf("container-1")))
+
+                val container = config.containers["container-1"]!!
+                assert.that(container.buildDirectory, equalTo("container-1-build-dir"))
+            }
+        }
+
         on("loading a configuration file where the project name is given twice") {
             it("should fail with an error message") {
                 val config = """
@@ -176,6 +195,22 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
                 assert.that({ loadConfiguration(config) }, throws(withMessage("Duplicate field 'first_task'")))
+            }
+        }
+
+        on("loading a configuration file with a container defined twice") {
+            it("should fail with an error message") {
+                val config = """
+                    |project_name: the_cool_project
+                    |
+                    |containers:
+                    |  container-1:
+                    |    build_directory: container-1
+                    |  container-1:
+                    |    build_directory: other-container-1
+                    """.trimMargin()
+
+                assert.that({ loadConfiguration(config) }, throws(withMessage("Duplicate field 'container-1'")))
             }
         }
     }

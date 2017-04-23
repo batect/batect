@@ -1,6 +1,6 @@
 package decompose.config
 
-data class TaskSet(val contents: Collection<Task>) : Map<String, Task> {
+data class TaskMap(val contents: Collection<Task>) : Map<String, Task> {
     constructor(vararg contents: Task) : this(contents.asList())
 
     init {

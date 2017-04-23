@@ -11,7 +11,7 @@ data class ConfigurationFile(
 
     fun toConfiguration(): Configuration = Configuration(
             projectName,
-            TaskSet(tasks.map { (name, task) -> task.toTask(name) }),
+            TaskMap(tasks.map { (name, task) -> task.toTask(name) }),
             containers.mapValues { (name, container) -> container.toContainer(name) })
 }
 

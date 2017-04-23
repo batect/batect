@@ -11,11 +11,11 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 
-object TaskSetSpec : Spek({
+object TaskMapSpec : Spek({
     describe("a set of tasks") {
         describe("creating a set of tasks") {
             on("creating an empty set") {
-                val set = TaskSet()
+                val set = TaskMap()
 
                 it("has no entries") {
                     assert.that(set.entries, isEmpty)
@@ -40,7 +40,7 @@ object TaskSetSpec : Spek({
 
             on("creating a set with a single task") {
                 val task = Task("the_task", TaskRunConfiguration("container", null))
-                val set = TaskSet(task)
+                val set = TaskMap(task)
 
                 it("has one entry") {
                     val entries = set.entries
@@ -81,7 +81,7 @@ object TaskSetSpec : Spek({
             on("creating a set with two tasks with different names") {
                 val task1 = Task("task-1", TaskRunConfiguration("container-1", null))
                 val task2 = Task("task-2", TaskRunConfiguration("container-2", null))
-                val set = TaskSet(task1, task2)
+                val set = TaskMap(task1, task2)
 
                 it("has two entries") {
                     val entries = set.entries
@@ -128,7 +128,7 @@ object TaskSetSpec : Spek({
                     val task1 = Task(taskName, TaskRunConfiguration("container-1", null))
                     val task2 = Task(taskName, TaskRunConfiguration("container-2", null))
 
-                    assert.that({ TaskSet(task1, task2) }, throws(withMessage("Cannot create a TaskSet where a task name is used more than once. Duplicated task names: $taskName")))
+                    assert.that({ TaskMap(task1, task2) }, throws(withMessage("Cannot create a TaskSet where a task name is used more than once. Duplicated task names: $taskName")))
                 }
             }
 
@@ -141,7 +141,7 @@ object TaskSetSpec : Spek({
                     val task3 = Task(taskName2, TaskRunConfiguration("container-3", null))
                     val task4 = Task(taskName2, TaskRunConfiguration("container-4", null))
 
-                    assert.that({ TaskSet(task1, task2, task3, task4) }, throws(withMessage("Cannot create a TaskSet where a task name is used more than once. Duplicated task names: $taskName1, $taskName2")))
+                    assert.that({ TaskMap(task1, task2, task3, task4) }, throws(withMessage("Cannot create a TaskSet where a task name is used more than once. Duplicated task names: $taskName1, $taskName2")))
                 }
             }
         }

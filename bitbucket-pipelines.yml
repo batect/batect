@@ -1,0 +1,7 @@
+image: java:8
+
+pipelines:
+  default:
+    - step:
+        script:
+          - bash ./gradlew build

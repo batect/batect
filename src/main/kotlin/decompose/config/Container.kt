@@ -1,11 +1,9 @@
 package decompose.config
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-
 data class Container(
+        val name: String,
         val buildDirectory: String,
-        @JsonDeserialize(using = EnvironmentDeserializer::class) val environment: Map<String, String> = emptyMap(),
+        val environment: Map<String, String>,
         val workingDirectory: String?,
-        @JsonProperty("volumes") val volumeMounts: Set<VolumeMount> = emptySet(),
-        @JsonProperty("ports") val portMappings: Set<PortMapping> = emptySet())
+        val volumeMounts: Set<VolumeMount>,
+        val portMappings: Set<PortMapping>)

@@ -1,9 +1,8 @@
-package decompose.config
+package decompose.config.io
 
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonToken
 import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.JsonMappingException
 
 fun <T> deserializeCollection(p: JsonParser?, context: DeserializationContext?, initialValue: T, accumulator: (String, T) -> T): T {
     if (p == null) {
@@ -15,7 +14,7 @@ fun <T> deserializeCollection(p: JsonParser?, context: DeserializationContext?, 
     }
 
     if (!p.isExpectedStartArrayToken()) {
-        throw JsonMappingException.from(p, "Expected a list.")
+        context.reportWrongTokenException(p, JsonToken.START_ARRAY, "Expected a list.")
     }
 
     var result = initialValue

@@ -1,4 +1,4 @@
-package decompose.config
+package decompose.config.io
 
 data class ConfigurationException(
         override val message: String,

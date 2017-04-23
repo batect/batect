@@ -1,4 +1,4 @@
-package decompose.config
+package decompose.config.io
 
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext

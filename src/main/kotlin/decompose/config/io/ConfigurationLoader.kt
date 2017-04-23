@@ -1,4 +1,4 @@
-package decompose.config
+package decompose.config.io
 
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.core.JsonParser
@@ -9,10 +9,11 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
+import decompose.config.Configuration
 import java.io.InputStream
 
 class ConfigurationLoader {
-    fun loadConfig(configurationStream: InputStream, fileName: String): ConfigurationFile {
+    fun loadConfig(configurationStream: InputStream, fileName: String): Configuration {
         val mapper = ObjectMapper(YAMLFactory())
         mapper.propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE
         mapper.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
@@ -20,6 +21,7 @@ class ConfigurationLoader {
 
         try {
             return mapper.readValue(configurationStream, ConfigurationFile::class.java)
+                    .toConfiguration()
         } catch (e: Throwable) {
             throw mapException(e, fileName)
         }

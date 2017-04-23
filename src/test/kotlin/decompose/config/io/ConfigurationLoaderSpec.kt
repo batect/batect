@@ -1,10 +1,13 @@
-package decompose.config
+package decompose.config.io
 
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assert
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
+import decompose.config.Configuration
+import decompose.config.PortMapping
+import decompose.config.VolumeMount
 import decompose.testutils.withLineNumber
 import decompose.testutils.withMessage
 import org.jetbrains.spek.api.Spek
@@ -17,7 +20,7 @@ object ConfigurationLoaderSpec : Spek({
         val loader = ConfigurationLoader()
         val testFileName = "theTestFile.yml"
 
-        fun loadConfiguration(config: String): ConfigurationFile {
+        fun loadConfiguration(config: String): Configuration {
             return config.byteInputStream().use {
                 loader.loadConfig(it, testFileName)
             }
@@ -60,6 +63,7 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should load the configuration for the task") {
                 val task = config.tasks["first_task"]!!
+                assert.that(task.name, equalTo("first_task"))
                 assert.that(task.runConfiguration.container, equalTo("build-env"))
                 assert.that(task.runConfiguration.command, equalTo("./gradlew doStuff"))
                 assert.that(task.dependencies, equalTo(emptySet()))
@@ -88,6 +92,7 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should load the configuration for the task") {
                 val task = config.tasks["first_task"]!!
+                assert.that(task.name, equalTo("first_task"))
                 assert.that(task.runConfiguration.container, equalTo("build-env"))
                 assert.that(task.runConfiguration.command, absent())
             }
@@ -119,6 +124,7 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should load the configuration for the task") {
                 val task = config.tasks["first_task"]!!
+                assert.that(task.name, equalTo("first_task"))
                 assert.that(task.runConfiguration.container, equalTo("build-env"))
                 assert.that(task.runConfiguration.command, equalTo("./gradlew doStuff"))
                 assert.that(task.dependencies, equalTo(setOf("dependency-1", "dependency-2")))
@@ -164,6 +170,7 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should load the build directory specified for the container") {
                 val container = config.containers["container-1"]!!
+                assert.that(container.name, equalTo("container-1"))
                 assert.that(container.buildDirectory, equalTo("container-1-build-dir"))
             }
         }
@@ -199,6 +206,7 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should load all of the configuration specified for the container") {
                 val container = config.containers["container-1"]!!
+                assert.that(container.name, equalTo("container-1"))
                 assert.that(container.buildDirectory, equalTo("container-1-build-dir"))
                 assert.that(container.environment, equalTo(mapOf("OPTS" to "-Dthing", "BOOL_VALUE" to "1")))
                 assert.that(container.workingDirectory, equalTo("/here"))

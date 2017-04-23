@@ -12,7 +12,7 @@ data class ConfigurationFile(
     fun toConfiguration(): Configuration = Configuration(
             projectName,
             TaskMap(tasks.map { (name, task) -> task.toTask(name) }),
-            containers.mapValues { (name, container) -> container.toContainer(name) })
+            ContainerMap(containers.map { (name, container) -> container.toContainer(name) }))
 }
 
 data class TaskFromFile(@JsonProperty("run") val runConfiguration: TaskRunConfiguration,

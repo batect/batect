@@ -1,6 +1,6 @@
 package decompose.config
 
-abstract class NamedObjectMap<E>(contentName: String, contents: Iterable<E>) : Map<String, E> {
+abstract class NamedObjectMap<E>(contentName: String, contents: Iterable<E>) : Map<String, E>, Set<E> {
     init {
         val duplicates = contents
                 .groupBy { nameFor(it) }
@@ -14,6 +14,7 @@ abstract class NamedObjectMap<E>(contentName: String, contents: Iterable<E>) : M
 
     private val implementation: Map<String, E> = contents.associateBy { nameFor(it) }
 
+    // Map members
     override val entries: Set<Map.Entry<String, E>>
         get() = implementation.entries
 
@@ -31,5 +32,13 @@ abstract class NamedObjectMap<E>(contentName: String, contents: Iterable<E>) : M
     override fun get(key: String): E? = implementation.get(key)
     override fun isEmpty(): Boolean = implementation.isEmpty()
 
+    // Set members
+    override fun contains(element: E): Boolean = containsValue(element)
+    override fun containsAll(elements: Collection<E>): Boolean = values.containsAll(elements)
+    override fun iterator(): Iterator<E> = values.iterator()
+
     abstract fun nameFor(value: E): String
+
+    override fun equals(other: Any?): Boolean = implementation == other
+    override fun hashCode(): Int = implementation.hashCode()
 }

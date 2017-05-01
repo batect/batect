@@ -29,7 +29,7 @@ abstract class NamedObjectMap<E>(contentName: String, contents: Iterable<E>) : M
 
     override fun containsKey(key: String): Boolean = implementation.containsKey(key)
     override fun containsValue(value: E): Boolean = implementation.containsValue(value)
-    override fun get(key: String): E? = implementation.get(key)
+    override fun get(key: String): E? = implementation[key]
     override fun isEmpty(): Boolean = implementation.isEmpty()
 
     // Set members

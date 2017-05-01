@@ -2,7 +2,6 @@ package decompose.config.io
 
 import com.natpryce.hamkrest.assertion.assert
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.hasSize
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.doReturn

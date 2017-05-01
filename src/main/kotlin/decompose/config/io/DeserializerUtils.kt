@@ -13,7 +13,7 @@ fun <T> deserializeCollection(p: JsonParser?, context: DeserializationContext?, 
         throw IllegalArgumentException("Must provide a DeserializationContext.")
     }
 
-    if (!p.isExpectedStartArrayToken()) {
+    if (!p.isExpectedStartArrayToken) {
         context.reportWrongTokenException(p, JsonToken.START_ARRAY, "Expected a list.")
     }
 

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 
-internal class EnvironmentDeserializer() : StdDeserializer<Map<String, String>>(Map::class.java) {
+internal class EnvironmentDeserializer : StdDeserializer<Map<String, String>>(Map::class.java) {
     override fun deserialize(p: JsonParser?, context: DeserializationContext?): Map<String, String> {
         return deserializeCollection(p, context, mapOf<String, String>()) { rawValue, result ->
             val separator = '='

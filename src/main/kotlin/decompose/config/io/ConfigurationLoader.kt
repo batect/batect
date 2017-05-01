@@ -27,8 +27,8 @@ class ConfigurationLoader(val pathResolver: PathResolver) {
         }
     }
 
-    private fun mapException(e: Throwable, fileName: String): ConfigurationException = when {
-        e is JsonProcessingException -> ConfigurationException(messageForJsonProcessingException(e, fileName), fileName, e.location.lineNr, e.location.columnNr, e)
+    private fun mapException(e: Throwable, fileName: String): ConfigurationException = when (e) {
+        is JsonProcessingException -> ConfigurationException(messageForJsonProcessingException(e, fileName), fileName, e.location.lineNr, e.location.columnNr, e)
         else -> ConfigurationException("Could not load '$fileName': ${e.message}", fileName, null, null, e)
     }
 

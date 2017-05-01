@@ -74,7 +74,7 @@ object NamedObjectMapSpec : Spek({
                 }
 
                 it("returns the item when accessing it by name") {
-                    assert.that(set.get(thing.name), equalTo(thing))
+                    assert.that(set[thing.name], equalTo(thing))
                 }
             }
 
@@ -117,8 +117,8 @@ object NamedObjectMapSpec : Spek({
                 }
 
                 it("returns the items when accessing them by name") {
-                    assert.that(set.get(thing1.name), equalTo(thing1))
-                    assert.that(set.get(thing2.name), equalTo(thing2))
+                    assert.that(set[thing1.name], equalTo(thing1))
+                    assert.that(set[thing2.name], equalTo(thing2))
                 }
             }
 

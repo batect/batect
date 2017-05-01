@@ -14,6 +14,7 @@
 * exit options (close all after any container stops, wait for all to stop)
 * use an existing image, pulling if necessary
 * dependencies between containers
+* dependencies explicitly specified for a task
 * requires / provides relationships
 * running multiple containers at once
 * creating an isolated network for all containers to use

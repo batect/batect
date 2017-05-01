@@ -23,7 +23,13 @@
 * pass-through additional command line arguments to a `run`
 
 ### Other
+* rename everything to 'Crane'
 * parse command lines properly (for command line when starting container)
+* make test names consistent (eg. `it("should do something")` vs `it("does something")`)
+* don't do all path resolution up-front
+  * if not all containers are used, doesn't make sense to try to resolve their paths
+  * would save some time
+  * means user doesn't see irrelevant error messages
 
 ## Future improvements
 * handle expanded form of mappings, for example:
@@ -43,3 +49,7 @@
 * support port ranges in mappings
 * support protocols other than TCP in port mappings
 * shell tab completion for tasks (eg. `decompose run b<tab>` completes to `decompose run build`)
+
+## Things that would have to be changed when moving to Kotlin/Native
+
+* would most likely need to replace YAML parsing code (although this would be a good opportunity to simplify it a bit and do more things while parsing the document)

@@ -5,6 +5,8 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assert
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
+import com.nhaarman.mockito_kotlin.doAnswer
+import com.nhaarman.mockito_kotlin.mock
 import decompose.config.Configuration
 import decompose.config.PortMapping
 import decompose.config.VolumeMount
@@ -14,10 +16,15 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import org.mockito.ArgumentMatchers.anyString
 
 object ConfigurationLoaderSpec : Spek({
     describe("a configuration loader") {
-        val loader = ConfigurationLoader()
+        val pathResolver = mock<PathResolver> {
+            on { resolve(anyString()) } doAnswer { invocation -> ResolvedToDirectory("/resolved/" + (invocation.arguments[0] as String)) }
+        }
+
+        val loader = ConfigurationLoader(pathResolver)
         val testFileName = "theTestFile.yml"
 
         fun loadConfiguration(config: String): Configuration {
@@ -168,10 +175,10 @@ object ConfigurationLoaderSpec : Spek({
                 assert.that(config.containers.keys, equalTo(setOf("container-1")))
             }
 
-            it("should load the build directory specified for the container") {
+            it("should load the build directory specified for the container and resolve it to an absolute path") {
                 val container = config.containers["container-1"]!!
                 assert.that(container.name, equalTo("container-1"))
-                assert.that(container.buildDirectory, equalTo("container-1-build-dir"))
+                assert.that(container.buildDirectory, equalTo("/resolved/container-1-build-dir"))
             }
         }
 
@@ -207,10 +214,10 @@ object ConfigurationLoaderSpec : Spek({
             it("should load all of the configuration specified for the container") {
                 val container = config.containers["container-1"]!!
                 assert.that(container.name, equalTo("container-1"))
-                assert.that(container.buildDirectory, equalTo("container-1-build-dir"))
+                assert.that(container.buildDirectory, equalTo("/resolved/container-1-build-dir"))
                 assert.that(container.environment, equalTo(mapOf("OPTS" to "-Dthing", "BOOL_VALUE" to "1")))
                 assert.that(container.workingDirectory, equalTo("/here"))
-                assert.that(container.volumeMounts, equalTo(setOf(VolumeMount("../", "/here"), VolumeMount("/somewhere", "/else"))))
+                assert.that(container.volumeMounts, equalTo(setOf(VolumeMount("/resolved/../", "/here"), VolumeMount("/resolved//somewhere", "/else"))))
                 assert.that(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
             }
         }

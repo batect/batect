@@ -36,8 +36,15 @@ dependencies {
 
     testCompile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     testCompile 'com.natpryce:hamkrest:1.4.0.0'
+    testCompile('com.nhaarman:mockito-kotlin:1.4.0') {
+        exclude group: 'org.jetbrains.kotlin'
+    }
 
     testCompile('org.jetbrains.spek:spek-api:1.1.0') {
+        exclude group: 'org.jetbrains.kotlin'
+    }
+
+    testCompile('org.jetbrains.spek:spek-data-driven-extension:1.1.0') {
         exclude group: 'org.jetbrains.kotlin'
     }
 

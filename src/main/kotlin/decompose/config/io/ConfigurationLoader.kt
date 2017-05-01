@@ -12,7 +12,7 @@ import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
 import decompose.config.Configuration
 import java.io.InputStream
 
-class ConfigurationLoader {
+class ConfigurationLoader(val pathResolver: PathResolver) {
     fun loadConfig(configurationStream: InputStream, fileName: String): Configuration {
         val mapper = ObjectMapper(YAMLFactory())
         mapper.propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE
@@ -21,7 +21,7 @@ class ConfigurationLoader {
 
         try {
             return mapper.readValue(configurationStream, ConfigurationFile::class.java)
-                    .toConfiguration()
+                    .toConfiguration(pathResolver)
         } catch (e: Throwable) {
             throw mapException(e, fileName)
         }

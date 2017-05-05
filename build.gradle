@@ -27,22 +27,16 @@ repositories {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version" // Override the version of kotlin-reflect used by jackson-module-kotlin
 
     compile 'com.fasterxml.jackson.core:jackson-databind:2.8.8'
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.8.8'
-    compile('com.fasterxml.jackson.module:jackson-module-kotlin:2.8.8') {
-        exclude group: 'org.jetbrains.kotlin'
-    }
+    compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.8.8'
+    compile 'com.github.salomonbrys.kodein:kodein:3.4.1'
 
-    testCompile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     testCompile 'com.natpryce:hamkrest:1.4.0.0'
-    testCompile('com.nhaarman:mockito-kotlin:1.4.0') {
-        exclude group: 'org.jetbrains.kotlin'
-    }
-
-    testCompile('org.jetbrains.spek:spek-api:1.1.0') {
-        exclude group: 'org.jetbrains.kotlin'
-    }
+    testCompile 'com.nhaarman:mockito-kotlin:1.4.0'
+    testCompile 'org.jetbrains.spek:spek-api:1.1.0'
 
     testCompile('org.jetbrains.spek:spek-data-driven-extension:1.1.0') {
         exclude group: 'org.jetbrains.kotlin'
@@ -50,7 +44,6 @@ dependencies {
 
     testRuntime('org.jetbrains.spek:spek-junit-platform-engine:1.1.0') {
         exclude group: 'org.junit.platform'
-        exclude group: 'org.jetbrains.kotlin'
     }
 }
 

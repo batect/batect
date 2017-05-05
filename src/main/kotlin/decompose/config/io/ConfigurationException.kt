@@ -5,13 +5,14 @@ data class ConfigurationException(
         val fileName: String?,
         val lineNumber: Int?,
         val column: Int?,
-        override val cause: Throwable?) : Exception(message, cause) {
+        override val cause: Throwable?) : RuntimeException(message, cause) {
 
     constructor(message: String) : this(message, null, null, null, null)
 
     override fun toString(): String {
         val location = locationString()
-        val description = "$message\nCaused by: $cause"
+        val causeDescription = if (cause != null) "\nCaused by: $cause" else ""
+        val description = message + causeDescription
 
         if (location != "") {
             return "$location: $description"

@@ -22,15 +22,19 @@
 * allow the user to keep containers after failure so they can examine logs
 * some way to see a list of available tasks
 * pass-through additional command line arguments to a `run`
+* default to a configuration file path of `decompose.yml` / `crane.yml` (ie. don't require the user to specify it every time)
 
 ### Other
 * rename everything to 'Crane'
-* parse command lines properly (for command line when starting container)
+* parse container command lines properly (for command line when starting container)
 * make test names consistent (eg. `it("should do something")` vs `it("does something")`)
 * don't do all path resolution up-front
   * if not all containers are used, doesn't make sense to try to resolve their paths
   * would save some time
   * means user doesn't see irrelevant error messages
+* logging
+* option to print full stack trace on non-fatal exceptions
+* for fatal exceptions (ie. crashes), add information on where to report the error
 
 ## Future improvements
 * handle expanded form of mappings, for example:

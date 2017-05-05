@@ -3,8 +3,8 @@ package decompose
 import decompose.config.Configuration
 import decompose.docker.DockerClient
 
-data class TaskRunner(val config: Configuration, val task: String, val dockerClient: DockerClient) {
-    fun run() {
+data class TaskRunner(val dockerClient: DockerClient) {
+    fun run(config: Configuration, task: String): Int {
         val resolvedTask = config.tasks[task] ?: throw ExecutionException("The task '$task' does not exist.")
         val runConfiguration = resolvedTask.runConfiguration
         val containerName = runConfiguration.container
@@ -16,6 +16,7 @@ data class TaskRunner(val config: Configuration, val task: String, val dockerCli
 
         val image = dockerClient.build(resolvedContainer)
         val container = dockerClient.create(resolvedContainer, image)
-        dockerClient.run(container)
+
+        return dockerClient.run(container).exitCode
     }
 }

@@ -13,6 +13,11 @@ import decompose.config.Configuration
 import java.io.InputStream
 
 class ConfigurationLoader(val pathResolver: PathResolver) {
+    // TODO
+    fun loadConfig(fileName: String): Configuration {
+        throw NotImplementedError()
+    }
+
     fun loadConfig(configurationStream: InputStream, fileName: String): Configuration {
         val mapper = ObjectMapper(YAMLFactory())
         mapper.propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE

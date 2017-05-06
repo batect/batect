@@ -58,3 +58,4 @@
 ## Things that would have to be changed when moving to Kotlin/Native
 
 * would most likely need to replace YAML parsing code (although this would be a good opportunity to simplify it a bit and do more things while parsing the document)
+* file I/O and path resolution logic

@@ -1,10 +1,12 @@
 package decompose.config.io
 
+import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assert
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
+import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.mock
 import decompose.config.Configuration
@@ -17,19 +19,36 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import org.mockito.ArgumentMatchers.anyString
+import java.nio.file.Files
+import java.nio.file.Path
 
 object ConfigurationLoaderSpec : Spek({
     describe("a configuration loader") {
-        val pathResolver = mock<PathResolver> {
-            on { resolve(anyString()) } doAnswer { invocation -> ResolvedToDirectory("/resolved/" + (invocation.arguments[0] as String)) }
+        val pathResolverFactory = mock<PathResolverFactory> {
+            on { createResolver(any()) } doAnswer { invocation ->
+                val relativeTo = invocation.arguments[0] as Path
+
+                mock<PathResolver> {
+                    on { resolve(anyString()) } doAnswer { invocation ->
+                        val path = invocation.arguments[0] as String
+                        ResolvedToDirectory("/resolved/(relative to $relativeTo)/$path")
+                    }
+                }
+            }
         }
 
-        val loader = ConfigurationLoader(pathResolver)
-        val testFileName = "theTestFile.yml"
+        val testFileName = "/theTestFile.yml"
+        val fileSystem = Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix())
+        val loader = ConfigurationLoader(pathResolverFactory, fileSystem)
 
         fun loadConfiguration(config: String): Configuration {
-            return config.byteInputStream().use {
-                loader.loadConfig(it, testFileName)
+            val filePath = fileSystem.getPath(testFileName)
+            Files.write(filePath, config.toByteArray())
+
+            try {
+                return loader.loadConfig(testFileName)
+            } finally {
+                Files.delete(filePath)
             }
         }
 
@@ -178,7 +197,7 @@ object ConfigurationLoaderSpec : Spek({
             it("should load the build directory specified for the container and resolve it to an absolute path") {
                 val container = config.containers["container-1"]!!
                 assert.that(container.name, equalTo("container-1"))
-                assert.that(container.buildDirectory, equalTo("/resolved/container-1-build-dir"))
+                assert.that(container.buildDirectory, equalTo("/resolved/(relative to $testFileName)/container-1-build-dir"))
             }
         }
 
@@ -214,11 +233,14 @@ object ConfigurationLoaderSpec : Spek({
             it("should load all of the configuration specified for the container") {
                 val container = config.containers["container-1"]!!
                 assert.that(container.name, equalTo("container-1"))
-                assert.that(container.buildDirectory, equalTo("/resolved/container-1-build-dir"))
+                assert.that(container.buildDirectory, equalTo("/resolved/(relative to $testFileName)/container-1-build-dir"))
                 assert.that(container.environment, equalTo(mapOf("OPTS" to "-Dthing", "BOOL_VALUE" to "1")))
                 assert.that(container.workingDirectory, equalTo("/here"))
-                assert.that(container.volumeMounts, equalTo(setOf(VolumeMount("/resolved/../", "/here"), VolumeMount("/resolved//somewhere", "/else"))))
                 assert.that(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
+                assert.that(container.volumeMounts, equalTo(setOf(
+                        VolumeMount("/resolved/(relative to $testFileName)/../", "/here"),
+                        VolumeMount("/resolved/(relative to $testFileName)//somewhere", "/else")
+                )))
             }
         }
 
@@ -327,6 +349,12 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should fail with an error message") {
                 assert.that({ loadConfiguration(config) }, throws(withMessage("Duplicate environment variable 'THING'") and withLineNumber(8)))
+            }
+        }
+
+        on("loading attempting to load a configuration file that does not exist") {
+            it("should fail with an appropriate error message") {
+                assert.that({ loader.loadConfig("/doesntexist.yml") }, throws(withMessage("The file '/doesntexist.yml' does not exist.")))
             }
         }
     }

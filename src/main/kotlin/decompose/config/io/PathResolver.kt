@@ -1,5 +1,11 @@
 package decompose.config.io
 
+import java.nio.file.Path
+
+interface PathResolverFactory {
+    fun createResolver(relativeTo: Path): PathResolver
+}
+
 interface PathResolver {
     fun resolve(path: String): PathResolutionResult
 }

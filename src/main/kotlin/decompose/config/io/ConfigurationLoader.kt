@@ -11,30 +11,43 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
 import decompose.config.Configuration
 import java.io.InputStream
+import java.nio.file.FileSystem
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardOpenOption
 
-class ConfigurationLoader(val pathResolver: PathResolver) {
-    // TODO
+class ConfigurationLoader(val pathResolverFactory: PathResolverFactory, val fileSystem: FileSystem) {
     fun loadConfig(fileName: String): Configuration {
-        throw NotImplementedError()
+        val path = fileSystem.getPath(fileName).toAbsolutePath()
+
+        if (!Files.exists(path)) {
+            throw ConfigurationException("The file '$path' does not exist.")
+        }
+
+        Files.newInputStream(path, StandardOpenOption.READ).use {
+            return loadConfig(it, path)
+        }
     }
 
-    fun loadConfig(configurationStream: InputStream, fileName: String): Configuration {
+    private fun loadConfig(configurationStream: InputStream, filePath: Path): Configuration {
         val mapper = ObjectMapper(YAMLFactory())
         mapper.propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE
         mapper.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
         mapper.registerModule(KotlinModule())
 
+        val pathResolver = pathResolverFactory.createResolver(filePath)
+
         try {
             return mapper.readValue(configurationStream, ConfigurationFile::class.java)
                     .toConfiguration(pathResolver)
         } catch (e: Throwable) {
-            throw mapException(e, fileName)
+            throw mapException(e, filePath.toString())
         }
     }
 
     private fun mapException(e: Throwable, fileName: String): ConfigurationException = when (e) {
         is JsonProcessingException -> ConfigurationException(messageForJsonProcessingException(e, fileName), fileName, e.location.lineNr, e.location.columnNr, e)
-        else -> ConfigurationException("Could not load '$fileName': ${e.message}", fileName, null, null, e)
+        else -> ConfigurationException("Could not load configuration file: ${e.message}", fileName, null, null, e)
     }
 
     private fun messageForJsonProcessingException(e: JsonProcessingException, fileName: String): String = when {

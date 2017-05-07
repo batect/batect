@@ -1,13 +1,35 @@
 package decompose.config.io
 
+import java.nio.file.Files
+import java.nio.file.InvalidPathException
 import java.nio.file.Path
 
-interface PathResolverFactory {
-    fun createResolver(relativeTo: Path): PathResolver
+class PathResolverFactory {
+    fun createResolver(relativeTo: Path): PathResolver = PathResolver(relativeTo)
 }
 
-interface PathResolver {
-    fun resolve(path: String): PathResolutionResult
+data class PathResolver(val relativeTo: Path) {
+    fun resolve(path: String): PathResolutionResult {
+        try {
+            val resolvedPath = relativeTo.resolve(path).normalize()
+
+            if (!Files.exists(resolvedPath)) {
+                return NotFound(resolvedPath.toString())
+            }
+
+            if (Files.isDirectory(resolvedPath)) {
+                return ResolvedToDirectory(resolvedPath.toString())
+            }
+
+            if (Files.isRegularFile(resolvedPath)) {
+                return ResolvedToFile(resolvedPath.toString())
+            }
+
+            throw RuntimeException("Path represents neither a directory nor a file.")
+        } catch (e: InvalidPathException) {
+            return InvalidPath
+        }
+    }
 }
 
 sealed class PathResolutionResult

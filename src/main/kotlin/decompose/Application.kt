@@ -1,10 +1,12 @@
 package decompose
 
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.KodeinAware
-import com.github.salomonbrys.kodein.instance
+import com.github.salomonbrys.kodein.*
 import decompose.config.io.ConfigurationLoader
+import decompose.config.io.PathResolverFactory
+import decompose.docker.DockerClient
 import java.io.PrintStream
+import java.nio.file.FileSystem
+import java.nio.file.FileSystems
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
@@ -14,6 +16,7 @@ fun main(args: Array<String>) {
     } catch (e: Throwable) {
         System.err.println("Fatal exception: ")
         e.printStackTrace(System.err)
+        exitProcess(-1)
     }
 }
 
@@ -38,11 +41,15 @@ class Application(override val kodein: Kodein) : KodeinAware {
 
         } catch (e: Throwable) {
             errorStream.println(e)
-            return -2
+            return -1
         }
     }
 }
 
 private fun createDefaultKodeinConfiguration(): Kodein = Kodein {
-
+    bind<ConfigurationLoader>() with provider { ConfigurationLoader(instance(), instance()) }
+    bind<PathResolverFactory>() with provider { PathResolverFactory() }
+    bind<FileSystem>() with provider { FileSystems.getDefault() }
+    bind<TaskRunner>() with provider { TaskRunner(instance()) }
+    bind<DockerClient>() with provider { DockerClient() }
 }

@@ -24,21 +24,19 @@ import java.nio.file.Path
 
 object ConfigurationLoaderSpec : Spek({
     describe("a configuration loader") {
+        val fileSystem = Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix())
         val pathResolverFactory = mock<PathResolverFactory> {
-            on { createResolver(any()) } doAnswer { invocation ->
-                val relativeTo = invocation.arguments[0] as Path
-
+            on { createResolver(fileSystem.getPath("/")) } doAnswer { invocation ->
                 mock<PathResolver> {
                     on { resolve(anyString()) } doAnswer { invocation ->
                         val path = invocation.arguments[0] as String
-                        ResolvedToDirectory("/resolved/(relative to $relativeTo)/$path")
+                        ResolvedToDirectory("/resolved/$path")
                     }
                 }
             }
         }
 
         val testFileName = "/theTestFile.yml"
-        val fileSystem = Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix())
         val loader = ConfigurationLoader(pathResolverFactory, fileSystem)
 
         fun loadConfiguration(config: String): Configuration {
@@ -197,7 +195,7 @@ object ConfigurationLoaderSpec : Spek({
             it("should load the build directory specified for the container and resolve it to an absolute path") {
                 val container = config.containers["container-1"]!!
                 assert.that(container.name, equalTo("container-1"))
-                assert.that(container.buildDirectory, equalTo("/resolved/(relative to $testFileName)/container-1-build-dir"))
+                assert.that(container.buildDirectory, equalTo("/resolved/container-1-build-dir"))
             }
         }
 
@@ -233,13 +231,13 @@ object ConfigurationLoaderSpec : Spek({
             it("should load all of the configuration specified for the container") {
                 val container = config.containers["container-1"]!!
                 assert.that(container.name, equalTo("container-1"))
-                assert.that(container.buildDirectory, equalTo("/resolved/(relative to $testFileName)/container-1-build-dir"))
+                assert.that(container.buildDirectory, equalTo("/resolved/container-1-build-dir"))
                 assert.that(container.environment, equalTo(mapOf("OPTS" to "-Dthing", "BOOL_VALUE" to "1")))
                 assert.that(container.workingDirectory, equalTo("/here"))
                 assert.that(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
                 assert.that(container.volumeMounts, equalTo(setOf(
-                        VolumeMount("/resolved/(relative to $testFileName)/../", "/here"),
-                        VolumeMount("/resolved/(relative to $testFileName)//somewhere", "/else")
+                        VolumeMount("/resolved/../", "/here"),
+                        VolumeMount("/resolved//somewhere", "/else")
                 )))
             }
         }

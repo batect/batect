@@ -1,3 +1,5 @@
+import org.junit.platform.console.ConsoleLauncher
+
 buildscript {
     ext.kotlin_version = '1.1.2-3'
     ext.junit_version = '1.0.0-M4'
@@ -57,4 +59,43 @@ junitPlatform {
             include 'spek'
         }
     }
+}
+
+sourceSets {
+    journeyTest
+}
+
+configurations {
+    journeyTestCompile.extendsFrom testCompile
+    journeyTestRuntime.extendsFrom testRuntime
+}
+
+// Gross hack because the JUnit 5 Gradle plugin doesn't provide a task class that we can extend from,
+// and the built-in Gradle Test task doesn't support JUnit 5.
+// Based on https://github.com/junit-team/junit5/blob/master/junit-platform-gradle-plugin/src/main/groovy/org/junit/platform/gradle/plugin/JUnitPlatformPlugin.groovy
+task journeyTest(type: JavaExec) {
+    description 'Runs the journey tests.'
+    group 'Verification'
+
+    dependsOn journeyTestClasses
+    dependsOn installDist
+
+    classpath = sourceSets.journeyTest.runtimeClasspath + configurations.junitPlatform
+
+    def reportDir = "$buildDir/test-results/journey-tests"
+    outputs.dir reportDir
+
+    def scanDirs = [
+            sourceSets.journeyTest.output.classesDir,
+            sourceSets.journeyTest.output.resourcesDir
+    ]
+    scanDirs += sourceSets.journeyTest.output.dirs.files
+
+    main = ConsoleLauncher.class.getName()
+    args = [
+            '--scan-class-path', scanDirs.join(File.pathSeparator),
+            '--reports-dir', reportDir,
+            '--include-engine', 'spek',
+            '--details', 'none'
+    ]
 }

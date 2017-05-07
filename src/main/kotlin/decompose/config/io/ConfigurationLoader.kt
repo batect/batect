@@ -35,7 +35,7 @@ class ConfigurationLoader(val pathResolverFactory: PathResolverFactory, val file
         mapper.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
         mapper.registerModule(KotlinModule())
 
-        val pathResolver = pathResolverFactory.createResolver(filePath)
+        val pathResolver = pathResolverFactory.createResolver(filePath.parent)
 
         try {
             return mapper.readValue(configurationStream, ConfigurationFile::class.java)

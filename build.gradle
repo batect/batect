@@ -49,6 +49,9 @@ dependencies {
     testRuntime('org.jetbrains.spek:spek-junit-platform-engine:1.1.1') {
         exclude group: 'org.junit.platform'
     }
+
+    // Temporary workaround for issue running tests in IntelliJ: https://github.com/raniejade/spek-idea-plugin/issues/37
+    testRuntime "org.junit.platform:junit-platform-launcher:$junit_version"
 }
 
 junitPlatform {

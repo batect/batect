@@ -3,6 +3,10 @@ package decompose.config
 import com.fasterxml.jackson.annotation.JsonCreator
 
 data class VolumeMount(val localPath: String, val containerPath: String) {
+    override fun toString(): String {
+        return "$localPath:$containerPath"
+    }
+
     companion object {
         @JvmStatic @JsonCreator
         fun parse(value: String): VolumeMount {

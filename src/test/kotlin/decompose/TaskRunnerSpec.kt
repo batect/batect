@@ -32,15 +32,15 @@ object TaskRunnerSpec : Spek({
             val expectedExitCode = 201
 
             val dockerClient = mock<DockerClient> {
-                on { build(container) } doReturn builtImage
-                on { create(container, builtImage) } doReturn dockerContainer
+                on { build(config.projectName, container) } doReturn builtImage
+                on { create(container, "do-things.sh", builtImage) } doReturn dockerContainer
                 on { run(dockerContainer) } doReturn DockerContainerRunResult(expectedExitCode)
             }
 
             val actualExitCode = TaskRunner(dockerClient).run(config, "the_task")
 
             it("builds the image") {
-                verify(dockerClient).build(container)
+                verify(dockerClient).build(config.projectName, container)
             }
 
             it("runs the command in the container") {

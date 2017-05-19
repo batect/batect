@@ -51,5 +51,5 @@ private fun createDefaultKodeinConfiguration(): Kodein = Kodein {
     bind<PathResolverFactory>() with provider { PathResolverFactory() }
     bind<FileSystem>() with provider { FileSystems.getDefault() }
     bind<TaskRunner>() with provider { TaskRunner(instance()) }
-    bind<DockerClient>() with provider { DockerClient() }
+    bind<DockerClient>() with provider { DockerClient(instance(), instance(), instance()) }
 }

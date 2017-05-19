@@ -14,8 +14,8 @@ data class TaskRunner(val dockerClient: DockerClient) {
             throw ExecutionException("Running tasks with dependencies isn't supported yet.")
         }
 
-        val image = dockerClient.build(resolvedContainer)
-        val container = dockerClient.create(resolvedContainer, image)
+        val image = dockerClient.build(config.projectName, resolvedContainer)
+        val container = dockerClient.create(resolvedContainer, resolvedTask.runConfiguration.command, image)
 
         return dockerClient.run(container).exitCode
     }

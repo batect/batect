@@ -35,6 +35,7 @@
 * logging
 * option to print full stack trace on non-fatal exceptions
 * for fatal exceptions (ie. crashes), add information on where to report the error
+* use Docker API directly rather than using Docker CLI
 
 ## Future improvements
 * handle expanded form of mappings, for example:

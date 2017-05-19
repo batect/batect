@@ -13,6 +13,10 @@ data class PortMapping(val localPort: Int, val containerPort: Int) {
         }
     }
 
+    override fun toString(): String {
+        return "$localPort:$containerPort"
+    }
+
     companion object {
         @JvmStatic @JsonCreator
         fun parse(value: String): PortMapping {

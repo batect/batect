@@ -6,8 +6,8 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assert
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
-import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
+import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import decompose.config.Configuration
 import decompose.config.PortMapping
@@ -20,20 +20,20 @@ import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import org.mockito.ArgumentMatchers.anyString
 import java.nio.file.Files
-import java.nio.file.Path
 
 object ConfigurationLoaderSpec : Spek({
     describe("a configuration loader") {
         val fileSystem = Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix())
-        val pathResolverFactory = mock<PathResolverFactory> {
-            on { createResolver(fileSystem.getPath("/")) } doAnswer { invocation ->
-                mock<PathResolver> {
-                    on { resolve(anyString()) } doAnswer { invocation ->
-                        val path = invocation.arguments[0] as String
-                        ResolvedToDirectory("/resolved/$path")
-                    }
-                }
+
+        val pathResolver = mock<PathResolver> {
+            on { resolve(anyString()) } doAnswer { invocation ->
+                val path = invocation.arguments[0] as String
+                ResolvedToDirectory("/resolved/$path")
             }
+        }
+
+        val pathResolverFactory = mock<PathResolverFactory> {
+            on { createResolver(fileSystem.getPath("/")) } doReturn pathResolver
         }
 
         val testFileName = "/theTestFile.yml"

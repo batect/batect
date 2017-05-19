@@ -5,3 +5,4 @@ pipelines:
     - step:
         script:
           - bash ./gradlew build
+          # TODO: add running journey tests

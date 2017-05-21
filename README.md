@@ -3,7 +3,7 @@
 ## MVP TODO
 
 ### Config file handling
-* validate configuration (eg. containers referenced in tasks as dependencies and direct targets must exist, build directory must exist)
+* validate configuration (eg. containers referenced in tasks as dependencies and direct targets must exist)
 * allow configuration includes (ie. allow splitting the configuration over multiple files)
 * better error message when a key (eg. a task name) is used twice (at the moment it's `Duplicate field 'duplicated_task_name'`)
 * allow tasks with just containers to start (ie. no `run` entry)
@@ -20,7 +20,7 @@
 * creating an isolated network for all containers to use
 * don't require command to be specified for each container in each task (allow a default to be set in the container's configuration)
 * allow the user to keep containers after failure so they can examine logs
-* some way to see a list of available tasks
+* some way to see a list of available tasks (eg. `crane tasks`)
 * pass-through additional command line arguments to a `run`
 * default to a configuration file path of `decompose.yml` / `crane.yml` (ie. don't require the user to specify it every time)
 
@@ -34,7 +34,7 @@
   * means user doesn't see irrelevant error messages
 * logging
 * option to print full stack trace on non-fatal exceptions
-* for fatal exceptions (ie. crashes), add information on where to report the error
+* for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use Docker API directly rather than using Docker CLI
 
 ## Future improvements

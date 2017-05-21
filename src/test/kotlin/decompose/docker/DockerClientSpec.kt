@@ -93,7 +93,23 @@ object DockerClientSpec : Spek({
         }
 
         describe("running a container") {
+            given("a Docker container") {
+                val container = DockerContainer("the-container-id")
 
+                on("running the container") {
+                    whenever(processRunner.run(any())).thenReturn(123)
+
+                    val result = client.run(container)
+
+                    it("starts the container") {
+                        verify(processRunner).run(listOf("docker", "start", "--attach", "--interactive", container.id))
+                    }
+
+                    it("returns the exit code from the container") {
+                        assert.that(result.exitCode, equalTo(123))
+                    }
+                }
+            }
         }
     }
 })

@@ -4,7 +4,9 @@ import com.github.salomonbrys.kodein.*
 import decompose.config.io.ConfigurationLoader
 import decompose.config.io.PathResolverFactory
 import decompose.docker.DockerClient
+import decompose.docker.DockerContainerCreationCommandGenerator
 import decompose.docker.DockerImageLabellingStrategy
+import decompose.docker.ProcessRunner
 import java.io.PrintStream
 import java.nio.file.FileSystem
 import java.nio.file.FileSystems
@@ -54,4 +56,6 @@ private fun createDefaultKodeinConfiguration(): Kodein = Kodein {
     bind<TaskRunner>() with provider { TaskRunner(instance()) }
     bind<DockerClient>() with provider { DockerClient(instance(), instance(), instance()) }
     bind<DockerImageLabellingStrategy>() with provider { DockerImageLabellingStrategy() }
+    bind<ProcessRunner>() with provider { ProcessRunner() }
+    bind<DockerContainerCreationCommandGenerator>() with provider { DockerContainerCreationCommandGenerator() }
 }

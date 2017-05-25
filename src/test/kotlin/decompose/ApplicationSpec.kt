@@ -32,6 +32,7 @@ object ApplicationSpec : Spek({
         val dependencies = Kodein {
             bind<ConfigurationLoader>() with instance(configLoader)
             bind<TaskRunner>() with instance(taskRunner)
+            bind<PrintStream>(PrintStreamType.Error) with instance(PrintStream(errorStream))
         }
 
         val application = Application(dependencies)
@@ -48,7 +49,7 @@ object ApplicationSpec : Spek({
             val args = emptyArray<String>()
 
             on("running") {
-                val exitCode = application.run(args, PrintStream(outputStream), PrintStream(errorStream))
+                val exitCode = application.run(args)
 
                 it("prints a help message to the error stream") {
                     assert.that(errorStream.toString().trim(), equalTo("Usage: decompose [configuration file] [task name]"))
@@ -68,7 +69,7 @@ object ApplicationSpec : Spek({
             val args = arrayOf("config.yml")
 
             on("running") {
-                val exitCode = application.run(args, PrintStream(outputStream), PrintStream(errorStream))
+                val exitCode = application.run(args)
 
                 it("prints a help message to the error stream") {
                     assert.that(errorStream.toString().trim(), equalTo("Usage: decompose [configuration file] [task name]"))
@@ -96,7 +97,7 @@ object ApplicationSpec : Spek({
                 val expectedTaskExitCode = 123
                 whenever(taskRunner.run(config, taskName)).thenReturn(expectedTaskExitCode)
 
-                val exitCode = application.run(args, PrintStream(outputStream), PrintStream(errorStream))
+                val exitCode = application.run(args)
 
                 it("does not print anything to the error stream") {
                     assert.that(errorStream.toString(), equalTo(""))
@@ -119,7 +120,7 @@ object ApplicationSpec : Spek({
                 val exception = RuntimeException("Could not load configuration for some reason.")
                 whenever(configLoader.loadConfig(configFileName)).thenThrow(exception)
 
-                val exitCode = application.run(args, PrintStream(outputStream), PrintStream(errorStream))
+                val exitCode = application.run(args)
 
                 it("prints the exception message to the error stream") {
                     assert.that(errorStream.toString().trim(), containsSubstring("Could not load configuration for some reason."))
@@ -141,7 +142,7 @@ object ApplicationSpec : Spek({
                 val exception = RuntimeException("Could not run task for some reason.")
                 whenever(taskRunner.run(config, taskName)).thenThrow(exception)
 
-                val exitCode = application.run(args, PrintStream(outputStream), PrintStream(errorStream))
+                val exitCode = application.run(args)
 
                 it("prints the exception message to the error stream") {
                     assert.that(errorStream.toString().trim(), containsSubstring("Could not run task for some reason."))

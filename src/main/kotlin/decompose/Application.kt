@@ -14,7 +14,7 @@ import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
     try {
-        val status = Application().run(args, System.out, System.err)
+        val status = Application(System.out, System.err).run(args)
         exitProcess(status)
     } catch (e: Throwable) {
         System.err.println("Fatal exception: ")
@@ -24,12 +24,14 @@ fun main(args: Array<String>) {
 }
 
 class Application(override val kodein: Kodein) : KodeinAware {
-    constructor() : this(createDefaultKodeinConfiguration())
+    constructor(outputStream: PrintStream, errorStream: PrintStream) :
+            this(createDefaultKodeinConfiguration(outputStream, errorStream))
 
     private val configLoader: ConfigurationLoader = instance()
     private val taskRunner: TaskRunner = instance()
+    private val errorStream: PrintStream = instance(PrintStreamType.Error)
 
-    fun run(args: Array<String>, outputStream: PrintStream, errorStream: PrintStream): Int {
+    fun run(args: Array<String>): Int {
         try {
             if (args.size != 2) {
                 errorStream.println("Usage: decompose [configuration file] [task name]")
@@ -49,13 +51,22 @@ class Application(override val kodein: Kodein) : KodeinAware {
     }
 }
 
-private fun createDefaultKodeinConfiguration(): Kodein = Kodein {
+enum class PrintStreamType {
+    Output,
+    Error
+}
+
+private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStream): Kodein = Kodein {
     bind<ConfigurationLoader>() with provider { ConfigurationLoader(instance(), instance()) }
     bind<PathResolverFactory>() with provider { PathResolverFactory() }
     bind<FileSystem>() with provider { FileSystems.getDefault() }
-    bind<TaskRunner>() with provider { TaskRunner(instance()) }
+    bind<TaskRunner>() with provider { TaskRunner(instance(), instance()) }
     bind<DockerClient>() with provider { DockerClient(instance(), instance(), instance()) }
     bind<DockerImageLabellingStrategy>() with provider { DockerImageLabellingStrategy() }
     bind<ProcessRunner>() with provider { ProcessRunner() }
     bind<DockerContainerCreationCommandGenerator>() with provider { DockerContainerCreationCommandGenerator() }
+    bind<EventLogger>() with provider { EventLogger(instance(PrintStreamType.Output)) }
+    bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
+    bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
 }
+

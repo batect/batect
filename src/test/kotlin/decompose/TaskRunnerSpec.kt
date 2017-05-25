@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.assertion.assert
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
 import decompose.config.*
@@ -21,9 +22,10 @@ object TaskRunnerSpec : Spek({
     describe("a task runner") {
         on("running a task with no dependencies specified, and no implicit dependencies specified for the container") {
             val container = Container("the_container", "/build_dir")
+            val command = "do-things.sh"
             val config = Configuration(
                     "the_project",
-                    TaskMap(Task("the_task", TaskRunConfiguration("the_container", "do-things.sh"))),
+                    TaskMap(Task("the_task", TaskRunConfiguration("the_container", command))),
                     ContainerMap(container)
             )
 
@@ -33,14 +35,24 @@ object TaskRunnerSpec : Spek({
 
             val dockerClient = mock<DockerClient> {
                 on { build(config.projectName, container) } doReturn builtImage
-                on { create(container, "do-things.sh", builtImage) } doReturn dockerContainer
+                on { create(container, command, builtImage) } doReturn dockerContainer
                 on { run(dockerContainer) } doReturn DockerContainerRunResult(expectedExitCode)
             }
 
-            val actualExitCode = TaskRunner(dockerClient).run(config, "the_task")
+            val eventLogger = mock<EventLogger>()
+
+            val actualExitCode = TaskRunner(dockerClient, eventLogger).run(config, "the_task")
+
+            it("logs that it is building the image") {
+                verify(eventLogger).imageBuildStarted(container)
+            }
 
             it("builds the image") {
                 verify(dockerClient).build(config.projectName, container)
+            }
+
+            it("logs that it is running the command") {
+                verify(eventLogger).commandStarted(container, command)
             }
 
             it("runs the command in the container") {
@@ -49,6 +61,20 @@ object TaskRunnerSpec : Spek({
 
             it("returns the exit code of the container") {
                 assert.that(actualExitCode, equalTo(expectedExitCode))
+            }
+
+            it("logs that it is building the image before it builds it") {
+                inOrder(eventLogger, dockerClient) {
+                    verify(eventLogger).imageBuildStarted(container)
+                    verify(dockerClient).build(config.projectName, container)
+                }
+            }
+
+            it("logs that it is running the command before it runs it") {
+                inOrder(eventLogger, dockerClient) {
+                    verify(eventLogger).commandStarted(container, command)
+                    verify(dockerClient).run(dockerContainer)
+                }
             }
         }
 
@@ -59,7 +85,7 @@ object TaskRunnerSpec : Spek({
                     ContainerMap()
             )
 
-            val runner = TaskRunner(mock<DockerClient>())
+            val runner = TaskRunner(mock<DockerClient>(), mock<EventLogger>())
 
             it("fails with an appropriate error message") {
                 assert.that({ runner.run(config, "the_task_that_doesnt_exist") }, throws<ExecutionException>(withMessage("The task 'the_task_that_doesnt_exist' does not exist.")))
@@ -73,7 +99,7 @@ object TaskRunnerSpec : Spek({
                     ContainerMap()
             )
 
-            val runner = TaskRunner(mock<DockerClient>())
+            val runner = TaskRunner(mock<DockerClient>(), mock<EventLogger>())
 
             it("fails with an appropriate error message") {
                 assert.that({ runner.run(config, "the_task") }, throws<ExecutionException>(withMessage("The container 'the_container' referenced by task 'the_task' does not exist.")))
@@ -87,7 +113,7 @@ object TaskRunnerSpec : Spek({
                     ContainerMap(Container("the_container", "/build_dir"))
             )
 
-            val runner = TaskRunner(mock<DockerClient>())
+            val runner = TaskRunner(mock<DockerClient>(), mock<EventLogger>())
 
             it("fails with an appropriate error message") {
                 assert.that({ runner.run(config, "the_task") }, throws<ExecutionException>(withMessage("Running tasks with dependencies isn't supported yet.")))

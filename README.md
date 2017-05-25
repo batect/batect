@@ -15,18 +15,15 @@
 * use an existing image, pulling if necessary
 * dependencies between containers
 * dependencies explicitly specified for a task
-* requires / provides relationships
 * running multiple containers at once
 * creating an isolated network for all containers to use
 * don't require command to be specified for each container in each task (allow a default to be set in the container's configuration)
 * allow the user to keep containers after failure so they can examine logs
 * some way to see a list of available tasks (eg. `crane tasks`)
-* pass-through additional command line arguments to a `run`
 * default to a configuration file path of `decompose.yml` / `crane.yml` (ie. don't require the user to specify it every time)
 
 ### Other
 * rename everything to 'Crane'
-* parse container command lines properly (for command line when starting container)
 * make test names consistent (eg. `it("should do something")` vs `it("does something")`)
 * don't do all path resolution up-front
   * if not all containers are used, doesn't make sense to try to resolve their paths
@@ -55,6 +52,8 @@
 * support port ranges in mappings
 * support protocols other than TCP in port mappings
 * shell tab completion for tasks (eg. `decompose run b<tab>` completes to `decompose run build`)
+* pass-through additional command line arguments to a `run`
+* requires / provides relationships
 
 ## Things that would have to be changed when moving to Kotlin/Native
 

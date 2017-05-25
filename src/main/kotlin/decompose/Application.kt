@@ -65,7 +65,8 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<DockerImageLabellingStrategy>() with provider { DockerImageLabellingStrategy() }
     bind<ProcessRunner>() with provider { ProcessRunner() }
     bind<DockerContainerCreationCommandGenerator>() with provider { DockerContainerCreationCommandGenerator() }
-    bind<EventLogger>() with provider { EventLogger(instance(PrintStreamType.Output)) }
+    bind<EventLogger>() with provider { EventLogger(instance()) }
+    bind<Console>() with provider { Console(instance(PrintStreamType.Output)) }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
     bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
 }

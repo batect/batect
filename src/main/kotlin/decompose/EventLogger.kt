@@ -3,12 +3,26 @@ package decompose
 import decompose.config.Container
 import java.io.PrintStream
 
-class EventLogger(val outputStream: PrintStream) {
+class EventLogger(private val console: Console) {
     fun imageBuildStarted(container: Container) {
-        outputStream.println("${Emoji.Hammer}  Building '${container.name}'...")
+        console.withColor(ConsoleColor.White) {
+            print("Building ")
+            printBold(container.name)
+            println("...")
+        }
     }
 
     fun commandStarted(container: Container, command: String?) {
-        outputStream.println("${Emoji.Gear}  Running '$command' in '${container.name}'...")
+        console.withColor(ConsoleColor.White) {
+            print("Running ")
+
+            if (command != null) {
+                printBold(command)
+                print(" in ")
+            }
+
+            printBold(container.name)
+            println("...")
+        }
     }
 }

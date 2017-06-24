@@ -1,0 +1,47 @@
+package decompose
+
+import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.equalTo
+import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.whenever
+import decompose.config.*
+import decompose.docker.DockerClient
+import org.jetbrains.spek.api.Spek
+import org.jetbrains.spek.api.dsl.describe
+import org.jetbrains.spek.api.dsl.it
+import org.jetbrains.spek.api.dsl.on
+
+object DependencyRuntimeManagerFactorySpec : Spek({
+    describe("a dependency runtime manager factory") {
+        val dependencyResolver = mock<DependencyResolver>()
+        val eventLogger = mock<EventLogger>()
+        val dockerClient = mock<DockerClient>()
+        val factory = DependencyRuntimeManagerFactory(dependencyResolver, eventLogger, dockerClient)
+
+        on("creating a dependency runtime manager") {
+            val task = Task("the-task", TaskRunConfiguration("some-container", "some-command"))
+            val config = Configuration("the-project", TaskMap(task), ContainerMap())
+
+            val dependencies = setOf(Container("the-dependency", "/some-build-dir"))
+            whenever(dependencyResolver.resolveDependencies(config, task)).thenReturn(dependencies)
+
+            val manager = factory.create(config, task)
+
+            it("creates a new dependency runtime manager with the dependencies of the given task") {
+                assert.that(manager.dependencies, equalTo(dependencies))
+            }
+
+            it("creates a new dependency runtime manager with the given project's name") {
+                assert.that(manager.projectName, equalTo(config.projectName))
+            }
+
+            it("creates a new dependency runtime manager with the given event logger") {
+                assert.that(manager.eventLogger, equalTo(eventLogger))
+            }
+
+            it("creates a new dependency runtime manager with the given Docker client") {
+                assert.that(manager.dockerClient, equalTo(dockerClient))
+            }
+        }
+    }
+})

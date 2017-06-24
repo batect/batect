@@ -20,8 +20,8 @@ object EventLoggerSpec : Spek({
         val logger = EventLogger(console)
         val container = Container("the-cool-container", "/build/dir/doesnt/matter")
 
-        on("receiving an 'image build started' event") {
-            logger.imageBuildStarted(container)
+        on("receiving an 'image build starting' event") {
+            logger.imageBuildStarting(container)
 
             it("prints a message to the output") {
                 inOrder(whiteConsole) {
@@ -32,8 +32,8 @@ object EventLoggerSpec : Spek({
             }
         }
 
-        on("receiving a 'command started' event with an explicit command") {
-            logger.commandStarted(container, "do-stuff.sh")
+        on("receiving a 'command starting' event with an explicit command") {
+            logger.commandStarting(container, "do-stuff.sh")
 
             it("prints a message to the output") {
                 inOrder(whiteConsole) {
@@ -46,12 +46,24 @@ object EventLoggerSpec : Spek({
             }
         }
 
-        on("receiving a 'command started' event with no explicit command") {
-            logger.commandStarted(container, null)
+        on("receiving a 'command starting' event with no explicit command") {
+            logger.commandStarting(container, null)
 
             it("prints a message to the output") {
                 inOrder(whiteConsole) {
                     verify(whiteConsole).print("Running ")
+                    verify(whiteConsole).printBold("the-cool-container")
+                    verify(whiteConsole).println("...")
+                }
+            }
+        }
+
+        on("receiving a 'dependency starting' event") {
+            logger.dependencyStarting(container)
+
+            it("prints a message to the output") {
+                inOrder(whiteConsole) {
+                    verify(whiteConsole).print("Starting dependency ")
                     verify(whiteConsole).printBold("the-cool-container")
                     verify(whiteConsole).println("...")
                 }

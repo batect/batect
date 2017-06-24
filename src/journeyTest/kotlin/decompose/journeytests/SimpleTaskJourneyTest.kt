@@ -7,12 +7,10 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
-import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
-import java.util.stream.Collectors
 
 object SimpleTaskJourneyTest : Spek({
     mapOf(
@@ -34,11 +32,10 @@ object SimpleTaskJourneyTest : Spek({
                         .redirectErrorStream(true)
                         .start()
 
-                process.waitFor(30, TimeUnit.SECONDS)
+                process.waitFor()
 
                 it("prints the output from that task") {
-                    val outputReader = BufferedReader(InputStreamReader(process.getInputStream()))
-                    val output = outputReader.lines().collect(Collectors.joining("\n"))
+                    val output = InputStreamReader(process.getInputStream()).readText()
 
                     assert.that(output, containsSubstring("This is some output from the task"))
                 }

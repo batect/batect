@@ -3,8 +3,11 @@ package decompose.docker
 import decompose.config.Container
 
 class DockerContainerCreationCommandGenerator {
-    fun createCommandLine(container: Container, command: String?, image: DockerImage): Iterable<String> =
-            listOf("docker", "create", "--rm", "-it") +
+    fun createCommandLine(container: Container, command: String?, image: DockerImage, network: DockerNetwork): Iterable<String> =
+            listOf("docker", "create", "--rm", "-it",
+                    "--network", network.id,
+                    "--hostname", container.name,
+                    "--network-alias", container.name) +
                     environmentVariableArguments(container) +
                     workingDirectoryArguments(container) +
                     volumeMountArguments(container) +

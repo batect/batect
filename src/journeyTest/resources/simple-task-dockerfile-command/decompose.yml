@@ -1,4 +1,4 @@
-project_name: simple-task-test
+project_name: simple-task-dockerfile-command-test
 
 containers:
   build-env:

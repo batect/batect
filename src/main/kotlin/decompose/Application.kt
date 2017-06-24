@@ -60,14 +60,16 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<ConfigurationLoader>() with provider { ConfigurationLoader(instance(), instance()) }
     bind<PathResolverFactory>() with provider { PathResolverFactory() }
     bind<FileSystem>() with provider { FileSystems.getDefault() }
-    bind<TaskRunner>() with provider { TaskRunner(instance(), instance()) }
+    bind<TaskRunner>() with provider { TaskRunner(instance(), instance(), instance()) }
     bind<DockerClient>() with provider { DockerClient(instance(), instance(), instance()) }
     bind<DockerImageLabellingStrategy>() with provider { DockerImageLabellingStrategy() }
     bind<ProcessRunner>() with provider { ProcessRunner() }
     bind<DockerContainerCreationCommandGenerator>() with provider { DockerContainerCreationCommandGenerator() }
     bind<EventLogger>() with provider { EventLogger(instance()) }
     bind<Console>() with provider { Console(instance(PrintStreamType.Output)) }
+    bind<DependencyResolver>() with provider { DependencyResolver() }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
     bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
+    bind<DependencyRuntimeManagerFactory>() with provider { DependencyRuntimeManagerFactory(instance(), instance(), instance()) }
 }
 

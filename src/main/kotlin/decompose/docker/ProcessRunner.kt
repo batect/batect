@@ -30,6 +30,40 @@ class ProcessRunner {
 
         return ProcessOutput(exitCode, output)
     }
+
+    fun <T> runAndProcessOutput(command: Iterable<String>, outputProcessor: (String) -> OutputProcessing<T>): RunAndProcessOutputResult<T> {
+        val process = ProcessBuilder(command.toList())
+                .redirectErrorStream(true)
+                .start();
+
+        try {
+            val reader = InputStreamReader(process.inputStream)
+
+            reader.useLines { lines ->
+                for (line in lines) {
+                    val result = outputProcessor(line)
+
+                    if (result is KillProcess) {
+                        process.destroy()
+                        return KilledDuringProcessing(result.result)
+                    }
+                }
+            }
+
+            val exitCode = process.waitFor()
+            return Exited<T>(exitCode)
+        } finally {
+            process.destroyForcibly()
+        }
+    }
 }
 
 data class ProcessOutput(val exitCode: Int, val output: String)
+
+sealed class OutputProcessing<T>
+class Continue<T> : OutputProcessing<T>()
+class KillProcess<T>(val result: T) : OutputProcessing<T>()
+
+sealed class RunAndProcessOutputResult<T>
+data class Exited<T>(val exitCode: Int) : RunAndProcessOutputResult<T>()
+data class KilledDuringProcessing<T>(val result: T) : RunAndProcessOutputResult<T>()

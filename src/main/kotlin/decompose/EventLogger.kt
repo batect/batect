@@ -4,7 +4,7 @@ import decompose.config.Container
 import java.io.PrintStream
 
 class EventLogger(private val console: Console) {
-    fun imageBuildStarted(container: Container) {
+    fun imageBuildStarting(container: Container) {
         console.withColor(ConsoleColor.White) {
             print("Building ")
             printBold(container.name)
@@ -12,7 +12,7 @@ class EventLogger(private val console: Console) {
         }
     }
 
-    fun commandStarted(container: Container, command: String?) {
+    fun commandStarting(container: Container, command: String?) {
         console.withColor(ConsoleColor.White) {
             print("Running ")
 
@@ -22,6 +22,14 @@ class EventLogger(private val console: Console) {
             }
 
             printBold(container.name)
+            println("...")
+        }
+    }
+
+    fun dependencyStarting(dependency: Container) {
+        console.withColor(ConsoleColor.White) {
+            print("Starting dependency ")
+            printBold(dependency.name)
             println("...")
         }
     }

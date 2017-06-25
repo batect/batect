@@ -21,7 +21,8 @@
   * rather than showing output from target, show output from all containers
 * don't require command to be specified for each container in each task (allow a default to be set in the container's configuration)
 * allow the user to keep containers after failure so they can examine logs (or even default to not destroying anything if they fail)
-* always clean up dependency containers when running on CI by default (use CI environment variable to detect, add command-line switch to disable) some way to see a list of available tasks (eg. `crane tasks`)
+* always clean up dependency containers when running on CI by default (use CI environment variable to detect, add command-line switch to disable) 
+* some way to see a list of available tasks (eg. `crane tasks`)
 * default to a configuration file path of `decompose.yml` / `crane.yml` (ie. don't require the user to specify it every time)
 * run image builds in parallel and only show summary of build progress (unless image build fails, in which case show full output)
 * start dependencies in parallel
@@ -33,7 +34,7 @@
   * if not all containers are used, doesn't make sense to try to resolve their paths
   * would save some time
   * means user doesn't see irrelevant error messages
-* logging
+* logging (for Crane internals)
 * option to print full stack trace on non-fatal exceptions
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use Docker API directly rather than using Docker CLI

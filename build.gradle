@@ -35,7 +35,7 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-databind:2.8.8'
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.8.8'
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.8.8'
-    compile 'com.github.salomonbrys.kodein:kodein:3.4.1'
+    compile 'com.github.salomonbrys.kodein:kodein:4.0.0'
 
     testCompile 'com.natpryce:hamkrest:1.4.0.0'
     testCompile 'com.nhaarman:mockito-kotlin:1.4.0'

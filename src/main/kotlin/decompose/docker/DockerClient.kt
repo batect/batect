@@ -1,7 +1,7 @@
 package decompose.docker
 
 import decompose.config.Container
-import java.util.*
+import java.util.UUID
 
 class DockerClient(
         private val imageLabellingStrategy: DockerImageLabellingStrategy,

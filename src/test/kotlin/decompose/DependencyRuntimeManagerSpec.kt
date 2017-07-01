@@ -2,9 +2,17 @@ package decompose
 
 import com.natpryce.hamkrest.assertion.assert
 import com.natpryce.hamkrest.throws
-import com.nhaarman.mockito_kotlin.*
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.inOrder
+import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.verify
 import decompose.config.Container
-import decompose.docker.*
+import decompose.docker.DockerClient
+import decompose.docker.DockerContainer
+import decompose.docker.DockerImage
+import decompose.docker.DockerNetwork
+import decompose.docker.HealthStatus
 import decompose.testutils.withMessage
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe

@@ -1,6 +1,10 @@
 package decompose
 
-import com.nhaarman.mockito_kotlin.*
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doAnswer
+import com.nhaarman.mockito_kotlin.eq
+import com.nhaarman.mockito_kotlin.inOrder
+import com.nhaarman.mockito_kotlin.mock
 import decompose.config.Container
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe

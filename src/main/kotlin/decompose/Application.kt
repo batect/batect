@@ -1,6 +1,10 @@
 package decompose
 
-import com.github.salomonbrys.kodein.*
+import com.github.salomonbrys.kodein.Kodein
+import com.github.salomonbrys.kodein.KodeinAware
+import com.github.salomonbrys.kodein.bind
+import com.github.salomonbrys.kodein.instance
+import com.github.salomonbrys.kodein.provider
 import decompose.config.io.ConfigurationLoader
 import decompose.config.io.PathResolverFactory
 import decompose.docker.DockerClient

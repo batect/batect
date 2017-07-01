@@ -2,7 +2,14 @@ package decompose.config.io
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import decompose.config.*
+import decompose.config.Configuration
+import decompose.config.Container
+import decompose.config.ContainerMap
+import decompose.config.PortMapping
+import decompose.config.Task
+import decompose.config.TaskMap
+import decompose.config.TaskRunConfiguration
+import decompose.config.VolumeMount
 
 data class ConfigurationFile(
         val projectName: String,

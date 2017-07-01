@@ -4,7 +4,12 @@ import com.natpryce.hamkrest.assertion.assert
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.throws
-import decompose.config.*
+import decompose.config.Configuration
+import decompose.config.Container
+import decompose.config.ContainerMap
+import decompose.config.Task
+import decompose.config.TaskMap
+import decompose.config.TaskRunConfiguration
 import decompose.testutils.withMessage
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe

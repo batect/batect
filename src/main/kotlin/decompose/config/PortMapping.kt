@@ -54,4 +54,4 @@ data class PortMapping(val localPort: Int, val containerPort: Int) {
     }
 }
 
-data class InvalidPortMappingException(override val message: String, override val cause:Throwable? = null) : Exception(message, cause)
+data class InvalidPortMappingException(override val message: String, override val cause: Throwable? = null) : Exception(message, cause)

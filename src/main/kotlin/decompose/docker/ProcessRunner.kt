@@ -23,7 +23,7 @@ class ProcessRunner {
     fun runAndCaptureOutput(command: Iterable<String>): ProcessOutput {
         val process = ProcessBuilder(command.toList())
                 .redirectErrorStream(true)
-                .start();
+                .start()
 
         val exitCode = process.waitFor()
         val output = InputStreamReader(process.inputStream).readText()
@@ -34,7 +34,7 @@ class ProcessRunner {
     fun <T> runAndProcessOutput(command: Iterable<String>, outputProcessor: (String) -> OutputProcessing<T>): RunAndProcessOutputResult<T> {
         val process = ProcessBuilder(command.toList())
                 .redirectErrorStream(true)
-                .start();
+                .start()
 
         try {
             val reader = InputStreamReader(process.inputStream)

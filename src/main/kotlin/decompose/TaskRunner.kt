@@ -3,7 +3,6 @@ package decompose
 import decompose.config.Configuration
 import decompose.config.TaskRunConfiguration
 import decompose.docker.DockerClient
-import decompose.docker.DockerNetwork
 
 data class TaskRunner(private val dockerClient: DockerClient, private val eventLogger: EventLogger, private val dependencyRuntimeManagerFactory: DependencyRuntimeManagerFactory) {
     fun run(config: Configuration, task: String): Int {

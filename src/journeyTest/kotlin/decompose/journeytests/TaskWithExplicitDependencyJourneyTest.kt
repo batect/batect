@@ -3,7 +3,6 @@ package decompose.journeytests
 import com.natpryce.hamkrest.assertion.assert
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.isEmptyString
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
@@ -11,7 +10,6 @@ import org.jetbrains.spek.api.dsl.on
 import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.util.concurrent.TimeUnit
 
 object TaskWithExplicitDependencyJourneyTest : Spek({
     given("a task with an explicit dependency") {

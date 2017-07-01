@@ -1,7 +1,11 @@
 package decompose
 
 import decompose.config.Container
-import decompose.docker.*
+import decompose.docker.DockerClient
+import decompose.docker.DockerContainer
+import decompose.docker.DockerImage
+import decompose.docker.DockerNetwork
+import decompose.docker.HealthStatus
 
 // This class is not thread safe, do not call its methods from different threads at the same time.
 data class DependencyRuntimeManager(val projectName: String, val dependencies: Set<Container>, val eventLogger: EventLogger, val dockerClient: DockerClient) {
@@ -47,5 +51,5 @@ data class DependencyRuntimeManager(val projectName: String, val dependencies: S
     }
 }
 
-class DependencyResolutionFailedException(message: String): Exception(message)
-class DependencyStartException(message: String): Exception(message)
+class DependencyResolutionFailedException(message: String) : Exception(message)
+class DependencyStartException(message: String) : Exception(message)

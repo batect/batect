@@ -1,7 +1,6 @@
 package decompose
 
 import decompose.config.Container
-import java.io.PrintStream
 
 class EventLogger(private val console: Console) {
     fun imageBuildStarting(container: Container) {

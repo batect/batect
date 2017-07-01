@@ -4,7 +4,12 @@ import com.natpryce.hamkrest.assertion.assert
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
-import decompose.config.*
+import decompose.config.Configuration
+import decompose.config.Container
+import decompose.config.ContainerMap
+import decompose.config.Task
+import decompose.config.TaskMap
+import decompose.config.TaskRunConfiguration
 import decompose.docker.DockerClient
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe

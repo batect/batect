@@ -6,7 +6,13 @@ import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
-import decompose.config.*
+import decompose.config.Container
+import decompose.config.ContainerMap
+import decompose.config.PortMapping
+import decompose.config.Task
+import decompose.config.TaskMap
+import decompose.config.TaskRunConfiguration
+import decompose.config.VolumeMount
 import decompose.testutils.withMessage
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe

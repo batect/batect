@@ -1,10 +1,17 @@
 package decompose.docker
 
+import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assert
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.throws
-import com.nhaarman.mockito_kotlin.*
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.check
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.eq
+import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.reset
+import com.nhaarman.mockito_kotlin.verify
+import com.nhaarman.mockito_kotlin.whenever
 import decompose.config.Container
 import decompose.testutils.withMessage
 import org.jetbrains.spek.api.Spek
@@ -13,7 +20,7 @@ import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import org.mockito.ArgumentMatchers.anyString
-import java.util.*
+import java.util.UUID
 
 object DockerClientSpec : Spek({
     describe("a Docker client") {

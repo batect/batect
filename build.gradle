@@ -28,6 +28,10 @@ repositories {
     mavenCentral()
 }
 
+configurations {
+    ktlint
+}
+
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version" // Override the version of kotlin-reflect used by jackson-module-kotlin
@@ -52,6 +56,8 @@ dependencies {
 
     // Temporary workaround for issue running tests in IntelliJ: https://github.com/raniejade/spek-idea-plugin/issues/37
     testRuntime "org.junit.platform:junit-platform-launcher:$junit_version"
+
+    ktlint 'com.github.shyiko:ktlint:0.8.1'
 }
 
 junitPlatform {
@@ -101,4 +107,18 @@ task journeyTest(type: JavaExec) {
             '--include-engine', 'spek',
             '--details', 'none'
     ]
+}
+
+task ktlint(type: JavaExec) {
+    main = "com.github.shyiko.ktlint.Main"
+    classpath = configurations.ktlint
+    args "src/**/*.kt"
+}
+
+check.dependsOn ktlint
+
+task ktlintFormat(type: JavaExec) {
+    main = "com.github.shyiko.ktlint.Main"
+    classpath = configurations.ktlint
+    args "-F", "src/**/*.kt"
 }

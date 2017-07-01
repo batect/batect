@@ -5,11 +5,11 @@ pipelines:
     - step:
         caches:
           - gradle
-          - gradleWrapper
+          - gradlewrapper
         script:
-          - bash ./gradlew build
+          - ./gradlew build
           # TODO: add running journey tests
 
 definitions:
   caches:
-    gradleWrapper: ~/.gradle/wrapper
+    gradlewrapper: ~/.gradle/wrapper

@@ -40,7 +40,7 @@ data class DependencyRuntimeManager(val projectName: String, val dependencies: S
             if (healthStatus == HealthStatus.Exited) {
                 throw DependencyStartException("Dependency '${container.name}' exited unexpectedly.")
             } else if (healthStatus == HealthStatus.BecameUnhealthy) {
-                throw DependencyStartException("Dependency '${container.name}' started but reported that it is not healthy.")
+                throw DependencyStartException("Dependency '${container.name}' did not become healthy within the timeout period.")
             }
         }
     }

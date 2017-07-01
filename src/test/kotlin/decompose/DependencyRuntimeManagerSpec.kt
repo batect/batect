@@ -85,7 +85,7 @@ object DependencyRuntimeManagerSpec : Spek({
                     DependencyStartFailureCase(
                             "starting a dependency that reports that it is unhealthy",
                             HealthStatus.BecameUnhealthy,
-                            "Dependency 'dependency1' started but reported that it is not healthy."
+                            "Dependency 'dependency1' did not become healthy within the timeout period."
                     )
             ).forEach { (description, healthStatus, expectedExceptionMessage) ->
                 on(description) {

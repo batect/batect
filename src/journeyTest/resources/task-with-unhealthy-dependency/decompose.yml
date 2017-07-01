@@ -1,0 +1,17 @@
+project_name: task-with-unhealthy-dependency-test
+
+containers:
+  build-env:
+    build_directory: build-env
+
+  http-server:
+    build_directory: http-server
+
+
+tasks:
+  the-task:
+    run:
+      container: build-env
+      command: echo "This task should never be executed!"
+    start:
+      - http-server

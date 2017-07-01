@@ -7,7 +7,7 @@ pipelines:
           - gradle
           - gradlewrapper
         script:
-          - ./gradlew build
+          - ./gradlew --no-daemon build
           # TODO: add running journey tests
 
 definitions:

@@ -40,7 +40,6 @@
 * use Docker API directly rather than using Docker CLI
 * documentation
 * examples
-* refactor journey tests - move duplicated code to one place
 * use `--iidfile` to get image ID after build and stop relying on tag
 
 ## Future improvements

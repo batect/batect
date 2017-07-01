@@ -7,36 +7,20 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
-import java.io.InputStreamReader
-import java.nio.file.Files
-import java.nio.file.Paths
 
 object TaskWithExplicitDependencyJourneyTest : Spek({
     given("a task with an explicit dependency") {
-        val testDirectory = Paths.get("src/journeyTest/resources/task-with-explicit-dependency").toAbsolutePath()
-        val applicationPath = Paths.get("build/install/decompose-kt/bin/decompose-kt").toAbsolutePath()
-
-        beforeGroup {
-            assert.that(Files.isDirectory(testDirectory), equalTo(true))
-            assert.that(Files.isExecutable(applicationPath), equalTo(true))
-        }
+        val runner = ApplicationRunner("task-with-explicit-dependency", listOf("decompose.yml", "the-task"))
 
         on("running that task") {
-            val process = ProcessBuilder(applicationPath.toString(), "decompose.yml", "the-task")
-                    .directory(testDirectory.toFile())
-                    .redirectErrorStream(true)
-                    .start()
-
-            process.waitFor()
+            val result = runner.run()
 
             it("displays the output from that task") {
-                val output = InputStreamReader(process.getInputStream()).readText()
-
-                assert.that(output, containsSubstring("Status code for request: 200"))
+                assert.that(result.output, containsSubstring("Status code for request: 200"))
             }
 
             it("returns the exit code from that task") {
-                assert.that(process.exitValue(), equalTo(0))
+                assert.that(result.exitCode, equalTo(0))
             }
         }
     }

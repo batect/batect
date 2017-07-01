@@ -3,6 +3,13 @@ image: java:8
 pipelines:
   default:
     - step:
+        caches:
+          - gradle
+          - gradleWrapper
         script:
           - bash ./gradlew build
           # TODO: add running journey tests
+
+definitions:
+  caches:
+    gradleWrapper: ~/.gradle/wrapper

@@ -26,6 +26,8 @@
 * default to a configuration file path of `decompose.yml` / `crane.yml` (ie. don't require the user to specify it every time)
 * run image builds in parallel and only show summary of build progress (unless image build fails, in which case show full output)
 * start dependencies in parallel
+* overridable health check parameters for containers (so that you can have the health check poll very frequently when waiting for something to 
+  come up for tests, but less frequently if that container is used in production)
 
 ### Other
 * rename everything to 'Crane'

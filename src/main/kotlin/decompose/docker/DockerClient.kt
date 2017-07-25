@@ -132,7 +132,7 @@ class ContainerStopFailedException(val containerName: String, val outputFromDock
 class ContainerDoesNotExistException(message: String) : RuntimeException(message)
 class ContainerHealthCheckException(message: String) : RuntimeException(message)
 class NetworkCreationFailedException(val outputFromDocker: String) : RuntimeException("Creation of network failed. Output from Docker was: $outputFromDocker")
-class NetworkDeletionFailedException(val networkId: String, val outputFromDocker: String) : RuntimeException("Deletion of network '${networkId}' failed. Output from Docker was: $outputFromDocker")
+class NetworkDeletionFailedException(val networkId: String, val outputFromDocker: String) : RuntimeException("Deletion of network '$networkId' failed. Output from Docker was: $outputFromDocker")
 
 enum class HealthStatus {
     NoHealthCheck,

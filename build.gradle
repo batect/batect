@@ -112,6 +112,9 @@ task journeyTest(type: JavaExec) {
 }
 
 task ktlint(type: JavaExec) {
+    description 'Checks Kotlin source files for formatting warnings.'
+    group 'Linting'
+
     inputs.files sourceSets.main.kotlin + sourceSets.test.kotlin + sourceSets.journeyTest.kotlin
 
     main = "com.github.shyiko.ktlint.Main"
@@ -122,6 +125,9 @@ task ktlint(type: JavaExec) {
 check.dependsOn ktlint
 
 task ktlintFormat(type: JavaExec) {
+    description 'Fixes formatting warnings in Kotlin source files.'
+    group 'Linting'
+
     inputs.files sourceSets.main.kotlin + sourceSets.test.kotlin + sourceSets.journeyTest.kotlin
 
     main = "com.github.shyiko.ktlint.Main"

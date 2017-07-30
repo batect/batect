@@ -1,10 +1,13 @@
 package decompose.cli
 
+import com.github.salomonbrys.kodein.Kodein
+import com.github.salomonbrys.kodein.bind
+import com.github.salomonbrys.kodein.instance
 import com.natpryce.hamkrest.assertion.assert
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isA
-import com.natpryce.hamkrest.isEmptyString
 import com.natpryce.hamkrest.throws
+import decompose.PrintStreamType
 import decompose.testutils.withMessage
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -16,287 +19,149 @@ import java.io.PrintStream
 
 object CommandLineParserSpec : Spek({
     describe("a command line parser") {
-        val output = ByteArrayOutputStream()
-        val outputStream = PrintStream(output)
-
-        beforeEachTest {
-            output.reset()
-        }
-
         given("a parser with no options or commands configured") {
-            val parser = CommandLineParser(outputStream)
+            val outputStream = PrintStream(ByteArrayOutputStream())
+
+            val injections = Kodein {
+                bind<PrintStream>(PrintStreamType.Error) with instance(outputStream)
+            }
+
+            val parser = CommandLineParser(injections)
 
             describe("parsing an empty list of arguments") {
-                var result: CommandLineParsingResult? = null
+                val result: CommandLineParsingResult = parser.parse(emptyList())
 
-                beforeEachTest {
-                    result = parser.parse(emptyList())
-                }
-
-                it("indicates that parsing failed") {
-                    assert.that(result, equalTo<CommandLineParsingResult>(Failed))
-                }
-
-                it("prints an error message to the output") {
-                    assert.that(output.toString(), equalTo("No command specified. Run 'decompose help' for a list of valid commands.\n"))
+                it("returns that parsing failed") {
+                    assert.that(result, equalTo<CommandLineParsingResult>(Failed("No command specified. Run 'decompose help' for a list of valid commands.")))
                 }
             }
 
             describe("parsing an unknown single argument that looks like a command") {
-                var result: CommandLineParsingResult? = null
-
-                beforeEachTest {
-                    result = parser.parse(listOf("something"))
-                }
+                val result: CommandLineParsingResult = parser.parse(listOf("something"))
 
                 it("indicates that parsing failed") {
-                    assert.that(result, equalTo<CommandLineParsingResult>(Failed))
-                }
-
-                it("prints an error message to the output") {
-                    assert.that(output.toString(), equalTo("Invalid command 'something'. Run 'decompose help' for a list of valid commands.\n"))
+                    assert.that(result, equalTo<CommandLineParsingResult>(Failed("Invalid command 'something'. Run 'decompose help' for a list of valid commands.")))
                 }
             }
 
             describe("parsing an unknown single argument that looks like an option") {
-                var result: CommandLineParsingResult? = null
-
-                beforeEachTest {
-                    result = parser.parse(listOf("--something"))
-                }
+                val result: CommandLineParsingResult = parser.parse(listOf("--something"))
 
                 it("indicates that parsing failed") {
-                    assert.that(result, equalTo<CommandLineParsingResult>(Failed))
-                }
-
-                it("prints an error message to the output") {
-                    assert.that(output.toString(), equalTo("Invalid option '--something'. Run 'decompose help' for a list of valid options.\n"))
+                    assert.that(result, equalTo<CommandLineParsingResult>(Failed("Invalid option '--something'. Run 'decompose help' for a list of valid options.")))
                 }
             }
 
             listOf("help", "--help").forEach { argument ->
                 describe("parsing a list of arguments with just '$argument'") {
-                    var result: CommandLineParsingResult? = null
-
-                    beforeEachTest {
-                        result = parser.parse(listOf(argument))
-                    }
+                    val result: CommandLineParsingResult = parser.parse(listOf(argument))
 
                     it("indicates that parsing succeeded") {
-                        assert.that(result!!, isA<Succeeded>())
+                        assert.that(result, isA<Succeeded>())
                     }
 
-                    it("does not print anything to the output") {
-                        assert.that(output.toString(), isEmptyString)
-                    }
-
-                    on("running the command returned") {
-                        val exitCode = (result as Succeeded).command.run()
-
-                        it("prints help information") {
-                            assert.that(output.toString(), equalTo("""
-                            |Usage: decompose [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]
-                            |
-                            |Commands:
-                            |  help    Print this help information and exit.
-                            |
-                            |For help on the options available for a command, run 'decompose help <command>'.
-                            |
-                            """.trimMargin()))
-                        }
-
-                        it("returns a non-zero exit code") {
-                            assert.that(exitCode, !equalTo(0))
-                        }
+                    it("returns a HelpCommand instance ready for use") {
+                        assert.that((result as Succeeded).command, equalTo<Command>(HelpCommand(null, parser, outputStream)))
                     }
                 }
             }
         }
 
         given("a parser with a single command configured") {
-            val rootParser = CommandLineParser(outputStream)
+            val outputStream = PrintStream(ByteArrayOutputStream())
 
-            val command = object : Command {
-                override fun run(): Int = 0
+            val injections = Kodein {
+                bind<PrintStream>(PrintStreamType.Error) with instance(outputStream)
             }
+
+            val rootParser = CommandLineParser(injections)
+            val command = NullCommand()
 
             val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.", aliases = setOf("do-stuff-alias")) {
-                override fun createCommand(): Command = command
+                override fun createCommand(kodein: Kodein): Command = command
             }
 
-            rootParser.addCommand(commandDefinition)
+            rootParser.addCommandDefinition(commandDefinition)
 
             describe("parsing a list of arguments with just that command's name") {
-                var result: CommandLineParsingResult? = null
-
-                beforeEachTest {
-                    result = rootParser.parse(listOf("do-stuff"))
-                }
+                val result: CommandLineParsingResult = rootParser.parse(listOf("do-stuff"))
 
                 it("indicates that parsing succeeded and returns the command") {
                     assert.that(result, equalTo<CommandLineParsingResult>(Succeeded(command)))
-                }
-
-                it("does not print anything to the output") {
-                    assert.that(output.toString(), isEmptyString)
                 }
             }
 
             listOf("help", "--help").forEach { argument ->
                 describe("parsing a list of arguments with just '$argument'") {
-                    var result: CommandLineParsingResult? = null
-
-                    beforeEachTest {
-                        result = rootParser.parse(listOf(argument))
-                    }
+                    val result: CommandLineParsingResult = rootParser.parse(listOf(argument))
 
                     it("indicates that parsing succeeded") {
-                        assert.that(result!!, isA<Succeeded>())
+                        assert.that(result, isA<Succeeded>())
                     }
 
-                    it("does not print anything to the output") {
-                        assert.that(output.toString(), isEmptyString)
-                    }
-
-                    on("running the command returned") {
-                        val exitCode = (result as Succeeded).command.run()
-
-                        it("prints help information") {
-                            assert.that(output.toString(), equalTo("""
-                                |Usage: decompose [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]
-                                |
-                                |Commands:
-                                |  do-stuff    Do the thing.
-                                |  help        Print this help information and exit.
-                                |
-                                |For help on the options available for a command, run 'decompose help <command>'.
-                                |
-                                """.trimMargin()))
-                        }
-
-                        it("returns a non-zero exit code") {
-                            assert.that(exitCode, !equalTo(0))
-                        }
+                    it("returns a HelpCommand instance ready for use") {
+                        assert.that((result as Succeeded).command, equalTo<Command>(HelpCommand(null, rootParser, outputStream)))
                     }
                 }
             }
 
             on("attempting to add a new command with the same name") {
                 val newCommand = object : CommandDefinition("do-stuff", "The other do-stuff.") {
-                    override fun createCommand(): Command = throw NotImplementedError()
+                    override fun createCommand(kodein: Kodein): Command = throw NotImplementedError()
                 }
 
                 it("throws an exception") {
-                    assert.that({ rootParser.addCommand(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff' is already registered.")))
+                    assert.that({ rootParser.addCommandDefinition(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff' is already registered.")))
                 }
             }
 
             on("attempting to add a new command with the same alias") {
                 val newCommand = object : CommandDefinition("do-something-else", "The other do-stuff.", aliases = setOf("do-stuff-alias")) {
-                    override fun createCommand(): Command = throw NotImplementedError()
+                    override fun createCommand(kodein: Kodein): Command = throw NotImplementedError()
                 }
 
                 it("throws an exception") {
-                    assert.that({ rootParser.addCommand(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff-alias' is already registered.")))
+                    assert.that({ rootParser.addCommandDefinition(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff-alias' is already registered.")))
                 }
             }
 
             on("attempting to add a new command with an alias with the same name as the existing command") {
                 val newCommand = object : CommandDefinition("do-other-stuff", "The other do-stuff.", aliases = setOf("do-stuff")) {
-                    override fun createCommand(): Command = throw NotImplementedError()
+                    override fun createCommand(kodein: Kodein): Command = throw NotImplementedError()
                 }
 
                 it("throws an exception") {
-                    assert.that({ rootParser.addCommand(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff' is already registered.")))
+                    assert.that({ rootParser.addCommandDefinition(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff' is already registered.")))
                 }
             }
 
             on("attempting to add a new command with a name that is the same as an existing command's alias") {
                 val newCommand = object : CommandDefinition("do-stuff-alias", "The other do-stuff.") {
-                    override fun createCommand(): Command = throw NotImplementedError()
+                    override fun createCommand(kodein: Kodein): Command = throw NotImplementedError()
                 }
 
                 it("throws an exception") {
-                    assert.that({ rootParser.addCommand(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff-alias' is already registered.")))
+                    assert.that({ rootParser.addCommandDefinition(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff-alias' is already registered.")))
                 }
             }
 
             describe("parsing the argument list 'help <command name>'") {
-                var result: CommandLineParsingResult? = null
-
-                beforeEachTest {
-                    result = rootParser.parse(listOf("help", "do-stuff"))
-                }
+                val result: CommandLineParsingResult = rootParser.parse(listOf("help", "do-stuff"))
 
                 it("indicates that parsing succeeded") {
-                    assert.that(result!!, isA<Succeeded>())
+                    assert.that(result, isA<Succeeded>())
                 }
 
-                it("does not print anything to the output") {
-                    assert.that(output.toString(), isEmptyString)
-                }
-
-                on("running the command returned") {
-                    val exitCode = (result as Succeeded).command.run()
-
-                    it("prints help information") {
-                        assert.that(output.toString(), equalTo("""
-                        |Usage: decompose [COMMON OPTIONS] do-stuff
-                        |
-                        |Do the thing.
-                        |
-                        |This command does not take any options.
-                        |
-                        """.trimMargin()))
-                    }
-
-                    it("returns a non-zero exit code") {
-                        assert.that(exitCode, !equalTo(0))
-                    }
+                it("returns a HelpCommand instance ready for use") {
+                    assert.that((result as Succeeded).command, equalTo<Command>(HelpCommand("do-stuff", rootParser, outputStream)))
                 }
             }
 
             describe("parsing the argument list 'help <command name> extra-arg") {
-                var result: CommandLineParsingResult? = null
-
-                beforeEachTest {
-                    result = rootParser.parse(listOf("help", "do-stuff", "extra-arg"))
-                }
+                val result: CommandLineParsingResult = rootParser.parse(listOf("help", "do-stuff", "extra-arg"))
 
                 it("indicates that parsing failed") {
-                    assert.that(result, equalTo<CommandLineParsingResult>(Failed))
-                }
-
-                it("prints an error message to the output") {
-                    assert.that(output.toString(), equalTo("Command 'help' takes at most 1 argument(s).\n"))
-                }
-            }
-
-            describe("parsing the argument list 'help unknown-command'") {
-                var result: CommandLineParsingResult? = null
-
-                beforeEachTest {
-                    result = rootParser.parse(listOf("help", "unknown-command"))
-                }
-
-                it("indicates that parsing succeeded") {
-                    assert.that(result!!, isA<Succeeded>())
-                }
-
-                it("does not print anything to the output") {
-                    assert.that(output.toString(), isEmptyString)
-                }
-
-                on("running the command returned") {
-                    val exitCode = (result as Succeeded).command.run()
-
-                    it("prints an error message") {
-                        assert.that(output.toString(), equalTo("Invalid command 'unknown-command'. Run 'decompose help' for a list of valid commands.\n"))
-                    }
-
-                    it("returns a non-zero exit code") {
-                        assert.that(exitCode, !equalTo(0))
-                    }
+                    assert.that(result, equalTo<CommandLineParsingResult>(Failed("Command 'help' takes at most 1 argument(s).")))
                 }
             }
         }

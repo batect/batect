@@ -1,32 +1,23 @@
 package decompose.cli
 
-import java.io.PrintStream
+import com.github.salomonbrys.kodein.Kodein
 
 abstract class CommandDefinition(val commandName: String, val description: String, val aliases: Set<String> = emptySet()) {
     val positionalParameters = mutableListOf<PositionalParameter>()
     var positionalParameterValues = emptyMap<PositionalParameter, String?>()
 
-    fun parse(args: Iterable<String>, errorOutputStream: PrintStream): CommandLineParsingResult {
+    fun parse(args: Iterable<String>, kodein: Kodein): CommandLineParsingResult {
         if (args.count() > positionalParameters.count()) {
-            errorOutputStream.println("Command '$commandName' takes at most ${positionalParameters.count()} argument(s).")
-            return Failed
+            return Failed("Command '$commandName' takes at most ${positionalParameters.count()} argument(s).")
         }
 
         positionalParameterValues = positionalParameters.associate { it to null } +
                 args.zip(positionalParameters).map { (arg, param) -> param to arg }
 
-        return Succeeded(this.createCommand())
+        return Succeeded(this.createCommand(kodein))
     }
 
-    fun printHelp(outputStream: PrintStream) {
-        outputStream.println("Usage: $applicationName [COMMON OPTIONS] $commandName")
-        outputStream.println()
-        outputStream.println(description)
-        outputStream.println()
-        outputStream.println("This command does not take any options.")
-    }
-
-    abstract fun createCommand(): Command
+    abstract fun createCommand(kodein: Kodein): Command
 }
 
 interface Command {

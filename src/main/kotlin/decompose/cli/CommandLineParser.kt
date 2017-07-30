@@ -1,63 +1,48 @@
 package decompose.cli
 
-import java.io.PrintStream
+import com.github.salomonbrys.kodein.Kodein
+import com.github.salomonbrys.kodein.bind
+import com.github.salomonbrys.kodein.instance
 
-class CommandLineParser(private val errorOutputStream: PrintStream) {
-    private val helpCommand = HelpCommandDefinition(this, errorOutputStream)
+class CommandLineParser(private val kodein: Kodein) {
+    private val helpCommand = HelpCommandDefinition()
 
-    private val commands = mutableSetOf<CommandDefinition>()
+    private val commandDefinitions = mutableSetOf<CommandDefinition>()
     private val commandAliases = mutableMapOf<String, CommandDefinition>()
 
     init {
-        addCommand(helpCommand)
+        addCommandDefinition(helpCommand)
     }
 
-    fun parse(args: Iterable<String>) = parse(args, errorOutputStream)
-
-    private fun parse(args: Iterable<String>, errorOutputStream: PrintStream): CommandLineParsingResult {
+    fun parse(args: Iterable<String>): CommandLineParsingResult {
         if (args.count() == 0) {
-            printNoCommand(errorOutputStream)
-            return Failed
+            return noCommand()
         }
 
-        val command: CommandDefinition? = commandAliases.get(args.first())
+        val command: CommandDefinition? = commandAliases[args.first()]
 
         if (command == null) {
-            printInvalidArg(args.first(), errorOutputStream)
-            return Failed
+            return invalidArg(args.first())
         }
 
-        return command.parse(args.drop(1), errorOutputStream)
-    }
+        val extendedKodein = Kodein {
+            extend(kodein)
 
-    fun printHelp(outputStream: PrintStream) {
-        outputStream.println("Usage: $applicationName [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]")
-        outputStream.println()
-        outputStream.println("Commands:")
-
-        val alignToColumn = 4 + (commands.map { it.commandName.length }.max() ?: 0)
-
-        commands.sortedBy { it.commandName }.forEach {
-            val indentationCount = alignToColumn - it.commandName.length
-            val indentation = " ".repeat(indentationCount)
-            outputStream.println("  ${it.commandName}$indentation${it.description}")
+            bind<CommandLineParser>() with instance(this@CommandLineParser)
         }
 
-        outputStream.println()
-        outputStream.println("For help on the options available for a command, run '$applicationName help <command>'.")
+        return command.parse(args.drop(1), extendedKodein)
     }
 
-    private fun printNoCommand(errorOutputStream: PrintStream) {
-        errorOutputStream.println("No command specified. Run '$applicationName help' for a list of valid commands.")
-    }
+    private fun noCommand(): CommandLineParsingResult = Failed("No command specified. Run '$applicationName help' for a list of valid commands.")
 
-    protected fun printInvalidArg(arg: String, errorOutputStream: PrintStream) {
+    private fun invalidArg(arg: String): CommandLineParsingResult {
         val guessedType = if (arg.startsWith("-")) "option" else "command"
 
-        errorOutputStream.println("Invalid $guessedType '$arg'. Run '$applicationName help' for a list of valid ${guessedType}s.")
+        return Failed("Invalid $guessedType '$arg'. Run '$applicationName help' for a list of valid ${guessedType}s.")
     }
 
-    fun addCommand(command: CommandDefinition) {
+    fun addCommandDefinition(command: CommandDefinition) {
         val aliases = command.aliases + command.commandName
         val duplicates = commandAliases.keys.intersect(aliases)
 
@@ -65,15 +50,16 @@ class CommandLineParser(private val errorOutputStream: PrintStream) {
             throw IllegalArgumentException("A command with the name or alias '${duplicates.first()}' is already registered.")
         }
 
-        commands.add(command)
+        commandDefinitions.add(command)
         aliases.forEach { commandAliases.put(it, command) }
     }
 
-    fun getCommandByName(name: String): CommandDefinition? = commandAliases[name]
+    fun getAllCommandDefinitions(): Set<CommandDefinition> = commandDefinitions
+    fun getCommandDefinitionByName(name: String): CommandDefinition? = commandAliases[name]
 }
 
 sealed class CommandLineParsingResult
 data class Succeeded(val command: Command) : CommandLineParsingResult()
-object Failed : CommandLineParsingResult()
+data class Failed(val error: String) : CommandLineParsingResult()
 
 val applicationName = "decompose"

@@ -5,8 +5,8 @@ import com.github.salomonbrys.kodein.instance
 import decompose.PrintStreamType
 import java.io.PrintStream
 
-class HelpCommandDefinition : CommandDefinition("help", "Print this help information and exit.", aliases = setOf("--help")) {
-    val showHelpForCommandName: String? by PositionalParameter("command")
+class HelpCommandDefinition : CommandDefinition("help", "Display information about available commands and options.", aliases = setOf("--help")) {
+    val showHelpForCommandName: String? by PositionalParameter("COMMAND", "Command to display help for. If no command specified, display overview of all available commands.")
 
     override fun createCommand(kodein: Kodein): Command = HelpCommand(showHelpForCommandName, kodein.instance(), kodein.instance(PrintStreamType.Error))
 }
@@ -45,10 +45,23 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
     }
 
     private fun printCommandHelp(commandDefinition: CommandDefinition) {
-        outputStream.println("Usage: $applicationName [COMMON OPTIONS] ${commandDefinition.commandName}")
+        outputStream.print("Usage: $applicationName [COMMON OPTIONS] ${commandDefinition.commandName}")
+
+        commandDefinition.positionalParameters.forEach { outputStream.print(" [${it.name}]") }
+
+        outputStream.println()
         outputStream.println()
         outputStream.println(commandDefinition.description)
         outputStream.println()
-        outputStream.println("This command does not take any options.")
+
+        if (commandDefinition.positionalParameters.isEmpty()) {
+            outputStream.println("This command does not take any options.")
+        } else {
+            outputStream.println("Parameters:")
+
+            commandDefinition.positionalParameters.forEach {
+                outputStream.println("  ${it.name}    (optional) ${it.description}")
+            }
+        }
     }
 }

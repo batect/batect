@@ -3,7 +3,7 @@ package decompose.cli
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-class OptionalPositionalParameter(name: String, description: String) : PositionalParameterDefinition(name, description), ReadOnlyProperty<CommandDefinition, String?> {
+class OptionalPositionalParameter(name: String, description: String) : PositionalParameterDefinition(name, description, true), ReadOnlyProperty<CommandDefinition, String?> {
     var value: String? = null
 
     operator fun provideDelegate(thisRef: CommandDefinition, property: KProperty<*>): OptionalPositionalParameter {

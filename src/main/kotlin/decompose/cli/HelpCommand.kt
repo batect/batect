@@ -31,15 +31,7 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
         outputStream.println("Usage: $applicationName [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]")
         outputStream.println()
         outputStream.println("Commands:")
-
-        val alignToColumn = 4 + (parser.getAllCommandDefinitions().map { it.commandName.length }.max() ?: 0)
-
-        parser.getAllCommandDefinitions().sortedBy { it.commandName }.forEach {
-            val indentationCount = alignToColumn - it.commandName.length
-            val indentation = " ".repeat(indentationCount)
-            outputStream.println("  ${it.commandName}$indentation${it.description}")
-        }
-
+        printInColumns(parser.getAllCommandDefinitions().sortedBy { it.commandName }.associate { "  " + it.commandName to it.description })
         outputStream.println()
         outputStream.println("For help on the options available for a command, run '$applicationName help <command>'.")
     }
@@ -47,10 +39,8 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
     private fun printCommandHelp(commandDefinition: CommandDefinition) {
         val positionalParameterDefinitions = commandDefinition.getAllPositionalParameterDefinitions()
 
-        outputStream.print("Usage: $applicationName [COMMON OPTIONS] ${commandDefinition.commandName}")
-        positionalParameterDefinitions.forEach { outputStream.print(" [${it.name}]") }
+        printCommandHelpHeader(commandDefinition, positionalParameterDefinitions)
 
-        outputStream.println()
         outputStream.println()
         outputStream.println(commandDefinition.description)
         outputStream.println()
@@ -58,11 +48,41 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
         if (positionalParameterDefinitions.isEmpty()) {
             outputStream.println("This command does not take any options.")
         } else {
-            outputStream.println("Parameters:")
+            printCommandParameterInfo(positionalParameterDefinitions)
+        }
+    }
 
-            positionalParameterDefinitions.forEach {
-                outputStream.println("  ${it.name}    (optional) ${it.description}")
-            }
+    private fun printCommandHelpHeader(commandDefinition: CommandDefinition, positionalParameterDefinitions: List<PositionalParameterDefinition>) {
+        outputStream.print("Usage: $applicationName [COMMON OPTIONS] ${commandDefinition.commandName}")
+
+        positionalParameterDefinitions.forEach {
+            val formattedName = if (it.isOptional) "[${it.name}]" else it.name
+            outputStream.print(" $formattedName")
+        }
+
+        outputStream.println()
+    }
+
+    private fun printCommandParameterInfo(positionalParameterDefinitions: List<PositionalParameterDefinition>) {
+        outputStream.println("Parameters:")
+        printInColumns(positionalParameterDefinitions.associate { "  " + it.name to descriptionForPositionalParameter(it) })
+    }
+
+    private fun descriptionForPositionalParameter(param: PositionalParameterDefinition): String {
+        if (param.isOptional) {
+            return "(optional) " + param.description
+        } else {
+            return param.description
+        }
+    }
+
+    private fun printInColumns(items: Map<String, String>) {
+        val alignToColumn = 4 + (items.keys.map { it.length }.max() ?: 0)
+
+        items.forEach { firstColumn, secondColumn ->
+            val indentationCount = alignToColumn - firstColumn.length
+            val indentation = " ".repeat(indentationCount)
+            outputStream.println("$firstColumn$indentation$secondColumn")
         }
     }
 }

@@ -105,6 +105,106 @@ object HelpCommandSpec : Spek({
                         assert.that(exitCode, !equalTo(0))
                     }
                 }
+
+                given("and that command has a single required positional parameter") {
+                    val output = ByteArrayOutputStream()
+                    val outputStream = PrintStream(output)
+
+                    val parser = mock<CommandLineParser> {
+                        on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
+                            val thingToDo: String by RequiredPositionalParameter("THING", "Thing to do.")
+
+                            override fun createCommand(kodein: Kodein): Command = NullCommand()
+                        }
+                    }
+
+                    val command = HelpCommand("do-stuff", parser, outputStream)
+                    val exitCode = command.run()
+
+                    it("prints help information") {
+                        assert.that(output.toString(), equalTo("""
+                            |Usage: decompose [COMMON OPTIONS] do-stuff THING
+                            |
+                            |Do the thing.
+                            |
+                            |Parameters:
+                            |  THING    Thing to do.
+                            |
+                            """.trimMargin()))
+                    }
+
+                    it("returns a non-zero exit code") {
+                        assert.that(exitCode, !equalTo(0))
+                    }
+                }
+
+                given("and that command has two required positional parameters") {
+                    val output = ByteArrayOutputStream()
+                    val outputStream = PrintStream(output)
+
+                    val parser = mock<CommandLineParser> {
+                        on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
+                            val thingToDo: String by RequiredPositionalParameter("THING", "Thing to do.")
+                            val otherThingToDo: String by RequiredPositionalParameter("OTHER-THING", "Other thing to do.")
+
+                            override fun createCommand(kodein: Kodein): Command = NullCommand()
+                        }
+                    }
+
+                    val command = HelpCommand("do-stuff", parser, outputStream)
+                    val exitCode = command.run()
+
+                    it("prints help information") {
+                        assert.that(output.toString(), equalTo("""
+                            |Usage: decompose [COMMON OPTIONS] do-stuff THING OTHER-THING
+                            |
+                            |Do the thing.
+                            |
+                            |Parameters:
+                            |  THING          Thing to do.
+                            |  OTHER-THING    Other thing to do.
+                            |
+                            """.trimMargin()))
+                    }
+
+                    it("returns a non-zero exit code") {
+                        assert.that(exitCode, !equalTo(0))
+                    }
+                }
+
+                given("and that command has a required and an optional parameter") {
+                    val output = ByteArrayOutputStream()
+                    val outputStream = PrintStream(output)
+
+                    val parser = mock<CommandLineParser> {
+                        on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
+                            val thingToDo: String by RequiredPositionalParameter("THING", "Thing to do.")
+                            val otherThingToDo: String? by OptionalPositionalParameter("OTHER-THING", "Other thing to do.")
+
+                            override fun createCommand(kodein: Kodein): Command = NullCommand()
+                        }
+                    }
+
+                    val command = HelpCommand("do-stuff", parser, outputStream)
+                    val exitCode = command.run()
+
+                    it("prints help information") {
+                        assert.that(output.toString(), equalTo("""
+                            |Usage: decompose [COMMON OPTIONS] do-stuff THING [OTHER-THING]
+                            |
+                            |Do the thing.
+                            |
+                            |Parameters:
+                            |  THING          Thing to do.
+                            |  OTHER-THING    (optional) Other thing to do.
+                            |
+                            """.trimMargin()))
+                    }
+
+                    it("returns a non-zero exit code") {
+                        assert.that(exitCode, !equalTo(0))
+                    }
+                }
             }
 
             given("and that command name is not a valid command name") {

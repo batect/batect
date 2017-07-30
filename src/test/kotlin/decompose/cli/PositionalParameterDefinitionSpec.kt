@@ -13,31 +13,31 @@ object PositionalParameterDefinitionSpec : Spek({
         describe("creation") {
             on("attempting to create a positional parameter with an uppercase name and description") {
                 it("does not throw an exception") {
-                    assert.that({ PositionalParameterDefinition("THING", "The thing.") }, !throws<Throwable>())
+                    assert.that({ PositionalParameterDefinition("THING", "The thing.", true) }, !throws<Throwable>())
                 }
             }
 
             on("attempting to create a positional parameter with a lowercase name") {
                 it("throws an exception") {
-                    assert.that({ PositionalParameterDefinition("thing", "The thing.") }, throws<IllegalArgumentException>(withMessage("Positional parameter name must be all uppercase.")))
+                    assert.that({ PositionalParameterDefinition("thing", "The thing.", true) }, throws<IllegalArgumentException>(withMessage("Positional parameter name must be all uppercase.")))
                 }
             }
 
             on("attempting to create a positional parameter with a mixed-case name") {
                 it("throws an exception") {
-                    assert.that({ PositionalParameterDefinition("thInG", "The thing.") }, throws<IllegalArgumentException>(withMessage("Positional parameter name must be all uppercase.")))
+                    assert.that({ PositionalParameterDefinition("thInG", "The thing.", true) }, throws<IllegalArgumentException>(withMessage("Positional parameter name must be all uppercase.")))
                 }
             }
 
             on("attempting to create a positional parameter with an empty name") {
                 it("throws an exception") {
-                    assert.that({ PositionalParameterDefinition("", "The thing.") }, throws<IllegalArgumentException>(withMessage("Positional parameter name must not be empty.")))
+                    assert.that({ PositionalParameterDefinition("", "The thing.", true) }, throws<IllegalArgumentException>(withMessage("Positional parameter name must not be empty.")))
                 }
             }
 
             on("attempting to create a positional parameter without a description") {
                 it("throws an exception") {
-                    assert.that({ PositionalParameterDefinition("THING", "") }, throws<IllegalArgumentException>(withMessage("Positional parameter description must not be empty.")))
+                    assert.that({ PositionalParameterDefinition("THING", "", true) }, throws<IllegalArgumentException>(withMessage("Positional parameter description must not be empty.")))
                 }
             }
         }

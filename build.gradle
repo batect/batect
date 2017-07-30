@@ -35,7 +35,8 @@ configurations {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
-    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version" // Override the version of kotlin-reflect used by jackson-module-kotlin
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    // Override the version of kotlin-reflect used by jackson-module-kotlin
 
     compile 'com.fasterxml.jackson.core:jackson-databind:2.8.9'
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.8.9'
@@ -111,15 +112,19 @@ task journeyTest(type: JavaExec) {
 }
 
 task ktlint(type: JavaExec) {
+    inputs.files sourceSets.main.kotlin + sourceSets.test.kotlin + sourceSets.journeyTest.kotlin
+
     main = "com.github.shyiko.ktlint.Main"
     classpath = configurations.ktlint
-    args "--reporter=plain?group_by_file", "src/**/*.kt"
+    args "--reporter=plain?group_by_file"
 }
 
 check.dependsOn ktlint
 
 task ktlintFormat(type: JavaExec) {
+    inputs.files sourceSets.main.kotlin + sourceSets.test.kotlin + sourceSets.journeyTest.kotlin
+
     main = "com.github.shyiko.ktlint.Main"
     classpath = configurations.ktlint
-    args "-F", "src/**/*.kt"
+    args "-F"
 }

@@ -2,7 +2,7 @@ package decompose.cli
 
 import java.io.PrintStream
 
-class HelpCommand(private val parser: CommandLineParser, private val outputStream: PrintStream): CommandLineCommand("help", "Print this help information and exit.", aliases = setOf("--help")) {
+class HelpCommand(private val parser: CommandLineParser, private val outputStream: PrintStream) : CommandLineCommand("help", "Print this help information and exit.", aliases = setOf("--help")) {
     val showHelpForCommandName: String? by PositionalParameter("command")
 
     override fun run(): Int {

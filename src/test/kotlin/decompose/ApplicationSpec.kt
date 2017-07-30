@@ -4,16 +4,14 @@ import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
 import com.natpryce.hamkrest.assertion.assert
-import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.reset
-import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
-import decompose.config.Configuration
-import decompose.config.ContainerMap
-import decompose.config.TaskMap
-import decompose.config.io.ConfigurationLoader
+import decompose.cli.Command
+import decompose.cli.CommandLineParser
+import decompose.cli.Failed
+import decompose.cli.Succeeded
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -24,78 +22,30 @@ import java.io.PrintStream
 
 object ApplicationSpec : Spek({
     describe("an application") {
-        val outputStream = ByteArrayOutputStream()
         val errorStream = ByteArrayOutputStream()
-        val configLoader = mock<ConfigurationLoader>()
-        val taskRunner = mock<TaskRunner>()
+        val commandLineParser = mock<CommandLineParser>()
 
         val dependencies = Kodein {
-            bind<ConfigurationLoader>() with instance(configLoader)
-            bind<TaskRunner>() with instance(taskRunner)
             bind<PrintStream>(PrintStreamType.Error) with instance(PrintStream(errorStream))
+            bind<CommandLineParser>() with instance(commandLineParser)
         }
 
         val application = Application(dependencies)
+        val args = listOf("some-command", "some-param")
 
         beforeEachTest {
-            outputStream.reset()
             errorStream.reset()
 
-            reset(configLoader)
-            reset(taskRunner)
+            reset(commandLineParser)
         }
 
-        given("no command-line arguments") {
-            val args = emptyArray<String>()
-
-            on("running") {
-                val exitCode = application.run(args)
-
-                it("prints a help message to the error stream") {
-                    assert.that(errorStream.toString().trim(), equalTo("Usage: decompose [configuration file] [task name]"))
-                }
-
-                it("does not print anything to the output stream") {
-                    assert.that(outputStream.toString(), equalTo(""))
-                }
-
-                it("returns a non-zero exit code") {
-                    assert.that(exitCode, !equalTo(0))
-                }
+        given("the command line parser returns a command") {
+            val command = object : Command {
+                override fun run(): Int = 123
             }
-        }
 
-        given("only one command-line argument") {
-            val args = arrayOf("config.yml")
-
-            on("running") {
-                val exitCode = application.run(args)
-
-                it("prints a help message to the error stream") {
-                    assert.that(errorStream.toString().trim(), equalTo("Usage: decompose [configuration file] [task name]"))
-                }
-
-                it("does not print anything to the output stream") {
-                    assert.that(outputStream.toString(), equalTo(""))
-                }
-
-                it("returns a non-zero exit code") {
-                    assert.that(exitCode, !equalTo(0))
-                }
-            }
-        }
-
-        given("a configuration file path and a task name") {
-            val configFileName = "config.yml"
-            val taskName = "the_task"
-            val args = arrayOf(configFileName, taskName)
-
-            on("running") {
-                val config = Configuration("the_project", TaskMap(), ContainerMap())
-                whenever(configLoader.loadConfig(configFileName)).thenReturn(config)
-
-                val expectedTaskExitCode = 123
-                whenever(taskRunner.run(config, taskName)).thenReturn(expectedTaskExitCode)
+            on("running the application") {
+                whenever(commandLineParser.parse(args)).thenReturn(Succeeded(command))
 
                 val exitCode = application.run(args)
 
@@ -103,53 +53,20 @@ object ApplicationSpec : Spek({
                     assert.that(errorStream.toString(), equalTo(""))
                 }
 
-                it("does not print anything to the output stream") {
-                    assert.that(outputStream.toString(), equalTo(""))
-                }
-
-                it("runs the task") {
-                    verify(taskRunner).run(config, taskName)
-                }
-
-                it("returns the exit code of the task") {
-                    assert.that(exitCode, equalTo(expectedTaskExitCode))
+                it("returns the exit code from the command") {
+                    assert.that(exitCode, equalTo(123))
                 }
             }
+        }
 
-            on("failing to load the configuration file") {
-                val exception = RuntimeException("Could not load configuration for some reason.")
-                whenever(configLoader.loadConfig(configFileName)).thenThrow(exception)
+        given("the command line parser returns an error") {
+            on("running the application") {
+                whenever(commandLineParser.parse(args)).thenReturn(Failed("Something went wrong while parsing arguments"))
 
                 val exitCode = application.run(args)
 
-                it("prints the exception message to the error stream") {
-                    assert.that(errorStream.toString().trim(), containsSubstring("Could not load configuration for some reason."))
-                }
-
-                it("does not print anything to the output stream") {
-                    assert.that(outputStream.toString(), equalTo(""))
-                }
-
-                it("returns a non-zero exit code") {
-                    assert.that(exitCode, !equalTo(0))
-                }
-            }
-
-            on("failing to run the task") {
-                val config = Configuration("the_project", TaskMap(), ContainerMap())
-                whenever(configLoader.loadConfig(configFileName)).thenReturn(config)
-
-                val exception = RuntimeException("Could not run task for some reason.")
-                whenever(taskRunner.run(config, taskName)).thenThrow(exception)
-
-                val exitCode = application.run(args)
-
-                it("prints the exception message to the error stream") {
-                    assert.that(errorStream.toString().trim(), containsSubstring("Could not run task for some reason."))
-                }
-
-                it("does not print anything to the output stream") {
-                    assert.that(outputStream.toString(), equalTo(""))
+                it("prints the error message to the error stream") {
+                    assert.that(errorStream.toString(), equalTo("Something went wrong while parsing arguments\n"))
                 }
 
                 it("returns a non-zero exit code") {

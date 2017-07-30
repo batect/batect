@@ -5,6 +5,10 @@ import com.github.salomonbrys.kodein.KodeinAware
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
 import com.github.salomonbrys.kodein.provider
+import decompose.cli.CommandLineParser
+import decompose.cli.Failed
+import decompose.cli.RunTaskCommandDefinition
+import decompose.cli.Succeeded
 import decompose.config.io.ConfigurationLoader
 import decompose.config.io.PathResolverFactory
 import decompose.docker.DockerClient
@@ -18,7 +22,7 @@ import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
     try {
-        val status = Application(System.out, System.err).run(args)
+        val status = Application(System.out, System.err).run(args.toList())
         exitProcess(status)
     } catch (e: Throwable) {
         System.err.println("Fatal exception: ")
@@ -31,23 +35,20 @@ class Application(override val kodein: Kodein) : KodeinAware {
     constructor(outputStream: PrintStream, errorStream: PrintStream) :
             this(createDefaultKodeinConfiguration(outputStream, errorStream))
 
-    private val configLoader: ConfigurationLoader = instance()
-    private val taskRunner: TaskRunner = instance()
     private val errorStream: PrintStream = instance(PrintStreamType.Error)
+    private val commandLineParser: CommandLineParser = instance()
 
-    fun run(args: Array<String>): Int {
+    fun run(args: Iterable<String>): Int {
         try {
-            if (args.size != 2) {
-                errorStream.println("Usage: decompose [configuration file] [task name]")
-                return -1
+            val result = commandLineParser.parse(args)
+
+            return when (result) {
+                is Failed -> {
+                    errorStream.println(result.error)
+                    -1
+                }
+                is Succeeded -> result.command.run()
             }
-
-            val configFileName = args[0]
-            val taskName = args[1]
-            val config = configLoader.loadConfig(configFileName)
-
-            return taskRunner.run(config, taskName)
-
         } catch (e: Throwable) {
             errorStream.println(e)
             return -1
@@ -75,5 +76,14 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
     bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
     bind<DependencyRuntimeManagerFactory>() with provider { DependencyRuntimeManagerFactory(instance(), instance(), instance()) }
+    bind<CommandLineParser>() with provider { createCommandLineParser(this) }
+}
+
+private fun createCommandLineParser(kodein: Kodein): CommandLineParser {
+    val parser = CommandLineParser(kodein)
+
+    parser.addCommandDefinition(RunTaskCommandDefinition())
+
+    return parser
 }
 

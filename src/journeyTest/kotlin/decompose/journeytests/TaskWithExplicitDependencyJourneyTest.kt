@@ -10,7 +10,7 @@ import org.jetbrains.spek.api.dsl.on
 
 object TaskWithExplicitDependencyJourneyTest : Spek({
     given("a task with an explicit dependency") {
-        val runner = ApplicationRunner("task-with-explicit-dependency", listOf("decompose.yml", "the-task"))
+        val runner = ApplicationRunner("task-with-explicit-dependency", listOf("run", "decompose.yml", "the-task"))
 
         on("running that task") {
             val result = runner.run()

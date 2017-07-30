@@ -21,7 +21,7 @@ class CommandLineParser(private val kodein: Kodein) {
 
         val command: CommandDefinition = commandAliases[args.first()] ?: return invalidArg(args.first())
 
-        val extendedKodein = Kodein {
+        val extendedKodein = Kodein(allowSilentOverride = true) {
             extend(kodein)
 
             bind<CommandLineParser>() with instance(this@CommandLineParser)

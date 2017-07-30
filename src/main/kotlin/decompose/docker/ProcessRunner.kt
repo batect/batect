@@ -51,7 +51,7 @@ class ProcessRunner {
             }
 
             val exitCode = process.waitFor()
-            return Exited<T>(exitCode)
+            return Exited(exitCode)
         } finally {
             process.destroyForcibly()
         }

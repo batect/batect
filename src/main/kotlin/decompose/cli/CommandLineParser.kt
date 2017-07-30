@@ -19,11 +19,7 @@ class CommandLineParser(private val kodein: Kodein) {
             return noCommand()
         }
 
-        val command: CommandDefinition? = commandAliases[args.first()]
-
-        if (command == null) {
-            return invalidArg(args.first())
-        }
+        val command: CommandDefinition = commandAliases[args.first()] ?: return invalidArg(args.first())
 
         val extendedKodein = Kodein {
             extend(kodein)

@@ -2,11 +2,12 @@ package decompose.journeytests
 
 import java.io.InputStreamReader
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 
 data class ApplicationRunner(val testName: String, val arguments: Iterable<String>) {
-    val applicationPath = Paths.get("build/install/decompose-kt/bin/decompose-kt").toAbsolutePath()
-    val testDirectory = Paths.get("src/journeyTest/resources", testName).toAbsolutePath()
+    val applicationPath: Path = Paths.get("build/install/decompose-kt/bin/decompose-kt").toAbsolutePath()
+    val testDirectory: Path = Paths.get("src/journeyTest/resources", testName).toAbsolutePath()
 
     init {
         if (!Files.isExecutable(applicationPath)) {
@@ -27,7 +28,7 @@ data class ApplicationRunner(val testName: String, val arguments: Iterable<Strin
 
         process.waitFor()
 
-        val output = InputStreamReader(process.getInputStream()).readText()
+        val output = InputStreamReader(process.inputStream).readText()
         return ApplicationResult(process.exitValue(), output)
     }
 }

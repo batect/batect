@@ -85,7 +85,7 @@ object ProcessRunnerSpec : Spek({
                 }
 
                 it("returns the value provided by the processing method") {
-                    assert.that(result, equalTo(KilledDuringProcessing<String>("I saw line 2") as RunAndProcessOutputResult<String>))
+                    assert.that(result, equalTo(KilledDuringProcessing("I saw line 2") as RunAndProcessOutputResult<String>))
                 }
 
                 it("kills the process when instructed to do so by the processing method") {

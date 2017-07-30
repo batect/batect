@@ -77,21 +77,26 @@ object HelpCommandSpec : Spek({
                 given("and that command has a single optional positional parameter") {
                     val output = ByteArrayOutputStream()
                     val outputStream = PrintStream(output)
+
                     val parser = mock<CommandLineParser> {
-                        on { getCommandDefinitionByName("help") } doReturn HelpCommandDefinition()
+                        on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
+                            val thingToDo: String? by PositionalParameter("THING", "Thing to do.")
+
+                            override fun createCommand(kodein: Kodein): Command = NullCommand()
+                        }
                     }
 
-                    val command = HelpCommand("help", parser, outputStream)
+                    val command = HelpCommand("do-stuff", parser, outputStream)
                     val exitCode = command.run()
 
                     it("prints help information") {
                         assert.that(output.toString(), equalTo("""
-                            |Usage: decompose [COMMON OPTIONS] help [COMMAND]
+                            |Usage: decompose [COMMON OPTIONS] do-stuff [THING]
                             |
-                            |Display information about available commands and options.
+                            |Do the thing.
                             |
                             |Parameters:
-                            |  COMMAND    (optional) Command to display help for. If no command specified, display overview of all available commands.
+                            |  THING    (optional) Thing to do.
                             |
                             """.trimMargin()))
                     }

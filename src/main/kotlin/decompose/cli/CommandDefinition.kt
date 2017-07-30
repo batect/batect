@@ -2,11 +2,9 @@ package decompose.cli
 
 import java.io.PrintStream
 
-open class CommandLineCommand(val commandName: String, val description: String, val aliases: Set<String> = emptySet()) {
+abstract class CommandDefinition(val commandName: String, val description: String, val aliases: Set<String> = emptySet()) {
     val positionalParameters = mutableListOf<PositionalParameter>()
     var positionalParameterValues = emptyMap<PositionalParameter, String?>()
-
-    open fun run(): Int = 0
 
     fun parse(args: Iterable<String>, errorOutputStream: PrintStream): CommandLineParsingResult {
         if (args.count() > positionalParameters.count()) {
@@ -17,7 +15,7 @@ open class CommandLineCommand(val commandName: String, val description: String, 
         positionalParameterValues = positionalParameters.associate { it to null } +
                 args.zip(positionalParameters).map { (arg, param) -> param to arg }
 
-        return Succeeded(this)
+        return Succeeded(this.createCommand())
     }
 
     fun printHelp(outputStream: PrintStream) {
@@ -27,4 +25,10 @@ open class CommandLineCommand(val commandName: String, val description: String, 
         outputStream.println()
         outputStream.println("This command does not take any options.")
     }
+
+    abstract fun createCommand(): Command
+}
+
+interface Command {
+    fun run(): Int
 }

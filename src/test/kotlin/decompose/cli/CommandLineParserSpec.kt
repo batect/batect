@@ -115,8 +115,16 @@ object CommandLineParserSpec : Spek({
 
         given("a parser with a single command configured") {
             val rootParser = CommandLineParser(outputStream)
-            val command = CommandLineCommand("do-stuff", "Do the thing.", aliases = setOf("do-stuff-alias"))
-            rootParser.addCommand(command)
+
+            val command = object : Command {
+                override fun run(): Int = 0
+            }
+
+            val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.", aliases = setOf("do-stuff-alias")) {
+                override fun createCommand(): Command = command
+            }
+
+            rootParser.addCommand(commandDefinition)
 
             describe("parsing a list of arguments with just that command's name") {
                 var result: CommandLineParsingResult? = null
@@ -174,7 +182,9 @@ object CommandLineParserSpec : Spek({
             }
 
             on("attempting to add a new command with the same name") {
-                val newCommand = CommandLineCommand("do-stuff", "The other do-stuff.")
+                val newCommand = object : CommandDefinition("do-stuff", "The other do-stuff.") {
+                    override fun createCommand(): Command = throw NotImplementedError()
+                }
 
                 it("throws an exception") {
                     assert.that({ rootParser.addCommand(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff' is already registered.")))
@@ -182,7 +192,9 @@ object CommandLineParserSpec : Spek({
             }
 
             on("attempting to add a new command with the same alias") {
-                val newCommand = CommandLineCommand("do-something-else", "The other do-stuff.", aliases = setOf("do-stuff-alias"))
+                val newCommand = object : CommandDefinition("do-something-else", "The other do-stuff.", aliases = setOf("do-stuff-alias")) {
+                    override fun createCommand(): Command = throw NotImplementedError()
+                }
 
                 it("throws an exception") {
                     assert.that({ rootParser.addCommand(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff-alias' is already registered.")))
@@ -190,7 +202,9 @@ object CommandLineParserSpec : Spek({
             }
 
             on("attempting to add a new command with an alias with the same name as the existing command") {
-                val newCommand = CommandLineCommand("do-other-stuff", "The other do-stuff.", aliases = setOf("do-stuff"))
+                val newCommand = object : CommandDefinition("do-other-stuff", "The other do-stuff.", aliases = setOf("do-stuff")) {
+                    override fun createCommand(): Command = throw NotImplementedError()
+                }
 
                 it("throws an exception") {
                     assert.that({ rootParser.addCommand(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff' is already registered.")))
@@ -198,26 +212,12 @@ object CommandLineParserSpec : Spek({
             }
 
             on("attempting to add a new command with a name that is the same as an existing command's alias") {
-                val newCommand = CommandLineCommand("do-stuff-alias", "The other do-stuff.")
+                val newCommand = object : CommandDefinition("do-stuff-alias", "The other do-stuff.") {
+                    override fun createCommand(): Command = throw NotImplementedError()
+                }
 
                 it("throws an exception") {
                     assert.that({ rootParser.addCommand(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff-alias' is already registered.")))
-                }
-            }
-
-            describe("parsing a list of arguments with that command's name") {
-                var result: CommandLineParsingResult? = null
-
-                beforeEachTest {
-                    result = rootParser.parse(listOf("do-stuff"))
-                }
-
-                it("indicates that parsing succeeded and returns the command") {
-                    assert.that(result, equalTo<CommandLineParsingResult>(Succeeded(command)))
-                }
-
-                it("does not print anything to the output") {
-                    assert.that(output.toString(), isEmptyString)
                 }
             }
 

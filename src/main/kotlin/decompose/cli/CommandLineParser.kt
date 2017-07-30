@@ -3,10 +3,10 @@ package decompose.cli
 import java.io.PrintStream
 
 class CommandLineParser(private val errorOutputStream: PrintStream) {
-    private val helpCommand = HelpCommand(this, errorOutputStream)
+    private val helpCommand = HelpCommandDefinition(this, errorOutputStream)
 
-    private val commands = mutableSetOf<CommandLineCommand>()
-    private val commandAliases = mutableMapOf<String, CommandLineCommand>()
+    private val commands = mutableSetOf<CommandDefinition>()
+    private val commandAliases = mutableMapOf<String, CommandDefinition>()
 
     init {
         addCommand(helpCommand)
@@ -20,7 +20,7 @@ class CommandLineParser(private val errorOutputStream: PrintStream) {
             return Failed
         }
 
-        val command: CommandLineCommand? = commandAliases.get(args.first())
+        val command: CommandDefinition? = commandAliases.get(args.first())
 
         if (command == null) {
             printInvalidArg(args.first(), errorOutputStream)
@@ -57,7 +57,7 @@ class CommandLineParser(private val errorOutputStream: PrintStream) {
         errorOutputStream.println("Invalid $guessedType '$arg'. Run '$applicationName help' for a list of valid ${guessedType}s.")
     }
 
-    fun addCommand(command: CommandLineCommand) {
+    fun addCommand(command: CommandDefinition) {
         val aliases = command.aliases + command.commandName
         val duplicates = commandAliases.keys.intersect(aliases)
 
@@ -69,11 +69,11 @@ class CommandLineParser(private val errorOutputStream: PrintStream) {
         aliases.forEach { commandAliases.put(it, command) }
     }
 
-    fun getCommandByName(name: String): CommandLineCommand? = commandAliases[name]
+    fun getCommandByName(name: String): CommandDefinition? = commandAliases[name]
 }
 
 sealed class CommandLineParsingResult
-data class Succeeded(val command: CommandLineCommand) : CommandLineParsingResult()
+data class Succeeded(val command: Command) : CommandLineParsingResult()
 object Failed : CommandLineParsingResult()
 
 val applicationName = "decompose"

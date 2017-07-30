@@ -11,7 +11,7 @@ import org.jetbrains.spek.api.dsl.on
 object PositionalParameterDefinitionSpec : Spek({
     describe("a positional parameter") {
         describe("creation") {
-            on("attempting to create a positional parameter with an uppercase name") {
+            on("attempting to create a positional parameter with an uppercase name and description") {
                 it("does not throw an exception") {
                     assert.that({ PositionalParameterDefinition("THING", "The thing.") }, !throws<Throwable>())
                 }
@@ -32,6 +32,12 @@ object PositionalParameterDefinitionSpec : Spek({
             on("attempting to create a positional parameter with an empty name") {
                 it("throws an exception") {
                     assert.that({ PositionalParameterDefinition("", "The thing.") }, throws<IllegalArgumentException>(withMessage("Positional parameter name must not be empty.")))
+                }
+            }
+
+            on("attempting to create a positional parameter without a description") {
+                it("throws an exception") {
+                    assert.that({ PositionalParameterDefinition("THING", "") }, throws<IllegalArgumentException>(withMessage("Positional parameter description must not be empty.")))
                 }
             }
         }

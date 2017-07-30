@@ -9,5 +9,9 @@ open class PositionalParameterDefinition(val name: String, val description: Stri
         if (name != name.toUpperCase()) {
             throw IllegalArgumentException("Positional parameter name must be all uppercase.")
         }
+
+        if (description == "") {
+            throw IllegalArgumentException("Positional parameter description must not be empty.")
+        }
     }
 }

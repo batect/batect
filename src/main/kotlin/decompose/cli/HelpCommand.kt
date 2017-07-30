@@ -6,7 +6,7 @@ import decompose.PrintStreamType
 import java.io.PrintStream
 
 class HelpCommandDefinition : CommandDefinition("help", "Display information about available commands and options.", aliases = setOf("--help")) {
-    val showHelpForCommandName: String? by PositionalParameter("COMMAND", "Command to display help for. If no command specified, display overview of all available commands.")
+    val showHelpForCommandName: String? by OptionalPositionalParameter("COMMAND", "Command to display help for. If no command specified, display overview of all available commands.")
 
     override fun createCommand(kodein: Kodein): Command = HelpCommand(showHelpForCommandName, kodein.instance(), kodein.instance(PrintStreamType.Error))
 }
@@ -45,21 +45,22 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
     }
 
     private fun printCommandHelp(commandDefinition: CommandDefinition) {
-        outputStream.print("Usage: $applicationName [COMMON OPTIONS] ${commandDefinition.commandName}")
+        val positionalParameterDefinitions = commandDefinition.getAllPositionalParameterDefinitions()
 
-        commandDefinition.positionalParameters.forEach { outputStream.print(" [${it.name}]") }
+        outputStream.print("Usage: $applicationName [COMMON OPTIONS] ${commandDefinition.commandName}")
+        positionalParameterDefinitions.forEach { outputStream.print(" [${it.name}]") }
 
         outputStream.println()
         outputStream.println()
         outputStream.println(commandDefinition.description)
         outputStream.println()
 
-        if (commandDefinition.positionalParameters.isEmpty()) {
+        if (positionalParameterDefinitions.isEmpty()) {
             outputStream.println("This command does not take any options.")
         } else {
             outputStream.println("Parameters:")
 
-            commandDefinition.positionalParameters.forEach {
+            positionalParameterDefinitions.forEach {
                 outputStream.println("  ${it.name}    (optional) ${it.description}")
             }
         }

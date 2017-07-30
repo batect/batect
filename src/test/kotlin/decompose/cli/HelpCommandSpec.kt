@@ -80,7 +80,7 @@ object HelpCommandSpec : Spek({
 
                     val parser = mock<CommandLineParser> {
                         on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
-                            val thingToDo: String? by PositionalParameter("THING", "Thing to do.")
+                            val thingToDo: String? by OptionalPositionalParameter("THING", "Thing to do.")
 
                             override fun createCommand(kodein: Kodein): Command = NullCommand()
                         }

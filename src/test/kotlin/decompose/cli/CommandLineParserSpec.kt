@@ -161,7 +161,7 @@ object CommandLineParserSpec : Spek({
                 val result: CommandLineParsingResult = rootParser.parse(listOf("help", "do-stuff", "extra-arg"))
 
                 it("indicates that parsing failed") {
-                    assert.that(result, equalTo<CommandLineParsingResult>(Failed("Command 'help' takes at most 1 argument(s).")))
+                    assert.that(result, equalTo<CommandLineParsingResult>(Failed("Command 'help' takes at most 1 parameter(s).")))
                 }
             }
         }

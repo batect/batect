@@ -34,6 +34,7 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
         printInColumns(parser.getAllCommandDefinitions().sortedBy { it.commandName }.associate { "  " + it.commandName to it.description })
         outputStream.println()
         outputStream.println("For help on the options available for a command, run '$applicationName help <command>'.")
+        outputStream.println()
     }
 
     private fun printCommandHelp(commandDefinition: CommandDefinition) {
@@ -50,6 +51,8 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
         } else {
             printCommandParameterInfo(positionalParameterDefinitions)
         }
+
+        outputStream.println()
     }
 
     private fun printCommandHelpHeader(commandDefinition: CommandDefinition, positionalParameterDefinitions: List<PositionalParameterDefinition>) {

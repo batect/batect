@@ -38,7 +38,7 @@ object HelpCommandSpec : Spek({
                             |
                             |For help on the options available for a command, run 'decompose help <command>'.
                             |
-                            """.trimMargin()))
+                            |""".trimMargin()))
             }
 
             it("returns a non-zero exit code") {
@@ -66,7 +66,7 @@ object HelpCommandSpec : Spek({
                             |
                             |This command does not take any options.
                             |
-                            """.trimMargin()))
+                            |""".trimMargin()))
                     }
 
                     it("returns a non-zero exit code") {
@@ -98,7 +98,7 @@ object HelpCommandSpec : Spek({
                             |Parameters:
                             |  THING    (optional) Thing to do.
                             |
-                            """.trimMargin()))
+                            |""".trimMargin()))
                     }
 
                     it("returns a non-zero exit code") {
@@ -130,7 +130,7 @@ object HelpCommandSpec : Spek({
                             |Parameters:
                             |  THING    Thing to do.
                             |
-                            """.trimMargin()))
+                            |""".trimMargin()))
                     }
 
                     it("returns a non-zero exit code") {
@@ -164,7 +164,7 @@ object HelpCommandSpec : Spek({
                             |  THING          Thing to do.
                             |  OTHER-THING    Other thing to do.
                             |
-                            """.trimMargin()))
+                            |""".trimMargin()))
                     }
 
                     it("returns a non-zero exit code") {
@@ -198,7 +198,7 @@ object HelpCommandSpec : Spek({
                             |  THING          Thing to do.
                             |  OTHER-THING    (optional) Other thing to do.
                             |
-                            """.trimMargin()))
+                            |""".trimMargin()))
                     }
 
                     it("returns a non-zero exit code") {

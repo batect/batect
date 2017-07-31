@@ -23,11 +23,13 @@
 * allow the user to keep containers after failure so they can examine logs (or even default to not destroying anything if they fail)
 * always clean up dependency containers when running on CI by default (use CI environment variable to detect, add command-line switch to disable) 
 * some way to see a list of available tasks (eg. `crane tasks`)
+* some way to add descriptions to tasks, which are then shown in `crane tasks`
 * default to a configuration file path of `decompose.yml` / `crane.yml` (ie. don't require the user to specify it every time)
 * run image builds in parallel and only show summary of build progress (unless image build fails, in which case show full output)
 * start dependencies in parallel
 * overridable health check parameters for containers (so that you can have the health check poll very frequently when waiting for something to 
   come up for tests, but less frequently if that container is used in production)
+* if a dependency container fails to start, show output and exit code from last health check attempt 
 
 ### Other
 * rename everything to 'Crane'

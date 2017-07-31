@@ -4,6 +4,7 @@ import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
 import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.reset
@@ -40,11 +41,11 @@ object ApplicationSpec : Spek({
         }
 
         given("the command line parser returns a command") {
-            val command = object : Command {
-                override fun run(): Int = 123
-            }
-
             on("running the application") {
+                val command = object : Command {
+                    override fun run(): Int = 123
+                }
+
                 whenever(commandLineParser.parse(args)).thenReturn(Succeeded(command))
 
                 val exitCode = application.run(args)
@@ -67,6 +68,42 @@ object ApplicationSpec : Spek({
 
                 it("prints the error message to the error stream") {
                     assert.that(errorStream.toString(), equalTo("Something went wrong while parsing arguments\n"))
+                }
+
+                it("returns a non-zero exit code") {
+                    assert.that(exitCode, !equalTo(0))
+                }
+            }
+        }
+
+        given("the command line parser throws an exception") {
+            on("running the application") {
+                whenever(commandLineParser.parse(args)).thenThrow(RuntimeException("Everything is broken"))
+
+                val exitCode = application.run(args)
+
+                it("prints the exception message to the error stream") {
+                    assert.that(errorStream.toString(), containsSubstring("Everything is broken"))
+                }
+
+                it("returns a non-zero exit code") {
+                    assert.that(exitCode, !equalTo(0))
+                }
+            }
+        }
+
+        given("the command throws an exception") {
+            on("running the application") {
+                val command = object : Command {
+                    override fun run(): Int = throw RuntimeException("Everything is broken")
+                }
+
+                whenever(commandLineParser.parse(args)).thenReturn(Succeeded(command))
+
+                val exitCode = application.run(args)
+
+                it("prints the exception message to the error stream") {
+                    assert.that(errorStream.toString(), containsSubstring("Everything is broken"))
                 }
 
                 it("returns a non-zero exit code") {

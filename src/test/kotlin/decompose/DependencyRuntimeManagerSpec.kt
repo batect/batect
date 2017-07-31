@@ -85,7 +85,7 @@ object DependencyRuntimeManagerSpec : Spek({
                     DependencyStartFailureCase(
                             "starting a dependency that reports that it is unhealthy",
                             HealthStatus.BecameUnhealthy,
-                            "Dependency 'dependency1' did not become healthy within the timeout period."
+                            "Dependency 'dependency1' did not become healthy within the timeout period defined in that container's Dockerfile."
                     )
             ).forEach { (description, healthStatus, expectedExceptionMessage) ->
                 on(description) {

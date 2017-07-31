@@ -16,7 +16,7 @@ object TaskWithUnhealthyDependencyTest : Spek({
             val result = runner.run()
 
             it("prints an appropriate error message") {
-                assert.that(result.output, containsSubstring("Dependency 'http-server' did not become healthy within the timeout period."))
+                assert.that(result.output, containsSubstring("Dependency 'http-server' did not become healthy within the timeout period defined in that container's Dockerfile."))
             }
 
             it("returns a non-zero exit code") {

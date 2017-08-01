@@ -7,6 +7,7 @@ import com.github.salomonbrys.kodein.instance
 import com.github.salomonbrys.kodein.provider
 import decompose.cli.CommandLineParser
 import decompose.cli.Failed
+import decompose.cli.ListTasksCommandDefinition
 import decompose.cli.RunTaskCommandDefinition
 import decompose.cli.Succeeded
 import decompose.config.io.ConfigurationLoader
@@ -83,6 +84,7 @@ private fun createCommandLineParser(kodein: Kodein): CommandLineParser {
     val parser = CommandLineParser(kodein)
 
     parser.addCommandDefinition(RunTaskCommandDefinition())
+    parser.addCommandDefinition(ListTasksCommandDefinition())
 
     return parser
 }

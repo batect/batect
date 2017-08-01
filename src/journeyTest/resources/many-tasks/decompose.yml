@@ -1,0 +1,21 @@
+project_name: simple-task-test
+
+containers:
+  build-env:
+    build_directory: build-env
+
+tasks:
+  task-1:
+    run:
+      container: build-env
+      command: sh -c "echo 'This is some output from task 1' && exit 123"
+
+  task-2:
+    run:
+      container: build-env
+      command: sh -c "echo 'This is some output from task 2' && exit 123"
+
+  task-3:
+    run:
+      container: build-env
+      command: sh -c "echo 'This is some output from task 3' && exit 123"

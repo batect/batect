@@ -96,7 +96,7 @@ task journeyTest(type: JavaExec) {
     outputs.dir reportDir
 
     def scanDirs = [
-            sourceSets.journeyTest.output.classesDir,
+            sourceSets.journeyTest.java.outputDir,
             sourceSets.journeyTest.output.resourcesDir
     ]
     scanDirs += sourceSets.journeyTest.output.dirs.files

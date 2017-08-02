@@ -42,7 +42,7 @@
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use Docker API directly rather than using Docker CLI
 * documentation
-* examples
+* examples (update or remove `sample` directory)
 * use `--iidfile` to get image ID after build and stop relying on tag
 
 ## Future improvements

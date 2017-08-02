@@ -37,9 +37,9 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     // Override the version of kotlin-reflect used by jackson-module-kotlin
 
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.8.9'
-    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.8.9'
-    compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.8.9'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.0'
+    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.0'
+    compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.0'
     compile 'com.github.salomonbrys.kodein:kodein:4.1.0'
 
     testCompile 'com.natpryce:hamkrest:1.4.1.0'

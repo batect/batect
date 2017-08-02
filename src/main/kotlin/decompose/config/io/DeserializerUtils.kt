@@ -3,8 +3,9 @@ package decompose.config.io
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonToken
 import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.type.TypeFactory
 
-fun <T> deserializeCollection(p: JsonParser?, context: DeserializationContext?, initialValue: T, accumulator: (String, T) -> T): T {
+inline fun <reified T> deserializeCollection(p: JsonParser?, context: DeserializationContext?, initialValue: T, accumulator: (String, T) -> T): T {
     if (p == null) {
         throw IllegalArgumentException("Must provide a JsonParser.")
     }
@@ -14,7 +15,7 @@ fun <T> deserializeCollection(p: JsonParser?, context: DeserializationContext?, 
     }
 
     if (!p.isExpectedStartArrayToken) {
-        context.reportWrongTokenException(p, JsonToken.START_ARRAY, "Expected a list.")
+        context.reportWrongTokenException(TypeFactory.defaultInstance().constructRawCollectionLikeType(T::class.java), JsonToken.START_ARRAY, "Expected a list.")
     }
 
     var result = initialValue

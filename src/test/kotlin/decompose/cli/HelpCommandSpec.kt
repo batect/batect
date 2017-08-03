@@ -22,7 +22,7 @@ object HelpCommandSpec : Spek({
             val output = ByteArrayOutputStream()
             val outputStream = PrintStream(output)
             val parser = mock<CommandLineParser> {
-                on { getAllCommandDefinitions() } doReturn setOf<CommandDefinition>(HelpCommandDefinition(), simpleCommandDefinition)
+                on { getAllCommandDefinitions() } doReturn setOf<CommandDefinition>(simpleCommandDefinition)
             }
 
             val command = HelpCommand(null, parser, outputStream)
@@ -34,7 +34,6 @@ object HelpCommandSpec : Spek({
                             |
                             |Commands:
                             |  do-stuff    Do the thing.
-                            |  help        Display information about available commands and options.
                             |
                             |For help on the options available for a command, run 'decompose help <command>'.
                             |

@@ -5,10 +5,10 @@ import com.github.salomonbrys.kodein.instance
 import decompose.PrintStreamType
 import java.io.PrintStream
 
-class HelpCommandDefinition : CommandDefinition("help", "Display information about available commands and options.", aliases = setOf("--help")) {
+class HelpCommandDefinition(val parser: CommandLineParser) : CommandDefinition("help", "Display information about available commands and options.", aliases = setOf("--help")) {
     val showHelpForCommandName: String? by OptionalPositionalParameter("COMMAND", "Command to display help for. If no command specified, display overview of all available commands.")
 
-    override fun createCommand(kodein: Kodein): Command = HelpCommand(showHelpForCommandName, kodein.instance(), kodein.instance(PrintStreamType.Error))
+    override fun createCommand(kodein: Kodein): Command = HelpCommand(showHelpForCommandName, parser, kodein.instance(PrintStreamType.Error))
 }
 
 data class HelpCommand(val commandName: String?, val parser: CommandLineParser, val outputStream: PrintStream) : Command {

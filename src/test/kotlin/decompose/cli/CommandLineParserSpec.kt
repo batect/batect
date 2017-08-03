@@ -401,5 +401,112 @@ object CommandLineParserSpec : Spek({
                 }
             }
         }
+
+        given("a parser with a single optional shared option") {
+            val injections = Kodein { }
+
+            data class TestCommonOptions(val value: String?)
+
+            val parser = object : CommandLineParser(injections) {
+                val value: String? by OptionalOption("value", "The value")
+
+                override fun createBindings(): Kodein.Module = Kodein.Module {
+                    bind<TestCommonOptions>() with instance(TestCommonOptions(value))
+                }
+            }
+
+            data class TestCommand(val value: String?) : Command {
+                override fun run(): Int = throw NotImplementedError()
+            }
+
+            val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.") {
+                override fun createCommand(kodein: Kodein): Command = TestCommand(kodein.instance<TestCommonOptions>().value)
+            }
+
+            parser.addCommandDefinition(commandDefinition)
+
+            describe("parsing a list of arguments where the option is not specified") {
+                val result: CommandLineParsingResult = parser.parse(listOf("do-stuff"))
+
+                it("indicates that parsing succeeded") {
+                    assert.that(result, isA<Succeeded>())
+                }
+
+                it("returns a command instance ready for use") {
+                    assert.that((result as Succeeded).command, equalTo<Command>(TestCommand(null)))
+                }
+            }
+
+            describe("parsing a list of arguments where the option is specified in the form '--value=thing'") {
+                val result: CommandLineParsingResult = parser.parse(listOf("--value=thing", "do-stuff"))
+
+                it("indicates that parsing succeeded") {
+                    assert.that(result, isA<Succeeded>())
+                }
+
+                it("returns a command instance ready for use") {
+                    assert.that((result as Succeeded).command, equalTo<Command>(TestCommand("thing")))
+                }
+            }
+
+            describe("parsing a list of arguments where the option is specified in the form '--value thing'") {
+                val result: CommandLineParsingResult = parser.parse(listOf("--value", "thing", "do-stuff"))
+
+                it("indicates that parsing succeeded") {
+                    assert.that(result, isA<Succeeded>())
+                }
+
+                it("returns a command instance ready for use") {
+                    assert.that((result as Succeeded).command, equalTo<Command>(TestCommand("thing")))
+                }
+            }
+
+            describe("parsing a list of arguments where the option is specified after the command name") {
+                val result: CommandLineParsingResult = parser.parse(listOf("do-stuff", "--value=thing"))
+
+                it("indicates that parsing failed") {
+                    assert.that(result, equalTo<CommandLineParsingResult>(Failed("Command 'do-stuff' does not take any parameters. ('--value=thing' is the first extra parameter.)")))
+                }
+            }
+
+            describe("parsing a list of arguments where the option is given in the form '--value=thing' but no value is provided after the equals sign") {
+                val result: CommandLineParsingResult = parser.parse(listOf("--value=", "do-stuff"))
+
+                it("indicates that parsing failed") {
+                    assert.that(result, equalTo<CommandLineParsingResult>(Failed("Option '--value=' is in an invalid format, you must provide a value after '='.")))
+                }
+            }
+
+            describe("parsing a list of arguments where the option is given in the form '--value thing' but no second argument is provided") {
+                val result: CommandLineParsingResult = parser.parse(listOf("--value"))
+
+                it("indicates that parsing failed") {
+                    assert.that(result, equalTo<CommandLineParsingResult>(Failed("Option '--value' requires a value to be provided, either in the form '--value=<value>' or '--value <value>'.")))
+                }
+            }
+
+            describe("parsing a list of arguments where the option is valid but given twice") {
+                val result: CommandLineParsingResult = parser.parse(listOf("--value=thing", "--value=other-thing", "do-stuff"))
+
+                it("indicates that parsing failed") {
+                    assert.that(result, equalTo<CommandLineParsingResult>(Failed("Option '--value' cannot be specified multiple times.")))
+                }
+            }
+
+            describe("parsing a list of arguments where the option is valid but no command is provided") {
+                val result: CommandLineParsingResult = parser.parse(listOf("--value=thing"))
+
+                it("indicates that parsing failed") {
+                    assert.that(result, equalTo<CommandLineParsingResult>(Failed("No command specified. Run 'decompose help' for a list of valid commands.")))
+                }
+            }
+        }
+
+        // Optional value with default
+        // Optional value on command
+        // Optional value with default on command
+        // Aliases for flags
+        // Help
+        // Duplicate names
     }
 })

@@ -1,5 +1,7 @@
 # decompose
 
+_Build and test environments as code_
+
 ## MVP TODO
 
 ### Config file handling
@@ -29,6 +31,8 @@
 * overridable health check parameters for containers (so that you can have the health check poll very frequently when waiting for something to 
   come up for tests, but less frequently if that container is used in production)
 * if a dependency container fails to start, show output and exit code from last health check attempt 
+* some way to propagate environment variables from host environment to target environment
+* some way to add additional environment variables at the task level (for the target container only, not dependencies)
 
 ### Other
 * rename everything to 'Crane'

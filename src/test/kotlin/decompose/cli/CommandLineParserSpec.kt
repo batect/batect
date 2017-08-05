@@ -506,7 +506,6 @@ object CommandLineParserSpec : Spek({
         // Optional value on command
         // Optional value with default on command
         // Aliases for flags
-        // Help
         // Duplicate names
     }
 })

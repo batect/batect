@@ -115,6 +115,8 @@ open class CommandLineParser(private val kodein: Kodein) {
         optionNames[option.name] = option
     }
 
+    fun getAllCommonOptions(): Set<OptionalOption> = options
+
     open fun createBindings(): Kodein.Module = Kodein.Module {}
 }
 

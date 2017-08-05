@@ -28,11 +28,29 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
     }
 
     private fun printRootHelp() {
-        outputStream.println("Usage: $applicationName [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]")
+        val commands = parser.getAllCommandDefinitions().sortedBy { it.commandName }.associate { it.commandName to it.description }
+        val options = parser.getAllCommonOptions().sortedBy { it.name }.associate { "--" + it.name + "=value" to it.description }
+        val alignToColumn = (commands.keys + options.keys).map { it.length }.max() ?: 0
+
+        outputStream.print("Usage: $applicationName ")
+
+        if (options.isNotEmpty()) {
+            outputStream.print("[COMMON OPTIONS] ")
+        }
+
+        outputStream.println("COMMAND [COMMAND OPTIONS]")
         outputStream.println()
+
         outputStream.println("Commands:")
-        printInColumns(parser.getAllCommandDefinitions().sortedBy { it.commandName }.associate { "  " + it.commandName to it.description })
+        printInColumns(commands, alignToColumn)
         outputStream.println()
+
+        if (options.isNotEmpty()) {
+            outputStream.println("Common options:")
+            printInColumns(options, alignToColumn)
+            outputStream.println()
+        }
+
         outputStream.println("For help on the options available for a command, run '$applicationName help <command>'.")
         outputStream.println()
     }
@@ -68,7 +86,7 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
 
     private fun printCommandParameterInfo(positionalParameterDefinitions: List<PositionalParameterDefinition>) {
         outputStream.println("Parameters:")
-        printInColumns(positionalParameterDefinitions.associate { "  " + it.name to descriptionForPositionalParameter(it) })
+        printInColumns(positionalParameterDefinitions.associate { it.name to descriptionForPositionalParameter(it) })
     }
 
     private fun descriptionForPositionalParameter(param: PositionalParameterDefinition): String {
@@ -79,13 +97,11 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
         }
     }
 
-    private fun printInColumns(items: Map<String, String>) {
-        val alignToColumn = 4 + (items.keys.map { it.length }.max() ?: 0)
-
+    private fun printInColumns(items: Map<String, String>, alignToColumn: Int = items.keys.map { it.length }.max() ?: 0) {
         items.forEach { firstColumn, secondColumn ->
-            val indentationCount = alignToColumn - firstColumn.length
+            val indentationCount = 4 + alignToColumn - firstColumn.length
             val indentation = " ".repeat(indentationCount)
-            outputStream.println("$firstColumn$indentation$secondColumn")
+            outputStream.println("  $firstColumn$indentation$secondColumn")
         }
     }
 }

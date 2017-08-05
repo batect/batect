@@ -14,34 +14,77 @@ import java.io.PrintStream
 
 object HelpCommandSpec : Spek({
     describe("a help command") {
-        val simpleCommandDefinition = object : CommandDefinition("do-stuff", "Do the thing.") {
+        val firstCommandDefinition = object : CommandDefinition("do-stuff", "Do the thing.") {
+            override fun createCommand(kodein: Kodein): Command = NullCommand()
+        }
+
+        val secondCommandDefinition = object : CommandDefinition("do-other-stuff", "Do the other thing.") {
             override fun createCommand(kodein: Kodein): Command = NullCommand()
         }
 
         given("no command name to show help for") {
-            val output = ByteArrayOutputStream()
-            val outputStream = PrintStream(output)
-            val parser = mock<CommandLineParser> {
-                on { getAllCommandDefinitions() } doReturn setOf<CommandDefinition>(simpleCommandDefinition)
+            given("and the root parser has no common options") {
+                val output = ByteArrayOutputStream()
+                val outputStream = PrintStream(output)
+                val parser = mock<CommandLineParser> {
+                    on { getAllCommandDefinitions() } doReturn setOf(firstCommandDefinition, secondCommandDefinition)
+                }
+
+                val command = HelpCommand(null, parser, outputStream)
+                val exitCode = command.run()
+
+                it("prints help information") {
+                    assert.that(output.toString(), equalTo("""
+                        |Usage: decompose COMMAND [COMMAND OPTIONS]
+                        |
+                        |Commands:
+                        |  do-other-stuff    Do the other thing.
+                        |  do-stuff          Do the thing.
+                        |
+                        |For help on the options available for a command, run 'decompose help <command>'.
+                        |
+                        |""".trimMargin()))
+                }
+
+                it("returns a non-zero exit code") {
+                    assert.that(exitCode, !equalTo(0))
+                }
             }
 
-            val command = HelpCommand(null, parser, outputStream)
-            val exitCode = command.run()
+            given("and the root parser has some common options") {
+                val output = ByteArrayOutputStream()
+                val outputStream = PrintStream(output)
+                val parser = mock<CommandLineParser> {
+                    on { getAllCommandDefinitions() } doReturn setOf(firstCommandDefinition, secondCommandDefinition)
+                    on { getAllCommonOptions() } doReturn setOf(
+                            OptionalOption("awesomeness-level", "Level of awesomeness to use."),
+                            OptionalOption("booster-level", "Level of boosters to use.")
+                    )
+                }
 
-            it("prints help information") {
-                assert.that(output.toString(), equalTo("""
-                            |Usage: decompose [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]
-                            |
-                            |Commands:
-                            |  do-stuff    Do the thing.
-                            |
-                            |For help on the options available for a command, run 'decompose help <command>'.
-                            |
-                            |""".trimMargin()))
-            }
+                val command = HelpCommand(null, parser, outputStream)
+                val exitCode = command.run()
 
-            it("returns a non-zero exit code") {
-                assert.that(exitCode, !equalTo(0))
+                it("prints help information") {
+                    assert.that(output.toString(), equalTo("""
+                        |Usage: decompose [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]
+                        |
+                        |Commands:
+                        |  do-other-stuff               Do the other thing.
+                        |  do-stuff                     Do the thing.
+                        |
+                        |Common options:
+                        |  --awesomeness-level=value    Level of awesomeness to use.
+                        |  --booster-level=value        Level of boosters to use.
+                        |
+                        |For help on the options available for a command, run 'decompose help <command>'.
+                        |
+                        |""".trimMargin()))
+                }
+
+                it("returns a non-zero exit code") {
+                    assert.that(exitCode, !equalTo(0))
+                }
             }
         }
 
@@ -51,7 +94,7 @@ object HelpCommandSpec : Spek({
                     val output = ByteArrayOutputStream()
                     val outputStream = PrintStream(output)
                     val parser = mock<CommandLineParser> {
-                        on { getCommandDefinitionByName("do-stuff") } doReturn simpleCommandDefinition
+                        on { getCommandDefinitionByName("do-stuff") } doReturn firstCommandDefinition
                     }
 
                     val command = HelpCommand("do-stuff", parser, outputStream)

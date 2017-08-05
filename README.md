@@ -1,6 +1,12 @@
 # decompose
 
+## The sales pitch
+
 _Build and test environments as code_
+
+* Consistent, repeatable, isolated environments everywhere: your computer, your colleagues' computers and on CI
+* No installation required
+* Only dependencies are Bash and Docker
 
 ## MVP TODO
 
@@ -43,6 +49,7 @@ _Build and test environments as code_
   * means user doesn't see irrelevant error messages
 * logging (for Crane internals)
 * option to print full stack trace on non-fatal exceptions
+* command to print version and system info
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use Docker API directly rather than using Docker CLI
 * documentation

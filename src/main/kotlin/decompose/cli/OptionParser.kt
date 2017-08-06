@@ -1,8 +1,8 @@
 package decompose.cli
 
 class OptionParser {
-    private val options = mutableSetOf<OptionalOption>()
-    private val optionNames = mutableMapOf<String, OptionalOption>()
+    private val options = mutableSetOf<ValueOption>()
+    private val optionNames = mutableMapOf<String, ValueOption>()
 
     fun parseOptions(args: Iterable<String>): OptionsParsingResult {
         options.forEach { it.value = null }
@@ -60,12 +60,12 @@ class OptionParser {
         }
     }
 
-    fun addOptionalOption(option: OptionalOption) {
+    fun addOption(option: ValueOption) {
         options.add(option)
         optionNames[option.name] = option
     }
 
-    fun getOptions(): Set<OptionalOption> = options
+    fun getOptions(): Set<ValueOption> = options
 
     sealed class OptionParsingResult {
         data class ReadOption(val argumentsConsumed: Int) : OptionParsingResult()

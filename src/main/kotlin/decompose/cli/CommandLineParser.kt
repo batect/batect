@@ -69,7 +69,7 @@ open class CommandLineParser(private val kodein: Kodein, override val optionPars
     fun getAllCommandDefinitions(): Set<CommandDefinition> = commandDefinitions
     fun getCommandDefinitionByName(name: String): CommandDefinition? = commandAliases[name]
 
-    fun getCommonOptions(): Set<OptionalOption> = optionParser.getOptions()
+    fun getCommonOptions(): Set<ValueOption> = optionParser.getOptions()
 
     open fun createBindings(): Kodein.Module = Kodein.Module {}
 }

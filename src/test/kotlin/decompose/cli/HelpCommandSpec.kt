@@ -59,8 +59,8 @@ object HelpCommandSpec : Spek({
                 val parser = mock<CommandLineParser> {
                     on { getAllCommandDefinitions() } doReturn setOf(firstCommandDefinition, secondCommandDefinition)
                     on { getCommonOptions() } doReturn setOf(
-                            OptionalOption("awesomeness-level", "Level of awesomeness to use."),
-                            OptionalOption("booster-level", "Level of boosters to use.")
+                            ValueOption("awesomeness-level", "Level of awesomeness to use."),
+                            ValueOption("booster-level", "Level of boosters to use.")
                     )
                 }
 

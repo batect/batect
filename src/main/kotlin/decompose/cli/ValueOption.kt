@@ -3,7 +3,7 @@ package decompose.cli
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-class OptionalOption(val name: String, val description: String) : ReadOnlyProperty<OptionParserContainer, String?> {
+class ValueOption(val name: String, val description: String) : ReadOnlyProperty<OptionParserContainer, String?> {
     var value: String? = null
 
     init {
@@ -24,8 +24,8 @@ class OptionalOption(val name: String, val description: String) : ReadOnlyProper
         }
     }
 
-    operator fun provideDelegate(thisRef: OptionParserContainer, property: KProperty<*>): OptionalOption {
-        thisRef.optionParser.addOptionalOption(this)
+    operator fun provideDelegate(thisRef: OptionParserContainer, property: KProperty<*>): ValueOption {
+        thisRef.optionParser.addOption(this)
         return this
     }
 

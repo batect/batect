@@ -34,8 +34,8 @@ object OptionParserSpec : Spek({
 
             given("a parser with a single optional shared option") {
                 val parser = OptionParser()
-                val option = OptionalOption("value", "The value")
-                parser.addOptionalOption(option)
+                val option = ValueOption("value", "The value")
+                parser.addOption(option)
 
                 on("parsing an empty list of arguments") {
                     val result = parser.parseOptions(emptyList())

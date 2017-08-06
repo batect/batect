@@ -22,10 +22,6 @@ import org.jetbrains.spek.api.dsl.on
 
 object CommandLineParserSpec : Spek({
     describe("a command line parser") {
-        val emptyOptionParser = mock<OptionParser> {
-            on { parseOptions(any()) } doReturn ReadOptions(0)
-        }
-
         describe("parsing arguments") {
             val optionParser = mock<OptionParser>()
 

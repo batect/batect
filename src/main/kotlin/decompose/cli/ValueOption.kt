@@ -3,8 +3,10 @@ package decompose.cli
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-class ValueOption(val name: String, val description: String) : ReadOnlyProperty<OptionParserContainer, String?> {
+class ValueOption(val name: String, val description: String, val shortName: Char? = null) : ReadOnlyProperty<OptionParserContainer, String?> {
     var value: String? = null
+    val longOption = "--$name"
+    val shortOption = if (shortName != null) "-$shortName" else null
 
     init {
         if (name == "") {
@@ -21,6 +23,10 @@ class ValueOption(val name: String, val description: String) : ReadOnlyProperty<
 
         if (description == "") {
             throw IllegalArgumentException("Option description must not be empty.")
+        }
+
+        if (shortName != null && !shortName.isLetterOrDigit()) {
+            throw IllegalArgumentException("Option short name must be alphanumeric.")
         }
     }
 

@@ -60,7 +60,8 @@ object HelpCommandSpec : Spek({
                     on { getAllCommandDefinitions() } doReturn setOf(firstCommandDefinition, secondCommandDefinition)
                     on { getCommonOptions() } doReturn setOf(
                             ValueOption("awesomeness-level", "Level of awesomeness to use."),
-                            ValueOption("booster-level", "Level of boosters to use.")
+                            ValueOption("booster-level", "Level of boosters to use."),
+                            ValueOption("file", "File name to use.", 'f')
                     )
                 }
 
@@ -72,12 +73,13 @@ object HelpCommandSpec : Spek({
                         |Usage: decompose [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]
                         |
                         |Commands:
-                        |  do-other-stuff               Do the other thing.
-                        |  do-stuff                     Do the thing.
+                        |  do-other-stuff                   Do the other thing.
+                        |  do-stuff                         Do the thing.
                         |
                         |Common options:
-                        |  --awesomeness-level=value    Level of awesomeness to use.
-                        |  --booster-level=value        Level of boosters to use.
+                        |      --awesomeness-level=value    Level of awesomeness to use.
+                        |      --booster-level=value        Level of boosters to use.
+                        |  -f, --file=value                 File name to use.
                         |
                         |For help on the options available for a command, run 'decompose help <command>'.
                         |

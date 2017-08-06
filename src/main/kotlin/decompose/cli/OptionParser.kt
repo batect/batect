@@ -24,12 +24,7 @@ class OptionParser {
 
     private fun parseOption(args: Iterable<String>, currentIndex: Int): OptionParsingResult {
         val arg = args.elementAt(currentIndex)
-
-        if (!arg.startsWith("--")) {
-            return OptionParsingResult.NoOption
-        }
-
-        val argName = arg.drop(2).substringBefore("=")
+        val argName = arg.substringBefore("=")
         val option = optionNames[argName]
 
         if (option == null) {
@@ -37,13 +32,15 @@ class OptionParser {
         }
 
         if (option.value != null) {
-            return OptionParsingResult.InvalidOption("Option '--$argName' cannot be specified multiple times.")
+            val shortOptionHint = if (option.shortName != null) " (or '${option.shortOption}')" else ""
+
+            return OptionParsingResult.InvalidOption("Option '${option.longOption}'$shortOptionHint cannot be specified multiple times.")
         }
 
         val useNextArgumentForValue = !arg.contains("=")
 
         val argValue = if (useNextArgumentForValue) {
-            if (currentIndex == args.count() - 1) return OptionParsingResult.InvalidOption("Option '$arg' requires a value to be provided, either in the form '--$argName=<value>' or '--$argName <value>'.")
+            if (currentIndex == args.count() - 1) return OptionParsingResult.InvalidOption("Option '$arg' requires a value to be provided, either in the form '$argName=<value>' or '$argName <value>'.")
             args.elementAt(currentIndex + 1)
         } else {
             val value = arg.drop(2).substringAfter("=", "")
@@ -61,8 +58,20 @@ class OptionParser {
     }
 
     fun addOption(option: ValueOption) {
+        if (optionNames.containsKey(option.longOption)) {
+            throw IllegalArgumentException("An option with the name '${option.name}' has already been added.")
+        }
+
+        if (option.shortOption != null && optionNames.containsKey(option.shortOption)) {
+            throw IllegalArgumentException("An option with the name '${option.shortName}' has already been added.")
+        }
+
         options.add(option)
-        optionNames[option.name] = option
+        optionNames[option.longOption] = option
+
+        if (option.shortOption != null) {
+            optionNames[option.shortOption] = option
+        }
     }
 
     fun getOptions(): Set<ValueOption> = options

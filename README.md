@@ -6,7 +6,7 @@ _Build and test environments as code_
 
 * Consistent, repeatable, isolated environments everywhere: your computer, your colleagues' computers and on CI
 * No installation required
-* Only dependencies are Bash and Docker
+* Only dependencies are Bash and Docker (and `curl` or `wget`?)
 
 ## MVP TODO
 
@@ -55,6 +55,10 @@ _Build and test environments as code_
 * documentation
 * examples (update or remove `sample` directory)
 * use `--iidfile` to get image ID after build and stop relying on tag
+* wrapper script to pull appropriate binary down (like `gradlew`)
+  * should be OS independent (so it can be committed with code) and pull down correct binary
+  * should lock to particular version (how to warn about newer available version?)
+  * should not require anything beyond what would already be installed on a standard OS X or Linux install (Bash and `curl` or `wget`)
 
 ## Future improvements
 * handle expanded form of mappings, for example:

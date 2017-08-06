@@ -112,7 +112,9 @@ object OptionParserSpec : Spek({
         }
 
         // Optional value with default
-        // Aliases for flags
-        // Duplicate names
+        // Short version for name (eg. '--file' has '-f')
+        // Check for duplicate names or short names
+
+        // Add to commands
     }
 })

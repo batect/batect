@@ -3,8 +3,14 @@ package decompose.cli
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-class ValueOption(val name: String, val description: String, val shortName: Char? = null) : ReadOnlyProperty<OptionParserContainer, String?> {
-    var value: String? = null
+class ValueOption(val name: String,
+                  val description: String,
+                  val shortName: Char? = null,
+                  val defaultValue: String? = null
+) : ReadOnlyProperty<OptionParserContainer, String?> {
+    var value: String? = defaultValue
+    var valueHasBeenSet: Boolean = false
+
     val longOption = "--$name"
     val shortOption = if (shortName != null) "-$shortName" else null
 
@@ -28,6 +34,13 @@ class ValueOption(val name: String, val description: String, val shortName: Char
         if (shortName != null && !shortName.isLetterOrDigit()) {
             throw IllegalArgumentException("Option short name must be alphanumeric.")
         }
+
+        reset()
+    }
+
+    fun reset() {
+        value = defaultValue
+        valueHasBeenSet = false
     }
 
     operator fun provideDelegate(thisRef: OptionParserContainer, property: KProperty<*>): ValueOption {

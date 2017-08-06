@@ -5,7 +5,7 @@ class OptionParser {
     private val optionNames = mutableMapOf<String, ValueOption>()
 
     fun parseOptions(args: Iterable<String>): OptionsParsingResult {
-        options.forEach { it.value = null }
+        options.forEach { it.reset() }
 
         var argIndex = 0
 
@@ -31,7 +31,7 @@ class OptionParser {
             return OptionParsingResult.NoOption
         }
 
-        if (option.value != null) {
+        if (option.valueHasBeenSet) {
             val shortOptionHint = if (option.shortName != null) " (or '${option.shortOption}')" else ""
 
             return OptionParsingResult.InvalidOption("Option '${option.longOption}'$shortOptionHint cannot be specified multiple times.")
@@ -49,6 +49,7 @@ class OptionParser {
         }
 
         option.value = argValue
+        option.valueHasBeenSet = true
 
         if (useNextArgumentForValue) {
             return OptionParsingResult.ReadOption(2)

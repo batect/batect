@@ -64,15 +64,15 @@ object OptionParserSpec : Spek({
                 }
 
                 listOf("--value", "-v").forEach { format ->
-                    on("parsing a list of arguments where the option is specified in the form '$format=thing'") {
-                        val result = parser.parseOptions(listOf("$format=thing", "do-stuff"))
+                    on("parsing a list of arguments where the option is not specified") {
+                        val result = parser.parseOptions(listOf("do-stuff"))
 
-                        it("indicates that parsing succeeded and that one argument was consumed") {
-                            assert.that(result, equalTo<OptionsParsingResult>(ReadOptions(1)))
+                        it("indicates that parsing succeeded and that no arguments were consumed") {
+                            assert.that(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
                         }
 
-                        it("sets the option's value") {
-                            assert.that(option.value, equalTo("thing"))
+                        it("sets the option's value to null") {
+                            assert.that(option.value, absent())
                         }
                     }
 
@@ -136,6 +136,36 @@ object OptionParserSpec : Spek({
                     }
                 }
             }
+
+            given("a parser with a single value option with a default value") {
+                val parser = OptionParser()
+                val option = ValueOption("value", "The value", defaultValue = "the-default-value")
+                parser.addOption(option)
+
+                on("parsing a list of arguments where the option is not specified") {
+                    val result = parser.parseOptions(listOf("do-stuff"))
+
+                    it("indicates that parsing succeeded and that no arguments were consumed") {
+                        assert.that(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
+                    }
+
+                    it("sets the option's value to the default value given") {
+                        assert.that(option.value, equalTo("the-default-value"))
+                    }
+                }
+
+                on("parsing a list of arguments where the option is specified") {
+                    val result = parser.parseOptions(listOf("--value=some-other-value", "do-stuff"))
+
+                    it("indicates that parsing succeeded and that one argument was consumed") {
+                        assert.that(result, equalTo<OptionsParsingResult>(ReadOptions(1)))
+                    }
+
+                    it("sets the option's value to the value given in the argument") {
+                        assert.that(option.value, equalTo("some-other-value"))
+                    }
+                }
+            }
         }
 
         describe("adding options") {
@@ -168,7 +198,6 @@ object OptionParserSpec : Spek({
             }
         }
 
-        // Optional value with default
 
         // Add to commands
     }

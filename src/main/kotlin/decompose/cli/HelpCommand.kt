@@ -80,10 +80,21 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
         }
 
         outputStream.println()
+
+        if (parser.getCommonOptions().isNotEmpty()) {
+            outputStream.println("For help on the common options available for all commands, run '$applicationName help'.")
+            outputStream.println()
+        }
     }
 
     private fun printCommandHelpHeader(commandDefinition: CommandDefinition, positionalParameterDefinitions: List<PositionalParameterDefinition>) {
-        outputStream.print("Usage: $applicationName [COMMON OPTIONS] ${commandDefinition.commandName}")
+        outputStream.print("Usage: $applicationName ")
+
+        if (parser.getCommonOptions().isNotEmpty()) {
+            outputStream.print("[COMMON OPTIONS] ")
+        }
+
+        outputStream.print(commandDefinition.commandName)
 
         positionalParameterDefinitions.forEach {
             val formattedName = if (it.isOptional) "[${it.name}]" else it.name

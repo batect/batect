@@ -29,7 +29,7 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
 
     private fun printRootHelp() {
         val commands = parser.getAllCommandDefinitions().sortedBy { it.commandName }.associate { it.commandName to it.description }
-        val options = parser.getAllCommonOptions().sortedBy { it.name }.associate { "--" + it.name + "=value" to it.description }
+        val options = parser.getCommonOptions().sortedBy { it.name }.associate { "--" + it.name + "=value" to it.description }
         val alignToColumn = (commands.keys + options.keys).map { it.length }.max() ?: 0
 
         outputStream.print("Usage: $applicationName ")

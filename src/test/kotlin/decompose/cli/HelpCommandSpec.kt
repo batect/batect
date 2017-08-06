@@ -28,6 +28,7 @@ object HelpCommandSpec : Spek({
                 val outputStream = PrintStream(output)
                 val parser = mock<CommandLineParser> {
                     on { getAllCommandDefinitions() } doReturn setOf(firstCommandDefinition, secondCommandDefinition)
+                    on { getCommonOptions() } doReturn emptySet()
                 }
 
                 val command = HelpCommand(null, parser, outputStream)
@@ -54,9 +55,10 @@ object HelpCommandSpec : Spek({
             given("and the root parser has some common options") {
                 val output = ByteArrayOutputStream()
                 val outputStream = PrintStream(output)
+
                 val parser = mock<CommandLineParser> {
                     on { getAllCommandDefinitions() } doReturn setOf(firstCommandDefinition, secondCommandDefinition)
-                    on { getAllCommonOptions() } doReturn setOf(
+                    on { getCommonOptions() } doReturn setOf(
                             OptionalOption("awesomeness-level", "Level of awesomeness to use."),
                             OptionalOption("booster-level", "Level of boosters to use.")
                     )

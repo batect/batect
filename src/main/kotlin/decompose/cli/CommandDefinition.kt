@@ -16,7 +16,7 @@ abstract class CommandDefinition(val commandName: String, val description: Strin
         }
     }
 
-    fun parse(args: Iterable<String>, kodein: Kodein): CommandLineParsingResult {
+    open fun parse(args: Iterable<String>, kodein: Kodein): CommandLineParsingResult {
         if (args.count() < requiredPositionalParameters.count()) {
             val firstMissingParam = requiredPositionalParameters.drop(args.count()).first()
             val noun = if (requiredPositionalParameters.count() == 1) "parameter" else "parameters"

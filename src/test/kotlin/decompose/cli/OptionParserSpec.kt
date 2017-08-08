@@ -139,7 +139,7 @@ object OptionParserSpec : Spek({
 
             given("a parser with a single value option with a default value") {
                 val parser = OptionParser()
-                val option = ValueOption("value", "The value", defaultValue = "the-default-value")
+                val option = ValueOptionWithDefault("value", "The value", "the-default-value")
                 parser.addOption(option)
 
                 on("parsing a list of arguments where the option is not specified") {
@@ -178,7 +178,7 @@ object OptionParserSpec : Spek({
                     val options = parser.getOptions()
 
                     it("returns a list with that single option") {
-                        assert.that(options, equalTo(setOf(option)))
+                        assert.that(options, equalTo(setOf<OptionDefinition>(option)))
                     }
                 }
 
@@ -197,8 +197,5 @@ object OptionParserSpec : Spek({
                 }
             }
         }
-
-
-        // Add to commands
     }
 })

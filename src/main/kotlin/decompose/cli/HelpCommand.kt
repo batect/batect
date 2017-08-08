@@ -55,7 +55,7 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
         outputStream.println()
     }
 
-    private fun nameFor(option: ValueOption): String {
+    private fun nameFor(option: OptionDefinition): String {
         val longNamePart = "${option.longOption}=value"
 
         return when {

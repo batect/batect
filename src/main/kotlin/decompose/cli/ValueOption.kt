@@ -3,44 +3,21 @@ package decompose.cli
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-class ValueOption(val name: String,
-                  val description: String,
-                  val shortName: Char? = null,
-                  val defaultValue: String? = null
-) : ReadOnlyProperty<OptionParserContainer, String?> {
-    var value: String? = defaultValue
-    var valueHasBeenSet: Boolean = false
+class ValueOption(name: String,
+                  description: String,
+                  shortName: Char? = null
+) : OptionDefinition(name, description, shortName), ReadOnlyProperty<OptionParserContainer, String?> {
 
-    val longOption = "--$name"
-    val shortOption = if (shortName != null) "-$shortName" else null
+    var value: String? = null
 
-    init {
-        if (name == "") {
-            throw IllegalArgumentException("Option name must not be empty.")
-        }
-
-        if (name.startsWith("-")) {
-            throw IllegalArgumentException("Option name must not start with a dash.")
-        }
-
-        if (name.length < 2) {
-            throw IllegalArgumentException("Option name must be at least two characters long.")
-        }
-
-        if (description == "") {
-            throw IllegalArgumentException("Option description must not be empty.")
-        }
-
-        if (shortName != null && !shortName.isLetterOrDigit()) {
-            throw IllegalArgumentException("Option short name must be alphanumeric.")
-        }
-
-        reset()
+    override fun reset() {
+        valueHasBeenSet = false
+        value = null
     }
 
-    fun reset() {
-        value = defaultValue
-        valueHasBeenSet = false
+    override fun applyValue(newValue: String) {
+        valueHasBeenSet = true
+        value = newValue
     }
 
     operator fun provideDelegate(thisRef: OptionParserContainer, property: KProperty<*>): ValueOption {

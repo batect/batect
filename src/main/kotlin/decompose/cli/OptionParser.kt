@@ -1,8 +1,8 @@
 package decompose.cli
 
 class OptionParser {
-    private val options = mutableSetOf<ValueOption>()
-    private val optionNames = mutableMapOf<String, ValueOption>()
+    private val options = mutableSetOf<OptionDefinition>()
+    private val optionNames = mutableMapOf<String, OptionDefinition>()
 
     fun parseOptions(args: Iterable<String>): OptionsParsingResult {
         options.forEach { it.reset() }
@@ -48,8 +48,7 @@ class OptionParser {
             value
         }
 
-        option.value = argValue
-        option.valueHasBeenSet = true
+        option.applyValue(argValue)
 
         if (useNextArgumentForValue) {
             return OptionParsingResult.ReadOption(2)
@@ -58,7 +57,7 @@ class OptionParser {
         }
     }
 
-    fun addOption(option: ValueOption) {
+    fun addOption(option: OptionDefinition) {
         if (optionNames.containsKey(option.longOption)) {
             throw IllegalArgumentException("An option with the name '${option.name}' has already been added.")
         }
@@ -75,7 +74,7 @@ class OptionParser {
         }
     }
 
-    fun getOptions(): Set<ValueOption> = options
+    fun getOptions(): Set<OptionDefinition> = options
 
     sealed class OptionParsingResult {
         data class ReadOption(val argumentsConsumed: Int) : OptionParsingResult()

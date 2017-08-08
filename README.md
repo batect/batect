@@ -4,7 +4,7 @@
 
 _Build and test environments as code_
 
-* Consistent, repeatable, isolated environments everywhere: your computer, your colleagues' computers and on CI
+* Consistent, fast, repeatable, isolated environments everywhere: your computer, your colleagues' computers and on CI
 * No installation required
 * Only dependencies are Bash and Docker (and `curl` or `wget`?)
 
@@ -12,13 +12,11 @@ _Build and test environments as code_
 
 ### Config file handling
 * validate configuration (eg. containers referenced in tasks as dependencies and direct targets must exist)
-* allow configuration includes (ie. allow splitting the configuration over multiple files)
 * better error message when a key (eg. a task name) is used twice (at the moment it's `Duplicate field 'duplicated_task_name'`)
 * allow tasks with just containers to start (ie. no `run` entry)
 * warn if a dependency is specified twice (either for a task or for a container)
 
 ### Features
-* return code options (any non-zero, particular container, first to exit)
 * logging options (all or particular container) - will this be implied by the presence of a `run` configuration?
 * exit options (close all after any container stops, wait for all to stop)
 * just use an existing image, pulling if necessary (ie. don't require a local Dockerfile)
@@ -28,7 +26,7 @@ _Build and test environments as code_
   * rather than showing output from target, show output from all containers
 * don't require command to be specified for each container in each task (allow a default to be set in the container's configuration)
 * allow the user to keep containers after failure so they can examine logs (or even default to not destroying anything if they fail)
-* always clean up dependency containers when running on CI by default (use CI environment variable to detect, add command-line switch to disable) 
+  * always clean up dependency containers when running on CI by default (use CI environment variable to detect, add command-line switch to disable) 
 * some way to add descriptions to tasks, which are then shown in `crane tasks`
 * run image builds in parallel and only show summary of build progress (unless image build fails, in which case show full output)
 * start dependencies in parallel
@@ -42,10 +40,6 @@ _Build and test environments as code_
 ### Other
 * rename everything to 'Crane'
 * make test names consistent (eg. `it("should do something")` vs `it("does something")`)
-* don't do all path resolution up-front
-  * if not all containers are used, doesn't make sense to try to resolve their paths
-  * would save some time
-  * means user doesn't see irrelevant error messages
 * logging (for Crane internals)
 * option to print full stack trace on non-fatal exceptions
 * command to print version and system info
@@ -60,6 +54,8 @@ _Build and test environments as code_
   * should not require anything beyond what would already be installed on a standard OS X or Linux install (Bash and `curl` or `wget`)
 
 ## Future improvements
+* return code options (any non-zero, particular container, first to exit)
+* allow configuration includes (ie. allow splitting the configuration over multiple files)
 * handle expanded form of mappings, for example:
   
   ```yaml
@@ -81,6 +77,10 @@ _Build and test environments as code_
 * requires / provides relationships (eg. 'app' requires 'service-a', and 'service-a-fake' and 'service-a-real' provide 'service-a')
 * prerequisites for tasks (eg. run the build before running journey tests)
 * support for Windows
+* don't do all path resolution up-front
+  * if not all containers are used, doesn't make sense to try to resolve their paths
+  * would save some time
+  * means user doesn't see irrelevant error messages
 
 ## Things that would have to be changed when moving to Kotlin/Native
 

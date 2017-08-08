@@ -10,7 +10,7 @@ import org.jetbrains.spek.api.dsl.on
 
 object TaskWithUnhealthyDependencyTest : Spek({
     given("a task with an unhealthy dependency") {
-        val runner = ApplicationRunner("task-with-unhealthy-dependency", listOf("run", "decompose.yml", "the-task"))
+        val runner = ApplicationRunner("task-with-unhealthy-dependency", listOf("run", "the-task"))
 
         on("running that task") {
             val result = runner.run()

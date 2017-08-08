@@ -10,7 +10,7 @@ import org.jetbrains.spek.api.dsl.on
 
 object ListTasksJourneyTest : Spek({
     given("a configuration file with multiple tasks") {
-        val runner = ApplicationRunner("many-tasks", listOf("tasks", "decompose.yml"))
+        val runner = ApplicationRunner("many-tasks", listOf("tasks"))
 
         on("listing available tasks") {
             val result = runner.run()

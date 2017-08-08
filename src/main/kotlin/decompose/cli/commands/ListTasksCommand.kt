@@ -5,15 +5,16 @@ import com.github.salomonbrys.kodein.instance
 import decompose.PrintStreamType
 import decompose.cli.Command
 import decompose.cli.CommandDefinition
-import decompose.cli.RequiredPositionalParameter
+import decompose.cli.CommonOptions
 import decompose.config.Task
 import decompose.config.io.ConfigurationLoader
 import java.io.PrintStream
 
 class ListTasksCommandDefinition : CommandDefinition("tasks", "List all tasks defined in the configuration file.") {
-    val configFile: String by RequiredPositionalParameter("CONFIGFILE", "The configuration file to use.")
-
-    override fun createCommand(kodein: Kodein): Command = ListTasksCommand(configFile, kodein.instance(), kodein.instance(PrintStreamType.Error))
+    override fun createCommand(kodein: Kodein): Command = ListTasksCommand(
+            kodein.instance(CommonOptions.ConfigurationFileName),
+            kodein.instance(),
+            kodein.instance(PrintStreamType.Error))
 }
 
 data class ListTasksCommand(val configFile: String, val configLoader: ConfigurationLoader, val outputStream: PrintStream) : Command {
@@ -23,8 +24,8 @@ data class ListTasksCommand(val configFile: String, val configLoader: Configurat
         config.tasks.map { t: Task -> t.name }
                 .sorted()
                 .forEach {
-            outputStream.println(it)
-        }
+                    outputStream.println(it)
+                }
 
         return 0
     }

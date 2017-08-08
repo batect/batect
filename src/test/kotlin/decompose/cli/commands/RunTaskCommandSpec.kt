@@ -11,6 +11,7 @@ import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
 import decompose.TaskRunner
 import decompose.cli.Command
+import decompose.cli.CommonOptions
 import decompose.cli.Succeeded
 import decompose.config.Configuration
 import decompose.config.ContainerMap
@@ -30,10 +31,11 @@ object RunTaskCommandSpec : Spek({
             val kodein = Kodein {
                 bind<ConfigurationLoader>() with instance(configLoader)
                 bind<TaskRunner>() with instance(taskRunner)
+                bind<String>(CommonOptions.ConfigurationFileName) with instance("thefile.yml")
             }
 
-            describe("when given two parameters") {
-                val result = commandLine.parse(listOf("thefile.yml", "the-task"), kodein)
+            describe("when given one parameter") {
+                val result = commandLine.parse(listOf("the-task"), kodein)
 
                 it("indicates that parsing succeeded") {
                     assert.that(result, isA<Succeeded>())

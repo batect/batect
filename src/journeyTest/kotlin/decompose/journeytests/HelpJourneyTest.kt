@@ -15,7 +15,7 @@ object HelpJourneyTest : Spek({
             val result = runner.run()
 
             it("prints the help header") {
-                assert.that(result.output, containsSubstring("Usage: decompose COMMAND [COMMAND OPTIONS]"))
+                assert.that(result.output, containsSubstring("Usage: decompose [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]"))
             }
 
             it("returns a non-zero exit code") {
@@ -28,7 +28,7 @@ object HelpJourneyTest : Spek({
             val result = runner.run()
 
             it("prints the help header") {
-                assert.that(result.output, containsSubstring("Usage: decompose run CONFIGFILE TASK"))
+                assert.that(result.output, containsSubstring("Usage: decompose [COMMON OPTIONS] run TASK"))
             }
 
             it("prints a description of the command") {

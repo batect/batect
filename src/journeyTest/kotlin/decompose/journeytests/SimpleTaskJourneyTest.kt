@@ -14,7 +14,7 @@ object SimpleTaskJourneyTest : Spek({
             "simple-task-dockerfile-command" to "a simple task with the command specified in the Dockerfile"
     ).forEach { testName, description ->
         given(description) {
-            val runner = ApplicationRunner(testName, listOf("run", "decompose.yml", "the-task"))
+            val runner = ApplicationRunner(testName, listOf("run", "the-task"))
 
             on("running that task") {
                 val result = runner.run()

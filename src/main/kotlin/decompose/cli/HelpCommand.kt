@@ -29,7 +29,7 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
 
     private fun printRootHelp() {
         val commands = parser.getAllCommandDefinitions().sortedBy { it.commandName }.associate { it.commandName to it.description }
-        val options = parser.getCommonOptions().sortedBy { it.name }.associate { nameFor(it) to it.description }
+        val options = parser.getCommonOptions().sortedBy { it.name }.associate { nameFor(it) to descriptionFor(it) }
         val alignToColumn = (commands.keys + options.keys).map { it.length }.max() ?: 0
 
         outputStream.print("Usage: $applicationName ")
@@ -61,6 +61,13 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
         return when {
             option.shortName == null -> "    $longNamePart"
             else -> "${option.shortOption}, $longNamePart"
+        }
+    }
+
+    private fun descriptionFor(option: OptionDefinition): String {
+        return when (option) {
+            is ValueOptionWithDefault -> "${option.description} (defaults to '${option.defaultValue}' if not set)"
+            else -> option.description
         }
     }
 

@@ -58,10 +58,11 @@ object HelpCommandSpec : Spek({
 
                 val parser = mock<CommandLineParser> {
                     on { getAllCommandDefinitions() } doReturn setOf(firstCommandDefinition, secondCommandDefinition)
-                    on { getCommonOptions() } doReturn setOf(
+                    on { getCommonOptions() } doReturn setOf<OptionDefinition>(
                             ValueOption("awesomeness-level", "Level of awesomeness to use."),
                             ValueOption("booster-level", "Level of boosters to use."),
-                            ValueOption("file", "File name to use.", 'f')
+                            ValueOption("file", "File name to use.", 'f'),
+                            ValueOptionWithDefault("sensible-default", "Something you can override if you want.", "the-default-value")
                     )
                 }
 
@@ -80,6 +81,7 @@ object HelpCommandSpec : Spek({
                         |      --awesomeness-level=value    Level of awesomeness to use.
                         |      --booster-level=value        Level of boosters to use.
                         |  -f, --file=value                 File name to use.
+                        |      --sensible-default=value     Something you can override if you want. (defaults to 'the-default-value' if not set)
                         |
                         |For help on the options available for a command, run 'decompose help <command>'.
                         |

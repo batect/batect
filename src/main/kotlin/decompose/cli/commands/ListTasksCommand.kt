@@ -21,9 +21,12 @@ data class ListTasksCommand(val configFile: String, val configLoader: Configurat
     override fun run(): Int {
         val config = configLoader.loadConfig(configFile)
 
+        outputStream.println("Available tasks:")
+
         config.tasks.map { t: Task -> t.name }
                 .sorted()
                 .forEach {
+                    outputStream.print("- ")
                     outputStream.println(it)
                 }
 

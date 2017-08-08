@@ -15,7 +15,10 @@ object NonStandardConfigurationFileNameTest : Spek({
             val result = runner.run()
 
             it("prints a list of all available tasks") {
-                assert.that(result.output, containsSubstring("task-1\ntask-2\ntask-3\n"))
+                assert.that(result.output, containsSubstring("""
+                    |- task-1
+                    |- task-2
+                    |- task-3""".trimMargin()))
             }
 
             it("returns a zero exit code") {

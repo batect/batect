@@ -69,7 +69,12 @@ object ListTasksCommandSpec : Spek({
                 val exitCode = command.run()
 
                 it("prints the names of the available tasks in alphabetical order") {
-                    assert.that(output.toString(), equalTo("another-task\nfirst-task\nother-task\n"))
+                    assert.that(output.toString(), equalTo("""
+                        |Available tasks:
+                        |- another-task
+                        |- first-task
+                        |- other-task
+                        |""".trimMargin()))
                 }
 
                 it("returns a zero exit code") {

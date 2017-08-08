@@ -1,10 +1,19 @@
-package decompose.cli
+package decompose.cli.commands
 
 import com.github.salomonbrys.kodein.Kodein
 import com.natpryce.hamkrest.assertion.assert
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
+import decompose.cli.Command
+import decompose.cli.CommandDefinition
+import decompose.cli.CommandLineParser
+import decompose.cli.NullCommand
+import decompose.cli.OptionDefinition
+import decompose.cli.OptionalPositionalParameter
+import decompose.cli.RequiredPositionalParameter
+import decompose.cli.ValueOption
+import decompose.cli.ValueOptionWithDefault
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given

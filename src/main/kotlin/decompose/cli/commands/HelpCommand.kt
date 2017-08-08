@@ -1,8 +1,16 @@
-package decompose.cli
+package decompose.cli.commands
 
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
 import decompose.PrintStreamType
+import decompose.cli.Command
+import decompose.cli.CommandDefinition
+import decompose.cli.CommandLineParser
+import decompose.cli.OptionDefinition
+import decompose.cli.OptionalPositionalParameter
+import decompose.cli.PositionalParameterDefinition
+import decompose.cli.ValueOptionWithDefault
+import decompose.cli.applicationName
 import java.io.PrintStream
 
 class HelpCommandDefinition(val parser: CommandLineParser) : CommandDefinition("help", "Display information about available commands and options.", aliases = setOf("--help")) {

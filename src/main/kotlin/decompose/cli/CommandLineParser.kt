@@ -1,6 +1,7 @@
 package decompose.cli
 
 import com.github.salomonbrys.kodein.Kodein
+import decompose.cli.commands.HelpCommandDefinition
 
 open class CommandLineParser(private val kodein: Kodein, override val optionParser: OptionParser) : OptionParserContainer {
     private val helpCommand = HelpCommandDefinition(this)

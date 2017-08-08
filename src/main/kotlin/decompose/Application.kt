@@ -6,9 +6,8 @@ import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
 import com.github.salomonbrys.kodein.provider
 import decompose.cli.CommandLineParser
+import decompose.cli.DecomposeCommandLineParser
 import decompose.cli.Failed
-import decompose.cli.ListTasksCommandDefinition
-import decompose.cli.RunTaskCommandDefinition
 import decompose.cli.Succeeded
 import decompose.config.io.ConfigurationLoader
 import decompose.config.io.PathResolverFactory
@@ -77,15 +76,6 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
     bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
     bind<DependencyRuntimeManagerFactory>() with provider { DependencyRuntimeManagerFactory(instance(), instance(), instance()) }
-    bind<CommandLineParser>() with provider { createCommandLineParser(this) }
-}
-
-private fun createCommandLineParser(kodein: Kodein): CommandLineParser {
-    val parser = CommandLineParser(kodein)
-
-    parser.addCommandDefinition(RunTaskCommandDefinition())
-    parser.addCommandDefinition(ListTasksCommandDefinition())
-
-    return parser
+    bind<CommandLineParser>() with provider { DecomposeCommandLineParser(this) }
 }
 

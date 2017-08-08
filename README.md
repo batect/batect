@@ -37,6 +37,7 @@ _Build and test environments as code_
 * if a dependency container fails to start, show output and exit code from last health check attempt 
 * some way to propagate environment variables from host environment to target environment
 * some way to add additional environment variables at the task level (for the target container only, not dependencies)
+* flag (eg. `--quiet`) to only show output from task
 
 ### Other
 * rename everything to 'Crane'

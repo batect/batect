@@ -73,12 +73,12 @@ _Build and test environments as code_
   ```
 
 * wildcard includes
-* deal with alternative volume mount specifications (eg. 'ro')
+* support alternative volume mount specifications (eg. 'ro')
 * support port ranges in mappings
 * support protocols other than TCP in port mappings
 * shell tab completion for tasks (eg. `decompose run b<tab>` completes to `decompose run build`)
 * pass-through additional command line arguments to a `run`
-* requires / provides relationships
+* requires / provides relationships (eg. 'app' requires 'service-a', and 'service-a-fake' and 'service-a-real' provide 'service-a')
 * prerequisites for tasks (eg. run the build before running journey tests)
 * support for Windows
 

@@ -55,7 +55,10 @@ class DockerContainerCreationCommandGenerator {
                 CommandParsingState.Normal -> when {
                     char == backslash -> handleBackslash()
                     char.isWhitespace() -> {
-                        arguments += currentArgument.toString()
+                        if (currentArgument.isNotBlank()) {
+                            arguments += currentArgument.toString()
+                        }
+
                         currentArgument.setLength(0)
                     }
                     char == singleQuote -> currentMode = CommandParsingState.SingleQuote

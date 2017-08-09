@@ -100,6 +100,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
         // - http://www.grymoire.com/Unix/Quote.html
         mapOf(
                 "echo hello" to listOf("echo", "hello"),
+                "echo  hello" to listOf("echo", "hello"),
                 """echo "hello world"""" to listOf("echo", "hello world"),
                 """echo 'hello world'""" to listOf("echo", "hello world"),
                 """echo hello\ world""" to listOf("echo", "hello world"),

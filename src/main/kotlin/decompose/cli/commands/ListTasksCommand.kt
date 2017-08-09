@@ -6,7 +6,6 @@ import decompose.PrintStreamType
 import decompose.cli.Command
 import decompose.cli.CommandDefinition
 import decompose.cli.CommonOptions
-import decompose.config.Task
 import decompose.config.io.ConfigurationLoader
 import java.io.PrintStream
 
@@ -23,11 +22,17 @@ data class ListTasksCommand(val configFile: String, val configLoader: Configurat
 
         outputStream.println("Available tasks:")
 
-        config.tasks.map { t: Task -> t.name }
-                .sorted()
+        config.tasks.sortedBy { it.name }
                 .forEach {
                     outputStream.print("- ")
-                    outputStream.println(it)
+                    outputStream.print(it.name)
+
+                    if (it.description.isNotBlank()) {
+                        outputStream.print(": ")
+                        outputStream.print(it.description)
+                    }
+
+                    outputStream.println()
                 }
 
         return 0

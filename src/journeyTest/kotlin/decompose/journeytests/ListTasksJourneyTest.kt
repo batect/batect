@@ -17,9 +17,10 @@ object ListTasksJourneyTest : Spek({
 
             it("prints a list of all available tasks") {
                 assert.that(result.output, containsSubstring("""
-                    |- task-1
-                    |- task-2
-                    |- task-3""".trimMargin()))
+                    |- task-1: do the first thing
+                    |- task-2: do the second thing
+                    |- task-3: do the third thing
+                    """.trimMargin()))
             }
 
             it("returns a zero exit code") {

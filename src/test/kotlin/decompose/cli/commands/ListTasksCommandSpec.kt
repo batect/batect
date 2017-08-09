@@ -55,7 +55,7 @@ object ListTasksCommandSpec : Spek({
             val taskRunConfig = TaskRunConfiguration("some-container", "dont-care")
             val task1 = Task("first-task", taskRunConfig)
             val task2 = Task("other-task", taskRunConfig)
-            val task3 = Task("another-task", taskRunConfig)
+            val task3 = Task("another-task-with-a-description", taskRunConfig, "do the thing")
             val config = Configuration("the_project", TaskMap(task1, task2, task3), ContainerMap())
 
             val configLoader = mock<ConfigurationLoader> {
@@ -71,7 +71,7 @@ object ListTasksCommandSpec : Spek({
                 it("prints the names of the available tasks in alphabetical order") {
                     assert.that(output.toString(), equalTo("""
                         |Available tasks:
-                        |- another-task
+                        |- another-task-with-a-description: do the thing
                         |- first-task
                         |- other-task
                         |""".trimMargin()))

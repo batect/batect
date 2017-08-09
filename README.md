@@ -27,7 +27,6 @@ _Build and test environments as code_
 * don't require command to be specified for each container in each task (allow a default to be set in the container's configuration)
 * allow the user to keep containers after failure so they can examine logs (or even default to not destroying anything if they fail)
   * always clean up dependency containers when running on CI by default (use CI environment variable to detect, add command-line switch to disable) 
-* some way to add descriptions to tasks, which are then shown in `crane tasks`
 * run image builds in parallel and only show summary of build progress (unless image build fails, in which case show full output)
 * start dependencies in parallel
 * overridable health check parameters for containers (so that you can have the health check poll very frequently when waiting for something to 

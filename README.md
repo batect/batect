@@ -18,7 +18,6 @@ _Build and test environments as code_
 
 ### Features
 * logging options (all or particular container) - will this be implied by the presence of a `run` configuration?
-* exit options (close all after any container stops, wait for all to stop)
 * just use an existing image, pulling if necessary (ie. don't require a local Dockerfile)
 * dependencies between containers
 * warn if dependency exits before task finishes
@@ -35,6 +34,7 @@ _Build and test environments as code_
 * some way to propagate environment variables from host environment to target environment
 * some way to add additional environment variables at the task level (for the target container only, not dependencies)
 * flag (eg. `--quiet`) to only show output from task
+* fancy progress bar output for building images and starting dependencies
 
 ### Other
 * rename everything to 'Crane'
@@ -80,6 +80,7 @@ _Build and test environments as code_
   * if not all containers are used, doesn't make sense to try to resolve their paths
   * would save some time
   * means user doesn't see irrelevant error messages
+* exit options (close all after any container stops, wait for all to stop)
 
 ## Things that would have to be changed when moving to Kotlin/Native
 

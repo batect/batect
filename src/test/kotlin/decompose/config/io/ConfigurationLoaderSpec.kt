@@ -122,6 +122,36 @@ object ConfigurationLoaderSpec : Spek({
             }
         }
 
+        on("loading a valid configuration file with a task with a description") {
+            val configString = """
+                |project_name: the_cool_project
+                |
+                |tasks:
+                |  first_task:
+                |    description: The very first task.
+                |    run:
+                |      container: build-env
+                """.trimMargin()
+
+            val config = loadConfiguration(configString)
+
+            it("should load the project name") {
+                assert.that(config.projectName, equalTo("the_cool_project"))
+            }
+
+            it("should load the single task specified") {
+                assert.that(config.tasks.keys, equalTo(setOf("first_task")))
+            }
+
+            it("should load the configuration for the task") {
+                val task = config.tasks["first_task"]!!
+                assert.that(task.name, equalTo("first_task"))
+                assert.that(task.runConfiguration.container, equalTo("build-env"))
+                assert.that(task.runConfiguration.command, absent())
+                assert.that(task.description, equalTo("The very first task."))
+            }
+        }
+
         on("loading a valid configuration file with a task with some dependencies") {
             val configString = """
                 |project_name: the_cool_project

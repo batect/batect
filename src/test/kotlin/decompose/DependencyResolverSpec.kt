@@ -22,7 +22,7 @@ object DependencyResolverSpec : Spek({
         val runConfig = TaskRunConfiguration("some-container", "some-command")
 
         on("creating a dependency manager for a task with no dependencies") {
-            val task = Task("the-task", runConfig, emptySet())
+            val task = Task("the-task", runConfig, dependencies = emptySet())
             val config = Configuration("the-project", TaskMap(task), ContainerMap())
             val dependencies = resolver.resolveDependencies(config, task)
 
@@ -33,7 +33,7 @@ object DependencyResolverSpec : Spek({
 
         on("creating a dependency manager for a task with a dependency") {
             val dependency = Container("the-dependency", "/build_dir")
-            val task = Task("the-task", runConfig, setOf(dependency.name))
+            val task = Task("the-task", runConfig, dependencies = setOf(dependency.name))
             val config = Configuration("the-project", TaskMap(task), ContainerMap(dependency))
             val dependencies = resolver.resolveDependencies(config, task)
 
@@ -47,7 +47,7 @@ object DependencyResolverSpec : Spek({
             val dependency2 = Container("dependency2", "/build_dir")
             val dependency3 = Container("dependency3", "/build_dir")
             val otherContainer = Container("something-else", "/build_dir")
-            val task = Task("the-task", runConfig, setOf(dependency1.name, dependency2.name, dependency3.name))
+            val task = Task("the-task", runConfig, dependencies = setOf(dependency1.name, dependency2.name, dependency3.name))
             val config = Configuration("the-project", TaskMap(task), ContainerMap(dependency1, dependency2, dependency3, otherContainer))
             val dependencies = resolver.resolveDependencies(config, task)
 
@@ -58,7 +58,7 @@ object DependencyResolverSpec : Spek({
 
         on("creating a dependency manager for a task with a dependency that does not exist") {
             val otherContainer = Container("something-else", "/build_dir")
-            val task = Task("the-task", runConfig, setOf("dependency"))
+            val task = Task("the-task", runConfig, dependencies = setOf("dependency"))
             val config = Configuration("the-project", TaskMap(task), ContainerMap(otherContainer))
 
             it("raises an appropriate exception") {
@@ -67,7 +67,7 @@ object DependencyResolverSpec : Spek({
         }
 
         on("creating a dependency manager for a task with a dependency on the task container") {
-            val task = Task("the-task", runConfig, setOf(runConfig.container))
+            val task = Task("the-task", runConfig, dependencies = setOf(runConfig.container))
             val config = Configuration("the-project", TaskMap(task), ContainerMap())
 
             it("raises an appropriate exception") {

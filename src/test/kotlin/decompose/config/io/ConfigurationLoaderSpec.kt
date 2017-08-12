@@ -281,6 +281,50 @@ object ConfigurationLoaderSpec : Spek({
             }
         }
 
+        on("loading a valid configuration file with a container with a dependency") {
+            val configString = """
+                    |project_name: the_cool_project
+                    |
+                    |containers:
+                    |  container-1:
+                    |    build_directory: container-1-build-dir
+                    |    dependencies:
+                    |      - container-2
+                    """.trimMargin()
+
+            val config = loadConfiguration(configString)
+
+            it("should load the project name") {
+                assert.that(config.projectName, equalTo("the_cool_project"))
+            }
+
+            it("should load the single container specified") {
+                assert.that(config.containers.keys, equalTo(setOf("container-1")))
+            }
+
+            it("should load the dependency specified") {
+                val container = config.containers["container-1"]!!
+                assert.that(container.dependencies, equalTo(setOf("container-2")))
+            }
+        }
+
+        on("loading a configuration file with a container that has a dependency defined twice") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |containers:
+                |  container-1:
+                |    build_directory: container-1-build-dir
+                |    dependencies:
+                |      - container-2
+                |      - container-2
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assert.that({ loadConfiguration(config) }, throws(withMessage("Duplicate value 'container-2'") and withLineNumber(8)))
+            }
+        }
+
         on("loading a configuration file where the project name is given twice") {
             val config = """
                 |project_name: the_cool_project

@@ -77,7 +77,8 @@ object ConfigurationFileSpec : Spek({
                         mapOf("ENV_VAR" to "/here"),
                         "working_dir",
                         setOf(VolumeMount(originalVolumeMountPath, volumeMountTargetPath)),
-                        setOf(PortMapping(1234, 5678)))
+                        setOf(PortMapping(1234, 5678)),
+                        setOf("some-dependency"))
 
                 val containerName = "the_container_name"
                 val configFile = ConfigurationFile("the_project_name", containers = mapOf(containerName to container))
@@ -106,7 +107,8 @@ object ConfigurationFileSpec : Spek({
                                     container.environment,
                                     container.workingDirectory,
                                     setOf(VolumeMount(resolvedVolumeMountPath, volumeMountTargetPath)),
-                                    container.portMappings)
+                                    container.portMappings,
+                                    container.dependencies)
                     )))
                 }
             }

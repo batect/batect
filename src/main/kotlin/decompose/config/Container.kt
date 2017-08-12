@@ -7,4 +7,5 @@ data class Container(
         val environment: Map<String, String> = emptyMap(),
         val workingDirectory: String? = null,
         val volumeMounts: Set<VolumeMount> = emptySet(),
-        val portMappings: Set<PortMapping> = emptySet())
+        val portMappings: Set<PortMapping> = emptySet(),
+        val dependencies: Set<String> = emptySet())

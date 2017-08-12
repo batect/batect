@@ -35,7 +35,8 @@ data class ContainerFromFile(
         @JsonDeserialize(using = EnvironmentDeserializer::class) val environment: Map<String, String> = emptyMap(),
         val workingDirectory: String? = null,
         @JsonProperty("volumes") val volumeMounts: Set<VolumeMount> = emptySet(),
-        @JsonProperty("ports") val portMappings: Set<PortMapping> = emptySet()) {
+        @JsonProperty("ports") val portMappings: Set<PortMapping> = emptySet(),
+        @JsonDeserialize(using = StringSetDeserializer::class) val dependencies: Set<String> = emptySet()) {
 
     fun toContainer(name: String, pathResolver: PathResolver): Container {
         val resolvedBuildDirectory = resolveBuildDirectory(name, pathResolver)
@@ -44,7 +45,7 @@ data class ContainerFromFile(
             resolveVolumeMount(it, name, pathResolver)
         }.toSet()
 
-        return Container(name, resolvedBuildDirectory, command, environment, workingDirectory, resolvedVolumeMounts, portMappings)
+        return Container(name, resolvedBuildDirectory, command, environment, workingDirectory, resolvedVolumeMounts, portMappings, dependencies)
     }
 
     private fun resolveBuildDirectory(containerName: String, pathResolver: PathResolver): String {

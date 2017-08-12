@@ -29,10 +29,11 @@ _Build and test environments as code_
 * start dependencies in parallel
 * overridable health check parameters for containers (so that you can have the health check poll very frequently when waiting for something to 
   come up for tests, but less frequently if that container is used in production)
-* if a dependency container fails to start, show output and exit code from last health check attempt 
+* if a dependency container fails to become healthy, show output and exit code from last health check attempt 
 * some way to propagate environment variables from host environment to target environment
 * some way to add additional environment variables at the task level (for the target container only, not dependencies)
 * flag (eg. `--quiet`) to only show output from task
+* flag (eg. `--simple-output`) to disable fancy output formatting (colours, bold, progress bars)
 * fancy progress bar output for building images and starting dependencies
 
 ### Other
@@ -80,6 +81,7 @@ _Build and test environments as code_
   * would save some time
   * means user doesn't see irrelevant error messages
 * exit options (close all after any container stops, wait for all to stop)
+* when starting up containers and displaying progress, show countdown to health check (eg. 'waiting for container to become healthy, next check in 3 seconds')
 
 ## Things that would have to be changed when moving to Kotlin/Native
 

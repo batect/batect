@@ -73,6 +73,7 @@ object ConfigurationFileSpec : Spek({
 
                 val container = ContainerFromFile(
                         originalBuildDirectory,
+                        "the-command",
                         mapOf("ENV_VAR" to "/here"),
                         "working_dir",
                         setOf(VolumeMount(originalVolumeMountPath, volumeMountTargetPath)),
@@ -101,6 +102,7 @@ object ConfigurationFileSpec : Spek({
                             Container(
                                     containerName,
                                     resolvedBuildDirectory,
+                                    container.command,
                                     container.environment,
                                     container.workingDirectory,
                                     setOf(VolumeMount(resolvedVolumeMountPath, volumeMountTargetPath)),

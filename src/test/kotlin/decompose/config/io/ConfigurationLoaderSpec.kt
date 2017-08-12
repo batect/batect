@@ -5,6 +5,8 @@ import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assert
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.isEmpty
+import com.natpryce.hamkrest.isEmptyString
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.doReturn
@@ -90,7 +92,8 @@ object ConfigurationLoaderSpec : Spek({
                 assert.that(task.name, equalTo("first_task"))
                 assert.that(task.runConfiguration.container, equalTo("build-env"))
                 assert.that(task.runConfiguration.command, equalTo("./gradlew doStuff"))
-                assert.that(task.dependencies, equalTo(emptySet()))
+                assert.that(task.dependencies, isEmpty)
+                assert.that(task.description, isEmptyString)
             }
         }
 
@@ -119,6 +122,8 @@ object ConfigurationLoaderSpec : Spek({
                 assert.that(task.name, equalTo("first_task"))
                 assert.that(task.runConfiguration.container, equalTo("build-env"))
                 assert.that(task.runConfiguration.command, absent())
+                assert.that(task.dependencies, isEmpty)
+                assert.that(task.description, isEmptyString)
             }
         }
 
@@ -148,6 +153,7 @@ object ConfigurationLoaderSpec : Spek({
                 assert.that(task.name, equalTo("first_task"))
                 assert.that(task.runConfiguration.container, equalTo("build-env"))
                 assert.that(task.runConfiguration.command, absent())
+                assert.that(task.dependencies, isEmpty)
                 assert.that(task.description, equalTo("The very first task."))
             }
         }
@@ -182,6 +188,7 @@ object ConfigurationLoaderSpec : Spek({
                 assert.that(task.runConfiguration.container, equalTo("build-env"))
                 assert.that(task.runConfiguration.command, equalTo("./gradlew doStuff"))
                 assert.that(task.dependencies, equalTo(setOf("dependency-1", "dependency-2")))
+                assert.that(task.description, isEmptyString)
             }
         }
 
@@ -236,6 +243,7 @@ object ConfigurationLoaderSpec : Spek({
                     |containers:
                     |  container-1:
                     |    build_directory: container-1-build-dir
+                    |    command: do-the-thing.sh some-param
                     |    environment:
                     |      - OPTS=-Dthing
                     |      - BOOL_VALUE=1
@@ -262,6 +270,7 @@ object ConfigurationLoaderSpec : Spek({
                 val container = config.containers["container-1"]!!
                 assert.that(container.name, equalTo("container-1"))
                 assert.that(container.buildDirectory, equalTo("/resolved/container-1-build-dir"))
+                assert.that(container.command, equalTo("do-the-thing.sh some-param"))
                 assert.that(container.environment, equalTo(mapOf("OPTS" to "-Dthing", "BOOL_VALUE" to "1")))
                 assert.that(container.workingDirectory, equalTo("/here"))
                 assert.that(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))

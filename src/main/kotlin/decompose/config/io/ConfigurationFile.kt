@@ -31,6 +31,7 @@ data class TaskFromFile(@JsonProperty("run") val runConfiguration: TaskRunConfig
 
 data class ContainerFromFile(
         val buildDirectory: String,
+        val command: String? = null,
         @JsonDeserialize(using = EnvironmentDeserializer::class) val environment: Map<String, String> = emptyMap(),
         val workingDirectory: String? = null,
         @JsonProperty("volumes") val volumeMounts: Set<VolumeMount> = emptySet(),
@@ -43,7 +44,7 @@ data class ContainerFromFile(
             resolveVolumeMount(it, name, pathResolver)
         }.toSet()
 
-        return Container(name, resolvedBuildDirectory, environment, workingDirectory, resolvedVolumeMounts, portMappings)
+        return Container(name, resolvedBuildDirectory, command, environment, workingDirectory, resolvedVolumeMounts, portMappings)
     }
 
     private fun resolveBuildDirectory(containerName: String, pathResolver: PathResolver): String {

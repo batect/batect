@@ -20,7 +20,8 @@ _Build and test environments as code_
 * logging options (all or particular container) - will this be implied by the presence of a `run` configuration?
 * just use an existing image, pulling if necessary (ie. don't require a local Dockerfile)
 * dependencies between containers
-* warn if dependency exits before task finishes
+  * stop dependencies in correct order (otherwise we could inadvertently trigger the 'dependency exited early' warning if a dependent container crashed)
+* warn if dependency exits before task finishes (include exit code)
 * running multiple containers at once (eg. stereotypical 'run' configuration that starts up the service with its dependencies)
   * rather than showing output from target, show output from all containers
 * allow the user to keep containers after failure so they can examine logs (or even default to not destroying anything if they fail)
@@ -35,6 +36,7 @@ _Build and test environments as code_
 * flag (eg. `--quiet`) to only show output from task
 * flag (eg. `--simple-output`) to disable fancy output formatting (colours, bold, progress bars)
 * fancy progress bar output for building images and starting dependencies
+* automatically create missing local volume mount directories and show a warning (useful when mounting a directory intended to be a cache)
 
 ### Other
 * rename everything to 'Crane'

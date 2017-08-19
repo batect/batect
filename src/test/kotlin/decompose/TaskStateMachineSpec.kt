@@ -82,7 +82,18 @@ object TaskStateMachineSpec : Spek({
                     it("does not return any further steps") {
                         assert.that(stateMachine.popNextStep(), absent())
                     }
+                }
 
+                on("receiving a 'image build failed' event") {
+                    stateMachine.processEvent(ImageBuildFailedEvent(container, "Something went wrong"))
+
+                    it("gives the next step as displaying an error to the user") {
+                        assert.that(stateMachine.popNextStep(), equalTo<TaskStep>(DisplayTaskFailureStep("Could not build image for container 'some-container': Something went wrong")))
+                    }
+
+                    it("does not return any further steps") {
+                        assert.that(stateMachine.popNextStep(), absent())
+                    }
                 }
             }
 
@@ -101,6 +112,18 @@ object TaskStateMachineSpec : Spek({
 
                     it("gives the next step as running the container for the task container") {
                         assert.that(stateMachine.popNextStep(), equalTo<TaskStep>(RunContainerStep(container, dockerContainer)))
+                    }
+
+                    it("does not return any further steps") {
+                        assert.that(stateMachine.popNextStep(), absent())
+                    }
+                }
+
+                on("receiving a 'container creation failed' event") {
+                    stateMachine.processEvent(ContainerCreationFailedEvent(container, "Something went wrong"))
+
+                    it("gives the next step as displaying an error to the user") {
+                        assert.that(stateMachine.popNextStep(), equalTo<TaskStep>(DisplayTaskFailureStep("Could not create Docker container for container 'some-container': Something went wrong")))
                     }
 
                     it("does not return any further steps") {
@@ -133,6 +156,22 @@ object TaskStateMachineSpec : Spek({
                         assert.that(stateMachine.popNextStep(), absent())
                     }
                 }
+
+                on("receiving a 'container run failed' event") {
+                    stateMachine.processEvent(ContainerRunFailedEvent(container, "Something went wrong"))
+
+                    it("gives the next step as displaying an error to the user") {
+                        assert.that(stateMachine.popNextStep(), equalTo<TaskStep>(DisplayTaskFailureStep("""
+                            |Could not run container 'some-container': Something went wrong
+                            |
+                            |This container has not been removed, so you may need to clean up this container yourself by running 'docker rm --force some-container-id'.
+                            """.trimMargin())))
+                    }
+
+                    it("does not return any further steps") {
+                        assert.that(stateMachine.popNextStep(), absent())
+                    }
+                }
             }
 
             describe("after processing the 'remove container' step") {
@@ -155,6 +194,22 @@ object TaskStateMachineSpec : Spek({
 
                     it("gives the next step as finishing the task") {
                         assert.that(stateMachine.popNextStep(), equalTo<TaskStep>(FinishTaskStep(exitCode)))
+                    }
+
+                    it("does not return any further steps") {
+                        assert.that(stateMachine.popNextStep(), absent())
+                    }
+                }
+
+                on("receiving a 'container removal failed' event") {
+                    stateMachine.processEvent(ContainerRemovalFailedEvent(container, "Something went wrong"))
+
+                    it("gives the next step as displaying an error to the user") {
+                        assert.that(stateMachine.popNextStep(), equalTo<TaskStep>(DisplayTaskFailureStep("""
+                            |After the task completed with exit code 123, the container 'some-container' could not be removed: Something went wrong
+                            |
+                            |This container may not have been removed, so you may need to clean up this container yourself by running 'docker rm --force some-id'.
+                            """.trimMargin())))
                     }
 
                     it("does not return any further steps") {

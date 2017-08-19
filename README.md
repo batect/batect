@@ -4,9 +4,11 @@
 
 _Build and test environments as code_
 
-* Consistent, fast, repeatable, isolated environments everywhere: your computer, your colleagues' computers and on CI
+* Consistent, fast, repeatable, isolated builds and test runs everywhere: your computer, your colleagues' computers and on CI
+* Manage dependencies for integration and end-to-end testing with ease
 * No installation required
 * Only dependencies are Bash and Docker (and `curl` or `wget`?)
+* Works with your existing CI system
 
 ## MVP TODO
 
@@ -25,7 +27,7 @@ _Build and test environments as code_
 * running multiple containers at once (eg. stereotypical 'run' configuration that starts up the service with its dependencies)
   * rather than showing output from target, show output from all containers
 * allow the user to keep containers after failure so they can examine logs (or even default to not destroying anything if they fail)
-  * always clean up dependency containers when running on CI by default (use CI environment variable to detect, add command-line switch to disable) 
+* always clean up all containers, regardless of reason for failure, when running on CI by default (use CI environment variable to detect, add command-line switch to disable) 
 * run image builds in parallel and only show summary of build progress (unless image build fails, in which case show full output)
 * start dependencies in parallel
 * overridable health check parameters for containers (so that you can have the health check poll very frequently when waiting for something to 
@@ -37,6 +39,7 @@ _Build and test environments as code_
 * flag (eg. `--simple-output`) to disable fancy output formatting (colours, bold, progress bars)
 * fancy progress bar output for building images and starting dependencies
 * automatically create missing local volume mount directories and show a warning (useful when mounting a directory intended to be a cache)
+* support new OS X caching features for volume mounts (https://docs.docker.com/docker-for-mac/osxfs-caching/) 
 
 ### Other
 * rename everything to 'Crane'

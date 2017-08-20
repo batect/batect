@@ -126,19 +126,24 @@ class TaskStateMachine(val graph: DependencyGraph) {
 
     private fun handleContainerRemovalFailedEvent(event: ContainerRemovalFailedEvent): List<DisplayTaskFailureStep> {
         val dockerContainer = dockerContainers[event.container]!!
-        val situation = if (exitCode != null) "After the task completed with exit code $exitCode" else "During clean up after the previous failure"
-
-        return listOf(DisplayTaskFailureStep("$situation, the container '${event.container.name}' could not be removed: ${event.message}\n\n" +
+        return listOf(DisplayTaskFailureStep("${situationExplanation()}, the container '${event.container.name}' could not be removed: ${event.message}\n\n" +
                 "This container may not have been removed, so you may need to clean up this container yourself by running '${containerCleanupCommand(dockerContainer)}'.\n" +
                 networkCleanupMessage()))
     }
 
-    private fun handleTaskNetworkDeletedEvent() = listOf(FinishTaskStep(exitCode!!))
+    private fun handleTaskNetworkDeletedEvent(): List<TaskStep> {
+        if (exitCode != null) {
+            return listOf(FinishTaskStep(exitCode!!))
+        } else {
+            return emptyList()
+        }
+    }
 
     private fun handleTaskNetworkDeletionFailedEvent(event: TaskNetworkDeletionFailedEvent) =
-            listOf(DisplayTaskFailureStep("After the task completed with exit code ${exitCode!!}, the network '${taskNetwork!!.id}' could not be deleted: ${event.message}\n\n" +
+            listOf(DisplayTaskFailureStep("${situationExplanation()}, the network '${taskNetwork!!.id}' could not be deleted: ${event.message}\n\n" +
                     "This network may not have been removed, so you may need to clean up this network yourself by running '${networkCleanupCommand()}'."))
 
+    private fun situationExplanation(): String = if (exitCode != null) "After the task completed with exit code $exitCode" else "During clean up after the previous failure"
     private fun containerCleanupCommand(container: DockerContainer): String = "docker rm --force ${container.id}"
     private fun networkCleanupMessage(): String = "Furthermore, the task network has not been removed, so you need to clean up this network yourself by running '${networkCleanupCommand()}'."
     private fun networkCleanupCommand(): String = "docker network rm ${taskNetwork!!.id}"

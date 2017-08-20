@@ -256,7 +256,6 @@ object TaskStateMachineSpec : Spek({
             }
 
             describe("after the 'delete task network' step has been processed") {
-                val exitCode = 123
                 val dockerContainer = DockerContainer("some-id", "some-name")
 
                 beforeEachTest {
@@ -264,30 +263,66 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(TaskNetworkCreatedEvent(DockerNetwork("the-network")))
                     stateMachine.processEvent(ImageBuiltEvent(container, DockerImage("doesnt-matter")))
                     stateMachine.processEvent(ContainerCreatedEvent(container, dockerContainer))
-                    stateMachine.processEvent(ContainerExitedEvent(container, exitCode))
-                    stateMachine.processEvent(ContainerRemovedEvent(container))
                     stateMachine.popAllNextSteps()
                 }
 
-                on("receiving a 'task network deleted' event") {
-                    stateMachine.processEvent(TaskNetworkDeletedEvent)
+                describe("and the task container exited normally") {
+                    val exitCode = 123
 
-                    it("gives the only next step as finishing the task") {
-                        assert.that(stateMachine, hasOnlyOneNextStep(FinishTaskStep(exitCode)))
+                    beforeEachTest {
+                        stateMachine.processEvent(ContainerExitedEvent(container, exitCode))
+                        stateMachine.processEvent(ContainerRemovedEvent(container))
+                        stateMachine.popAllNextSteps()
+                    }
+
+                    on("receiving a 'task network deleted' event") {
+                        stateMachine.processEvent(TaskNetworkDeletedEvent)
+
+                        it("gives the only next step as finishing the task") {
+                            assert.that(stateMachine, hasOnlyOneNextStep(FinishTaskStep(exitCode)))
+                        }
+                    }
+
+                    on("receiving a 'task network deletion failed' event") {
+                        stateMachine.processEvent(TaskNetworkDeletionFailedEvent("Something went wrong"))
+
+                        it("gives the only next step as displaying an error to the user") {
+                            assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("""
+                                |After the task completed with exit code 123, the network 'the-network' could not be deleted: Something went wrong
+                                |
+                                |This network may not have been removed, so you may need to clean up this network yourself by running 'docker network rm the-network'.
+                                """.trimMargin())))
+                        }
                     }
                 }
 
-                on("receiving a 'task network deletion failed' event") {
-                    stateMachine.processEvent(TaskNetworkDeletionFailedEvent("Something went wrong"))
+                describe("and the task container never exited (eg. because it couldn't start)") {
+                    beforeEachTest {
+                        stateMachine.processEvent(ContainerRemovedEvent(container))
+                        stateMachine.popAllNextSteps()
+                    }
 
-                    it("gives the only next step as displaying an error to the user") {
-                        assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("""
-                            |After the task completed with exit code 123, the network 'the-network' could not be deleted: Something went wrong
-                            |
-                            |This network may not have been removed, so you may need to clean up this network yourself by running 'docker network rm the-network'.
-                            """.trimMargin())))
+                    on("receiving a 'task network deleted' event") {
+                        stateMachine.processEvent(TaskNetworkDeletedEvent)
+
+                        it("does not return any further steps") {
+                            assert.that(stateMachine, hasNoFurtherSteps())
+                        }
+                    }
+
+                    on("receiving a 'task network deletion failed' event") {
+                        stateMachine.processEvent(TaskNetworkDeletionFailedEvent("Something went wrong"))
+
+                        it("gives the only next step as displaying an error to the user") {
+                            assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("""
+                                |During clean up after the previous failure, the network 'the-network' could not be deleted: Something went wrong
+                                |
+                                |This network may not have been removed, so you may need to clean up this network yourself by running 'docker network rm the-network'.
+                                """.trimMargin())))
+                        }
                     }
                 }
+
             }
         }
     }

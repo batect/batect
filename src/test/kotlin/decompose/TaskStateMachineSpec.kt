@@ -127,6 +127,17 @@ object TaskStateMachineSpec : Spek({
                             assert.that(stateMachine, hasOnlyOneNextStep(CreateContainerStep(container, image, network)))
                         }
                     }
+
+                    on("when the task container image has failed to build") {
+                        stateMachine.processEvent(ImageBuildFailedEvent(container, "Could not build image."))
+                        stateMachine.popAllNextSteps()
+
+                        stateMachine.processEvent(event)
+
+                        it("gives the only next step as deleting the network") {
+                            assert.that(stateMachine, hasOnlyOneNextStep(DeleteTaskNetworkStep(network)))
+                        }
+                    }
                 }
 
                 on("receiving a 'task network creation failed' event") {
@@ -400,6 +411,18 @@ object TaskStateMachineSpec : Spek({
                     }
                 }
             }
+
+            on("receiving an 'image built' event after a previous image build failed and the network has already been created") {
+                stateMachine.processEvent(TaskNetworkCreatedEvent(DockerNetwork("the-network")))
+                stateMachine.processEvent(ImageBuildFailedEvent(directDependency, "Image couldn't be built."))
+                stateMachine.popAllNextSteps()
+
+                stateMachine.processEvent(ImageBuiltEvent(taskContainer, DockerImage("some-image-id")))
+
+                it("does not return any further steps") {
+                    assert.that(stateMachine, hasNoFurtherSteps())
+                }
+            }
         }
 
         describe("after the 'create network' step is processed") {
@@ -439,6 +462,19 @@ object TaskStateMachineSpec : Spek({
                         ))
                     }
                 }
+
+                on("when some of the container images have been built but at least one has failed to build") {
+                    val directDependencyImage = DockerImage("direct-dependency-image")
+                    stateMachine.processEvent(ImageBuiltEvent(directDependency, directDependencyImage))
+                    stateMachine.processEvent(ImageBuildFailedEvent(indirectDependency, "Something went wrong"))
+                    stateMachine.popAllNextSteps()
+
+                    stateMachine.processEvent(event)
+
+                    it("gives the only next step as deleting the network") {
+                        assert.that(stateMachine, hasOnlyOneNextStep(DeleteTaskNetworkStep(network)))
+                    }
+                }
             }
 
             describe("receiving a 'task network creation failed' event") {
@@ -461,6 +497,104 @@ object TaskStateMachineSpec : Spek({
                     }
                 }
             }
+        }
+
+        describe("when building an image fails") {
+            beforeEachTest {
+                stateMachine.processEvent(TaskStartedEvent)
+                stateMachine.popAllNextSteps()
+            }
+
+            on("and neither the network nor any containers have been created yet") {
+                stateMachine.processEvent(ImageBuildFailedEvent(directDependency, "Something went wrong"))
+
+                it("gives the only next step as displaying an error to the user") {
+                    assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("Could not build image for container 'direct-dependency-container': Something went wrong")))
+                }
+            }
+
+            describe("and the network has been created already") {
+                val network = DockerNetwork("the-network")
+
+                beforeEachTest {
+                    stateMachine.processEvent(TaskNetworkCreatedEvent(network))
+                    stateMachine.popAllNextSteps()
+                }
+
+                on("and no containers have been created yet") {
+                    stateMachine.processEvent(ImageBuildFailedEvent(directDependency, "Something went wrong"))
+
+                    it("gives the next steps as displaying an error to the user and deleting the network") {
+                        assert.that(stateMachine, hasNextStepsInAnyOrder(
+                                DisplayTaskFailureStep("Could not build image for container 'direct-dependency-container': Something went wrong"),
+                                DeleteTaskNetworkStep(network)
+                        ))
+                    }
+                }
+
+                on("and a container has already been created") {
+                    val dockerContainer = DockerContainer("indirect-dependency-container", "some-name")
+
+                    stateMachine.processEvent(ImageBuiltEvent(indirectDependency, DockerImage("the-image")))
+                    stateMachine.processEvent(ContainerCreatedEvent(indirectDependency, dockerContainer))
+                    stateMachine.popAllNextSteps()
+
+                    stateMachine.processEvent(ImageBuildFailedEvent(directDependency, "Something went wrong"))
+
+                    it("gives the next steps as displaying an error to the user and cleaning up the container") {
+                        assert.that(stateMachine, hasNextStepsInAnyOrder(
+                                DisplayTaskFailureStep("Could not build image for container 'direct-dependency-container': Something went wrong"),
+                                CleanUpContainerStep(indirectDependency, dockerContainer)
+                        ))
+                    }
+                }
+
+                on("and a container has already been started") {
+                    val dockerContainer = DockerContainer("indirect-dependency-container", "some-name")
+
+                    stateMachine.processEvent(ImageBuiltEvent(indirectDependency, DockerImage("the-image")))
+                    stateMachine.processEvent(ContainerCreatedEvent(indirectDependency, dockerContainer))
+                    stateMachine.processEvent(ContainerStartedEvent(indirectDependency))
+                    stateMachine.popAllNextSteps()
+
+                    stateMachine.processEvent(ImageBuildFailedEvent(directDependency, "Something went wrong"))
+
+                    it("gives the next steps as displaying an error to the user and cleaning up the container") {
+                        assert.that(stateMachine, hasNextStepsInAnyOrder(
+                                DisplayTaskFailureStep("Could not build image for container 'direct-dependency-container': Something went wrong"),
+                                CleanUpContainerStep(indirectDependency, dockerContainer)
+                        ))
+                    }
+                }
+            }
+        }
+
+        // TODO: this can cover all clean up cases (eg. after container creation failure, not becoming healthy, container start failure)
+        describe("cleaning up after an image build has failed") {
+            val failureEvent = ImageBuildFailedEvent(directDependency, "Something went wrong")
+
+            on("a container being created after an image build has failed") {
+                stateMachine.processEvent(ImageBuiltEvent(indirectDependency, DockerImage("some-image")))
+                stateMachine.processEvent(failureEvent)
+                stateMachine.popAllNextSteps()
+
+                val dockerContainer = DockerContainer("some-id", "some-name")
+                stateMachine.processEvent(ContainerCreatedEvent(indirectDependency, dockerContainer))
+
+                it("gives the only next step as cleaning up that container") {
+                    assert.that(stateMachine, hasOnlyOneNextStep(CleanUpContainerStep(indirectDependency, dockerContainer)))
+                }
+            }
+
+            on("a container being started after an image build has failed") {
+
+            }
+
+            on("a container becoming healthy after an image build has failed") {
+
+            }
+
+            // TODO: once all containers have been cleaned up, should remove network
         }
 
         describe("after the 'create container' steps have been processed") {

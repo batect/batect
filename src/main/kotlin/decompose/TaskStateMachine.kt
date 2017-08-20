@@ -14,6 +14,7 @@ class TaskStateMachine(val graph: DependencyGraph) {
     private val containersLeftToStop = mutableSetOf<Container>()
     private val containersLeftToRemove = mutableSetOf<Container>()
     private val healthyContainers = mutableSetOf<Container>()
+    private var cleaningUp = false
     private var exitCode: Int? = null
     private var taskNetwork: DockerNetwork? = null
 
@@ -53,10 +54,15 @@ class TaskStateMachine(val graph: DependencyGraph) {
     private fun handleTaskNetworkCreatedEvent(event: TaskNetworkCreatedEvent): List<TaskStep> {
         taskNetwork = event.network
 
+        if (cleaningUp) {
+            return listOf(DeleteTaskNetworkStep(event.network))
+        }
+
         return dockerImages.map { (container, image) -> CreateContainerStep(container, image, event.network) }
     }
 
     private fun handleTaskNetworkCreationFailedEvent(event: TaskNetworkCreationFailedEvent): List<TaskStep> {
+        // TODO: don't clear everything, just don't start any new image builds
         stepQueue.clear()
 
         return listOf(DisplayTaskFailureStep("Could not create network for task: ${event.message}"))
@@ -65,19 +71,40 @@ class TaskStateMachine(val graph: DependencyGraph) {
     private fun handleImageBuiltEvent(event: ImageBuiltEvent): List<TaskStep> {
         dockerImages[event.container] = event.image
 
-        if (taskNetwork == null) {
+        if (taskNetwork == null || cleaningUp) {
             return emptyList()
         } else {
             return listOf(CreateContainerStep(event.container, event.image, taskNetwork!!))
         }
     }
 
-    private fun handleImageBuildFailedEvent(event: ImageBuildFailedEvent) =
-            listOf(DisplayTaskFailureStep("Could not build image for container '${event.container.name}': ${event.message}"))
+    private fun handleImageBuildFailedEvent(event: ImageBuildFailedEvent): List<TaskStep> {
+        // TODO: remove any pending build image, create container, start container steps
+
+        cleaningUp = true
+
+        val displayTaskFailureStep = DisplayTaskFailureStep("Could not build image for container '${event.container.name}': ${event.message}")
+        val containersToCleanUp = containersLeftToStop + containersLeftToRemove
+
+        if (containersToCleanUp.isNotEmpty()) {
+            val cleanUpSteps = containersToCleanUp.map { CleanUpContainerStep(it, dockerContainers[it]!!) }
+
+            return listOf(displayTaskFailureStep) + cleanUpSteps
+        } else if (taskNetwork != null) {
+            return listOf(displayTaskFailureStep, DeleteTaskNetworkStep(taskNetwork!!))
+        } else {
+            return listOf(displayTaskFailureStep)
+        }
+    }
 
     private fun handleContainerCreatedEvent(event: ContainerCreatedEvent): List<TaskStep> {
         dockerContainers[event.container] = event.dockerContainer
         containersLeftToRemove.add(event.container)
+
+        if (cleaningUp) {
+            return listOf(CleanUpContainerStep(event.container, event.dockerContainer))
+        }
+
         return startOrRunContainerIfReady(event.container)
     }
 

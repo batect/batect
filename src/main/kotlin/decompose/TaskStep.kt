@@ -33,6 +33,10 @@ data class StopContainerStep(val container: Container, val dockerContainer: Dock
     override fun toString() = super.toString() + "(container: ${container.name}, Docker container: ${dockerContainer.id})"
 }
 
+data class CleanUpContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
+    override fun toString() = super.toString() + "(container: ${container.name}, Docker container: ${dockerContainer.id})"
+}
+
 data class RemoveContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
     override fun toString() = super.toString() + "(container: ${container.name}, Docker container: ${dockerContainer.id})"
 }

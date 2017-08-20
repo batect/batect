@@ -772,6 +772,78 @@ object TaskStateMachineSpec : Spek({
             }
         }
     }
+
+    given("a task with two direct dependencies (A and B), and dependency B also depends on dependency A") {
+        val dependencyA = Container("dependency-a", "/dependency-a-build-dir")
+        val dependencyB = Container("dependency-b", "/dependency-b-build-dir", dependencies = setOf(dependencyA.name))
+        val taskContainer = Container("task-container", "/build-dir", dependencies = setOf(dependencyA.name, dependencyB.name))
+        val runConfig = TaskRunConfiguration(taskContainer.name, "some-command")
+        val task = Task("the-task", runConfig)
+        val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyB, dependencyA))
+        val graph = DependencyGraph(config, task)
+        val stateMachine by CreateForEachTest(this, { TaskStateMachine(graph) })
+
+        val exitCode = 123
+        val network = DockerNetwork("the-network")
+        val taskDockerContainer = DockerContainer("task-container", "task-container")
+        val dependencyADockerContainer = DockerContainer("dependency-a", "dependency-a")
+        val dependencyBDockerContainer = DockerContainer("dependency-b", "dependency-b")
+
+        beforeEachTest {
+            stateMachine.processEvent(TaskStartedEvent)
+            stateMachine.processEvent(TaskNetworkCreatedEvent(network))
+            stateMachine.processEvent(ImageBuiltEvent(taskContainer, DockerImage("doesnt-matter")))
+            stateMachine.processEvent(ImageBuiltEvent(dependencyB, DockerImage("dont-care")))
+            stateMachine.processEvent(ImageBuiltEvent(dependencyA, DockerImage("dont-care")))
+            stateMachine.processEvent(ContainerCreatedEvent(taskContainer, taskDockerContainer))
+            stateMachine.processEvent(ContainerCreatedEvent(dependencyA, dependencyADockerContainer))
+            stateMachine.processEvent(ContainerCreatedEvent(dependencyB, dependencyBDockerContainer))
+            stateMachine.processEvent(ContainerStartedEvent(dependencyA))
+            stateMachine.processEvent(ContainerBecameHealthyEvent(dependencyA))
+            stateMachine.processEvent(ContainerStartedEvent(dependencyB))
+            stateMachine.processEvent(ContainerBecameHealthyEvent(dependencyB))
+            stateMachine.popAllNextSteps()
+        }
+
+        on("receiving a 'container exited' event for the task container") {
+            stateMachine.processEvent(ContainerExitedEvent(taskContainer, exitCode))
+
+            it("gives the next steps as removing the task container and stopping the container that is not depended on by the other container (B)") {
+                assert.that(stateMachine, hasNextStepsInAnyOrder(
+                        RemoveContainerStep(taskContainer, taskDockerContainer),
+                        StopContainerStep(dependencyB, dependencyBDockerContainer)
+                ))
+            }
+        }
+
+        on("receiving a 'container stopped' event for the container that is only a dependency of the task (B)") {
+            stateMachine.processEvent(ContainerExitedEvent(taskContainer, exitCode))
+            stateMachine.popAllNextSteps()
+
+            stateMachine.processEvent(ContainerStoppedEvent(dependencyB))
+
+            it("gives the next steps as removing that container (B) and stopping the other container (A)") {
+                assert.that(stateMachine, hasNextStepsInAnyOrder(
+                        RemoveContainerStep(dependencyB, dependencyBDockerContainer),
+                        StopContainerStep(dependencyA, dependencyADockerContainer)
+                ))
+            }
+        }
+
+        on("receiving a 'container stopped' event for the container that is a dependency of both the task and other dependency (A)") {
+            stateMachine.processEvent(ContainerExitedEvent(taskContainer, exitCode))
+            stateMachine.processEvent(ContainerStoppedEvent(dependencyB))
+            stateMachine.popAllNextSteps()
+
+            stateMachine.processEvent(ContainerStoppedEvent(dependencyA))
+
+            it("gives the next steps as removing that container (A)") {
+                assert.that(stateMachine, hasNextStepsInAnyOrder(
+                        RemoveContainerStep(dependencyA, dependencyADockerContainer)
+                ))
+            }
+        }
+    }
 })
 
 data class CreateForEachTest<T>(val spec: SpecBody, val creator: () -> T) : ReadOnlyProperty<Any?, T> {

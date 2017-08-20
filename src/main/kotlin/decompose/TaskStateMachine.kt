@@ -11,6 +11,7 @@ class TaskStateMachine(val graph: DependencyGraph) {
     private val stepQueue: Queue<TaskStep> = LinkedList<TaskStep>()
     private val dockerImages = mutableMapOf<Container, DockerImage>()
     private val dockerContainers = mutableMapOf<Container, DockerContainer>()
+    private val containersLeftToStop = mutableSetOf<Container>()
     private val containersLeftToRemove = mutableSetOf<Container>()
     private val healthyContainers = mutableSetOf<Container>()
     private var exitCode: Int? = null
@@ -87,7 +88,7 @@ class TaskStateMachine(val graph: DependencyGraph) {
             listOf(WaitForContainerToBecomeHealthyStep(event.container, dockerContainers[event.container]!!))
 
     private fun handleContainerStoppedEvent(event: ContainerStoppedEvent) =
-            removeContainerAndStopDependencies(event.container)
+            handleContainerStopped(event.container)
 
     private fun handleContainerBecameHealthyEvent(event: ContainerBecameHealthyEvent): List<TaskStep> {
         healthyContainers.add(event.container)
@@ -103,7 +104,7 @@ class TaskStateMachine(val graph: DependencyGraph) {
 
         exitCode = event.exitCode
 
-        return removeContainerAndStopDependencies(event.container)
+        return handleContainerStopped(event.container)
     }
 
     private fun handleContainerRunFailedEvent(event: ContainerRunFailedEvent): List<DisplayTaskFailureStep> {
@@ -142,12 +143,13 @@ class TaskStateMachine(val graph: DependencyGraph) {
 
     private fun startOrRunContainerIfReady(container: Container): List<TaskStep> {
         val graphNode = graph.nodeFor(container)
-        val dependencies = graphNode.dependsOn.map { it.container }
+        val dependencies = graphNode.dependsOnContainers
         val containerHasBeenCreated = dockerContainers.containsKey(container)
         val dependenciesAreHealthy = healthyContainers.containsAll(dependencies)
 
         if (containerHasBeenCreated && dependenciesAreHealthy) {
             val dockerContainer = dockerContainers[container]!!
+            containersLeftToStop.add(container)
 
             if (isTaskNode(container)) {
                 return listOf(RunContainerStep(container, dockerContainer))
@@ -161,12 +163,23 @@ class TaskStateMachine(val graph: DependencyGraph) {
 
     private fun isTaskNode(container: Container) = container == graph.taskContainerNode.container
 
-    private fun removeContainerAndStopDependencies(container: Container): List<TaskStep> {
-        // TODO: Don't stop containers that are depended on by containers that are still running or about to be stopped
-        val dependenciesToStop = graph.nodeFor(container).dependsOn.map { it.container }
-        val stopSteps = dependenciesToStop.map { StopContainerStep(it, dockerContainers[it]!!) }
+    private fun handleContainerStopped(container: Container): List<TaskStep> {
+        containersLeftToStop.remove(container)
+
+        val containersToStop = graph.nodeFor(container)
+                .dependsOnContainers
+                .filterNot { isAnyContainerStillRunningThatDependsOn(it) }
+
+        val stopSteps = containersToStop.map { StopContainerStep(it, dockerContainers[it]!!) }
 
         return stopSteps + listOf(RemoveContainerStep(container, dockerContainers[container]!!))
+    }
+
+    private fun isAnyContainerStillRunningThatDependsOn(container: Container): Boolean {
+        val node = graph.nodeFor(container)
+        val containersThatDependOnThisCandidate = node.dependedOnByContainers
+
+        return containersThatDependOnThisCandidate.any { containersLeftToStop.contains(it) }
     }
 }
 

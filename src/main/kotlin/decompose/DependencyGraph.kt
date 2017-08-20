@@ -115,4 +115,7 @@ data class DependencyGraphNode(
         val dependsOn: Set<DependencyGraphNode>,
         val graph: DependencyGraph) {
     val dependedOnBy: Set<DependencyGraphNode> by lazy { graph.allNodes.filter { it.dependsOn.contains(this) }.toSet() }
+
+    val dependsOnContainers: Set<Container> by lazy { dependsOn.map { it.container }.toSet() }
+    val dependedOnByContainers: Set<Container> by lazy { dependedOnBy.map { it.container }.toSet() }
 }

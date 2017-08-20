@@ -182,35 +182,3 @@ class TaskStateMachine(val graph: DependencyGraph) {
         return containersThatDependOnThisCandidate.any { containersLeftToStop.contains(it) }
     }
 }
-
-sealed class TaskStep
-object BeginTaskStep : TaskStep()
-data class BuildImageStep(val container: Container) : TaskStep()
-object CreateTaskNetworkStep : TaskStep()
-data class CreateContainerStep(val container: Container, val image: DockerImage, val network: DockerNetwork) : TaskStep()
-data class RunContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep()
-data class StartContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep()
-data class StopContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep()
-data class RemoveContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep()
-data class WaitForContainerToBecomeHealthyStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep()
-data class FinishTaskStep(val exitCode: Int) : TaskStep()
-data class DeleteTaskNetworkStep(val network: DockerNetwork) : TaskStep()
-data class DisplayTaskFailureStep(val message: String) : TaskStep()
-
-sealed class TaskEvent
-object TaskStartedEvent : TaskEvent()
-data class TaskNetworkCreatedEvent(val network: DockerNetwork) : TaskEvent()
-data class TaskNetworkCreationFailedEvent(val message: String) : TaskEvent()
-data class ImageBuiltEvent(val container: Container, val image: DockerImage) : TaskEvent()
-data class ImageBuildFailedEvent(val container: Container, val message: String) : TaskEvent()
-data class ContainerCreatedEvent(val container: Container, val dockerContainer: DockerContainer) : TaskEvent()
-data class ContainerCreationFailedEvent(val container: Container, val message: String) : TaskEvent()
-data class ContainerExitedEvent(val container: Container, val exitCode: Int) : TaskEvent()
-data class ContainerStartedEvent(val container: Container) : TaskEvent()
-data class ContainerStoppedEvent(val container: Container) : TaskEvent()
-data class ContainerBecameHealthyEvent(val container: Container) : TaskEvent()
-data class ContainerRunFailedEvent(val container: Container, val message: String) : TaskEvent()
-object TaskNetworkDeletedEvent : TaskEvent()
-data class TaskNetworkDeletionFailedEvent(val message: String) : TaskEvent()
-data class ContainerRemovedEvent(val container: Container) : TaskEvent()
-data class ContainerRemovalFailedEvent(val container: Container, val message: String) : TaskEvent()

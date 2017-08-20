@@ -194,19 +194,16 @@ object TaskStateMachineSpec : Spek({
                 on("receiving a 'container run failed' event") {
                     stateMachine.processEvent(ContainerRunFailedEvent(container, "Something went wrong"))
 
-                    it("gives the only next step as displaying an error to the user") {
-                        assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("""
-                            |Could not run container 'some-container': Something went wrong
-                            |
-                            |This container has not been removed, so you need to clean up this container yourself by running 'docker rm --force some-container-id'.
-                            |Furthermore, the network 'the-network' has not been removed, so you need to clean up this network yourself by running 'docker network rm the-network'.
-                            """.trimMargin())))
+                    it("gives the next steps as displaying an error to the user and removing the task container") {
+                        assert.that(stateMachine, hasNextStepsInAnyOrder(
+                                DisplayTaskFailureStep("Could not run container 'some-container': Something went wrong"),
+                                RemoveContainerStep(container, dockerContainer)
+                        ))
                     }
                 }
             }
 
             describe("after the 'remove container' step has been processed") {
-                val exitCode = 123
                 val network = DockerNetwork("the-network")
 
                 beforeEachTest {
@@ -214,7 +211,6 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(TaskNetworkCreatedEvent(network))
                     stateMachine.processEvent(ImageBuiltEvent(container, DockerImage("doesnt-matter")))
                     stateMachine.processEvent(ContainerCreatedEvent(container, DockerContainer("some-id", "some-name")))
-                    stateMachine.processEvent(ContainerExitedEvent(container, exitCode))
                     stateMachine.popAllNextSteps()
                 }
 
@@ -226,16 +222,35 @@ object TaskStateMachineSpec : Spek({
                     }
                 }
 
-                on("receiving a 'container removal failed' event") {
-                    stateMachine.processEvent(ContainerRemovalFailedEvent(container, "Something went wrong"))
+                describe("receiving a 'container removal failed' event") {
+                    on("and the task container exited normally") {
+                        val exitCode = 123
+                        stateMachine.processEvent(ContainerExitedEvent(container, exitCode))
+                        stateMachine.popAllNextSteps()
 
-                    it("gives the only next step as displaying an error to the user") {
-                        assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("""
-                            |After the task completed with exit code 123, the container 'some-container' could not be removed: Something went wrong
-                            |
-                            |This container may not have been removed, so you may need to clean up this container yourself by running 'docker rm --force some-id'.
-                            |Furthermore, the network 'the-network' has not been removed, so you need to clean up this network yourself by running 'docker network rm the-network'.
-                            """.trimMargin())))
+                        stateMachine.processEvent(ContainerRemovalFailedEvent(container, "Something went wrong"))
+
+                        it("gives the only next step as displaying an error to the user") {
+                            assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("""
+                                |After the task completed with exit code 123, the container 'some-container' could not be removed: Something went wrong
+                                |
+                                |This container may not have been removed, so you may need to clean up this container yourself by running 'docker rm --force some-id'.
+                                |Furthermore, the task network has not been removed, so you need to clean up this network yourself by running 'docker network rm the-network'.
+                                """.trimMargin())))
+                        }
+                    }
+
+                    on("and the task container never exited (eg. because it couldn't start)") {
+                        stateMachine.processEvent(ContainerRemovalFailedEvent(container, "Something went wrong"))
+
+                        it("gives the only next step as displaying an error to the user") {
+                            assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("""
+                                |During clean up after the previous failure, the container 'some-container' could not be removed: Something went wrong
+                                |
+                                |This container may not have been removed, so you may need to clean up this container yourself by running 'docker rm --force some-id'.
+                                |Furthermore, the task network has not been removed, so you need to clean up this network yourself by running 'docker network rm the-network'.
+                                """.trimMargin())))
+                        }
                     }
                 }
             }

@@ -107,11 +107,11 @@ class TaskStateMachine(val graph: DependencyGraph) {
         return handleContainerStopped(event.container)
     }
 
-    private fun handleContainerRunFailedEvent(event: ContainerRunFailedEvent): List<DisplayTaskFailureStep> {
-        val dockerContainer = dockerContainers[event.container]!!
-        return listOf(DisplayTaskFailureStep("Could not run container '${event.container.name}': ${event.message}\n\n" +
-                "This container has not been removed, so you need to clean up this container yourself by running '${containerCleanupCommand(dockerContainer)}'.\n" +
-                networkCleanupMessage()))
+    private fun handleContainerRunFailedEvent(event: ContainerRunFailedEvent): List<TaskStep> {
+        val cleanupSteps = handleContainerStopped(event.container)
+        val failureMessageStep = DisplayTaskFailureStep("Could not run container '${event.container.name}': ${event.message}")
+
+        return listOf(failureMessageStep) + cleanupSteps
     }
 
     private fun handleContainerRemovedEvent(event: ContainerRemovedEvent): List<TaskStep> {
@@ -126,7 +126,9 @@ class TaskStateMachine(val graph: DependencyGraph) {
 
     private fun handleContainerRemovalFailedEvent(event: ContainerRemovalFailedEvent): List<DisplayTaskFailureStep> {
         val dockerContainer = dockerContainers[event.container]!!
-        return listOf(DisplayTaskFailureStep("After the task completed with exit code ${exitCode!!}, the container '${event.container.name}' could not be removed: ${event.message}\n\n" +
+        val situation = if (exitCode != null) "After the task completed with exit code $exitCode" else "During clean up after the previous failure"
+
+        return listOf(DisplayTaskFailureStep("$situation, the container '${event.container.name}' could not be removed: ${event.message}\n\n" +
                 "This container may not have been removed, so you may need to clean up this container yourself by running '${containerCleanupCommand(dockerContainer)}'.\n" +
                 networkCleanupMessage()))
     }
@@ -138,7 +140,7 @@ class TaskStateMachine(val graph: DependencyGraph) {
                     "This network may not have been removed, so you may need to clean up this network yourself by running '${networkCleanupCommand()}'."))
 
     private fun containerCleanupCommand(container: DockerContainer): String = "docker rm --force ${container.id}"
-    private fun networkCleanupMessage(): String = "Furthermore, the network '${taskNetwork!!.id}' has not been removed, so you need to clean up this network yourself by running '${networkCleanupCommand()}'."
+    private fun networkCleanupMessage(): String = "Furthermore, the task network has not been removed, so you need to clean up this network yourself by running '${networkCleanupCommand()}'."
     private fun networkCleanupCommand(): String = "docker network rm ${taskNetwork!!.id}"
 
     private fun startOrRunContainerIfReady(container: Container): List<TaskStep> {

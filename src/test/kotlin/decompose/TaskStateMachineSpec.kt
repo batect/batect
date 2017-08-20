@@ -1,8 +1,9 @@
 package decompose
 
+import com.natpryce.hamkrest.MatchResult
+import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assert
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.isEmpty
 import decompose.config.Configuration
 import decompose.config.Container
 import decompose.config.ContainerMap
@@ -70,7 +71,7 @@ object TaskStateMachineSpec : Spek({
                         stateMachine.processEvent(event)
 
                         it("does not return any further steps") {
-                            assert.that(stateMachine.popAllNextSteps(), isEmpty)
+                            assert.that(stateMachine, hasNoFurtherSteps())
                         }
                     }
 
@@ -110,7 +111,7 @@ object TaskStateMachineSpec : Spek({
                         stateMachine.processEvent(event)
 
                         it("does not return any further steps") {
-                            assert.that(stateMachine.popAllNextSteps(), isEmpty)
+                            assert.that(stateMachine, hasNoFurtherSteps())
                         }
                     }
 
@@ -338,7 +339,7 @@ object TaskStateMachineSpec : Spek({
                         stateMachine.processEvent(event)
 
                         it("does not return any further steps") {
-                            assert.that(stateMachine.popAllNextSteps(), isEmpty)
+                            assert.that(stateMachine, hasNoFurtherSteps())
                         }
                     }
                 }
@@ -362,7 +363,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(event)
 
                     it("does not return any further steps") {
-                        assert.that(stateMachine.popAllNextSteps(), isEmpty)
+                        assert.that(stateMachine, hasNoFurtherSteps())
                     }
                 }
 
@@ -435,7 +436,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(ContainerCreatedEvent(directDependency, dockerContainer))
 
                     it("does not return any further steps") {
-                        assert.that(stateMachine.popAllNextSteps(), isEmpty)
+                        assert.that(stateMachine, hasNoFurtherSteps())
                     }
                 }
 
@@ -460,7 +461,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(ContainerCreatedEvent(taskContainer, dockerContainer))
 
                     it("does not return any further steps") {
-                        assert.that(stateMachine.popAllNextSteps(), isEmpty)
+                        assert.that(stateMachine, hasNoFurtherSteps())
                     }
                 }
 
@@ -540,7 +541,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(ContainerBecameHealthyEvent(indirectDependency))
 
                     it("does not return any further steps") {
-                        assert.that(stateMachine.popAllNextSteps(), isEmpty)
+                        assert.that(stateMachine, hasNoFurtherSteps())
                     }
                 }
             }
@@ -569,7 +570,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(ContainerBecameHealthyEvent(directDependency))
 
                     it("does not return any further steps") {
-                        assert.that(stateMachine.popAllNextSteps(), isEmpty)
+                        assert.that(stateMachine, hasNoFurtherSteps())
                     }
                 }
             }
@@ -683,7 +684,7 @@ object TaskStateMachineSpec : Spek({
                 stateMachine.processEvent(ContainerRemovedEvent(indirectDependency))
 
                 it("does not return any further steps") {
-                    assert.that(stateMachine.popAllNextSteps(), isEmpty)
+                    assert.that(stateMachine, hasNoFurtherSteps())
                 }
             }
 
@@ -691,7 +692,7 @@ object TaskStateMachineSpec : Spek({
                 stateMachine.processEvent(ContainerRemovedEvent(directDependency))
 
                 it("does not return any further steps") {
-                    assert.that(stateMachine.popAllNextSteps(), isEmpty)
+                    assert.that(stateMachine, hasNoFurtherSteps())
                 }
             }
 
@@ -699,7 +700,7 @@ object TaskStateMachineSpec : Spek({
                 stateMachine.processEvent(ContainerRemovedEvent(taskContainer))
 
                 it("does not return any further steps") {
-                    assert.that(stateMachine.popAllNextSteps(), isEmpty)
+                    assert.that(stateMachine, hasNoFurtherSteps())
                 }
             }
 
@@ -798,3 +799,19 @@ private fun TaskStateMachine.popAllNextSteps(): List<TaskStep> {
 
     return steps
 }
+
+fun hasNoFurtherSteps(): Matcher<TaskStateMachine> =
+        object : Matcher<TaskStateMachine> {
+            override fun invoke(actual: TaskStateMachine): MatchResult {
+                val steps = actual.peekNextSteps()
+
+                if (steps.any()) {
+                    return MatchResult.Mismatch("contained steps $steps")
+                } else {
+                    return MatchResult.Match
+                }
+            }
+
+            override val description: String get() = "has no further steps"
+            override val negatedDescription: String get() = "has further steps"
+        }

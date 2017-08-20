@@ -21,6 +21,7 @@ class TaskStateMachine(val graph: DependencyGraph) {
     }
 
     fun popNextStep(): TaskStep? = stepQueue.poll()
+    fun peekNextSteps(): Iterable<TaskStep> = stepQueue
 
     fun processEvent(event: TaskEvent) {
         val newSteps = when (event) {

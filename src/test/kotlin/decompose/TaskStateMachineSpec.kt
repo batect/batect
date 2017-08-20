@@ -3,7 +3,6 @@ package decompose
 import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assert
-import com.natpryce.hamkrest.equalTo
 import decompose.config.Configuration
 import decompose.config.Container
 import decompose.config.ContainerMap
@@ -35,7 +34,7 @@ object TaskStateMachineSpec : Spek({
             describe("initial state") {
                 on("getting the next step") {
                     it("gives the only next step as starting the task") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(BeginTaskStep)))
+                        assert.that(stateMachine, hasOnlyOneNextStep(BeginTaskStep))
                     }
                 }
             }
@@ -49,10 +48,10 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(TaskStartedEvent)
 
                     it("gives the next steps as building the image for the task container and creating the task network (in any order)") {
-                        assert.that(stateMachine.popAllNextSteps().toSet(), equalTo(setOf<TaskStep>(
+                        assert.that(stateMachine, hasNextStepsInAnyOrder(
                                 BuildImageStep(container),
                                 CreateTaskNetworkStep
-                        )))
+                        ))
                     }
                 }
             }
@@ -83,7 +82,7 @@ object TaskStateMachineSpec : Spek({
                         stateMachine.processEvent(event)
 
                         it("gives the only next step as creating the container for the task container") {
-                            assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(CreateContainerStep(container, image, network))))
+                            assert.that(stateMachine, hasOnlyOneNextStep(CreateContainerStep(container, image, network)))
                         }
                     }
                 }
@@ -92,7 +91,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(ImageBuildFailedEvent(container, "Something went wrong"))
 
                     it("gives the only next step as displaying an error to the user") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(DisplayTaskFailureStep("Could not build image for container 'some-container': Something went wrong"))))
+                        assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("Could not build image for container 'some-container': Something went wrong")))
                     }
                 }
             }
@@ -123,7 +122,7 @@ object TaskStateMachineSpec : Spek({
                         stateMachine.processEvent(event)
 
                         it("gives the only next step as creating the container for the task container") {
-                            assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(CreateContainerStep(container, image, network))))
+                            assert.that(stateMachine, hasOnlyOneNextStep(CreateContainerStep(container, image, network)))
                         }
                     }
                 }
@@ -132,7 +131,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(TaskNetworkCreationFailedEvent("Something went wrong"))
 
                     it("gives the only next step as displaying an error to the user") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(DisplayTaskFailureStep("Could not create network for task: Something went wrong"))))
+                        assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("Could not create network for task: Something went wrong")))
                     }
                 }
             }
@@ -150,7 +149,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(ContainerCreatedEvent(container, dockerContainer))
 
                     it("gives the only next step as running the container for the task container") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(RunContainerStep(container, dockerContainer))))
+                        assert.that(stateMachine, hasOnlyOneNextStep(RunContainerStep(container, dockerContainer)))
                     }
                 }
 
@@ -158,7 +157,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(ContainerCreationFailedEvent(container, "Something went wrong"))
 
                     it("gives the only next step as displaying an error to the user") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(DisplayTaskFailureStep("Could not create Docker container for container 'some-container': Something went wrong"))))
+                        assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("Could not create Docker container for container 'some-container': Something went wrong")))
                     }
                 }
             }
@@ -178,7 +177,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(ContainerExitedEvent(container, 123))
 
                     it("gives the only next step as removing the container for the task container") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(RemoveContainerStep(container, dockerContainer))))
+                        assert.that(stateMachine, hasOnlyOneNextStep(RemoveContainerStep(container, dockerContainer)))
                     }
                 }
 
@@ -186,12 +185,12 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(ContainerRunFailedEvent(container, "Something went wrong"))
 
                     it("gives the only next step as displaying an error to the user") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(DisplayTaskFailureStep("""
+                        assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("""
                             |Could not run container 'some-container': Something went wrong
                             |
                             |This container has not been removed, so you need to clean up this container yourself by running 'docker rm --force some-container-id'.
                             |Furthermore, the network 'the-network' has not been removed, so you need to clean up this network yourself by running 'docker network rm the-network'.
-                            """.trimMargin()))))
+                            """.trimMargin())))
                     }
                 }
             }
@@ -213,7 +212,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(ContainerRemovedEvent(container))
 
                     it("gives the only next step as removing the task network") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(DeleteTaskNetworkStep(network))))
+                        assert.that(stateMachine, hasOnlyOneNextStep(DeleteTaskNetworkStep(network)))
                     }
                 }
 
@@ -221,12 +220,12 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(ContainerRemovalFailedEvent(container, "Something went wrong"))
 
                     it("gives the only next step as displaying an error to the user") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(DisplayTaskFailureStep("""
+                        assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("""
                             |After the task completed with exit code 123, the container 'some-container' could not be removed: Something went wrong
                             |
                             |This container may not have been removed, so you may need to clean up this container yourself by running 'docker rm --force some-id'.
                             |Furthermore, the network 'the-network' has not been removed, so you need to clean up this network yourself by running 'docker network rm the-network'.
-                            """.trimMargin()))))
+                            """.trimMargin())))
                     }
                 }
             }
@@ -249,7 +248,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(TaskNetworkDeletedEvent)
 
                     it("gives the only next step as finishing the task") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(FinishTaskStep(exitCode))))
+                        assert.that(stateMachine, hasOnlyOneNextStep(FinishTaskStep(exitCode)))
                     }
                 }
 
@@ -257,11 +256,11 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(TaskNetworkDeletionFailedEvent("Something went wrong"))
 
                     it("gives the only next step as displaying an error to the user") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(DisplayTaskFailureStep("""
+                        assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("""
                             |After the task completed with exit code 123, the network 'the-network' could not be deleted: Something went wrong
                             |
                             |This network may not have been removed, so you may need to clean up this network yourself by running 'docker network rm the-network'.
-                            """.trimMargin()))))
+                            """.trimMargin())))
                     }
                 }
             }
@@ -280,10 +279,8 @@ object TaskStateMachineSpec : Spek({
 
         describe("initial state") {
             on("getting the next step") {
-                val nextStep = stateMachine.popNextStep()
-
                 it("gives the only next step as starting the task") {
-                    assert.that(nextStep, equalTo<TaskStep>(BeginTaskStep))
+                    assert.that(stateMachine, hasOnlyOneNextStep(BeginTaskStep))
                 }
             }
         }
@@ -297,13 +294,12 @@ object TaskStateMachineSpec : Spek({
                 stateMachine.processEvent(TaskStartedEvent)
 
                 it("gives the next three steps as building the images for the containers and creating the task network (in any order)") {
-                    val steps = stateMachine.popAllNextSteps().toSet()
-                    assert.that(steps, equalTo(setOf<TaskStep?>(
+                    assert.that(stateMachine, hasNextStepsInAnyOrder(
                             BuildImageStep(taskContainer),
                             BuildImageStep(directDependency),
                             BuildImageStep(indirectDependency),
                             CreateTaskNetworkStep
-                    )))
+                    ))
                 }
             }
         }
@@ -331,7 +327,7 @@ object TaskStateMachineSpec : Spek({
                         stateMachine.processEvent(event)
 
                         it("gives the only next step as creating the container for the $name container") {
-                            assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(CreateContainerStep(container, image, network))))
+                            assert.that(stateMachine, hasOnlyOneNextStep(CreateContainerStep(container, image, network)))
                         }
                     }
 
@@ -377,10 +373,10 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(event)
 
                     it("gives the next steps as creating the containers for the containers with built images (in any order)") {
-                        assert.that(stateMachine.popAllNextSteps().toSet(), equalTo(setOf<TaskStep>(
+                        assert.that(stateMachine, hasNextStepsInAnyOrder(
                                 CreateContainerStep(directDependency, directDependencyImage, network),
                                 CreateContainerStep(indirectDependency, indirectDependencyImage, network)
-                        )))
+                        ))
                     }
                 }
             }
@@ -393,7 +389,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(event)
 
                     it("gives the only next step as displaying an error to the user") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(DisplayTaskFailureStep("Could not create network for task: Something went wrong"))))
+                        assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("Could not create network for task: Something went wrong")))
                     }
                 }
 
@@ -401,7 +397,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(event)
 
                     it("gives the only next step as displaying an error to the user") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(DisplayTaskFailureStep("Could not create network for task: Something went wrong"))))
+                        assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("Could not create network for task: Something went wrong")))
                     }
                 }
             }
@@ -426,7 +422,7 @@ object TaskStateMachineSpec : Spek({
                 stateMachine.processEvent(ContainerCreatedEvent(indirectDependency, dockerContainer))
 
                 it("gives the only next step as starting the container for the indirect dependency") {
-                    assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(StartContainerStep(indirectDependency, dockerContainer))))
+                    assert.that(stateMachine, hasOnlyOneNextStep(StartContainerStep(indirectDependency, dockerContainer)))
                 }
             }
 
@@ -450,7 +446,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(ContainerCreatedEvent(directDependency, dockerContainer))
 
                     it("gives the only next step as starting the container for the direct dependency") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(StartContainerStep(directDependency, dockerContainer))))
+                        assert.that(stateMachine, hasOnlyOneNextStep(StartContainerStep(directDependency, dockerContainer)))
                     }
                 }
             }
@@ -475,7 +471,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(ContainerCreatedEvent(taskContainer, dockerContainer))
 
                     it("gives the only next step as running the task container") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(RunContainerStep(taskContainer, dockerContainer))))
+                        assert.that(stateMachine, hasOnlyOneNextStep(RunContainerStep(taskContainer, dockerContainer)))
                     }
                 }
             }
@@ -498,7 +494,7 @@ object TaskStateMachineSpec : Spek({
                 stateMachine.processEvent(ContainerStartedEvent(directDependency))
 
                 it("gives the only next step as waiting for the direct dependency container to become healthy") {
-                    assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(WaitForContainerToBecomeHealthyStep(directDependency, directDependencyDockerContainer))))
+                    assert.that(stateMachine, hasOnlyOneNextStep(WaitForContainerToBecomeHealthyStep(directDependency, directDependencyDockerContainer)))
                 }
             }
 
@@ -506,7 +502,7 @@ object TaskStateMachineSpec : Spek({
                 stateMachine.processEvent(ContainerStartedEvent(indirectDependency))
 
                 it("gives the only next step as waiting for the indirect dependency container to become healthy") {
-                    assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(WaitForContainerToBecomeHealthyStep(indirectDependency, indirectDependencyDockerContainer))))
+                    assert.that(stateMachine, hasOnlyOneNextStep(WaitForContainerToBecomeHealthyStep(indirectDependency, indirectDependencyDockerContainer)))
                 }
             }
         }
@@ -533,7 +529,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(ContainerBecameHealthyEvent(indirectDependency))
 
                     it("gives the only next step as starting the direct dependency container") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(StartContainerStep(directDependency, directDependencyDockerContainer))))
+                        assert.that(stateMachine, hasOnlyOneNextStep(StartContainerStep(directDependency, directDependencyDockerContainer)))
                     }
                 }
 
@@ -562,7 +558,7 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.processEvent(ContainerBecameHealthyEvent(directDependency))
 
                     it("gives the only next step as running the task container") {
-                        assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(RunContainerStep(taskContainer, taskDockerContainer))))
+                        assert.that(stateMachine, hasOnlyOneNextStep(RunContainerStep(taskContainer, taskDockerContainer)))
                     }
                 }
 
@@ -601,10 +597,10 @@ object TaskStateMachineSpec : Spek({
                 stateMachine.processEvent(ContainerExitedEvent(taskContainer, 123))
 
                 it("gives the next steps as stopping the direct dependency container and removing the task container (in any order)") {
-                    assert.that(stateMachine.popAllNextSteps().toSet(), equalTo(setOf<TaskStep>(
+                    assert.that(stateMachine, hasNextStepsInAnyOrder(
                             StopContainerStep(directDependency, directDependencyDockerContainer),
                             RemoveContainerStep(taskContainer, taskDockerContainer)
-                    )))
+                    ))
                 }
             }
         }
@@ -635,10 +631,10 @@ object TaskStateMachineSpec : Spek({
                 stateMachine.processEvent(ContainerStoppedEvent(directDependency))
 
                 it("gives the next steps as stopping the indirect dependency container and removing the direct dependency container (in any order)") {
-                    assert.that(stateMachine.popAllNextSteps().toSet(), equalTo(setOf<TaskStep>(
+                    assert.that(stateMachine, hasNextStepsInAnyOrder(
                             StopContainerStep(indirectDependency, indirectDependencyDockerContainer),
                             RemoveContainerStep(directDependency, directDependencyDockerContainer)
-                    )))
+                    ))
                 }
             }
 
@@ -649,7 +645,7 @@ object TaskStateMachineSpec : Spek({
                 stateMachine.processEvent(ContainerStoppedEvent(indirectDependency))
 
                 it("gives the next step as removing the indirect dependency container") {
-                    assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(RemoveContainerStep(indirectDependency, indirectDependencyDockerContainer))))
+                    assert.that(stateMachine, hasOnlyOneNextStep(RemoveContainerStep(indirectDependency, indirectDependencyDockerContainer)))
                 }
             }
         }
@@ -710,7 +706,7 @@ object TaskStateMachineSpec : Spek({
                 stateMachine.processEvent(ContainerRemovedEvent(taskContainer))
 
                 it("gives the next step as deleting the task network") {
-                    assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(DeleteTaskNetworkStep(network))))
+                    assert.that(stateMachine, hasOnlyOneNextStep(DeleteTaskNetworkStep(network)))
                 }
             }
         }
@@ -749,7 +745,7 @@ object TaskStateMachineSpec : Spek({
                 stateMachine.processEvent(TaskNetworkDeletedEvent)
 
                 it("gives the only next step as finishing the task") {
-                    assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(FinishTaskStep(exitCode))))
+                    assert.that(stateMachine, hasOnlyOneNextStep(FinishTaskStep(exitCode)))
                 }
             }
 
@@ -757,11 +753,11 @@ object TaskStateMachineSpec : Spek({
                 stateMachine.processEvent(TaskNetworkDeletionFailedEvent("Something went wrong"))
 
                 it("gives the only next step as displaying an error to the user") {
-                    assert.that(stateMachine.popAllNextSteps(), equalTo(listOf<TaskStep>(DisplayTaskFailureStep("""
+                    assert.that(stateMachine, hasOnlyOneNextStep(DisplayTaskFailureStep("""
                             |After the task completed with exit code 123, the network 'the-network' could not be deleted: Something went wrong
                             |
                             |This network may not have been removed, so you may need to clean up this network yourself by running 'docker network rm the-network'.
-                            """.trimMargin()))))
+                            """.trimMargin())))
                 }
             }
         }
@@ -814,4 +810,42 @@ fun hasNoFurtherSteps(): Matcher<TaskStateMachine> =
 
             override val description: String get() = "has no further steps"
             override val negatedDescription: String get() = "has further steps"
+        }
+
+fun hasOnlyOneNextStep(expectedStep: TaskStep): Matcher<TaskStateMachine> =
+        object : Matcher<TaskStateMachine> {
+            override fun invoke(actual: TaskStateMachine): MatchResult {
+                val steps = actual.peekNextSteps()
+
+                if (steps.none()) {
+                    return MatchResult.Mismatch("had no steps")
+                } else if (steps.count() > 1) {
+                    return MatchResult.Mismatch("had ${steps.count()} steps: $steps")
+                } else {
+                    val actualStep = steps.first()
+
+                    if (expectedStep == actualStep) {
+                        return MatchResult.Match
+                    } else {
+                        return MatchResult.Mismatch("had step $actualStep")
+                    }
+                }
+            }
+
+            override val description: String get() = "has only one step, $expectedStep"
+        }
+
+fun hasNextStepsInAnyOrder(vararg expectedSteps: TaskStep): Matcher<TaskStateMachine> =
+        object : Matcher<TaskStateMachine> {
+            override fun invoke(actual: TaskStateMachine): MatchResult {
+                val actualSteps = actual.peekNextSteps()
+
+                if (actualSteps.toSet() == expectedSteps.toSet()) {
+                    return MatchResult.Match
+                } else {
+                    return MatchResult.Mismatch("had the steps $actualSteps")
+                }
+            }
+
+            override val description: String get() = "has the steps ${expectedSteps.joinToString(", ")} in any order"
         }

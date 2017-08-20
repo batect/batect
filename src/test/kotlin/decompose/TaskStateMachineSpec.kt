@@ -3,6 +3,7 @@ package decompose
 import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.throws
 import decompose.config.Configuration
 import decompose.config.Container
 import decompose.config.ContainerMap
@@ -12,6 +13,7 @@ import decompose.config.TaskRunConfiguration
 import decompose.docker.DockerContainer
 import decompose.docker.DockerImage
 import decompose.docker.DockerNetwork
+import decompose.testutils.withMessage
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.SpecBody
 import org.jetbrains.spek.api.dsl.describe
@@ -173,11 +175,19 @@ object TaskStateMachineSpec : Spek({
                     stateMachine.popAllNextSteps()
                 }
 
-                on("receiving a 'container exited' event") {
+                on("receiving a 'container exited' event for the task container") {
                     stateMachine.processEvent(ContainerExitedEvent(container, 123))
 
                     it("gives the only next step as removing the container for the task container") {
                         assert.that(stateMachine, hasOnlyOneNextStep(RemoveContainerStep(container, dockerContainer)))
+                    }
+                }
+
+                on("receiving a 'container exited' event for another container") {
+                    val event = ContainerExitedEvent(Container("other-container", "/doesnt-matter"), 100)
+
+                    it("throws an exception") {
+                        assert.that({ stateMachine.processEvent(event) }, throws<IllegalArgumentException>(withMessage("Container 'other-container' is not the task container.")))
                     }
                 }
 

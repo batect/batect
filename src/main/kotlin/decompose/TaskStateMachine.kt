@@ -97,7 +97,10 @@ class TaskStateMachine(val graph: DependencyGraph) {
     }
 
     private fun handleContainerExitedEvent(event: ContainerExitedEvent): List<TaskStep> {
-        // TODO: Make sure this is the task container
+        if (event.container != graph.taskContainerNode.container) {
+            throw IllegalArgumentException("Container '${event.container.name}' is not the task container.")
+        }
+
         exitCode = event.exitCode
 
         return removeContainerAndStopDependencies(event.container)

@@ -1,7 +1,7 @@
 package decompose.model.events
 
-import decompose.RunContainerStep
-import decompose.StartContainerStep
+import decompose.model.steps.RunContainerStep
+import decompose.model.steps.StartContainerStep
 import decompose.config.Container
 import decompose.docker.DockerContainer
 

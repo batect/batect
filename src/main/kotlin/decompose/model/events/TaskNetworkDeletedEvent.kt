@@ -1,6 +1,6 @@
 package decompose.model.events
 
-import decompose.FinishTaskStep
+import decompose.model.steps.FinishTaskStep
 
 // if aborting, do nothing, otherwise, finish task with exit code
 object TaskNetworkDeletedEvent : TaskEvent() {

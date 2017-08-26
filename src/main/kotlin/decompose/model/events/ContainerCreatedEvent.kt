@@ -1,8 +1,8 @@
 package decompose.model.events
 
-import decompose.CleanUpContainerStep
-import decompose.RunContainerStep
-import decompose.StartContainerStep
+import decompose.model.steps.CleanUpContainerStep
+import decompose.model.steps.RunContainerStep
+import decompose.model.steps.StartContainerStep
 import decompose.config.Container
 import decompose.docker.DockerContainer
 

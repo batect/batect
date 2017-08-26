@@ -6,7 +6,7 @@ import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
-import decompose.CreateContainerStep
+import decompose.model.steps.CreateContainerStep
 import decompose.config.Container
 import decompose.docker.DockerImage
 import decompose.docker.DockerNetwork

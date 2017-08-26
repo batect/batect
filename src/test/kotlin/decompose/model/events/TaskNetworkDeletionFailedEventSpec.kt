@@ -5,7 +5,7 @@ import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
-import decompose.DisplayTaskFailureStep
+import decompose.model.steps.DisplayTaskFailureStep
 import decompose.config.Container
 import decompose.docker.DockerNetwork
 import org.jetbrains.spek.api.Spek

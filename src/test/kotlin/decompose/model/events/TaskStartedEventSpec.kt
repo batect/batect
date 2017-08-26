@@ -5,8 +5,8 @@ import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
-import decompose.BuildImageStep
-import decompose.CreateTaskNetworkStep
+import decompose.model.steps.BuildImageStep
+import decompose.model.steps.CreateTaskNetworkStep
 import decompose.config.Container
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe

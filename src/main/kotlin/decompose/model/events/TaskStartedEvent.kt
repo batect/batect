@@ -1,7 +1,7 @@
 package decompose.model.events
 
-import decompose.BuildImageStep
-import decompose.CreateTaskNetworkStep
+import decompose.model.steps.BuildImageStep
+import decompose.model.steps.CreateTaskNetworkStep
 
 object TaskStartedEvent : TaskEvent() {
     override fun apply(context: TaskEventContext) {

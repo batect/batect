@@ -7,7 +7,7 @@ import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
-import decompose.WaitForContainerToBecomeHealthyStep
+import decompose.model.steps.WaitForContainerToBecomeHealthyStep
 import decompose.config.Container
 import decompose.docker.DockerContainer
 import org.jetbrains.spek.api.Spek

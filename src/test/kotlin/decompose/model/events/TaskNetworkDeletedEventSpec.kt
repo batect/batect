@@ -7,7 +7,7 @@ import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
-import decompose.FinishTaskStep
+import decompose.model.steps.FinishTaskStep
 import decompose.config.Container
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe

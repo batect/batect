@@ -1,4 +1,4 @@
-package decompose
+package decompose.model.steps
 
 import decompose.config.Container
 import decompose.docker.DockerContainer

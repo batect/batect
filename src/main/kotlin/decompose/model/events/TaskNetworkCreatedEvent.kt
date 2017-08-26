@@ -1,7 +1,7 @@
 package decompose.model.events
 
-import decompose.CreateContainerStep
-import decompose.DeleteTaskNetworkStep
+import decompose.model.steps.CreateContainerStep
+import decompose.model.steps.DeleteTaskNetworkStep
 import decompose.docker.DockerNetwork
 
 data class TaskNetworkCreatedEvent(val network: DockerNetwork) : TaskEvent() {

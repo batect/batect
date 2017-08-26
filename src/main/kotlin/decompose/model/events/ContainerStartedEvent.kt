@@ -1,6 +1,6 @@
 package decompose.model.events
 
-import decompose.WaitForContainerToBecomeHealthyStep
+import decompose.model.steps.WaitForContainerToBecomeHealthyStep
 import decompose.config.Container
 
 data class ContainerStartedEvent(val container: Container) : TaskEvent() {

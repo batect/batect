@@ -1,13 +1,13 @@
 package decompose.model.events
 
-import decompose.BuildImageStep
-import decompose.CleanUpContainerStep
-import decompose.CreateContainerStep
-import decompose.CreateTaskNetworkStep
-import decompose.DeleteTaskNetworkStep
-import decompose.DisplayTaskFailureStep
-import decompose.StartContainerStep
-import decompose.WaitForContainerToBecomeHealthyStep
+import decompose.model.steps.BuildImageStep
+import decompose.model.steps.CleanUpContainerStep
+import decompose.model.steps.CreateContainerStep
+import decompose.model.steps.CreateTaskNetworkStep
+import decompose.model.steps.DeleteTaskNetworkStep
+import decompose.model.steps.DisplayTaskFailureStep
+import decompose.model.steps.StartContainerStep
+import decompose.model.steps.WaitForContainerToBecomeHealthyStep
 
 abstract class PreTaskRunFailureEvent() : TaskEvent() {
     override fun apply(context: TaskEventContext) {

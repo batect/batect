@@ -1,9 +1,9 @@
 package decompose.model.events
 
-import decompose.CleanUpContainerStep
-import decompose.DisplayTaskFailureStep
-import decompose.RemoveContainerStep
-import decompose.StopContainerStep
+import decompose.model.steps.CleanUpContainerStep
+import decompose.model.steps.DisplayTaskFailureStep
+import decompose.model.steps.RemoveContainerStep
+import decompose.model.steps.StopContainerStep
 import decompose.config.Container
 
 abstract class PostTaskRunCleanupFailureEvent(open val container: Container) : TaskEvent() {

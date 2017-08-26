@@ -9,8 +9,8 @@ import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.reset
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
-import decompose.RunContainerStep
-import decompose.StartContainerStep
+import decompose.model.steps.RunContainerStep
+import decompose.model.steps.StartContainerStep
 import decompose.config.Container
 import decompose.docker.DockerContainer
 import org.jetbrains.spek.api.Spek

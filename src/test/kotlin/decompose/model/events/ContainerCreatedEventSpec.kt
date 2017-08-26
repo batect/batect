@@ -7,9 +7,9 @@ import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
-import decompose.CleanUpContainerStep
-import decompose.RunContainerStep
-import decompose.StartContainerStep
+import decompose.model.steps.CleanUpContainerStep
+import decompose.model.steps.RunContainerStep
+import decompose.model.steps.StartContainerStep
 import decompose.config.Container
 import decompose.docker.DockerContainer
 import org.jetbrains.spek.api.Spek

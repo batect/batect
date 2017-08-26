@@ -1,6 +1,6 @@
 package decompose.model.events
 
-import decompose.TaskStep
+import decompose.model.steps.TaskStep
 import decompose.config.Container
 import kotlin.reflect.KClass
 

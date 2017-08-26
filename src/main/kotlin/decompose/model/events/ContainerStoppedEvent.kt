@@ -1,7 +1,7 @@
 package decompose.model.events
 
-import decompose.RemoveContainerStep
-import decompose.StopContainerStep
+import decompose.model.steps.RemoveContainerStep
+import decompose.model.steps.StopContainerStep
 import decompose.config.Container
 
 data class ContainerStoppedEvent(val container: Container) : TaskEvent() {

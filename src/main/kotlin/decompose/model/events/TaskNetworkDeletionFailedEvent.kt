@@ -1,6 +1,6 @@
 package decompose.model.events
 
-import decompose.DisplayTaskFailureStep
+import decompose.model.steps.DisplayTaskFailureStep
 
 data class TaskNetworkDeletionFailedEvent(val message: String) : TaskEvent() {
     override fun apply(context: TaskEventContext) {

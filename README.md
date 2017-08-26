@@ -2,7 +2,7 @@
 
 ## The sales pitch
 
-_Build and test environments as code_
+_Build and testing environments as code_
 
 * Consistent, fast, repeatable, isolated builds and test runs everywhere: your computer, your colleagues' computers and on CI
 * Manage dependencies for integration and end-to-end testing with ease
@@ -36,7 +36,8 @@ _Build and test environments as code_
 * some way to propagate environment variables from host environment to target environment
 * some way to add additional environment variables at the task level (for the target container only, not dependencies)
 * flag (eg. `--quiet`) to only show output from task
-* flag (eg. `--simple-output`) to disable fancy output formatting (colours, bold, progress bars)
+* flag (eg. `--simple-output`) to disable fancy output formatting (eg. progress bars) from decompose (task process can still do whatever it wants)
+* flag (eg. `--no-colors`) to disable coloured and bold output (implies `--simple-output`) from decompose (task process can still do whatever it wants)
 * fancy progress bar output for building images and starting dependencies
 * automatically create missing local volume mount directories and show a warning (useful when mounting a directory intended to be a cache)
 * support new OS X caching features for volume mounts (https://docs.docker.com/docker-for-mac/osxfs-caching/) 
@@ -50,10 +51,11 @@ _Build and test environments as code_
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use Docker API directly rather than using Docker CLI
 * documentation
+  * CI setup - reminder to clean up stale images regularly
 * examples (update or remove `sample` directory)
 * use `--iidfile` to get image ID after build and stop relying on tag
 * wrapper script to pull appropriate binary down (like `gradlew`)
-  * should be OS independent (so it can be committed with code) and pull down correct binary
+  * should be OS independent (so it can be committed with application code) and pull down correct binary
   * should lock to particular version (how to warn about newer available version?)
   * should not require anything beyond what would already be installed on a standard OS X or Linux install (Bash and `curl` or `wget`)
 

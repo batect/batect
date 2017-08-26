@@ -1,7 +1,7 @@
 package decompose.cli
 
 import com.natpryce.hamkrest.absent
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import decompose.testutils.withMessage
@@ -21,7 +21,7 @@ object OptionParserSpec : Spek({
                     val result = parser.parseOptions(emptyList())
 
                     it("indicates that parsing succeeded and that no arguments were consumed") {
-                        assert.that(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
+                        assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
                     }
                 }
 
@@ -29,7 +29,7 @@ object OptionParserSpec : Spek({
                     val result = parser.parseOptions(listOf("some-argument"))
 
                     it("indicates that parsing succeeded and that no arguments were consumed") {
-                        assert.that(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
+                        assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
                     }
                 }
             }
@@ -43,11 +43,11 @@ object OptionParserSpec : Spek({
                     val result = parser.parseOptions(emptyList())
 
                     it("indicates that parsing succeeded and that no arguments were consumed") {
-                        assert.that(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
+                        assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
                     }
 
                     it("sets the option's value to null") {
-                        assert.that(option.value, absent())
+                        assertThat(option.value, absent())
                     }
                 }
 
@@ -55,11 +55,11 @@ object OptionParserSpec : Spek({
                     val result = parser.parseOptions(listOf("do-stuff"))
 
                     it("indicates that parsing succeeded and that no arguments were consumed") {
-                        assert.that(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
+                        assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
                     }
 
                     it("sets the option's value to null") {
-                        assert.that(option.value, absent())
+                        assertThat(option.value, absent())
                     }
                 }
 
@@ -68,11 +68,11 @@ object OptionParserSpec : Spek({
                         val result = parser.parseOptions(listOf("do-stuff"))
 
                         it("indicates that parsing succeeded and that no arguments were consumed") {
-                            assert.that(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
+                            assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
                         }
 
                         it("sets the option's value to null") {
-                            assert.that(option.value, absent())
+                            assertThat(option.value, absent())
                         }
                     }
 
@@ -80,11 +80,11 @@ object OptionParserSpec : Spek({
                         val result = parser.parseOptions(listOf(format, "thing", "do-stuff"))
 
                         it("indicates that parsing succeeded and that two arguments were consumed") {
-                            assert.that(result, equalTo<OptionsParsingResult>(ReadOptions(2)))
+                            assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(2)))
                         }
 
                         it("sets the option's value") {
-                            assert.that(option.value, equalTo("thing"))
+                            assertThat(option.value, equalTo("thing"))
                         }
                     }
 
@@ -92,7 +92,7 @@ object OptionParserSpec : Spek({
                         val result = parser.parseOptions(listOf("$format=", "do-stuff"))
 
                         it("indicates that parsing failed") {
-                            assert.that(result, equalTo<OptionsParsingResult>(InvalidOptions("Option '$format=' is in an invalid format, you must provide a value after '='.")))
+                            assertThat(result, equalTo<OptionsParsingResult>(InvalidOptions("Option '$format=' is in an invalid format, you must provide a value after '='.")))
                         }
                     }
 
@@ -100,7 +100,7 @@ object OptionParserSpec : Spek({
                         val result = parser.parseOptions(listOf(format))
 
                         it("indicates that parsing failed") {
-                            assert.that(result, equalTo<OptionsParsingResult>(InvalidOptions("Option '$format' requires a value to be provided, either in the form '$format=<value>' or '$format <value>'.")))
+                            assertThat(result, equalTo<OptionsParsingResult>(InvalidOptions("Option '$format' requires a value to be provided, either in the form '$format=<value>' or '$format <value>'.")))
                         }
                     }
                 }
@@ -117,7 +117,7 @@ object OptionParserSpec : Spek({
                         val result = parser.parseOptions(args + "do-stuff")
 
                         it("indicates that parsing failed") {
-                            assert.that(result, equalTo<OptionsParsingResult>(InvalidOptions("Option '--value' (or '-v') cannot be specified multiple times.")))
+                            assertThat(result, equalTo<OptionsParsingResult>(InvalidOptions("Option '--value' (or '-v') cannot be specified multiple times.")))
                         }
                     }
                 }
@@ -132,7 +132,7 @@ object OptionParserSpec : Spek({
                     val result = parser.parseOptions(listOf("--value=thing", "--value=other-thing", "do-stuff"))
 
                     it("indicates that parsing failed") {
-                        assert.that(result, equalTo<OptionsParsingResult>(InvalidOptions("Option '--value' cannot be specified multiple times.")))
+                        assertThat(result, equalTo<OptionsParsingResult>(InvalidOptions("Option '--value' cannot be specified multiple times.")))
                     }
                 }
             }
@@ -146,11 +146,11 @@ object OptionParserSpec : Spek({
                     val result = parser.parseOptions(listOf("do-stuff"))
 
                     it("indicates that parsing succeeded and that no arguments were consumed") {
-                        assert.that(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
+                        assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
                     }
 
                     it("sets the option's value to the default value given") {
-                        assert.that(option.value, equalTo("the-default-value"))
+                        assertThat(option.value, equalTo("the-default-value"))
                     }
                 }
 
@@ -158,11 +158,11 @@ object OptionParserSpec : Spek({
                     val result = parser.parseOptions(listOf("--value=some-other-value", "do-stuff"))
 
                     it("indicates that parsing succeeded and that one argument was consumed") {
-                        assert.that(result, equalTo<OptionsParsingResult>(ReadOptions(1)))
+                        assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(1)))
                     }
 
                     it("sets the option's value to the value given in the argument") {
-                        assert.that(option.value, equalTo("some-other-value"))
+                        assertThat(option.value, equalTo("some-other-value"))
                     }
                 }
             }
@@ -178,20 +178,20 @@ object OptionParserSpec : Spek({
                     val options = parser.getOptions()
 
                     it("returns a list with that single option") {
-                        assert.that(options, equalTo(setOf<OptionDefinition>(option)))
+                        assertThat(options, equalTo(setOf<OptionDefinition>(option)))
                     }
                 }
 
                 on("attempting to add another option with the same name") {
                     it("throws an exception") {
-                        assert.that({ parser.addOption(ValueOption("value", "The other value")) },
+                        assertThat({ parser.addOption(ValueOption("value", "The other value")) },
                                 throws<IllegalArgumentException>(withMessage("An option with the name 'value' has already been added.")))
                     }
                 }
 
                 on("attempting to add another option with the same short name") {
                     it("throws an exception") {
-                        assert.that({ parser.addOption(ValueOption("other-value", "The other value", 'v')) },
+                        assertThat({ parser.addOption(ValueOption("other-value", "The other value", 'v')) },
                                 throws<IllegalArgumentException>(withMessage("An option with the name 'v' has already been added.")))
                     }
                 }

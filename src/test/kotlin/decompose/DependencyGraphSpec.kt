@@ -1,6 +1,6 @@
 package decompose
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.throws
@@ -30,19 +30,19 @@ object DependencyGraphSpec : Spek({
                 val node = graph.taskContainerNode
 
                 it("depends on nothing") {
-                    assert.that(node.dependsOn, isEmpty)
+                    assertThat(node.dependsOn, isEmpty)
                 }
 
                 it("is depended on by nothing") {
-                    assert.that(node.dependedOnBy, isEmpty)
+                    assertThat(node.dependedOnBy, isEmpty)
                 }
 
                 it("indicates that it is the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(true))
+                    assertThat(node.isRootNode, equalTo(true))
                 }
 
                 it("is the same node as the node for the task container") {
-                    assert.that(graph.nodeFor(container), equalTo(node))
+                    assertThat(graph.nodeFor(container), equalTo(node))
                 }
             }
 
@@ -50,7 +50,7 @@ object DependencyGraphSpec : Spek({
                 val otherContainer = Container("the-other-container", "does-not-matter")
 
                 it("throws an exception") {
-                    assert.that({ graph.nodeFor(otherContainer) }, throws<IllegalArgumentException>(withMessage("Container 'the-other-container' is not part of this dependency graph.")))
+                    assertThat({ graph.nodeFor(otherContainer) }, throws<IllegalArgumentException>(withMessage("Container 'the-other-container' is not part of this dependency graph.")))
                 }
             }
         }
@@ -62,7 +62,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assert.that({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The container 'some-non-existent-container' referenced by task 'the-task' does not exist.")))
+                    assertThat({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The container 'some-non-existent-container' referenced by task 'the-task' does not exist.")))
                 }
             }
         }
@@ -79,19 +79,19 @@ object DependencyGraphSpec : Spek({
                 val node = graph.taskContainerNode
 
                 it("depends on the dependency container") {
-                    assert.that(node.dependsOn.mapToSet { it.container }, equalTo(setOf(dependencyContainer)))
+                    assertThat(node.dependsOn.mapToSet { it.container }, equalTo(setOf(dependencyContainer)))
                 }
 
                 it("is depended on by nothing") {
-                    assert.that(node.dependedOnBy, isEmpty)
+                    assertThat(node.dependedOnBy, isEmpty)
                 }
 
                 it("indicates that it is the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(true))
+                    assertThat(node.isRootNode, equalTo(true))
                 }
 
                 it("is the same node as the node for the task container") {
-                    assert.that(graph.nodeFor(taskContainer), equalTo(node))
+                    assertThat(graph.nodeFor(taskContainer), equalTo(node))
                 }
             }
 
@@ -99,15 +99,15 @@ object DependencyGraphSpec : Spek({
                 val node = graph.nodeFor(dependencyContainer)
 
                 it("depends on nothing") {
-                    assert.that(node.dependsOn, isEmpty)
+                    assertThat(node.dependsOn, isEmpty)
                 }
 
                 it("is depended on by the task container") {
-                    assert.that(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer)))
+                    assertThat(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer)))
                 }
 
                 it("indicates that it is not the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(false))
+                    assertThat(node.isRootNode, equalTo(false))
                 }
             }
         }
@@ -126,19 +126,19 @@ object DependencyGraphSpec : Spek({
                 val node = graph.taskContainerNode
 
                 it("depends on the dependency containers") {
-                    assert.that(node.dependsOn.mapToSet { it.container }, equalTo(setOf(dependencyContainer1, dependencyContainer2, dependencyContainer3)))
+                    assertThat(node.dependsOn.mapToSet { it.container }, equalTo(setOf(dependencyContainer1, dependencyContainer2, dependencyContainer3)))
                 }
 
                 it("is depended on by nothing") {
-                    assert.that(node.dependedOnBy, isEmpty)
+                    assertThat(node.dependedOnBy, isEmpty)
                 }
 
                 it("indicates that it is the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(true))
+                    assertThat(node.isRootNode, equalTo(true))
                 }
 
                 it("is the same node as the node for the task container") {
-                    assert.that(graph.nodeFor(taskContainer), equalTo(node))
+                    assertThat(graph.nodeFor(taskContainer), equalTo(node))
                 }
             }
 
@@ -147,15 +147,15 @@ object DependencyGraphSpec : Spek({
                     val node = graph.nodeFor(container)
 
                     it("depends on nothing") {
-                        assert.that(node.dependsOn, isEmpty)
+                        assertThat(node.dependsOn, isEmpty)
                     }
 
                     it("is depended on by the task container") {
-                        assert.that(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer)))
+                        assertThat(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer)))
                     }
 
                     it("indicates that it is not the root node of the graph") {
-                        assert.that(node.isRootNode, equalTo(false))
+                        assertThat(node.isRootNode, equalTo(false))
                     }
                 }
             }
@@ -169,7 +169,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assert.that({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-dependency' referenced by task 'the-task' does not exist.")))
+                    assertThat({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-dependency' referenced by task 'the-task' does not exist.")))
                 }
             }
         }
@@ -182,7 +182,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assert.that({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The task 'the-task' cannot start the container 'some-container' and also run it.")))
+                    assertThat({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The task 'the-task' cannot start the container 'some-container' and also run it.")))
                 }
             }
         }
@@ -201,19 +201,19 @@ object DependencyGraphSpec : Spek({
                 val node = graph.taskContainerNode
 
                 it("depends on the dependency containers") {
-                    assert.that(node.dependsOn.mapToSet { it.container }, equalTo(setOf(dependencyContainer1, dependencyContainer2, dependencyContainer3)))
+                    assertThat(node.dependsOn.mapToSet { it.container }, equalTo(setOf(dependencyContainer1, dependencyContainer2, dependencyContainer3)))
                 }
 
                 it("is depended on by nothing") {
-                    assert.that(node.dependedOnBy, isEmpty)
+                    assertThat(node.dependedOnBy, isEmpty)
                 }
 
                 it("indicates that it is the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(true))
+                    assertThat(node.isRootNode, equalTo(true))
                 }
 
                 it("is the same node as the node for the task container") {
-                    assert.that(graph.nodeFor(taskContainer), equalTo(node))
+                    assertThat(graph.nodeFor(taskContainer), equalTo(node))
                 }
             }
 
@@ -222,15 +222,15 @@ object DependencyGraphSpec : Spek({
                     val node = graph.nodeFor(container)
 
                     it("depends on nothing") {
-                        assert.that(node.dependsOn, isEmpty)
+                        assertThat(node.dependsOn, isEmpty)
                     }
 
                     it("is depended on by the task container") {
-                        assert.that(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer)))
+                        assertThat(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer)))
                     }
 
                     it("indicates that it is not the root node of the graph") {
-                        assert.that(node.isRootNode, equalTo(false))
+                        assertThat(node.isRootNode, equalTo(false))
                     }
                 }
             }
@@ -249,19 +249,19 @@ object DependencyGraphSpec : Spek({
                 val node = graph.taskContainerNode
 
                 it("depends on its direct dependency") {
-                    assert.that(node.dependsOn.mapToSet { it.container }, equalTo(setOf(dependencyContainer2)))
+                    assertThat(node.dependsOn.mapToSet { it.container }, equalTo(setOf(dependencyContainer2)))
                 }
 
                 it("is depended on by nothing") {
-                    assert.that(node.dependedOnBy, isEmpty)
+                    assertThat(node.dependedOnBy, isEmpty)
                 }
 
                 it("indicates that it is the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(true))
+                    assertThat(node.isRootNode, equalTo(true))
                 }
 
                 it("is the same node as the node for the task container") {
-                    assert.that(graph.nodeFor(taskContainer), equalTo(node))
+                    assertThat(graph.nodeFor(taskContainer), equalTo(node))
                 }
             }
 
@@ -269,15 +269,15 @@ object DependencyGraphSpec : Spek({
                 val node = graph.nodeFor(dependencyContainer2)
 
                 it("depends on its direct dependency") {
-                    assert.that(node.dependsOn.mapToSet { it.container }, equalTo(setOf(dependencyContainer1)))
+                    assertThat(node.dependsOn.mapToSet { it.container }, equalTo(setOf(dependencyContainer1)))
                 }
 
                 it("is depended on by the task container") {
-                    assert.that(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer)))
+                    assertThat(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer)))
                 }
 
                 it("indicates that it is not the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(false))
+                    assertThat(node.isRootNode, equalTo(false))
                 }
             }
 
@@ -285,15 +285,15 @@ object DependencyGraphSpec : Spek({
                 val node = graph.nodeFor(dependencyContainer1)
 
                 it("depends on nothing") {
-                    assert.that(node.dependsOn, isEmpty)
+                    assertThat(node.dependsOn, isEmpty)
                 }
 
                 it("is depended on by the direct dependency of the task container") {
-                    assert.that(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(dependencyContainer2)))
+                    assertThat(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(dependencyContainer2)))
                 }
 
                 it("indicates that it is not the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(false))
+                    assertThat(node.isRootNode, equalTo(false))
                 }
             }
         }
@@ -312,19 +312,19 @@ object DependencyGraphSpec : Spek({
                 val node = graph.taskContainerNode
 
                 it("depends on its direct dependencies") {
-                    assert.that(node.dependsOn.mapToSet { it.container }, equalTo(setOf(dependencyContainer1, dependencyContainer2)))
+                    assertThat(node.dependsOn.mapToSet { it.container }, equalTo(setOf(dependencyContainer1, dependencyContainer2)))
                 }
 
                 it("is depended on by nothing") {
-                    assert.that(node.dependedOnBy, isEmpty)
+                    assertThat(node.dependedOnBy, isEmpty)
                 }
 
                 it("indicates that it is the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(true))
+                    assertThat(node.isRootNode, equalTo(true))
                 }
 
                 it("is the same node as the node for the task container") {
-                    assert.that(graph.nodeFor(taskContainer), equalTo(node))
+                    assertThat(graph.nodeFor(taskContainer), equalTo(node))
                 }
             }
 
@@ -333,15 +333,15 @@ object DependencyGraphSpec : Spek({
                     val node = graph.nodeFor(container)
 
                     it("depends on the common dependency") {
-                        assert.that(node.dependsOn.mapToSet { it.container }, equalTo(setOf(containerWithNoDependencies)))
+                        assertThat(node.dependsOn.mapToSet { it.container }, equalTo(setOf(containerWithNoDependencies)))
                     }
 
                     it("is depended on by the task container") {
-                        assert.that(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer)))
+                        assertThat(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer)))
                     }
 
                     it("indicates that it is not the root node of the graph") {
-                        assert.that(node.isRootNode, equalTo(false))
+                        assertThat(node.isRootNode, equalTo(false))
                     }
                 }
             }
@@ -350,15 +350,15 @@ object DependencyGraphSpec : Spek({
                 val node = graph.nodeFor(containerWithNoDependencies)
 
                 it("depends on nothing") {
-                    assert.that(node.dependsOn, isEmpty)
+                    assertThat(node.dependsOn, isEmpty)
                 }
 
                 it("is depended on by the two direct dependencies of the task container") {
-                    assert.that(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(dependencyContainer1, dependencyContainer2)))
+                    assertThat(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(dependencyContainer1, dependencyContainer2)))
                 }
 
                 it("indicates that it is not the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(false))
+                    assertThat(node.isRootNode, equalTo(false))
                 }
             }
         }
@@ -376,19 +376,19 @@ object DependencyGraphSpec : Spek({
                 val node = graph.taskContainerNode
 
                 it("depends on its direct dependencies") {
-                    assert.that(node.dependsOn.mapToSet { it.container }, equalTo(setOf(containerA, containerB)))
+                    assertThat(node.dependsOn.mapToSet { it.container }, equalTo(setOf(containerA, containerB)))
                 }
 
                 it("is depended on by nothing") {
-                    assert.that(node.dependedOnBy, isEmpty)
+                    assertThat(node.dependedOnBy, isEmpty)
                 }
 
                 it("indicates that it is the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(true))
+                    assertThat(node.isRootNode, equalTo(true))
                 }
 
                 it("is the same node as the node for the task container") {
-                    assert.that(graph.nodeFor(taskContainer), equalTo(node))
+                    assertThat(graph.nodeFor(taskContainer), equalTo(node))
                 }
             }
 
@@ -396,15 +396,15 @@ object DependencyGraphSpec : Spek({
                 val node = graph.nodeFor(containerA)
 
                 it("depends on nothing") {
-                    assert.that(node.dependsOn, isEmpty)
+                    assertThat(node.dependsOn, isEmpty)
                 }
 
                 it("is depended on by the task container and container B") {
-                    assert.that(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer, containerB)))
+                    assertThat(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer, containerB)))
                 }
 
                 it("indicates that it is not the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(false))
+                    assertThat(node.isRootNode, equalTo(false))
                 }
             }
 
@@ -412,15 +412,15 @@ object DependencyGraphSpec : Spek({
                 val node = graph.nodeFor(containerB)
 
                 it("depends on container A") {
-                    assert.that(node.dependsOn.mapToSet { it.container }, equalTo(setOf(containerA)))
+                    assertThat(node.dependsOn.mapToSet { it.container }, equalTo(setOf(containerA)))
                 }
 
                 it("is depended on by the task container") {
-                    assert.that(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer)))
+                    assertThat(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer)))
                 }
 
                 it("indicates that it is not the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(false))
+                    assertThat(node.isRootNode, equalTo(false))
                 }
             }
         }
@@ -438,19 +438,19 @@ object DependencyGraphSpec : Spek({
                 val node = graph.taskContainerNode
 
                 it("depends on the task dependency") {
-                    assert.that(node.dependsOn.mapToSet { it.container }, equalTo(setOf(taskDependencyContainer)))
+                    assertThat(node.dependsOn.mapToSet { it.container }, equalTo(setOf(taskDependencyContainer)))
                 }
 
                 it("is depended on by nothing") {
-                    assert.that(node.dependedOnBy, isEmpty)
+                    assertThat(node.dependedOnBy, isEmpty)
                 }
 
                 it("indicates that it is the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(true))
+                    assertThat(node.isRootNode, equalTo(true))
                 }
 
                 it("is the same node as the node for the task container") {
-                    assert.that(graph.nodeFor(taskContainer), equalTo(node))
+                    assertThat(graph.nodeFor(taskContainer), equalTo(node))
                 }
             }
 
@@ -458,15 +458,15 @@ object DependencyGraphSpec : Spek({
                 val node = graph.nodeFor(taskDependencyContainer)
 
                 it("depends on its direct dependency") {
-                    assert.that(node.dependsOn.mapToSet { it.container }, equalTo(setOf(otherDependencyContainer)))
+                    assertThat(node.dependsOn.mapToSet { it.container }, equalTo(setOf(otherDependencyContainer)))
                 }
 
                 it("is depended on by the task container") {
-                    assert.that(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer)))
+                    assertThat(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer)))
                 }
 
                 it("indicates that it is not the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(false))
+                    assertThat(node.isRootNode, equalTo(false))
                 }
             }
 
@@ -474,15 +474,15 @@ object DependencyGraphSpec : Spek({
                 val node = graph.nodeFor(otherDependencyContainer)
 
                 it("depends on nothing") {
-                    assert.that(node.dependsOn, isEmpty)
+                    assertThat(node.dependsOn, isEmpty)
                 }
 
                 it("is depended on by the task dependency") {
-                    assert.that(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskDependencyContainer)))
+                    assertThat(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskDependencyContainer)))
                 }
 
                 it("indicates that it is not the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(false))
+                    assertThat(node.isRootNode, equalTo(false))
                 }
             }
         }
@@ -499,19 +499,19 @@ object DependencyGraphSpec : Spek({
                 val node = graph.taskContainerNode
 
                 it("depends on the dependency") {
-                    assert.that(node.dependsOn.mapToSet { it.container }, equalTo(setOf(dependencyContainer)))
+                    assertThat(node.dependsOn.mapToSet { it.container }, equalTo(setOf(dependencyContainer)))
                 }
 
                 it("is depended on by nothing") {
-                    assert.that(node.dependedOnBy, isEmpty)
+                    assertThat(node.dependedOnBy, isEmpty)
                 }
 
                 it("indicates that it is the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(true))
+                    assertThat(node.isRootNode, equalTo(true))
                 }
 
                 it("is the same node as the node for the task container") {
-                    assert.that(graph.nodeFor(taskContainer), equalTo(node))
+                    assertThat(graph.nodeFor(taskContainer), equalTo(node))
                 }
             }
 
@@ -519,15 +519,15 @@ object DependencyGraphSpec : Spek({
                 val node = graph.nodeFor(dependencyContainer)
 
                 it("depends on nothing") {
-                    assert.that(node.dependsOn, isEmpty)
+                    assertThat(node.dependsOn, isEmpty)
                 }
 
                 it("is depended on by the task container") {
-                    assert.that(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer)))
+                    assertThat(node.dependedOnBy.mapToSet { it.container }, equalTo(setOf(taskContainer)))
                 }
 
                 it("indicates that it is not the root node of the graph") {
-                    assert.that(node.isRootNode, equalTo(false))
+                    assertThat(node.isRootNode, equalTo(false))
                 }
             }
         }
@@ -540,7 +540,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assert.that({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-container' referenced by container 'some-container' does not exist.")))
+                    assertThat({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-container' referenced by container 'some-container' does not exist.")))
                 }
             }
         }
@@ -554,7 +554,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assert.that({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-container' referenced by container 'dependency-container' does not exist.")))
+                    assertThat({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-container' referenced by container 'dependency-container' does not exist.")))
                 }
             }
         }
@@ -567,7 +567,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assert.that({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The container 'some-container' cannot depend on itself.")))
+                    assertThat({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The container 'some-container' cannot depend on itself.")))
                 }
             }
         }
@@ -581,7 +581,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assert.that({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The container 'dependency-container' cannot depend on itself.")))
+                    assertThat({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The container 'dependency-container' cannot depend on itself.")))
                 }
             }
         }
@@ -595,7 +595,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assert.that({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-a' depends on 'container-b', which depends on 'container-a'.")))
+                    assertThat({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-a' depends on 'container-b', which depends on 'container-a'.")))
                 }
             }
         }
@@ -610,7 +610,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assert.that({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-a' depends on 'container-b', which depends on 'container-c', which depends on 'container-a'.")))
+                    assertThat({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-a' depends on 'container-b', which depends on 'container-c', which depends on 'container-a'.")))
                 }
             }
         }
@@ -624,7 +624,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assert.that({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on the task container 'container-a'.")))
+                    assertThat({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on the task container 'container-a'.")))
                 }
             }
         }
@@ -639,7 +639,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assert.that({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on the task container 'container-a'.")))
+                    assertThat({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on the task container 'container-a'.")))
                 }
             }
         }
@@ -655,7 +655,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assert.that({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on 'container-d', and 'container-d' depends on the task container 'container-a'.")))
+                    assertThat({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on 'container-d', and 'container-d' depends on the task container 'container-a'.")))
                 }
             }
         }
@@ -670,7 +670,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assert.that({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on 'container-b'.")))
+                    assertThat({ DependencyGraph(config, task) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on 'container-b'.")))
                 }
             }
         }

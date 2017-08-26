@@ -1,6 +1,6 @@
 package decompose.docker
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -20,14 +20,14 @@ object ProcessRunnerSpec : Spek({
                 val command = listOf("rm", filePath.absolutePath)
                 runner.run(command)
 
-                assert.that(filePath.exists(), equalTo(false))
+                assertThat(filePath.exists(), equalTo(false))
             }
 
             it("returns the exit code of the command") {
                 val command = listOf("sh", "-c", "exit 123")
                 val exitCode = runner.run(command)
 
-                assert.that(exitCode, equalTo(123))
+                assertThat(exitCode, equalTo(123))
             }
         }
 
@@ -36,11 +36,11 @@ object ProcessRunnerSpec : Spek({
             val result = runner.runAndCaptureOutput(command)
 
             it("returns the exit code of the command") {
-                assert.that(result.exitCode, equalTo(201))
+                assertThat(result.exitCode, equalTo(201))
             }
 
             it("returns the combined standard output and standard error of the command") {
-                assert.that(result.output, equalTo("hello world\nhello error world\nmore non-error output\n"))
+                assertThat(result.output, equalTo("hello world\nhello error world\nmore non-error output\n"))
             }
         }
 
@@ -55,11 +55,11 @@ object ProcessRunnerSpec : Spek({
                 }
 
                 it("calls the processing method provided for each line written to stdout or stderr") {
-                    assert.that(linesProcessed, equalTo(listOf("line1", "line2", "lastLineWithoutTrailingNewLine")))
+                    assertThat(linesProcessed, equalTo(listOf("line1", "line2", "lastLineWithoutTrailingNewLine")))
                 }
 
                 it("returns the exit code of the process") {
-                    assert.that(result, equalTo(Exited<Any>(123) as RunAndProcessOutputResult<Any>))
+                    assertThat(result, equalTo(Exited<Any>(123) as RunAndProcessOutputResult<Any>))
                 }
             }
 
@@ -81,17 +81,17 @@ object ProcessRunnerSpec : Spek({
                 }
 
                 it("calls the processing method provided for each line written to stdout or stderr") {
-                    assert.that(linesProcessed, equalTo(listOf("line1", "line2")))
+                    assertThat(linesProcessed, equalTo(listOf("line1", "line2")))
                 }
 
                 it("returns the value provided by the processing method") {
-                    assert.that(result, equalTo(KilledDuringProcessing("I saw line 2") as RunAndProcessOutputResult<String>))
+                    assertThat(result, equalTo(KilledDuringProcessing("I saw line 2") as RunAndProcessOutputResult<String>))
                 }
 
                 it("kills the process when instructed to do so by the processing method") {
                     // FIXME This test has a race condition, but I can't think of any better way to test this.
                     Thread.sleep(200)
-                    assert.that(tempFile.length(), equalTo(0L))
+                    assertThat(tempFile.length(), equalTo(0L))
                 }
             }
         }

@@ -1,7 +1,7 @@
 package decompose.docker
 
 import com.natpryce.hamkrest.Matcher
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.any
@@ -51,7 +51,7 @@ object DockerClientSpec : Spek({
                     }
 
                     it("returns the ID of the created image") {
-                        assert.that(result.id, equalTo(imageLabel))
+                        assertThat(result.id, equalTo(imageLabel))
                     }
                 }
 
@@ -59,7 +59,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.run(any())).thenReturn(1)
 
                     it("raises an appropriate exception") {
-                        assert.that({ client.build("the-project", container) }, throws<ImageBuildFailedException>())
+                        assertThat({ client.build("the-project", container) }, throws<ImageBuildFailedException>())
                     }
                 }
             }
@@ -88,7 +88,7 @@ object DockerClientSpec : Spek({
                     }
 
                     it("returns the ID of the created container") {
-                        assert.that(result.id, equalTo(containerId))
+                        assertThat(result.id, equalTo(containerId))
                     }
                 }
 
@@ -96,7 +96,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Something went wrong."))
 
                     it("raises an appropriate exception") {
-                        assert.that({ client.create(container, command, image, network) }, throws<ContainerCreationFailedException>(withMessage("Creation of container 'the-container' failed. Output from Docker was: Something went wrong.")))
+                        assertThat({ client.create(container, command, image, network) }, throws<ContainerCreationFailedException>(withMessage("Creation of container 'the-container' failed. Output from Docker was: Something went wrong.")))
                     }
                 }
             }
@@ -116,7 +116,7 @@ object DockerClientSpec : Spek({
                     }
 
                     it("returns the exit code from the container") {
-                        assert.that(result.exitCode, equalTo(123))
+                        assertThat(result.exitCode, equalTo(123))
                     }
                 }
             }
@@ -140,7 +140,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Something went wrong."))
 
                     it("raises an appropriate exception") {
-                        assert.that({ client.start(container) }, throws<ContainerStartFailedException>(withMessage("Starting container 'the-container' failed. Output from Docker was: Something went wrong.")))
+                        assertThat({ client.start(container) }, throws<ContainerStartFailedException>(withMessage("Starting container 'the-container' failed. Output from Docker was: Something went wrong.")))
                     }
                 }
             }
@@ -164,7 +164,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Error response from daemon: No such container: ${container.id}"))
 
                     it("raises an appropriate exception") {
-                        assert.that({ client.stop(container) }, throws<ContainerDoesNotExistException>(withMessage("Stopping container 'the-container' failed because it does not exist. If it was started with '--rm', it may have already stopped and removed itself.")))
+                        assertThat({ client.stop(container) }, throws<ContainerDoesNotExistException>(withMessage("Stopping container 'the-container' failed because it does not exist. If it was started with '--rm', it may have already stopped and removed itself.")))
                     }
                 }
 
@@ -172,7 +172,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Something went wrong."))
 
                     it("raises an appropriate exception") {
-                        assert.that({ client.stop(container) }, throws<ContainerStopFailedException>(withMessage("Stopping container 'the-container' failed. Output from Docker was: Something went wrong.")))
+                        assertThat({ client.stop(container) }, throws<ContainerStopFailedException>(withMessage("Stopping container 'the-container' failed. Output from Docker was: Something went wrong.")))
                     }
                 }
             }
@@ -189,7 +189,7 @@ object DockerClientSpec : Spek({
                     val result = client.waitForHealthStatus(container)
 
                     it("reports that the container does not have a healthcheck") {
-                        assert.that(result, equalTo(HealthStatus.NoHealthCheck))
+                        assertThat(result, equalTo(HealthStatus.NoHealthCheck))
                     }
                 }
             }
@@ -206,7 +206,7 @@ object DockerClientSpec : Spek({
                     val result = client.waitForHealthStatus(container)
 
                     it("reports that the container became healthy") {
-                        assert.that(result, equalTo(HealthStatus.BecameHealthy))
+                        assertThat(result, equalTo(HealthStatus.BecameHealthy))
                     }
                 }
             }
@@ -223,7 +223,7 @@ object DockerClientSpec : Spek({
                     val result = client.waitForHealthStatus(container)
 
                     it("reports that the container became unhealthy") {
-                        assert.that(result, equalTo(HealthStatus.BecameUnhealthy))
+                        assertThat(result, equalTo(HealthStatus.BecameUnhealthy))
                     }
                 }
             }
@@ -240,7 +240,7 @@ object DockerClientSpec : Spek({
                     val result = client.waitForHealthStatus(container)
 
                     it("reports that the container exited") {
-                        assert.that(result, equalTo(HealthStatus.Exited))
+                        assertThat(result, equalTo(HealthStatus.Exited))
                     }
                 }
             }
@@ -256,7 +256,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndProcessOutput<HealthStatus>(eq(command), any())).thenReturn(Exited(123))
 
                     it("throws an appropriate exception") {
-                        assert.that({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Event stream for container 'the-container' exited early with exit code 123.")))
+                        assertThat({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Event stream for container 'the-container' exited early with exit code 123.")))
                     }
                 }
             }
@@ -271,14 +271,14 @@ object DockerClientSpec : Spek({
                 it("creates the network") {
                     verify(processRunner).runAndCaptureOutput(check { command ->
                         val expectedCommandTemplate = listOf("docker", "network", "create", "--driver", "bridge")
-                        assert.that(command.count(), equalTo(expectedCommandTemplate.size + 1))
-                        assert.that(command.take(expectedCommandTemplate.size), equalTo(expectedCommandTemplate))
-                        assert.that(command.last(), isUUID)
+                        assertThat(command.count(), equalTo(expectedCommandTemplate.size + 1))
+                        assertThat(command.take(expectedCommandTemplate.size), equalTo(expectedCommandTemplate))
+                        assertThat(command.last(), isUUID)
                     })
                 }
 
                 it("returns the ID of the created network") {
-                    assert.that(result.id, equalTo("the-network-ID"))
+                    assertThat(result.id, equalTo("the-network-ID"))
                 }
             }
 
@@ -286,7 +286,7 @@ object DockerClientSpec : Spek({
                 whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
 
                 it("throws an appropriate exception") {
-                    assert.that({ client.createNewBridgeNetwork() }, throws<NetworkCreationFailedException>(withMessage("Creation of network failed. Output from Docker was: Something went wrong.")))
+                    assertThat({ client.createNewBridgeNetwork() }, throws<NetworkCreationFailedException>(withMessage("Creation of network failed. Output from Docker was: Something went wrong.")))
                 }
             }
         }
@@ -309,7 +309,7 @@ object DockerClientSpec : Spek({
                 whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
 
                 it("throws an appropriate exception") {
-                    assert.that({ client.deleteNetwork(network) }, throws<NetworkDeletionFailedException>(withMessage("Deletion of network 'abc123' failed. Output from Docker was: Something went wrong.")))
+                    assertThat({ client.deleteNetwork(network) }, throws<NetworkDeletionFailedException>(withMessage("Deletion of network 'abc123' failed. Output from Docker was: Something went wrong.")))
                 }
             }
         }
@@ -329,7 +329,7 @@ private fun ProcessRunner.whenGettingEventsForContainerRespondWith(containerId: 
         val processor: (String) -> OutputProcessing<HealthStatus> = invocation.getArgument(1)
         val processingResponse = processor.invoke(event)
 
-        assert.that(processingResponse, com.natpryce.hamkrest.isA<KillProcess<HealthStatus>>())
+        assertThat(processingResponse, com.natpryce.hamkrest.isA<KillProcess<HealthStatus>>())
 
         KilledDuringProcessing((processingResponse as KillProcess<HealthStatus>).result)
     }

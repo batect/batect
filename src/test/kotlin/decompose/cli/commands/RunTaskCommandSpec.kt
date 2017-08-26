@@ -3,7 +3,7 @@ package decompose.cli.commands
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockito_kotlin.doReturn
@@ -38,11 +38,11 @@ object RunTaskCommandSpec : Spek({
                 val result = commandLine.parse(listOf("the-task"), kodein)
 
                 it("indicates that parsing succeeded") {
-                    assert.that(result, isA<Succeeded>())
+                    assertThat(result, isA<Succeeded>())
                 }
 
                 it("returns a command instance ready for use") {
-                    assert.that((result as Succeeded).command, equalTo<Command>(RunTaskCommand("thefile.yml", "the-task", configLoader, taskRunner)))
+                    assertThat((result as Succeeded).command, equalTo<Command>(RunTaskCommand("thefile.yml", "the-task", configLoader, taskRunner)))
                 }
             }
         }
@@ -71,7 +71,7 @@ object RunTaskCommandSpec : Spek({
                 }
 
                 it("returns the exit code of the task") {
-                    assert.that(exitCode, equalTo(expectedTaskExitCode))
+                    assertThat(exitCode, equalTo(expectedTaskExitCode))
                 }
             }
         }

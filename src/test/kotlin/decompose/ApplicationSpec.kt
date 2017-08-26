@@ -3,7 +3,7 @@ package decompose
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.mock
@@ -51,11 +51,11 @@ object ApplicationSpec : Spek({
                 val exitCode = application.run(args)
 
                 it("does not print anything to the error stream") {
-                    assert.that(errorStream.toString(), equalTo(""))
+                    assertThat(errorStream.toString(), equalTo(""))
                 }
 
                 it("returns the exit code from the command") {
-                    assert.that(exitCode, equalTo(123))
+                    assertThat(exitCode, equalTo(123))
                 }
             }
         }
@@ -67,11 +67,11 @@ object ApplicationSpec : Spek({
                 val exitCode = application.run(args)
 
                 it("prints the error message to the error stream") {
-                    assert.that(errorStream.toString(), equalTo("Something went wrong while parsing arguments\n"))
+                    assertThat(errorStream.toString(), equalTo("Something went wrong while parsing arguments\n"))
                 }
 
                 it("returns a non-zero exit code") {
-                    assert.that(exitCode, !equalTo(0))
+                    assertThat(exitCode, !equalTo(0))
                 }
             }
         }
@@ -83,11 +83,11 @@ object ApplicationSpec : Spek({
                 val exitCode = application.run(args)
 
                 it("prints the exception message to the error stream") {
-                    assert.that(errorStream.toString(), containsSubstring("Everything is broken"))
+                    assertThat(errorStream.toString(), containsSubstring("Everything is broken"))
                 }
 
                 it("returns a non-zero exit code") {
-                    assert.that(exitCode, !equalTo(0))
+                    assertThat(exitCode, !equalTo(0))
                 }
             }
         }
@@ -103,11 +103,11 @@ object ApplicationSpec : Spek({
                 val exitCode = application.run(args)
 
                 it("prints the exception message to the error stream") {
-                    assert.that(errorStream.toString(), containsSubstring("Everything is broken"))
+                    assertThat(errorStream.toString(), containsSubstring("Everything is broken"))
                 }
 
                 it("returns a non-zero exit code") {
-                    assert.that(exitCode, !equalTo(0))
+                    assertThat(exitCode, !equalTo(0))
                 }
             }
         }

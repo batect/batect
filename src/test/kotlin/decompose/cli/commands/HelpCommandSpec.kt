@@ -1,7 +1,7 @@
 package decompose.cli.commands
 
 import com.github.salomonbrys.kodein.Kodein
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
@@ -44,7 +44,7 @@ object HelpCommandSpec : Spek({
                 val exitCode = command.run()
 
                 it("prints help information") {
-                    assert.that(output.toString(), equalTo("""
+                    assertThat(output.toString(), equalTo("""
                         |Usage: decompose COMMAND [COMMAND OPTIONS]
                         |
                         |Commands:
@@ -57,7 +57,7 @@ object HelpCommandSpec : Spek({
                 }
 
                 it("returns a non-zero exit code") {
-                    assert.that(exitCode, !equalTo(0))
+                    assertThat(exitCode, !equalTo(0))
                 }
             }
 
@@ -79,7 +79,7 @@ object HelpCommandSpec : Spek({
                 val exitCode = command.run()
 
                 it("prints help information") {
-                    assert.that(output.toString(), equalTo("""
+                    assertThat(output.toString(), equalTo("""
                         |Usage: decompose [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]
                         |
                         |Commands:
@@ -98,7 +98,7 @@ object HelpCommandSpec : Spek({
                 }
 
                 it("returns a non-zero exit code") {
-                    assert.that(exitCode, !equalTo(0))
+                    assertThat(exitCode, !equalTo(0))
                 }
             }
         }
@@ -120,7 +120,7 @@ object HelpCommandSpec : Spek({
                         val exitCode = command.run()
 
                         it("prints help information") {
-                            assert.that(output.toString(), equalTo("""
+                            assertThat(output.toString(), equalTo("""
                             |Usage: decompose [COMMON OPTIONS] do-stuff
                             |
                             |Do the thing.
@@ -133,7 +133,7 @@ object HelpCommandSpec : Spek({
                         }
 
                         it("returns a non-zero exit code") {
-                            assert.that(exitCode, !equalTo(0))
+                            assertThat(exitCode, !equalTo(0))
                         }
                     }
 
@@ -154,7 +154,7 @@ object HelpCommandSpec : Spek({
                         val exitCode = command.run()
 
                         it("prints help information") {
-                            assert.that(output.toString(), equalTo("""
+                            assertThat(output.toString(), equalTo("""
                             |Usage: decompose [COMMON OPTIONS] do-stuff [THING]
                             |
                             |Do the thing.
@@ -168,7 +168,7 @@ object HelpCommandSpec : Spek({
                         }
 
                         it("returns a non-zero exit code") {
-                            assert.that(exitCode, !equalTo(0))
+                            assertThat(exitCode, !equalTo(0))
                         }
                     }
 
@@ -189,7 +189,7 @@ object HelpCommandSpec : Spek({
                         val exitCode = command.run()
 
                         it("prints help information") {
-                            assert.that(output.toString(), equalTo("""
+                            assertThat(output.toString(), equalTo("""
                             |Usage: decompose [COMMON OPTIONS] do-stuff THING
                             |
                             |Do the thing.
@@ -203,7 +203,7 @@ object HelpCommandSpec : Spek({
                         }
 
                         it("returns a non-zero exit code") {
-                            assert.that(exitCode, !equalTo(0))
+                            assertThat(exitCode, !equalTo(0))
                         }
                     }
 
@@ -225,7 +225,7 @@ object HelpCommandSpec : Spek({
                         val exitCode = command.run()
 
                         it("prints help information") {
-                            assert.that(output.toString(), equalTo("""
+                            assertThat(output.toString(), equalTo("""
                             |Usage: decompose [COMMON OPTIONS] do-stuff THING OTHER-THING
                             |
                             |Do the thing.
@@ -240,7 +240,7 @@ object HelpCommandSpec : Spek({
                         }
 
                         it("returns a non-zero exit code") {
-                            assert.that(exitCode, !equalTo(0))
+                            assertThat(exitCode, !equalTo(0))
                         }
                     }
 
@@ -262,7 +262,7 @@ object HelpCommandSpec : Spek({
                         val exitCode = command.run()
 
                         it("prints help information") {
-                            assert.that(output.toString(), equalTo("""
+                            assertThat(output.toString(), equalTo("""
                             |Usage: decompose [COMMON OPTIONS] do-stuff THING [OTHER-THING]
                             |
                             |Do the thing.
@@ -277,7 +277,7 @@ object HelpCommandSpec : Spek({
                         }
 
                         it("returns a non-zero exit code") {
-                            assert.that(exitCode, !equalTo(0))
+                            assertThat(exitCode, !equalTo(0))
                         }
                     }
                 }
@@ -293,7 +293,7 @@ object HelpCommandSpec : Spek({
                     val exitCode = command.run()
 
                     it("does not include the placeholder for common options in the header or print a message about common options") {
-                        assert.that(output.toString(), equalTo("""
+                        assertThat(output.toString(), equalTo("""
                             |Usage: decompose do-stuff
                             |
                             |Do the thing.
@@ -304,7 +304,7 @@ object HelpCommandSpec : Spek({
                     }
 
                     it("returns a non-zero exit code") {
-                        assert.that(exitCode, !equalTo(0))
+                        assertThat(exitCode, !equalTo(0))
                     }
                 }
             }
@@ -317,11 +317,11 @@ object HelpCommandSpec : Spek({
                 val exitCode = command.run()
 
                 it("prints an error message") {
-                    assert.that(output.toString(), equalTo("Invalid command 'unknown-command'. Run 'decompose help' for a list of valid commands.\n"))
+                    assertThat(output.toString(), equalTo("Invalid command 'unknown-command'. Run 'decompose help' for a list of valid commands.\n"))
                 }
 
                 it("returns a non-zero exit code") {
-                    assert.that(exitCode, !equalTo(0))
+                    assertThat(exitCode, !equalTo(0))
                 }
             }
         }

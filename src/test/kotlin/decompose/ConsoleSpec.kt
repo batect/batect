@@ -1,7 +1,7 @@
 package decompose
 
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.assertion.assert
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -28,7 +28,7 @@ object ConsoleSpec : Spek({
             console.print("This is some text")
 
             it("writes the text directly to the output") {
-                assert.that(output.toString(), equalTo("This is some text"))
+                assertThat(output.toString(), equalTo("This is some text"))
             }
         }
 
@@ -36,7 +36,7 @@ object ConsoleSpec : Spek({
             console.println("This is some text")
 
             it("writes the text directly to the output") {
-                assert.that(output.toString(), equalTo("This is some text\n"))
+                assertThat(output.toString(), equalTo("This is some text\n"))
             }
         }
 
@@ -46,7 +46,7 @@ object ConsoleSpec : Spek({
             }
 
             it("writes the text to the output with the appropriate escape codes") {
-                assert.that(output.toString(), equalTo("${whiteText}the white text$reset"))
+                assertThat(output.toString(), equalTo("${whiteText}the white text$reset"))
             }
         }
 
@@ -62,7 +62,7 @@ object ConsoleSpec : Spek({
             }
 
             it("writes the text to the output with the appropriate escape codes") {
-                assert.that(output.toString(), equalTo("${whiteText}white\n${reset}${redText}red\n${reset}${whiteText}more white\n$reset"))
+                assertThat(output.toString(), equalTo("${whiteText}white\n${reset}${redText}red\n${reset}${whiteText}more white\n$reset"))
             }
         }
 
@@ -78,7 +78,7 @@ object ConsoleSpec : Spek({
             }
 
             it("writes the text to the output with the appropriate escape codes") {
-                assert.that(output.toString(), equalTo("${whiteText}white 1\nwhite 2\nwhite 3\n$reset"))
+                assertThat(output.toString(), equalTo("${whiteText}white 1\nwhite 2\nwhite 3\n$reset"))
             }
         }
 
@@ -88,7 +88,7 @@ object ConsoleSpec : Spek({
             }
 
             it("writes the text to the output with the appropriate escape codes") {
-                assert.that(output.toString(), equalTo("${boldText}the bold text$reset"))
+                assertThat(output.toString(), equalTo("${boldText}the bold text$reset"))
             }
         }
 
@@ -96,7 +96,7 @@ object ConsoleSpec : Spek({
             console.printBold("the bold text")
 
             it("writes the text to the output with the appropriate escape codes") {
-                assert.that(output.toString(), equalTo("${boldText}the bold text$reset"))
+                assertThat(output.toString(), equalTo("${boldText}the bold text$reset"))
             }
         }
 
@@ -108,7 +108,7 @@ object ConsoleSpec : Spek({
             }
 
             it("writes the text to the output with the appropriate escape codes") {
-                assert.that(output.toString(), equalTo("${boldText}the bold text$reset"))
+                assertThat(output.toString(), equalTo("${boldText}the bold text$reset"))
             }
         }
 
@@ -122,7 +122,7 @@ object ConsoleSpec : Spek({
             }
 
             it("writes the text to the output with the appropriate escape codes") {
-                assert.that(output.toString(), equalTo("${redText}red${boldText}bold${reset}${redText}more red$reset"))
+                assertThat(output.toString(), equalTo("${redText}red${boldText}bold${reset}${redText}more red$reset"))
             }
         }
 
@@ -136,7 +136,7 @@ object ConsoleSpec : Spek({
             }
 
             it("writes the text to the output with the appropriate escape codes") {
-                assert.that(output.toString(), equalTo("${boldText}bold${redText}red${reset}${boldText}more bold$reset"))
+                assertThat(output.toString(), equalTo("${boldText}bold${redText}red${reset}${boldText}more bold$reset"))
             }
         }
 
@@ -163,7 +163,7 @@ object ConsoleSpec : Spek({
                         "${boldText}${whiteText}more white$reset" +
                         "${boldText}more bold$reset"
 
-                assert.that(output.toString(), equalTo(expected))
+                assertThat(output.toString(), equalTo(expected))
             }
         }
     }

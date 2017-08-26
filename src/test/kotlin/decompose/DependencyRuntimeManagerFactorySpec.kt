@@ -1,6 +1,6 @@
 package decompose
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
@@ -33,19 +33,19 @@ object DependencyRuntimeManagerFactorySpec : Spek({
             val manager = factory.create(config, task)
 
             it("creates a new dependency runtime manager with the dependencies of the given task") {
-                assert.that(manager.dependencies, equalTo(dependencies))
+                assertThat(manager.dependencies, equalTo(dependencies))
             }
 
             it("creates a new dependency runtime manager with the given project's name") {
-                assert.that(manager.projectName, equalTo(config.projectName))
+                assertThat(manager.projectName, equalTo(config.projectName))
             }
 
             it("creates a new dependency runtime manager with the given event logger") {
-                assert.that(manager.eventLogger, equalTo(eventLogger))
+                assertThat(manager.eventLogger, equalTo(eventLogger))
             }
 
             it("creates a new dependency runtime manager with the given Docker client") {
-                assert.that(manager.dockerClient, equalTo(dockerClient))
+                assertThat(manager.dockerClient, equalTo(dockerClient))
             }
         }
     }

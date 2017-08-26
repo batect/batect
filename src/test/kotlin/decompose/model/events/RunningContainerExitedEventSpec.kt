@@ -1,6 +1,6 @@
 package decompose.model.events
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
@@ -50,7 +50,7 @@ object RunningContainerExitedEventSpec : Spek({
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assert.that(event.toString(), equalTo("RunningContainerExitedEvent(container: 'container-1', exit code: 123)"))
+                assertThat(event.toString(), equalTo("RunningContainerExitedEvent(container: 'container-1', exit code: 123)"))
             }
         }
     }

@@ -3,7 +3,7 @@ package decompose.cli.commands
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockito_kotlin.doReturn
@@ -41,11 +41,11 @@ object ListTasksCommandSpec : Spek({
                 val result = commandLine.parse(emptyList(), kodein)
 
                 it("indicates that parsing succeeded") {
-                    assert.that(result, isA<Succeeded>())
+                    assertThat(result, isA<Succeeded>())
                 }
 
                 it("returns a command instance ready for use") {
-                    assert.that((result as Succeeded).command, equalTo<Command>(ListTasksCommand("thefile.yml", configLoader, outputStream)))
+                    assertThat((result as Succeeded).command, equalTo<Command>(ListTasksCommand("thefile.yml", configLoader, outputStream)))
                 }
             }
         }
@@ -69,7 +69,7 @@ object ListTasksCommandSpec : Spek({
                 val exitCode = command.run()
 
                 it("prints the names of the available tasks in alphabetical order") {
-                    assert.that(output.toString(), equalTo("""
+                    assertThat(output.toString(), equalTo("""
                         |Available tasks:
                         |- another-task-with-a-description: do the thing
                         |- first-task
@@ -78,7 +78,7 @@ object ListTasksCommandSpec : Spek({
                 }
 
                 it("returns a zero exit code") {
-                    assert.that(exitCode, equalTo(0))
+                    assertThat(exitCode, equalTo(0))
                 }
             }
         }

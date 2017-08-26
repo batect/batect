@@ -3,7 +3,7 @@ package decompose.cli
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isIn
 import com.natpryce.hamkrest.throws
@@ -56,7 +56,7 @@ object CommandLineParserSpec : Spek({
 
                 on("parsing a list of arguments") {
                     it("indicates that parsing failed") {
-                        assert.that(parser.parse(listOf("abc", "123")),
+                        assertThat(parser.parse(listOf("abc", "123")),
                                 equalTo<CommandLineParsingResult>(Failed("Something was invalid")))
                     }
                 }
@@ -71,7 +71,7 @@ object CommandLineParserSpec : Spek({
                     val result = parser.parse(listOf("--some-option", "--some-other-option"))
 
                     it("indicates that parsing failed because no command was provided") {
-                        assert.that(result, equalTo<CommandLineParsingResult>(Failed("No command specified. Run 'decompose help' for a list of valid commands.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("No command specified. Run 'decompose help' for a list of valid commands.")))
                     }
                 }
 
@@ -79,7 +79,7 @@ object CommandLineParserSpec : Spek({
                     val result = parser.parse(listOf("--some-option", "--some-other-option", "some-non-existent-command"))
 
                     it("indicates that parsing failed") {
-                        assert.that(result, equalTo<CommandLineParsingResult>(Failed("Invalid command 'some-non-existent-command'. Run 'decompose help' for a list of valid commands.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Invalid command 'some-non-existent-command'. Run 'decompose help' for a list of valid commands.")))
                     }
                 }
 
@@ -87,7 +87,7 @@ object CommandLineParserSpec : Spek({
                     val result = parser.parse(listOf("--some-option", "--some-other-option", "--some-unknown-option", "do-stuff"))
 
                     it("indicates that parsing failed") {
-                        assert.that(result, equalTo<CommandLineParsingResult>(Failed("Invalid option '--some-unknown-option'. Run 'decompose help' for a list of valid options.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Invalid option '--some-unknown-option'. Run 'decompose help' for a list of valid options.")))
                     }
                 }
 
@@ -103,7 +103,7 @@ object CommandLineParserSpec : Spek({
                             val result = parser.parse(listOf("--some-option", "--some-other-option", "do-stuff"))
 
                             it("indicates that parsing succeeded") {
-                                assert.that(result, equalTo<CommandLineParsingResult>(Succeeded(command)))
+                                assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(command)))
                             }
 
                             it("passes an empty list of arguments to the command") {
@@ -123,7 +123,7 @@ object CommandLineParserSpec : Spek({
                             val result = parser.parse(listOf("--some-option", "--some-other-option", "do-stuff", "some-command-parameter"))
 
                             it("indicates that parsing succeeded") {
-                                assert.that(result, equalTo<CommandLineParsingResult>(Succeeded(command)))
+                                assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(command)))
                             }
 
                             it("passes the command-specific arguments to the command") {
@@ -149,7 +149,7 @@ object CommandLineParserSpec : Spek({
                             val result = parser.parse(listOf("--some-option", "--some-other-option", "do-stuff"))
 
                             it("indicates that parsing failed") {
-                                assert.that(result, equalTo<CommandLineParsingResult>(Failed("Something went wrong")))
+                                assertThat(result, equalTo<CommandLineParsingResult>(Failed("Something went wrong")))
                             }
                         }
                     }
@@ -165,7 +165,7 @@ object CommandLineParserSpec : Spek({
                             val result = parser.parse(listOf("--some-option", "--some-other-option", "ds"))
 
                             it("indicates that parsing succeeded") {
-                                assert.that(result, equalTo<CommandLineParsingResult>(Succeeded(command)))
+                                assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(command)))
                             }
                         }
                     }
@@ -187,7 +187,7 @@ object CommandLineParserSpec : Spek({
                 val commands = parser.getAllCommandDefinitions()
 
                 it("includes the newly registered command") {
-                    assert.that(commandDefinition, isIn(commands))
+                    assertThat(commandDefinition, isIn(commands))
                 }
             }
 
@@ -195,7 +195,7 @@ object CommandLineParserSpec : Spek({
                 val commandFound = parser.getCommandDefinitionByName("do-stuff")
 
                 it("returns the newly registered command") {
-                    assert.that<CommandDefinition?>(commandFound, equalTo(commandDefinition))
+                    assertThat(commandFound, equalTo<CommandDefinition?>(commandDefinition))
                 }
             }
 
@@ -203,7 +203,7 @@ object CommandLineParserSpec : Spek({
                 val commandFound = parser.getCommandDefinitionByName("do-stuff-alias")
 
                 it("returns the newly registered command") {
-                    assert.that<CommandDefinition?>(commandFound, equalTo(commandDefinition))
+                    assertThat(commandFound, equalTo<CommandDefinition?>(commandDefinition))
                 }
             }
 
@@ -213,7 +213,7 @@ object CommandLineParserSpec : Spek({
                 }
 
                 it("throws an exception") {
-                    assert.that({ parser.addCommandDefinition(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff' is already registered.")))
+                    assertThat({ parser.addCommandDefinition(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff' is already registered.")))
                 }
             }
 
@@ -223,7 +223,7 @@ object CommandLineParserSpec : Spek({
                 }
 
                 it("throws an exception") {
-                    assert.that({ parser.addCommandDefinition(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff-alias' is already registered.")))
+                    assertThat({ parser.addCommandDefinition(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff-alias' is already registered.")))
                 }
             }
 
@@ -233,7 +233,7 @@ object CommandLineParserSpec : Spek({
                 }
 
                 it("throws an exception") {
-                    assert.that({ parser.addCommandDefinition(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff' is already registered.")))
+                    assertThat({ parser.addCommandDefinition(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff' is already registered.")))
                 }
             }
 
@@ -243,7 +243,7 @@ object CommandLineParserSpec : Spek({
                 }
 
                 it("throws an exception") {
-                    assert.that({ parser.addCommandDefinition(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff-alias' is already registered.")))
+                    assertThat({ parser.addCommandDefinition(newCommand) }, throws(withMessage("A command with the name or alias 'do-stuff-alias' is already registered.")))
                 }
             }
         }

@@ -1,6 +1,6 @@
 package decompose.config
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import decompose.testutils.withMessage
@@ -16,17 +16,17 @@ object VolumeMountSpec : Spek({
                 val volumeMount = VolumeMount.parse("/local:/container")
 
                 it("returns the correct local path") {
-                    assert.that(volumeMount.localPath, equalTo("/local"))
+                    assertThat(volumeMount.localPath, equalTo("/local"))
                 }
 
                 it("returns the correct container path") {
-                    assert.that(volumeMount.containerPath, equalTo("/container"))
+                    assertThat(volumeMount.containerPath, equalTo("/container"))
                 }
             }
 
             on("parsing an empty volume mount definition") {
                 it("fails with an appropriate error message") {
-                    assert.that({ VolumeMount.parse("") }, throws(withMessage("Volume mount definition cannot be empty.")))
+                    assertThat({ VolumeMount.parse("") }, throws(withMessage("Volume mount definition cannot be empty.")))
                 }
             }
 
@@ -39,7 +39,7 @@ object VolumeMountSpec : Spek({
             ).map {
                 on("parsing the invalid volume mount definition '$it'") {
                     it("fails with an appropriate error message") {
-                        assert.that({ VolumeMount.parse(it) }, throws(withMessage("Volume mount definition '$it' is not valid. It must be in the form 'local_path:container_path'.")))
+                        assertThat({ VolumeMount.parse(it) }, throws(withMessage("Volume mount definition '$it' is not valid. It must be in the form 'local_path:container_path'.")))
                     }
                 }
             }

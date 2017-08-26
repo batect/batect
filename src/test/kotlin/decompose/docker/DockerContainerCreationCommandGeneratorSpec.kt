@@ -1,6 +1,6 @@
 package decompose.docker
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import decompose.config.Container
@@ -27,7 +27,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 val commandLine = generator.createCommandLine(container, command, image, network)
 
                 it("generates the correct command line, taking the command from the task") {
-                    assert.that(commandLine, equalTo(listOf(
+                    assertThat(commandLine, equalTo(listOf(
                             "docker", "create",
                             "--rm", "-it",
                             "--network", network.id,
@@ -49,7 +49,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 val commandLine = generator.createCommandLine(container, command, image, network)
 
                 it("generates the correct command line, taking the command from the container") {
-                    assert.that(commandLine, equalTo(listOf(
+                    assertThat(commandLine, equalTo(listOf(
                             "docker", "create",
                             "--rm", "-it",
                             "--network", network.id,
@@ -70,7 +70,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 val commandLine = generator.createCommandLine(container, null, image, network)
 
                 it("generates the correct command line, not specifying an explicit command") {
-                    assert.that(commandLine, equalTo(listOf(
+                    assertThat(commandLine, equalTo(listOf(
                             "docker", "create",
                             "--rm", "-it",
                             "--network", network.id,
@@ -91,7 +91,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 val commandLine = generator.createCommandLine(container, command, image, network)
 
                 it("generates the correct command line, taking the command from the task") {
-                    assert.that(commandLine, equalTo(listOf(
+                    assertThat(commandLine, equalTo(listOf(
                             "docker", "create",
                             "--rm", "-it",
                             "--network", network.id,
@@ -120,7 +120,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 val commandLine = generator.createCommandLine(container, command, image, network)
 
                 it("generates the correct command line") {
-                    assert.that(commandLine, equalTo(listOf(
+                    assertThat(commandLine, equalTo(listOf(
                             "docker", "create",
                             "--rm", "-it",
                             "--network", network.id,
@@ -173,7 +173,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                             image.id) + expectedSplit
 
                     it("generates the correct command line") {
-                        assert.that(commandLine, equalTo(expectedCommandLine.asIterable()))
+                        assertThat(commandLine, equalTo(expectedCommandLine.asIterable()))
                     }
                 }
             }
@@ -192,7 +192,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
 
                 on("generating the command") {
                     it("throws an exception with the message '$expectedErrorMessage'") {
-                        assert.that({ generator.createCommandLine(container, command, image, network) },
+                        assertThat({ generator.createCommandLine(container, command, image, network) },
                                 throws<ContainerCreationFailedException>(withMessage("Command line `$command` is invalid: $expectedErrorMessage")))
                     }
                 }

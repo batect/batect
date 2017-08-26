@@ -1,6 +1,6 @@
 package decompose.docker
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import decompose.config.Container
 import org.jetbrains.spek.api.Spek
@@ -21,7 +21,7 @@ object DockerImageLabellingStrategySpec : Spek({
                 val label = imageLabellingStrategy.labelImage(projectName, container)
 
                 it("returns the expected image name") {
-                    assert.that(label, equalTo("the-project-the-container:latest"))
+                    assertThat(label, equalTo("the-project-the-container:latest"))
                 }
             }
         }

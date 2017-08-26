@@ -1,6 +1,6 @@
 package decompose.config
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import decompose.testutils.withMessage
@@ -16,17 +16,17 @@ object PortMappingSpec : Spek({
                 val portMapping = PortMapping.parse("123:456")
 
                 it("returns the correct local path") {
-                    assert.that(portMapping.localPort, equalTo(123))
+                    assertThat(portMapping.localPort, equalTo(123))
                 }
 
                 it("returns the correct container path") {
-                    assert.that(portMapping.containerPort, equalTo(456))
+                    assertThat(portMapping.containerPort, equalTo(456))
                 }
             }
 
             on("parsing an empty port mapping definition") {
                 it("fails with an appropriate error message") {
-                    assert.that({ PortMapping.parse("") }, throws(withMessage("Port mapping definition cannot be empty.")))
+                    assertThat({ PortMapping.parse("") }, throws(withMessage("Port mapping definition cannot be empty.")))
                 }
             }
 
@@ -48,7 +48,7 @@ object PortMappingSpec : Spek({
             ).map {
                 on("parsing the invalid port mapping definition '$it'") {
                     it("fails with an appropriate error message") {
-                        assert.that({ PortMapping.parse(it) }, throws(withMessage("Port mapping definition '$it' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.")))
+                        assertThat({ PortMapping.parse(it) }, throws(withMessage("Port mapping definition '$it' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.")))
                     }
                 }
             }

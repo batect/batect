@@ -1,6 +1,6 @@
 package decompose.config.io
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.throws
@@ -30,15 +30,15 @@ object ConfigurationFileSpec : Spek({
                 val resultingConfig = configFile.toConfiguration(pathResolver)
 
                 it("returns a configuration object with the project name") {
-                    assert.that(resultingConfig.projectName, equalTo("the_project_name"))
+                    assertThat(resultingConfig.projectName, equalTo("the_project_name"))
                 }
 
                 it("returns a configuration object with no tasks") {
-                    assert.that(resultingConfig.tasks, isEmpty)
+                    assertThat(resultingConfig.tasks, isEmpty)
                 }
 
                 it("returns a configuration object with no containers") {
-                    assert.that(resultingConfig.containers, isEmpty)
+                    assertThat(resultingConfig.containers, isEmpty)
                 }
             }
 
@@ -50,17 +50,17 @@ object ConfigurationFileSpec : Spek({
                 val resultingConfig = configFile.toConfiguration(pathResolver)
 
                 it("returns a configuration object with the project name") {
-                    assert.that(resultingConfig.projectName, equalTo("the_project_name"))
+                    assertThat(resultingConfig.projectName, equalTo("the_project_name"))
                 }
 
                 it("returns a configuration object with the task") {
-                    assert.that(resultingConfig.tasks, equalTo(TaskMap(
+                    assertThat(resultingConfig.tasks, equalTo(TaskMap(
                             Task(taskName, task.runConfiguration, "Some description", task.dependencies)
                     )))
                 }
 
                 it("returns a configuration object with no containers") {
-                    assert.that(resultingConfig.containers, isEmpty)
+                    assertThat(resultingConfig.containers, isEmpty)
                 }
             }
 
@@ -91,15 +91,15 @@ object ConfigurationFileSpec : Spek({
                 val resultingConfig = configFile.toConfiguration(pathResolver)
 
                 it("returns a configuration object with the project name") {
-                    assert.that(resultingConfig.projectName, equalTo("the_project_name"))
+                    assertThat(resultingConfig.projectName, equalTo("the_project_name"))
                 }
 
                 it("returns a configuration object with no tasks") {
-                    assert.that(resultingConfig.tasks, isEmpty)
+                    assertThat(resultingConfig.tasks, isEmpty)
                 }
 
                 it("returns a configuration object with the container") {
-                    assert.that(resultingConfig.containers, equalTo(ContainerMap(
+                    assertThat(resultingConfig.containers, equalTo(ContainerMap(
                             Container(
                                     containerName,
                                     resolvedBuildDirectory,
@@ -127,7 +127,7 @@ object ConfigurationFileSpec : Spek({
                 }
 
                 it("fails with an appropriate error message") {
-                    assert.that({ configFile.toConfiguration(pathResolver) }, throws(withMessage(expectedMessage)))
+                    assertThat({ configFile.toConfiguration(pathResolver) }, throws(withMessage(expectedMessage)))
                 }
             }
 
@@ -149,7 +149,7 @@ object ConfigurationFileSpec : Spek({
                 val resultingContainer = resultingConfig.containers.getValue("the_container_name")
 
                 it("returns a configuration object with the volume mount path resolved") {
-                    assert.that(resultingContainer.volumeMounts, equalTo(setOf(VolumeMount("/some_resolved_path", "/container_path"))))
+                    assertThat(resultingContainer.volumeMounts, equalTo(setOf(VolumeMount("/some_resolved_path", "/container_path"))))
                 }
             }
 
@@ -168,7 +168,7 @@ object ConfigurationFileSpec : Spek({
                 }
 
                 it("fails with an appropriate error message") {
-                    assert.that({ configFile.toConfiguration(pathResolver) }, throws(withMessage(expectedMessage)))
+                    assertThat({ configFile.toConfiguration(pathResolver) }, throws(withMessage(expectedMessage)))
                 }
             }
         }

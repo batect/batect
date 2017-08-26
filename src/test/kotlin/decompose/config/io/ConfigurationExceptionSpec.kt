@@ -1,6 +1,6 @@
 package decompose.config.io
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -16,7 +16,7 @@ object ConfigurationExceptionSpec : Spek({
 
                 on("converting to a string") {
                     it("returns just the message") {
-                        assert.that(exception.toString(), equalTo("This is the error message"))
+                        assertThat(exception.toString(), equalTo("This is the error message"))
                     }
                 }
             }
@@ -27,7 +27,7 @@ object ConfigurationExceptionSpec : Spek({
 
                 on("converting to a string") {
                     it("returns the message and details of the cause") {
-                        assert.that(exception.toString(), equalTo("This is the error message\nCaused by: java.lang.RuntimeException: Something went wrong"))
+                        assertThat(exception.toString(), equalTo("This is the error message\nCaused by: java.lang.RuntimeException: Something went wrong"))
                     }
                 }
             }
@@ -37,7 +37,7 @@ object ConfigurationExceptionSpec : Spek({
 
                 on("converting to a string") {
                     it("returns the message and the file name") {
-                        assert.that(exception.toString(), equalTo("source.txt: This is the error message"))
+                        assertThat(exception.toString(), equalTo("source.txt: This is the error message"))
                     }
                 }
             }
@@ -47,7 +47,7 @@ object ConfigurationExceptionSpec : Spek({
 
                 on("converting to a string") {
                     it("returns the message, the file name and the line number") {
-                        assert.that(exception.toString(), equalTo("source.txt (line 12): This is the error message"))
+                        assertThat(exception.toString(), equalTo("source.txt (line 12): This is the error message"))
                     }
                 }
             }
@@ -57,7 +57,7 @@ object ConfigurationExceptionSpec : Spek({
 
                 on("converting to a string") {
                     it("returns the message, the file name, the line number and the column") {
-                        assert.that(exception.toString(), equalTo("source.txt (line 12, column 54): This is the error message"))
+                        assertThat(exception.toString(), equalTo("source.txt (line 12, column 54): This is the error message"))
                     }
                 }
             }
@@ -68,7 +68,7 @@ object ConfigurationExceptionSpec : Spek({
 
                 on("converting to a string") {
                     it("returns the message, the file name, the line number, the column and the cause") {
-                        assert.that(exception.toString(), equalTo("source.txt (line 12, column 54): This is the error message\nCaused by: java.lang.RuntimeException: Something went wrong"))
+                        assertThat(exception.toString(), equalTo("source.txt (line 12, column 54): This is the error message\nCaused by: java.lang.RuntimeException: Something went wrong"))
                     }
                 }
             }

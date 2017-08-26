@@ -61,7 +61,7 @@ object ImageBuiltEventSpec : Spek({
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                com.natpryce.hamkrest.assertion.assert.that(event.toString(), equalTo("ImageBuiltEvent(container: 'container-1', image: 'image-1')"))
+                com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuiltEvent(container: 'container-1', image: 'image-1')"))
             }
         }
     }

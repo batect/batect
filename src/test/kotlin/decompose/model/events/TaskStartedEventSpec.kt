@@ -1,6 +1,6 @@
 package decompose.model.events
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
@@ -39,7 +39,7 @@ object TaskStartedEventSpec : Spek({
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assert.that(event.toString(), equalTo("TaskStartedEvent"))
+                assertThat(event.toString(), equalTo("TaskStartedEvent"))
             }
         }
     }

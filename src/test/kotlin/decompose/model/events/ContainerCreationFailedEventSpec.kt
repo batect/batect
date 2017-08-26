@@ -1,6 +1,6 @@
 package decompose.model.events
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import decompose.config.Container
 import org.jetbrains.spek.api.Spek
@@ -15,13 +15,13 @@ object ContainerCreationFailedEventSpec : Spek({
 
         on("getting the message to display to the user") {
             it("returns an appropriate message") {
-                assert.that(event.messageToDisplay, equalTo("Could not create container 'container-1': Something went wrong"))
+                assertThat(event.messageToDisplay, equalTo("Could not create container 'container-1': Something went wrong"))
             }
         }
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assert.that(event.toString(), equalTo("ContainerCreationFailedEvent(container: 'container-1', message: 'Something went wrong')"))
+                assertThat(event.toString(), equalTo("ContainerCreationFailedEvent(container: 'container-1', message: 'Something went wrong')"))
             }
         }
     }

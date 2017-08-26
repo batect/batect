@@ -3,7 +3,7 @@ package decompose.config.io
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.isEmptyString
@@ -54,7 +54,7 @@ object ConfigurationLoaderSpec : Spek({
 
         on("loading an empty configuration file") {
             it("should fail with an error message") {
-                assert.that({ loadConfiguration("") }, throws(withMessage("File '$testFileName' is empty")))
+                assertThat({ loadConfiguration("") }, throws(withMessage("File '$testFileName' is empty")))
             }
         }
 
@@ -62,7 +62,7 @@ object ConfigurationLoaderSpec : Spek({
             val config = loadConfiguration("project_name: the_cool_project")
 
             it("should return a populated configuration object with the project name specified") {
-                assert.that(config.projectName, equalTo("the_cool_project"))
+                assertThat(config.projectName, equalTo("the_cool_project"))
             }
         }
 
@@ -80,20 +80,20 @@ object ConfigurationLoaderSpec : Spek({
             val config = loadConfiguration(configString)
 
             it("should load the project name") {
-                assert.that(config.projectName, equalTo("the_cool_project"))
+                assertThat(config.projectName, equalTo("the_cool_project"))
             }
 
             it("should load the single task specified") {
-                assert.that(config.tasks.keys, equalTo(setOf("first_task")))
+                assertThat(config.tasks.keys, equalTo(setOf("first_task")))
             }
 
             it("should load the configuration for the task") {
                 val task = config.tasks["first_task"]!!
-                assert.that(task.name, equalTo("first_task"))
-                assert.that(task.runConfiguration.container, equalTo("build-env"))
-                assert.that(task.runConfiguration.command, equalTo("./gradlew doStuff"))
-                assert.that(task.dependencies, isEmpty)
-                assert.that(task.description, isEmptyString)
+                assertThat(task.name, equalTo("first_task"))
+                assertThat(task.runConfiguration.container, equalTo("build-env"))
+                assertThat(task.runConfiguration.command, equalTo("./gradlew doStuff"))
+                assertThat(task.dependencies, isEmpty)
+                assertThat(task.description, isEmptyString)
             }
         }
 
@@ -110,20 +110,20 @@ object ConfigurationLoaderSpec : Spek({
             val config = loadConfiguration(configString)
 
             it("should load the project name") {
-                assert.that(config.projectName, equalTo("the_cool_project"))
+                assertThat(config.projectName, equalTo("the_cool_project"))
             }
 
             it("should load the single task specified") {
-                assert.that(config.tasks.keys, equalTo(setOf("first_task")))
+                assertThat(config.tasks.keys, equalTo(setOf("first_task")))
             }
 
             it("should load the configuration for the task") {
                 val task = config.tasks["first_task"]!!
-                assert.that(task.name, equalTo("first_task"))
-                assert.that(task.runConfiguration.container, equalTo("build-env"))
-                assert.that(task.runConfiguration.command, absent())
-                assert.that(task.dependencies, isEmpty)
-                assert.that(task.description, isEmptyString)
+                assertThat(task.name, equalTo("first_task"))
+                assertThat(task.runConfiguration.container, equalTo("build-env"))
+                assertThat(task.runConfiguration.command, absent())
+                assertThat(task.dependencies, isEmpty)
+                assertThat(task.description, isEmptyString)
             }
         }
 
@@ -141,20 +141,20 @@ object ConfigurationLoaderSpec : Spek({
             val config = loadConfiguration(configString)
 
             it("should load the project name") {
-                assert.that(config.projectName, equalTo("the_cool_project"))
+                assertThat(config.projectName, equalTo("the_cool_project"))
             }
 
             it("should load the single task specified") {
-                assert.that(config.tasks.keys, equalTo(setOf("first_task")))
+                assertThat(config.tasks.keys, equalTo(setOf("first_task")))
             }
 
             it("should load the configuration for the task") {
                 val task = config.tasks["first_task"]!!
-                assert.that(task.name, equalTo("first_task"))
-                assert.that(task.runConfiguration.container, equalTo("build-env"))
-                assert.that(task.runConfiguration.command, absent())
-                assert.that(task.dependencies, isEmpty)
-                assert.that(task.description, equalTo("The very first task."))
+                assertThat(task.name, equalTo("first_task"))
+                assertThat(task.runConfiguration.container, equalTo("build-env"))
+                assertThat(task.runConfiguration.command, absent())
+                assertThat(task.dependencies, isEmpty)
+                assertThat(task.description, equalTo("The very first task."))
             }
         }
 
@@ -175,20 +175,20 @@ object ConfigurationLoaderSpec : Spek({
             val config = loadConfiguration(configString)
 
             it("should load the project name") {
-                assert.that(config.projectName, equalTo("the_cool_project"))
+                assertThat(config.projectName, equalTo("the_cool_project"))
             }
 
             it("should load the single task specified") {
-                assert.that(config.tasks.keys, equalTo(setOf("first_task")))
+                assertThat(config.tasks.keys, equalTo(setOf("first_task")))
             }
 
             it("should load the configuration for the task") {
                 val task = config.tasks["first_task"]!!
-                assert.that(task.name, equalTo("first_task"))
-                assert.that(task.runConfiguration.container, equalTo("build-env"))
-                assert.that(task.runConfiguration.command, equalTo("./gradlew doStuff"))
-                assert.that(task.dependencies, equalTo(setOf("dependency-1", "dependency-2")))
-                assert.that(task.description, isEmptyString)
+                assertThat(task.name, equalTo("first_task"))
+                assertThat(task.runConfiguration.container, equalTo("build-env"))
+                assertThat(task.runConfiguration.command, equalTo("./gradlew doStuff"))
+                assertThat(task.dependencies, equalTo(setOf("dependency-1", "dependency-2")))
+                assertThat(task.description, isEmptyString)
             }
         }
 
@@ -206,7 +206,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assert.that({ loadConfiguration(config) }, throws(withMessage("Duplicate value 'dependency-1'") and withLineNumber(9)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate value 'dependency-1'") and withLineNumber(9)))
             }
         }
 
@@ -222,17 +222,17 @@ object ConfigurationLoaderSpec : Spek({
             val config = loadConfiguration(configString)
 
             it("should load the project name") {
-                assert.that(config.projectName, equalTo("the_cool_project"))
+                assertThat(config.projectName, equalTo("the_cool_project"))
             }
 
             it("should load the single container specified") {
-                assert.that(config.containers.keys, equalTo(setOf("container-1")))
+                assertThat(config.containers.keys, equalTo(setOf("container-1")))
             }
 
             it("should load the build directory specified for the container and resolve it to an absolute path") {
                 val container = config.containers["container-1"]!!
-                assert.that(container.name, equalTo("container-1"))
-                assert.that(container.buildDirectory, equalTo("/resolved/container-1-build-dir"))
+                assertThat(container.name, equalTo("container-1"))
+                assertThat(container.buildDirectory, equalTo("/resolved/container-1-build-dir"))
             }
         }
 
@@ -259,22 +259,22 @@ object ConfigurationLoaderSpec : Spek({
             val config = loadConfiguration(configString)
 
             it("should load the project name") {
-                assert.that(config.projectName, equalTo("the_cool_project"))
+                assertThat(config.projectName, equalTo("the_cool_project"))
             }
 
             it("should load the single container specified") {
-                assert.that(config.containers.keys, equalTo(setOf("container-1")))
+                assertThat(config.containers.keys, equalTo(setOf("container-1")))
             }
 
             it("should load all of the configuration specified for the container") {
                 val container = config.containers["container-1"]!!
-                assert.that(container.name, equalTo("container-1"))
-                assert.that(container.buildDirectory, equalTo("/resolved/container-1-build-dir"))
-                assert.that(container.command, equalTo("do-the-thing.sh some-param"))
-                assert.that(container.environment, equalTo(mapOf("OPTS" to "-Dthing", "BOOL_VALUE" to "1")))
-                assert.that(container.workingDirectory, equalTo("/here"))
-                assert.that(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
-                assert.that(container.volumeMounts, equalTo(setOf(
+                assertThat(container.name, equalTo("container-1"))
+                assertThat(container.buildDirectory, equalTo("/resolved/container-1-build-dir"))
+                assertThat(container.command, equalTo("do-the-thing.sh some-param"))
+                assertThat(container.environment, equalTo(mapOf("OPTS" to "-Dthing", "BOOL_VALUE" to "1")))
+                assertThat(container.workingDirectory, equalTo("/here"))
+                assertThat(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
+                assertThat(container.volumeMounts, equalTo(setOf(
                         VolumeMount("/resolved/../", "/here"),
                         VolumeMount("/resolved//somewhere", "/else")
                 )))
@@ -295,16 +295,16 @@ object ConfigurationLoaderSpec : Spek({
             val config = loadConfiguration(configString)
 
             it("should load the project name") {
-                assert.that(config.projectName, equalTo("the_cool_project"))
+                assertThat(config.projectName, equalTo("the_cool_project"))
             }
 
             it("should load the single container specified") {
-                assert.that(config.containers.keys, equalTo(setOf("container-1")))
+                assertThat(config.containers.keys, equalTo(setOf("container-1")))
             }
 
             it("should load the dependency specified") {
                 val container = config.containers["container-1"]!!
-                assert.that(container.dependencies, equalTo(setOf("container-2")))
+                assertThat(container.dependencies, equalTo(setOf("container-2")))
             }
         }
 
@@ -321,7 +321,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assert.that({ loadConfiguration(config) }, throws(withMessage("Duplicate value 'container-2'") and withLineNumber(8)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate value 'container-2'") and withLineNumber(8)))
             }
         }
 
@@ -332,7 +332,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assert.that({ loadConfiguration(config) }, throws(withMessage("Duplicate field 'project_name'") and withLineNumber(2)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate field 'project_name'") and withLineNumber(2)))
             }
         }
 
@@ -343,7 +343,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assert.that({ loadConfiguration(config) }, throws(withMessage("Unknown field 'thing'") and withLineNumber(2)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Unknown field 'thing'") and withLineNumber(2)))
             }
         }
 
@@ -356,7 +356,7 @@ object ConfigurationLoaderSpec : Spek({
             val config = loadConfiguration(configString)
 
             it("should ignore the comment") {
-                assert.that(config.projectName, equalTo("the_cool_project"))
+                assertThat(config.projectName, equalTo("the_cool_project"))
             }
         }
 
@@ -364,7 +364,7 @@ object ConfigurationLoaderSpec : Spek({
             val config = loadConfiguration("project_name: the_cool_project # This is a comment")
 
             it("should ignore the comment") {
-                assert.that(config.projectName, equalTo("the_cool_project"))
+                assertThat(config.projectName, equalTo("the_cool_project"))
             }
         }
 
@@ -378,7 +378,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assert.that({ loadConfiguration(config) }, throws(withMessage("Missing required field 'project_name'")))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Missing required field 'project_name'")))
             }
         }
 
@@ -396,7 +396,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assert.that({ loadConfiguration(config) }, throws(withMessage("Duplicate field 'first_task'") and withLineNumber(7)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate field 'first_task'") and withLineNumber(7)))
             }
         }
 
@@ -412,7 +412,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assert.that({ loadConfiguration(config) }, throws(withMessage("Duplicate field 'container-1'") and withLineNumber(6)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate field 'container-1'") and withLineNumber(6)))
             }
         }
 
@@ -429,13 +429,13 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assert.that({ loadConfiguration(config) }, throws(withMessage("Duplicate environment variable 'THING'") and withLineNumber(8)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate environment variable 'THING'") and withLineNumber(8)))
             }
         }
 
         on("loading attempting to load a configuration file that does not exist") {
             it("should fail with an appropriate error message") {
-                assert.that({ loader.loadConfig("/doesntexist.yml") }, throws(withMessage("The file '/doesntexist.yml' does not exist.")))
+                assertThat({ loader.loadConfig("/doesntexist.yml") }, throws(withMessage("The file '/doesntexist.yml' does not exist.")))
             }
         }
     }

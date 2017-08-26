@@ -1,6 +1,6 @@
 package decompose
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.doReturn
@@ -70,7 +70,7 @@ object TaskRunnerSpec : Spek({
             }
 
             it("returns the exit code of the container") {
-                assert.that(actualExitCode, equalTo(expectedExitCode))
+                assertThat(actualExitCode, equalTo(expectedExitCode))
             }
         }
 
@@ -84,7 +84,7 @@ object TaskRunnerSpec : Spek({
             val runner = TaskRunner(mock<DockerClient>(), mock<EventLogger>(), mock<DependencyRuntimeManagerFactory>())
 
             it("fails with an appropriate error message") {
-                assert.that({ runner.run(config, "the_task_that_doesnt_exist") }, throws<ExecutionException>(withMessage("The task 'the_task_that_doesnt_exist' does not exist.")))
+                assertThat({ runner.run(config, "the_task_that_doesnt_exist") }, throws<ExecutionException>(withMessage("The task 'the_task_that_doesnt_exist' does not exist.")))
             }
         }
 
@@ -98,7 +98,7 @@ object TaskRunnerSpec : Spek({
             val runner = TaskRunner(mock<DockerClient>(), mock<EventLogger>(), mock<DependencyRuntimeManagerFactory>())
 
             it("fails with an appropriate error message") {
-                assert.that({ runner.run(config, "the_task") }, throws<ExecutionException>(withMessage("The container 'the_container' referenced by task 'the_task' does not exist.")))
+                assertThat({ runner.run(config, "the_task") }, throws<ExecutionException>(withMessage("The container 'the_container' referenced by task 'the_task' does not exist.")))
             }
         }
 
@@ -149,7 +149,7 @@ object TaskRunnerSpec : Spek({
             }
 
             it("returns the exit code of the container") {
-                assert.that(actualExitCode, equalTo(expectedExitCode))
+                assertThat(actualExitCode, equalTo(expectedExitCode))
             }
 
             it("performs dependency operations in the correct order") {

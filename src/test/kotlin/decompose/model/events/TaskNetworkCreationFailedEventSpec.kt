@@ -1,6 +1,6 @@
 package decompose.model.events
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -13,13 +13,13 @@ object TaskNetworkCreationFailedEventSpec : Spek({
 
         on("getting the message to display to the user") {
             it("returns an appropriate message") {
-                assert.that(event.messageToDisplay, equalTo("Could not create network for task: Something went wrong"))
+                assertThat(event.messageToDisplay, equalTo("Could not create network for task: Something went wrong"))
             }
         }
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assert.that(event.toString(), equalTo("TaskNetworkCreationFailedEvent(message: 'Something went wrong')"))
+                assertThat(event.toString(), equalTo("TaskNetworkCreationFailedEvent(message: 'Something went wrong')"))
             }
         }
     }

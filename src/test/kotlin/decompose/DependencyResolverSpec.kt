@@ -1,6 +1,6 @@
 package decompose
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.throws
@@ -27,7 +27,7 @@ object DependencyResolverSpec : Spek({
             val dependencies = resolver.resolveDependencies(config, task)
 
             it("resolves an empty list of dependencies") {
-                assert.that(dependencies, isEmpty)
+                assertThat(dependencies, isEmpty)
             }
         }
 
@@ -38,7 +38,7 @@ object DependencyResolverSpec : Spek({
             val dependencies = resolver.resolveDependencies(config, task)
 
             it("resolves a list of dependencies with just that dependency") {
-                assert.that(dependencies, equalTo(setOf(dependency)))
+                assertThat(dependencies, equalTo(setOf(dependency)))
             }
         }
 
@@ -52,7 +52,7 @@ object DependencyResolverSpec : Spek({
             val dependencies = resolver.resolveDependencies(config, task)
 
             it("resolves a list of dependencies with those dependencies") {
-                assert.that(dependencies, equalTo(setOf(dependency1, dependency2, dependency3)))
+                assertThat(dependencies, equalTo(setOf(dependency1, dependency2, dependency3)))
             }
         }
 
@@ -62,7 +62,7 @@ object DependencyResolverSpec : Spek({
             val config = Configuration("the-project", TaskMap(task), ContainerMap(otherContainer))
 
             it("raises an appropriate exception") {
-                assert.that({ resolver.resolveDependencies(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The container 'dependency' referenced by task 'the-task' does not exist.")))
+                assertThat({ resolver.resolveDependencies(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The container 'dependency' referenced by task 'the-task' does not exist.")))
             }
         }
 
@@ -71,7 +71,7 @@ object DependencyResolverSpec : Spek({
             val config = Configuration("the-project", TaskMap(task), ContainerMap())
 
             it("raises an appropriate exception") {
-                assert.that({ resolver.resolveDependencies(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The task 'the-task' cannot depend on the container 'some-container' and also run it.")))
+                assertThat({ resolver.resolveDependencies(config, task) }, throws<DependencyResolutionFailedException>(withMessage("The task 'the-task' cannot depend on the container 'some-container' and also run it.")))
             }
         }
     }

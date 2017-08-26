@@ -2,7 +2,7 @@ package decompose.cli
 
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -19,7 +19,7 @@ object DecomposeCommandLineParserSpec : Spek({
             }
 
             it("includes the value of the configuration file name") {
-                assert.that(bindings.instance<String>(CommonOptions.ConfigurationFileName), equalTo("decompose.yml"))
+                assertThat(bindings.instance<String>(CommonOptions.ConfigurationFileName), equalTo("decompose.yml"))
             }
         }
     }

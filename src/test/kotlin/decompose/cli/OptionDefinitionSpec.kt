@@ -1,6 +1,6 @@
 package decompose.cli
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import decompose.testutils.withMessage
 import org.jetbrains.spek.api.Spek
@@ -19,55 +19,55 @@ object OptionDefinitionSpec : Spek({
 
             on("attempting to create an value option with a valid name and description") {
                 it("does not throw an exception") {
-                    assert.that({ createOption("value", "The value.") }, !throws<Throwable>())
+                    assertThat({ createOption("value", "The value.") }, !throws<Throwable>())
                 }
             }
 
             on("attempting to create an value option with a valid name, description and short name") {
                 it("does not throw an exception") {
-                    assert.that({ createOption("value", "The value.", 'v') }, !throws<Throwable>())
+                    assertThat({ createOption("value", "The value.", 'v') }, !throws<Throwable>())
                 }
             }
 
             on("attempting to create an value option with a name with dashes") {
                 it("does not throw an exception") {
-                    assert.that({ createOption("some-value", "The value.") }, !throws<Throwable>())
+                    assertThat({ createOption("some-value", "The value.") }, !throws<Throwable>())
                 }
             }
 
             on("attempting to create an value option with an empty name") {
                 it("throws an exception") {
-                    assert.that({ createOption("", "The value.") }, throws<IllegalArgumentException>(withMessage("Option name must not be empty.")))
+                    assertThat({ createOption("", "The value.") }, throws<IllegalArgumentException>(withMessage("Option name must not be empty.")))
                 }
             }
 
             on("attempting to create an value option with an empty description") {
                 it("throws an exception") {
-                    assert.that({ createOption("value", "") }, throws<IllegalArgumentException>(withMessage("Option description must not be empty.")))
+                    assertThat({ createOption("value", "") }, throws<IllegalArgumentException>(withMessage("Option description must not be empty.")))
                 }
             }
 
             on("attempting to create an value option with a name that starts with a dash") {
                 it("throws an exception") {
-                    assert.that({ createOption("-value", "The value.") }, throws<IllegalArgumentException>(withMessage("Option name must not start with a dash.")))
+                    assertThat({ createOption("-value", "The value.") }, throws<IllegalArgumentException>(withMessage("Option name must not start with a dash.")))
                 }
             }
 
             on("attempting to create an value option with a name that is only one character long") {
                 it("throws an exception") {
-                    assert.that({ createOption("v", "The value.") }, throws<IllegalArgumentException>(withMessage("Option name must be at least two characters long.")))
+                    assertThat({ createOption("v", "The value.") }, throws<IllegalArgumentException>(withMessage("Option name must be at least two characters long.")))
                 }
             }
 
             on("attempting to create an value option with a short name that is a dash") {
                 it("does not throw an exception") {
-                    assert.that({ createOption("value", "The value.", '-') }, throws<IllegalArgumentException>(withMessage("Option short name must be alphanumeric.")))
+                    assertThat({ createOption("value", "The value.", '-') }, throws<IllegalArgumentException>(withMessage("Option short name must be alphanumeric.")))
                 }
             }
 
             on("attempting to create an value option with a short name that is a space") {
                 it("does not throw an exception") {
-                    assert.that({ createOption("value", "The value.", ' ') }, throws<IllegalArgumentException>(withMessage("Option short name must be alphanumeric.")))
+                    assertThat({ createOption("value", "The value.", ' ') }, throws<IllegalArgumentException>(withMessage("Option short name must be alphanumeric.")))
                 }
             }
         }

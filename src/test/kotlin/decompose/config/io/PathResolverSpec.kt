@@ -2,7 +2,7 @@ package decompose.config.io
 
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -24,7 +24,7 @@ object PathResolverSpec : Spek({
             val path = ""
 
             it("resolves to the original directory") {
-                assert.that(resolver.resolve(path), equalTo(ResolvedToDirectory("/thing/place") as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(ResolvedToDirectory("/thing/place") as PathResolutionResult))
             }
         }
 
@@ -32,7 +32,7 @@ object PathResolverSpec : Spek({
             val path = "."
 
             it("resolves to the original directory") {
-                assert.that(resolver.resolve(path), equalTo(ResolvedToDirectory("/thing/place") as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(ResolvedToDirectory("/thing/place") as PathResolutionResult))
             }
         }
 
@@ -41,7 +41,7 @@ object PathResolverSpec : Spek({
             Files.createDirectories(relativeTo.resolve(path))
 
             it("resolves to the subdirectory") {
-                assert.that(resolver.resolve(path), equalTo(ResolvedToDirectory("/thing/place/stuff") as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(ResolvedToDirectory("/thing/place/stuff") as PathResolutionResult))
             }
         }
 
@@ -49,7 +49,7 @@ object PathResolverSpec : Spek({
             val path = ".."
 
             it("resolves to the parent directory") {
-                assert.that(resolver.resolve(path), equalTo(ResolvedToDirectory("/thing") as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(ResolvedToDirectory("/thing") as PathResolutionResult))
             }
         }
 
@@ -58,7 +58,7 @@ object PathResolverSpec : Spek({
             Files.createDirectories(fileSystem.getPath("/thing/something"))
 
             it("resolves to the parent directory") {
-                assert.that(resolver.resolve(path), equalTo(ResolvedToDirectory("/thing/something") as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(ResolvedToDirectory("/thing/something") as PathResolutionResult))
             }
         }
 
@@ -67,7 +67,7 @@ object PathResolverSpec : Spek({
             Files.createDirectories(fileSystem.getPath(path))
 
             it("resolves to the absolute path") {
-                assert.that(resolver.resolve(path), equalTo(ResolvedToDirectory("/other") as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(ResolvedToDirectory("/other") as PathResolutionResult))
             }
         }
 
@@ -75,7 +75,7 @@ object PathResolverSpec : Spek({
             val path = "doesnotexist"
 
             it("reports that the path does not exist") {
-                assert.that(resolver.resolve(path), equalTo(NotFound("/thing/place/doesnotexist") as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(NotFound("/thing/place/doesnotexist") as PathResolutionResult))
             }
         }
 
@@ -84,7 +84,7 @@ object PathResolverSpec : Spek({
             Files.createFile(relativeTo.resolve(path))
 
             it("resolves to the file") {
-                assert.that(resolver.resolve(path), equalTo(ResolvedToFile("/thing/place/thefile.txt") as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(ResolvedToFile("/thing/place/thefile.txt") as PathResolutionResult))
             }
         }
 
@@ -92,7 +92,7 @@ object PathResolverSpec : Spek({
             val path = "\u0000"
 
             it("reports that the path is invalid") {
-                assert.that(resolver.resolve(path), equalTo(InvalidPath as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(InvalidPath as PathResolutionResult))
             }
         }
     }

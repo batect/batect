@@ -1,6 +1,6 @@
 package decompose
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doReturn
@@ -106,7 +106,7 @@ object DependencyRuntimeManagerSpec : Spek({
                     dependencyManager.buildImages()
 
                     it("throws an appropriate exception") {
-                        assert.that({ dependencyManager.startDependencies(network) }, throws<DependencyStartException>(withMessage(expectedExceptionMessage)))
+                        assertThat({ dependencyManager.startDependencies(network) }, throws<DependencyStartException>(withMessage(expectedExceptionMessage)))
                     }
                 }
             }
@@ -118,7 +118,7 @@ object DependencyRuntimeManagerSpec : Spek({
                 val network = DockerNetwork("the-network")
 
                 it("raises an appropriate exception") {
-                    assert.that({ dependencyManager.startDependencies(network) }, throws<ExecutionException>(withMessage("Cannot start dependencies if their images have not yet been built. Call buildImages() before calling startDependencies().")))
+                    assertThat({ dependencyManager.startDependencies(network) }, throws<ExecutionException>(withMessage("Cannot start dependencies if their images have not yet been built. Call buildImages() before calling startDependencies().")))
                 }
             }
         }

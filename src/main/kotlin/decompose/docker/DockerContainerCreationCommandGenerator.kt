@@ -4,8 +4,6 @@ import decompose.config.Container
 
 class DockerContainerCreationCommandGenerator {
     fun createCommandLine(container: Container, command: String?, image: DockerImage, network: DockerNetwork): Iterable<String> {
-        val commandToUse = if (command != null) command else container.command
-
         return listOf("docker", "create", "-it",
                 "--network", network.id,
                 "--hostname", container.name,
@@ -15,7 +13,7 @@ class DockerContainerCreationCommandGenerator {
                 volumeMountArguments(container) +
                 portMappingArguments(container) +
                 image.id +
-                commandArguments(commandToUse)
+                commandArguments(command)
     }
 
     private fun environmentVariableArguments(container: Container): Iterable<String> = container.environment.flatMap { (key, value) -> listOf("--env", "$key=$value") }

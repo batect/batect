@@ -22,7 +22,7 @@ object TaskStartedEventSpec : Spek({
             val container2 = Container("container-2", "/container-2-build-dir")
 
             val context = mock<TaskEventContext> {
-                on { allContainers } doReturn setOf(container1, container2)
+                on { allTaskContainers } doReturn setOf(container1, container2)
                 on { projectName } doReturn "the-project"
             }
 

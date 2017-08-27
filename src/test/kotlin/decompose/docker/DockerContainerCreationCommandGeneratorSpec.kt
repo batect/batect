@@ -39,8 +39,8 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
             }
         }
 
-        given("a simple container definition, a built image and an explicit command to run for the container") {
-            val container = Container("the-container", "/this/does/not/matter", "some-command some-argument")
+        given("a simple container definition, a built image and no explicit command to run for the container") {
+            val container = Container("the-container", "/this/does/not/matter")
             val command = null
             val image = DockerImage("the-image")
             val network = DockerNetwork("the-network")
@@ -55,35 +55,14 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                             "--network", network.id,
                             "--hostname", container.name,
                             "--network-alias", container.name,
-                            image.id,
-                            "some-command", "some-argument").asIterable()))
-                }
-            }
-        }
-
-        given("a simple container definition, a built image and no explicit command to run for the task or container") {
-            val container = Container("the-container", "/this/does/not/matter")
-            val image = DockerImage("the-image")
-            val network = DockerNetwork("the-network")
-
-            on("generating the command") {
-                val commandLine = generator.createCommandLine(container, null, image, network)
-
-                it("generates the correct command line, not specifying an explicit command") {
-                    assertThat(commandLine, equalTo(listOf(
-                            "docker", "create",
-                            "-it",
-                            "--network", network.id,
-                            "--hostname", container.name,
-                            "--network-alias", container.name,
                             image.id).asIterable()))
                 }
             }
         }
 
-        given("a simple container definition, a built image and an explicit command to run for the task and container") {
+        given("a simple container definition, a built image and an explicit command to run for the container") {
             val container = Container("the-container", "/this/does/not/matter", "some-command-from-the-container")
-            val command = "some-command-from-the-task"
+            val command = "some-explicit-command"
             val image = DockerImage("the-image")
             val network = DockerNetwork("the-network")
 
@@ -112,12 +91,11 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                     setOf(VolumeMount("/local1", "/container1"), VolumeMount("/local2", "/container2")),
                     setOf(PortMapping(1000, 2000), PortMapping(3000, 4000)))
 
-            val command = null
             val image = DockerImage("the-image")
             val network = DockerNetwork("the-network")
 
             on("generating the command") {
-                val commandLine = generator.createCommandLine(container, command, image, network)
+                val commandLine = generator.createCommandLine(container, "some-command", image, network)
 
                 it("generates the correct command line") {
                     assertThat(commandLine, equalTo(listOf(
@@ -134,7 +112,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                             "--publish", "1000:2000",
                             "--publish", "3000:4000",
                             image.id,
-                            "the-container-command").asIterable()))
+                            "some-command").asIterable()))
                 }
             }
         }

@@ -23,7 +23,7 @@ interface TaskEventContext {
     fun dependenciesOf(container: Container): Set<Container>
     fun containersThatDependOn(container: Container): Set<Container>
 
-    val allContainers: Set<Container>
+    val allTaskContainers: Set<Container>
     val isAborting: Boolean
     val projectName: String
 }

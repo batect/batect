@@ -6,6 +6,10 @@ import decompose.config.Container
 
 data class RunningContainerExitedEvent(val container: Container, val exitCode: Int) : TaskEvent() {
     override fun apply(context: TaskEventContext) {
+        if (!context.isTaskContainer(container)) {
+            throw IllegalArgumentException("The container '${container.name}' is not the task container.")
+        }
+
         val dockerContainer = context.getPastEventsOfType<ContainerCreatedEvent>()
                 .single { it.container == container }
                 .dockerContainer

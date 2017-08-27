@@ -32,10 +32,10 @@ object ContainerRemovedEventSpec : Spek({
             on("when all containers with a pending or processed creation step have been removed or reported that they failed to be created") {
                 val context = mock<TaskEventContext> {
                     on { getPendingAndProcessedStepsOfType<CreateContainerStep>() } doReturn setOf(
-                            CreateContainerStep(container, image, network),
-                            CreateContainerStep(otherContainer1, image, network),
-                            CreateContainerStep(otherContainer2, image, network),
-                            CreateContainerStep(containerThatFailedToCreate, image, network)
+                            CreateContainerStep(container, "some-command", image, network),
+                            CreateContainerStep(otherContainer1, "some-command", image, network),
+                            CreateContainerStep(otherContainer2, "some-command", image, network),
+                            CreateContainerStep(containerThatFailedToCreate, "some-command", image, network)
                     )
 
                     on { getPastEventsOfType<ContainerRemovedEvent>() } doReturn setOf(
@@ -61,10 +61,10 @@ object ContainerRemovedEventSpec : Spek({
             on("when some containers with a pending or processed creation step have not been removed or reported that they failed to be created") {
                 val context = mock<TaskEventContext> {
                     on { getPendingAndProcessedStepsOfType<CreateContainerStep>() } doReturn setOf(
-                            CreateContainerStep(container, image, network),
-                            CreateContainerStep(otherContainer1, image, network),
-                            CreateContainerStep(otherContainer2, image, network),
-                            CreateContainerStep(containerThatFailedToCreate, image, network)
+                            CreateContainerStep(container, "some-command", image, network),
+                            CreateContainerStep(otherContainer1, "some-command", image, network),
+                            CreateContainerStep(otherContainer2, "some-command", image, network),
+                            CreateContainerStep(containerThatFailedToCreate, "some-command", image, network)
                     )
 
                     on { getPastEventsOfType<ContainerRemovedEvent>() } doReturn setOf(

@@ -24,7 +24,7 @@ class DockerClient(
         val result = processRunner.runAndCaptureOutput(args)
 
         if (failed(result.exitCode)) {
-            throw ContainerCreationFailedException("Creation of container '${container.name}' failed. Output from Docker was: ${result.output.trim()}")
+            throw ContainerCreationFailedException("Output from Docker was: ${result.output.trim()}")
         } else {
             return DockerContainer(result.output.trim(), container.name)
         }
@@ -42,7 +42,7 @@ class DockerClient(
         val result = processRunner.runAndCaptureOutput(command)
 
         if (failed(result.exitCode)) {
-            throw ContainerStartFailedException(container.name, result.output)
+            throw ContainerStartFailedException(container.id, result.output)
         }
     }
 
@@ -61,9 +61,9 @@ class DockerClient(
             when {
                 line == "health_status: healthy" -> KillProcess(HealthStatus.BecameHealthy)
                 line == "health_status: unhealthy" -> KillProcess(HealthStatus.BecameUnhealthy)
-                line.startsWith("health_status") -> throw IllegalArgumentException("Unexpected health_status event: $line")
+                line.startsWith("health_status") -> throw ContainerHealthCheckException("Unexpected health_status event: $line")
                 line == "die" -> KillProcess(HealthStatus.Exited)
-                else -> throw IllegalArgumentException("Unexpected event received: $line")
+                else -> throw ContainerHealthCheckException("Unexpected event received: $line")
             }
         }
 
@@ -89,11 +89,7 @@ class DockerClient(
         val result = processRunner.runAndCaptureOutput(command)
 
         if (failed(result.exitCode)) {
-            if (result.output.startsWith("Error response from daemon: No such container: ")) {
-                throw ContainerDoesNotExistException("Stopping container '${container.name}' failed because it does not exist. If it was started with '--rm', it may have already stopped and removed itself.")
-            } else {
-                throw ContainerStopFailedException(container.name, result.output.trim())
-            }
+            throw ContainerStopFailedException(container.id, result.output.trim())
         }
     }
 
@@ -117,6 +113,32 @@ class DockerClient(
         }
     }
 
+    fun remove(container: DockerContainer) {
+        val command = listOf("docker", "rm", container.id)
+        val result = processRunner.runAndCaptureOutput(command)
+
+        if (failed(result.exitCode)) {
+            if (result.output.startsWith("Error response from daemon: No such container: ")) {
+                throw ContainerDoesNotExistException("Removing container '${container.id}' failed because it does not exist.")
+            } else {
+                throw ContainerRemovalFailedException(container.id, result.output.trim())
+            }
+        }
+    }
+
+    fun forciblyRemove(container: DockerContainer) {
+        val command = listOf("docker", "rm", "--force", container.id)
+        val result = processRunner.runAndCaptureOutput(command)
+
+        if (failed(result.exitCode)) {
+            if (result.output.startsWith("Error response from daemon: No such container: ")) {
+                throw ContainerDoesNotExistException("Removing container '${container.id}' failed because it does not exist.")
+            } else {
+                throw ContainerRemovalFailedException(container.id, result.output.trim())
+            }
+        }
+    }
+
     private fun failed(exitCode: Int): Boolean = exitCode != 0
 }
 
@@ -127,11 +149,12 @@ data class DockerNetwork(val id: String)
 
 class ImageBuildFailedException : RuntimeException("Image build failed.")
 class ContainerCreationFailedException(message: String) : RuntimeException(message)
-class ContainerStartFailedException(val containerName: String, val outputFromDocker: String) : RuntimeException("Starting container '$containerName' failed. Output from Docker was: $outputFromDocker")
-class ContainerStopFailedException(val containerName: String, val outputFromDocker: String) : RuntimeException("Stopping container '$containerName' failed. Output from Docker was: $outputFromDocker")
+class ContainerStartFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Starting container '$containerId' failed. Output from Docker was: $outputFromDocker")
+class ContainerStopFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Stopping container '$containerId' failed. Output from Docker was: $outputFromDocker")
 class ContainerDoesNotExistException(message: String) : RuntimeException(message)
 class ContainerHealthCheckException(message: String) : RuntimeException(message)
 class NetworkCreationFailedException(val outputFromDocker: String) : RuntimeException("Creation of network failed. Output from Docker was: $outputFromDocker")
+class ContainerRemovalFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Removal of container '$containerId' failed. Output from Docker was: $outputFromDocker")
 class NetworkDeletionFailedException(val networkId: String, val outputFromDocker: String) : RuntimeException("Deletion of network '$networkId' failed. Output from Docker was: $outputFromDocker")
 
 enum class HealthStatus {

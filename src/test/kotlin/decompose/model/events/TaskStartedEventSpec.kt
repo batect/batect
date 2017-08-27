@@ -23,13 +23,14 @@ object TaskStartedEventSpec : Spek({
 
             val context = mock<TaskEventContext> {
                 on { allContainers } doReturn setOf(container1, container2)
+                on { projectName } doReturn "the-project"
             }
 
             event.apply(context)
 
             it("queues build image steps for each container in the task dependency graph") {
-                verify(context).queueStep(BuildImageStep(container1))
-                verify(context).queueStep(BuildImageStep(container2))
+                verify(context).queueStep(BuildImageStep("the-project", container1))
+                verify(context).queueStep(BuildImageStep("the-project", container2))
             }
 
             it("queues a step to create the task network") {

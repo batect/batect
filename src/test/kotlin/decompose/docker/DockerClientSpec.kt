@@ -96,7 +96,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Something went wrong."))
 
                     it("raises an appropriate exception") {
-                        assertThat({ client.create(container, command, image, network) }, throws<ContainerCreationFailedException>(withMessage("Creation of container 'the-container' failed. Output from Docker was: Something went wrong.")))
+                        assertThat({ client.create(container, command, image, network) }, throws<ContainerCreationFailedException>(withMessage("Output from Docker was: Something went wrong.")))
                     }
                 }
             }
@@ -140,7 +140,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Something went wrong."))
 
                     it("raises an appropriate exception") {
-                        assertThat({ client.start(container) }, throws<ContainerStartFailedException>(withMessage("Starting container 'the-container' failed. Output from Docker was: Something went wrong.")))
+                        assertThat({ client.start(container) }, throws<ContainerStartFailedException>(withMessage("Starting container 'the-container-id' failed. Output from Docker was: Something went wrong.")))
                     }
                 }
             }
@@ -160,19 +160,11 @@ object DockerClientSpec : Spek({
                     }
                 }
 
-                on("that container not existing") {
-                    whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Error response from daemon: No such container: ${container.id}"))
-
-                    it("raises an appropriate exception") {
-                        assertThat({ client.stop(container) }, throws<ContainerDoesNotExistException>(withMessage("Stopping container 'the-container' failed because it does not exist. If it was started with '--rm', it may have already stopped and removed itself.")))
-                    }
-                }
-
                 on("an unsuccessful stop attempt") {
                     whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Something went wrong."))
 
                     it("raises an appropriate exception") {
-                        assertThat({ client.stop(container) }, throws<ContainerStopFailedException>(withMessage("Stopping container 'the-container' failed. Output from Docker was: Something went wrong.")))
+                        assertThat({ client.stop(container) }, throws<ContainerStopFailedException>(withMessage("Stopping container 'the-container-id' failed. Output from Docker was: Something went wrong.")))
                     }
                 }
             }
@@ -310,6 +302,68 @@ object DockerClientSpec : Spek({
 
                 it("throws an appropriate exception") {
                     assertThat({ client.deleteNetwork(network) }, throws<NetworkDeletionFailedException>(withMessage("Deletion of network 'abc123' failed. Output from Docker was: Something went wrong.")))
+                }
+            }
+        }
+
+        describe("removing a container") {
+            val container = DockerContainer("some-id", "doesnt-matter")
+            val expectedCommand = listOf("docker", "rm", "some-id")
+
+            on("a successful removal") {
+                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "Done!"))
+
+                client.remove(container)
+
+                it("calls the Docker CLI to remove the container") {
+                    verify(processRunner).runAndCaptureOutput(expectedCommand)
+                }
+            }
+
+            on("an unsuccessful deletion") {
+                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
+
+                it("throws an appropriate exception") {
+                    assertThat({ client.remove(container) }, throws<ContainerRemovalFailedException>(withMessage("Removal of container 'some-id' failed. Output from Docker was: Something went wrong.")))
+                }
+            }
+
+            on("that container not existing") {
+                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Error response from daemon: No such container: ${container.id}"))
+
+                it("throws an appropriate exception") {
+                    assertThat({ client.remove(container) }, throws<ContainerDoesNotExistException>(withMessage("Removing container 'some-id' failed because it does not exist.")))
+                }
+            }
+        }
+
+        describe("forcibly removing a container") {
+            val container = DockerContainer("some-id", "doesnt-matter")
+            val expectedCommand = listOf("docker", "rm", "--force", "some-id")
+
+            on("a successful removal") {
+                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "Done!"))
+
+                client.forciblyRemove(container)
+
+                it("calls the Docker CLI to remove the container") {
+                    verify(processRunner).runAndCaptureOutput(expectedCommand)
+                }
+            }
+
+            on("an unsuccessful deletion") {
+                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
+
+                it("throws an appropriate exception") {
+                    assertThat({ client.forciblyRemove(container) }, throws<ContainerRemovalFailedException>(withMessage("Removal of container 'some-id' failed. Output from Docker was: Something went wrong.")))
+                }
+            }
+
+            on("that container not existing") {
+                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Error response from daemon: No such container: ${container.id}"))
+
+                it("throws an appropriate exception") {
+                    assertThat({ client.forciblyRemove(container) }, throws<ContainerDoesNotExistException>(withMessage("Removing container 'some-id' failed because it does not exist.")))
                 }
             }
         }

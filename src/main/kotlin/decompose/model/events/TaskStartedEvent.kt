@@ -7,7 +7,7 @@ object TaskStartedEvent : TaskEvent() {
     override fun apply(context: TaskEventContext) {
         context.queueStep(CreateTaskNetworkStep)
 
-        context.allContainers.forEach { context.queueStep(BuildImageStep(it)) }
+        context.allContainers.forEach { context.queueStep(BuildImageStep(context.projectName, it)) }
     }
 
     override fun toString() = this::class.simpleName!!

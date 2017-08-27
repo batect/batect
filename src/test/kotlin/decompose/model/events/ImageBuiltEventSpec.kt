@@ -38,12 +38,13 @@ object ImageBuiltEventSpec : Spek({
                 val network = DockerNetwork("the-network")
                 val context = mock<TaskEventContext> {
                     on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
+                    on { commandForContainer(container) } doReturn "do-stuff"
                 }
 
                 event.apply(context)
 
                 it("queues a 'create container' step") {
-                    verify(context).queueStep(CreateContainerStep(container, image, network))
+                    verify(context).queueStep(CreateContainerStep(container, "do-stuff", image, network))
                 }
             }
 

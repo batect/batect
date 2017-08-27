@@ -19,11 +19,13 @@ interface TaskEventContext {
     fun <T : TaskStep> getProcessedStepsOfType(clazz: KClass<T>): Set<T>
 
     fun isTaskContainer(container: Container): Boolean
+    fun commandForContainer(container: Container): String?
     fun dependenciesOf(container: Container): Set<Container>
     fun containersThatDependOn(container: Container): Set<Container>
 
     val allContainers: Set<Container>
     val isAborting: Boolean
+    val projectName: String
 }
 
 inline fun <reified T: TaskEvent> TaskEventContext.getPastEventsOfType(): Set<T> = this.getPastEventsOfType(T::class)

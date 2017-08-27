@@ -12,7 +12,10 @@ data class TaskNetworkCreatedEvent(val network: DockerNetwork) : TaskEvent() {
         }
 
         context.getPastEventsOfType<ImageBuiltEvent>()
-                .forEach { context.queueStep(CreateContainerStep(it.container, it.image, network)) }
+                .forEach {
+                    val command = context.commandForContainer(it.container)
+                    context.queueStep(CreateContainerStep(it.container, command, it.image, network))
+                }
     }
 
     override fun toString() = "${this::class.simpleName}(network ID: '${network.id}')"

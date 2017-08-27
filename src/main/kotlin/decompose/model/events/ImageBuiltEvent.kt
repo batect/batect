@@ -13,7 +13,8 @@ data class ImageBuiltEvent(val container: Container, val image: DockerImage) : T
         val networkCreationEvent = context.getSinglePastEventOfType<TaskNetworkCreatedEvent>()
 
         if (networkCreationEvent != null) {
-            context.queueStep(CreateContainerStep(container, image, networkCreationEvent.network))
+            val command = context.commandForContainer(container)
+            context.queueStep(CreateContainerStep(container, command, image, networkCreationEvent.network))
         }
     }
 

@@ -11,38 +11,38 @@ sealed class TaskStep {
 
 object BeginTaskStep : TaskStep()
 
-data class BuildImageStep(val container: Container) : TaskStep() {
-    override fun toString() = super.toString() + "(container: ${container.name})"
+data class BuildImageStep(val projectName: String, val container: Container) : TaskStep() {
+    override fun toString() = super.toString() + "(project name: '$projectName', container: '${container.name}')"
 }
 
 object CreateTaskNetworkStep : TaskStep()
 
-data class CreateContainerStep(val container: Container, val image: DockerImage, val network: DockerNetwork) : TaskStep() {
-    override fun toString() = super.toString() + "(container: ${container.name}, image ${image.id}, network: ${network.id}"
+data class CreateContainerStep(val container: Container, val command: String?, val image: DockerImage, val network: DockerNetwork) : TaskStep() {
+    override fun toString() = super.toString() + "(container: '${container.name}', command: '${(command ?: "")}', image '${image.id}', network: '${network.id}')"
 }
 
 data class RunContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
-    override fun toString() = super.toString() + "(container: ${container.name}, Docker container: ${dockerContainer.id})"
+    override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 
 data class StartContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
-    override fun toString() = super.toString() + "(container: ${container.name}, Docker container: ${dockerContainer.id})"
+    override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 
 data class StopContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
-    override fun toString() = super.toString() + "(container: ${container.name}, Docker container: ${dockerContainer.id})"
+    override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 
 data class CleanUpContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
-    override fun toString() = super.toString() + "(container: ${container.name}, Docker container: ${dockerContainer.id})"
+    override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 
 data class RemoveContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
-    override fun toString() = super.toString() + "(container: ${container.name}, Docker container: ${dockerContainer.id})"
+    override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 
 data class WaitForContainerToBecomeHealthyStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
-    override fun toString() = super.toString() + "(container: ${container.name}, Docker container: ${dockerContainer.id})"
+    override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 
 data class FinishTaskStep(val exitCode: Int) : TaskStep() {
@@ -50,9 +50,9 @@ data class FinishTaskStep(val exitCode: Int) : TaskStep() {
 }
 
 data class DeleteTaskNetworkStep(val network: DockerNetwork) : TaskStep() {
-    override fun toString() = super.toString() + "(network: ${network.id})"
+    override fun toString() = super.toString() + "(network: '${network.id}')"
 }
 
 data class DisplayTaskFailureStep(val message: String) : TaskStep() {
-    override fun toString() = super.toString() + "(message: $message)"
+    override fun toString() = super.toString() + "(message: '$message')"
 }

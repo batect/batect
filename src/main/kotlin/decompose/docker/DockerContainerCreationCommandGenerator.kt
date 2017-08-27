@@ -6,7 +6,7 @@ class DockerContainerCreationCommandGenerator {
     fun createCommandLine(container: Container, command: String?, image: DockerImage, network: DockerNetwork): Iterable<String> {
         val commandToUse = if (command != null) command else container.command
 
-        return listOf("docker", "create", "--rm", "-it",
+        return listOf("docker", "create", "-it",
                 "--network", network.id,
                 "--hostname", container.name,
                 "--network-alias", container.name) +

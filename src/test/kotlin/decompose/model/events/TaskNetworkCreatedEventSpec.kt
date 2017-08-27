@@ -44,13 +44,15 @@ object TaskNetworkCreatedEventSpec : Spek({
                             ImageBuiltEvent(container1, image1),
                             ImageBuiltEvent(container2, image2)
                     )
+                    on { commandForContainer(container1) } doReturn "command-1"
+                    on { commandForContainer(container2) } doReturn "command-2"
                 }
 
                 event.apply(context)
 
                 it("queues 'create container' steps for them") {
-                    verify(context).queueStep(CreateContainerStep(container1, image1, network))
-                    verify(context).queueStep(CreateContainerStep(container2, image2, network))
+                    verify(context).queueStep(CreateContainerStep(container1, "command-1", image1, network))
+                    verify(context).queueStep(CreateContainerStep(container2, "command-2", image2, network))
                 }
 
                 it("does not queue a 'delete task network' step") {

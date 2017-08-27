@@ -29,7 +29,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 it("generates the correct command line, taking the command from the task") {
                     assertThat(commandLine, equalTo(listOf(
                             "docker", "create",
-                            "--rm", "-it",
+                            "-it",
                             "--network", network.id,
                             "--hostname", container.name,
                             "--network-alias", container.name,
@@ -51,7 +51,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 it("generates the correct command line, taking the command from the container") {
                     assertThat(commandLine, equalTo(listOf(
                             "docker", "create",
-                            "--rm", "-it",
+                            "-it",
                             "--network", network.id,
                             "--hostname", container.name,
                             "--network-alias", container.name,
@@ -72,7 +72,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 it("generates the correct command line, not specifying an explicit command") {
                     assertThat(commandLine, equalTo(listOf(
                             "docker", "create",
-                            "--rm", "-it",
+                            "-it",
                             "--network", network.id,
                             "--hostname", container.name,
                             "--network-alias", container.name,
@@ -93,7 +93,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 it("generates the correct command line, taking the command from the task") {
                     assertThat(commandLine, equalTo(listOf(
                             "docker", "create",
-                            "--rm", "-it",
+                            "-it",
                             "--network", network.id,
                             "--hostname", container.name,
                             "--network-alias", container.name,
@@ -122,7 +122,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 it("generates the correct command line") {
                     assertThat(commandLine, equalTo(listOf(
                             "docker", "create",
-                            "--rm", "-it",
+                            "-it",
                             "--network", network.id,
                             "--hostname", container.name,
                             "--network-alias", container.name,
@@ -166,7 +166,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 on("generating the command") {
                     val commandLine = generator.createCommandLine(container, command, image, network)
                     val expectedCommandLine = listOf("docker", "create",
-                            "--rm", "-it",
+                            "-it",
                             "--network", network.id,
                             "--hostname", container.name,
                             "--network-alias", container.name,

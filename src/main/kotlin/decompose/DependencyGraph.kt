@@ -7,7 +7,7 @@ import decompose.config.Task
 data class DependencyGraph(val config: Configuration, val task: Task) {
     private val nodesMap = createNodes()
 
-    val taskContainerNode: DependencyGraphNode = nodeFor(config.containers[task.runConfiguration.container]!!)
+    val taskContainerNode: DependencyGraphNode by lazy { nodeFor(config.containers[task.runConfiguration.container]!!) }
     val allNodes = nodesMap.values
 
     fun nodeFor(container: Container): DependencyGraphNode {

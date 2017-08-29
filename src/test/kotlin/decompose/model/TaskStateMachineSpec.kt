@@ -5,6 +5,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.throws
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
 import decompose.DependencyGraph
@@ -297,11 +299,24 @@ object TaskStateMachineSpec : Spek({
 
         describe("posting events") {
             on("receiving an event") {
-                val event = mock<TaskEvent>()
+                var sawSelfInEventList = false
+                val event = mock<TaskEvent> {
+                    on { apply(any()) } doAnswer { invocation ->
+                        val appliedToStateMachine = invocation.getArgument<TaskStateMachine>(0)
+                        sawSelfInEventList = appliedToStateMachine.getPastEventsOfType(TaskEvent::class).contains(invocation.mock)
+
+                        null
+                    }
+                }
+
                 stateMachine.postEvent(event)
 
                 it("applies the event") {
                     verify(event).apply(stateMachine)
+                }
+
+                it("adds the event to the list of past events before applying it") {
+                    assertThat(sawSelfInEventList, equalTo(true))
                 }
             }
         }

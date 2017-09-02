@@ -73,8 +73,12 @@ object TaskRunnerSpec : Spek({
             on("the task finishing with no 'finish task' step") {
                 val exitCode = taskRunner.run(config, task.name)
 
+                it("resets the event logger") {
+                    verify(eventLogger).reset()
+                }
+
                 it("logs that the task failed") {
-                    verify(eventLogger).taskFailed("some-task")
+                    verify(eventLogger).logTaskFailed("some-task")
                 }
 
                 it("returns a non-zero exit code") {
@@ -88,7 +92,11 @@ object TaskRunnerSpec : Spek({
 
                 val exitCode = taskRunner.run(config, task.name)
 
-                it("logs it to the event logger") {
+                it("resets the event logger") {
+                    verify(eventLogger).reset()
+                }
+
+                it("logs the step to the event logger") {
                     verify(eventLogger).logBeforeStartingStep(finishTaskStep)
                 }
 
@@ -98,6 +106,13 @@ object TaskRunnerSpec : Spek({
 
                 it("returns the exit code from the 'finish task' step") {
                     assertThat(exitCode, equalTo(123))
+                }
+
+                it("resets the event logger before logging that it is starting the step") {
+                    inOrder(eventLogger) {
+                        verify(eventLogger).reset()
+                        verify(eventLogger).logBeforeStartingStep(finishTaskStep)
+                    }
                 }
             }
 
@@ -114,6 +129,10 @@ object TaskRunnerSpec : Spek({
                 }
 
                 taskRunner.run(config, task.name)
+
+                it("resets the event logger") {
+                    verify(eventLogger).reset()
+                }
 
                 it("logs it to the event logger") {
                     verify(eventLogger).logBeforeStartingStep(step)
@@ -142,6 +161,14 @@ object TaskRunnerSpec : Spek({
                     inOrder(eventLogger, stateMachine) {
                         verify(eventLogger).postEvent(eventToPost)
                         verify(stateMachine).postEvent(eventToPost)
+                    }
+                }
+
+                it("resets the event logger before logging anything") {
+                    inOrder(eventLogger) {
+                        verify(eventLogger).reset()
+                        verify(eventLogger).logBeforeStartingStep(step)
+                        verify(eventLogger).postEvent(eventToPost)
                     }
                 }
             }

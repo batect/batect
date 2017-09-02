@@ -22,11 +22,13 @@ data class TaskRunner(
         val stateMachine = stateMachineProvider.createStateMachine(graph)
         val eventSink = createEventSink(stateMachine)
 
+        eventLogger.reset()
+
         while (true) {
             val step = stateMachine.popNextStep()
 
             if (step == null) {
-                eventLogger.taskFailed(taskName)
+                eventLogger.logTaskFailed(taskName)
                 return 1
             }
 

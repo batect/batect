@@ -15,7 +15,7 @@ object ContainerDidNotBecomeHealthyEventSpec : Spek({
 
         on("getting the message to display to the user") {
             it("returns an appropriate message") {
-                assertThat(event.messageToDisplay, equalTo("Container 'container-1' did not become healthy: Something went wrong"))
+                assertThat(event.messageToDisplay, equalTo("Dependency 'container-1' did not become healthy: Something went wrong"))
             }
         }
 

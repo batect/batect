@@ -12,6 +12,6 @@ tasks:
   the-task:
     run:
       container: build-env
-      command: "sh -c 'echo Status code for request: $(curl --silent --show-error -o /dev/null -w \"%{http_code}\" http://http-server/index.html)'"
+      command: "sh -c 'echo Status code for request: $(curl --fail --silent --show-error -o /dev/null -w \"%{http_code}\" http://http-server/index.html)'"
     start:
       - http-server

@@ -2,8 +2,8 @@ import org.junit.platform.console.ConsoleLauncher
 
 buildscript {
     ext.kotlin_version = '1.1.4-2'
-    ext.junit_version = '1.0.0-RC2'
-    ext.spek_version = '1.1.2'
+    ext.junit_version = '1.0.0-RC3'
+    ext.spek_version = '1.1.4'
 
     repositories {
         mavenCentral()
@@ -59,10 +59,6 @@ dependencies {
 }
 
 junitPlatform {
-    // Temporary workaround for compatibility issues between Spek and more recent JUnit Gradle releases
-    // (see https://github.com/JetBrains/spek/issues/248#issuecomment-323052332)
-    platformVersion "1.0.0-M4"
-
     filters {
         engines {
             include 'spek'

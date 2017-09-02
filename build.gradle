@@ -92,11 +92,9 @@ task journeyTest(type: JavaExec) {
 
     classpath = sourceSets.journeyTest.runtimeClasspath + configurations.junitPlatform
 
-    def scanDirs = [
-            sourceSets.journeyTest.java.outputDir,
-            sourceSets.journeyTest.output.resourcesDir
-    ]
-    scanDirs += sourceSets.journeyTest.output.dirs.files
+    def scanDirs = [sourceSets.journeyTest.output.resourcesDir] +
+            sourceSets.journeyTest.output.classesDirs +
+            sourceSets.journeyTest.output.dirs.files
 
     main = ConsoleLauncher.class.getName()
     args = [

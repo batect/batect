@@ -1,4 +1,4 @@
-project_name: simple-task-test
+project_name: many-tasks-test
 
 containers:
   build-env:

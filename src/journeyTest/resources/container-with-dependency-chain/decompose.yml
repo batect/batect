@@ -1,4 +1,4 @@
-project_name: task-with-healthy-dependency-test
+project_name: container-with-dependency-chain-test
 
 containers:
   build-env:

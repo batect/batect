@@ -1,6 +1,6 @@
 package decompose.journeytests
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
@@ -16,7 +16,7 @@ object ListTasksJourneyTest : Spek({
             val result = runner.run()
 
             it("prints a list of all available tasks") {
-                assert.that(result.output, containsSubstring("""
+                assertThat(result.output, containsSubstring("""
                     |- task-1: do the first thing
                     |- task-2: do the second thing
                     |- task-3: do the third thing
@@ -24,7 +24,7 @@ object ListTasksJourneyTest : Spek({
             }
 
             it("returns a zero exit code") {
-                assert.that(result.exitCode, equalTo(0))
+                assertThat(result.exitCode, equalTo(0))
             }
         }
     }

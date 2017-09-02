@@ -1,6 +1,6 @@
 package decompose.journeytests
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
@@ -15,14 +15,14 @@ object NonStandardConfigurationFileNameTest : Spek({
             val result = runner.run()
 
             it("prints a list of all available tasks") {
-                assert.that(result.output, containsSubstring("""
+                assertThat(result.output, containsSubstring("""
                     |- task-1
                     |- task-2
                     |- task-3""".trimMargin()))
             }
 
             it("returns a zero exit code") {
-                assert.that(result.exitCode, equalTo(0))
+                assertThat(result.exitCode, equalTo(0))
             }
         }
 
@@ -31,11 +31,11 @@ object NonStandardConfigurationFileNameTest : Spek({
             val result = runner.run()
 
             it("prints the output of the task ") {
-                assert.that(result.output, containsSubstring("This is some output from task 1"))
+                assertThat(result.output, containsSubstring("This is some output from task 1"))
             }
 
             it("returns the exit code from the task") {
-                assert.that(result.exitCode, equalTo(123))
+                assertThat(result.exitCode, equalTo(123))
             }
         }
     }

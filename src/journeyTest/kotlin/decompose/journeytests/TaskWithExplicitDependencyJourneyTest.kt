@@ -1,6 +1,6 @@
 package decompose.journeytests
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
@@ -16,11 +16,11 @@ object TaskWithExplicitDependencyJourneyTest : Spek({
             val result = runner.run()
 
             it("displays the output from that task") {
-                assert.that(result.output, containsSubstring("Status code for request: 200"))
+                assertThat(result.output, containsSubstring("Status code for request: 200"))
             }
 
             it("returns the exit code from that task") {
-                assert.that(result.exitCode, equalTo(0))
+                assertThat(result.exitCode, equalTo(0))
             }
         }
     }

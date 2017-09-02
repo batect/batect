@@ -1,6 +1,6 @@
 package decompose.journeytests
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
@@ -16,11 +16,11 @@ object TaskWithUnhealthyDependencyTest : Spek({
             val result = runner.run()
 
             it("prints an appropriate error message") {
-                assert.that(result.output, containsSubstring("Dependency 'http-server' did not become healthy: The configured health check did not report the container as healthy within the timeout period."))
+                assertThat(result.output, containsSubstring("Dependency 'http-server' did not become healthy: The configured health check did not report the container as healthy within the timeout period."))
             }
 
             it("returns a non-zero exit code") {
-                assert.that(result.exitCode, !equalTo(0))
+                assertThat(result.exitCode, !equalTo(0))
             }
         }
     }

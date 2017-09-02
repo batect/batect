@@ -1,6 +1,6 @@
 package decompose.journeytests
 
-import com.natpryce.hamkrest.assertion.assert
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
@@ -15,11 +15,11 @@ object HelpJourneyTest : Spek({
             val result = runner.run()
 
             it("prints the help header") {
-                assert.that(result.output, containsSubstring("Usage: decompose [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]"))
+                assertThat(result.output, containsSubstring("Usage: decompose [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]"))
             }
 
             it("returns a non-zero exit code") {
-                assert.that(result.exitCode, !equalTo(0))
+                assertThat(result.exitCode, !equalTo(0))
             }
         }
 
@@ -28,15 +28,15 @@ object HelpJourneyTest : Spek({
             val result = runner.run()
 
             it("prints the help header") {
-                assert.that(result.output, containsSubstring("Usage: decompose [COMMON OPTIONS] run TASK"))
+                assertThat(result.output, containsSubstring("Usage: decompose [COMMON OPTIONS] run TASK"))
             }
 
             it("prints a description of the command") {
-                assert.that(result.output, containsSubstring("Run a task."))
+                assertThat(result.output, containsSubstring("Run a task."))
             }
 
             it("returns a non-zero exit code") {
-                assert.that(result.exitCode, !equalTo(0))
+                assertThat(result.exitCode, !equalTo(0))
             }
         }
     }

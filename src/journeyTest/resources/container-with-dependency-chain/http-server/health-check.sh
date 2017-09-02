@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
-exit 0
+set -e
+
+curl --fail --show-error --silent http://localhost

@@ -23,8 +23,6 @@ _Build and testing environments as code_
 * running multiple containers at once (eg. stereotypical 'run' configuration that starts up the service with its dependencies)
   * rather than showing output from target, show output from all containers
 * allow the user to keep containers after failure so they can examine logs
-* always try to clean up all containers, regardless of reason for failure
-  * extend journey tests to verify this
 * run image builds in parallel and only show summary of build progress (unless image build fails, in which case show full output)
 * start dependencies in parallel
 * overridable health check parameters for containers (so that you can have the health check poll very frequently when waiting for something to 

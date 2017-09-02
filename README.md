@@ -13,21 +13,18 @@ _Build and testing environments as code_
 ## MVP TODO
 
 ### Config file handling
-* validate configuration (eg. containers referenced in tasks as dependencies and direct targets must exist)
 * better error message when a key (eg. a task name) is used twice (at the moment it's `Duplicate field 'duplicated_task_name'`)
-* allow tasks with just containers to start (ie. no `run` entry)
 * warn if a dependency is specified twice (either for a task or for a container)
 
 ### Features
 * logging options (all or particular container) - will this be implied by the presence of a `run` configuration?
 * just use an existing image, pulling if necessary (ie. don't require a local Dockerfile)
-* dependencies between containers
-  * stop dependencies in correct order (otherwise we could inadvertently trigger the 'dependency exited early' warning if a dependent container crashed)
 * warn if dependency exits before task finishes (include exit code)
 * running multiple containers at once (eg. stereotypical 'run' configuration that starts up the service with its dependencies)
   * rather than showing output from target, show output from all containers
-* allow the user to keep containers after failure so they can examine logs (or even default to not destroying anything if they fail)
-* always clean up all containers, regardless of reason for failure, when running on CI by default (use CI environment variable to detect, add command-line switch to disable) 
+* allow the user to keep containers after failure so they can examine logs
+* always try to clean up all containers, regardless of reason for failure
+  * extend journey tests to verify this
 * run image builds in parallel and only show summary of build progress (unless image build fails, in which case show full output)
 * start dependencies in parallel
 * overridable health check parameters for containers (so that you can have the health check poll very frequently when waiting for something to 
@@ -39,6 +36,7 @@ _Build and testing environments as code_
 * flag (eg. `--simple-output`) to disable fancy output formatting (eg. progress bars) from decompose (task process can still do whatever it wants)
 * flag (eg. `--no-colors`) to disable coloured and bold output (implies `--simple-output`) from decompose (task process can still do whatever it wants)
 * fancy progress bar output for building images and starting dependencies
+  * make sure accidental input on stdin doesn't mangle it
 * automatically create missing local volume mount directories and show a warning (useful when mounting a directory intended to be a cache)
 * support new OS X caching features for volume mounts (https://docs.docker.com/docker-for-mac/osxfs-caching/) 
 
@@ -89,6 +87,7 @@ _Build and testing environments as code_
   * means user doesn't see irrelevant error messages
 * exit options (close all after any container stops, wait for all to stop)
 * when starting up containers and displaying progress, show countdown to health check (eg. 'waiting for container to become healthy, next check in 3 seconds')
+* warn if a dependency does not have a health check defined
 
 ## Things that would have to be changed when moving to Kotlin/Native
 

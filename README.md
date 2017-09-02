@@ -1,4 +1,5 @@
-# decompose
+# batect 
+**b**uild **a**nd **t**esting **e**nvironments as **c**ode **t**ool
 
 ## The sales pitch
 
@@ -31,17 +32,16 @@ _Build and testing environments as code_
 * some way to propagate environment variables from host environment to target environment
 * some way to add additional environment variables at the task level (for the target container only, not dependencies)
 * flag (eg. `--quiet`) to only show output from task
-* flag (eg. `--simple-output`) to disable fancy output formatting (eg. progress bars) from decompose (task process can still do whatever it wants)
-* flag (eg. `--no-colors`) to disable coloured and bold output (implies `--simple-output`) from decompose (task process can still do whatever it wants)
+* flag (eg. `--simple-output`) to disable fancy output formatting (eg. progress bars) from batect (task process can still do whatever it wants)
+* flag (eg. `--no-colors`) to disable coloured and bold output (implies `--simple-output`) from batect (task process can still do whatever it wants)
 * fancy progress bar output for building images and starting dependencies
   * make sure accidental input on stdin doesn't mangle it
 * automatically create missing local volume mount directories and show a warning (useful when mounting a directory intended to be a cache)
 * support new OS X caching features for volume mounts (https://docs.docker.com/docker-for-mac/osxfs-caching/) 
 
 ### Other
-* rename everything to 'Crane'
 * make test names consistent (eg. `it("should do something")` vs `it("does something")`)
-* logging (for Crane internals)
+* logging (for batect internals)
 * option to print full stack trace on non-fatal exceptions
 * command to print version and system info
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
@@ -74,7 +74,7 @@ _Build and testing environments as code_
 * support alternative volume mount specifications (eg. 'ro')
 * support port ranges in mappings
 * support protocols other than TCP in port mappings
-* shell tab completion for tasks (eg. `decompose run b<tab>` completes to `decompose run build`)
+* shell tab completion for tasks (eg. `batect run b<tab>` completes to `batect run build`)
 * pass-through additional command line arguments to a `run`
 * requires / provides relationships (eg. 'app' requires 'service-a', and 'service-a-fake' and 'service-a-real' provide 'service-a')
 * prerequisites for tasks (eg. run the build before running journey tests)

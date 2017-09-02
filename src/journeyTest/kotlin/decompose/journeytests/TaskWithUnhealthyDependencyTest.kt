@@ -3,6 +3,7 @@ package decompose.journeytests
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.isEmpty
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
@@ -21,6 +22,10 @@ object TaskWithUnhealthyDependencyTest : Spek({
 
             it("returns a non-zero exit code") {
                 assertThat(result.exitCode, !equalTo(0))
+            }
+
+            it("cleans up all containers it creates") {
+                assertThat(result.potentiallyOrphanedContainers, isEmpty)
             }
         }
     }

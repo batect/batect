@@ -3,20 +3,30 @@ package decompose
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
+import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.reset
+import com.nhaarman.mockito_kotlin.verify
+import com.nhaarman.mockito_kotlin.whenever
 import decompose.config.Configuration
 import decompose.config.Container
 import decompose.config.ContainerMap
 import decompose.config.Task
 import decompose.config.TaskMap
 import decompose.config.TaskRunConfiguration
-import decompose.docker.DockerClient
-import decompose.docker.DockerContainer
-import decompose.docker.DockerContainerRunResult
-import decompose.docker.DockerImage
-import decompose.docker.DockerNetwork
+import decompose.model.DependencyGraph
+import decompose.model.DependencyGraphProvider
+import decompose.model.TaskStateMachine
+import decompose.model.TaskStateMachineProvider
+import decompose.model.events.TaskEvent
+import decompose.model.events.TaskEventSink
+import decompose.model.steps.BuildImageStep
+import decompose.model.steps.CreateTaskNetworkStep
+import decompose.model.steps.FinishTaskStep
+import decompose.model.steps.TaskStepRunner
 import decompose.testutils.withMessage
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -25,140 +35,147 @@ import org.jetbrains.spek.api.dsl.on
 
 object TaskRunnerSpec : Spek({
     describe("a task runner") {
-        on("running a task with no dependencies specified, and no implicit dependencies specified for the container") {
-            val container = Container("the_container", "/build_dir")
-            val command = "do-things.sh"
-            val task = Task("the_task", TaskRunConfiguration("the_container", command))
-            val config = Configuration(
-                    "the_project",
-                    TaskMap(task),
-                    ContainerMap(container)
-            )
+        val eventLogger = mock<EventLogger>()
+        val taskStepRunner = mock<TaskStepRunner>()
+        val graph = mock<DependencyGraph>()
+        val graphProvider = mock<DependencyGraphProvider>()
+        val stateMachine = mock<TaskStateMachine>()
+        val stateMachineProvider = mock<TaskStateMachineProvider> {
+            on { createStateMachine(graph) } doReturn stateMachine
+        }
 
-            val network = DockerNetwork("the-network")
-            val builtImage = DockerImage("the_image_id")
-            val dockerContainer = DockerContainer("the_container_id", container.name)
-            val expectedExitCode = 201
+        val taskRunner = TaskRunner(eventLogger, taskStepRunner, graphProvider, stateMachineProvider)
 
-            val dockerClient = mock<DockerClient> {
-                on { createNewBridgeNetwork() } doReturn network
-                on { build(config.projectName, container) } doReturn builtImage
-                on { create(container, command, builtImage, network) } doReturn dockerContainer
-                on { run(dockerContainer) } doReturn DockerContainerRunResult(expectedExitCode)
-            }
+        beforeEachTest {
+            reset(taskStepRunner)
+            reset(eventLogger)
+            reset(stateMachine)
+        }
 
-            val eventLogger = mock<EventLogger>()
-            val dependencyManager = mock<DependencyRuntimeManager>()
-            val dependencyManagerFactory = mock<DependencyRuntimeManagerFactory> {
-                on { create(config, task) } doReturn dependencyManager
-            }
+        on("attempting to run a task that does not exist") {
+            val config = Configuration("some-project", TaskMap(), ContainerMap())
 
-            val actualExitCode = TaskRunner(dockerClient, eventLogger, dependencyManagerFactory).run(config, "the_task")
-
-            it("logs that it is building the image before it builds it") {
-                inOrder(eventLogger, dockerClient) {
-                    verify(eventLogger).imageBuildStarting(container)
-                    verify(dockerClient).build(config.projectName, container)
-                }
-            }
-
-            it("logs that it is running the command before it runs it") {
-                inOrder(eventLogger, dockerClient) {
-                    verify(eventLogger).commandStarting(container, command)
-                    verify(dockerClient).run(dockerContainer)
-                }
-            }
-
-            it("returns the exit code of the container") {
-                assertThat(actualExitCode, equalTo(expectedExitCode))
+            it("throws an appropriate exception") {
+                assertThat({ taskRunner.run(config, "some-task") }, throws<ExecutionException>(withMessage("The task 'some-task' does not exist.")))
             }
         }
 
-        on("running a task that doesn't exist") {
-            val config = Configuration(
-                    "the_project",
-                    TaskMap(),
-                    ContainerMap()
-            )
+        describe("running a task that exists") {
+            val container = Container("some-container", "/some-build-dir")
+            val runConfiguration = TaskRunConfiguration(container.name)
+            val task = Task("some-task", runConfiguration)
+            val config = Configuration("some-project", TaskMap(task), ContainerMap(container))
 
-            val runner = TaskRunner(mock<DockerClient>(), mock<EventLogger>(), mock<DependencyRuntimeManagerFactory>())
-
-            it("fails with an appropriate error message") {
-                assertThat({ runner.run(config, "the_task_that_doesnt_exist") }, throws<ExecutionException>(withMessage("The task 'the_task_that_doesnt_exist' does not exist.")))
-            }
-        }
-
-        on("running a task that runs a container that doesn't exist") {
-            val config = Configuration(
-                    "the_project",
-                    TaskMap(Task("the_task", TaskRunConfiguration("the_container", "do-things.sh"))),
-                    ContainerMap()
-            )
-
-            val runner = TaskRunner(mock<DockerClient>(), mock<EventLogger>(), mock<DependencyRuntimeManagerFactory>())
-
-            it("fails with an appropriate error message") {
-                assertThat({ runner.run(config, "the_task") }, throws<ExecutionException>(withMessage("The container 'the_container' referenced by task 'the_task' does not exist.")))
-            }
-        }
-
-        on("running a task that has a dependency") {
-            val taskContainer = Container("the_container", "/build_dir")
-            val dependencyContainer = Container("the_dependency", "/other_build_dir")
-            val command = "do-things.sh"
-            val task = Task("the_task", TaskRunConfiguration("the_container", command), dependencies = setOf(dependencyContainer.name))
-
-            val config = Configuration(
-                    "the_project",
-                    TaskMap(task),
-                    ContainerMap(taskContainer, dependencyContainer)
-            )
-
-            val builtImage = DockerImage("the_image_id")
-            val network = DockerNetwork("the-network")
-            val dockerContainer = DockerContainer("the_container_id", taskContainer.name)
-            val expectedExitCode = 201
-
-            val dockerClient = mock<DockerClient> {
-                on { createNewBridgeNetwork() } doReturn network
-                on { build(config.projectName, taskContainer) } doReturn builtImage
-                on { create(taskContainer, command, builtImage, network) } doReturn dockerContainer
-                on { run(dockerContainer) } doReturn DockerContainerRunResult(expectedExitCode)
+            beforeEachTest {
+                whenever(graphProvider.createGraph(config, task)).thenReturn(graph)
             }
 
-            val eventLogger = mock<EventLogger>()
-            val dependencyManager = mock<DependencyRuntimeManager>()
-            val dependencyManagerFactory = mock<DependencyRuntimeManagerFactory> {
-                on { create(config, task) } doReturn dependencyManager
-            }
+            on("the task finishing with no 'finish task' step") {
+                val exitCode = taskRunner.run(config, task.name)
 
-            val actualExitCode = TaskRunner(dockerClient, eventLogger, dependencyManagerFactory).run(config, "the_task")
+                it("logs that the task failed") {
+                    verify(eventLogger).taskFailed("some-task")
+                }
 
-            it("logs that it is building the image before it builds it") {
-                inOrder(eventLogger, dockerClient) {
-                    verify(eventLogger).imageBuildStarting(taskContainer)
-                    verify(dockerClient).build(config.projectName, taskContainer)
+                it("returns a non-zero exit code") {
+                    assertThat(exitCode, !equalTo(0))
                 }
             }
 
-            it("logs that it is running the command before it runs it") {
-                inOrder(eventLogger, dockerClient) {
-                    verify(eventLogger).commandStarting(taskContainer, command)
-                    verify(dockerClient).run(dockerContainer)
+            on("the task finishing with a 'finish task' step") {
+                val finishTaskStep = FinishTaskStep(123)
+                whenever(stateMachine.popNextStep()).thenReturn(finishTaskStep, null)
+
+                val exitCode = taskRunner.run(config, task.name)
+
+                it("logs it to the event logger") {
+                    verify(eventLogger).logBeforeStartingStep(finishTaskStep)
+                }
+
+                it("runs the step") {
+                    verify(taskStepRunner).run(eq(finishTaskStep), any())
+                }
+
+                it("returns the exit code from the 'finish task' step") {
+                    assertThat(exitCode, equalTo(123))
                 }
             }
 
-            it("returns the exit code of the container") {
-                assertThat(actualExitCode, equalTo(expectedExitCode))
+            on("the state machine producing a step to run") {
+                val step = BuildImageStep(config.projectName, container)
+                val eventToPost = mock<TaskEvent>()
+
+                whenever(stateMachine.popNextStep()).thenReturn(step, null)
+                whenever(taskStepRunner.run(eq(step), any())).then { invocation ->
+                    val eventSink = invocation.arguments[1] as TaskEventSink
+                    eventSink.postEvent(eventToPost)
+
+                    null
+                }
+
+                taskRunner.run(config, task.name)
+
+                it("logs it to the event logger") {
+                    verify(eventLogger).logBeforeStartingStep(step)
+                }
+
+                it("runs the step") {
+                    verify(taskStepRunner).run(eq(step), any())
+                }
+
+                it("logs it to the event logger and then runs it") {
+                    inOrder(eventLogger, taskStepRunner) {
+                        verify(eventLogger).logBeforeStartingStep(step)
+                        verify(taskStepRunner).run(eq(step), any())
+                    }
+                }
+
+                it("logs the posted event to the event logger") {
+                    verify(eventLogger).postEvent(eventToPost)
+                }
+
+                it("forwards the posted event to the state machine") {
+                    verify(stateMachine).postEvent(eventToPost)
+                }
+
+                it("logs the posted event to the event logger before forwarding it to the state machine") {
+                    inOrder(eventLogger, stateMachine) {
+                        verify(eventLogger).postEvent(eventToPost)
+                        verify(stateMachine).postEvent(eventToPost)
+                    }
+                }
             }
 
-            it("performs dependency operations in the correct order") {
-                inOrder(dockerClient, dependencyManager) {
-                    verify(dependencyManager).buildImages()
-                    verify(dependencyManager).startDependencies(network)
-                    verify(dockerClient).run(dockerContainer)
-                    verify(dependencyManager).stopDependencies()
-                    verify(dockerClient).deleteNetwork(network)
+            on("the state machine producing multiple steps to run") {
+                val step1 = BuildImageStep(config.projectName, container)
+                val step2 = CreateTaskNetworkStep
+                whenever(stateMachine.popNextStep()).thenReturn(step1, step2, null)
+
+                taskRunner.run(config, task.name)
+
+                it("logs the first step to the event logger") {
+                    verify(eventLogger).logBeforeStartingStep(step1)
+                }
+
+                it("runs the first step") {
+                    verify(taskStepRunner).run(eq(step1), any())
+                }
+
+                it("logs the second step to the event logger") {
+                    verify(eventLogger).logBeforeStartingStep(step2)
+                }
+
+                it("runs the second step") {
+                    verify(taskStepRunner).run(eq(step2), any())
+                }
+
+                it("performs each operation in the correct order") {
+                    inOrder(eventLogger, taskStepRunner) {
+                        verify(eventLogger).logBeforeStartingStep(step1)
+                        verify(taskStepRunner).run(eq(step1), any())
+                        verify(eventLogger).logBeforeStartingStep(step2)
+                        verify(taskStepRunner).run(eq(step2), any())
+                    }
                 }
             }
         }

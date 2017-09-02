@@ -15,6 +15,9 @@ import decompose.docker.DockerClient
 import decompose.docker.DockerContainerCreationCommandGenerator
 import decompose.docker.DockerImageLabellingStrategy
 import decompose.docker.ProcessRunner
+import decompose.model.DependencyGraphProvider
+import decompose.model.TaskStateMachineProvider
+import decompose.model.steps.TaskStepRunner
 import java.io.PrintStream
 import java.nio.file.FileSystem
 import java.nio.file.FileSystems
@@ -65,17 +68,18 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<ConfigurationLoader>() with provider { ConfigurationLoader(instance(), instance()) }
     bind<PathResolverFactory>() with provider { PathResolverFactory() }
     bind<FileSystem>() with provider { FileSystems.getDefault() }
-    bind<TaskRunner>() with provider { TaskRunner(instance(), instance(), instance()) }
+    bind<TaskRunner>() with provider { TaskRunner(instance(), instance(), instance(), instance()) }
     bind<DockerClient>() with provider { DockerClient(instance(), instance(), instance()) }
     bind<DockerImageLabellingStrategy>() with provider { DockerImageLabellingStrategy() }
     bind<ProcessRunner>() with provider { ProcessRunner() }
     bind<DockerContainerCreationCommandGenerator>() with provider { DockerContainerCreationCommandGenerator() }
     bind<EventLogger>() with provider { EventLogger(instance()) }
     bind<Console>() with provider { Console(instance(PrintStreamType.Output)) }
-    bind<DependencyResolver>() with provider { DependencyResolver() }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
     bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
-    bind<DependencyRuntimeManagerFactory>() with provider { DependencyRuntimeManagerFactory(instance(), instance(), instance()) }
     bind<CommandLineParser>() with provider { DecomposeCommandLineParser(this) }
+    bind<TaskStepRunner>() with provider { TaskStepRunner(instance()) }
+    bind<DependencyGraphProvider>() with provider { DependencyGraphProvider() }
+    bind<TaskStateMachineProvider>() with provider { TaskStateMachineProvider() }
 }
 

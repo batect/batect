@@ -1,4 +1,4 @@
-package decompose
+package decompose.model
 
 import decompose.config.Configuration
 import decompose.config.Container
@@ -119,3 +119,5 @@ data class DependencyGraphNode(
     val dependsOnContainers: Set<Container> by lazy { dependsOn.map { it.container }.toSet() }
     val dependedOnByContainers: Set<Container> by lazy { dependedOnBy.map { it.container }.toSet() }
 }
+
+class DependencyResolutionFailedException(message: String) : Exception(message)

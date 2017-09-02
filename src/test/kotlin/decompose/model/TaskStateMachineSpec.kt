@@ -9,7 +9,6 @@ import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
-import decompose.DependencyGraph
 import decompose.config.Configuration
 import decompose.config.Container
 import decompose.config.ContainerMap

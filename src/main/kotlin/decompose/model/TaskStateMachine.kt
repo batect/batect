@@ -1,6 +1,5 @@
 package decompose.model
 
-import decompose.DependencyGraph
 import decompose.config.Container
 import decompose.model.events.TaskEvent
 import decompose.model.events.TaskEventContext
@@ -12,6 +11,8 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.reflect.KClass
 
+// FIXME: this is really two things: the state machine and a collection of utility functions
+// for events
 class TaskStateMachine(private val graph: DependencyGraph) : TaskEventContext, TaskEventSink {
     private val stepQueue: Queue<TaskStep> = LinkedList<TaskStep>()
     private val processedSteps = mutableSetOf<TaskStep>()

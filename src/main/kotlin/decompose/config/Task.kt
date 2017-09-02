@@ -5,4 +5,4 @@ data class Task(val name: String,
                 val description: String = "",
                 val dependencies: Set<String> = emptySet())
 
-data class TaskRunConfiguration(val container: String, val command: String?)
+data class TaskRunConfiguration(val container: String, val command: String? = null)

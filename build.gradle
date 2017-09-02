@@ -23,7 +23,7 @@ apply plugin: 'application'
 apply plugin: 'kotlin'
 apply plugin: 'org.junit.platform.gradle.plugin'
 
-mainClassName = 'decompose.ApplicationKt'
+mainClassName = 'batect.ApplicationKt'
 
 repositories {
     mavenCentral()

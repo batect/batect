@@ -9,17 +9,17 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 
-object DecomposeCommandLineParserSpec : Spek({
-    describe("a Decompose-specific command line parser") {
+object BatectCommandLineParserSpec : Spek({
+    describe("a batect-specific command line parser") {
         on("creating bindings for common options") {
             val emptyKodein = Kodein {}
-            val parser = DecomposeCommandLineParser(emptyKodein)
+            val parser = BatectCommandLineParser(emptyKodein)
             val bindings = Kodein {
                 import(parser.createBindings())
             }
 
             it("includes the value of the configuration file name") {
-                assertThat(bindings.instance<String>(CommonOptions.ConfigurationFileName), equalTo("decompose.yml"))
+                assertThat(bindings.instance<String>(CommonOptions.ConfigurationFileName), equalTo("batect.yml"))
             }
         }
     }

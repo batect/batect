@@ -6,7 +6,7 @@ import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
 import com.github.salomonbrys.kodein.provider
 import batect.cli.CommandLineParser
-import batect.cli.DecomposeCommandLineParser
+import batect.cli.BatectCommandLineParser
 import batect.cli.Failed
 import batect.cli.Succeeded
 import batect.config.io.ConfigurationLoader
@@ -77,7 +77,7 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<Console>() with provider { Console(instance(PrintStreamType.Output)) }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
     bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
-    bind<CommandLineParser>() with provider { DecomposeCommandLineParser(this) }
+    bind<CommandLineParser>() with provider { BatectCommandLineParser(this) }
     bind<TaskStepRunner>() with provider { TaskStepRunner(instance()) }
     bind<DependencyGraphProvider>() with provider { DependencyGraphProvider() }
     bind<TaskStateMachineProvider>() with provider { TaskStateMachineProvider() }

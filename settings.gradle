@@ -15,4 +15,4 @@ include 'api'
 include 'services:webservice'
 */
 
-rootProject.name = 'decompose-kt'
+rootProject.name = 'batect'

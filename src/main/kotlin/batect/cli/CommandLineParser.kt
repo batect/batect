@@ -79,4 +79,4 @@ sealed class CommandLineParsingResult
 data class Succeeded(val command: Command) : CommandLineParsingResult()
 data class Failed(val error: String) : CommandLineParsingResult()
 
-val applicationName = "decompose"
+val applicationName = "batect"

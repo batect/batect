@@ -71,7 +71,7 @@ object CommandLineParserSpec : Spek({
                     val result = parser.parse(listOf("--some-option", "--some-other-option"))
 
                     it("indicates that parsing failed because no command was provided") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("No command specified. Run 'decompose help' for a list of valid commands.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("No command specified. Run 'batect help' for a list of valid commands.")))
                     }
                 }
 
@@ -79,7 +79,7 @@ object CommandLineParserSpec : Spek({
                     val result = parser.parse(listOf("--some-option", "--some-other-option", "some-non-existent-command"))
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Invalid command 'some-non-existent-command'. Run 'decompose help' for a list of valid commands.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Invalid command 'some-non-existent-command'. Run 'batect help' for a list of valid commands.")))
                     }
                 }
 
@@ -87,7 +87,7 @@ object CommandLineParserSpec : Spek({
                     val result = parser.parse(listOf("--some-option", "--some-other-option", "--some-unknown-option", "do-stuff"))
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Invalid option '--some-unknown-option'. Run 'decompose help' for a list of valid options.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Invalid option '--some-unknown-option'. Run 'batect help' for a list of valid options.")))
                     }
                 }
 

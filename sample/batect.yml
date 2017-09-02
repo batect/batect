@@ -1,6 +1,6 @@
 ---
 
-project_name: decompose-sample
+project_name: batect-sample
 
 tasks:
   build:

@@ -45,13 +45,13 @@ object HelpCommandSpec : Spek({
 
                 it("prints help information") {
                     assertThat(output.toString(), equalTo("""
-                        |Usage: decompose COMMAND [COMMAND OPTIONS]
+                        |Usage: batect COMMAND [COMMAND OPTIONS]
                         |
                         |Commands:
                         |  do-other-stuff    Do the other thing.
                         |  do-stuff          Do the thing.
                         |
-                        |For help on the options available for a command, run 'decompose help <command>'.
+                        |For help on the options available for a command, run 'batect help <command>'.
                         |
                         |""".trimMargin()))
                 }
@@ -80,7 +80,7 @@ object HelpCommandSpec : Spek({
 
                 it("prints help information") {
                     assertThat(output.toString(), equalTo("""
-                        |Usage: decompose [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]
+                        |Usage: batect [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]
                         |
                         |Commands:
                         |  do-other-stuff                   Do the other thing.
@@ -92,7 +92,7 @@ object HelpCommandSpec : Spek({
                         |  -f, --file=value                 File name to use.
                         |      --sensible-default=value     Something you can override if you want. (defaults to 'the-default-value' if not set)
                         |
-                        |For help on the options available for a command, run 'decompose help <command>'.
+                        |For help on the options available for a command, run 'batect help <command>'.
                         |
                         |""".trimMargin()))
                 }
@@ -121,13 +121,13 @@ object HelpCommandSpec : Spek({
 
                         it("prints help information") {
                             assertThat(output.toString(), equalTo("""
-                            |Usage: decompose [COMMON OPTIONS] do-stuff
+                            |Usage: batect [COMMON OPTIONS] do-stuff
                             |
                             |Do the thing.
                             |
                             |This command does not take any options.
                             |
-                            |For help on the common options available for all commands, run 'decompose help'.
+                            |For help on the common options available for all commands, run 'batect help'.
                             |
                             |""".trimMargin()))
                         }
@@ -155,14 +155,14 @@ object HelpCommandSpec : Spek({
 
                         it("prints help information") {
                             assertThat(output.toString(), equalTo("""
-                            |Usage: decompose [COMMON OPTIONS] do-stuff [THING]
+                            |Usage: batect [COMMON OPTIONS] do-stuff [THING]
                             |
                             |Do the thing.
                             |
                             |Parameters:
                             |  THING    (optional) Thing to do.
                             |
-                            |For help on the common options available for all commands, run 'decompose help'.
+                            |For help on the common options available for all commands, run 'batect help'.
                             |
                             |""".trimMargin()))
                         }
@@ -190,14 +190,14 @@ object HelpCommandSpec : Spek({
 
                         it("prints help information") {
                             assertThat(output.toString(), equalTo("""
-                            |Usage: decompose [COMMON OPTIONS] do-stuff THING
+                            |Usage: batect [COMMON OPTIONS] do-stuff THING
                             |
                             |Do the thing.
                             |
                             |Parameters:
                             |  THING    Thing to do.
                             |
-                            |For help on the common options available for all commands, run 'decompose help'.
+                            |For help on the common options available for all commands, run 'batect help'.
                             |
                             |""".trimMargin()))
                         }
@@ -226,7 +226,7 @@ object HelpCommandSpec : Spek({
 
                         it("prints help information") {
                             assertThat(output.toString(), equalTo("""
-                            |Usage: decompose [COMMON OPTIONS] do-stuff THING OTHER-THING
+                            |Usage: batect [COMMON OPTIONS] do-stuff THING OTHER-THING
                             |
                             |Do the thing.
                             |
@@ -234,7 +234,7 @@ object HelpCommandSpec : Spek({
                             |  THING          Thing to do.
                             |  OTHER-THING    Other thing to do.
                             |
-                            |For help on the common options available for all commands, run 'decompose help'.
+                            |For help on the common options available for all commands, run 'batect help'.
                             |
                             |""".trimMargin()))
                         }
@@ -263,7 +263,7 @@ object HelpCommandSpec : Spek({
 
                         it("prints help information") {
                             assertThat(output.toString(), equalTo("""
-                            |Usage: decompose [COMMON OPTIONS] do-stuff THING [OTHER-THING]
+                            |Usage: batect [COMMON OPTIONS] do-stuff THING [OTHER-THING]
                             |
                             |Do the thing.
                             |
@@ -271,7 +271,7 @@ object HelpCommandSpec : Spek({
                             |  THING          Thing to do.
                             |  OTHER-THING    (optional) Other thing to do.
                             |
-                            |For help on the common options available for all commands, run 'decompose help'.
+                            |For help on the common options available for all commands, run 'batect help'.
                             |
                             |""".trimMargin()))
                         }
@@ -294,7 +294,7 @@ object HelpCommandSpec : Spek({
 
                     it("does not include the placeholder for common options in the header or print a message about common options") {
                         assertThat(output.toString(), equalTo("""
-                            |Usage: decompose do-stuff
+                            |Usage: batect do-stuff
                             |
                             |Do the thing.
                             |
@@ -317,7 +317,7 @@ object HelpCommandSpec : Spek({
                 val exitCode = command.run()
 
                 it("prints an error message") {
-                    assertThat(output.toString(), equalTo("Invalid command 'unknown-command'. Run 'decompose help' for a list of valid commands.\n"))
+                    assertThat(output.toString(), equalTo("Invalid command 'unknown-command'. Run 'batect help' for a list of valid commands.\n"))
                 }
 
                 it("returns a non-zero exit code") {

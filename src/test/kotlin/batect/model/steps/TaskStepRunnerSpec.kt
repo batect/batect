@@ -85,12 +85,12 @@ object TaskStepRunnerSpec : Spek({
                 }
 
                 on("when building the image fails") {
-                    whenever(dockerClient.build("some-project-name", container)).thenThrow(ImageBuildFailedException())
+                    whenever(dockerClient.build("some-project-name", container)).thenThrow(ImageBuildFailedException("Something went wrong."))
 
                     runner.run(step, eventSink)
 
                     it("emits a 'image build failed' event") {
-                        verify(eventSink).postEvent(ImageBuildFailedEvent(container, "Image build failed."))
+                        verify(eventSink).postEvent(ImageBuildFailedEvent(container, "Image build failed. Output from Docker was: Something went wrong."))
                     }
                 }
             }

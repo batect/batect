@@ -44,10 +44,11 @@ object DockerClientSpec : Spek({
                 val container = Container("the-container", "/path/to/build/dir")
 
                 on("a successful build") {
+                    whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(0, "Some output"))
                     val result = client.build("the-project", container)
 
                     it("builds the image") {
-                        verify(processRunner).run(listOf("docker", "build", "--tag", imageLabel, container.buildDirectory))
+                        verify(processRunner).runAndCaptureOutput(listOf("docker", "build", "--tag", imageLabel, container.buildDirectory))
                     }
 
                     it("returns the ID of the created image") {
@@ -56,7 +57,7 @@ object DockerClientSpec : Spek({
                 }
 
                 on("a failed build") {
-                    whenever(processRunner.run(any())).thenReturn(1)
+                    whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Some output from Docker"))
 
                     it("raises an appropriate exception") {
                         assertThat({ client.build("the-project", container) }, throws<ImageBuildFailedException>())

@@ -40,6 +40,14 @@ object ConsoleSpec : Spek({
             }
         }
 
+        on("printing a blank line of text") {
+            console.println()
+
+            it("writes a blank line directly to the output") {
+                assertThat(output.toString(), equalTo("\n"))
+            }
+        }
+
         on("printing coloured text") {
             console.withColor(ConsoleColor.White) {
                 print("the white text")

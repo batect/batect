@@ -19,6 +19,7 @@ class EventLogger(private val console: Console) : TaskEventSink {
 
     fun logTaskFailed(taskName: String) {
         console.withColor(ConsoleColor.Red) {
+            println()
             print("The task ")
             printBold(taskName)
             println(" failed. See above for details.")
@@ -71,6 +72,7 @@ class EventLogger(private val console: Console) : TaskEventSink {
 
     private fun logTaskFailure(message: String) {
         console.withColor(ConsoleColor.Red) {
+            println()
             println(message)
         }
     }

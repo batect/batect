@@ -19,6 +19,7 @@ class Console(private val outputStream: PrintStream, private val color: ConsoleC
 
     fun print(text: String) = outputStream.print(text)
     fun println(text: String) = outputStream.println(text)
+    fun println() = outputStream.println()
 
     fun withColor(color: ConsoleColor, printStatements: Console.() -> Unit) {
         if (color == this.color) {

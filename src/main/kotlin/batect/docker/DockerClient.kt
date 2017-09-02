@@ -11,9 +11,10 @@ class DockerClient(
     fun build(projectName: String, container: Container): DockerImage {
         val label = imageLabellingStrategy.labelImage(projectName, container)
         val command = listOf("docker", "build", "--tag", label, container.buildDirectory)
+        val result = processRunner.runAndCaptureOutput(command)
 
-        if (failed(processRunner.run(command))) {
-            throw ImageBuildFailedException()
+        if (failed(result.exitCode)) {
+            throw ImageBuildFailedException(result.output.trim())
         }
 
         return DockerImage(label)
@@ -147,7 +148,7 @@ data class DockerContainer(val id: String, val name: String)
 data class DockerContainerRunResult(val exitCode: Int)
 data class DockerNetwork(val id: String)
 
-class ImageBuildFailedException : RuntimeException("Image build failed.")
+class ImageBuildFailedException(val outputFromDocker: String) : RuntimeException("Image build failed. Output from Docker was: $outputFromDocker")
 class ContainerCreationFailedException(message: String) : RuntimeException(message)
 class ContainerStartFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Starting container '$containerId' failed. Output from Docker was: $outputFromDocker")
 class ContainerStopFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Stopping container '$containerId' failed. Output from Docker was: $outputFromDocker")

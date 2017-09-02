@@ -143,7 +143,10 @@ object EventLoggerSpec : Spek({
                 logger.logBeforeStartingStep(step)
 
                 it("prints the message to the output") {
-                    verify(redConsole).println(step.message)
+                    inOrder(redConsole) {
+                        verify(redConsole).println()
+                        verify(redConsole).println(step.message)
+                    }
                 }
             }
 
@@ -162,6 +165,7 @@ object EventLoggerSpec : Spek({
 
             it("prints a message to the output") {
                 inOrder(redConsole) {
+                    verify(redConsole).println()
                     verify(redConsole).print("The task ")
                     verify(redConsole).printBold("some-task")
                     verify(redConsole).println(" failed. See above for details.")

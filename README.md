@@ -92,3 +92,11 @@ _Build and testing environments as code_
   bit and do more things while parsing the document rather than afterwards)
 * file I/O and path resolution logic
 * process creation / monitoring
+
+## Things blocking move to Kotlin/Native
+
+* unit testing support and associated library
+* file I/O support
+* process creation / monitoring support
+* YAML parsing library
+* [Kodein support](https://github.com/SalomonBrys/Kodein/tree/master/kodein-native)

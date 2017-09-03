@@ -12,39 +12,44 @@ import batect.model.steps.TaskStep
 
 class EventLogger(private val console: Console) : TaskEventSink {
     private val commands = mutableMapOf<Container, String?>()
+    private val lock = Object()
 
     fun reset() {
         commands.clear()
     }
 
     fun logTaskDoesNotExist(taskName: String) {
-        console.withColor(ConsoleColor.Red) {
-            print("The task ")
-            printBold(taskName)
-            println(" does not exist.")
+        synchronized(lock) {
+            console.withColor(ConsoleColor.Red) {
+                print("The task ")
+                printBold(taskName)
+                println(" does not exist.")
+            }
         }
     }
 
     fun logTaskFailed(taskName: String) {
-        console.withColor(ConsoleColor.Red) {
-            println()
-            print("The task ")
-            printBold(taskName)
-            println(" failed. See above for details.")
+        synchronized(lock) {
+            console.withColor(ConsoleColor.Red) {
+                println()
+                print("The task ")
+                printBold(taskName)
+                println(" failed. See above for details.")
+            }
         }
     }
 
-    override fun postEvent(event: TaskEvent) {
-
-    }
+    override fun postEvent(event: TaskEvent) {}
 
     fun logBeforeStartingStep(step: TaskStep) {
-        when (step) {
-            is BuildImageStep -> logImageBuildStarting(step.container)
-            is StartContainerStep -> logDependencyContainerStarting(step.container)
-            is RunContainerStep -> logCommandStarting(step.container, commands[step.container])
-            is DisplayTaskFailureStep -> logTaskFailure(step.message)
-            is CreateContainerStep -> commands[step.container] = step.command
+        synchronized(lock) {
+            when (step) {
+                is BuildImageStep -> logImageBuildStarting(step.container)
+                is StartContainerStep -> logDependencyContainerStarting(step.container)
+                is RunContainerStep -> logCommandStarting(step.container, commands[step.container])
+                is DisplayTaskFailureStep -> logTaskFailure(step.message)
+                is CreateContainerStep -> commands[step.container] = step.command
+            }
         }
     }
 

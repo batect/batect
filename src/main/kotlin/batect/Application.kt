@@ -1,12 +1,7 @@
 package batect
 
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.KodeinAware
-import com.github.salomonbrys.kodein.bind
-import com.github.salomonbrys.kodein.instance
-import com.github.salomonbrys.kodein.provider
-import batect.cli.CommandLineParser
 import batect.cli.BatectCommandLineParser
+import batect.cli.CommandLineParser
 import batect.cli.Failed
 import batect.cli.Succeeded
 import batect.config.io.ConfigurationLoader
@@ -18,6 +13,11 @@ import batect.docker.ProcessRunner
 import batect.model.DependencyGraphProvider
 import batect.model.TaskStateMachineProvider
 import batect.model.steps.TaskStepRunner
+import com.github.salomonbrys.kodein.Kodein
+import com.github.salomonbrys.kodein.KodeinAware
+import com.github.salomonbrys.kodein.bind
+import com.github.salomonbrys.kodein.instance
+import com.github.salomonbrys.kodein.provider
 import java.io.PrintStream
 import java.nio.file.FileSystem
 import java.nio.file.FileSystems
@@ -81,5 +81,6 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<TaskStepRunner>() with provider { TaskStepRunner(instance()) }
     bind<DependencyGraphProvider>() with provider { DependencyGraphProvider() }
     bind<TaskStateMachineProvider>() with provider { TaskStateMachineProvider() }
+    bind<ParallelExecutionManagerProvider>() with provider { ParallelExecutionManagerProvider(instance(), instance()) }
 }
 

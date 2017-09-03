@@ -17,6 +17,14 @@ class EventLogger(private val console: Console) : TaskEventSink {
         commands.clear()
     }
 
+    fun logTaskDoesNotExist(taskName: String) {
+        console.withColor(ConsoleColor.Red) {
+            print("The task ")
+            printBold(taskName)
+            println(" does not exist.")
+        }
+    }
+
     fun logTaskFailed(taskName: String) {
         console.withColor(ConsoleColor.Red) {
             println()

@@ -1,16 +1,5 @@
 package batect
 
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.throws
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.eq
-import com.nhaarman.mockito_kotlin.inOrder
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.reset
-import com.nhaarman.mockito_kotlin.verify
-import com.nhaarman.mockito_kotlin.whenever
 import batect.config.Configuration
 import batect.config.Container
 import batect.config.ContainerMap
@@ -27,7 +16,16 @@ import batect.model.steps.BuildImageStep
 import batect.model.steps.CreateTaskNetworkStep
 import batect.model.steps.FinishTaskStep
 import batect.model.steps.TaskStepRunner
-import batect.testutils.withMessage
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.eq
+import com.nhaarman.mockito_kotlin.inOrder
+import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.reset
+import com.nhaarman.mockito_kotlin.verify
+import com.nhaarman.mockito_kotlin.whenever
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -54,9 +52,14 @@ object TaskRunnerSpec : Spek({
 
         on("attempting to run a task that does not exist") {
             val config = Configuration("some-project", TaskMap(), ContainerMap())
+            val exitCode = taskRunner.run(config, "some-task")
 
-            it("throws an appropriate exception") {
-                assertThat({ taskRunner.run(config, "some-task") }, throws<ExecutionException>(withMessage("The task 'some-task' does not exist.")))
+            it("logs that the task does not exist") {
+                verify(eventLogger).logTaskDoesNotExist("some-task")
+            }
+
+            it("returns a non-zero exit code") {
+                assertThat(exitCode, !equalTo(0))
             }
         }
 

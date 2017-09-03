@@ -172,5 +172,17 @@ object EventLoggerSpec : Spek({
                 }
             }
         }
+
+        on("when the task does not exist") {
+            logger.logTaskDoesNotExist("some-task")
+
+            it("prints a message to the output") {
+                inOrder(redConsole) {
+                    verify(redConsole).print("The task ")
+                    verify(redConsole).printBold("some-task")
+                    verify(redConsole).println(" does not exist.")
+                }
+            }
+        }
     }
 })

@@ -16,7 +16,12 @@ data class TaskRunner(
         private val stateMachineProvider: TaskStateMachineProvider
 ) {
     fun run(config: Configuration, taskName: String): Int {
-        val resolvedTask = config.tasks[taskName] ?: throw ExecutionException("The task '$taskName' does not exist.")
+        val resolvedTask = config.tasks[taskName]
+
+        if (resolvedTask == null) {
+            eventLogger.logTaskDoesNotExist(taskName)
+            return -1
+        }
 
         val graph = graphProvider.createGraph(config, resolvedTask)
         val stateMachine = stateMachineProvider.createStateMachine(graph)
@@ -29,7 +34,7 @@ data class TaskRunner(
 
             if (step == null) {
                 eventLogger.logTaskFailed(taskName)
-                return 1
+                return -1
             }
 
             eventLogger.logBeforeStartingStep(step)

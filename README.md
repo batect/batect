@@ -104,3 +104,6 @@ _Build and testing environments as code_
 * process creation / monitoring support
 * YAML parsing library
 * [Kodein support](https://github.com/SalomonBrys/Kodein/tree/master/kodein-native)
+
+## Notes
+* Parallelising task step execution resulted in a 10s execution time reduction for DS journey tests (63s -> 53s)

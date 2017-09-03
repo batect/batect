@@ -48,12 +48,15 @@ _Build and testing environments as code_
 * documentation
   * CI setup - reminder to clean up stale images regularly
   * use ':cached' mode for mounts for performance (https://docs.docker.com/docker-for-mac/osxfs-caching/)
+  * importance of idempotency
 * examples (update or remove `sample` directory)
 * use `--iidfile` to get image ID after build and stop relying on tag
 * wrapper script to pull appropriate binary down (like `gradlew`)
   * should be OS independent (so it can be committed with application code) and pull down correct binary
   * should lock to particular version (how to warn about newer available version?)
   * should not require anything beyond what would already be installed on a standard OS X or Linux install (Bash and `curl` or `wget`)
+* make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
+* log error messages to stderr, not stdout
 
 ## Future improvements
 * return code options (any non-zero, particular container, first to exit)

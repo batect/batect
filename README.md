@@ -37,7 +37,6 @@ _Build and testing environments as code_
 * fancy progress bar output for building images and starting dependencies
   * make sure accidental input on stdin doesn't mangle it
 * automatically create missing local volume mount directories and show a warning (useful when mounting a directory intended to be a cache)
-* support new OS X caching features for volume mounts (https://docs.docker.com/docker-for-mac/osxfs-caching/) 
 
 ### Other
 * make test names consistent (eg. `it("should do something")` vs `it("does something")`)
@@ -48,6 +47,7 @@ _Build and testing environments as code_
 * use Docker API directly rather than using Docker CLI
 * documentation
   * CI setup - reminder to clean up stale images regularly
+  * use ':cached' mode for mounts for performance (https://docs.docker.com/docker-for-mac/osxfs-caching/)
 * examples (update or remove `sample` directory)
 * use `--iidfile` to get image ID after build and stop relying on tag
 * wrapper script to pull appropriate binary down (like `gradlew`)
@@ -71,7 +71,6 @@ _Build and testing environments as code_
   ```
 
 * wildcard includes
-* support alternative volume mount specifications (eg. 'ro')
 * support port ranges in mappings
 * support protocols other than TCP in port mappings
 * shell tab completion for tasks (eg. `batect run b<tab>` completes to `batect run build`)

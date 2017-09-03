@@ -250,7 +250,7 @@ object ConfigurationLoaderSpec : Spek({
                     |    working_directory: /here
                     |    volumes:
                     |      - ../:/here
-                    |      - /somewhere:/else
+                    |      - /somewhere:/else:ro
                     |    ports:
                     |      - "1234:5678"
                     |      - "9012:3456"
@@ -275,8 +275,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.workingDirectory, equalTo("/here"))
                 assertThat(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
                 assertThat(container.volumeMounts, equalTo(setOf(
-                        VolumeMount("/resolved/../", "/here"),
-                        VolumeMount("/resolved//somewhere", "/else")
+                        VolumeMount("/resolved/../", "/here", null),
+                        VolumeMount("/resolved//somewhere", "/else", "ro")
                 )))
             }
         }

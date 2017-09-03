@@ -69,6 +69,6 @@ data class ContainerFromFile(
             is InvalidPath -> throw ConfigurationException("Local path '${volumeMount.localPath}' for volume mount in container '$containerName' is not a valid path.")
         }
 
-        return VolumeMount(resolvedLocalPath, volumeMount.containerPath)
+        return VolumeMount(resolvedLocalPath, volumeMount.containerPath, volumeMount.options)
     }
 }

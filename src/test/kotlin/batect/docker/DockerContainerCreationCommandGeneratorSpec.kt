@@ -88,7 +88,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                     "the-container-command",
                     mapOf("SOME_VAR" to "SOME_VALUE", "OTHER_VAR" to "OTHER_VALUE"),
                     "/workingdir",
-                    setOf(VolumeMount("/local1", "/container1"), VolumeMount("/local2", "/container2")),
+                    setOf(VolumeMount("/local1", "/container1", null), VolumeMount("/local2", "/container2", "ro")),
                     setOf(PortMapping(1000, 2000), PortMapping(3000, 4000)))
 
             val image = DockerImage("the-image")
@@ -108,7 +108,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                             "--env", "OTHER_VAR=OTHER_VALUE",
                             "--workdir", "/workingdir",
                             "--volume", "/local1:/container1",
-                            "--volume", "/local2:/container2",
+                            "--volume", "/local2:/container2:ro",
                             "--publish", "1000:2000",
                             "--publish", "3000:4000",
                             image.id,

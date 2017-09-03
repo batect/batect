@@ -2,9 +2,13 @@ package batect.config
 
 import com.fasterxml.jackson.annotation.JsonCreator
 
-data class VolumeMount(val localPath: String, val containerPath: String) {
+data class VolumeMount(val localPath: String, val containerPath: String, val options: String?) {
     override fun toString(): String {
-        return "$localPath:$containerPath"
+        if (options == null) {
+            return "$localPath:$containerPath"
+        } else {
+            return "$localPath:$containerPath:$options"
+        }
     }
 
     companion object {
@@ -14,23 +18,23 @@ data class VolumeMount(val localPath: String, val containerPath: String) {
                 throw IllegalArgumentException("Volume mount definition cannot be empty.")
             }
 
-            val separator = ':'
-            val separatorIndex = value.indexOf(separator)
+            val parts = value.split(':')
 
-            if (separatorIndex == -1) {
+            if (parts.size < 2 || parts.size > 3) {
                 throw invalidMountDefinitionException(value)
             }
 
-            val local = value.substring(0, separatorIndex)
-            val container = value.substring(separatorIndex + 1)
+            val local = parts[0]
+            val container = parts[1]
+            val options = parts.getOrNull(2)
 
-            if (local == "" || container == "") {
+            if (local == "" || container == "" || options == "") {
                 throw invalidMountDefinitionException(value)
             }
 
-            return VolumeMount(local, container)
+            return VolumeMount(local, container, options)
         }
 
-        fun invalidMountDefinitionException(value: String): Throwable = IllegalArgumentException("Volume mount definition '$value' is not valid. It must be in the form 'local_path:container_path'.")
+        fun invalidMountDefinitionException(value: String): Throwable = IllegalArgumentException("Volume mount definition '$value' is not valid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.")
     }
 }

@@ -76,7 +76,7 @@ object ConfigurationFileSpec : Spek({
                         "the-command",
                         mapOf("ENV_VAR" to "/here"),
                         "working_dir",
-                        setOf(VolumeMount(originalVolumeMountPath, volumeMountTargetPath)),
+                        setOf(VolumeMount(originalVolumeMountPath, volumeMountTargetPath, "some-options")),
                         setOf(PortMapping(1234, 5678)),
                         setOf("some-dependency"))
 
@@ -106,7 +106,7 @@ object ConfigurationFileSpec : Spek({
                                     container.command,
                                     container.environment,
                                     container.workingDirectory,
-                                    setOf(VolumeMount(resolvedVolumeMountPath, volumeMountTargetPath)),
+                                    setOf(VolumeMount(resolvedVolumeMountPath, volumeMountTargetPath, "some-options")),
                                     container.portMappings,
                                     container.dependencies)
                     )))
@@ -137,7 +137,7 @@ object ConfigurationFileSpec : Spek({
             { _, resolution ->
                 val originalBuildDirectory = "build_dir"
                 val originalVolumeMountPath = "local_volume_path"
-                val container = ContainerFromFile(originalBuildDirectory, volumeMounts = setOf(VolumeMount(originalVolumeMountPath, "/container_path")))
+                val container = ContainerFromFile(originalBuildDirectory, volumeMounts = setOf(VolumeMount(originalVolumeMountPath, "/container_path", "some-options")))
                 val configFile = ConfigurationFile("the_project_name", containers = mapOf("the_container_name" to container))
 
                 val pathResolver = mock<PathResolver> {
@@ -149,7 +149,7 @@ object ConfigurationFileSpec : Spek({
                 val resultingContainer = resultingConfig.containers.getValue("the_container_name")
 
                 it("returns a configuration object with the volume mount path resolved") {
-                    assertThat(resultingContainer.volumeMounts, equalTo(setOf(VolumeMount("/some_resolved_path", "/container_path"))))
+                    assertThat(resultingContainer.volumeMounts, equalTo(setOf(VolumeMount("/some_resolved_path", "/container_path", "some-options"))))
                 }
             }
 
@@ -159,7 +159,7 @@ object ConfigurationFileSpec : Spek({
             { _, resolution, expectedMessage ->
                 val originalBuildDirectory = "build_dir"
                 val originalVolumeMountPath = "local_volume_path"
-                val container = ContainerFromFile(originalBuildDirectory, volumeMounts = setOf(VolumeMount(originalVolumeMountPath, "/container_path")))
+                val container = ContainerFromFile(originalBuildDirectory, volumeMounts = setOf(VolumeMount(originalVolumeMountPath, "/container_path", "some-options")))
                 val configFile = ConfigurationFile("the_project_name", containers = mapOf("the_container_name" to container))
 
                 val pathResolver = mock<PathResolver> {

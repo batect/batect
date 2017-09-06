@@ -143,7 +143,7 @@ spotless {
         endWithNewline()
     }
     format 'misc', {
-        target '**/*.gradle', '**/*.md', '**/.gitignore'
+        target '**/*.gradle', '**/*.md', '**/.gitignore', '**/*.yaml', '**/*.yml'
 
         trimTrailingWhitespace()
         indentWithSpaces()

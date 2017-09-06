@@ -83,4 +83,3 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<TaskStateMachineProvider>() with provider { TaskStateMachineProvider() }
     bind<ParallelExecutionManagerProvider>() with provider { ParallelExecutionManagerProvider(instance(), instance()) }
 }
-

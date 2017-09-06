@@ -17,6 +17,7 @@ buildscript {
 
 plugins {
     id 'com.github.ben-manes.versions' version '0.15.0'
+    id 'com.diffplug.gradle.spotless' version '3.5.2'
 }
 
 apply plugin: 'application'
@@ -27,10 +28,6 @@ mainClassName = 'batect.ApplicationKt'
 
 repositories {
     mavenCentral()
-}
-
-configurations {
-    ktlint
 }
 
 dependencies {
@@ -54,8 +51,6 @@ dependencies {
     testRuntime("org.jetbrains.spek:spek-junit-platform-engine:$spek_version") {
         exclude group: 'org.junit.platform'
     }
-
-    ktlint 'com.github.shyiko:ktlint:0.9.2'
 }
 
 junitPlatform {
@@ -105,26 +100,19 @@ task journeyTest(type: JavaExec) {
     ]
 }
 
-task ktlint(type: JavaExec) {
-    description 'Checks Kotlin source files for formatting warnings.'
-    group 'Linting'
+spotless {
+    kotlin {
+        ktlint("0.9.2")
 
-    inputs.files sourceSets.main.kotlin + sourceSets.test.kotlin + sourceSets.journeyTest.kotlin
+        trimTrailingWhitespace()
+        indentWithSpaces()
+        endWithNewline()
+    }
+    format 'misc', {
+        target '**/*.gradle', '**/*.md', '**/.gitignore'
 
-    main = "com.github.shyiko.ktlint.Main"
-    classpath = configurations.ktlint
-    args "--reporter=plain?group_by_file"
-}
-
-check.dependsOn ktlint
-
-task ktlintFormat(type: JavaExec) {
-    description 'Fixes formatting warnings in Kotlin source files.'
-    group 'Linting'
-
-    inputs.files sourceSets.main.kotlin + sourceSets.test.kotlin + sourceSets.journeyTest.kotlin
-
-    main = "com.github.shyiko.ktlint.Main"
-    classpath = configurations.ktlint
-    args "-F"
+        trimTrailingWhitespace()
+        indentWithSpaces()
+        endWithNewline()
+    }
 }

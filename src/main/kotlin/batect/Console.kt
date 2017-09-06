@@ -85,4 +85,3 @@ enum class ConsoleColor(val code: Int) {
     Cyan(36),
     White(37)
 }
-

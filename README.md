@@ -1,4 +1,4 @@
-# batect 
+# batect
 **b**uild **a**nd **t**esting **e**nvironments as **c**ode **t**ool
 
 ## The sales pitch
@@ -23,9 +23,9 @@ _Build and testing environments as code_
   * better output to show what's going on
 * just use an existing image, pulling if necessary (ie. don't require a local Dockerfile)
 * allow the user to keep containers after failure so they can examine logs
-* overridable health check parameters for containers (so that you can have the health check poll very frequently when waiting for something to 
+* overridable health check parameters for containers (so that you can have the health check poll very frequently when waiting for something to
   come up for tests, but less frequently if that container is used in production)
-* if a dependency container fails to become healthy, show output and exit code from last health check attempt 
+* if a dependency container fails to become healthy, show output and exit code from last health check attempt
 * some way to propagate environment variables from host environment to target environment
 * some way to add additional environment variables at the task level (for the target container only, not dependencies)
 * flag (eg. `--quiet`) to only show output from task
@@ -39,7 +39,7 @@ _Build and testing environments as code_
   * first pass: just print a simple 'Cleaning up...' message
   * second pass: show what still remains to be cleaned up (eg. 'Cleaning up... 3 containers (X, Y, Z) still running')
 * easy way to mount Docker socket and statically linked binary into container (eg. for building other containers from within that container)
-* default to just terminating all containers at clean up time with option to gracefully shut down on individual containers 
+* default to just terminating all containers at clean up time with option to gracefully shut down on individual containers
   (eg. database where data is shared between invocations and we don't want to corrupt it)
 * prerequisites for tasks (eg. run the build before running journey tests)
 * display help if command name is followed by `--help` (eg. `batect run --help`)
@@ -70,12 +70,12 @@ _Build and testing environments as code_
 * running multiple containers at once (eg. stereotypical 'run' configuration that starts up the service with its dependencies)
   * exit options (close all after any container stops, wait for all to stop)
   * rather than showing output from target, show output from all containers
-  * logging options (all or particular container) 
+  * logging options (all or particular container)
   * return code options (any non-zero, particular container, first to exit)
 * allow configuration includes (ie. allow splitting the configuration over multiple files)
 * wildcard includes (eg. `include: containers/*.yaml`)
 * handle expanded form of mappings, for example:
-  
+
   ```yaml
   containers:
     build-env:
@@ -83,7 +83,7 @@ _Build and testing environments as code_
       environment:
         - name: THING
           value: thing_value
-  
+
   ```
 
 * support port ranges in mappings
@@ -102,7 +102,7 @@ _Build and testing environments as code_
 
 ## Things that would have to be changed when moving to Kotlin/Native
 
-* would most likely need to replace YAML parsing code (although this would be a good opportunity to simplify it a 
+* would most likely need to replace YAML parsing code (although this would be a good opportunity to simplify it a
   bit and do more things while parsing the document rather than afterwards)
 * file I/O and path resolution logic
 * process creation / monitoring

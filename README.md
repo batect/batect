@@ -42,6 +42,7 @@ _Build and testing environments as code_
 * default to just terminating all containers at clean up time with option to gracefully shut down on individual containers 
   (eg. database where data is shared between invocations and we don't want to corrupt it)
 * prerequisites for tasks (eg. run the build before running journey tests)
+* display help if command name is followed by `--help` (eg. `batect run --help`)
 
 ### Other
 * make test names consistent (eg. `it("should do something")` vs `it("does something")`)

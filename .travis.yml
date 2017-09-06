@@ -11,14 +11,7 @@ before_install:
   - sudo apt-get -y install docker-ce
   - docker --version
 
-before_cache:
-  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-
-cache:
-  directories:
-    - $HOME/.gradle/caches/
-    - $HOME/.gradle/wrapper/
+install: true
 
 jobs:
   include:
@@ -28,3 +21,12 @@ jobs:
       script: ./gradlew check
     - stage: journey test
       script: ./gradlew journeyTest
+
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/

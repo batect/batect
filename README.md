@@ -11,6 +11,8 @@ _Build and testing environments as code_
 * Only dependencies are Bash and Docker (and `curl` or `wget`?)
 * Works with your existing CI system
 
+[![Build Status](https://travis-ci.org/charleskorn/batect.svg?branch=master)](https://travis-ci.org/charleskorn/batect)
+
 ## MVP TODO
 
 ### Config file handling

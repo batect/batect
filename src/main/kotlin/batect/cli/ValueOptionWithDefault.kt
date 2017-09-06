@@ -11,13 +11,7 @@ class ValueOptionWithDefault(name: String,
 
     var value: String = defaultValue
 
-    override fun reset() {
-        valueHasBeenSet = false
-        value = defaultValue
-    }
-
     override fun applyValue(newValue: String) {
-        valueHasBeenSet = true
         value = newValue
     }
 

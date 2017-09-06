@@ -10,13 +10,7 @@ class ValueOption(name: String,
 
     var value: String? = null
 
-    override fun reset() {
-        valueHasBeenSet = false
-        value = null
-    }
-
     override fun applyValue(newValue: String) {
-        valueHasBeenSet = true
         value = newValue
     }
 

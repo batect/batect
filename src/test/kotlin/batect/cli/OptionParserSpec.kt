@@ -1,10 +1,16 @@
 package batect.cli
 
-import com.natpryce.hamkrest.absent
+import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
-import batect.testutils.withMessage
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.never
+import com.nhaarman.mockito_kotlin.reset
+import com.nhaarman.mockito_kotlin.verify
+import com.nhaarman.mockito_kotlin.whenever
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -36,8 +42,18 @@ object OptionParserSpec : Spek({
 
             given("a parser with a single value option with a short name") {
                 val parser = OptionParser()
-                val option = ValueOption("value", "The value", 'v')
+                val option = mock<OptionDefinition> {
+                    on { longName } doReturn "value"
+                    on { longOption } doReturn "--value"
+                    on { shortName } doReturn 'v'
+                    on { shortOption } doReturn "-v"
+                }
+
                 parser.addOption(option)
+
+                beforeEachTest {
+                    reset(option)
+                }
 
                 on("parsing an empty list of arguments") {
                     val result = parser.parseOptions(emptyList())
@@ -46,8 +62,8 @@ object OptionParserSpec : Spek({
                         assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
                     }
 
-                    it("sets the option's value to null") {
-                        assertThat(option.value, absent())
+                    it("does not ask the option to parse a value") {
+                        verify(option, never()).parse(any())
                     }
                 }
 
@@ -58,111 +74,81 @@ object OptionParserSpec : Spek({
                         assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
                     }
 
-                    it("sets the option's value to null") {
-                        assertThat(option.value, absent())
+                    it("does not ask the option to parse a value") {
+                        verify(option, never()).parse(any())
+                    }
+                }
+
+                on("parsing a list of arguments where an unknown argument is specified") {
+                    val result = parser.parseOptions(listOf("--something-else"))
+
+                    it("indicates that parsing succeeded and that no arguments were consumed") {
+                        assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
+                    }
+
+                    it("does not ask the option to parse a value") {
+                        verify(option, never()).parse(any())
                     }
                 }
 
                 listOf("--value", "-v").forEach { format ->
-                    on("parsing a list of arguments where the option is not specified") {
-                        val result = parser.parseOptions(listOf("do-stuff"))
+                    describe("parsing a list of arguments where the argument is specified in the form '$format'") {
+                        on("when the option indicates that parsing succeeded and a single argument was consumed") {
+                            whenever(option.parse(any())).doReturn(OptionParsingResult.ReadOption(1))
+                            val result = parser.parseOptions(listOf(format))
 
-                        it("indicates that parsing succeeded and that no arguments were consumed") {
-                            assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
+                            it("indicates that parsing succeeded and that one argument was consumed") {
+                                assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(1)))
+                            }
+
+                            it("asks the option to parse a value from the correct list of arguments") {
+                                verify(option).parse(listOf(format))
+                            }
                         }
 
-                        it("sets the option's value to null") {
-                            assertThat(option.value, absent())
+                        on("when the option indicates that parsing succeeded and two arguments were consumed") {
+                            whenever(option.parse(any())).doReturn(OptionParsingResult.ReadOption(2))
+                            val result = parser.parseOptions(listOf(format, "some-other-arg"))
+
+                            it("indicates that parsing succeeded and that two arguments were consumed") {
+                                assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(2)))
+                            }
+
+                            it("asks the option to parse a value from the correct list of arguments") {
+                                verify(option).parse(listOf(format, "some-other-arg"))
+                            }
                         }
-                    }
 
-                    on("parsing a list of arguments where the option is specified in the form '$format thing'") {
-                        val result = parser.parseOptions(listOf(format, "thing", "do-stuff"))
+                        on("when the option indicates that parsing failed") {
+                            whenever(option.parse(any())).doReturn(OptionParsingResult.InvalidOption("That's not allowed"))
+                            val result = parser.parseOptions(listOf(format))
 
-                        it("indicates that parsing succeeded and that two arguments were consumed") {
-                            assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(2)))
+                            it("indicates that parsing failed") {
+                                assertThat(result, equalTo<OptionsParsingResult>(InvalidOptions("That's not allowed")))
+                            }
+
+                            it("asks the option to parse a value from the correct list of arguments") {
+                                verify(option).parse(listOf(format))
+                            }
                         }
 
-                        it("sets the option's value") {
-                            assertThat(option.value, equalTo("thing"))
+                        on("when the option is specified multiple times") {
+                            whenever(option.parse(listOf(format, "something", format, format, "some-other-arg"))).doReturn(OptionParsingResult.ReadOption(2))
+                            whenever(option.parse(listOf(format, format, "some-other-arg"))).doReturn(OptionParsingResult.ReadOption(1))
+                            whenever(option.parse(listOf(format, "some-other-arg"))).doReturn(OptionParsingResult.ReadOption(1))
+
+                            val result = parser.parseOptions(listOf(format, "something", format, format, "some-other-arg"))
+
+                            it("indicates that parsing succeeded and that four arguments were consumed") {
+                                assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(4)))
+                            }
+
+                            it("asks the option to parse values from the correct list of arguments each time") {
+                                verify(option).parse(listOf(format, "something", format, format, "some-other-arg"))
+                                verify(option).parse(listOf(format, format, "some-other-arg"))
+                                verify(option).parse(listOf(format, "some-other-arg"))
+                            }
                         }
-                    }
-
-                    on("parsing a list of arguments where the option is given in the form '$format=thing' but no value is provided after the equals sign") {
-                        val result = parser.parseOptions(listOf("$format=", "do-stuff"))
-
-                        it("indicates that parsing failed") {
-                            assertThat(result, equalTo<OptionsParsingResult>(InvalidOptions("Option '$format=' is in an invalid format, you must provide a value after '='.")))
-                        }
-                    }
-
-                    on("parsing a list of arguments where the option is given in the form '$format thing' but no second argument is provided") {
-                        val result = parser.parseOptions(listOf(format))
-
-                        it("indicates that parsing failed") {
-                            assertThat(result, equalTo<OptionsParsingResult>(InvalidOptions("Option '$format' requires a value to be provided, either in the form '$format=<value>' or '$format <value>'.")))
-                        }
-                    }
-                }
-
-                setOf(
-                        listOf("--value=thing", "--value=other-thing"),
-                        listOf("-v=thing", "--value=other-thing"),
-                        listOf("--value=thing", "-v=other-thing"),
-                        listOf("-v=thing", "-v=other-thing"),
-                        listOf("--value=thing", "--value", "other-thing"),
-                        listOf("--value", "thing", "--value=other-thing")
-                ).forEach { args ->
-                    on("parsing a list of arguments where the option is valid but given twice in the form $args") {
-                        val result = parser.parseOptions(args + "do-stuff")
-
-                        it("indicates that parsing failed") {
-                            assertThat(result, equalTo<OptionsParsingResult>(InvalidOptions("Option '--value' (or '-v') cannot be specified multiple times.")))
-                        }
-                    }
-                }
-            }
-
-            given("a parser with a single value option without a short name") {
-                val parser = OptionParser()
-                val option = ValueOption("value", "The value")
-                parser.addOption(option)
-
-                on("parsing a list of arguments where the option is valid but given twice") {
-                    val result = parser.parseOptions(listOf("--value=thing", "--value=other-thing", "do-stuff"))
-
-                    it("indicates that parsing failed") {
-                        assertThat(result, equalTo<OptionsParsingResult>(InvalidOptions("Option '--value' cannot be specified multiple times.")))
-                    }
-                }
-            }
-
-            given("a parser with a single value option with a default value") {
-                val parser = OptionParser()
-                val option = ValueOptionWithDefault("value", "The value", "the-default-value")
-                parser.addOption(option)
-
-                on("parsing a list of arguments where the option is not specified") {
-                    val result = parser.parseOptions(listOf("do-stuff"))
-
-                    it("indicates that parsing succeeded and that no arguments were consumed") {
-                        assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(0)))
-                    }
-
-                    it("sets the option's value to the default value given") {
-                        assertThat(option.value, equalTo("the-default-value"))
-                    }
-                }
-
-                on("parsing a list of arguments where the option is specified") {
-                    val result = parser.parseOptions(listOf("--value=some-other-value", "do-stuff"))
-
-                    it("indicates that parsing succeeded and that one argument was consumed") {
-                        assertThat(result, equalTo<OptionsParsingResult>(ReadOptions(1)))
-                    }
-
-                    it("sets the option's value to the value given in the argument") {
-                        assertThat(option.value, equalTo("some-other-value"))
                     }
                 }
             }

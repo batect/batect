@@ -20,4 +20,11 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
 
-script: ./gradlew check && ./gradlew journeyTest
+jobs:
+  include:
+    - stage: lint
+      script: ./gradlew spotlessCheck
+    - stage: unit test
+      script: ./gradlew check
+    - stage: journey test
+      script: ./gradlew journeyTest

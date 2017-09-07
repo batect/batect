@@ -46,6 +46,8 @@ If there's something you're really keen to see, pull requests are always welcome
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use Docker API directly rather than using Docker CLI (would allow for more detailed progress and error reporting)
 * documentation
+  * getting started guide
+  * examples for common languages and scenarios
   * CI setup - reminder to clean up stale images regularly
   * use ':cached' mode for mounts for performance (https://docs.docker.com/docker-for-mac/osxfs-caching/)
   * importance of idempotency

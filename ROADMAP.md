@@ -36,6 +36,8 @@ If there's something you're really keen to see, pull requests are always welcome
   (eg. database where data is shared between invocations and we don't want to corrupt it)
 * prerequisites for tasks (eg. run the build before running journey tests)
 * display help if command name is followed by `--help` (eg. `batect run --help`)
+* show more detailed image build progress (eg. `build-env: Building step 1/7: FROM alpine:3.5`)
+* prioritise running steps that lie on the critical path (eg. favour pulling image for leaf of dependency graph over creating container for task container)
 
 ### Other
 * make test names consistent (eg. `it("should do something")` vs `it("does something")`)

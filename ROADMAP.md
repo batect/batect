@@ -1,7 +1,7 @@
 # batect roadmap
 
-This file reflects my current plans. Something being listed here does not guarantee that I will implement it soon (or even ever), 
-and, similarly, just because something isn't here doesn't mean I won't ever implement it. 
+This file reflects my current plans. Something being listed here does not guarantee that I will implement it soon (or even ever),
+and, similarly, just because something isn't here doesn't mean I won't ever implement it.
 
 If there's something you're really keen to see, pull requests are always welcome :)
 

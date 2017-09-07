@@ -16,24 +16,27 @@
 
 package batect
 
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doAnswer
-import com.nhaarman.mockito_kotlin.eq
-import com.nhaarman.mockito_kotlin.inOrder
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.verify
-import com.nhaarman.mockito_kotlin.verifyZeroInteractions
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.model.steps.BuildImageStep
+import batect.model.steps.CleanUpContainerStep
 import batect.model.steps.CreateContainerStep
 import batect.model.steps.CreateTaskNetworkStep
 import batect.model.steps.DisplayTaskFailureStep
+import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.testutils.CreateForEachTest
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doAnswer
+import com.nhaarman.mockito_kotlin.eq
+import com.nhaarman.mockito_kotlin.inOrder
+import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.times
+import com.nhaarman.mockito_kotlin.verify
+import com.nhaarman.mockito_kotlin.verifyZeroInteractions
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -162,6 +165,43 @@ object EventLoggerSpec : Spek({
                     inOrder(redConsole) {
                         verify(redConsole).println()
                         verify(redConsole).println(step.message)
+                    }
+                }
+            }
+
+            mapOf(
+                    "remove container" to RemoveContainerStep(container, DockerContainer("some-id", "some-name")),
+                    "clean up container" to CleanUpContainerStep(container, DockerContainer("some-id", "some-name"))
+            ).forEach { description, step ->
+                describe("when a '$description' step is starting") {
+                    on("and no 'remove container' or 'clean up container' steps have run before") {
+                        logger.logBeforeStartingStep(step)
+
+                        it("prints a message to the output") {
+                            verify(whiteConsole).println("Cleaning up...")
+                        }
+                    }
+
+                    on("and a 'remove container' step has already been run") {
+                        val previousStep = RemoveContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id", "some-other-name"))
+                        logger.logBeforeStartingStep(previousStep)
+
+                        logger.logBeforeStartingStep(step)
+
+                        it("only prints one message to the output") {
+                            verify(whiteConsole, times(1)).println("Cleaning up...")
+                        }
+                    }
+
+                    on("and a 'clean up container' step has already been run") {
+                        val previousStep = CleanUpContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id", "some-other-name"))
+                        logger.logBeforeStartingStep(previousStep)
+
+                        logger.logBeforeStartingStep(step)
+
+                        it("only prints one message to the output") {
+                            verify(whiteConsole, times(1)).println("Cleaning up...")
+                        }
                     }
                 }
             }

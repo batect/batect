@@ -20,18 +20,22 @@ import batect.config.Container
 import batect.model.events.TaskEvent
 import batect.model.events.TaskEventSink
 import batect.model.steps.BuildImageStep
+import batect.model.steps.CleanUpContainerStep
 import batect.model.steps.CreateContainerStep
 import batect.model.steps.DisplayTaskFailureStep
+import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.model.steps.TaskStep
 
 class EventLogger(private val console: Console) : TaskEventSink {
     private val commands = mutableMapOf<Container, String?>()
+    private var haveStartedCleanUp = false
     private val lock = Object()
 
     fun reset() {
         commands.clear()
+        haveStartedCleanUp = false
     }
 
     fun logTaskDoesNotExist(taskName: String) {
@@ -65,6 +69,8 @@ class EventLogger(private val console: Console) : TaskEventSink {
                 is RunContainerStep -> logCommandStarting(step.container, commands[step.container])
                 is DisplayTaskFailureStep -> logTaskFailure(step.message)
                 is CreateContainerStep -> commands[step.container] = step.command
+                is RemoveContainerStep -> logCleanUpStarting()
+                is CleanUpContainerStep -> logCleanUpStarting()
             }
         }
     }
@@ -97,6 +103,18 @@ class EventLogger(private val console: Console) : TaskEventSink {
             printBold(dependency.name)
             println("...")
         }
+    }
+
+    private fun logCleanUpStarting() {
+        if (haveStartedCleanUp) {
+            return
+        }
+
+        console.withColor(ConsoleColor.White) {
+            println("Cleaning up...")
+        }
+
+        haveStartedCleanUp = true
     }
 
     private fun logTaskFailure(message: String) {

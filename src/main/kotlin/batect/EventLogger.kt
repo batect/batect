@@ -28,7 +28,7 @@ import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.model.steps.TaskStep
 
-class EventLogger(private val console: Console) : TaskEventSink {
+class EventLogger(private val console: Console, private val errorConsole: Console) : TaskEventSink {
     private val commands = mutableMapOf<Container, String?>()
     private var haveStartedCleanUp = false
     private val lock = Object()
@@ -40,7 +40,7 @@ class EventLogger(private val console: Console) : TaskEventSink {
 
     fun logTaskDoesNotExist(taskName: String) {
         synchronized(lock) {
-            console.withColor(ConsoleColor.Red) {
+            errorConsole.withColor(ConsoleColor.Red) {
                 print("The task ")
                 printBold(taskName)
                 println(" does not exist.")
@@ -50,7 +50,7 @@ class EventLogger(private val console: Console) : TaskEventSink {
 
     fun logTaskFailed(taskName: String) {
         synchronized(lock) {
-            console.withColor(ConsoleColor.Red) {
+            errorConsole.withColor(ConsoleColor.Red) {
                 println()
                 print("The task ")
                 printBold(taskName)
@@ -118,7 +118,7 @@ class EventLogger(private val console: Console) : TaskEventSink {
     }
 
     private fun logTaskFailure(message: String) {
-        console.withColor(ConsoleColor.Red) {
+        errorConsole.withColor(ConsoleColor.Red) {
             println()
             println(message)
         }

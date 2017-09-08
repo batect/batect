@@ -45,21 +45,26 @@ import org.jetbrains.spek.api.dsl.on
 object EventLoggerSpec : Spek({
     describe("an event logger") {
         val whiteConsole by CreateForEachTest(this) { mock<Console>() }
-        val redConsole by CreateForEachTest(this) { mock<Console>() }
         val console by CreateForEachTest(this) {
             mock<Console> {
                 on { withColor(eq(ConsoleColor.White), any()) } doAnswer {
                     val printStatements = it.getArgument<Console.() -> Unit>(1)
                     printStatements(whiteConsole)
                 }
+            }
+        }
+
+        val redErrorConsole by CreateForEachTest(this) { mock<Console>() }
+        val errorConsole by CreateForEachTest(this) {
+            mock<Console> {
                 on { withColor(eq(ConsoleColor.Red), any()) } doAnswer {
                     val printStatements = it.getArgument<Console.() -> Unit>(1)
-                    printStatements(redConsole)
+                    printStatements(redErrorConsole)
                 }
             }
         }
 
-        val logger by CreateForEachTest(this) { EventLogger(console) }
+        val logger by CreateForEachTest(this) { EventLogger(console, errorConsole) }
         val container = Container("the-cool-container", "/build/dir/doesnt/matter")
 
         describe("handling when steps start") {
@@ -162,9 +167,9 @@ object EventLoggerSpec : Spek({
                 logger.logBeforeStartingStep(step)
 
                 it("prints the message to the output") {
-                    inOrder(redConsole) {
-                        verify(redConsole).println()
-                        verify(redConsole).println(step.message)
+                    inOrder(redErrorConsole) {
+                        verify(redErrorConsole).println()
+                        verify(redErrorConsole).println(step.message)
                     }
                 }
             }
@@ -220,11 +225,11 @@ object EventLoggerSpec : Spek({
             logger.logTaskFailed("some-task")
 
             it("prints a message to the output") {
-                inOrder(redConsole) {
-                    verify(redConsole).println()
-                    verify(redConsole).print("The task ")
-                    verify(redConsole).printBold("some-task")
-                    verify(redConsole).println(" failed. See above for details.")
+                inOrder(redErrorConsole) {
+                    verify(redErrorConsole).println()
+                    verify(redErrorConsole).print("The task ")
+                    verify(redErrorConsole).printBold("some-task")
+                    verify(redErrorConsole).println(" failed. See above for details.")
                 }
             }
         }
@@ -233,10 +238,10 @@ object EventLoggerSpec : Spek({
             logger.logTaskDoesNotExist("some-task")
 
             it("prints a message to the output") {
-                inOrder(redConsole) {
-                    verify(redConsole).print("The task ")
-                    verify(redConsole).printBold("some-task")
-                    verify(redConsole).println(" does not exist.")
+                inOrder(redErrorConsole) {
+                    verify(redErrorConsole).print("The task ")
+                    verify(redErrorConsole).printBold("some-task")
+                    verify(redErrorConsole).println(" does not exist.")
                 }
             }
         }

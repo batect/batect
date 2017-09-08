@@ -59,7 +59,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * should lock to particular version (how to warn about newer available version?)
   * should not require anything beyond what would already be installed on a standard OS X or Linux install (Bash and `curl` or `wget`)
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
-* log error messages to stderr, not stdout
 * regularly check for updates and notify the user if there is one available
 * move to Kotlin/Native
   * Why? Don't want to require users to install a JVM to use batect, also want to remove as much overhead as possible

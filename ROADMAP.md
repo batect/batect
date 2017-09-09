@@ -103,7 +103,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * support protocols other than TCP in port mappings
 * shell tab completion for built-in commands (eg. `batect r<tab>` completes to `batect run`)
 * shell tab completion for tasks (eg. `batect run b<tab>` completes to `batect run build`)
-* pass-through additional command line arguments to a `run`
+* pass-through additional command line arguments to a `run` (eg. `batect run unitTest -- --parallel --watch` passes `--parallel --watch` through to task container)
 * requires / provides relationships (eg. 'app' requires 'service-a', and 'service-a-fake' and 'service-a-real' provide 'service-a')
 * support for Windows
 * don't do all path resolution up-front

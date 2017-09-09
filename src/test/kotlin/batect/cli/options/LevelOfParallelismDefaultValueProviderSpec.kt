@@ -33,7 +33,7 @@ object LevelOfParallelismDefaultValueProviderSpec : Spek({
         }
 
         it("has a human-readable description of the value") {
-            assertThat(provider.description, equalTo("defaults to two times the number of CPU cores available, which is $expectedLevelOfParallelism"))
+            assertThat(provider.description, equalTo("defaults to $expectedLevelOfParallelism, which is two times the number of CPU cores available"))
         }
     }
 })

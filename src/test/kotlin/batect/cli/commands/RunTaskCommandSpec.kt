@@ -28,6 +28,7 @@ import com.nhaarman.mockito_kotlin.verify
 import batect.TaskRunner
 import batect.cli.CommonOptions
 import batect.cli.Succeeded
+import batect.cli.options.LevelOfParallelismDefaultValueProvider
 import batect.config.Configuration
 import batect.config.ContainerMap
 import batect.config.TaskMap
@@ -57,7 +58,21 @@ object RunTaskCommandSpec : Spek({
                 }
 
                 it("returns a command instance ready for use") {
-                    assertThat((result as Succeeded).command, equalTo<Command>(RunTaskCommand("thefile.yml", "the-task", configLoader, taskRunner)))
+                    assertThat((result as Succeeded).command, equalTo<Command>(
+                            RunTaskCommand("thefile.yml", "the-task", LevelOfParallelismDefaultValueProvider.value, configLoader, taskRunner)))
+                }
+            }
+
+            describe("when given one parameter and a level of parallelism") {
+                val result = commandLine.parse(listOf("--level-of-parallelism", "123", "the-task"), kodein)
+
+                it("indicates that parsing succeeded") {
+                    assertThat(result, isA<Succeeded>())
+                }
+
+                it("returns a command instance ready for use with the desired level of parallelism") {
+                    assertThat((result as Succeeded).command, equalTo<Command>(
+                            RunTaskCommand("thefile.yml", "the-task", 123, configLoader, taskRunner)))
                 }
             }
         }
@@ -67,22 +82,23 @@ object RunTaskCommandSpec : Spek({
             val taskName = "the_task"
             val config = Configuration("the_project", TaskMap(), ContainerMap())
             val expectedTaskExitCode = 123
+            val levelOfParallelism = 64
 
             val configLoader = mock<ConfigurationLoader> {
                 on { loadConfig(configFile) } doReturn config
             }
 
             val taskRunner = mock<TaskRunner> {
-                on { run(config, taskName) } doReturn expectedTaskExitCode
+                on { run(config, taskName, levelOfParallelism) } doReturn expectedTaskExitCode
             }
 
-            val command = RunTaskCommand(configFile, taskName, configLoader, taskRunner)
+            val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskRunner)
 
             describe("when the configuration file can be loaded and the task runs successfully") {
                 val exitCode = command.run()
 
                 it("runs the task") {
-                    verify(taskRunner).run(config, taskName)
+                    verify(taskRunner).run(config, taskName, levelOfParallelism)
                 }
 
                 it("returns the exit code of the task") {

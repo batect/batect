@@ -26,7 +26,7 @@ data class TaskRunner(
         private val stateMachineProvider: TaskStateMachineProvider,
         private val executionManagerProvider: ParallelExecutionManagerProvider
 ) {
-    fun run(config: Configuration, taskName: String): Int {
+    fun run(config: Configuration, taskName: String, maximumConcurrentSteps: Int): Int {
         val resolvedTask = config.tasks[taskName]
 
         if (resolvedTask == null) {
@@ -36,7 +36,7 @@ data class TaskRunner(
 
         val graph = graphProvider.createGraph(config, resolvedTask)
         val stateMachine = stateMachineProvider.createStateMachine(graph)
-        val executionManager = executionManagerProvider.createParallelExecutionManager(stateMachine, taskName)
+        val executionManager = executionManagerProvider.createParallelExecutionManager(stateMachine, taskName, maximumConcurrentSteps)
 
         eventLogger.reset()
 

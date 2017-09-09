@@ -62,10 +62,6 @@ class ValueOption<StorageType, ValueType : StorageType>(name: String,
         }
 }
 
-object ValueConverters {
-    fun string(value: String): ValueConversionResult<String> = ConversionSucceeded(value)
-}
-
 sealed class ValueConversionResult<V>
 data class ConversionSucceeded<V>(val value: V) : ValueConversionResult<V>()
 data class ConversionFailed<V>(val message: String) : ValueConversionResult<V>()

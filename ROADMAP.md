@@ -13,7 +13,6 @@ If there's something you're really keen to see, pull requests are always welcome
 
 ### Features
 * run operations (image builds, container creation, container start) in parallel where possible
-  * configurable level of parallelism
   * better output to show what's going on
 * just use an existing image, pulling if necessary (ie. don't require a local Dockerfile)
 * allow the user to keep containers after failure so they can examine logs

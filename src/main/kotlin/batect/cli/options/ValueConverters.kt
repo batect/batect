@@ -16,10 +16,20 @@
 
 package batect.cli.options
 
-object LevelOfParallelismDefaultValueProvider : DefaultValueProvider<Int> {
-    override val value: Int
-        get() = Runtime.getRuntime().availableProcessors() * 2
+object ValueConverters {
+    fun string(value: String): ValueConversionResult<String> = ConversionSucceeded(value)
 
-    override val description: String
-        get() = "defaults to $value, which is two times the number of CPU cores available"
+    fun positiveInteger(value: String): ValueConversionResult<Int> {
+        try {
+            val parsedValue = Integer.parseInt(value)
+
+            if (parsedValue <= 0) {
+                return ConversionFailed("Value must be positive.")
+            }
+
+            return ConversionSucceeded(parsedValue)
+        } catch (_: NumberFormatException) {
+            return ConversionFailed("Value is not a valid integer.")
+        }
+    }
 }

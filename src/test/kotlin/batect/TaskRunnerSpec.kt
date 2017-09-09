@@ -29,7 +29,6 @@ import batect.model.TaskStateMachineProvider
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.reset
@@ -47,13 +46,14 @@ object TaskRunnerSpec : Spek({
         val graphProvider = mock<DependencyGraphProvider>()
         val stateMachine = mock<TaskStateMachine>()
         val executionManager = mock<ParallelExecutionManager>()
+        val levelOfParallelism = 64
 
         val stateMachineProvider = mock<TaskStateMachineProvider> {
             on { createStateMachine(graph) } doReturn stateMachine
         }
 
         val executionManagerProvider = mock<ParallelExecutionManagerProvider> {
-            on { createParallelExecutionManager(eq(stateMachine), eq("some-task")) } doReturn executionManager
+            on { createParallelExecutionManager(stateMachine, "some-task", levelOfParallelism) } doReturn executionManager
         }
 
         val taskRunner = TaskRunner(eventLogger, graphProvider, stateMachineProvider, executionManagerProvider)
@@ -65,7 +65,7 @@ object TaskRunnerSpec : Spek({
 
         on("attempting to run a task that does not exist") {
             val config = Configuration("some-project", TaskMap(), ContainerMap())
-            val exitCode = taskRunner.run(config, "some-task")
+            val exitCode = taskRunner.run(config, "some-task", levelOfParallelism)
 
             it("logs that the task does not exist") {
                 verify(eventLogger).logTaskDoesNotExist("some-task")
@@ -85,7 +85,7 @@ object TaskRunnerSpec : Spek({
             whenever(graphProvider.createGraph(config, task)).thenReturn(graph)
             whenever(executionManager.run()).doReturn(100)
 
-            val exitCode = taskRunner.run(config, "some-task")
+            val exitCode = taskRunner.run(config, "some-task", levelOfParallelism)
 
             it("resets the event logger") {
                 verify(eventLogger).reset()

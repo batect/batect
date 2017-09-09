@@ -17,9 +17,10 @@
 package batect.cli
 
 import batect.testutils.CreateForEachTest
-import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -34,13 +35,17 @@ object ValueOptionSpec : Spek({
             }
         }
 
+        val defaultProvider = mock<DefaultValueProvider<Int>> {
+            onGeneric { value } doReturn 9999
+        }
+
         val option by CreateForEachTest(this) {
-            ValueOption("option", "Some integer option", null, converter)
+            ValueOption("option", "Some integer option", defaultProvider, converter)
         }
 
         on("not applying a value for the option") {
             it("returns the default value") {
-                assertThat(option.value, absent())
+                assertThat(option.value, equalTo(9999))
             }
         }
 
@@ -65,19 +70,27 @@ object ValueOptionSpec : Spek({
         }
 
         describe("getting the help description for an option") {
-            on("the option having a null default value") {
-                val optionWithNullDefault = ValueOption("option", "Some integer option", null, converter)
+            on("the default value provider not giving any extra information") {
+                val noDescriptionDefaultProvider = mock<DefaultValueProvider<Int>> {
+                    onGeneric { description } doReturn ""
+                }
+
+                val noDefaultDescriptionOption = ValueOption("option", "Some integer option", noDescriptionDefaultProvider, converter)
 
                 it("returns the original description") {
-                    assertThat(optionWithNullDefault.descriptionForHelp, equalTo("Some integer option"))
+                    assertThat(noDefaultDescriptionOption.descriptionForHelp, equalTo("Some integer option"))
                 }
             }
 
-            on("the option having a non-null default value") {
-                val optionWithNullDefault = ValueOption("option", "Some integer option", 1234, converter)
+            on("the default value provider giving extra information") {
+                val noDescriptionDefaultProvider = mock<DefaultValueProvider<Int>> {
+                    onGeneric { description } doReturn "defaults to '1234' if not set"
+                }
 
-                it("returns the original description") {
-                    assertThat(optionWithNullDefault.descriptionForHelp, equalTo("Some integer option (defaults to '1234' if not set)"))
+                val defaultWithDescriptionOption = ValueOption("option", "Some integer option", noDescriptionDefaultProvider, converter)
+
+                it("returns the original description with the additional information from the default value provider") {
+                    assertThat(defaultWithDescriptionOption.descriptionForHelp, equalTo("Some integer option (defaults to '1234' if not set)"))
                 }
             }
         }

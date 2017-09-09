@@ -18,8 +18,8 @@ package batect.cli.commands
 
 import batect.PrintStreamType
 import batect.cli.CommandLineParser
-import batect.cli.options.OptionDefinition
 import batect.cli.applicationName
+import batect.cli.options.OptionDefinition
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
 import java.io.PrintStream
@@ -48,7 +48,7 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
 
     private fun printRootHelp() {
         val commands = parser.getAllCommandDefinitions().sortedBy { it.commandName }.associate { it.commandName to it.description }
-        val options = parser.getCommonOptions().sortedBy { it.longName }.associate { nameFor(it) to it.descriptionForHelp }
+        val options = formatListOfOptions(parser.getCommonOptions())
         val alignToColumn = (commands.keys + options.keys).map { it.length }.max() ?: 0
 
         outputStream.print("Usage: $applicationName ")
@@ -74,6 +74,11 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
         outputStream.println()
     }
 
+    private fun formatListOfOptions(options: Iterable<OptionDefinition>): Map<String, String> {
+        return options.sortedBy { it.longName }
+                .associate { nameFor(it) to it.descriptionForHelp }
+    }
+
     private fun nameFor(option: OptionDefinition): String {
         val longNamePart = "${option.longOption}=value"
 
@@ -84,21 +89,13 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
     }
 
     private fun printCommandHelp(commandDefinition: CommandDefinition) {
-        val positionalParameterDefinitions = commandDefinition.getAllPositionalParameterDefinitions()
-
-        printCommandHelpHeader(commandDefinition, positionalParameterDefinitions)
+        printCommandHelpHeader(commandDefinition)
 
         outputStream.println()
         outputStream.println(commandDefinition.description)
         outputStream.println()
 
-        if (positionalParameterDefinitions.isEmpty()) {
-            outputStream.println("This command does not take any options.")
-        } else {
-            printCommandParameterInfo(positionalParameterDefinitions)
-        }
-
-        outputStream.println()
+        printCommandOptionAndParameterInfo(commandDefinition)
 
         if (parser.getCommonOptions().isNotEmpty()) {
             outputStream.println("For help on the common options available for all commands, run '$applicationName help'.")
@@ -106,7 +103,7 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
         }
     }
 
-    private fun printCommandHelpHeader(commandDefinition: CommandDefinition, positionalParameterDefinitions: List<PositionalParameterDefinition>) {
+    private fun printCommandHelpHeader(commandDefinition: CommandDefinition) {
         outputStream.print("Usage: $applicationName ")
 
         if (parser.getCommonOptions().isNotEmpty()) {
@@ -115,7 +112,11 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
 
         outputStream.print(commandDefinition.commandName)
 
-        positionalParameterDefinitions.forEach {
+        if (commandDefinition.optionParser.getOptions().isNotEmpty()) {
+            outputStream.print(" [OPTIONS]")
+        }
+
+        commandDefinition.getAllPositionalParameterDefinitions().forEach {
             val formattedName = if (it.isOptional) "[${it.name}]" else it.name
             outputStream.print(" $formattedName")
         }
@@ -123,16 +124,38 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
         outputStream.println()
     }
 
-    private fun printCommandParameterInfo(positionalParameterDefinitions: List<PositionalParameterDefinition>) {
-        outputStream.println("Parameters:")
-        printInColumns(positionalParameterDefinitions.associate { it.name to descriptionForPositionalParameter(it) })
-    }
-
     private fun descriptionForPositionalParameter(param: PositionalParameterDefinition): String {
         if (param.isOptional) {
             return "(optional) " + param.description
         } else {
             return param.description
+        }
+    }
+
+    private fun printCommandOptionAndParameterInfo(commandDefinition: CommandDefinition) {
+        val options = commandDefinition.optionParser.getOptions()
+        val positionalParameters = commandDefinition.getAllPositionalParameterDefinitions()
+
+        if (positionalParameters.isEmpty() && options.isEmpty()) {
+            outputStream.println("This command does not take any options.")
+            outputStream.println()
+            return
+        }
+
+        val formattedOptions = formatListOfOptions(options)
+        val formattedParameters = positionalParameters.associate { it.name to descriptionForPositionalParameter(it) }
+        val alignToColumn = (formattedOptions.keys + formattedParameters.keys).map { it.length }.max() ?: 0
+
+        if (options.isNotEmpty()) {
+            outputStream.println("Options:")
+            printInColumns(formattedOptions, alignToColumn)
+            outputStream.println()
+        }
+
+        if (positionalParameters.isNotEmpty()) {
+            outputStream.println("Parameters:")
+            printInColumns(formattedParameters, alignToColumn)
+            outputStream.println()
         }
     }
 

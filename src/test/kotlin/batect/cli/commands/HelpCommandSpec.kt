@@ -17,9 +17,9 @@
 package batect.cli.commands
 
 import batect.cli.CommandLineParser
-import batect.cli.testutils.NullCommand
 import batect.cli.options.OptionDefinition
 import batect.cli.options.ValueApplicationResult
+import batect.cli.testutils.NullCommand
 import com.github.salomonbrys.kodein.Kodein
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -288,6 +288,84 @@ object HelpCommandSpec : Spek({
                             |Parameters:
                             |  THING          Thing to do.
                             |  OTHER-THING    (optional) Other thing to do.
+                            |
+                            |For help on the common options available for all commands, run 'batect help'.
+                            |
+                            |""".trimMargin()))
+                        }
+
+                        it("returns a non-zero exit code") {
+                            assertThat(exitCode, !equalTo(0))
+                        }
+                    }
+
+                    given("and that command has an option") {
+                        val output = ByteArrayOutputStream()
+                        val outputStream = PrintStream(output)
+
+                        val parser = mock<CommandLineParser> {
+                            on { getCommonOptions() } doReturn commonOptions
+                            on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
+                                val someOption: String? by valueOption("some-option", "Some option that you can set.", 'o')
+
+                                override fun createCommand(kodein: Kodein): Command = NullCommand()
+                            }
+                        }
+
+                        val command = HelpCommand("do-stuff", parser, outputStream)
+                        val exitCode = command.run()
+
+                        it("prints help information") {
+                            assertThat(output.toString(), equalTo("""
+                            |Usage: batect [COMMON OPTIONS] do-stuff [OPTIONS]
+                            |
+                            |Do the thing.
+                            |
+                            |Options:
+                            |  -o, --some-option=value    Some option that you can set.
+                            |
+                            |For help on the common options available for all commands, run 'batect help'.
+                            |
+                            |""".trimMargin()))
+                        }
+
+                        it("returns a non-zero exit code") {
+                            assertThat(exitCode, !equalTo(0))
+                        }
+                    }
+
+                    given("and that command has some options and some parameters") {
+                        val output = ByteArrayOutputStream()
+                        val outputStream = PrintStream(output)
+
+                        val parser = mock<CommandLineParser> {
+                            on { getCommonOptions() } doReturn commonOptions
+                            on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
+                                val someOption: String? by valueOption("some-option", "Some option that you can set.", 'o')
+                                val anotherOption: String? by valueOption("another-option", "Some other option that you can set.")
+                                val thingToDo: String by RequiredPositionalParameter("THING", "Thing to do.")
+                                val otherThingToDo: String? by OptionalPositionalParameter("OTHER-THING", "Other thing to do.")
+
+                                override fun createCommand(kodein: Kodein): Command = NullCommand()
+                            }
+                        }
+
+                        val command = HelpCommand("do-stuff", parser, outputStream)
+                        val exitCode = command.run()
+
+                        it("prints help information") {
+                            assertThat(output.toString(), equalTo("""
+                            |Usage: batect [COMMON OPTIONS] do-stuff [OPTIONS] THING [OTHER-THING]
+                            |
+                            |Do the thing.
+                            |
+                            |Options:
+                            |      --another-option=value    Some other option that you can set.
+                            |  -o, --some-option=value       Some option that you can set.
+                            |
+                            |Parameters:
+                            |  THING                         Thing to do.
+                            |  OTHER-THING                   (optional) Other thing to do.
                             |
                             |For help on the common options available for all commands, run 'batect help'.
                             |

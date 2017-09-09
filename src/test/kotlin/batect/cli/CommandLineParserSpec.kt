@@ -16,6 +16,9 @@
 
 package batect.cli
 
+import batect.cli.options.InvalidOptions
+import batect.cli.options.OptionParser
+import batect.cli.options.ReadOptions
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance

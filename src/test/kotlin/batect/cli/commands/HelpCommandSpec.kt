@@ -20,10 +20,10 @@ import batect.cli.Command
 import batect.cli.CommandDefinition
 import batect.cli.CommandLineParser
 import batect.cli.NullCommand
-import batect.cli.OptionDefinition
+import batect.cli.options.OptionDefinition
 import batect.cli.OptionalPositionalParameter
 import batect.cli.RequiredPositionalParameter
-import batect.cli.ValueApplicationResult
+import batect.cli.options.ValueApplicationResult
 import com.github.salomonbrys.kodein.Kodein
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo

@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.cli
+package batect.cli.options
 
 class OptionParser {
     private val options = mutableSetOf<OptionDefinition>()

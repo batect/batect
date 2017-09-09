@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.cli
+package batect.cli.options
 
 abstract class OptionDefinition(val longName: String,
                                 val description: String,

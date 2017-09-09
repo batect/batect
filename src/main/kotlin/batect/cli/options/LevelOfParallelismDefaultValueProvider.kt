@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.cli
+package batect.cli.options
 
 object LevelOfParallelismDefaultValueProvider : DefaultValueProvider<Int> {
     override val value: Int

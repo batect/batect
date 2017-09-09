@@ -14,9 +14,9 @@
    limitations under the License.
 */
 
-package batect.cli
+package batect.cli.options
 
-interface DefaultValueProvider<T> {
-    val value: T
-    val description: String
+data class StaticDefaultValueProvider<T>(override val value: T) : DefaultValueProvider<T> {
+    override val description: String
+        get() = if (value == null) "" else "defaults to '$value' if not set"
 }

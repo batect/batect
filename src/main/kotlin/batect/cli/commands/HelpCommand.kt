@@ -20,7 +20,7 @@ import batect.PrintStreamType
 import batect.cli.Command
 import batect.cli.CommandDefinition
 import batect.cli.CommandLineParser
-import batect.cli.OptionDefinition
+import batect.cli.options.OptionDefinition
 import batect.cli.OptionalPositionalParameter
 import batect.cli.PositionalParameterDefinition
 import batect.cli.applicationName

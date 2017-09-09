@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.cli
+package batect.cli.options
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo

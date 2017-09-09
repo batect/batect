@@ -18,6 +18,11 @@ package batect.cli
 
 import com.github.salomonbrys.kodein.Kodein
 import batect.cli.commands.HelpCommandDefinition
+import batect.cli.options.InvalidOptions
+import batect.cli.options.OptionDefinition
+import batect.cli.options.OptionParser
+import batect.cli.options.OptionParserContainer
+import batect.cli.options.ReadOptions
 
 open class CommandLineParser(private val kodein: Kodein, override val optionParser: OptionParser) : OptionParserContainer {
     private val helpCommand = HelpCommandDefinition(this)

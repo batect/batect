@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.cli
+package batect.cli.options
 
 import batect.testutils.CreateForEachTest
 import batect.testutils.withMessage

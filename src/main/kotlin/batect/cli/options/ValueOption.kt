@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.cli
+package batect.cli.options
 
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty

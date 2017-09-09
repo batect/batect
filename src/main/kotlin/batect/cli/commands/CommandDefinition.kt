@@ -19,11 +19,18 @@ package batect.cli.commands
 import batect.cli.CommandLineParsingResult
 import batect.cli.Failed
 import batect.cli.Succeeded
+import batect.cli.options.InvalidOptions
+import batect.cli.options.OptionParser
+import batect.cli.options.OptionParserContainer
+import batect.cli.options.ReadOptions
 import com.github.salomonbrys.kodein.Kodein
 
-abstract class CommandDefinition(val commandName: String, val description: String, val aliases: Set<String> = emptySet()) {
+abstract class CommandDefinition(val commandName: String, val description: String, override val optionParser: OptionParser, val aliases: Set<String> = emptySet()) : OptionParserContainer {
     val requiredPositionalParameters = mutableListOf<RequiredPositionalParameter>()
     val optionalPositionalParameters = mutableListOf<OptionalPositionalParameter>()
+
+    constructor(commandName: String, description: String, aliases: Set<String> = emptySet()) :
+            this(commandName, description, OptionParser(), aliases)
 
     init {
         if (commandName == "") {
@@ -36,6 +43,15 @@ abstract class CommandDefinition(val commandName: String, val description: Strin
     }
 
     open fun parse(args: Iterable<String>, kodein: Kodein): CommandLineParsingResult {
+        val optionParsingResult = optionParser.parseOptions(args)
+
+        return when (optionParsingResult) {
+            is InvalidOptions -> Failed(optionParsingResult.message)
+            is ReadOptions -> parseParameters(args.drop(optionParsingResult.argumentsConsumed), kodein)
+        }
+    }
+
+    private fun parseParameters(args: Iterable<String>, kodein: Kodein): CommandLineParsingResult {
         if (args.count() < requiredPositionalParameters.count()) {
             val firstMissingParam = requiredPositionalParameters.drop(args.count()).first()
             val noun = if (requiredPositionalParameters.count() == 1) "parameter" else "parameters"

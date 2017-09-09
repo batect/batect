@@ -20,6 +20,9 @@ import batect.cli.CommandLineParsingResult
 import batect.cli.Failed
 import batect.cli.testutils.NullCommand
 import batect.cli.Succeeded
+import batect.cli.options.InvalidOptions
+import batect.cli.options.OptionParser
+import batect.cli.options.ReadOptions
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
@@ -27,6 +30,9 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import batect.testutils.withMessage
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -60,10 +66,15 @@ object CommandDefinitionSpec : Spek({
         }
 
         describe("parsing arguments") {
-            given("a command definition with no parameters defined") {
+            given("a command definition with no parameters or options defined") {
                 val emptyKodein = Kodein {}
                 val command = NullCommand()
-                val commandDefinition = object : CommandDefinition("test-command", "Do the thing.") {
+
+                val optionParser = mock<OptionParser> {
+                    on { parseOptions(any()) } doReturn ReadOptions(0)
+                }
+
+                val commandDefinition = object : CommandDefinition("test-command", "Do the thing.", optionParser) {
                     override fun createCommand(kodein: Kodein): Command = command
                 }
 
@@ -87,11 +98,15 @@ object CommandDefinitionSpec : Spek({
             given("a command definition with a single required positional parameter") {
                 val emptyKodein = Kodein {}
 
+                val optionParser = mock<OptionParser> {
+                    on { parseOptions(any()) } doReturn ReadOptions(0)
+                }
+
                 data class TestCommand(val value: String) : Command {
                     override fun run(): Int = throw NotImplementedError()
                 }
 
-                val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.") {
+                val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.", optionParser) {
                     val thing: String by RequiredPositionalParameter("THING", "The thing.")
 
                     override fun createCommand(kodein: Kodein): Command = TestCommand(thing)
@@ -125,11 +140,15 @@ object CommandDefinitionSpec : Spek({
             given("a command definition with a single optional positional parameter") {
                 val emptyKodein = Kodein {}
 
+                val optionParser = mock<OptionParser> {
+                    on { parseOptions(any()) } doReturn ReadOptions(0)
+                }
+
                 data class TestCommand(val value: String?) : Command {
                     override fun run(): Int = throw NotImplementedError()
                 }
 
-                val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.") {
+                val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.", optionParser) {
                     val thing: String? by OptionalPositionalParameter("THING", "The thing.")
 
                     override fun createCommand(kodein: Kodein): Command = TestCommand(thing)
@@ -163,11 +182,15 @@ object CommandDefinitionSpec : Spek({
             given("a command definition with a required parameter and an optional parameter") {
                 val emptyKodein = Kodein {}
 
+                val optionParser = mock<OptionParser> {
+                    on { parseOptions(any()) } doReturn ReadOptions(0)
+                }
+
                 data class TestCommand(val requiredValue: String, val optionalValue: String?) : Command {
                     override fun run(): Int = throw NotImplementedError()
                 }
 
-                val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.") {
+                val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.", optionParser) {
                     val requiredValue: String by RequiredPositionalParameter("THING", "The thing.")
                     val optionalValue: String? by OptionalPositionalParameter("OTHER-THING", "The other thing.")
 
@@ -210,11 +233,15 @@ object CommandDefinitionSpec : Spek({
             given("a command definition with a required parameter and two optional parameters") {
                 val emptyKodein = Kodein {}
 
+                val optionParser = mock<OptionParser> {
+                    on { parseOptions(any()) } doReturn ReadOptions(0)
+                }
+
                 data class TestCommand(val requiredValue: String, val firstOptionalValue: String?, val secondOptionalValue: String?) : Command {
                     override fun run(): Int = throw NotImplementedError()
                 }
 
-                val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.") {
+                val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.", optionParser) {
                     val requiredValue: String by RequiredPositionalParameter("THING", "The thing.")
                     val firstOptionalValue: String? by OptionalPositionalParameter("FIRST OTHER THING", "The first other thing.")
                     val secondOptionalValue: String? by OptionalPositionalParameter("SECOND OTHER THING", "The second other thing.")
@@ -266,11 +293,15 @@ object CommandDefinitionSpec : Spek({
             given("a command definition with two required parameters") {
                 val emptyKodein = Kodein {}
 
+                val optionParser = mock<OptionParser> {
+                    on { parseOptions(any()) } doReturn ReadOptions(0)
+                }
+
                 data class TestCommand(val firstValue: String, val secondValue: String) : Command {
                     override fun run(): Int = throw NotImplementedError()
                 }
 
-                val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.") {
+                val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.", optionParser) {
                     val firstValue: String by RequiredPositionalParameter("FIRST-THING", "The first thing.")
                     val secondValue: String by RequiredPositionalParameter("SECOND-THING", "The second thing.")
 
@@ -311,6 +342,10 @@ object CommandDefinitionSpec : Spek({
             }
 
             given("a command definition and a non-empty Kodein container") {
+                val optionParser = mock<OptionParser> {
+                    on { parseOptions(any()) } doReturn ReadOptions(0)
+                }
+
                 val kodeinContainer = Kodein {
                     bind<String>("the-value") with instance("This is the value")
                 }
@@ -319,7 +354,7 @@ object CommandDefinitionSpec : Spek({
                     override fun run(): Int = throw NotImplementedError()
                 }
 
-                val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.") {
+                val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.", optionParser) {
                     override fun createCommand(kodein: Kodein): Command = TestCommand(kodein.instance("the-value"))
                 }
 
@@ -328,6 +363,49 @@ object CommandDefinitionSpec : Spek({
 
                     it("indicates that parsing succeeded and returns a command instance populated with the value from the container") {
                         assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(TestCommand("This is the value"))))
+                    }
+                }
+            }
+
+            given("a command definition and some options") {
+                val emptyKodein = Kodein {}
+                val optionParser = mock<OptionParser> {
+                    on { parseOptions(listOf("invalid-arg")) } doReturn InvalidOptions("The option parser said that's not possible")
+                    on { parseOptions(listOf("--some-option")) } doReturn ReadOptions(1)
+                    on { parseOptions(listOf("--some-option", "the-value")) } doReturn ReadOptions(1)
+                }
+
+                data class TestCommand(val value: String) : Command {
+                    override fun run(): Int = throw NotImplementedError()
+                }
+
+                val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.", optionParser) {
+                    val thing: String by RequiredPositionalParameter("THING", "The thing.")
+
+                    override fun createCommand(kodein: Kodein): Command = TestCommand(thing)
+                }
+
+                on("parsing a list of arguments that the option parser rejects") {
+                    val result = commandDefinition.parse(listOf("invalid-arg"), emptyKodein)
+
+                    it("indicates that parsing failed and propagates the error message from the option parser") {
+                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("The option parser said that's not possible")))
+                    }
+                }
+
+                on("parsing a list of arguments that the option parser consumes entirely") {
+                    val result = commandDefinition.parse(listOf("--some-option"), emptyKodein)
+
+                    it("indicates that parsing failed because the required parameter was not provided") {
+                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Command 'do-stuff' requires at least 1 parameter. The parameter 'THING' was not supplied.")))
+                    }
+                }
+
+                on("parsing a list of arguments that the option parser consumes partially") {
+                    val result = commandDefinition.parse(listOf("--some-option", "the-value"), emptyKodein)
+
+                    it("indicates that parsing failed because the required parameter was not provided") {
+                        assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(TestCommand("the-value"))))
                     }
                 }
             }

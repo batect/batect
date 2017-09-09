@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect
+package batect.ui
 
 import batect.config.Container
 import batect.docker.DockerContainer

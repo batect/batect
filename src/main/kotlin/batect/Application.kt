@@ -29,6 +29,9 @@ import batect.docker.ProcessRunner
 import batect.model.DependencyGraphProvider
 import batect.model.TaskStateMachineProvider
 import batect.model.steps.TaskStepRunner
+import batect.ui.Console
+import batect.ui.EventLogger
+import batect.ui.SimpleEventLogger
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.KodeinAware
 import com.github.salomonbrys.kodein.bind

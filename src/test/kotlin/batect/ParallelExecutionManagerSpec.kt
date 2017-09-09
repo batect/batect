@@ -23,6 +23,7 @@ import batect.model.steps.FinishTaskStep
 import batect.model.steps.TaskStep
 import batect.model.steps.TaskStepRunner
 import batect.testutils.CreateForEachTest
+import batect.ui.EventLogger
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.any

@@ -19,6 +19,7 @@ package batect
 import batect.config.Configuration
 import batect.model.DependencyGraphProvider
 import batect.model.TaskStateMachineProvider
+import batect.ui.EventLogger
 
 data class TaskRunner(
         private val eventLogger: EventLogger,

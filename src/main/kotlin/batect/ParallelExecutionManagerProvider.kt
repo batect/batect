@@ -18,6 +18,7 @@ package batect
 
 import batect.model.TaskStateMachine
 import batect.model.steps.TaskStepRunner
+import batect.ui.EventLogger
 
 class ParallelExecutionManagerProvider(private val eventLogger: EventLogger, private val taskStepRunner: TaskStepRunner) {
     fun createParallelExecutionManager(stateMachine: TaskStateMachine, taskName: String, maximumConcurrentSteps: Int) =

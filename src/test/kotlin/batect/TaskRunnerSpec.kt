@@ -26,6 +26,7 @@ import batect.model.DependencyGraph
 import batect.model.DependencyGraphProvider
 import batect.model.TaskStateMachine
 import batect.model.TaskStateMachineProvider
+import batect.ui.EventLogger
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn

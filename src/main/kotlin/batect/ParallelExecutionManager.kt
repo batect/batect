@@ -22,6 +22,7 @@ import batect.model.events.TaskEventSink
 import batect.model.steps.FinishTaskStep
 import batect.model.steps.TaskStep
 import batect.model.steps.TaskStepRunner
+import batect.ui.EventLogger
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor

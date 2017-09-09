@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect
+package batect.ui
 
 import batect.model.events.TaskEventSink
 import batect.model.steps.TaskStep

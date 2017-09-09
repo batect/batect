@@ -98,8 +98,13 @@ object OptionDefinitionSpec : Spek({
                                        shortName: Char? = null) : OptionDefinition(name, description, shortName) {
                 var lastAppliedValue: String? = null
 
-                override fun applyValue(newValue: String) {
+                override fun applyValue(newValue: String): ValueApplicationResult {
                     lastAppliedValue = newValue
+
+                    return when (newValue) {
+                        "thing" -> ValidValue
+                        else -> InvalidValue("that's not allowed")
+                    }
                 }
             }
 
@@ -128,6 +133,26 @@ object OptionDefinitionSpec : Spek({
 
                         it("sets the option's value") {
                             assertThat(option.lastAppliedValue, equalTo("thing"))
+                        }
+                    }
+
+                    on("parsing a list of arguments where the option is specified in the form '$format=thing'") {
+                        val result = option.parse(listOf("$format=thing", "do-stuff"))
+
+                        it("indicates that parsing succeeded and that one argument was consumed") {
+                            assertThat(result, equalTo<OptionParsingResult>(OptionParsingResult.ReadOption(1)))
+                        }
+
+                        it("sets the option's value") {
+                            assertThat(option.lastAppliedValue, equalTo("thing"))
+                        }
+                    }
+
+                    on("parsing a list of arguments where the option is specified in a valid form but the value is not valid") {
+                        val result = option.parse(listOf(format, "invalid-thing", "do-stuff"))
+
+                        it("indicates that parsing failed") {
+                            assertThat(result, equalTo<OptionParsingResult>(OptionParsingResult.InvalidOption("The value 'invalid-thing' for option '$format' is invalid: that's not allowed")))
                         }
                     }
 

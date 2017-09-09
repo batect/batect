@@ -173,7 +173,7 @@ object OptionParserSpec : Spek({
         describe("adding options") {
             given("a parser with a single value option with a short name") {
                 val parser = OptionParser()
-                val option = ValueOption("value", "The value", 'v')
+                val option = ValueOption("value", "The value", null, ValueConverters::string, 'v')
                 parser.addOption(option)
 
                 on("getting the list of all options") {
@@ -186,14 +186,14 @@ object OptionParserSpec : Spek({
 
                 on("attempting to add another option with the same name") {
                     it("throws an exception") {
-                        assertThat({ parser.addOption(ValueOption("value", "The other value")) },
+                        assertThat({ parser.addOption(ValueOption("value", "The other value", null, ValueConverters::string)) },
                                 throws<IllegalArgumentException>(withMessage("An option with the name 'value' has already been added.")))
                     }
                 }
 
                 on("attempting to add another option with the same short name") {
                     it("throws an exception") {
-                        assertThat({ parser.addOption(ValueOption("other-value", "The other value", 'v')) },
+                        assertThat({ parser.addOption(ValueOption("other-value", "The other value", null, ValueConverters::string, 'v')) },
                                 throws<IllegalArgumentException>(withMessage("An option with the name 'v' has already been added.")))
                     }
                 }

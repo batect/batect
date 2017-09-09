@@ -52,9 +52,7 @@ abstract class OptionDefinition(val longName: String,
         }
 
         if (valueHasBeenSet) {
-            val shortOptionHint = if (shortName != null) " (or '$shortOption')" else ""
-
-            return OptionParsingResult.InvalidOption("Option '$longOption'$shortOptionHint cannot be specified multiple times.")
+            return specifiedMultipleTimesError()
         }
 
         val arg = args.first()
@@ -65,7 +63,6 @@ abstract class OptionDefinition(val longName: String,
         }
 
         val useNextArgumentForValue = !arg.contains("=")
-
         val argValue = if (useNextArgumentForValue) {
             if (args.count() == 1) return OptionParsingResult.InvalidOption("Option '$arg' requires a value to be provided, either in the form '$argName=<value>' or '$argName <value>'.")
             args.elementAt(1)
@@ -75,19 +72,33 @@ abstract class OptionDefinition(val longName: String,
             value
         }
 
-        applyValue(argValue)
         valueHasBeenSet = true
+        val applicationResult = applyValue(argValue)
 
-        if (useNextArgumentForValue) {
-            return OptionParsingResult.ReadOption(2)
-        } else {
-            return OptionParsingResult.ReadOption(1)
+        return when (applicationResult) {
+            is InvalidValue -> OptionParsingResult.InvalidOption("The value '$argValue' for option '$arg' is invalid: ${applicationResult.message}")
+            is ValidValue -> if (useNextArgumentForValue) {
+                OptionParsingResult.ReadOption(2)
+            } else {
+                OptionParsingResult.ReadOption(1)
+            }
         }
+    }
+
+    private fun specifiedMultipleTimesError(): OptionParsingResult {
+        val shortOptionHint = if (shortName != null) " (or '$shortOption')" else ""
+        return OptionParsingResult.InvalidOption("Option '$longOption'$shortOptionHint cannot be specified multiple times.")
     }
 
     private fun nameMatches(nameFromArgument: String): Boolean {
         return nameFromArgument == longOption || nameFromArgument == shortOption
     }
 
-    internal abstract fun applyValue(newValue: String)
+    internal abstract fun applyValue(newValue: String): ValueApplicationResult
+
+    open val descriptionForHelp: String = description
 }
+
+sealed class ValueApplicationResult
+data class InvalidValue(val message: String) : ValueApplicationResult()
+object ValidValue : ValueApplicationResult()

@@ -16,11 +16,6 @@
 
 package batect.cli.commands
 
-import com.github.salomonbrys.kodein.Kodein
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
 import batect.cli.Command
 import batect.cli.CommandDefinition
 import batect.cli.CommandLineParser
@@ -28,8 +23,12 @@ import batect.cli.NullCommand
 import batect.cli.OptionDefinition
 import batect.cli.OptionalPositionalParameter
 import batect.cli.RequiredPositionalParameter
-import batect.cli.ValueOption
-import batect.cli.ValueOptionWithDefault
+import batect.cli.ValueApplicationResult
+import com.github.salomonbrys.kodein.Kodein
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -46,6 +45,13 @@ object HelpCommandSpec : Spek({
         val secondCommandDefinition = object : CommandDefinition("do-other-stuff", "Do the other thing.") {
             override fun createCommand(kodein: Kodein): Command = NullCommand()
         }
+
+        fun createOption(longName: String, description: String, shortName: Char? = null): OptionDefinition =
+                object : OptionDefinition(longName, description, shortName) {
+                    override fun applyValue(newValue: String): ValueApplicationResult = throw NotImplementedError()
+                    override val descriptionForHelp: String
+                        get() = description + " (extra help info)"
+                }
 
         given("no command name to show help for") {
             given("and the root parser has no common options") {
@@ -84,10 +90,10 @@ object HelpCommandSpec : Spek({
                 val parser = mock<CommandLineParser> {
                     on { getAllCommandDefinitions() } doReturn setOf(firstCommandDefinition, secondCommandDefinition)
                     on { getCommonOptions() } doReturn setOf<OptionDefinition>(
-                            ValueOption("awesomeness-level", "Level of awesomeness to use."),
-                            ValueOption("booster-level", "Level of boosters to use."),
-                            ValueOption("file", "File name to use.", 'f'),
-                            ValueOptionWithDefault("sensible-default", "Something you can override if you want.", "the-default-value")
+                            createOption("awesomeness-level", "Level of awesomeness to use."),
+                            createOption("booster-level", "Level of boosters to use."),
+                            createOption("file", "File name to use.", 'f'),
+                            createOption("sensible-default", "Something you can override if you want.")
                     )
                 }
 
@@ -103,10 +109,10 @@ object HelpCommandSpec : Spek({
                         |  do-stuff                         Do the thing.
                         |
                         |Common options:
-                        |      --awesomeness-level=value    Level of awesomeness to use.
-                        |      --booster-level=value        Level of boosters to use.
-                        |  -f, --file=value                 File name to use.
-                        |      --sensible-default=value     Something you can override if you want. (defaults to 'the-default-value' if not set)
+                        |      --awesomeness-level=value    Level of awesomeness to use. (extra help info)
+                        |      --booster-level=value        Level of boosters to use. (extra help info)
+                        |  -f, --file=value                 File name to use. (extra help info)
+                        |      --sensible-default=value     Something you can override if you want. (extra help info)
                         |
                         |For help on the options available for a command, run 'batect help <command>'.
                         |
@@ -122,7 +128,7 @@ object HelpCommandSpec : Spek({
         given("a command name to show help for") {
             given("and that command name is a valid command name") {
                 given("the root parser has some common options") {
-                    val commonOptions = setOf(ValueOption("some-option", "Some common option."))
+                    val commonOptions = setOf(createOption("some-option", "Some common option."))
 
                     given("and that command has no options or positional parameters") {
                         val output = ByteArrayOutputStream()

@@ -16,8 +16,6 @@
 
 package batect.cli.commands
 
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.instance
 import batect.PrintStreamType
 import batect.cli.Command
 import batect.cli.CommandDefinition
@@ -25,8 +23,9 @@ import batect.cli.CommandLineParser
 import batect.cli.OptionDefinition
 import batect.cli.OptionalPositionalParameter
 import batect.cli.PositionalParameterDefinition
-import batect.cli.ValueOptionWithDefault
 import batect.cli.applicationName
+import com.github.salomonbrys.kodein.Kodein
+import com.github.salomonbrys.kodein.instance
 import java.io.PrintStream
 
 class HelpCommandDefinition(val parser: CommandLineParser) : CommandDefinition("help", "Display information about available commands and options.", aliases = setOf("--help")) {
@@ -53,7 +52,7 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
 
     private fun printRootHelp() {
         val commands = parser.getAllCommandDefinitions().sortedBy { it.commandName }.associate { it.commandName to it.description }
-        val options = parser.getCommonOptions().sortedBy { it.longName }.associate { nameFor(it) to descriptionFor(it) }
+        val options = parser.getCommonOptions().sortedBy { it.longName }.associate { nameFor(it) to it.descriptionForHelp }
         val alignToColumn = (commands.keys + options.keys).map { it.length }.max() ?: 0
 
         outputStream.print("Usage: $applicationName ")
@@ -85,13 +84,6 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
         return when {
             option.shortName == null -> "    $longNamePart"
             else -> "${option.shortOption}, $longNamePart"
-        }
-    }
-
-    private fun descriptionFor(option: OptionDefinition): String {
-        return when (option) {
-            is ValueOptionWithDefault -> "${option.description} (defaults to '${option.defaultValue}' if not set)"
-            else -> option.description
         }
     }
 

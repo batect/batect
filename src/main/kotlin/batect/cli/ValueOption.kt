@@ -19,21 +19,50 @@ package batect.cli
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-class ValueOption(name: String,
-                  description: String,
-                  shortName: Char? = null
-) : OptionDefinition(name, description, shortName), ReadOnlyProperty<OptionParserContainer, String?> {
+// Why the two generic parameters here?
+// StorageType defines how the value is stored - for example, for a String value with a null default, StorageType would be String?
+// ValueType defines what type user-provided values should be - for example, String
+// This allows us to provide type safety and also differentiate between 'not provided' (null) and 'provided' in the
+// case where there's a default value.
+class ValueOption<StorageType, ValueType : StorageType> (name: String,
+                                        description: String,
+                                        val defaultValue: StorageType,
+                                        val valueConverter: (String) -> ValueConversionResult<ValueType>,
+                                        shortName: Char? = null) :
+        OptionDefinition(name, description, shortName), ReadOnlyProperty<OptionParserContainer, StorageType> {
+    var value: StorageType = defaultValue
 
-    var value: String? = null
+    override fun applyValue(newValue: String): ValueApplicationResult {
+        val conversionResult = valueConverter(newValue)
 
-    override fun applyValue(newValue: String) {
-        value = newValue
+        return when (conversionResult) {
+            is ConversionSucceeded -> {
+                value = conversionResult.value
+                ValidValue
+            }
+            is ConversionFailed -> InvalidValue(conversionResult.message)
+        }
     }
 
-    operator fun provideDelegate(thisRef: OptionParserContainer, property: KProperty<*>): ValueOption {
+    operator fun provideDelegate(thisRef: OptionParserContainer, property: KProperty<*>): ValueOption<StorageType, ValueType> {
         thisRef.optionParser.addOption(this)
         return this
     }
 
-    override fun getValue(thisRef: OptionParserContainer, property: KProperty<*>): String? = value
+    override fun getValue(thisRef: OptionParserContainer, property: KProperty<*>): StorageType = value
+
+    override val descriptionForHelp: String
+        get() = if (defaultValue == null) {
+            description
+        } else {
+            "$description (defaults to '$defaultValue' if not set)"
+        }
 }
+
+object ValueConverters {
+    fun string(value: String): ValueConversionResult<String> = ConversionSucceeded(value)
+}
+
+sealed class ValueConversionResult<V>
+data class ConversionSucceeded<V>(val value: V) : ValueConversionResult<V>()
+data class ConversionFailed<V>(val message: String) : ValueConversionResult<V>()

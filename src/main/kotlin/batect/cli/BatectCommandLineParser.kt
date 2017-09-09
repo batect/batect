@@ -23,7 +23,7 @@ import batect.cli.commands.ListTasksCommandDefinition
 import batect.cli.commands.RunTaskCommandDefinition
 
 class BatectCommandLineParser(kodein: Kodein) : CommandLineParser(kodein) {
-    val configurationFileName: String by ValueOptionWithDefault("config-file", "The configuration file to use.", "batect.yml", 'f')
+    val configurationFileName: String by valueOption("config-file", "The configuration file to use.", "batect.yml", 'f')
 
     init {
         addCommandDefinition(RunTaskCommandDefinition())

@@ -71,6 +71,18 @@ class OptionParser {
 
 interface OptionParserContainer {
     val optionParser: OptionParser
+
+    fun valueOption(name: String, description: String, shortName: Char? = null)
+            = ValueOption(name, description, null, ValueConverters::string, shortName)
+
+    fun <V> valueOption(name: String, description: String, valueConverter: (String) -> ValueConversionResult<V>, shortName: Char? = null)
+            = ValueOption(name, description, null, valueConverter, shortName)
+
+    fun valueOption(name: String, description: String, defaultValue: String, shortName: Char? = null)
+            = ValueOption(name, description, defaultValue, ValueConverters::string, shortName)
+
+    fun <V> valueOption(name: String, description: String, defaultValue: V, valueConverter: (String) -> ValueConversionResult<V>, shortName: Char? = null)
+            = ValueOption(name, description, defaultValue, valueConverter, shortName)
 }
 
 sealed class OptionsParsingResult

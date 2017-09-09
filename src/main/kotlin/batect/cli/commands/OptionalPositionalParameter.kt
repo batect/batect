@@ -14,18 +14,18 @@
    limitations under the License.
 */
 
-package batect.cli
+package batect.cli.commands
 
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-class RequiredPositionalParameter(name: String, description: String) : PositionalParameterDefinition(name, description, false), ReadOnlyProperty<CommandDefinition, String> {
-    var value: String = ""
+class OptionalPositionalParameter(name: String, description: String) : PositionalParameterDefinition(name, description, true), ReadOnlyProperty<CommandDefinition, String?> {
+    var value: String? = null
 
-    operator fun provideDelegate(thisRef: CommandDefinition, property: KProperty<*>): RequiredPositionalParameter {
-        thisRef.requiredPositionalParameters.add(this)
+    operator fun provideDelegate(thisRef: CommandDefinition, property: KProperty<*>): OptionalPositionalParameter {
+        thisRef.optionalPositionalParameters.add(this)
         return this
     }
 
-    override fun getValue(thisRef: CommandDefinition, property: KProperty<*>): String = value
+    override fun getValue(thisRef: CommandDefinition, property: KProperty<*>): String? = value
 }

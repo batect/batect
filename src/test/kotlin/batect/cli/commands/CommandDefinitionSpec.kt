@@ -14,8 +14,12 @@
    limitations under the License.
 */
 
-package batect.cli
+package batect.cli.commands
 
+import batect.cli.CommandLineParsingResult
+import batect.cli.Failed
+import batect.cli.testutils.NullCommand
+import batect.cli.Succeeded
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance

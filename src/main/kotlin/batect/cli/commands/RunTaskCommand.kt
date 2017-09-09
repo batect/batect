@@ -19,10 +19,7 @@ package batect.cli.commands
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
 import batect.TaskRunner
-import batect.cli.Command
-import batect.cli.CommandDefinition
 import batect.cli.CommonOptions
-import batect.cli.RequiredPositionalParameter
 import batect.config.io.ConfigurationLoader
 
 class RunTaskCommandDefinition : CommandDefinition("run", "Run a task.") {

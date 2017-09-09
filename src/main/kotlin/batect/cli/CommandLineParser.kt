@@ -16,6 +16,8 @@
 
 package batect.cli
 
+import batect.cli.commands.Command
+import batect.cli.commands.CommandDefinition
 import com.github.salomonbrys.kodein.Kodein
 import batect.cli.commands.HelpCommandDefinition
 import batect.cli.options.InvalidOptions

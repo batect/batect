@@ -25,7 +25,7 @@ import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.reset
 import com.nhaarman.mockito_kotlin.whenever
-import batect.cli.Command
+import batect.cli.commands.Command
 import batect.cli.CommandLineParser
 import batect.cli.Failed
 import batect.cli.Succeeded

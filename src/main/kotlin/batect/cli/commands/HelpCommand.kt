@@ -17,12 +17,8 @@
 package batect.cli.commands
 
 import batect.PrintStreamType
-import batect.cli.Command
-import batect.cli.CommandDefinition
 import batect.cli.CommandLineParser
 import batect.cli.options.OptionDefinition
-import batect.cli.OptionalPositionalParameter
-import batect.cli.PositionalParameterDefinition
 import batect.cli.applicationName
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance

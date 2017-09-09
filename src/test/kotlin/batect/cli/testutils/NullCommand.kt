@@ -14,7 +14,9 @@
    limitations under the License.
 */
 
-package batect.cli
+package batect.cli.testutils
+
+import batect.cli.commands.Command
 
 class NullCommand : Command {
     override fun run(): Int = throw NotImplementedError()

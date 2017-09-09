@@ -16,9 +16,12 @@
 
 package batect.cli
 
+import batect.cli.commands.Command
+import batect.cli.commands.CommandDefinition
 import batect.cli.options.InvalidOptions
 import batect.cli.options.OptionParser
 import batect.cli.options.ReadOptions
+import batect.cli.testutils.NullCommand
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance

@@ -25,7 +25,6 @@ import com.natpryce.hamkrest.isA
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import batect.PrintStreamType
-import batect.cli.Command
 import batect.cli.CommonOptions
 import batect.cli.Succeeded
 import batect.config.Configuration

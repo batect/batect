@@ -14,18 +14,20 @@
    limitations under the License.
 */
 
-package batect.cli
+package batect.cli.commands
 
-import kotlin.properties.ReadOnlyProperty
-import kotlin.reflect.KProperty
+open class PositionalParameterDefinition(val name: String, val description: String, val isOptional: Boolean) {
+    init {
+        if (name == "") {
+            throw IllegalArgumentException("Positional parameter name must not be empty.")
+        }
 
-class OptionalPositionalParameter(name: String, description: String) : PositionalParameterDefinition(name, description, true), ReadOnlyProperty<CommandDefinition, String?> {
-    var value: String? = null
+        if (name != name.toUpperCase()) {
+            throw IllegalArgumentException("Positional parameter name must be all uppercase.")
+        }
 
-    operator fun provideDelegate(thisRef: CommandDefinition, property: KProperty<*>): OptionalPositionalParameter {
-        thisRef.optionalPositionalParameters.add(this)
-        return this
+        if (description == "") {
+            throw IllegalArgumentException("Positional parameter description must not be empty.")
+        }
     }
-
-    override fun getValue(thisRef: CommandDefinition, property: KProperty<*>): String? = value
 }

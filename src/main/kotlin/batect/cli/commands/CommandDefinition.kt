@@ -14,8 +14,11 @@
    limitations under the License.
 */
 
-package batect.cli
+package batect.cli.commands
 
+import batect.cli.CommandLineParsingResult
+import batect.cli.Failed
+import batect.cli.Succeeded
 import com.github.salomonbrys.kodein.Kodein
 
 abstract class CommandDefinition(val commandName: String, val description: String, val aliases: Set<String> = emptySet()) {

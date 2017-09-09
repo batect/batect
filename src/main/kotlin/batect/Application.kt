@@ -89,7 +89,7 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<DockerImageLabellingStrategy>() with provider { DockerImageLabellingStrategy() }
     bind<ProcessRunner>() with provider { ProcessRunner() }
     bind<DockerContainerCreationCommandGenerator>() with provider { DockerContainerCreationCommandGenerator() }
-    bind<EventLogger>() with provider { EventLogger(instance(PrintStreamType.Output), instance(PrintStreamType.Error)) }
+    bind<EventLogger>() with provider { SimpleEventLogger(instance(PrintStreamType.Output), instance(PrintStreamType.Error)) }
     bind<Console>(PrintStreamType.Output) with provider { Console(instance(PrintStreamType.Output)) }
     bind<Console>(PrintStreamType.Error) with provider { Console(instance(PrintStreamType.Error)) }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)

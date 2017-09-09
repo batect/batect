@@ -42,8 +42,8 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 
-object EventLoggerSpec : Spek({
-    describe("an event logger") {
+object SimpleEventLoggerSpec : Spek({
+    describe("a simple event logger") {
         val whiteConsole by CreateForEachTest(this) { mock<Console>() }
         val console by CreateForEachTest(this) {
             mock<Console> {
@@ -64,7 +64,7 @@ object EventLoggerSpec : Spek({
             }
         }
 
-        val logger by CreateForEachTest(this) { EventLogger(console, errorConsole) }
+        val logger by CreateForEachTest(this) { SimpleEventLogger(console, errorConsole) }
         val container = Container("the-cool-container", "/build/dir/doesnt/matter")
 
         describe("handling when steps start") {

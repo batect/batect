@@ -1,0 +1,363 @@
+/*
+   Copyright 2017 Charles Korn.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+package batect.ui
+
+import batect.config.Container
+import batect.docker.DockerContainer
+import batect.docker.DockerImage
+import batect.docker.DockerNetwork
+import batect.model.events.ContainerBecameHealthyEvent
+import batect.model.events.ContainerCreatedEvent
+import batect.model.events.ContainerStartedEvent
+import batect.model.events.ImageBuiltEvent
+import batect.model.events.TaskNetworkCreatedEvent
+import batect.model.steps.BuildImageStep
+import batect.model.steps.CreateContainerStep
+import batect.model.steps.RunContainerStep
+import batect.model.steps.StartContainerStep
+import batect.testutils.CreateForEachTest
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doAnswer
+import com.nhaarman.mockito_kotlin.eq
+import com.nhaarman.mockito_kotlin.inOrder
+import com.nhaarman.mockito_kotlin.mock
+import org.jetbrains.spek.api.Spek
+import org.jetbrains.spek.api.dsl.describe
+import org.jetbrains.spek.api.dsl.it
+import org.jetbrains.spek.api.dsl.on
+
+object ContainerStartupProgressLineSpec : Spek({
+    describe("a container startup progress line") {
+        val dependencyA = Container("dependency-a", "/dependency-a-build-dir")
+        val dependencyB = Container("dependency-b", "/dependency-b-build-dir")
+        val dependencyC = Container("dependency-c", "/dependency-c-build-dir")
+        val container = Container("some-container", "/some-build-dir", dependencies = setOf(dependencyA.name, dependencyB.name, dependencyC.name))
+        val otherContainer = Container("other-container", "/other-build-dir")
+
+        val line: ContainerStartupProgressLine by CreateForEachTest(this) {
+            ContainerStartupProgressLine(container)
+        }
+
+        val whiteConsole by CreateForEachTest(this) { mock<Console>() }
+        val console by CreateForEachTest(this) {
+            mock<Console> {
+                on { withColor(eq(ConsoleColor.White), any()) } doAnswer {
+                    val printStatements = it.getArgument<Console.() -> Unit>(1)
+                    printStatements(whiteConsole)
+                }
+            }
+        }
+
+        fun verifyPrintedDescription(description: String) {
+            inOrder(whiteConsole) {
+                verify(whiteConsole).printBold(container.name)
+                verify(whiteConsole).print(": ")
+                verify(whiteConsole).print(description)
+            }
+        }
+
+        on("initial state") {
+            line.print(console)
+
+            it("prints that the container is waiting to build its image") {
+                verifyPrintedDescription("ready to build image")
+            }
+        }
+
+        describe("after receiving an 'image build starting' notification") {
+            on("that notification being for this line's container") {
+                val step = BuildImageStep("some-project", container)
+                line.onStepStarting(step)
+                line.print(console)
+
+                it("prints that the container is building") {
+                    verifyPrintedDescription("building image...")
+                }
+            }
+
+            on("that notification being for another container") {
+                val step = BuildImageStep("some-project", otherContainer)
+                line.onStepStarting(step)
+                line.print(console)
+
+                it("prints that the container is still waiting to build its image") {
+                    verifyPrintedDescription("ready to build image")
+                }
+            }
+        }
+
+        describe("after receiving an 'image built' notification") {
+            describe("and that notification being for this line's container") {
+                val event = ImageBuiltEvent(container, DockerImage("some-image"))
+
+                on("when the task network has already been created") {
+                    line.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
+                    line.onEventPosted(event)
+                    line.print(console)
+
+                    it("prints that the container is ready to be created") {
+                        verifyPrintedDescription("image built, ready to create container")
+                    }
+                }
+
+                on("when the task network has not already been created") {
+                    line.onEventPosted(event)
+                    line.print(console)
+
+                    it("prints that the container is ready to be created") {
+                        verifyPrintedDescription("image built, waiting for network to be ready...")
+                    }
+                }
+            }
+
+            on("that notification being for another container") {
+                val event = ImageBuiltEvent(otherContainer, DockerImage("some-image"))
+                line.onEventPosted(event)
+                line.print(console)
+
+                it("prints that the container is still waiting to build its image") {
+                    verifyPrintedDescription("ready to build image")
+                }
+            }
+        }
+
+        describe("after receiving a 'task network created' notification") {
+            val event = TaskNetworkCreatedEvent(DockerNetwork("some-network"))
+
+            on("when the image has not started building yet") {
+                line.onEventPosted(event)
+                line.print(console)
+
+                it("prints that the container is still waiting to build its image") {
+                    verifyPrintedDescription("ready to build image")
+                }
+            }
+
+            on("when the image is still building") {
+                line.onStepStarting(BuildImageStep("some-project", container))
+                line.onEventPosted(event)
+                line.print(console)
+
+                it("prints that the container is building") {
+                    verifyPrintedDescription("building image...")
+                }
+            }
+
+            on("when the image has been built") {
+                line.onEventPosted(ImageBuiltEvent(container, DockerImage("some-image")))
+                line.onEventPosted(event)
+                line.print(console)
+
+                it("prints that the container is ready to be created") {
+                    verifyPrintedDescription("image built, ready to create container")
+                }
+            }
+        }
+
+        describe("after receiving a 'creating container' notification") {
+            on("that notification being for this line's container") {
+                val step = CreateContainerStep(container, "some-command", DockerImage("some-image"), DockerNetwork("some-network"))
+                line.onStepStarting(step)
+                line.print(console)
+
+                it("prints that the container is being created") {
+                    verifyPrintedDescription("creating container...")
+                }
+            }
+
+            on("that notification being for another container") {
+                val step = CreateContainerStep(otherContainer, "some-command", DockerImage("some-image"), DockerNetwork("some-network"))
+                line.onStepStarting(step)
+                line.print(console)
+
+                it("prints that the container is still waiting to build its image") {
+                    verifyPrintedDescription("ready to build image")
+                }
+            }
+        }
+
+        describe("after receiving a 'container created' notification") {
+            describe("on that notification being for this line's container") {
+                val event = ContainerCreatedEvent(container, DockerContainer("some-id", "some-name"))
+
+                on("and none of the container's dependencies being ready") {
+                    line.onEventPosted(event)
+                    line.print(console)
+
+                    it("prints that the container is waiting for the dependencies to be ready") {
+                        inOrder(whiteConsole) {
+                            verify(whiteConsole).printBold(container.name)
+                            verify(whiteConsole).print(": ")
+                            verify(whiteConsole).print("waiting for dependencies ")
+                            verify(whiteConsole).printBold(dependencyA.name)
+                            verify(whiteConsole).print(", ")
+                            verify(whiteConsole).printBold(dependencyB.name)
+                            verify(whiteConsole).print(" and ")
+                            verify(whiteConsole).printBold(dependencyC.name)
+                            verify(whiteConsole).print(" to be ready...")
+                        }
+                    }
+                }
+
+                on("and two of the container's dependencies not being ready") {
+                    line.onEventPosted(ContainerBecameHealthyEvent(dependencyA))
+                    line.onEventPosted(event)
+                    line.print(console)
+
+                    it("prints that the container is waiting for the dependencies to be ready") {
+                        inOrder(whiteConsole) {
+                            verify(whiteConsole).printBold(container.name)
+                            verify(whiteConsole).print(": ")
+                            verify(whiteConsole).print("waiting for dependencies ")
+                            verify(whiteConsole).printBold(dependencyB.name)
+                            verify(whiteConsole).print(" and ")
+                            verify(whiteConsole).printBold(dependencyC.name)
+                            verify(whiteConsole).print(" to be ready...")
+                        }
+                    }
+                }
+
+                on("and one of the container's dependencies not being ready") {
+                    line.onEventPosted(ContainerBecameHealthyEvent(dependencyA))
+                    line.onEventPosted(ContainerBecameHealthyEvent(dependencyB))
+                    line.onEventPosted(event)
+                    line.print(console)
+
+                    it("prints that the container is waiting for that dependency to be ready") {
+                        inOrder(whiteConsole) {
+                            verify(whiteConsole).printBold(container.name)
+                            verify(whiteConsole).print(": ")
+                            verify(whiteConsole).print("waiting for dependency ")
+                            verify(whiteConsole).printBold(dependencyC.name)
+                            verify(whiteConsole).print(" to be ready...")
+                        }
+                    }
+                }
+
+                on("and all of the container's dependencies are ready") {
+                    line.onEventPosted(ContainerBecameHealthyEvent(dependencyA))
+                    line.onEventPosted(ContainerBecameHealthyEvent(dependencyB))
+                    line.onEventPosted(ContainerBecameHealthyEvent(dependencyC))
+                    line.onEventPosted(event)
+                    line.print(console)
+
+                    it("prints that the container is ready to start") {
+                        verifyPrintedDescription("ready to start")
+                    }
+                }
+            }
+
+            on("that notification being for another container") {
+                val event = ContainerCreatedEvent(otherContainer, DockerContainer("some-id", "some-name"))
+                line.onEventPosted(event)
+                line.print(console)
+
+                it("prints that the container is still waiting to build its image") {
+                    verifyPrintedDescription("ready to build image")
+                }
+            }
+        }
+
+        describe("after receiving a 'container starting' notification") {
+            on("that notification being for this line's container") {
+                val step = StartContainerStep(container, DockerContainer("some-id", "some-name"))
+                line.onStepStarting(step)
+                line.print(console)
+
+                it("prints that the container is starting") {
+                    verifyPrintedDescription("starting container...")
+                }
+            }
+
+            on("that notification being for another container") {
+                val step = StartContainerStep(otherContainer, DockerContainer("some-id", "some-name"))
+                line.onStepStarting(step)
+                line.print(console)
+
+                it("prints that the container is still waiting to build its image") {
+                    verifyPrintedDescription("ready to build image")
+                }
+            }
+        }
+
+        describe("after receiving a 'container started' notification") {
+            on("that notification being for this line's container") {
+                val event = ContainerStartedEvent(container)
+                line.onEventPosted(event)
+                line.print(console)
+
+                it("prints that the container is waiting to become healthy") {
+                    verifyPrintedDescription("container started, waiting for it to become healthy...")
+                }
+            }
+
+            on("that notification being for another container") {
+                val event = ContainerStartedEvent(otherContainer)
+                line.onEventPosted(event)
+                line.print(console)
+
+                it("prints that the container is still waiting to build its image") {
+                    verifyPrintedDescription("ready to build image")
+                }
+            }
+        }
+
+        describe("after receiving a 'container became healthy' notification") {
+            on("that notification being for this line's container") {
+                val event = ContainerBecameHealthyEvent(container)
+                line.onEventPosted(event)
+                line.print(console)
+
+                it("prints that the container has finished starting up") {
+                    verifyPrintedDescription("done")
+                }
+            }
+
+            on("that notification being for another container") {
+                val event = ContainerBecameHealthyEvent(otherContainer)
+                line.onEventPosted(event)
+                line.print(console)
+
+                it("prints that the container is still waiting to build its image") {
+                    verifyPrintedDescription("ready to build image")
+                }
+            }
+        }
+
+        describe("after receiving a 'running container' notification") {
+            on("that notification being for this line's container") {
+                val step = RunContainerStep(container, DockerContainer("some-id", "some-name"))
+                line.onStepStarting(step)
+                line.print(console)
+
+                it("prints that the container has finished starting up") {
+                    verifyPrintedDescription("done")
+                }
+            }
+
+            on("that notification being for another container") {
+                val step = RunContainerStep(otherContainer, DockerContainer("some-id", "some-name"))
+                line.onStepStarting(step)
+                line.print(console)
+
+                it("prints that the container is still waiting to build its image") {
+                    verifyPrintedDescription("ready to build image")
+                }
+            }
+        }
+    }
+})

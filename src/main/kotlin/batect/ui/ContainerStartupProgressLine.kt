@@ -135,25 +135,25 @@ class ContainerStartupProgressLine(val container: Container) {
         }
     }
 
-    fun onImageBuiltEventPosted(event: ImageBuiltEvent) {
+    private fun onImageBuiltEventPosted(event: ImageBuiltEvent) {
         if (event.container == container) {
             hasBeenBuilt = true
         }
     }
 
-    fun onContainerCreatedEventPosted(event: ContainerCreatedEvent) {
+    private fun onContainerCreatedEventPosted(event: ContainerCreatedEvent) {
         if (event.container == container) {
             hasBeenCreated = true
         }
     }
 
-    fun onContainerStartedEventPosted(event: ContainerStartedEvent) {
+    private fun onContainerStartedEventPosted(event: ContainerStartedEvent) {
         if (event.container == container) {
             hasStarted = true
         }
     }
 
-    fun onContainerBecameHealthyEventPosted(event: ContainerBecameHealthyEvent) {
+    private fun onContainerBecameHealthyEventPosted(event: ContainerBecameHealthyEvent) {
         healthyContainers.add(event.container.name)
 
         if (event.container == container) {

@@ -260,5 +260,13 @@ object ConsoleSpec : Spek({
                 assertThat(output.toString(), equalTo("\r$ESC[K"))
             }
         }
+
+        on("moving to the start of the current line") {
+            console.moveCursorToStartOfLine()
+
+            it("writes the appropriate escape code to the output") {
+                assertThat(output.toString(), equalTo("\r"))
+            }
+        }
     }
 })

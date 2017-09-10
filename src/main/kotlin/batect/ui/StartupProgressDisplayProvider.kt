@@ -14,13 +14,14 @@
    limitations under the License.
 */
 
-package batect
+package batect.ui
 
-import batect.model.TaskStateMachine
-import batect.model.steps.TaskStepRunner
-import batect.ui.EventLogger
+import batect.model.DependencyGraph
 
-class ParallelExecutionManagerProvider(private val taskStepRunner: TaskStepRunner) {
-    fun createParallelExecutionManager(eventLogger: EventLogger, stateMachine: TaskStateMachine, taskName: String, maximumConcurrentSteps: Int) =
-            ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, taskName, maximumConcurrentSteps)
+class StartupProgressDisplayProvider {
+    fun createForDependencyGraph(graph: DependencyGraph): StartupProgressDisplay {
+        val lines = graph.allNodes.map { ContainerStartupProgressLine(it.container) }
+
+        return StartupProgressDisplay(lines)
+    }
 }

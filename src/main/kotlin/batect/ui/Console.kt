@@ -101,8 +101,13 @@ class Console(private val outputStream: PrintStream, private val color: ConsoleC
         outputStream.print("$ESC[${lines}B")
     }
 
+    fun moveCursorToStartOfLine() {
+        outputStream.print("\r")
+    }
+
     fun clearCurrentLine() {
-        outputStream.print("\r$ESC[K")
+        moveCursorToStartOfLine()
+        outputStream.print("$ESC[K")
     }
 
     private val ESC = "\u001B"

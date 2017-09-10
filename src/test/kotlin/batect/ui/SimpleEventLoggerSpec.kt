@@ -142,23 +142,6 @@ object SimpleEventLoggerSpec : Spek({
                             }
                         }
                     }
-
-                    on("but the logger has been reset since that event") {
-                        val createContainerStep = CreateContainerStep(container, "do-stuff.sh", DockerImage("some-image"), DockerNetwork("some-network"))
-                        val runContainerStep = RunContainerStep(container, DockerContainer("not-important", "not-important"))
-
-                        logger.logBeforeStartingStep(createContainerStep)
-                        logger.reset()
-                        logger.logBeforeStartingStep(runContainerStep)
-
-                        it("prints a message to the output without mentioning a command") {
-                            inOrder(whiteConsole) {
-                                verify(whiteConsole).print("Running ")
-                                verify(whiteConsole).printBold("the-cool-container")
-                                verify(whiteConsole).println("...")
-                            }
-                        }
-                    }
                 }
             }
 

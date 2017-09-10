@@ -31,7 +31,8 @@ import batect.model.TaskStateMachineProvider
 import batect.model.steps.TaskStepRunner
 import batect.ui.Console
 import batect.ui.EventLogger
-import batect.ui.SimpleEventLogger
+import batect.ui.FancyEventLogger
+import batect.ui.StartupProgressDisplayProvider
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.KodeinAware
 import com.github.salomonbrys.kodein.bind
@@ -92,7 +93,7 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<DockerImageLabellingStrategy>() with provider { DockerImageLabellingStrategy() }
     bind<ProcessRunner>() with provider { ProcessRunner() }
     bind<DockerContainerCreationCommandGenerator>() with provider { DockerContainerCreationCommandGenerator() }
-    bind<EventLogger>() with provider { SimpleEventLogger(instance(PrintStreamType.Output), instance(PrintStreamType.Error)) }
+    bind<EventLogger>() with provider { FancyEventLogger(instance(PrintStreamType.Output), instance(PrintStreamType.Error), instance()) }
     bind<Console>(PrintStreamType.Output) with provider { Console(instance(PrintStreamType.Output)) }
     bind<Console>(PrintStreamType.Error) with provider { Console(instance(PrintStreamType.Error)) }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
@@ -101,5 +102,6 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<TaskStepRunner>() with provider { TaskStepRunner(instance()) }
     bind<DependencyGraphProvider>() with provider { DependencyGraphProvider() }
     bind<TaskStateMachineProvider>() with provider { TaskStateMachineProvider() }
-    bind<ParallelExecutionManagerProvider>() with provider { ParallelExecutionManagerProvider(instance(), instance()) }
+    bind<ParallelExecutionManagerProvider>() with provider { ParallelExecutionManagerProvider(instance()) }
+    bind<StartupProgressDisplayProvider>() with provider { StartupProgressDisplayProvider() }
 }

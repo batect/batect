@@ -36,10 +36,10 @@ data class TaskRunner(
         }
 
         val graph = graphProvider.createGraph(config, resolvedTask)
-        val stateMachine = stateMachineProvider.createStateMachine(graph)
-        val executionManager = executionManagerProvider.createParallelExecutionManager(stateMachine, taskName, maximumConcurrentSteps)
+        eventLogger.onDependencyGraphCreated(graph)
 
-        eventLogger.reset()
+        val stateMachine = stateMachineProvider.createStateMachine(graph)
+        val executionManager = executionManagerProvider.createParallelExecutionManager(eventLogger, stateMachine, taskName, maximumConcurrentSteps)
 
         return executionManager.run()
     }

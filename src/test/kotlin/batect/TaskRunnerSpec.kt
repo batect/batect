@@ -54,7 +54,7 @@ object TaskRunnerSpec : Spek({
         }
 
         val executionManagerProvider = mock<ParallelExecutionManagerProvider> {
-            on { createParallelExecutionManager(stateMachine, "some-task", levelOfParallelism) } doReturn executionManager
+            on { createParallelExecutionManager(eventLogger, stateMachine, "some-task", levelOfParallelism) } doReturn executionManager
         }
 
         val taskRunner = TaskRunner(eventLogger, graphProvider, stateMachineProvider, executionManagerProvider)
@@ -88,17 +88,17 @@ object TaskRunnerSpec : Spek({
 
             val exitCode = taskRunner.run(config, "some-task", levelOfParallelism)
 
-            it("resets the event logger") {
-                verify(eventLogger).reset()
+            it("passes the dependency graph to the event logger") {
+                verify(eventLogger).onDependencyGraphCreated(graph)
             }
 
             it("returns the exit code from the execution manager") {
                 assertThat(exitCode, equalTo(100))
             }
 
-            it("resets the event logger before running the task") {
+            it("passes the dependency graph to the event logger before running the task") {
                 inOrder(eventLogger, executionManager) {
-                    verify(eventLogger).reset()
+                    verify(eventLogger).onDependencyGraphCreated(graph)
                     verify(executionManager).run()
                 }
             }

@@ -16,11 +16,12 @@
 
 package batect.ui
 
+import batect.model.DependencyGraph
 import batect.model.events.TaskEventSink
 import batect.model.steps.TaskStep
 
 interface EventLogger : TaskEventSink {
-    fun reset()
+    fun onDependencyGraphCreated(graph: DependencyGraph)
     fun logTaskDoesNotExist(taskName: String)
     fun logTaskFailed(taskName: String)
     fun logBeforeStartingStep(step: TaskStep)

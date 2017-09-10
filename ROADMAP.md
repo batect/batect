@@ -27,6 +27,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * automatically enable `--no-colours` or `--simple-output` if console doesn't support it
 * fancy progress bar output for building images and starting dependencies
   * make sure accidental input on stdin doesn't mangle it
+  * test with different console colour schemes (eg. white background, black background, OS X default, Ubuntu default, Ubuntu GUI terminal default)
 * automatically create missing local volume mount directories and show a warning (useful when mounting a directory intended to be a cache)
 * show a message when cleaning up
   * second pass: show what still remains to be cleaned up (eg. 'Cleaning up... 3 containers (X, Y, Z) still running')
@@ -36,7 +37,11 @@ If there's something you're really keen to see, pull requests are always welcome
 * prerequisites for tasks (eg. run the build before running journey tests)
 * display help if command name is followed by `--help` (eg. `batect run --help`)
 * show more detailed image build progress (eg. `build-env: Building step 1/7: FROM alpine:3.5`)
-* prioritise running steps that lie on the critical path (eg. favour pulling image for leaf of dependency graph over creating container for task container)
+* performance improvements
+  * prioritise running steps that lie on the critical path (eg. favour pulling image for leaf of dependency graph over creating container for task container)
+  * batch up printing updates to the console when using fancy output mode, rather than reprinting progress information on every event
+* check that Docker client is available before trying to use it
+* check that Docker client and server are compatible versions
 
 ### Other
 * make test names consistent (eg. `it("should do something")` vs `it("does something")`)
@@ -51,6 +56,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * CI setup - reminder to clean up stale images regularly
   * use ':cached' mode for mounts for performance (https://docs.docker.com/docker-for-mac/osxfs-caching/)
   * importance of idempotency
+  * integration with IDEs (eg. how to reference the Ruby runtime inside a Docker container for code completion etc.)
 * examples (update or remove `sample` directory)
 * use `--iidfile` to get image ID after build and stop relying on tag
 * wrapper script to pull appropriate binary down (like `gradlew`)

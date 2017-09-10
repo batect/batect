@@ -51,7 +51,7 @@ class Console(private val outputStream: PrintStream, private val color: ConsoleC
             }
         }
 
-        outputStream.print(escapeSequence(color.code))
+        outputStream.print(colorEscapeSequence(color.code))
         printStatements(Console(outputStream, color, isBold))
         returnConsoleToCurrentState()
     }
@@ -81,14 +81,34 @@ class Console(private val outputStream: PrintStream, private val color: ConsoleC
         }
 
         if (this.color != null) {
-            outputStream.print(escapeSequence(this.color.code))
+            outputStream.print(colorEscapeSequence(this.color.code))
         }
     }
 
+    fun moveCursorUp(lines: Int = 1) {
+        if (lines < 1) {
+            throw IllegalArgumentException("Number of lines must be positive.")
+        }
+
+        outputStream.print("$ESC[${lines}A")
+    }
+
+    fun moveCursorDown(lines: Int = 1) {
+        if (lines < 1) {
+            throw IllegalArgumentException("Number of lines must be positive.")
+        }
+
+        outputStream.print("$ESC[${lines}B")
+    }
+
+    fun clearCurrentLine() {
+        outputStream.print("\r$ESC[K")
+    }
+
     private val ESC = "\u001B"
-    private fun escapeSequence(code: Int) = "$ESC[${code}m"
-    private val resetEscapeSequence = escapeSequence(0)
-    private val boldEscapeSequence = escapeSequence(1)
+    private fun colorEscapeSequence(code: Int) = "$ESC[${code}m"
+    private val resetEscapeSequence = colorEscapeSequence(0)
+    private val boldEscapeSequence = colorEscapeSequence(1)
 }
 
 enum class ConsoleColor(val code: Int) {

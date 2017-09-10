@@ -16,8 +16,10 @@
 
 package batect.ui
 
+import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.throws
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -188,6 +190,74 @@ object ConsoleSpec : Spek({
                         "${boldText}more bold$reset"
 
                 assertThat(output.toString(), equalTo(expected))
+            }
+        }
+
+        describe("moving the cursor up") {
+            on("moving the cursor up one line") {
+                console.moveCursorUp()
+
+                it("writes the appropriate escape code to the output") {
+                    assertThat(output.toString(), equalTo("$ESC[1A"))
+                }
+            }
+
+            on("moving the cursor up multiple lines") {
+                console.moveCursorUp(23)
+
+                it("writes the appropriate escape code to the output") {
+                    assertThat(output.toString(), equalTo("$ESC[23A"))
+                }
+            }
+
+            on("attempting to move the cursor up zero lines") {
+                it("throws an appropriate exception") {
+                    assertThat({ console.moveCursorUp(0) }, throws<IllegalArgumentException>(withMessage("Number of lines must be positive.")))
+                }
+            }
+
+            on("attempting to move the cursor up a negative number of lines") {
+                it("throws an appropriate exception") {
+                    assertThat({ console.moveCursorUp(-1) }, throws<IllegalArgumentException>(withMessage("Number of lines must be positive.")))
+                }
+            }
+        }
+
+        describe("moving the cursor down") {
+            on("moving the cursor down one line") {
+                console.moveCursorDown()
+
+                it("writes the appropriate escape code to the output") {
+                    assertThat(output.toString(), equalTo("$ESC[1B"))
+                }
+            }
+
+            on("moving the cursor down multiple lines") {
+                console.moveCursorDown(23)
+
+                it("writes the appropriate escape code to the output") {
+                    assertThat(output.toString(), equalTo("$ESC[23B"))
+                }
+            }
+
+            on("attempting to move the cursor down zero lines") {
+                it("throws an appropriate exception") {
+                    assertThat({ console.moveCursorDown(0) }, throws<IllegalArgumentException>(withMessage("Number of lines must be positive.")))
+                }
+            }
+
+            on("attempting to move the cursor down a negative number of lines") {
+                it("throws an appropriate exception") {
+                    assertThat({ console.moveCursorDown(-1) }, throws<IllegalArgumentException>(withMessage("Number of lines must be positive.")))
+                }
+            }
+        }
+
+        on("clearing the current line") {
+            console.clearCurrentLine()
+
+            it("writes the appropriate escape code sequence to the output") {
+                assertThat(output.toString(), equalTo("\r$ESC[K"))
             }
         }
     }

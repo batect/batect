@@ -22,7 +22,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 data class ApplicationRunner(val testName: String, val arguments: Iterable<String>) {
-    val applicationPath: Path = Paths.get("build/install/batect/bin/batect").toAbsolutePath()
+    val applicationPath: Path = Paths.get("build/install/batect-shadow/bin/batect").toAbsolutePath()
     val testDirectory: Path = Paths.get("src/journeyTest/resources", testName).toAbsolutePath()
 
     init {

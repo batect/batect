@@ -95,7 +95,7 @@ task journeyTest(type: JavaExec) {
     group 'Verification'
 
     dependsOn journeyTestClasses
-    dependsOn installDist
+    dependsOn installShadowDist
 
     inputs.files installDist.outputs.files
 

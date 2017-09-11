@@ -27,8 +27,8 @@ import org.jetbrains.spek.api.dsl.on
 object HelpJourneyTest : Spek({
     given("the application") {
         on("requesting help for the application") {
-            val runner = ApplicationRunner("", listOf("help"))
-            val result = runner.run()
+            val runner = ApplicationRunner("")
+            val result = runner.runApplication(listOf("help"))
 
             it("prints the help header") {
                 assertThat(result.output, containsSubstring("Usage: batect [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]"))
@@ -40,8 +40,8 @@ object HelpJourneyTest : Spek({
         }
 
         on("requesting help for a command") {
-            val runner = ApplicationRunner("", listOf("help", "run"))
-            val result = runner.run()
+            val runner = ApplicationRunner("")
+            val result = runner.runApplication(listOf("help", "run"))
 
             it("prints the help header") {
                 assertThat(result.output, containsSubstring("Usage: batect [COMMON OPTIONS] run [OPTIONS] TASK"))

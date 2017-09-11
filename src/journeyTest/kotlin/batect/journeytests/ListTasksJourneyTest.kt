@@ -26,10 +26,10 @@ import org.jetbrains.spek.api.dsl.on
 
 object ListTasksJourneyTest : Spek({
     given("a configuration file with multiple tasks") {
-        val runner = ApplicationRunner("many-tasks", listOf("tasks"))
+        val runner = ApplicationRunner("many-tasks")
 
         on("listing available tasks") {
-            val result = runner.run()
+            val result = runner.runApplication(listOf("tasks"))
 
             it("prints a list of all available tasks") {
                 assertThat(result.output, containsSubstring("""

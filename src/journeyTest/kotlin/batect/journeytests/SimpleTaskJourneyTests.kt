@@ -32,13 +32,13 @@ object SimpleTaskJourneyTests : Spek({
             "simple-task-container-command" to "a simple task with the command specified on the container in the configuration file"
     ).forEach { testName, description ->
         given(description) {
-            val runner = ApplicationRunner(testName, listOf("run", "the-task"))
+            val runner = ApplicationRunner(testName)
 
             on("running that task") {
-                val result = runner.run()
+                val result = runner.runApplication(listOf("run", "the-task"))
 
                 it("prints the output from that task") {
-                    assertThat(result.output, containsSubstring("This is some output from the task"))
+                    assertThat(result.output, containsSubstring("This is some output from the task\r\n"))
                 }
 
                 it("returns the exit code from that task") {

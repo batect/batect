@@ -31,10 +31,10 @@ object ContainerWithMountJourneyTests : Spek({
             "container-with-cached-mount" to "a simple task with a cached volume mount"
     ).forEach { testName, description ->
         given(description) {
-            val runner = ApplicationRunner(testName, listOf("run", "the-task"))
+            val runner = ApplicationRunner(testName)
 
             on("running that task") {
-                val result = runner.run()
+                val result = runner.runApplication(listOf("run", "the-task"))
 
                 it("prints the output from that task") {
                     assertThat(result.output, containsSubstring("This is some output from the script"))

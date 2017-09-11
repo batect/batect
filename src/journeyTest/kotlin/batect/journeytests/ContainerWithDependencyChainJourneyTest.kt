@@ -27,10 +27,10 @@ import org.jetbrains.spek.api.dsl.on
 
 object ContainerWithDependencyChainJourneyTest : Spek({
     given("a task with a container with a chain of dependencies") {
-        val runner = ApplicationRunner("container-with-dependency-chain", listOf("run", "the-task"))
+        val runner = ApplicationRunner("container-with-dependency-chain")
 
         on("running that task") {
-            val result = runner.run()
+            val result = runner.runApplication(listOf("run", "the-task"))
 
             it("displays the output from that task") {
                 assertThat(result.output, containsSubstring("Status code for request: 200"))

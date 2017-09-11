@@ -27,10 +27,10 @@ import org.jetbrains.spek.api.dsl.on
 
 object TaskWithExplicitDependencyJourneyTest : Spek({
     given("a task with an explicit dependency") {
-        val runner = ApplicationRunner("task-with-explicit-dependency", listOf("run", "the-task"))
+        val runner = ApplicationRunner("task-with-explicit-dependency")
 
         on("running that task") {
-            val result = runner.run()
+            val result = runner.runApplication(listOf("run", "the-task"))
 
             it("displays the output from that task") {
                 assertThat(result.output, containsSubstring("Status code for request: 200"))

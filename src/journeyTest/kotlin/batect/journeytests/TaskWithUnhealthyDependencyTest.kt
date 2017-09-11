@@ -27,10 +27,10 @@ import org.jetbrains.spek.api.dsl.on
 
 object TaskWithUnhealthyDependencyTest : Spek({
     given("a task with an unhealthy dependency") {
-        val runner = ApplicationRunner("task-with-unhealthy-dependency", listOf("run", "the-task"))
+        val runner = ApplicationRunner("task-with-unhealthy-dependency")
 
         on("running that task") {
-            val result = runner.run()
+            val result = runner.runApplication(listOf("run", "the-task"))
 
             it("prints an appropriate error message") {
                 assertThat(result.output, containsSubstring("Dependency 'http-server' did not become healthy: The configured health check did not report the container as healthy within the timeout period."))

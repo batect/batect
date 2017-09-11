@@ -21,7 +21,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-data class ApplicationRunner(val testName: String, val arguments: Iterable<String>) {
+data class ApplicationRunner(val testName: String) {
     val applicationPath: Path = Paths.get("build/install/batect-shadow/bin/batect").toAbsolutePath()
     val testDirectory: Path = Paths.get("src/journeyTest/resources", testName).toAbsolutePath()
 
@@ -35,9 +35,14 @@ data class ApplicationRunner(val testName: String, val arguments: Iterable<Strin
         }
     }
 
-    fun run(): ApplicationResult {
-        val containersBefore = getContainers()
-        val commandLine = listOf(applicationPath.toString()) + arguments
+    fun runApplication(arguments: Iterable<String>): ApplicationResult {
+        val commandLine = commandLineForApplication(arguments)
+
+        return runCommandLine(commandLine)
+    }
+
+    fun runCommandLine(commandLine: List<String>): ApplicationResult {
+        val containersBefore = getAllCreatedContainers()
         val process = ProcessBuilder(commandLine)
                 .directory(testDirectory.toFile())
                 .redirectErrorStream(true)
@@ -46,13 +51,13 @@ data class ApplicationRunner(val testName: String, val arguments: Iterable<Strin
         process.waitFor()
         val output = InputStreamReader(process.inputStream).readText()
 
-        val containersAfter = getContainers()
+        val containersAfter = getAllCreatedContainers()
         val potentiallyOrphanedContainers = containersAfter - containersBefore
 
         return ApplicationResult(process.exitValue(), output, potentiallyOrphanedContainers)
     }
 
-    fun getContainers(): Set<String> {
+    private fun getAllCreatedContainers(): Set<String> {
         val commandLine = listOf("docker", "ps", "--all", "--format", "{{.Names}} ({{.ID}}): {{.Image}}")
         val process = ProcessBuilder(commandLine)
                 .redirectErrorStream(true)
@@ -66,6 +71,10 @@ data class ApplicationRunner(val testName: String, val arguments: Iterable<Strin
         }
 
         return output.split("\n").toSet()
+    }
+
+    fun commandLineForApplication(arguments: Iterable<String>): List<String> {
+        return listOf(applicationPath.toString()) + arguments
     }
 }
 

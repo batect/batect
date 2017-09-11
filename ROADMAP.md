@@ -54,7 +54,9 @@ If there's something you're really keen to see, pull requests are always welcome
   * getting started guide
   * examples for common languages and scenarios
   * CI setup - reminder to clean up stale images regularly
-  * use ':cached' mode for mounts for performance (https://docs.docker.com/docker-for-mac/osxfs-caching/)
+  * performance tips
+    * use ':cached' mode for mounts for performance (https://docs.docker.com/docker-for-mac/osxfs-caching/)
+    * bake schema into DB containers used for integration or journey testing
   * importance of idempotency
   * integration with IDEs (eg. how to reference the Ruby runtime inside a Docker container for code completion etc.)
 * examples (update or remove `sample` directory)

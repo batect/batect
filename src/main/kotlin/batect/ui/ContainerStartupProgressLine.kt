@@ -38,6 +38,7 @@ class ContainerStartupProgressLine(val container: Container) {
     private var hasStarted = false
     private var isHealthy = false
     private var isRunning = false
+    private var command: String? = null
 
     private var networkHasBeenCreated = false
 
@@ -49,7 +50,8 @@ class ContainerStartupProgressLine(val container: Container) {
             print(": ")
 
             when {
-                isHealthy || isRunning -> print("done")
+                isHealthy -> print("running")
+                isRunning -> printDescriptionWhenRunning(this)
                 hasStarted -> print("container started, waiting for it to become healthy...")
                 isStarting -> print("starting container...")
                 hasBeenCreated -> printDescriptionWhenWaitingToStart(this)
@@ -92,6 +94,15 @@ class ContainerStartupProgressLine(val container: Container) {
         console.print(" to be ready...")
     }
 
+    private fun printDescriptionWhenRunning(console: Console) {
+        if (command == null) {
+            console.print("running")
+        } else {
+            console.print("running ")
+            console.printBold(command!!)
+        }
+    }
+
     fun onStepStarting(step: TaskStep) {
         when (step) {
             is BuildImageStep -> onBuildImageStepStarting(step)
@@ -110,6 +121,7 @@ class ContainerStartupProgressLine(val container: Container) {
     private fun onCreateContainerStepStarting(step: CreateContainerStep) {
         if (step.container == container) {
             isCreating = true
+            command = step.command
         }
     }
 

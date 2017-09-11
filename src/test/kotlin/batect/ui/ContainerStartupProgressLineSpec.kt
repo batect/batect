@@ -323,7 +323,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 line.print(console)
 
                 it("prints that the container has finished starting up") {
-                    verifyPrintedDescription("done")
+                    verifyPrintedDescription("running")
                 }
             }
 
@@ -339,13 +339,42 @@ object ContainerStartupProgressLineSpec : Spek({
         }
 
         describe("after receiving a 'running container' notification") {
-            on("that notification being for this line's container") {
+            describe("that notification being for this line's container") {
                 val step = RunContainerStep(container, DockerContainer("some-id"))
-                line.onStepStarting(step)
-                line.print(console)
 
-                it("prints that the container has finished starting up") {
-                    verifyPrintedDescription("done")
+                on("and the container has no command specified in the configuration file") {
+                    line.onStepStarting(CreateContainerStep(container, null, DockerImage("some-image"), DockerNetwork("some-network")))
+                    line.onStepStarting(step)
+                    line.print(console)
+
+                    it("prints that the container has finished starting up") {
+                        verifyPrintedDescription("running")
+                    }
+                }
+
+                on("and the container has a command specified in the configuration file") {
+                    line.onStepStarting(CreateContainerStep(container, "some-command", DockerImage("some-image"), DockerNetwork("some-network")))
+                    line.onStepStarting(step)
+                    line.print(console)
+
+                    it("prints that the container has finished starting up and the command that it is running") {
+                        inOrder(whiteConsole) {
+                            verify(whiteConsole).printBold(container.name)
+                            verify(whiteConsole).print(": ")
+                            verify(whiteConsole).print("running ")
+                            verify(whiteConsole).printBold("some-command")
+                        }
+                    }
+                }
+
+                on("and another container has a command specified in the configuration file") {
+                    line.onStepStarting(CreateContainerStep(otherContainer, "some-command", DockerImage("some-image"), DockerNetwork("some-network")))
+                    line.onStepStarting(step)
+                    line.print(console)
+
+                    it("prints that the container has finished starting up") {
+                        verifyPrintedDescription("running")
+                    }
                 }
             }
 

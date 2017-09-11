@@ -30,6 +30,7 @@ import batect.model.DependencyGraphProvider
 import batect.model.TaskStateMachineProvider
 import batect.model.steps.TaskStepRunner
 import batect.ui.Console
+import batect.ui.ConsoleInfo
 import batect.ui.EventLogger
 import batect.ui.SimpleEventLogger
 import batect.ui.StartupProgressDisplayProvider
@@ -89,7 +90,7 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<PathResolverFactory>() with provider { PathResolverFactory() }
     bind<FileSystem>() with provider { FileSystems.getDefault() }
     bind<TaskRunner>() with provider { TaskRunner(instance(), instance(), instance(), instance()) }
-    bind<DockerClient>() with provider { DockerClient(instance(), instance(), instance()) }
+    bind<DockerClient>() with provider { DockerClient(instance(), instance(), instance(), instance()) }
     bind<DockerImageLabellingStrategy>() with provider { DockerImageLabellingStrategy() }
     bind<ProcessRunner>() with provider { ProcessRunner() }
     bind<DockerContainerCreationCommandGenerator>() with provider { DockerContainerCreationCommandGenerator() }
@@ -104,4 +105,5 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<TaskStateMachineProvider>() with provider { TaskStateMachineProvider() }
     bind<ParallelExecutionManagerProvider>() with provider { ParallelExecutionManagerProvider(instance()) }
     bind<StartupProgressDisplayProvider>() with provider { StartupProgressDisplayProvider() }
+    bind<ConsoleInfo>() with provider { ConsoleInfo(instance()) }
 }

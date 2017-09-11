@@ -17,12 +17,15 @@
 package batect.docker
 
 import batect.config.Container
+import batect.ui.ConsoleInfo
 import java.util.UUID
 
 class DockerClient(
         private val imageLabellingStrategy: DockerImageLabellingStrategy,
         private val processRunner: ProcessRunner,
-        private val creationCommandGenerator: DockerContainerCreationCommandGenerator) {
+        private val creationCommandGenerator: DockerContainerCreationCommandGenerator,
+        private val consoleInfo: ConsoleInfo
+) {
 
     fun build(projectName: String, container: Container): DockerImage {
         val label = imageLabellingStrategy.labelImage(projectName, container)
@@ -48,7 +51,12 @@ class DockerClient(
     }
 
     fun run(container: DockerContainer): DockerContainerRunResult {
-        val command = listOf("docker", "start", "--attach", "--interactive", container.id)
+        val command = if (consoleInfo.stdinIsTTY) {
+            listOf("docker", "start", "--attach", "--interactive", container.id)
+        } else {
+            listOf("docker", "start", "--attach", container.id)
+        }
+
         val exitCode = processRunner.run(command)
 
         return DockerContainerRunResult(exitCode)

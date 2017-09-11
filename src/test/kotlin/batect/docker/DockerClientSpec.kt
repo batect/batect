@@ -30,6 +30,7 @@ import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
 import batect.config.Container
 import batect.testutils.withMessage
+import batect.ui.ConsoleInfo
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -47,8 +48,9 @@ object DockerClientSpec : Spek({
 
         val processRunner = mock<ProcessRunner>()
         val creationCommandGenerator = mock<DockerContainerCreationCommandGenerator>()
+        val consoleInfo = mock<ConsoleInfo>()
 
-        val client = DockerClient(labeller, processRunner, creationCommandGenerator)
+        val client = DockerClient(labeller, processRunner, creationCommandGenerator, consoleInfo)
 
         beforeEachTest {
             reset(processRunner)
@@ -123,17 +125,37 @@ object DockerClientSpec : Spek({
             given("a Docker container") {
                 val container = DockerContainer("the-container-id", "the-container")
 
-                on("running the container") {
-                    whenever(processRunner.run(any())).thenReturn(123)
+                given("and that the application is being run with a TTY connected to STDIN") {
+                    on("running the container") {
+                        whenever(consoleInfo.stdinIsTTY).thenReturn(true)
+                        whenever(processRunner.run(any())).thenReturn(123)
 
-                    val result = client.run(container)
+                        val result = client.run(container)
 
-                    it("starts the container") {
-                        verify(processRunner).run(listOf("docker", "start", "--attach", "--interactive", container.id))
+                        it("starts the container in interactive mode") {
+                            verify(processRunner).run(listOf("docker", "start", "--attach", "--interactive", container.id))
+                        }
+
+                        it("returns the exit code from the container") {
+                            assertThat(result.exitCode, equalTo(123))
+                        }
                     }
+                }
 
-                    it("returns the exit code from the container") {
-                        assertThat(result.exitCode, equalTo(123))
+                given("and that the application is being run without a TTY connected to STDIN") {
+                    on("running the container") {
+                        whenever(consoleInfo.stdinIsTTY).thenReturn(false)
+                        whenever(processRunner.run(any())).thenReturn(123)
+
+                        val result = client.run(container)
+
+                        it("starts the container in non-interactive mode") {
+                            verify(processRunner).run(listOf("docker", "start", "--attach", container.id))
+                        }
+
+                        it("returns the exit code from the container") {
+                            assertThat(result.exitCode, equalTo(123))
+                        }
                     }
                 }
             }

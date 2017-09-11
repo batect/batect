@@ -38,9 +38,9 @@ object ContainerStartedEventSpec : Spek({
 
         describe("being applied") {
             on("when the task is not aborting") {
-                val dockerContainer = DockerContainer("container-1-dc", "container-1")
+                val dockerContainer = DockerContainer("container-1-dc")
                 val otherContainer = Container("container-2", "/other-build-dir")
-                val otherDockerContainer = DockerContainer("container-2-dc", "container-2")
+                val otherDockerContainer = DockerContainer("container-2-dc")
 
                 val context = mock<TaskEventContext> {
                     on { getPastEventsOfType<ContainerCreatedEvent>() } doReturn setOf(

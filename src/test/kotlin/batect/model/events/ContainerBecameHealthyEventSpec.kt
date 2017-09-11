@@ -54,7 +54,7 @@ object ContainerBecameHealthyEventSpec : Spek({
                 }
 
                 describe("and B's Docker container has been created") {
-                    val containerBDockerContainer = DockerContainer("container-b-container", "container-b")
+                    val containerBDockerContainer = DockerContainer("container-b-container")
 
                     beforeEachTest {
                         whenever(context.getPastEventsOfType<ContainerCreatedEvent>()).doReturn(setOf(

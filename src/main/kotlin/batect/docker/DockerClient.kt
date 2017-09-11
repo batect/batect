@@ -46,7 +46,7 @@ class DockerClient(
         if (failed(result.exitCode)) {
             throw ContainerCreationFailedException("Output from Docker was: ${result.output.trim()}")
         } else {
-            return DockerContainer(result.output.trim(), container.name)
+            return DockerContainer(result.output.trim())
         }
     }
 
@@ -94,7 +94,7 @@ class DockerClient(
 
         return when (result) {
             is KilledDuringProcessing -> result.result
-            is Exited -> throw ContainerHealthCheckException("Event stream for container '${container.name}' exited early with exit code ${result.exitCode}.")
+            is Exited -> throw ContainerHealthCheckException("Event stream for container '${container.id}' exited early with exit code ${result.exitCode}.")
         }
     }
 
@@ -103,7 +103,7 @@ class DockerClient(
         val result = processRunner.runAndCaptureOutput(command)
 
         if (failed(result.exitCode)) {
-            throw ContainerHealthCheckException("Checking if container '${container.name}' has a healthcheck failed. Output from Docker was: ${result.output}")
+            throw ContainerHealthCheckException("Checking if container '${container.id}' has a healthcheck failed. Output from Docker was: ${result.output.trim()}")
         }
 
         return result.output.trim() != "null"
@@ -168,7 +168,7 @@ class DockerClient(
 }
 
 data class DockerImage(val id: String)
-data class DockerContainer(val id: String, val name: String)
+data class DockerContainer(val id: String)
 data class DockerContainerRunResult(val exitCode: Int)
 data class DockerNetwork(val id: String)
 

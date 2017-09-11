@@ -82,7 +82,7 @@ object FancyEventLoggerSpec : Spek({
 
         describe("when logging that a step is starting") {
             val container = Container("task-container", "/task-dir")
-            val dockerContainer = DockerContainer("some-id", "some-name")
+            val dockerContainer = DockerContainer("some-id")
 
             on("while the task is starting up") {
                 val step = CreateTaskNetworkStep
@@ -141,7 +141,7 @@ object FancyEventLoggerSpec : Spek({
                             }
 
                             on("and a 'remove container' step has already been run") {
-                                val previousStep = RemoveContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id", "some-other-name"))
+                                val previousStep = RemoveContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id"))
                                 logger.logBeforeStartingStep(previousStep)
 
                                 logger.logBeforeStartingStep(step)
@@ -160,7 +160,7 @@ object FancyEventLoggerSpec : Spek({
                             }
 
                             on("and a 'clean up container' step has already been run") {
-                                val previousStep = CleanUpContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id", "some-other-name"))
+                                val previousStep = CleanUpContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id"))
                                 logger.logBeforeStartingStep(previousStep)
 
                                 logger.logBeforeStartingStep(step)
@@ -217,7 +217,7 @@ object FancyEventLoggerSpec : Spek({
             }
 
             on("after the task has run") {
-                logger.logBeforeStartingStep(RunContainerStep(Container("task-container", "/task-dir"), DockerContainer("some-id", "some-name")))
+                logger.logBeforeStartingStep(RunContainerStep(Container("task-container", "/task-dir"), DockerContainer("some-id")))
                 reset(startupProgressDisplay)
 
                 val event = ContainerRemovedEvent(Container("some-container", "/some-dir"))

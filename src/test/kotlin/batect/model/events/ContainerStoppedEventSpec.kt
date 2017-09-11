@@ -43,10 +43,10 @@ object ContainerStoppedEventSpec : Spek({
 
         describe("being applied") {
             on("when the task is not aborting") {
-                val dockerContainer = DockerContainer("container-1-container", "container-1")
-                val dependency1DockerContainer = DockerContainer("dependency-container-1-container", "dependency-container-1")
-                val dependency2DockerContainer = DockerContainer("dependency-container-2-container", "dependency-container-2")
-                val dependency3DockerContainer = DockerContainer("dependency-container-3-container", "dependency-container-3")
+                val dockerContainer = DockerContainer("container-1-container")
+                val dependency1DockerContainer = DockerContainer("dependency-container-1-container")
+                val dependency2DockerContainer = DockerContainer("dependency-container-2-container")
+                val dependency3DockerContainer = DockerContainer("dependency-container-3-container")
 
                 val context = mock<TaskEventContext> {
                     on { getPastEventsOfType<ContainerCreatedEvent>() } doReturn setOf(

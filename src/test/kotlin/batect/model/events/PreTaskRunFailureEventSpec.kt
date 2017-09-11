@@ -128,8 +128,8 @@ object PreTaskRunFailureEventSpec : Spek({
                 val network = DockerNetwork("the-id")
                 val container1 = Container("container-1", "/container-1-build-dir")
                 val container2 = Container("container-2", "/container-2-build-dir")
-                val dockerContainer1 = DockerContainer("docker-container-1", "container-1")
-                val dockerContainer2 = DockerContainer("docker-container-2", "container-2")
+                val dockerContainer1 = DockerContainer("docker-container-1")
+                val dockerContainer2 = DockerContainer("docker-container-2")
 
                 val context = mock<TaskEventContext> {
                     on { getPastEventsOfType<ContainerCreatedEvent>() } doReturn setOf(

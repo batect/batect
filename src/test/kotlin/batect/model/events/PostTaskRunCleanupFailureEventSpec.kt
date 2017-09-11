@@ -40,7 +40,7 @@ object PostTaskRunCleanupFailureEventSpec : Spek({
         }
 
         describe("being applied") {
-            val dockerContainer = DockerContainer("some-container-id", "some-container")
+            val dockerContainer = DockerContainer("some-container-id")
             val network = DockerNetwork("some-network")
 
             on("when the task is already aborting") {
@@ -65,7 +65,7 @@ object PostTaskRunCleanupFailureEventSpec : Spek({
 
             on("when the task is not already aborting") {
                 val otherContainer = Container("some-other-container", "/some-other-build-dir")
-                val otherDockerContainer = DockerContainer("some-other-container-id", "some-other-container")
+                val otherDockerContainer = DockerContainer("some-other-container-id")
 
                 val context = mock<TaskEventContext>() {
                     on { getSinglePastEventOfType<RunningContainerExitedEvent>() } doReturn RunningContainerExitedEvent(container, 123)

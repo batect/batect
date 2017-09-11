@@ -144,7 +144,7 @@ object TaskStepRunnerSpec : Spek({
                 val step = CreateContainerStep(container, command, image, network)
 
                 on("when creating the container succeeds") {
-                    val dockerContainer = DockerContainer("some-id", "some-container")
+                    val dockerContainer = DockerContainer("some-id")
                     whenever(dockerClient.create(container, command, image, network)).doReturn(dockerContainer)
 
                     runner.run(step, eventSink)
@@ -167,7 +167,7 @@ object TaskStepRunnerSpec : Spek({
 
             on("running a 'run container' step") {
                 val container = Container("some-container", "/some-build-dir")
-                val dockerContainer = DockerContainer("some-id", "some-container")
+                val dockerContainer = DockerContainer("some-id")
                 val step = RunContainerStep(container, dockerContainer)
 
                 whenever(dockerClient.run(dockerContainer)).doReturn(DockerContainerRunResult(200))
@@ -181,7 +181,7 @@ object TaskStepRunnerSpec : Spek({
 
             describe("running a 'start container' step") {
                 val container = Container("some-container", "/some-build-dir")
-                val dockerContainer = DockerContainer("some-id", "some-container")
+                val dockerContainer = DockerContainer("some-id")
                 val step = StartContainerStep(container, dockerContainer)
 
                 on("when starting the container succeeds") {
@@ -209,7 +209,7 @@ object TaskStepRunnerSpec : Spek({
 
             describe("running a 'stop container' step") {
                 val container = Container("some-container", "/some-build-dir")
-                val dockerContainer = DockerContainer("some-id", "some-container")
+                val dockerContainer = DockerContainer("some-id")
                 val step = StopContainerStep(container, dockerContainer)
 
                 on("when stopping the container succeeds") {
@@ -237,7 +237,7 @@ object TaskStepRunnerSpec : Spek({
 
             describe("running a 'clean up container' step") {
                 val container = Container("some-container", "/some-build-dir")
-                val dockerContainer = DockerContainer("some-id", "some-container")
+                val dockerContainer = DockerContainer("some-id")
                 val step = CleanUpContainerStep(container, dockerContainer)
 
                 on("when cleaning up the container succeeds") {
@@ -275,7 +275,7 @@ object TaskStepRunnerSpec : Spek({
 
             describe("running a 'remove container' step") {
                 val container = Container("some-container", "/some-build-dir")
-                val dockerContainer = DockerContainer("some-id", "some-container")
+                val dockerContainer = DockerContainer("some-id")
                 val step = RemoveContainerStep(container, dockerContainer)
 
                 on("when removing the container succeeds") {
@@ -313,7 +313,7 @@ object TaskStepRunnerSpec : Spek({
 
             describe("running a 'wait for container to become healthy' step") {
                 val container = Container("some-container", "/some-build-dir")
-                val dockerContainer = DockerContainer("some-id", "some-container")
+                val dockerContainer = DockerContainer("some-id")
                 val step = WaitForContainerToBecomeHealthyStep(container, dockerContainer)
 
                 on("when the container has no health check") {

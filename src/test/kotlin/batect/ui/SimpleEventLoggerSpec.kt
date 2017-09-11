@@ -82,7 +82,7 @@ object SimpleEventLoggerSpec : Spek({
             }
 
             on("when a 'start container' step is starting") {
-                val step = StartContainerStep(container, DockerContainer("not-important", "not-important"))
+                val step = StartContainerStep(container, DockerContainer("not-important"))
                 logger.logBeforeStartingStep(step)
 
                 it("prints a message to the output") {
@@ -96,7 +96,7 @@ object SimpleEventLoggerSpec : Spek({
 
             describe("when a 'run container' step is starting") {
                 on("and no 'create container' step has been seen") {
-                    val step = RunContainerStep(container, DockerContainer("not-important", "not-important"))
+                    val step = RunContainerStep(container, DockerContainer("not-important"))
                     logger.logBeforeStartingStep(step)
 
                     it("prints a message to the output without mentioning a command") {
@@ -111,7 +111,7 @@ object SimpleEventLoggerSpec : Spek({
                 describe("and a 'create container' step has been seen") {
                     on("and that step did not contain a command") {
                         val createContainerStep = CreateContainerStep(container, null, DockerImage("some-image"), DockerNetwork("some-network"))
-                        val runContainerStep = RunContainerStep(container, DockerContainer("not-important", "not-important"))
+                        val runContainerStep = RunContainerStep(container, DockerContainer("not-important"))
 
                         logger.logBeforeStartingStep(createContainerStep)
                         logger.logBeforeStartingStep(runContainerStep)
@@ -127,7 +127,7 @@ object SimpleEventLoggerSpec : Spek({
 
                     on("and that step contained a command") {
                         val createContainerStep = CreateContainerStep(container, "do-stuff.sh", DockerImage("some-image"), DockerNetwork("some-network"))
-                        val runContainerStep = RunContainerStep(container, DockerContainer("not-important", "not-important"))
+                        val runContainerStep = RunContainerStep(container, DockerContainer("not-important"))
 
                         logger.logBeforeStartingStep(createContainerStep)
                         logger.logBeforeStartingStep(runContainerStep)
@@ -158,8 +158,8 @@ object SimpleEventLoggerSpec : Spek({
             }
 
             mapOf(
-                    "remove container" to RemoveContainerStep(container, DockerContainer("some-id", "some-name")),
-                    "clean up container" to CleanUpContainerStep(container, DockerContainer("some-id", "some-name"))
+                    "remove container" to RemoveContainerStep(container, DockerContainer("some-id")),
+                    "clean up container" to CleanUpContainerStep(container, DockerContainer("some-id"))
             ).forEach { description, step ->
                 describe("when a '$description' step is starting") {
                     on("and no 'remove container' or 'clean up container' steps have run before") {
@@ -171,7 +171,7 @@ object SimpleEventLoggerSpec : Spek({
                     }
 
                     on("and a 'remove container' step has already been run") {
-                        val previousStep = RemoveContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id", "some-other-name"))
+                        val previousStep = RemoveContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id"))
                         logger.logBeforeStartingStep(previousStep)
 
                         logger.logBeforeStartingStep(step)
@@ -182,7 +182,7 @@ object SimpleEventLoggerSpec : Spek({
                     }
 
                     on("and a 'clean up container' step has already been run") {
-                        val previousStep = CleanUpContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id", "some-other-name"))
+                        val previousStep = CleanUpContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id"))
                         logger.logBeforeStartingStep(previousStep)
 
                         logger.logBeforeStartingStep(step)

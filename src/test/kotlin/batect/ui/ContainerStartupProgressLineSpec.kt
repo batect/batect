@@ -192,7 +192,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
         describe("after receiving a 'container created' notification") {
             describe("on that notification being for this line's container") {
-                val event = ContainerCreatedEvent(container, DockerContainer("some-id", "some-name"))
+                val event = ContainerCreatedEvent(container, DockerContainer("some-id"))
 
                 on("and none of the container's dependencies being ready") {
                     line.onEventPosted(event)
@@ -262,7 +262,7 @@ object ContainerStartupProgressLineSpec : Spek({
             }
 
             on("that notification being for another container") {
-                val event = ContainerCreatedEvent(otherContainer, DockerContainer("some-id", "some-name"))
+                val event = ContainerCreatedEvent(otherContainer, DockerContainer("some-id"))
                 line.onEventPosted(event)
                 line.print(console)
 
@@ -274,7 +274,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
         describe("after receiving a 'container starting' notification") {
             on("that notification being for this line's container") {
-                val step = StartContainerStep(container, DockerContainer("some-id", "some-name"))
+                val step = StartContainerStep(container, DockerContainer("some-id"))
                 line.onStepStarting(step)
                 line.print(console)
 
@@ -284,7 +284,7 @@ object ContainerStartupProgressLineSpec : Spek({
             }
 
             on("that notification being for another container") {
-                val step = StartContainerStep(otherContainer, DockerContainer("some-id", "some-name"))
+                val step = StartContainerStep(otherContainer, DockerContainer("some-id"))
                 line.onStepStarting(step)
                 line.print(console)
 
@@ -340,7 +340,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
         describe("after receiving a 'running container' notification") {
             on("that notification being for this line's container") {
-                val step = RunContainerStep(container, DockerContainer("some-id", "some-name"))
+                val step = RunContainerStep(container, DockerContainer("some-id"))
                 line.onStepStarting(step)
                 line.print(console)
 
@@ -350,7 +350,7 @@ object ContainerStartupProgressLineSpec : Spek({
             }
 
             on("that notification being for another container") {
-                val step = RunContainerStep(otherContainer, DockerContainer("some-id", "some-name"))
+                val step = RunContainerStep(otherContainer, DockerContainer("some-id"))
                 line.onStepStarting(step)
                 line.print(console)
 

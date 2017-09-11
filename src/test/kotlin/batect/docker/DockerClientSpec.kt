@@ -123,7 +123,7 @@ object DockerClientSpec : Spek({
 
         describe("running a container") {
             given("a Docker container") {
-                val container = DockerContainer("the-container-id", "the-container")
+                val container = DockerContainer("the-container-id")
 
                 given("and that the application is being run with a TTY connected to STDIN") {
                     on("running the container") {
@@ -163,7 +163,7 @@ object DockerClientSpec : Spek({
 
         describe("starting a container") {
             given("a Docker container") {
-                val container = DockerContainer("the-container-id", "the-container")
+                val container = DockerContainer("the-container-id")
 
                 on("starting that container") {
                     whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(0, ""))
@@ -187,7 +187,7 @@ object DockerClientSpec : Spek({
 
         describe("stopping a container") {
             given("a Docker container") {
-                val container = DockerContainer("the-container-id", "the-container")
+                val container = DockerContainer("the-container-id")
 
                 on("stopping that container") {
                     whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(0, ""))
@@ -211,7 +211,7 @@ object DockerClientSpec : Spek({
 
         describe("waiting for a container to report its health status") {
             given("a Docker container with no healthcheck") {
-                val container = DockerContainer("the-container-id", "the-container")
+                val container = DockerContainer("the-container-id")
 
                 on("waiting for that container to become healthy") {
                     val expectedCommand = listOf("docker", "inspect", "--format", "{{json .Config.Healthcheck}}", container.id)
@@ -225,8 +225,21 @@ object DockerClientSpec : Spek({
                 }
             }
 
+            given("the Docker client returns an error when checking if the container has a healthcheck") {
+                val container = DockerContainer("the-container-id")
+
+                on("waiting for that container to become healthy") {
+                    val expectedCommand = listOf("docker", "inspect", "--format", "{{json .Config.Healthcheck}}", container.id)
+                    whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong\n"))
+
+                    it("throws an appropriate exception") {
+                        assertThat({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Checking if container 'the-container-id' has a healthcheck failed. Output from Docker was: Something went wrong")))
+                    }
+                }
+            }
+
             given("a Docker container with a healthcheck that passes") {
-                val container = DockerContainer("the-container-id", "the-container")
+                val container = DockerContainer("the-container-id")
 
                 on("waiting for that container to become healthy") {
                     val hasHealthcheckCommand = listOf("docker", "inspect", "--format", "{{json .Config.Healthcheck}}", container.id)
@@ -243,7 +256,7 @@ object DockerClientSpec : Spek({
             }
 
             given("a Docker container with a healthcheck that fails") {
-                val container = DockerContainer("the-container-id", "the-container")
+                val container = DockerContainer("the-container-id")
 
                 on("waiting for that container to become healthy") {
                     val hasHealthcheckCommand = listOf("docker", "inspect", "--format", "{{json .Config.Healthcheck}}", container.id)
@@ -260,7 +273,7 @@ object DockerClientSpec : Spek({
             }
 
             given("a Docker container with a healthcheck that exits before the healthcheck reports") {
-                val container = DockerContainer("the-container-id", "the-container")
+                val container = DockerContainer("the-container-id")
 
                 on("waiting for that container to become healthy") {
                     val hasHealthcheckCommand = listOf("docker", "inspect", "--format", "{{json .Config.Healthcheck}}", container.id)
@@ -277,7 +290,7 @@ object DockerClientSpec : Spek({
             }
 
             given("a Docker container with a healthcheck that causes the 'docker events' command to terminate early") {
-                val container = DockerContainer("the-container-id", "the-container")
+                val container = DockerContainer("the-container-id")
 
                 on("waiting for that container to become healthy") {
                     val hasHealthcheckCommand = listOf("docker", "inspect", "--format", "{{json .Config.Healthcheck}}", container.id)
@@ -287,7 +300,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndProcessOutput<HealthStatus>(eq(command), any())).thenReturn(Exited(123))
 
                     it("throws an appropriate exception") {
-                        assertThat({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Event stream for container 'the-container' exited early with exit code 123.")))
+                        assertThat({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Event stream for container 'the-container-id' exited early with exit code 123.")))
                     }
                 }
             }
@@ -346,7 +359,7 @@ object DockerClientSpec : Spek({
         }
 
         describe("removing a container") {
-            val container = DockerContainer("some-id", "doesnt-matter")
+            val container = DockerContainer("some-id")
             val expectedCommand = listOf("docker", "rm", "some-id")
 
             on("a successful removal") {
@@ -377,7 +390,7 @@ object DockerClientSpec : Spek({
         }
 
         describe("forcibly removing a container") {
-            val container = DockerContainer("some-id", "doesnt-matter")
+            val container = DockerContainer("some-id")
             val expectedCommand = listOf("docker", "rm", "--force", "some-id")
 
             on("a successful removal") {

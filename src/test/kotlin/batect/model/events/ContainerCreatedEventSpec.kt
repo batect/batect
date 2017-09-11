@@ -39,7 +39,7 @@ object ContainerCreatedEventSpec : Spek({
         val dependency2 = Container("dependency-container-2", "/dependency-container-2-build-dir")
 
         val container = Container("container-1", "/container-1-build-dir", dependencies = setOf(dependency1.name, dependency2.name))
-        val dockerContainer = DockerContainer("docker-container-1", "container-1")
+        val dockerContainer = DockerContainer("docker-container-1")
         val event = ContainerCreatedEvent(container, dockerContainer)
 
         describe("being applied") {

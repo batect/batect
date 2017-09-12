@@ -25,10 +25,10 @@ import batect.config.io.PathResolverFactory
 import batect.docker.DockerClient
 import batect.docker.DockerContainerCreationCommandGenerator
 import batect.docker.DockerImageLabellingStrategy
-import batect.docker.ProcessRunner
 import batect.model.DependencyGraphProvider
 import batect.model.TaskStateMachineProvider
 import batect.model.steps.TaskStepRunner
+import batect.os.ProcessRunner
 import batect.ui.Console
 import batect.ui.ConsoleInfo
 import batect.ui.EventLoggerProvider

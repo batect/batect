@@ -16,6 +16,10 @@
 
 package batect.docker
 
+import batect.os.Exited
+import batect.os.KillProcess
+import batect.os.KilledDuringProcessing
+import batect.os.ProcessRunner
 import batect.config.Container
 import batect.ui.ConsoleInfo
 import java.util.UUID

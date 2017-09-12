@@ -16,7 +16,7 @@
 
 package batect.ui
 
-import batect.docker.ProcessRunner
+import batect.os.ProcessRunner
 
 class ConsoleInfo(private val processRunner: ProcessRunner) {
     val stdinIsTTY: Boolean by lazy {

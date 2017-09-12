@@ -16,8 +16,8 @@
 
 package batect.ui
 
-import batect.docker.ProcessOutput
-import batect.docker.ProcessRunner
+import batect.os.ProcessOutput
+import batect.os.ProcessRunner
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn

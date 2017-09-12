@@ -16,6 +16,12 @@
 
 package batect.docker
 
+import batect.os.Exited
+import batect.os.KillProcess
+import batect.os.KilledDuringProcessing
+import batect.os.OutputProcessing
+import batect.os.ProcessOutput
+import batect.os.ProcessRunner
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo

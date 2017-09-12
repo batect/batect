@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.docker
+package batect.os
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo

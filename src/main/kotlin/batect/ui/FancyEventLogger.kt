@@ -38,7 +38,7 @@ class FancyEventLogger(
         startupProgressDisplay = startupProgressDisplayProvider.createForDependencyGraph(graph)
     }
 
-    override fun logBeforeStartingStep(step: TaskStep) {
+    override fun onStartingTaskStep(step: TaskStep) {
         synchronized(lock) {
             if (step is DisplayTaskFailureStep) {
                 keepUpdatingStartupProgress = false
@@ -92,7 +92,7 @@ class FancyEventLogger(
         }
     }
 
-    override fun logTaskDoesNotExist(taskName: String) {
+    override fun onTaskDoesNotExist(taskName: String) {
         errorConsole.withColor(ConsoleColor.Red) {
             print("The task ")
             printBold(taskName)
@@ -100,7 +100,7 @@ class FancyEventLogger(
         }
     }
 
-    override fun logTaskFailed(taskName: String) {
+    override fun onTaskFailed(taskName: String) {
         errorConsole.withColor(ConsoleColor.Red) {
             println()
             print("The task ")

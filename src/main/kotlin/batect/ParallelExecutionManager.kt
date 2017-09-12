@@ -61,7 +61,7 @@ class ParallelExecutionManager(
         if (exitCode != null) {
             return exitCode!!
         } else {
-            eventLogger.logTaskFailed(taskName)
+            eventLogger.onTaskFailed(taskName)
             return -1
         }
     }
@@ -107,7 +107,7 @@ class ParallelExecutionManager(
 
     private fun runStep(step: TaskStep, threadPool: ThreadPoolExecutor, eventSink: TaskEventSink) {
         threadPool.execute {
-            eventLogger.logBeforeStartingStep(step)
+            eventLogger.onStartingTaskStep(step)
             taskStepRunner.run(step, eventSink)
 
             if (step is FinishTaskStep) {

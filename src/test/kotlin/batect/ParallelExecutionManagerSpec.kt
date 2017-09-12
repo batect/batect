@@ -62,7 +62,7 @@ object ParallelExecutionManagerSpec : Spek({
             val exitCode = executionManager.run()
 
             it("logs that the task failed") {
-                verify(eventLogger).logTaskFailed("some-task")
+                verify(eventLogger).onTaskFailed("some-task")
             }
 
             it("returns a non-zero exit code") {
@@ -85,7 +85,7 @@ object ParallelExecutionManagerSpec : Spek({
             executionManager.run()
 
             it("logs the step to the event logger") {
-                verify(eventLogger).logBeforeStartingStep(step)
+                verify(eventLogger).onStartingTaskStep(step)
             }
 
             it("runs the step") {
@@ -94,7 +94,7 @@ object ParallelExecutionManagerSpec : Spek({
 
             it("logs the step to the event logger and then runs it") {
                 inOrder(eventLogger, taskStepRunner) {
-                    verify(eventLogger).logBeforeStartingStep(step)
+                    verify(eventLogger).onStartingTaskStep(step)
                     verify(taskStepRunner).run(eq(step), any())
                 }
             }
@@ -122,7 +122,7 @@ object ParallelExecutionManagerSpec : Spek({
             val exitCode = executionManager.run()
 
             it("logs the step to the event logger") {
-                verify(eventLogger).logBeforeStartingStep(step)
+                verify(eventLogger).onStartingTaskStep(step)
             }
 
             it("runs the step") {
@@ -131,7 +131,7 @@ object ParallelExecutionManagerSpec : Spek({
 
             it("logs the step to the event logger and then runs it") {
                 inOrder(eventLogger, taskStepRunner) {
-                    verify(eventLogger).logBeforeStartingStep(step)
+                    verify(eventLogger).onStartingTaskStep(step)
                     verify(taskStepRunner).run(eq(step), any())
                 }
             }
@@ -168,7 +168,7 @@ object ParallelExecutionManagerSpec : Spek({
             executionManager.run()
 
             it("logs the first step to the event logger") {
-                verify(eventLogger).logBeforeStartingStep(step1)
+                verify(eventLogger).onStartingTaskStep(step1)
             }
 
             it("runs the first step") {
@@ -176,7 +176,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("logs the second step to the event logger") {
-                verify(eventLogger).logBeforeStartingStep(step2)
+                verify(eventLogger).onStartingTaskStep(step2)
             }
 
             it("runs the second step") {
@@ -220,7 +220,7 @@ object ParallelExecutionManagerSpec : Spek({
             executionManager.run()
 
             it("logs the first step to the event logger") {
-                verify(eventLogger).logBeforeStartingStep(step1)
+                verify(eventLogger).onStartingTaskStep(step1)
             }
 
             it("runs the first step") {
@@ -228,7 +228,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("logs the second step to the event logger") {
-                verify(eventLogger).logBeforeStartingStep(step2)
+                verify(eventLogger).onStartingTaskStep(step2)
             }
 
             it("runs the second step") {
@@ -266,7 +266,7 @@ object ParallelExecutionManagerSpec : Spek({
             executionManager.run()
 
             it("logs the first step to the event logger") {
-                verify(eventLogger).logBeforeStartingStep(step1)
+                verify(eventLogger).onStartingTaskStep(step1)
             }
 
             it("runs the first step") {
@@ -274,7 +274,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("logs the second step to the event logger") {
-                verify(eventLogger).logBeforeStartingStep(step2)
+                verify(eventLogger).onStartingTaskStep(step2)
             }
 
             it("runs the second step") {
@@ -282,7 +282,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("logs the third step to the event logger") {
-                verify(eventLogger).logBeforeStartingStep(step3)
+                verify(eventLogger).onStartingTaskStep(step3)
             }
 
             it("runs the third step") {

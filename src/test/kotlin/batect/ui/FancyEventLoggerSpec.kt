@@ -86,7 +86,7 @@ object FancyEventLoggerSpec : Spek({
 
             on("while the task is starting up") {
                 val step = CreateTaskNetworkStep
-                logger.logBeforeStartingStep(step)
+                logger.onStartingTaskStep(step)
 
                 it("notifies the startup progress display of the step and then reprints it") {
                     inOrder(startupProgressDisplay) {
@@ -98,7 +98,7 @@ object FancyEventLoggerSpec : Spek({
 
             on("and that step is to run the task container") {
                 val step = RunContainerStep(container, dockerContainer)
-                logger.logBeforeStartingStep(step)
+                logger.onStartingTaskStep(step)
 
                 it("notifies the startup progress display of the step, reprints it and then prints a blank line") {
                     inOrder(startupProgressDisplay, console) {
@@ -115,7 +115,7 @@ object FancyEventLoggerSpec : Spek({
             ).forEach { description, originalStep ->
                 describe(description) {
                     beforeEachTest {
-                        logger.logBeforeStartingStep(originalStep)
+                        logger.onStartingTaskStep(originalStep)
                         reset(startupProgressDisplay)
                     }
 
@@ -125,7 +125,7 @@ object FancyEventLoggerSpec : Spek({
                     ).forEach { description, step ->
                         describe("when a '$description' step is starting") {
                             on("and no 'remove container' or 'clean up container' steps have run before") {
-                                logger.logBeforeStartingStep(step)
+                                logger.onStartingTaskStep(step)
 
                                 it("prints a message to the output") {
                                     verify(whiteConsole).println("\nCleaning up...")
@@ -142,9 +142,9 @@ object FancyEventLoggerSpec : Spek({
 
                             on("and a 'remove container' step has already been run") {
                                 val previousStep = RemoveContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id"))
-                                logger.logBeforeStartingStep(previousStep)
+                                logger.onStartingTaskStep(previousStep)
 
-                                logger.logBeforeStartingStep(step)
+                                logger.onStartingTaskStep(step)
 
                                 it("only prints one message to the output") {
                                     verify(whiteConsole, times(1)).println("\nCleaning up...")
@@ -161,9 +161,9 @@ object FancyEventLoggerSpec : Spek({
 
                             on("and a 'clean up container' step has already been run") {
                                 val previousStep = CleanUpContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id"))
-                                logger.logBeforeStartingStep(previousStep)
+                                logger.onStartingTaskStep(previousStep)
 
-                                logger.logBeforeStartingStep(step)
+                                logger.onStartingTaskStep(step)
 
                                 it("only prints one message to the output") {
                                     verify(whiteConsole, times(1)).println("\nCleaning up...")
@@ -184,7 +184,7 @@ object FancyEventLoggerSpec : Spek({
 
             on("and that step is to display an error message") {
                 val step = DisplayTaskFailureStep("Something went wrong.")
-                logger.logBeforeStartingStep(step)
+                logger.onStartingTaskStep(step)
 
                 it("prints the message to the output") {
                     inOrder(redErrorConsole) {
@@ -217,7 +217,7 @@ object FancyEventLoggerSpec : Spek({
             }
 
             on("after the task has run") {
-                logger.logBeforeStartingStep(RunContainerStep(Container("task-container", "/task-dir"), DockerContainer("some-id")))
+                logger.onStartingTaskStep(RunContainerStep(Container("task-container", "/task-dir"), DockerContainer("some-id")))
                 reset(startupProgressDisplay)
 
                 val event = ContainerRemovedEvent(Container("some-container", "/some-dir"))
@@ -233,7 +233,7 @@ object FancyEventLoggerSpec : Spek({
             }
 
             on("after an error message has been displayed") {
-                logger.logBeforeStartingStep(DisplayTaskFailureStep("Something went wrong"))
+                logger.onStartingTaskStep(DisplayTaskFailureStep("Something went wrong"))
                 reset(startupProgressDisplay)
 
                 val event = ContainerBecameHealthyEvent(Container("some-container", "/some-dir"))
@@ -250,7 +250,7 @@ object FancyEventLoggerSpec : Spek({
         }
 
         on("when the task fails") {
-            logger.logTaskFailed("some-task")
+            logger.onTaskFailed("some-task")
 
             it("prints a message to the output") {
                 inOrder(redErrorConsole) {
@@ -263,7 +263,7 @@ object FancyEventLoggerSpec : Spek({
         }
 
         on("when the task does not exist") {
-            logger.logTaskDoesNotExist("some-task")
+            logger.onTaskDoesNotExist("some-task")
 
             it("prints a message to the output") {
                 inOrder(redErrorConsole) {

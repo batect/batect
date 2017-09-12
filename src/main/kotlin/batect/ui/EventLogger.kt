@@ -22,7 +22,7 @@ import batect.model.steps.TaskStep
 
 interface EventLogger : TaskEventSink {
     fun onDependencyGraphCreated(graph: DependencyGraph)
-    fun logTaskDoesNotExist(taskName: String)
-    fun logTaskFailed(taskName: String)
-    fun logBeforeStartingStep(step: TaskStep)
+    fun onTaskDoesNotExist(taskName: String)
+    fun onTaskFailed(taskName: String)
+    fun onStartingTaskStep(step: TaskStep)
 }

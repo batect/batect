@@ -32,7 +32,7 @@ data class TaskRunner(
         val resolvedTask = config.tasks[taskName]
 
         if (resolvedTask == null) {
-            eventLogger.logTaskDoesNotExist(taskName)
+            eventLogger.onTaskDoesNotExist(taskName)
             return -1
         }
 

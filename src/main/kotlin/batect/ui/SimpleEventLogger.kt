@@ -33,7 +33,7 @@ class SimpleEventLogger(private val console: Console, private val errorConsole: 
     private var haveStartedCleanUp = false
     private val lock = Object()
 
-    override fun logTaskDoesNotExist(taskName: String) {
+    override fun onTaskDoesNotExist(taskName: String) {
         synchronized(lock) {
             errorConsole.withColor(ConsoleColor.Red) {
                 print("The task ")
@@ -43,7 +43,7 @@ class SimpleEventLogger(private val console: Console, private val errorConsole: 
         }
     }
 
-    override fun logTaskFailed(taskName: String) {
+    override fun onTaskFailed(taskName: String) {
         synchronized(lock) {
             errorConsole.withColor(ConsoleColor.Red) {
                 println()
@@ -56,7 +56,7 @@ class SimpleEventLogger(private val console: Console, private val errorConsole: 
 
     override fun postEvent(event: TaskEvent) {}
 
-    override fun logBeforeStartingStep(step: TaskStep) {
+    override fun onStartingTaskStep(step: TaskStep) {
         synchronized(lock) {
             when (step) {
                 is BuildImageStep -> logImageBuildStarting(step.container)

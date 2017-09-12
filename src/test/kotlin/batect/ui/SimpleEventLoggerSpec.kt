@@ -70,7 +70,7 @@ object SimpleEventLoggerSpec : Spek({
         describe("handling when steps start") {
             on("when a 'build image' step is starting") {
                 val step = BuildImageStep("doesnt-matter", container)
-                logger.logBeforeStartingStep(step)
+                logger.onStartingTaskStep(step)
 
                 it("prints a message to the output") {
                     inOrder(whiteConsole) {
@@ -83,7 +83,7 @@ object SimpleEventLoggerSpec : Spek({
 
             on("when a 'start container' step is starting") {
                 val step = StartContainerStep(container, DockerContainer("not-important"))
-                logger.logBeforeStartingStep(step)
+                logger.onStartingTaskStep(step)
 
                 it("prints a message to the output") {
                     inOrder(whiteConsole) {
@@ -97,7 +97,7 @@ object SimpleEventLoggerSpec : Spek({
             describe("when a 'run container' step is starting") {
                 on("and no 'create container' step has been seen") {
                     val step = RunContainerStep(container, DockerContainer("not-important"))
-                    logger.logBeforeStartingStep(step)
+                    logger.onStartingTaskStep(step)
 
                     it("prints a message to the output without mentioning a command") {
                         inOrder(whiteConsole) {
@@ -113,8 +113,8 @@ object SimpleEventLoggerSpec : Spek({
                         val createContainerStep = CreateContainerStep(container, null, DockerImage("some-image"), DockerNetwork("some-network"))
                         val runContainerStep = RunContainerStep(container, DockerContainer("not-important"))
 
-                        logger.logBeforeStartingStep(createContainerStep)
-                        logger.logBeforeStartingStep(runContainerStep)
+                        logger.onStartingTaskStep(createContainerStep)
+                        logger.onStartingTaskStep(runContainerStep)
 
                         it("prints a message to the output without mentioning a command") {
                             inOrder(whiteConsole) {
@@ -129,8 +129,8 @@ object SimpleEventLoggerSpec : Spek({
                         val createContainerStep = CreateContainerStep(container, "do-stuff.sh", DockerImage("some-image"), DockerNetwork("some-network"))
                         val runContainerStep = RunContainerStep(container, DockerContainer("not-important"))
 
-                        logger.logBeforeStartingStep(createContainerStep)
-                        logger.logBeforeStartingStep(runContainerStep)
+                        logger.onStartingTaskStep(createContainerStep)
+                        logger.onStartingTaskStep(runContainerStep)
 
                         it("prints a message to the output including the command") {
                             inOrder(whiteConsole) {
@@ -147,7 +147,7 @@ object SimpleEventLoggerSpec : Spek({
 
             on("when a 'display task failure' step is starting") {
                 val step = DisplayTaskFailureStep("Something went wrong.")
-                logger.logBeforeStartingStep(step)
+                logger.onStartingTaskStep(step)
 
                 it("prints the message to the output") {
                     inOrder(redErrorConsole) {
@@ -163,7 +163,7 @@ object SimpleEventLoggerSpec : Spek({
             ).forEach { description, step ->
                 describe("when a '$description' step is starting") {
                     on("and no 'remove container' or 'clean up container' steps have run before") {
-                        logger.logBeforeStartingStep(step)
+                        logger.onStartingTaskStep(step)
 
                         it("prints a message to the output") {
                             verify(whiteConsole).println("Cleaning up...")
@@ -172,9 +172,9 @@ object SimpleEventLoggerSpec : Spek({
 
                     on("and a 'remove container' step has already been run") {
                         val previousStep = RemoveContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id"))
-                        logger.logBeforeStartingStep(previousStep)
+                        logger.onStartingTaskStep(previousStep)
 
-                        logger.logBeforeStartingStep(step)
+                        logger.onStartingTaskStep(step)
 
                         it("only prints one message to the output") {
                             verify(whiteConsole, times(1)).println("Cleaning up...")
@@ -183,9 +183,9 @@ object SimpleEventLoggerSpec : Spek({
 
                     on("and a 'clean up container' step has already been run") {
                         val previousStep = CleanUpContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id"))
-                        logger.logBeforeStartingStep(previousStep)
+                        logger.onStartingTaskStep(previousStep)
 
-                        logger.logBeforeStartingStep(step)
+                        logger.onStartingTaskStep(step)
 
                         it("only prints one message to the output") {
                             verify(whiteConsole, times(1)).println("Cleaning up...")
@@ -196,7 +196,7 @@ object SimpleEventLoggerSpec : Spek({
 
             on("when another kind of step is starting") {
                 val step = CreateTaskNetworkStep
-                logger.logBeforeStartingStep(step)
+                logger.onStartingTaskStep(step)
 
                 it("does not print anything to the output") {
                     verifyZeroInteractions(console)
@@ -205,7 +205,7 @@ object SimpleEventLoggerSpec : Spek({
         }
 
         on("when the task fails") {
-            logger.logTaskFailed("some-task")
+            logger.onTaskFailed("some-task")
 
             it("prints a message to the output") {
                 inOrder(redErrorConsole) {
@@ -218,7 +218,7 @@ object SimpleEventLoggerSpec : Spek({
         }
 
         on("when the task does not exist") {
-            logger.logTaskDoesNotExist("some-task")
+            logger.onTaskDoesNotExist("some-task")
 
             it("prints a message to the output") {
                 inOrder(redErrorConsole) {

@@ -74,7 +74,7 @@ object TaskRunnerSpec : Spek({
             val exitCode = taskRunner.run(config, "some-task", levelOfParallelism)
 
             it("logs that the task does not exist") {
-                verify(eventLogger).logTaskDoesNotExist("some-task")
+                verify(eventLogger).onTaskDoesNotExist("some-task")
             }
 
             it("returns a non-zero exit code") {

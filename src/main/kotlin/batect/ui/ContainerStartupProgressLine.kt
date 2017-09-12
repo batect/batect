@@ -29,7 +29,7 @@ import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.model.steps.TaskStep
 
-class ContainerStartupProgressLine(val container: Container) {
+class ContainerStartupProgressLine(val container: Container, val dependencies: Set<Container>) {
     private var isBuilding = false
     private var hasBeenBuilt = false
     private var isCreating = false
@@ -42,7 +42,7 @@ class ContainerStartupProgressLine(val container: Container) {
 
     private var networkHasBeenCreated = false
 
-    private val healthyContainers = mutableSetOf<String>()
+    private val healthyContainers = mutableSetOf<Container>()
 
     fun print(console: Console) {
         console.withColor(ConsoleColor.White) {
@@ -65,7 +65,7 @@ class ContainerStartupProgressLine(val container: Container) {
     }
 
     private fun printDescriptionWhenWaitingToStart(console: Console) {
-        val remainingDependencies = container.dependencies - healthyContainers
+        val remainingDependencies = dependencies - healthyContainers
 
         if (remainingDependencies.isEmpty()) {
             console.print("ready to start")
@@ -78,8 +78,8 @@ class ContainerStartupProgressLine(val container: Container) {
             console.print("waiting for dependencies ")
         }
 
-        remainingDependencies.forEachIndexed { i, dependencyName ->
-            console.printBold(dependencyName)
+        remainingDependencies.forEachIndexed { i, dependency ->
+            console.printBold(dependency.name)
 
             val secondLastDependency = i == remainingDependencies.size - 2
             val beforeSecondLastDependency = i < remainingDependencies.size - 2
@@ -166,7 +166,7 @@ class ContainerStartupProgressLine(val container: Container) {
     }
 
     private fun onContainerBecameHealthyEventPosted(event: ContainerBecameHealthyEvent) {
-        healthyContainers.add(event.container.name)
+        healthyContainers.add(event.container)
 
         if (event.container == container) {
             isHealthy = true

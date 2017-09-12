@@ -32,9 +32,10 @@ object StartupProgressDisplayProviderSpec : Spek({
     describe("a startup progress display provider") {
         val provider = StartupProgressDisplayProvider()
 
-        fun createNodeFor(container: Container): DependencyGraphNode {
+        fun createNodeFor(container: Container, dependencies: Set<Container>): DependencyGraphNode {
             return mock<DependencyGraphNode> {
                 on { this.container } doReturn container
+                on { dependsOnContainers } doReturn dependencies
             }
         }
 
@@ -42,18 +43,30 @@ object StartupProgressDisplayProviderSpec : Spek({
             val container1 = Container("container-1", "/container-1-build-dir")
             val container2 = Container("container-2", "/container-2-build-dir")
 
-            val node1 = createNodeFor(container1)
-            val node2 = createNodeFor(container2)
+            val container1Dependencies = setOf(container2)
+            val container2Dependencies = emptySet<Container>()
+
+            val node1 = createNodeFor(container1, container1Dependencies)
+            val node2 = createNodeFor(container2, container2Dependencies)
 
             val graph = mock<DependencyGraph> {
                 on { allNodes } doReturn setOf(node1, node2)
             }
 
             val display = provider.createForDependencyGraph(graph)
+            val linesForContainers = display.containerLines.associateBy { it.container }
 
-            it("returns a display with progress lines for each node in the graph") {
+            it("returns progress lines for each node in the graph") {
                 assertThat(display.containerLines.map { it.container }.toSet(),
                         equalTo(setOf(container1, container2)))
+            }
+
+            it("returns a progress line for the first node with its dependencies") {
+                assertThat(linesForContainers[container1]!!.dependencies, equalTo(container1Dependencies))
+            }
+
+            it("returns a progress line for the second node with its dependencies") {
+                assertThat(linesForContainers[container2]!!.dependencies, equalTo(container2Dependencies))
             }
         }
     }

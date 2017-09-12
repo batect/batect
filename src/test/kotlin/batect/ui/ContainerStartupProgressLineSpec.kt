@@ -45,11 +45,11 @@ object ContainerStartupProgressLineSpec : Spek({
         val dependencyA = Container("dependency-a", "/dependency-a-build-dir")
         val dependencyB = Container("dependency-b", "/dependency-b-build-dir")
         val dependencyC = Container("dependency-c", "/dependency-c-build-dir")
-        val container = Container("some-container", "/some-build-dir", dependencies = setOf(dependencyA.name, dependencyB.name, dependencyC.name))
+        val container = Container("some-container", "/some-build-dir")
         val otherContainer = Container("other-container", "/other-build-dir")
 
         val line: ContainerStartupProgressLine by CreateForEachTest(this) {
-            ContainerStartupProgressLine(container)
+            ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC))
         }
 
         val whiteConsole by CreateForEachTest(this) { mock<Console>() }

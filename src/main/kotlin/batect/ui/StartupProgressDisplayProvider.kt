@@ -20,7 +20,7 @@ import batect.model.DependencyGraph
 
 class StartupProgressDisplayProvider {
     fun createForDependencyGraph(graph: DependencyGraph): StartupProgressDisplay {
-        val lines = graph.allNodes.map { ContainerStartupProgressLine(it.container) }
+        val lines = graph.allNodes.map { ContainerStartupProgressLine(it.container, it.dependsOnContainers) }
 
         return StartupProgressDisplay(lines)
     }

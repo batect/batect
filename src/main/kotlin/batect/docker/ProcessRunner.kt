@@ -39,6 +39,7 @@ class ProcessRunner {
     fun runAndCaptureOutput(command: Iterable<String>): ProcessOutput {
         val process = ProcessBuilder(command.toList())
                 .redirectErrorStream(true)
+                .redirectInput(ProcessBuilder.Redirect.INHERIT)
                 .start()
 
         val exitCode = process.waitFor()

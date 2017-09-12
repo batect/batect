@@ -27,6 +27,7 @@ import batect.model.DependencyGraphProvider
 import batect.model.TaskStateMachine
 import batect.model.TaskStateMachineProvider
 import batect.ui.EventLogger
+import batect.ui.EventLoggerProvider
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
@@ -43,6 +44,10 @@ import org.jetbrains.spek.api.dsl.on
 object TaskRunnerSpec : Spek({
     describe("a task runner") {
         val eventLogger = mock<EventLogger>()
+        val eventLoggerProvider = mock<EventLoggerProvider> {
+            on { getEventLogger() } doReturn eventLogger
+        }
+
         val graph = mock<DependencyGraph>()
         val graphProvider = mock<DependencyGraphProvider>()
         val stateMachine = mock<TaskStateMachine>()
@@ -57,7 +62,7 @@ object TaskRunnerSpec : Spek({
             on { createParallelExecutionManager(eventLogger, stateMachine, "some-task", levelOfParallelism) } doReturn executionManager
         }
 
-        val taskRunner = TaskRunner(eventLogger, graphProvider, stateMachineProvider, executionManagerProvider)
+        val taskRunner = TaskRunner(eventLoggerProvider, graphProvider, stateMachineProvider, executionManagerProvider)
 
         beforeEachTest {
             reset(eventLogger)

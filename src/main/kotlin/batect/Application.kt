@@ -31,7 +31,8 @@ import batect.model.TaskStateMachineProvider
 import batect.model.steps.TaskStepRunner
 import batect.ui.Console
 import batect.ui.ConsoleInfo
-import batect.ui.EventLogger
+import batect.ui.EventLoggerProvider
+import batect.ui.FancyEventLogger
 import batect.ui.SimpleEventLogger
 import batect.ui.StartupProgressDisplayProvider
 import com.github.salomonbrys.kodein.Kodein
@@ -94,7 +95,9 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<DockerImageLabellingStrategy>() with provider { DockerImageLabellingStrategy() }
     bind<ProcessRunner>() with provider { ProcessRunner() }
     bind<DockerContainerCreationCommandGenerator>() with provider { DockerContainerCreationCommandGenerator() }
-    bind<EventLogger>() with provider { SimpleEventLogger(instance(PrintStreamType.Output), instance(PrintStreamType.Error)) }
+    bind<EventLoggerProvider>() with provider { EventLoggerProvider(instance(), instance(), instance()) }
+    bind<SimpleEventLogger>() with provider { SimpleEventLogger(instance(PrintStreamType.Output), instance(PrintStreamType.Error)) }
+    bind<FancyEventLogger>() with provider { FancyEventLogger(instance(PrintStreamType.Output), instance(PrintStreamType.Error), instance()) }
     bind<Console>(PrintStreamType.Output) with provider { Console(instance(PrintStreamType.Output)) }
     bind<Console>(PrintStreamType.Error) with provider { Console(instance(PrintStreamType.Error)) }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)

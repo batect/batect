@@ -19,15 +19,16 @@ package batect
 import batect.config.Configuration
 import batect.model.DependencyGraphProvider
 import batect.model.TaskStateMachineProvider
-import batect.ui.EventLogger
+import batect.ui.EventLoggerProvider
 
 data class TaskRunner(
-        private val eventLogger: EventLogger,
+        private val eventLoggerProvider: EventLoggerProvider,
         private val graphProvider: DependencyGraphProvider,
         private val stateMachineProvider: TaskStateMachineProvider,
         private val executionManagerProvider: ParallelExecutionManagerProvider
 ) {
     fun run(config: Configuration, taskName: String, maximumConcurrentSteps: Int): Int {
+        val eventLogger = eventLoggerProvider.getEventLogger()
         val resolvedTask = config.tasks[taskName]
 
         if (resolvedTask == null) {

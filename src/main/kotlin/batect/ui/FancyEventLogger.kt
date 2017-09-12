@@ -28,7 +28,7 @@ class FancyEventLogger(
         private val console: Console,
         private val errorConsole: Console,
         private val startupProgressDisplayProvider: StartupProgressDisplayProvider
-) : EventLogger {
+) : EventLogger(errorConsole) {
     private val lock = Object()
     private var keepUpdatingStartupProgress = true
     private var haveStartedCleanUp = false
@@ -89,23 +89,6 @@ class FancyEventLogger(
                 startupProgressDisplay!!.onEventPosted(event)
                 startupProgressDisplay!!.print(console)
             }
-        }
-    }
-
-    override fun onTaskDoesNotExist(taskName: String) {
-        errorConsole.withColor(ConsoleColor.Red) {
-            print("The task ")
-            printBold(taskName)
-            println(" does not exist.")
-        }
-    }
-
-    override fun onTaskFailed(taskName: String) {
-        errorConsole.withColor(ConsoleColor.Red) {
-            println()
-            print("The task ")
-            printBold(taskName)
-            println(" failed. See above for details.")
         }
     }
 }

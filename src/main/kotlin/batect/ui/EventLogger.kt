@@ -20,9 +20,24 @@ import batect.model.DependencyGraph
 import batect.model.events.TaskEventSink
 import batect.model.steps.TaskStep
 
-interface EventLogger : TaskEventSink {
-    fun onDependencyGraphCreated(graph: DependencyGraph)
-    fun onTaskDoesNotExist(taskName: String)
-    fun onTaskFailed(taskName: String)
-    fun onStartingTaskStep(step: TaskStep)
+abstract class EventLogger(private val errorConsole: Console) : TaskEventSink {
+    abstract fun onDependencyGraphCreated(graph: DependencyGraph)
+    abstract fun onStartingTaskStep(step: TaskStep)
+
+    fun onTaskDoesNotExist(taskName: String) {
+        errorConsole.withColor(ConsoleColor.Red) {
+            print("The task ")
+            printBold(taskName)
+            println(" does not exist.")
+        }
+    }
+
+    fun onTaskFailed(taskName: String) {
+        errorConsole.withColor(ConsoleColor.Red) {
+            println()
+            print("The task ")
+            printBold(taskName)
+            println(" failed. See above for details.")
+        }
+    }
 }

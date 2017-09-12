@@ -203,30 +203,5 @@ object SimpleEventLoggerSpec : Spek({
                 }
             }
         }
-
-        on("when the task fails") {
-            logger.onTaskFailed("some-task")
-
-            it("prints a message to the output") {
-                inOrder(redErrorConsole) {
-                    verify(redErrorConsole).println()
-                    verify(redErrorConsole).print("The task ")
-                    verify(redErrorConsole).printBold("some-task")
-                    verify(redErrorConsole).println(" failed. See above for details.")
-                }
-            }
-        }
-
-        on("when the task does not exist") {
-            logger.onTaskDoesNotExist("some-task")
-
-            it("prints a message to the output") {
-                inOrder(redErrorConsole) {
-                    verify(redErrorConsole).print("The task ")
-                    verify(redErrorConsole).printBold("some-task")
-                    verify(redErrorConsole).println(" does not exist.")
-                }
-            }
-        }
     }
 })

@@ -28,31 +28,10 @@ import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.model.steps.TaskStep
 
-class SimpleEventLogger(private val console: Console, private val errorConsole: Console) : EventLogger {
+class SimpleEventLogger(private val console: Console, private val errorConsole: Console) : EventLogger(errorConsole) {
     private val commands = mutableMapOf<Container, String?>()
     private var haveStartedCleanUp = false
     private val lock = Object()
-
-    override fun onTaskDoesNotExist(taskName: String) {
-        synchronized(lock) {
-            errorConsole.withColor(ConsoleColor.Red) {
-                print("The task ")
-                printBold(taskName)
-                println(" does not exist.")
-            }
-        }
-    }
-
-    override fun onTaskFailed(taskName: String) {
-        synchronized(lock) {
-            errorConsole.withColor(ConsoleColor.Red) {
-                println()
-                print("The task ")
-                printBold(taskName)
-                println(" failed. See above for details.")
-            }
-        }
-    }
 
     override fun postEvent(event: TaskEvent) {}
 

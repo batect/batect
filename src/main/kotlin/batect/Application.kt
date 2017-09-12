@@ -39,7 +39,7 @@ import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.KodeinAware
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
-import com.github.salomonbrys.kodein.provider
+import com.github.salomonbrys.kodein.singleton
 import java.io.PrintStream
 import java.nio.file.FileSystem
 import java.nio.file.FileSystems
@@ -87,26 +87,26 @@ enum class PrintStreamType {
 }
 
 private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStream): Kodein = Kodein {
-    bind<ConfigurationLoader>() with provider { ConfigurationLoader(instance(), instance()) }
-    bind<PathResolverFactory>() with provider { PathResolverFactory() }
-    bind<FileSystem>() with provider { FileSystems.getDefault() }
-    bind<TaskRunner>() with provider { TaskRunner(instance(), instance(), instance(), instance()) }
-    bind<DockerClient>() with provider { DockerClient(instance(), instance(), instance(), instance()) }
-    bind<DockerImageLabellingStrategy>() with provider { DockerImageLabellingStrategy() }
-    bind<ProcessRunner>() with provider { ProcessRunner() }
-    bind<DockerContainerCreationCommandGenerator>() with provider { DockerContainerCreationCommandGenerator() }
-    bind<EventLoggerProvider>() with provider { EventLoggerProvider(instance(), instance(), instance()) }
-    bind<SimpleEventLogger>() with provider { SimpleEventLogger(instance(PrintStreamType.Output), instance(PrintStreamType.Error)) }
-    bind<FancyEventLogger>() with provider { FancyEventLogger(instance(PrintStreamType.Output), instance(PrintStreamType.Error), instance()) }
-    bind<Console>(PrintStreamType.Output) with provider { Console(instance(PrintStreamType.Output)) }
-    bind<Console>(PrintStreamType.Error) with provider { Console(instance(PrintStreamType.Error)) }
+    bind<ConfigurationLoader>() with singleton { ConfigurationLoader(instance(), instance()) }
+    bind<PathResolverFactory>() with singleton { PathResolverFactory() }
+    bind<FileSystem>() with singleton { FileSystems.getDefault() }
+    bind<TaskRunner>() with singleton { TaskRunner(instance(), instance(), instance(), instance()) }
+    bind<DockerClient>() with singleton { DockerClient(instance(), instance(), instance(), instance()) }
+    bind<DockerImageLabellingStrategy>() with singleton { DockerImageLabellingStrategy() }
+    bind<ProcessRunner>() with singleton { ProcessRunner() }
+    bind<DockerContainerCreationCommandGenerator>() with singleton { DockerContainerCreationCommandGenerator() }
+    bind<EventLoggerProvider>() with singleton { EventLoggerProvider(instance(), instance(), instance()) }
+    bind<SimpleEventLogger>() with singleton { SimpleEventLogger(instance(PrintStreamType.Output), instance(PrintStreamType.Error)) }
+    bind<FancyEventLogger>() with singleton { FancyEventLogger(instance(PrintStreamType.Output), instance(PrintStreamType.Error), instance()) }
+    bind<Console>(PrintStreamType.Output) with singleton { Console(instance(PrintStreamType.Output)) }
+    bind<Console>(PrintStreamType.Error) with singleton { Console(instance(PrintStreamType.Error)) }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
     bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
-    bind<CommandLineParser>() with provider { BatectCommandLineParser(this) }
-    bind<TaskStepRunner>() with provider { TaskStepRunner(instance()) }
-    bind<DependencyGraphProvider>() with provider { DependencyGraphProvider() }
-    bind<TaskStateMachineProvider>() with provider { TaskStateMachineProvider() }
-    bind<ParallelExecutionManagerProvider>() with provider { ParallelExecutionManagerProvider(instance()) }
-    bind<StartupProgressDisplayProvider>() with provider { StartupProgressDisplayProvider() }
-    bind<ConsoleInfo>() with provider { ConsoleInfo(instance()) }
+    bind<CommandLineParser>() with singleton { BatectCommandLineParser(this) }
+    bind<TaskStepRunner>() with singleton { TaskStepRunner(instance()) }
+    bind<DependencyGraphProvider>() with singleton { DependencyGraphProvider() }
+    bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider() }
+    bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance()) }
+    bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider() }
+    bind<ConsoleInfo>() with singleton { ConsoleInfo(instance()) }
 }

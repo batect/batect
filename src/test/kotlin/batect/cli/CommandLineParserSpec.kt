@@ -22,6 +22,7 @@ import batect.cli.options.InvalidOptions
 import batect.cli.options.OptionParser
 import batect.cli.options.ReadOptions
 import batect.cli.testutils.NullCommand
+import batect.testutils.withMessage
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
@@ -36,7 +37,6 @@ import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.reset
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
-import batect.testutils.withMessage
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -51,7 +51,7 @@ object CommandLineParserSpec : Spek({
                 bind<String>("the-string-from-original-container") with instance("The original string")
             }
 
-            val parser = object : CommandLineParser(injections, optionParser) {
+            val parser = object : CommandLineParser(injections, "the-cool-app", optionParser) {
                 override fun createBindings(): Kodein.Module {
                     return Kodein.Module {
                         bind<String>("the-string-from-created-container") with instance("The additional string")
@@ -93,7 +93,7 @@ object CommandLineParserSpec : Spek({
                     val result = parser.parse(listOf("--some-option", "--some-other-option"))
 
                     it("indicates that parsing failed because no command was provided") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("No command specified. Run 'batect help' for a list of valid commands.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("No command specified. Run 'the-cool-app help' for a list of valid commands.")))
                     }
                 }
 
@@ -101,7 +101,7 @@ object CommandLineParserSpec : Spek({
                     val result = parser.parse(listOf("--some-option", "--some-other-option", "some-non-existent-command"))
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Invalid command 'some-non-existent-command'. Run 'batect help' for a list of valid commands.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Invalid command 'some-non-existent-command'. Run 'the-cool-app help' for a list of valid commands.")))
                     }
                 }
 
@@ -109,7 +109,7 @@ object CommandLineParserSpec : Spek({
                     val result = parser.parse(listOf("--some-option", "--some-other-option", "--some-unknown-option", "do-stuff"))
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Invalid option '--some-unknown-option'. Run 'batect help' for a list of valid options.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Invalid option '--some-unknown-option'. Run 'the-cool-app help' for a list of valid options.")))
                     }
                 }
 
@@ -197,7 +197,7 @@ object CommandLineParserSpec : Spek({
 
         describe("adding a command definition to the list of commands") {
             val injections = Kodein { }
-            val parser = CommandLineParser(injections)
+            val parser = CommandLineParser(injections, "the-cool-app")
 
             val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.", aliases = setOf("do-stuff-alias")) {
                 override fun createCommand(kodein: Kodein): Command = NullCommand()

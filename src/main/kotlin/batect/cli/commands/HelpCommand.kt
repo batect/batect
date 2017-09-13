@@ -18,7 +18,6 @@ package batect.cli.commands
 
 import batect.PrintStreamType
 import batect.cli.CommandLineParser
-import batect.cli.applicationName
 import batect.cli.options.OptionDefinition
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
@@ -38,7 +37,7 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
             val command = parser.getCommandDefinitionByName(commandName)
 
             when (command) {
-                null -> outputStream.println("Invalid command '$commandName'. Run '$applicationName help' for a list of valid commands.")
+                null -> outputStream.println("Invalid command '$commandName'. Run '${parser.applicationName} help' for a list of valid commands.")
                 else -> printCommandHelp(command)
             }
         }
@@ -51,7 +50,7 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
         val options = formatListOfOptions(parser.getCommonOptions())
         val alignToColumn = (commands.keys + options.keys).map { it.length }.max() ?: 0
 
-        outputStream.print("Usage: $applicationName ")
+        outputStream.print("Usage: ${parser.applicationName} ")
 
         if (options.isNotEmpty()) {
             outputStream.print("[COMMON OPTIONS] ")
@@ -70,7 +69,7 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
             outputStream.println()
         }
 
-        outputStream.println("For help on the options available for a command, run '$applicationName help <command>'.")
+        outputStream.println("For help on the options available for a command, run '${parser.applicationName} help <command>'.")
         outputStream.println()
     }
 
@@ -98,13 +97,13 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
         printCommandOptionAndParameterInfo(commandDefinition)
 
         if (parser.getCommonOptions().isNotEmpty()) {
-            outputStream.println("For help on the common options available for all commands, run '$applicationName help'.")
+            outputStream.println("For help on the common options available for all commands, run '${parser.applicationName} help'.")
             outputStream.println()
         }
     }
 
     private fun printCommandHelpHeader(commandDefinition: CommandDefinition) {
-        outputStream.print("Usage: $applicationName ")
+        outputStream.print("Usage: ${parser.applicationName} ")
 
         if (parser.getCommonOptions().isNotEmpty()) {
             outputStream.print("[COMMON OPTIONS] ")

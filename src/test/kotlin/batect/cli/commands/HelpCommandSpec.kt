@@ -54,6 +54,7 @@ object HelpCommandSpec : Spek({
                 val output = ByteArrayOutputStream()
                 val outputStream = PrintStream(output)
                 val parser = mock<CommandLineParser> {
+                    on { applicationName } doReturn "the-cool-app"
                     on { getAllCommandDefinitions() } doReturn setOf(firstCommandDefinition, secondCommandDefinition)
                     on { getCommonOptions() } doReturn emptySet()
                 }
@@ -63,13 +64,13 @@ object HelpCommandSpec : Spek({
 
                 it("prints help information") {
                     assertThat(output.toString(), equalTo("""
-                        |Usage: batect COMMAND [COMMAND OPTIONS]
+                        |Usage: the-cool-app COMMAND [COMMAND OPTIONS]
                         |
                         |Commands:
                         |  do-other-stuff    Do the other thing.
                         |  do-stuff          Do the thing.
                         |
-                        |For help on the options available for a command, run 'batect help <command>'.
+                        |For help on the options available for a command, run 'the-cool-app help <command>'.
                         |
                         |""".trimMargin()))
                 }
@@ -84,6 +85,7 @@ object HelpCommandSpec : Spek({
                 val outputStream = PrintStream(output)
 
                 val parser = mock<CommandLineParser> {
+                    on { applicationName } doReturn "the-cool-app"
                     on { getAllCommandDefinitions() } doReturn setOf(firstCommandDefinition, secondCommandDefinition)
                     on { getCommonOptions() } doReturn setOf<OptionDefinition>(
                             createOption("awesomeness-level", "Level of awesomeness to use."),
@@ -98,7 +100,7 @@ object HelpCommandSpec : Spek({
 
                 it("prints help information") {
                     assertThat(output.toString(), equalTo("""
-                        |Usage: batect [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]
+                        |Usage: the-cool-app [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]
                         |
                         |Commands:
                         |  do-other-stuff                   Do the other thing.
@@ -110,7 +112,7 @@ object HelpCommandSpec : Spek({
                         |  -f, --file=value                 File name to use. (extra help info)
                         |      --sensible-default=value     Something you can override if you want. (extra help info)
                         |
-                        |For help on the options available for a command, run 'batect help <command>'.
+                        |For help on the options available for a command, run 'the-cool-app help <command>'.
                         |
                         |""".trimMargin()))
                 }
@@ -130,6 +132,7 @@ object HelpCommandSpec : Spek({
                         val output = ByteArrayOutputStream()
                         val outputStream = PrintStream(output)
                         val parser = mock<CommandLineParser> {
+                            on { applicationName } doReturn "the-cool-app"
                             on { getCommandDefinitionByName("do-stuff") } doReturn firstCommandDefinition
                             on { getCommonOptions() } doReturn commonOptions
                         }
@@ -139,13 +142,13 @@ object HelpCommandSpec : Spek({
 
                         it("prints help information") {
                             assertThat(output.toString(), equalTo("""
-                            |Usage: batect [COMMON OPTIONS] do-stuff
+                            |Usage: the-cool-app [COMMON OPTIONS] do-stuff
                             |
                             |Do the thing.
                             |
                             |This command does not take any options.
                             |
-                            |For help on the common options available for all commands, run 'batect help'.
+                            |For help on the common options available for all commands, run 'the-cool-app help'.
                             |
                             |""".trimMargin()))
                         }
@@ -160,6 +163,7 @@ object HelpCommandSpec : Spek({
                         val outputStream = PrintStream(output)
 
                         val parser = mock<CommandLineParser> {
+                            on { applicationName } doReturn "the-cool-app"
                             on { getCommonOptions() } doReturn commonOptions
                             on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
                                 val thingToDo: String? by OptionalPositionalParameter("THING", "Thing to do.")
@@ -173,14 +177,14 @@ object HelpCommandSpec : Spek({
 
                         it("prints help information") {
                             assertThat(output.toString(), equalTo("""
-                            |Usage: batect [COMMON OPTIONS] do-stuff [THING]
+                            |Usage: the-cool-app [COMMON OPTIONS] do-stuff [THING]
                             |
                             |Do the thing.
                             |
                             |Parameters:
                             |  THING    (optional) Thing to do.
                             |
-                            |For help on the common options available for all commands, run 'batect help'.
+                            |For help on the common options available for all commands, run 'the-cool-app help'.
                             |
                             |""".trimMargin()))
                         }
@@ -195,6 +199,7 @@ object HelpCommandSpec : Spek({
                         val outputStream = PrintStream(output)
 
                         val parser = mock<CommandLineParser> {
+                            on { applicationName } doReturn "the-cool-app"
                             on { getCommonOptions() } doReturn commonOptions
                             on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
                                 val thingToDo: String by RequiredPositionalParameter("THING", "Thing to do.")
@@ -208,14 +213,14 @@ object HelpCommandSpec : Spek({
 
                         it("prints help information") {
                             assertThat(output.toString(), equalTo("""
-                            |Usage: batect [COMMON OPTIONS] do-stuff THING
+                            |Usage: the-cool-app [COMMON OPTIONS] do-stuff THING
                             |
                             |Do the thing.
                             |
                             |Parameters:
                             |  THING    Thing to do.
                             |
-                            |For help on the common options available for all commands, run 'batect help'.
+                            |For help on the common options available for all commands, run 'the-cool-app help'.
                             |
                             |""".trimMargin()))
                         }
@@ -230,6 +235,7 @@ object HelpCommandSpec : Spek({
                         val outputStream = PrintStream(output)
 
                         val parser = mock<CommandLineParser> {
+                            on { applicationName } doReturn "the-cool-app"
                             on { getCommonOptions() } doReturn commonOptions
                             on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
                                 val thingToDo: String by RequiredPositionalParameter("THING", "Thing to do.")
@@ -244,7 +250,7 @@ object HelpCommandSpec : Spek({
 
                         it("prints help information") {
                             assertThat(output.toString(), equalTo("""
-                            |Usage: batect [COMMON OPTIONS] do-stuff THING OTHER-THING
+                            |Usage: the-cool-app [COMMON OPTIONS] do-stuff THING OTHER-THING
                             |
                             |Do the thing.
                             |
@@ -252,7 +258,7 @@ object HelpCommandSpec : Spek({
                             |  THING          Thing to do.
                             |  OTHER-THING    Other thing to do.
                             |
-                            |For help on the common options available for all commands, run 'batect help'.
+                            |For help on the common options available for all commands, run 'the-cool-app help'.
                             |
                             |""".trimMargin()))
                         }
@@ -267,6 +273,7 @@ object HelpCommandSpec : Spek({
                         val outputStream = PrintStream(output)
 
                         val parser = mock<CommandLineParser> {
+                            on { applicationName } doReturn "the-cool-app"
                             on { getCommonOptions() } doReturn commonOptions
                             on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
                                 val thingToDo: String by RequiredPositionalParameter("THING", "Thing to do.")
@@ -281,7 +288,7 @@ object HelpCommandSpec : Spek({
 
                         it("prints help information") {
                             assertThat(output.toString(), equalTo("""
-                            |Usage: batect [COMMON OPTIONS] do-stuff THING [OTHER-THING]
+                            |Usage: the-cool-app [COMMON OPTIONS] do-stuff THING [OTHER-THING]
                             |
                             |Do the thing.
                             |
@@ -289,7 +296,7 @@ object HelpCommandSpec : Spek({
                             |  THING          Thing to do.
                             |  OTHER-THING    (optional) Other thing to do.
                             |
-                            |For help on the common options available for all commands, run 'batect help'.
+                            |For help on the common options available for all commands, run 'the-cool-app help'.
                             |
                             |""".trimMargin()))
                         }
@@ -304,6 +311,7 @@ object HelpCommandSpec : Spek({
                         val outputStream = PrintStream(output)
 
                         val parser = mock<CommandLineParser> {
+                            on { applicationName } doReturn "the-cool-app"
                             on { getCommonOptions() } doReturn commonOptions
                             on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
                                 val someOption: String? by valueOption("some-option", "Some option that you can set.", 'o')
@@ -317,14 +325,14 @@ object HelpCommandSpec : Spek({
 
                         it("prints help information") {
                             assertThat(output.toString(), equalTo("""
-                            |Usage: batect [COMMON OPTIONS] do-stuff [OPTIONS]
+                            |Usage: the-cool-app [COMMON OPTIONS] do-stuff [OPTIONS]
                             |
                             |Do the thing.
                             |
                             |Options:
                             |  -o, --some-option=value    Some option that you can set.
                             |
-                            |For help on the common options available for all commands, run 'batect help'.
+                            |For help on the common options available for all commands, run 'the-cool-app help'.
                             |
                             |""".trimMargin()))
                         }
@@ -339,6 +347,7 @@ object HelpCommandSpec : Spek({
                         val outputStream = PrintStream(output)
 
                         val parser = mock<CommandLineParser> {
+                            on { applicationName } doReturn "the-cool-app"
                             on { getCommonOptions() } doReturn commonOptions
                             on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
                                 val someOption: String? by valueOption("some-option", "Some option that you can set.", 'o')
@@ -355,7 +364,7 @@ object HelpCommandSpec : Spek({
 
                         it("prints help information") {
                             assertThat(output.toString(), equalTo("""
-                            |Usage: batect [COMMON OPTIONS] do-stuff [OPTIONS] THING [OTHER-THING]
+                            |Usage: the-cool-app [COMMON OPTIONS] do-stuff [OPTIONS] THING [OTHER-THING]
                             |
                             |Do the thing.
                             |
@@ -367,7 +376,7 @@ object HelpCommandSpec : Spek({
                             |  THING                         Thing to do.
                             |  OTHER-THING                   (optional) Other thing to do.
                             |
-                            |For help on the common options available for all commands, run 'batect help'.
+                            |For help on the common options available for all commands, run 'the-cool-app help'.
                             |
                             |""".trimMargin()))
                         }
@@ -382,6 +391,7 @@ object HelpCommandSpec : Spek({
                     val output = ByteArrayOutputStream()
                     val outputStream = PrintStream(output)
                     val parser = mock<CommandLineParser> {
+                        on { applicationName } doReturn "the-cool-app"
                         on { getCommandDefinitionByName("do-stuff") } doReturn firstCommandDefinition
                     }
 
@@ -390,7 +400,7 @@ object HelpCommandSpec : Spek({
 
                     it("does not include the placeholder for common options in the header or print a message about common options") {
                         assertThat(output.toString(), equalTo("""
-                            |Usage: batect do-stuff
+                            |Usage: the-cool-app do-stuff
                             |
                             |Do the thing.
                             |
@@ -408,12 +418,15 @@ object HelpCommandSpec : Spek({
             given("and that command name is not a valid command name") {
                 val output = ByteArrayOutputStream()
                 val outputStream = PrintStream(output)
-                val parser = mock<CommandLineParser>()
+                val parser = mock<CommandLineParser> {
+                    on { applicationName } doReturn "the-cool-app"
+                }
+
                 val command = HelpCommand("unknown-command", parser, outputStream)
                 val exitCode = command.run()
 
                 it("prints an error message") {
-                    assertThat(output.toString(), equalTo("Invalid command 'unknown-command'. Run 'batect help' for a list of valid commands.\n"))
+                    assertThat(output.toString(), equalTo("Invalid command 'unknown-command'. Run 'the-cool-app help' for a list of valid commands.\n"))
                 }
 
                 it("returns a non-zero exit code") {

@@ -35,8 +35,11 @@ import com.nhaarman.mockito_kotlin.reset
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
 import batect.config.Container
+import batect.testutils.withCause
 import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
+import com.natpryce.hamkrest.and
+import com.natpryce.hamkrest.isA
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -425,6 +428,38 @@ object DockerClientSpec : Spek({
                 }
             }
         }
+
+        describe("getting Docker version information") {
+            val expectedCommand = listOf("docker", "version", "--format", "Client: {{.Client.Version}} (API: {{.Client.APIVersion}}, commit: {{.Client.GitCommit}}), Server: {{.Server.Version}} (API: {{.Server.APIVersion}}, minimum supported API: {{.Server.MinAPIVersion}}, commit: {{.Server.GitCommit}})")
+
+            on("the Docker version command invocation succeeding") {
+                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "This is the version info.\n"))
+
+                it("returns the version information from Docker") {
+                    assertThat(client.getDockerVersionInfo(), equalTo("This is the version info."))
+                }
+            }
+
+            on("the Docker version command invocation failing") {
+                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong\n"))
+
+                it("throws an appropriate exception") {
+                    assertThat({ client.getDockerVersionInfo() }, throws<DockerVersionInfoRetrievalFailedException>(withMessage("Could not get Docker version information: Something went wrong")))
+                }
+            }
+
+            on("running the Docker version command throwing an exception (for example, because Docker is not installed)") {
+                val exception = RuntimeException("Something went wrong")
+                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenThrow(exception)
+
+                it("throws an appropriate exception") {
+                    assertThat({ client.getDockerVersionInfo() }, throws<DockerVersionInfoRetrievalFailedException>(
+                            withMessage("Could not get Docker version information because RuntimeException was thrown: Something went wrong")
+                            and withCause(exception)
+                    ))
+                }
+            }
+        }
     }
 })
 
@@ -441,7 +476,7 @@ private fun ProcessRunner.whenGettingEventsForContainerRespondWith(containerId: 
         val processor: (String) -> OutputProcessing<HealthStatus> = invocation.getArgument(1)
         val processingResponse = processor.invoke(event)
 
-        assertThat(processingResponse, com.natpryce.hamkrest.isA<KillProcess<HealthStatus>>())
+        assertThat(processingResponse, isA<KillProcess<HealthStatus>>())
 
         KilledDuringProcessing((processingResponse as KillProcess<HealthStatus>).result)
     }

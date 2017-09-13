@@ -36,6 +36,7 @@ object VersionInfoJourneyTest : Spek({
                 assertThat(result.output, containsSubstring("Built:"))
                 assertThat(result.output, containsSubstring("JVM version:"))
                 assertThat(result.output, containsSubstring("OS version:"))
+                assertThat(result.output, containsSubstring("Docker version:"))
             }
 
             it("returns a zero exit code") {

@@ -16,11 +16,12 @@
 
 package batect.docker
 
+import batect.config.Container
 import batect.os.Exited
 import batect.os.KillProcess
 import batect.os.KilledDuringProcessing
+import batect.os.ProcessOutput
 import batect.os.ProcessRunner
-import batect.config.Container
 import batect.ui.ConsoleInfo
 import java.util.UUID
 
@@ -36,7 +37,7 @@ class DockerClient(
         val command = listOf("docker", "build", "--tag", label, container.buildDirectory)
         val result = processRunner.runAndCaptureOutput(command)
 
-        if (failed(result.exitCode)) {
+        if (failed(result)) {
             throw ImageBuildFailedException(result.output.trim())
         }
 
@@ -47,7 +48,7 @@ class DockerClient(
         val args = creationCommandGenerator.createCommandLine(container, command, image, network)
         val result = processRunner.runAndCaptureOutput(args)
 
-        if (failed(result.exitCode)) {
+        if (failed(result)) {
             throw ContainerCreationFailedException("Output from Docker was: ${result.output.trim()}")
         } else {
             return DockerContainer(result.output.trim())
@@ -70,7 +71,7 @@ class DockerClient(
         val command = listOf("docker", "start", container.id)
         val result = processRunner.runAndCaptureOutput(command)
 
-        if (failed(result.exitCode)) {
+        if (failed(result)) {
             throw ContainerStartFailedException(container.id, result.output)
         }
     }
@@ -106,7 +107,7 @@ class DockerClient(
         val command = listOf("docker", "inspect", "--format", "{{json .Config.Healthcheck}}", container.id)
         val result = processRunner.runAndCaptureOutput(command)
 
-        if (failed(result.exitCode)) {
+        if (failed(result)) {
             throw ContainerHealthCheckException("Checking if container '${container.id}' has a healthcheck failed. Output from Docker was: ${result.output.trim()}")
         }
 
@@ -117,7 +118,7 @@ class DockerClient(
         val command = listOf("docker", "stop", container.id)
         val result = processRunner.runAndCaptureOutput(command)
 
-        if (failed(result.exitCode)) {
+        if (failed(result)) {
             throw ContainerStopFailedException(container.id, result.output.trim())
         }
     }
@@ -126,7 +127,7 @@ class DockerClient(
         val command = listOf("docker", "network", "create", "--driver", "bridge", UUID.randomUUID().toString())
         val result = processRunner.runAndCaptureOutput(command)
 
-        if (failed(result.exitCode)) {
+        if (failed(result)) {
             throw NetworkCreationFailedException(result.output.trim())
         }
 
@@ -137,7 +138,7 @@ class DockerClient(
         val command = listOf("docker", "network", "rm", network.id)
         val result = processRunner.runAndCaptureOutput(command)
 
-        if (failed(result.exitCode)) {
+        if (failed(result)) {
             throw NetworkDeletionFailedException(network.id, result.output.trim())
         }
     }
@@ -146,7 +147,7 @@ class DockerClient(
         val command = listOf("docker", "rm", container.id)
         val result = processRunner.runAndCaptureOutput(command)
 
-        if (failed(result.exitCode)) {
+        if (failed(result)) {
             if (result.output.startsWith("Error response from daemon: No such container: ")) {
                 throw ContainerDoesNotExistException("Removing container '${container.id}' failed because it does not exist.")
             } else {
@@ -159,7 +160,7 @@ class DockerClient(
         val command = listOf("docker", "rm", "--force", container.id)
         val result = processRunner.runAndCaptureOutput(command)
 
-        if (failed(result.exitCode)) {
+        if (failed(result)) {
             if (result.output.startsWith("Error response from daemon: No such container: ")) {
                 throw ContainerDoesNotExistException("Removing container '${container.id}' failed because it does not exist.")
             } else {
@@ -168,7 +169,27 @@ class DockerClient(
         }
     }
 
-    private fun failed(exitCode: Int): Boolean = exitCode != 0
+    fun getDockerVersionInfo(): String {
+        val result = tryToGetDockerVersionInfo()
+
+        if (failed(result)) {
+            throw DockerVersionInfoRetrievalFailedException("Could not get Docker version information: ${result.output.trim()}")
+        }
+
+        return result.output.trim()
+    }
+
+    private fun tryToGetDockerVersionInfo(): ProcessOutput {
+        val command = listOf("docker", "version", "--format", "Client: {{.Client.Version}} (API: {{.Client.APIVersion}}, commit: {{.Client.GitCommit}}), Server: {{.Server.Version}} (API: {{.Server.APIVersion}}, minimum supported API: {{.Server.MinAPIVersion}}, commit: {{.Server.GitCommit}})")
+
+        try {
+            return processRunner.runAndCaptureOutput(command)
+        } catch (t: Throwable) {
+            throw DockerVersionInfoRetrievalFailedException("Could not get Docker version information because ${t.javaClass.simpleName} was thrown: ${t.message}", t)
+        }
+    }
+
+    private fun failed(result: ProcessOutput): Boolean = result.exitCode != 0
 }
 
 data class DockerImage(val id: String)
@@ -185,6 +206,7 @@ class ContainerHealthCheckException(message: String) : RuntimeException(message)
 class NetworkCreationFailedException(val outputFromDocker: String) : RuntimeException("Creation of network failed. Output from Docker was: $outputFromDocker")
 class ContainerRemovalFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Removal of container '$containerId' failed. Output from Docker was: $outputFromDocker")
 class NetworkDeletionFailedException(val networkId: String, val outputFromDocker: String) : RuntimeException("Deletion of network '$networkId' failed. Output from Docker was: $outputFromDocker")
+class DockerVersionInfoRetrievalFailedException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
 enum class HealthStatus {
     NoHealthCheck,

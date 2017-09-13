@@ -16,13 +16,17 @@
 
 package batect.testutils
 
+import batect.config.io.ConfigurationException
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
-import batect.config.io.ConfigurationException
 
 fun withMessage(message: String): Matcher<Throwable> {
     return has(Throwable::message, equalTo(message))
+}
+
+fun withCause(cause: Throwable): Matcher<Throwable> {
+    return has(Throwable::cause, equalTo(cause))
 }
 
 fun withLineNumber(lineNumber: Int): Matcher<ConfigurationException> {

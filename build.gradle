@@ -14,9 +14,9 @@
    limitations under the License.
 */
 
+
 import org.junit.platform.console.ConsoleLauncher
 
-import java.nio.file.Files
 import java.nio.file.Paths
 import java.text.SimpleDateFormat
 
@@ -46,7 +46,7 @@ apply plugin: 'kotlin'
 apply plugin: 'org.junit.platform.gradle.plugin'
 
 mainClassName = 'batect.ApplicationKt'
-version = '0.1'
+version = '0.1-preview'
 
 repositories {
     mavenCentral()
@@ -138,7 +138,7 @@ def licenseText = """
    limitations under the License.
 """
 
-def kotlinLicenseHeader = "/*$licenseText*/\n\n"
+ext.kotlinLicenseHeader = "/*$licenseText*/\n\n"
 
 spotless {
     kotlin {
@@ -159,74 +159,68 @@ spotless {
     }
 }
 
-task retrieveGitCommitHash(type: Exec) {
-    def outputDir = getTemporaryDir()
-    def outputFile = "$outputDir/hash"
+String runProcess(String... args) {
+    def process = new ProcessBuilder(args)
+            .redirectErrorStream(true)
+            .start()
 
-    outputs.file outputFile
-    commandLine 'git', 'describe', '--always', '--dirty', '--exclude', '*', '--abbrev=0'
+    def exitCode = process.waitFor()
+    def output = process.inputStream.getText()
 
-    outputs.upToDateWhen { false }
-
-    doFirst {
-        standardOutput = new FileOutputStream(outputFile)
+    if (exitCode != 0) {
+        throw RuntimeException("$args failed with exit code $exitCode. Output was: $output")
     }
 
-    ext {
-        outputPath = Paths.get(outputFile)
+    return output.trim()
+}
+
+String getCurrentGitCommit() {
+    return runProcess('git', 'describe', '--always', '--dirty', '--exclude', '*', '--abbrev=0')
+}
+
+String getCurrentGitCommitDate() {
+    return runProcess('git', 'show', '-s', '--format=%ci', 'HEAD')
+}
+
+String getBuildDate() {
+    if (project.hasProperty("releaseBuild")) {
+        def dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z")
+        dateFormat.setTimeZone(new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC"))
+        return dateFormat.format(new Date())
+    } else {
+        return "(the build date is not populated for development builds)"
     }
 }
 
-task retrieveGitCommitDate(type: Exec) {
-    def outputDir = getTemporaryDir()
-    def outputFile = "$outputDir/date"
-
-    outputs.file outputFile
-    commandLine 'git', 'show', '-s', '--format=%ci', 'HEAD'
-
-    outputs.upToDateWhen { false }
-
-    doFirst {
-        standardOutput = new FileOutputStream(outputFile)
-    }
-
-    ext {
-        outputPath = Paths.get(outputFile)
-    }
+String versionInfoFileContents() {
+    kotlinLicenseHeader +
+    """ |package batect
+        |
+        |// This file is generated automatically by the $generateVersionInfoFile.name Gradle task.
+        |// Do not edit it (it will be overwritten on the next build anyway).
+        |// Do not commit it.
+        |class VersionInfo {
+        |    val gitCommitHash = "${getCurrentGitCommit()}"
+        |    val gitCommitDate = "${getCurrentGitCommitDate()}"
+        |    val version = "$project.version"
+        |    val buildDate = "${getBuildDate()}"
+        |}
+        |""".stripMargin("|")
 }
 
 task generateVersionInfoFile {
-    inputs.files retrieveGitCommitHash, retrieveGitCommitDate
     inputs.property("version", project.version)
 
-    def outputFile = "$projectDir/src/main/kotlin/batect/VersionInfo.kt"
+    def outputFile = Paths.get("$projectDir/src/main/kotlin/batect/VersionInfo.kt").toFile()
     outputs.file outputFile
 
+    outputs.upToDateWhen {
+        outputFile.exists() && outputFile.text == versionInfoFileContents()
+    }
+
     doLast {
-        def gitCommitHashPath = retrieveGitCommitHash.outputPath
-        def gitCommitHash = Files.readAllLines(gitCommitHashPath)[0]
-
-        def gitCommitDatePath = retrieveGitCommitDate.outputPath
-        def gitCommitDate = Files.readAllLines(gitCommitDatePath)[0]
-
-        def dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z")
-        dateFormat.setTimeZone(new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC"))
-        def buildTime = dateFormat.format(new Date())
-
-        def file = new File(outputFile)
-        file.text = kotlinLicenseHeader +
-            """ |package batect
-                |
-                |// This file is generated automatically by the $generateVersionInfoFile.name Gradle task.
-                |// Do not edit it (it will be overwritten on the next build anyway).
-                |// Do not commit it.
-                |class VersionInfo {
-                |    val gitCommitHash = "$gitCommitHash"
-                |    val gitCommitDate = "$gitCommitDate"
-                |    val version = "$project.version"
-                |    val buildTime = "$buildTime"
-                |}
-                |""".stripMargin("|")
+        def text = versionInfoFileContents()
+        outputFile.text = text
     }
 }
 

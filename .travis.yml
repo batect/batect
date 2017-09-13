@@ -8,11 +8,11 @@ jobs:
   include:
     - stage: lint
       install: skip
-      script: ./gradlew spotlessCheck
+      script: ./gradlew spotlessCheck -PreleaseBuild
 
     - stage: unit test
       install: skip
-      script: ./gradlew check
+      script: ./gradlew check -PreleaseBuild
 
     - stage: journey test
       before_install:
@@ -21,8 +21,9 @@ jobs:
         - sudo apt-get update
         - sudo apt-get -y install docker-ce
         - docker --version
-      install: true # Travis runs ./gradlew assemble by default as an install step, we don't need that
-      script: ./gradlew journeyTest
+      # Travis runs ./gradlew assemble by default as an install step, we don't need that (but we do need before_install, so we can't use 'skip' below like we do above)
+      install: true
+      script: ./gradlew journeyTest -PreleaseBuild
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock

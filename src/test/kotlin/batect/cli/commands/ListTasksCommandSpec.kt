@@ -48,7 +48,7 @@ object ListTasksCommandSpec : Spek({
 
             val kodein = Kodein {
                 bind<ConfigurationLoader>() with instance(configLoader)
-                bind<PrintStream>(PrintStreamType.Error) with instance(outputStream)
+                bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
                 bind<String>(CommonOptions.ConfigurationFileName) with instance("thefile.yml")
             }
 

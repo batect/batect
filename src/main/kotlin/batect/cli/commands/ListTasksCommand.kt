@@ -27,7 +27,7 @@ class ListTasksCommandDefinition : CommandDefinition("tasks", "List all tasks de
     override fun createCommand(kodein: Kodein): Command = ListTasksCommand(
             kodein.instance(CommonOptions.ConfigurationFileName),
             kodein.instance(),
-            kodein.instance(PrintStreamType.Error))
+            kodein.instance(PrintStreamType.Output))
 }
 
 data class ListTasksCommand(val configFile: String, val configLoader: ConfigurationLoader, val outputStream: PrintStream) : Command {

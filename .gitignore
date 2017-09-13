@@ -20,3 +20,8 @@ classes/
 ### IntelliJ
 /.idea/
 out
+
+### batect-specific
+
+# Don't include the dynamically-generated version info file.
+src/main/kotlin/batect/VersionInfo.kt

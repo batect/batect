@@ -21,6 +21,7 @@ import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
 import batect.cli.commands.ListTasksCommandDefinition
 import batect.cli.commands.RunTaskCommandDefinition
+import batect.cli.commands.VersionInfoCommandDefinition
 
 class BatectCommandLineParser(kodein: Kodein) : CommandLineParser(kodein) {
     val configurationFileName: String by valueOption("config-file", "The configuration file to use.", "batect.yml", 'f')
@@ -28,6 +29,7 @@ class BatectCommandLineParser(kodein: Kodein) : CommandLineParser(kodein) {
     init {
         addCommandDefinition(RunTaskCommandDefinition())
         addCommandDefinition(ListTasksCommandDefinition())
+        addCommandDefinition(VersionInfoCommandDefinition())
     }
 
     override fun createBindings(): Kodein.Module {

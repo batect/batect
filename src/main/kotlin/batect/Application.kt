@@ -29,6 +29,7 @@ import batect.model.DependencyGraphProvider
 import batect.model.TaskStateMachineProvider
 import batect.model.steps.TaskStepRunner
 import batect.os.ProcessRunner
+import batect.os.SystemInfo
 import batect.ui.Console
 import batect.ui.ConsoleInfo
 import batect.ui.EventLoggerProvider
@@ -109,4 +110,6 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance()) }
     bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider() }
     bind<ConsoleInfo>() with singleton { ConsoleInfo(instance()) }
+    bind<VersionInfo>() with singleton { VersionInfo() }
+    bind<SystemInfo>() with singleton { SystemInfo(System.getProperties()) }
 }

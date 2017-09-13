@@ -106,6 +106,8 @@ object VersionInfoCommandSpec : Spek({
                             |JVM version:       THE JVM VERSION
                             |OS version:        THE OS VERSION
                             |Docker version:    DOCKER VERSION INFO
+                            |
+                            |For documentation and further information on batect, visit https://github.com/charleskorn/batect.
                             |""".trimMargin()))
                 }
 
@@ -128,6 +130,8 @@ object VersionInfoCommandSpec : Spek({
                             |JVM version:       THE JVM VERSION
                             |OS version:        THE OS VERSION
                             |Docker version:    (Could not get Docker version info because XXX.)
+                            |
+                            |For documentation and further information on batect, visit https://github.com/charleskorn/batect.
                             |""".trimMargin()))
                 }
 

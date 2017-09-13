@@ -43,6 +43,8 @@ data class VersionInfoCommand(
         outputStream.println("JVM version:       ${systemInfo.jvmVersion}")
         outputStream.println("OS version:        ${systemInfo.osVersion}")
         outputStream.println("Docker version:    ${getDockerVersion()}")
+        outputStream.println()
+        outputStream.println("For documentation and further information on batect, visit https://github.com/charleskorn/batect.")
 
         return 0
     }

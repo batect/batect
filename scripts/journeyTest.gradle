@@ -1,0 +1,66 @@
+/*
+   Copyright 2017 Charles Korn.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+import org.junit.platform.console.ConsoleLauncher
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.junit.platform:junit-platform-gradle-plugin:$junit_version"
+    }
+}
+
+sourceSets {
+    journeyTest
+}
+
+configurations {
+    journeyTestCompile.extendsFrom testCompile
+    journeyTestRuntime.extendsFrom testRuntime
+}
+
+// Gross hack because the JUnit 5 Gradle plugin doesn't provide a task class that we can extend from,
+// and the built-in Gradle Test task doesn't support JUnit 5.
+// Based on https://github.com/junit-team/junit5/blob/master/junit-platform-gradle-plugin/src/main/groovy/org/junit/platform/gradle/plugin/JUnitPlatformPlugin.groovy
+task journeyTest(type: JavaExec) {
+    description 'Runs the journey tests.'
+    group 'Verification'
+
+    dependsOn journeyTestClasses
+    dependsOn installShadowDist
+
+    inputs.files installDist.outputs.files
+
+    def reportDir = "$buildDir/test-results/journey-tests"
+    outputs.dir reportDir
+
+    classpath = sourceSets.journeyTest.runtimeClasspath + configurations.junitPlatform
+
+    def scanDirs = [sourceSets.journeyTest.output.resourcesDir] +
+            sourceSets.journeyTest.output.classesDirs +
+            sourceSets.journeyTest.output.dirs.files
+
+    main = ConsoleLauncher.class.getName()
+    args = [
+            '--scan-class-path', scanDirs.join(File.pathSeparator),
+            '--reports-dir', reportDir,
+            '--include-engine', 'spek',
+            '--details', 'none'
+    ]
+}

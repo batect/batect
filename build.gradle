@@ -14,9 +14,6 @@
    limitations under the License.
 */
 
-
-import org.junit.platform.console.ConsoleLauncher
-
 import java.nio.file.Paths
 import java.text.SimpleDateFormat
 
@@ -83,44 +80,7 @@ junitPlatform {
     }
 }
 
-sourceSets {
-    journeyTest
-}
-
-configurations {
-    journeyTestCompile.extendsFrom testCompile
-    journeyTestRuntime.extendsFrom testRuntime
-}
-
-// Gross hack because the JUnit 5 Gradle plugin doesn't provide a task class that we can extend from,
-// and the built-in Gradle Test task doesn't support JUnit 5.
-// Based on https://github.com/junit-team/junit5/blob/master/junit-platform-gradle-plugin/src/main/groovy/org/junit/platform/gradle/plugin/JUnitPlatformPlugin.groovy
-task journeyTest(type: JavaExec) {
-    description 'Runs the journey tests.'
-    group 'Verification'
-
-    dependsOn journeyTestClasses
-    dependsOn installShadowDist
-
-    inputs.files installDist.outputs.files
-
-    def reportDir = "$buildDir/test-results/journey-tests"
-    outputs.dir reportDir
-
-    classpath = sourceSets.journeyTest.runtimeClasspath + configurations.junitPlatform
-
-    def scanDirs = [sourceSets.journeyTest.output.resourcesDir] +
-            sourceSets.journeyTest.output.classesDirs +
-            sourceSets.journeyTest.output.dirs.files
-
-    main = ConsoleLauncher.class.getName()
-    args = [
-            '--scan-class-path', scanDirs.join(File.pathSeparator),
-            '--reports-dir', reportDir,
-            '--include-engine', 'spek',
-            '--details', 'none'
-    ]
-}
+apply from: 'scripts/journeyTest.gradle'
 
 def licenseText = """
    Copyright 2017 Charles Korn.

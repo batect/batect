@@ -12,8 +12,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * warn if a dependency is specified twice (either for a task or for a container)
 
 ### Features
-* run operations (image builds, container creation, container start) in parallel where possible
-  * better output to show what's going on
 * just use an existing image, pulling if necessary (ie. don't require a local Dockerfile)
 * allow the user to keep containers after failure so they can examine logs
 * overridable health check parameters for containers (so that you can have the health check poll very frequently when waiting for something to
@@ -47,7 +45,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * make test names consistent (eg. `it("should do something")` vs `it("does something")`)
 * logging (for batect internals)
 * option to print full stack trace on non-fatal exceptions
-* command to print version and system info
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use Docker API directly rather than using Docker CLI (would allow for more detailed progress and error reporting)
 * documentation

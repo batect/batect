@@ -55,6 +55,7 @@ object HelpCommandSpec : Spek({
                 val outputStream = PrintStream(output)
                 val parser = mock<CommandLineParser> {
                     on { applicationName } doReturn "the-cool-app"
+                    on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
                     on { getAllCommandDefinitions() } doReturn setOf(firstCommandDefinition, secondCommandDefinition)
                     on { getCommonOptions() } doReturn emptySet()
                 }
@@ -72,6 +73,8 @@ object HelpCommandSpec : Spek({
                         |
                         |For help on the options available for a command, run 'the-cool-app help <command>'.
                         |
+                        |Visit www.thecoolapp.com for documentation and more help.
+                        |
                         |""".trimMargin()))
                 }
 
@@ -86,6 +89,7 @@ object HelpCommandSpec : Spek({
 
                 val parser = mock<CommandLineParser> {
                     on { applicationName } doReturn "the-cool-app"
+                    on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
                     on { getAllCommandDefinitions() } doReturn setOf(firstCommandDefinition, secondCommandDefinition)
                     on { getCommonOptions() } doReturn setOf<OptionDefinition>(
                             createOption("awesomeness-level", "Level of awesomeness to use."),
@@ -114,6 +118,8 @@ object HelpCommandSpec : Spek({
                         |
                         |For help on the options available for a command, run 'the-cool-app help <command>'.
                         |
+                        |Visit www.thecoolapp.com for documentation and more help.
+                        |
                         |""".trimMargin()))
                 }
 
@@ -133,6 +139,7 @@ object HelpCommandSpec : Spek({
                         val outputStream = PrintStream(output)
                         val parser = mock<CommandLineParser> {
                             on { applicationName } doReturn "the-cool-app"
+                            on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
                             on { getCommandDefinitionByName("do-stuff") } doReturn firstCommandDefinition
                             on { getCommonOptions() } doReturn commonOptions
                         }
@@ -150,6 +157,8 @@ object HelpCommandSpec : Spek({
                             |
                             |For help on the common options available for all commands, run 'the-cool-app help'.
                             |
+                            |Visit www.thecoolapp.com for documentation and more help.
+                            |
                             |""".trimMargin()))
                         }
 
@@ -164,6 +173,7 @@ object HelpCommandSpec : Spek({
 
                         val parser = mock<CommandLineParser> {
                             on { applicationName } doReturn "the-cool-app"
+                            on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
                             on { getCommonOptions() } doReturn commonOptions
                             on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
                                 val thingToDo: String? by OptionalPositionalParameter("THING", "Thing to do.")
@@ -186,6 +196,8 @@ object HelpCommandSpec : Spek({
                             |
                             |For help on the common options available for all commands, run 'the-cool-app help'.
                             |
+                            |Visit www.thecoolapp.com for documentation and more help.
+                            |
                             |""".trimMargin()))
                         }
 
@@ -200,6 +212,7 @@ object HelpCommandSpec : Spek({
 
                         val parser = mock<CommandLineParser> {
                             on { applicationName } doReturn "the-cool-app"
+                            on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
                             on { getCommonOptions() } doReturn commonOptions
                             on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
                                 val thingToDo: String by RequiredPositionalParameter("THING", "Thing to do.")
@@ -222,6 +235,8 @@ object HelpCommandSpec : Spek({
                             |
                             |For help on the common options available for all commands, run 'the-cool-app help'.
                             |
+                            |Visit www.thecoolapp.com for documentation and more help.
+                            |
                             |""".trimMargin()))
                         }
 
@@ -236,6 +251,7 @@ object HelpCommandSpec : Spek({
 
                         val parser = mock<CommandLineParser> {
                             on { applicationName } doReturn "the-cool-app"
+                            on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
                             on { getCommonOptions() } doReturn commonOptions
                             on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
                                 val thingToDo: String by RequiredPositionalParameter("THING", "Thing to do.")
@@ -260,6 +276,8 @@ object HelpCommandSpec : Spek({
                             |
                             |For help on the common options available for all commands, run 'the-cool-app help'.
                             |
+                            |Visit www.thecoolapp.com for documentation and more help.
+                            |
                             |""".trimMargin()))
                         }
 
@@ -274,6 +292,7 @@ object HelpCommandSpec : Spek({
 
                         val parser = mock<CommandLineParser> {
                             on { applicationName } doReturn "the-cool-app"
+                            on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
                             on { getCommonOptions() } doReturn commonOptions
                             on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
                                 val thingToDo: String by RequiredPositionalParameter("THING", "Thing to do.")
@@ -298,6 +317,8 @@ object HelpCommandSpec : Spek({
                             |
                             |For help on the common options available for all commands, run 'the-cool-app help'.
                             |
+                            |Visit www.thecoolapp.com for documentation and more help.
+                            |
                             |""".trimMargin()))
                         }
 
@@ -312,6 +333,7 @@ object HelpCommandSpec : Spek({
 
                         val parser = mock<CommandLineParser> {
                             on { applicationName } doReturn "the-cool-app"
+                            on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
                             on { getCommonOptions() } doReturn commonOptions
                             on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
                                 val someOption: String? by valueOption("some-option", "Some option that you can set.", 'o')
@@ -334,6 +356,8 @@ object HelpCommandSpec : Spek({
                             |
                             |For help on the common options available for all commands, run 'the-cool-app help'.
                             |
+                            |Visit www.thecoolapp.com for documentation and more help.
+                            |
                             |""".trimMargin()))
                         }
 
@@ -348,6 +372,7 @@ object HelpCommandSpec : Spek({
 
                         val parser = mock<CommandLineParser> {
                             on { applicationName } doReturn "the-cool-app"
+                            on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
                             on { getCommonOptions() } doReturn commonOptions
                             on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
                                 val someOption: String? by valueOption("some-option", "Some option that you can set.", 'o')
@@ -378,6 +403,8 @@ object HelpCommandSpec : Spek({
                             |
                             |For help on the common options available for all commands, run 'the-cool-app help'.
                             |
+                            |Visit www.thecoolapp.com for documentation and more help.
+                            |
                             |""".trimMargin()))
                         }
 
@@ -392,6 +419,7 @@ object HelpCommandSpec : Spek({
                     val outputStream = PrintStream(output)
                     val parser = mock<CommandLineParser> {
                         on { applicationName } doReturn "the-cool-app"
+                        on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
                         on { getCommandDefinitionByName("do-stuff") } doReturn firstCommandDefinition
                     }
 
@@ -405,6 +433,8 @@ object HelpCommandSpec : Spek({
                             |Do the thing.
                             |
                             |This command does not take any options.
+                            |
+                            |Visit www.thecoolapp.com for documentation and more help.
                             |
                             |""".trimMargin()))
                     }

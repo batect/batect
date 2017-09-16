@@ -51,7 +51,7 @@ object CommandLineParserSpec : Spek({
                 bind<String>("the-string-from-original-container") with instance("The original string")
             }
 
-            val parser = object : CommandLineParser(injections, "the-cool-app", optionParser) {
+            val parser = object : CommandLineParser(injections, "the-cool-app", "For more help, visit www.help.com.", optionParser) {
                 override fun createBindings(): Kodein.Module {
                     return Kodein.Module {
                         bind<String>("the-string-from-created-container") with instance("The additional string")
@@ -197,7 +197,7 @@ object CommandLineParserSpec : Spek({
 
         describe("adding a command definition to the list of commands") {
             val injections = Kodein { }
-            val parser = CommandLineParser(injections, "the-cool-app")
+            val parser = CommandLineParser(injections, "the-cool-app", "For more help, visit www.help.com.")
 
             val commandDefinition = object : CommandDefinition("do-stuff", "Do the thing.", aliases = setOf("do-stuff-alias")) {
                 override fun createCommand(kodein: Kodein): Command = NullCommand()

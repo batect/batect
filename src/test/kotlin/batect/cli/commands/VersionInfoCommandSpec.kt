@@ -18,6 +18,7 @@ package batect.cli.commands
 
 import batect.PrintStreamType
 import batect.VersionInfo
+import batect.cli.CommandLineParser
 import batect.cli.Succeeded
 import batect.docker.DockerClient
 import batect.docker.DockerVersionInfoRetrievalFailedException
@@ -48,12 +49,14 @@ object VersionInfoCommandSpec : Spek({
             val outputStream = mock<PrintStream>()
             val systemInfo = mock<SystemInfo>()
             val dockerClient = mock<DockerClient>()
+            val commandLineParser = mock<CommandLineParser>()
 
             val kodein = Kodein {
                 bind<VersionInfo>() with instance(versionInfo)
                 bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
                 bind<SystemInfo>() with instance(systemInfo)
                 bind<DockerClient>() with instance(dockerClient)
+                bind<CommandLineParser>() with instance(commandLineParser)
             }
 
             describe("when given no parameters") {
@@ -65,7 +68,7 @@ object VersionInfoCommandSpec : Spek({
 
                 it("returns a command instance ready for use") {
                     assertThat((result as Succeeded).command,
-                            equalTo<Command>(VersionInfoCommand(versionInfo, outputStream, systemInfo, dockerClient)))
+                            equalTo<Command>(VersionInfoCommand(versionInfo, outputStream, systemInfo, dockerClient, commandLineParser)))
                 }
             }
         }
@@ -83,9 +86,13 @@ object VersionInfoCommandSpec : Spek({
                 on { osVersion } doReturn "THE OS VERSION"
             }
 
+            val commandLineParser = mock<CommandLineParser> {
+                on { helpBlurb } doReturn "For more information on batect, go to www.help.com."
+            }
+
             val dockerClient = mock<DockerClient>()
             val outputStream = ByteArrayOutputStream()
-            val command = VersionInfoCommand(versionInfo, PrintStream(outputStream), systemInfo, dockerClient)
+            val command = VersionInfoCommand(versionInfo, PrintStream(outputStream), systemInfo, dockerClient, commandLineParser)
 
             beforeEachTest {
                 reset(dockerClient)
@@ -107,7 +114,8 @@ object VersionInfoCommandSpec : Spek({
                             |OS version:        THE OS VERSION
                             |Docker version:    DOCKER VERSION INFO
                             |
-                            |For documentation and further information on batect, visit https://github.com/charleskorn/batect.
+                            |For more information on batect, go to www.help.com.
+                            |
                             |""".trimMargin()))
                 }
 
@@ -131,7 +139,8 @@ object VersionInfoCommandSpec : Spek({
                             |OS version:        THE OS VERSION
                             |Docker version:    (Could not get Docker version info because XXX.)
                             |
-                            |For documentation and further information on batect, visit https://github.com/charleskorn/batect.
+                            |For more information on batect, go to www.help.com.
+                            |
                             |""".trimMargin()))
                 }
 

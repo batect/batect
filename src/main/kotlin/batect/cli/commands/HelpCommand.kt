@@ -71,6 +71,8 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
 
         outputStream.println("For help on the options available for a command, run '${parser.applicationName} help <command>'.")
         outputStream.println()
+        outputStream.println(parser.helpBlurb)
+        outputStream.println()
     }
 
     private fun formatListOfOptions(options: Iterable<OptionDefinition>): Map<String, String> {
@@ -100,6 +102,9 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
             outputStream.println("For help on the common options available for all commands, run '${parser.applicationName} help'.")
             outputStream.println()
         }
+
+        outputStream.println(parser.helpBlurb)
+        outputStream.println()
     }
 
     private fun printCommandHelpHeader(commandDefinition: CommandDefinition) {

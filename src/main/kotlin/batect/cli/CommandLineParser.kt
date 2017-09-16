@@ -29,6 +29,7 @@ import batect.cli.options.ReadOptions
 open class CommandLineParser(
         private val kodein: Kodein,
         val applicationName: String,
+        val helpBlurb: String,
         override val optionParser: OptionParser
 ) : OptionParserContainer {
     private val helpCommand = HelpCommandDefinition(this)
@@ -36,7 +37,7 @@ open class CommandLineParser(
     private val commandDefinitions = mutableSetOf<CommandDefinition>()
     private val commandAliases = mutableMapOf<String, CommandDefinition>()
 
-    constructor(kodein: Kodein, applicationName: String) : this(kodein, applicationName, OptionParser())
+    constructor(kodein: Kodein, applicationName: String, helpBlurb: String) : this(kodein, applicationName, helpBlurb, OptionParser())
 
     init {
         addCommandDefinition(helpCommand)

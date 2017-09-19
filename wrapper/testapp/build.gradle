@@ -14,11 +14,13 @@
    limitations under the License.
 */
 
-// From https://stackoverflow.com/a/34121857/1668119
-fileTree('.') {
-    include '**/build.gradle'
-    exclude 'build.gradle'
-}.collect { relativePath(it.parent).replace(File.separator, ':') }
-    .each { include(it) }
+apply plugin: 'java'
+apply plugin: 'application'
 
-rootProject.name = 'batect'
+jar {
+    manifest {
+        attributes(
+            'Main-Class': 'testapp.Application'
+        )
+    }
+}

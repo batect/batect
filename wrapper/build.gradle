@@ -1,0 +1,62 @@
+/*
+   Copyright 2017 Charles Korn.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+def templateFile = 'src/template.sh'
+
+task shellcheck(type: Exec) {
+    def upToDateFile = getTemporaryDir().toPath().resolve("lastRun")
+
+    inputs.file templateFile
+    outputs.file upToDateFile
+
+    commandLine 'docker', 'run', '--rm', '-t',
+        '-v', "$projectDir:$projectDir",
+        '-w', projectDir,
+        'koalaman/shellcheck:v0.4.6', templateFile
+
+    doLast {
+        // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java
+        upToDateFile.text = System.currentTimeMillis()
+    }
+}
+
+task copyTestJar(type: Copy) {
+    from project("testapp").getTasksByName("jar", false)
+    into "test"
+}
+
+task test(type: Exec) {
+    def upToDateFile = getTemporaryDir().toPath().resolve("lastRun")
+
+    inputs.files fileTree(dir: 'test', include: '**/*')
+    inputs.file templateFile
+    outputs.file upToDateFile
+
+    dependsOn copyTestJar
+
+    commandLine './test/run.sh'
+
+    doLast {
+        // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java
+        upToDateFile.text = System.currentTimeMillis()
+    }
+}
+
+task check {
+    dependsOn shellcheck
+    dependsOn test
+}
+

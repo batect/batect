@@ -14,68 +14,14 @@
    limitations under the License.
 */
 
-buildscript {
-    ext.kotlin_version = '1.1.4-3'
-    ext.junit_version = '1.0.0-RC3'
-    ext.spek_version = '1.1.4'
+allprojects {
+    buildscript {
+        repositories {
+            mavenCentral()
+        }
+    }
 
     repositories {
         mavenCentral()
     }
-
-    dependencies {
-        classpath "org.junit.platform:junit-platform-gradle-plugin:$junit_version"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
 }
-
-plugins {
-    id 'com.github.ben-manes.versions' version '0.15.0'
-    id 'com.github.johnrengelman.shadow' version '2.0.1'
-}
-
-apply plugin: 'application'
-apply plugin: 'kotlin'
-apply plugin: 'org.junit.platform.gradle.plugin'
-
-mainClassName = 'batect.ApplicationKt'
-version = '0.1-preview'
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
-    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version" // Override the version of kotlin-reflect used by jackson-module-kotlin
-
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.1'
-    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.1'
-    compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.1'
-    compile 'com.github.salomonbrys.kodein:kodein:4.1.0'
-
-    testCompile 'com.natpryce:hamkrest:1.4.2.0'
-    testCompile 'com.nhaarman:mockito-kotlin-kt1.1:1.5.0'
-    testCompile 'com.google.jimfs:jimfs:1.1'
-    testCompile "org.jetbrains.spek:spek-api:$spek_version"
-
-    testCompile("org.jetbrains.spek:spek-data-driven-extension:$spek_version") {
-        exclude group: 'org.jetbrains.kotlin'
-    }
-
-    testRuntime("org.jetbrains.spek:spek-junit-platform-engine:$spek_version") {
-        exclude group: 'org.junit.platform'
-    }
-}
-
-junitPlatform {
-    filters {
-        engines {
-            include 'spek'
-        }
-    }
-}
-
-apply from: 'scripts/journeyTest.gradle'
-apply from: 'scripts/spotless.gradle'
-apply from: 'scripts/versionInfo.gradle'

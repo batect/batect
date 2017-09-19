@@ -1,7 +1,7 @@
 # Created by .ignore support plugin (hsz.mobi)
 ### Gradle template
 .gradle
-/build/
+build/
 
 # Ignore Gradle GUI config
 gradle-app.setting
@@ -24,4 +24,4 @@ out
 ### batect-specific
 
 # Don't include the dynamically-generated version info file.
-src/main/kotlin/batect/VersionInfo.kt
+app/src/main/kotlin/batect/VersionInfo.kt

@@ -66,20 +66,26 @@ String versionInfoFileContents() {
         |""".stripMargin("|")
 }
 
+def versionInfoFile = Paths.get("$projectDir/src/main/kotlin/batect/VersionInfo.kt").toFile()
+
 task generateVersionInfoFile {
     inputs.property("version", project.version)
-
-    def outputFile = Paths.get("$projectDir/src/main/kotlin/batect/VersionInfo.kt").toFile()
-    outputs.file outputFile
+    outputs.file versionInfoFile
 
     outputs.upToDateWhen {
-        outputFile.exists() && outputFile.text == versionInfoFileContents()
+        versionInfoFile.exists() && versionInfoFile.text == versionInfoFileContents()
     }
 
     doLast {
         def text = versionInfoFileContents()
-        outputFile.text = text
+        versionInfoFile.text = text
     }
 }
 
 compileKotlin.dependsOn generateVersionInfoFile
+
+task cleanVersionInfo(type: Delete) {
+    delete versionInfoFile
+}
+
+clean.dependsOn cleanVersionInfo

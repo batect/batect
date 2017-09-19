@@ -189,6 +189,32 @@ class DockerClient(
         }
     }
 
+    fun pullImage(imageName: String): DockerImage {
+        if (haveImageLocally(imageName)) {
+            return DockerImage(imageName)
+        }
+
+        val command = listOf("docker", "pull", imageName)
+        val result = processRunner.runAndCaptureOutput(command)
+
+        if (failed(result)) {
+            throw ImagePullFailedException("Pulling image '$imageName' failed. Output from Docker was: ${result.output.trim()}")
+        }
+
+        return DockerImage(imageName)
+    }
+
+    private fun haveImageLocally(imageName: String): Boolean {
+        val command = listOf("docker", "images", "-q", imageName)
+        val result = processRunner.runAndCaptureOutput(command)
+
+        if (failed(result)) {
+            throw ImagePullFailedException("Checking if image '$imageName' has already been pulled failed. Output from Docker was: ${result.output.trim()}")
+        }
+
+        return result.output.trim().isNotEmpty()
+    }
+
     private fun failed(result: ProcessOutput): Boolean = result.exitCode != 0
 }
 
@@ -201,6 +227,7 @@ class ImageBuildFailedException(val outputFromDocker: String) : RuntimeException
 class ContainerCreationFailedException(message: String) : RuntimeException(message)
 class ContainerStartFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Starting container '$containerId' failed. Output from Docker was: $outputFromDocker")
 class ContainerStopFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Stopping container '$containerId' failed. Output from Docker was: $outputFromDocker")
+class ImagePullFailedException(message: String) : RuntimeException(message)
 class ContainerDoesNotExistException(message: String) : RuntimeException(message)
 class ContainerHealthCheckException(message: String) : RuntimeException(message)
 class NetworkCreationFailedException(val outputFromDocker: String) : RuntimeException("Creation of network failed. Output from Docker was: $outputFromDocker")

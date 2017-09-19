@@ -26,20 +26,21 @@ import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.check
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.eq
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.reset
-import com.nhaarman.mockito_kotlin.verify
-import com.nhaarman.mockito_kotlin.whenever
 import batect.config.Container
 import batect.testutils.withCause
 import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.isA
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.check
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.eq
+import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.never
+import com.nhaarman.mockito_kotlin.reset
+import com.nhaarman.mockito_kotlin.verify
+import com.nhaarman.mockito_kotlin.whenever
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -454,9 +455,63 @@ object DockerClientSpec : Spek({
 
                 it("throws an appropriate exception") {
                     assertThat({ client.getDockerVersionInfo() }, throws<DockerVersionInfoRetrievalFailedException>(
-                            withMessage("Could not get Docker version information because RuntimeException was thrown: Something went wrong")
+                        withMessage("Could not get Docker version information because RuntimeException was thrown: Something went wrong")
                             and withCause(exception)
                     ))
+                }
+            }
+        }
+
+        describe("pulling an image") {
+            val pullCommand = listOf("docker", "pull", "some-image")
+
+            describe("when the image does not exist locally") {
+                beforeEachTest {
+                    whenever(processRunner.runAndCaptureOutput(listOf("docker", "images", "-q", "some-image"))).thenReturn(ProcessOutput(0, ""))
+                }
+
+                on("and pulling the image succeeds") {
+                    whenever(processRunner.runAndCaptureOutput(pullCommand)).thenReturn(ProcessOutput(0, "Image pulled!"))
+
+                    val image = client.pullImage("some-image")
+
+                    it("calls the Docker CLI to pull the image") {
+                        verify(processRunner).runAndCaptureOutput(pullCommand)
+                    }
+
+                    it("returns the Docker image") {
+                        assertThat(image, equalTo(DockerImage("some-image")))
+                    }
+                }
+
+                on("and pulling the image fails") {
+                    whenever(processRunner.runAndCaptureOutput(pullCommand)).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
+
+                    it("throws an appropriate exception") {
+                        assertThat({ client.pullImage("some-image") }, throws<ImagePullFailedException>(withMessage("Pulling image 'some-image' failed. Output from Docker was: Something went wrong.")))
+                    }
+                }
+            }
+
+            on("when the image already exists locally") {
+                whenever(processRunner.runAndCaptureOutput(listOf("docker", "images", "-q", "some-image"))).thenReturn(ProcessOutput(0, "abc123"))
+
+                val image = client.pullImage("some-image")
+
+                it("does not call the Docker CLI to pull the image again") {
+                    verify(processRunner, never()).runAndCaptureOutput(pullCommand)
+                }
+
+                it("returns the Docker image") {
+                    assertThat(image, equalTo(DockerImage("some-image")))
+                }
+            }
+
+            on("when checking if the image has already been pulled fails") {
+                whenever(processRunner.runAndCaptureOutput(listOf("docker", "images", "-q", "some-image"))).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
+
+                it("throws an appropriate exception") {
+                    assertThat({ client.pullImage("some-image") }, throws<ImagePullFailedException>(withMessage("Checking if image 'some-image' has already been pulled failed. Output from Docker was: Something went wrong.")))
                 }
             }
         }
@@ -464,10 +519,10 @@ object DockerClientSpec : Spek({
 })
 
 private fun eventsCommandForContainer(containerId: String) = listOf("docker", "events", "--since=0",
-        "--format", "{{.Status}}",
-        "--filter", "container=$containerId",
-        "--filter", "event=die",
-        "--filter", "event=health_status")
+    "--format", "{{.Status}}",
+    "--filter", "container=$containerId",
+    "--filter", "event=die",
+    "--filter", "event=health_status")
 
 private fun ProcessRunner.whenGettingEventsForContainerRespondWith(containerId: String, event: String) {
     val eventsCommand = eventsCommandForContainer(containerId)

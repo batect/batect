@@ -1,3 +1,5 @@
+import java.nio.file.Files
+
 /*
    Copyright 2017 Charles Korn.
 
@@ -14,7 +16,7 @@
    limitations under the License.
 */
 
-def templateFile = 'src/template.sh'
+def templateFile = project.file 'src/template.sh'
 
 task shellcheck(type: Exec) {
     def upToDateFile = getTemporaryDir().toPath().resolve("lastRun")
@@ -60,3 +62,20 @@ task check {
     dependsOn test
 }
 
+task build {
+    def scriptDir = getBuildDir().toPath().resolve("scripts")
+    def scriptFile = scriptDir.resolve(rootProject.name)
+
+    inputs.file templateFile
+    inputs.property("version", { version })
+    outputs.file scriptFile
+
+    doLast {
+        def script = templateFile.text
+            .replace("VERSION-GOES-HERE", version)
+            .replace("DOWNLOAD-URL-GOES-HERE", "https://github.com/charleskorn/batect/releases/download/$version/batect-${version}.jar")
+
+        Files.createDirectories scriptDir
+        scriptFile.text = script
+    }
+}

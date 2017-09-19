@@ -37,7 +37,6 @@ apply plugin: 'org.junit.platform.gradle.plugin'
 applicationName = 'batect'
 archivesBaseName = 'batect'
 mainClassName = 'batect.ApplicationKt'
-version = '0.1-preview'
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"

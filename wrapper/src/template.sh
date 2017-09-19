@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-VERSION="version-goes-here"
-DOWNLOAD_URL=${BATECT_DOWNLOAD_URL:-"download-url-goes-here"}
+VERSION="VERSION-GOES-HERE"
+DOWNLOAD_URL=${BATECT_DOWNLOAD_URL:-"DOWNLOAD-URL-GOES-HERE"}
 
 ROOT_CACHE_DIR=${BATECT_CACHE_DIR:-"~/.batect/cache"}
 CACHE_DIR="$ROOT_CACHE_DIR/$VERSION"
@@ -30,7 +30,7 @@ function download() {
     fi
 
     mkdir -p "$CACHE_DIR"
-    curl -# --fail --silent --show-error --output "$JAR_PATH" "$DOWNLOAD_URL"
+    curl -# --fail --silent --show-error --location --output "$JAR_PATH" "$DOWNLOAD_URL"
 }
 
 function runApplication() {

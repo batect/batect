@@ -81,7 +81,7 @@ data class ContainerFromFile(
         val resolvedLocalPath = when (result) {
             is ResolvedToDirectory -> result.path
             is ResolvedToFile -> result.path
-            is NotFound -> throw ConfigurationException("Local path '${volumeMount.localPath}' (resolved to '${result.path}') for volume mount in container '$containerName' does not exist.")
+            is NotFound -> result.path
             is InvalidPath -> throw ConfigurationException("Local path '${volumeMount.localPath}' for volume mount in container '$containerName' is not a valid path.")
         }
 

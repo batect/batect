@@ -147,10 +147,11 @@ object ConfigurationFileSpec : Spek({
                 }
             }
 
-            on("converting a configuration file with a container that has a volume mount that is a %s",
-                    data("directory", ResolvedToDirectory("/some_resolved_path") as PathResolutionResult),
-                    data("file", ResolvedToFile("/some_resolved_path") as PathResolutionResult))
-            { _, resolution ->
+            on("converting a configuration file with a container that has a volume mount that %s",
+                    data("is a directory", ResolvedToDirectory("/some_resolved_path") as PathResolutionResult),
+                    data("is a file", ResolvedToFile("/some_resolved_path") as PathResolutionResult),
+                    data("does not exist", NotFound("/some_resolved_path") as PathResolutionResult)
+            ) { _, resolution ->
                 val originalBuildDirectory = "build_dir"
                 val originalVolumeMountPath = "local_volume_path"
                 val container = ContainerFromFile(originalBuildDirectory, volumeMounts = setOf(VolumeMount(originalVolumeMountPath, "/container_path", "some-options")))
@@ -169,10 +170,7 @@ object ConfigurationFileSpec : Spek({
                 }
             }
 
-            on("converting a configuration file with a container that has a volume mount that has a local path that %s",
-                    data("does not exist", NotFound("/some_resolved_path") as PathResolutionResult, "Local path 'local_volume_path' (resolved to '/some_resolved_path') for volume mount in container 'the_container_name' does not exist."),
-                    data("is an invalid path", InvalidPath as PathResolutionResult, "Local path 'local_volume_path' for volume mount in container 'the_container_name' is not a valid path."))
-            { _, resolution, expectedMessage ->
+            on("converting a configuration file with a container that has a volume mount that has a local path that is an invalid path") {
                 val originalBuildDirectory = "build_dir"
                 val originalVolumeMountPath = "local_volume_path"
                 val container = ContainerFromFile(originalBuildDirectory, volumeMounts = setOf(VolumeMount(originalVolumeMountPath, "/container_path", "some-options")))
@@ -180,11 +178,12 @@ object ConfigurationFileSpec : Spek({
 
                 val pathResolver = mock<PathResolver> {
                     on { resolve(originalBuildDirectory) } doReturn ResolvedToDirectory("/resolved_build_dir")
-                    on { resolve(originalVolumeMountPath) } doReturn resolution
+                    on { resolve(originalVolumeMountPath) } doReturn InvalidPath
                 }
 
                 it("fails with an appropriate error message") {
-                    assertThat({ configFile.toConfiguration(pathResolver) }, throws(withMessage(expectedMessage)))
+                    assertThat({ configFile.toConfiguration(pathResolver) },
+                        throws(withMessage("Local path 'local_volume_path' for volume mount in container 'the_container_name' is not a valid path.")))
                 }
             }
         }

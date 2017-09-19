@@ -11,6 +11,7 @@ import unittest
 
 class WrapperScriptTests(unittest.TestCase):
     http_port = 8080
+    default_download_url = "http://localhost:" + str(http_port) + "/test/testapp.jar"
 
     def setUp(self):
         self.start_server()
@@ -38,11 +39,17 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertIn("I received 2 arguments.\narg 3\narg 4\n", second_result.stdout.decode())
         self.assertEqual(first_result.returncode, 0)
 
+    def test_download_fails(self):
+        result = self.run_script(["arg 1", "arg 2"], download_url=self.default_download_url + "-does-not-exist")
 
-    def run_script(self, args):
+        self.assertIn("Downloading batect", result.stdout.decode())
+        self.assertIn("404 File not found", result.stdout.decode())
+        self.assertNotEqual(result.returncode, 0)
+
+    def run_script(self, args, download_url=default_download_url):
         env = {
             "BATECT_CACHE_DIR": self.cache_dir,
-            "BATECT_DOWNLOAD_URL": "http://localhost:" + str(self.http_port) + "/test/testapp.jar"
+            "BATECT_DOWNLOAD_URL": download_url
         }
 
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "src", "template.sh")

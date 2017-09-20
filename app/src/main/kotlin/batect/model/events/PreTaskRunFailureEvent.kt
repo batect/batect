@@ -22,6 +22,7 @@ import batect.model.steps.CreateContainerStep
 import batect.model.steps.CreateTaskNetworkStep
 import batect.model.steps.DeleteTaskNetworkStep
 import batect.model.steps.DisplayTaskFailureStep
+import batect.model.steps.PullImageStep
 import batect.model.steps.StartContainerStep
 import batect.model.steps.WaitForContainerToBecomeHealthyStep
 
@@ -29,6 +30,7 @@ abstract class PreTaskRunFailureEvent() : TaskEvent() {
     override fun apply(context: TaskEventContext) {
         context.abort()
         context.removePendingStepsOfType<BuildImageStep>()
+        context.removePendingStepsOfType<PullImageStep>()
         context.removePendingStepsOfType<CreateContainerStep>()
         context.removePendingStepsOfType<CreateTaskNetworkStep>()
         context.removePendingStepsOfType<StartContainerStep>()

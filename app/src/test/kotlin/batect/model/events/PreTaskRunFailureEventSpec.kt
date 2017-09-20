@@ -32,6 +32,8 @@ import batect.model.steps.WaitForContainerToBecomeHealthyStep
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
+import batect.model.steps.PullImageStep
+import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -63,6 +65,10 @@ object PreTaskRunFailureEventSpec : Spek({
 
                 it("removes all pending image build steps") {
                     verify(context).removePendingStepsOfType(BuildImageStep::class)
+                }
+
+                it("removes all pending image pull steps") {
+                    verify(context).removePendingStepsOfType(PullImageStep::class)
                 }
 
                 it("removes all pending container creation steps") {
@@ -126,8 +132,8 @@ object PreTaskRunFailureEventSpec : Spek({
 
             on("when the task network has been created and some containers have been created") {
                 val network = DockerNetwork("the-id")
-                val container1 = Container("container-1", "/container-1-build-dir")
-                val container2 = Container("container-2", "/container-2-build-dir")
+                val container1 = Container("container-1", imageSourceDoesNotMatter())
+                val container2 = Container("container-2", imageSourceDoesNotMatter())
                 val dockerContainer1 = DockerContainer("docker-container-1")
                 val dockerContainer2 = DockerContainer("docker-container-2")
 

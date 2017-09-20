@@ -29,6 +29,7 @@ import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.testutils.CreateForEachTest
+import batect.testutils.imageSourceDoesNotMatter
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.eq
@@ -65,7 +66,7 @@ object SimpleEventLoggerSpec : Spek({
         }
 
         val logger by CreateForEachTest(this) { SimpleEventLogger(console, errorConsole) }
-        val container = Container("the-cool-container", "/build/dir/doesnt/matter")
+        val container = Container("the-cool-container", imageSourceDoesNotMatter())
 
         describe("handling when steps start") {
             on("when a 'build image' step is starting") {
@@ -171,7 +172,7 @@ object SimpleEventLoggerSpec : Spek({
                     }
 
                     on("and a 'remove container' step has already been run") {
-                        val previousStep = RemoveContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id"))
+                        val previousStep = RemoveContainerStep(Container("other-container", imageSourceDoesNotMatter()), DockerContainer("some-other-id"))
                         logger.onStartingTaskStep(previousStep)
 
                         logger.onStartingTaskStep(step)
@@ -182,7 +183,7 @@ object SimpleEventLoggerSpec : Spek({
                     }
 
                     on("and a 'clean up container' step has already been run") {
-                        val previousStep = CleanUpContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id"))
+                        val previousStep = CleanUpContainerStep(Container("other-container", imageSourceDoesNotMatter()), DockerContainer("some-other-id"))
                         logger.onStartingTaskStep(previousStep)
 
                         logger.onStartingTaskStep(step)

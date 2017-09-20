@@ -25,6 +25,7 @@ import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
 import batect.model.steps.FinishTaskStep
 import batect.config.Container
+import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -36,7 +37,7 @@ object TaskNetworkDeletedEventSpec : Spek({
 
         describe("being applied") {
             on("when the task is completing normally") {
-                val taskContainer = Container("task-container", "/build-dir")
+                val taskContainer = Container("task-container", imageSourceDoesNotMatter())
                 val context = mock<TaskEventContext> {
                     on { getSinglePastEventOfType<RunningContainerExitedEvent>() } doReturn RunningContainerExitedEvent(taskContainer, 123)
                 }

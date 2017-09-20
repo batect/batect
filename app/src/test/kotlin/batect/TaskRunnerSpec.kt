@@ -26,6 +26,7 @@ import batect.model.DependencyGraph
 import batect.model.DependencyGraphProvider
 import batect.model.TaskStateMachine
 import batect.model.TaskStateMachineProvider
+import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.EventLogger
 import batect.ui.EventLoggerProvider
 import com.natpryce.hamkrest.assertion.assertThat
@@ -83,7 +84,7 @@ object TaskRunnerSpec : Spek({
         }
 
         on("running a task that exists") {
-            val container = Container("some-container", "/some-build-dir")
+            val container = Container("some-container", imageSourceDoesNotMatter())
             val runConfiguration = TaskRunConfiguration(container.name)
             val task = Task("some-task", runConfiguration)
             val config = Configuration("some-project", TaskMap(task), ContainerMap(container))

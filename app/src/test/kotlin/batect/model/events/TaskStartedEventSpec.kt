@@ -16,6 +16,7 @@
 
 package batect.model.events
 
+import batect.config.BuildImage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
@@ -24,6 +25,10 @@ import com.nhaarman.mockito_kotlin.verify
 import batect.model.steps.BuildImageStep
 import batect.model.steps.CreateTaskNetworkStep
 import batect.config.Container
+import batect.config.PullImage
+import batect.model.steps.PullImageStep
+import com.nhaarman.mockito_kotlin.never
+import com.nhaarman.mockito_kotlin.times
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -34,19 +39,30 @@ object TaskStartedEventSpec : Spek({
         val event = TaskStartedEvent
 
         on("being applied") {
-            val container1 = Container("container-1", "/container-1-build-dir")
-            val container2 = Container("container-2", "/container-2-build-dir")
+            val container1 = Container("container-1", BuildImage("/container-1-build-dir"))
+            val container2 = Container("container-2", BuildImage("/container-2-build-dir"))
+            val container3 = Container("container-3", PullImage("common-image"))
+            val container4 = Container("container-4", PullImage("common-image"))
 
             val context = mock<TaskEventContext> {
-                on { allTaskContainers } doReturn setOf(container1, container2)
+                on { allTaskContainers } doReturn setOf(container1, container2, container3, container4)
                 on { projectName } doReturn "the-project"
             }
 
             event.apply(context)
 
-            it("queues build image steps for each container in the task dependency graph") {
+            it("queues 'build image' steps for each container in the task dependency graph that requires a image to be built") {
                 verify(context).queueStep(BuildImageStep("the-project", container1))
                 verify(context).queueStep(BuildImageStep("the-project", container2))
+            }
+
+            it("does not queue 'build image' steps for containers in the task dependency graph that use an existing image") {
+                verify(context, never()).queueStep(BuildImageStep("the-project", container3))
+                verify(context, never()).queueStep(BuildImageStep("the-project", container4))
+            }
+
+            it("queues 'pull image' steps for each unique image required by containers in the task dependency graph") {
+                verify(context, times(1)).queueStep(PullImageStep("common-image"))
             }
 
             it("queues a step to create the task network") {

@@ -16,6 +16,7 @@
 
 package batect.ui
 
+import batect.config.BuildImage
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
@@ -30,6 +31,7 @@ import batect.model.steps.CreateContainerStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.testutils.CreateForEachTest
+import batect.testutils.imageSourceDoesNotMatter
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.eq
@@ -42,11 +44,11 @@ import org.jetbrains.spek.api.dsl.on
 
 object ContainerStartupProgressLineSpec : Spek({
     describe("a container startup progress line") {
-        val dependencyA = Container("dependency-a", "/dependency-a-build-dir")
-        val dependencyB = Container("dependency-b", "/dependency-b-build-dir")
-        val dependencyC = Container("dependency-c", "/dependency-c-build-dir")
-        val container = Container("some-container", "/some-build-dir")
-        val otherContainer = Container("other-container", "/other-build-dir")
+        val dependencyA = Container("dependency-a", imageSourceDoesNotMatter())
+        val dependencyB = Container("dependency-b", imageSourceDoesNotMatter())
+        val dependencyC = Container("dependency-c", imageSourceDoesNotMatter())
+        val container = Container("some-container", BuildImage("/some-build-dir"))
+        val otherContainer = Container("other-container", BuildImage("/other-build-dir"))
 
         val line: ContainerStartupProgressLine by CreateForEachTest(this) {
             ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC))

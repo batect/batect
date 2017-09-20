@@ -16,6 +16,13 @@
 
 package batect.model.events
 
+import batect.config.BuildImage
+import batect.config.Container
+import batect.config.PullImage
+import batect.docker.DockerImage
+import batect.docker.DockerNetwork
+import batect.model.steps.CreateContainerStep
+import batect.model.steps.DeleteTaskNetworkStep
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.any
@@ -23,11 +30,6 @@ import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
-import batect.model.steps.CreateContainerStep
-import batect.model.steps.DeleteTaskNetworkStep
-import batect.config.Container
-import batect.docker.DockerImage
-import batect.docker.DockerNetwork
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -38,14 +40,14 @@ object TaskNetworkCreatedEventSpec : Spek({
         val network = DockerNetwork("some-network")
         val event = TaskNetworkCreatedEvent(network)
 
-        val container1 = Container("container-1", "/container-1-build-dir")
+        val containerWithImageToBuild = Container("container-1", BuildImage("/container-1-build-dir"))
         val image1 = DockerImage("image-1")
 
-        val container2 = Container("container-2", "/container-2-build-dir")
+        val containerWithImageToPull = Container("container-2", PullImage("image-2"))
         val image2 = DockerImage("image-2")
 
         describe("being applied") {
-            on("when no images have been built yet") {
+            on("when no images have been built or pulled yet") {
                 val context = mock<TaskEventContext> { }
                 event.apply(context)
 
@@ -54,21 +56,27 @@ object TaskNetworkCreatedEventSpec : Spek({
                 }
             }
 
-            on("when some images have been built already") {
+            on("when some images have been built or pulled already") {
                 val context = mock<TaskEventContext> {
                     on { getPastEventsOfType<ImageBuiltEvent>() } doReturn setOf(
-                            ImageBuiltEvent(container1, image1),
-                            ImageBuiltEvent(container2, image2)
+                        ImageBuiltEvent(containerWithImageToBuild, image1)
                     )
-                    on { commandForContainer(container1) } doReturn "command-1"
-                    on { commandForContainer(container2) } doReturn "command-2"
+
+                    on { getPastEventsOfType<ImagePulledEvent>() } doReturn setOf(
+                        ImagePulledEvent(image2)
+                    )
+
+                    on { commandForContainer(containerWithImageToBuild) } doReturn "command-1"
+                    on { commandForContainer(containerWithImageToPull) } doReturn "command-2"
+
+                    on { allTaskContainers } doReturn setOf(containerWithImageToBuild, containerWithImageToPull)
                 }
 
                 event.apply(context)
 
                 it("queues 'create container' steps for them") {
-                    verify(context).queueStep(CreateContainerStep(container1, "command-1", image1, network))
-                    verify(context).queueStep(CreateContainerStep(container2, "command-2", image2, network))
+                    verify(context).queueStep(CreateContainerStep(containerWithImageToBuild, "command-1", image1, network))
+                    verify(context).queueStep(CreateContainerStep(containerWithImageToPull, "command-2", image2, network))
                 }
 
                 it("does not queue a 'delete task network' step") {
@@ -80,7 +88,10 @@ object TaskNetworkCreatedEventSpec : Spek({
                 val context = mock<TaskEventContext> {
                     on { isAborting } doReturn true
                     on { getPastEventsOfType<ImageBuiltEvent>() } doReturn setOf(
-                            ImageBuiltEvent(container1, image1)
+                        ImageBuiltEvent(containerWithImageToBuild, image1)
+                    )
+                    on { getPastEventsOfType<ImagePulledEvent>() } doReturn setOf(
+                        ImagePulledEvent(image2)
                     )
                 }
 
@@ -90,7 +101,7 @@ object TaskNetworkCreatedEventSpec : Spek({
                     verify(context).queueStep(DeleteTaskNetworkStep(network))
                 }
 
-                it("does not queue any 'create container' steps for the containers with built images") {
+                it("does not queue any 'create container' steps for the containers with built or pulled images") {
                     verify(context, never()).queueStep(any<CreateContainerStep>())
                 }
             }

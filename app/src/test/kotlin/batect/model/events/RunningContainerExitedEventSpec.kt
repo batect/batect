@@ -26,6 +26,7 @@ import batect.config.Container
 import batect.docker.DockerContainer
 import batect.model.steps.RemoveContainerStep
 import batect.model.steps.StopContainerStep
+import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -34,10 +35,10 @@ import org.jetbrains.spek.api.dsl.on
 
 object RunningContainerExitedEventSpec : Spek({
     describe("a 'running container exited' event") {
-        val dependency1 = Container("dependency-container-1", "/dependency-container-1-build-dir")
-        val dependency2 = Container("dependency-container-2", "/dependency-container-2-build-dir")
+        val dependency1 = Container("dependency-container-1", imageSourceDoesNotMatter())
+        val dependency2 = Container("dependency-container-2", imageSourceDoesNotMatter())
 
-        val container = Container("container-1", "/container-1-build-dir", dependencies = setOf(dependency1.name, dependency2.name))
+        val container = Container("container-1", imageSourceDoesNotMatter(), dependencies = setOf(dependency1.name, dependency2.name))
         val event = RunningContainerExitedEvent(container, 123)
 
         describe("being applied") {

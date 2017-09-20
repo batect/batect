@@ -41,6 +41,7 @@ import batect.model.steps.DeleteTaskNetworkStep
 import batect.model.steps.DisplayTaskFailureStep
 import batect.model.steps.TaskStep
 import batect.testutils.CreateForEachTest
+import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -49,17 +50,17 @@ import org.jetbrains.spek.api.dsl.on
 
 object TaskStateMachineSpec : Spek({
     describe("a task state machine") {
-        val dependencyContainer1 = Container("dependency-container-1", "/other-dir-1")
+        val dependencyContainer1 = Container("dependency-container-1", imageSourceDoesNotMatter())
 
-        val dependencyContainer2 = Container("dependency-container-2", "/other-dir-2",
+        val dependencyContainer2 = Container("dependency-container-2", imageSourceDoesNotMatter(),
                 dependencies = setOf(dependencyContainer1.name),
                 command = "do-stuff-in-container-2")
 
-        val taskContainer = Container("some-container", "/build-dir",
+        val taskContainer = Container("some-container", imageSourceDoesNotMatter(),
                 dependencies = setOf(dependencyContainer2.name),
                 command = "do-stuff-in-task-container")
 
-        val unrelatedContainer = Container("some-other-container", "/some-other-dir")
+        val unrelatedContainer = Container("some-other-container", imageSourceDoesNotMatter())
         val runConfig = TaskRunConfiguration(taskContainer.name, "some-command")
         val task = Task("the-task", runConfig)
         val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, unrelatedContainer))

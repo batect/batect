@@ -28,6 +28,7 @@ import batect.model.steps.DeleteTaskNetworkStep
 import batect.config.Container
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -35,13 +36,13 @@ import org.jetbrains.spek.api.dsl.on
 
 object ContainerRemovedEventSpec : Spek({
     describe("a 'container removed' event") {
-        val container = Container("container-1", "/build-dir")
+        val container = Container("container-1", imageSourceDoesNotMatter())
         val event = ContainerRemovedEvent(container)
 
         describe("being applied") {
-            val otherContainer1 = Container("other-container-1", "/other-container-1-build-dir")
-            val otherContainer2 = Container("other-container-2", "/other-container-2-build-dir")
-            val containerThatFailedToCreate = Container("failed-to-create", "/failed-to-create-build-dir")
+            val otherContainer1 = Container("other-container-1", imageSourceDoesNotMatter())
+            val otherContainer2 = Container("other-container-2", imageSourceDoesNotMatter())
+            val containerThatFailedToCreate = Container("failed-to-create", imageSourceDoesNotMatter())
             val image = DockerImage("some-image")
             val network = DockerNetwork("the-network")
 

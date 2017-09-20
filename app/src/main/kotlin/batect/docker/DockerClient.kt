@@ -16,6 +16,7 @@
 
 package batect.docker
 
+import batect.config.BuildImage
 import batect.config.Container
 import batect.os.Exited
 import batect.os.KillProcess
@@ -34,7 +35,7 @@ class DockerClient(
 
     fun build(projectName: String, container: Container): DockerImage {
         val label = imageLabellingStrategy.labelImage(projectName, container)
-        val command = listOf("docker", "build", "--tag", label, container.buildDirectory)
+        val command = listOf("docker", "build", "--tag", label, (container.imageSource as BuildImage).buildDirectory)
         val result = processRunner.runAndCaptureOutput(command)
 
         if (failed(result)) {

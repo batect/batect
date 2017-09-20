@@ -16,14 +16,32 @@
 
 package batect.model.events
 
+import batect.config.BuildImage
+import batect.config.PullImage
 import batect.model.steps.BuildImageStep
 import batect.model.steps.CreateTaskNetworkStep
+import batect.model.steps.PullImageStep
 
 object TaskStartedEvent : TaskEvent() {
     override fun apply(context: TaskEventContext) {
         context.queueStep(CreateTaskNetworkStep)
 
-        context.allTaskContainers.forEach { context.queueStep(BuildImageStep(context.projectName, it)) }
+        buildImages(context)
+        pullImages(context)
+    }
+
+    private fun buildImages(context: TaskEventContext) {
+        context.allTaskContainers
+            .filter { it.imageSource is BuildImage }
+            .forEach { context.queueStep(BuildImageStep(context.projectName, it)) }
+    }
+
+    private fun pullImages(context: TaskEventContext) {
+        context.allTaskContainers
+            .map { it.imageSource }
+            .filterIsInstance<PullImage>()
+            .toSet()
+            .forEach { context.queueStep(PullImageStep(it.imageName)) }
     }
 
     override fun toString() = this::class.simpleName!!

@@ -27,6 +27,7 @@ import batect.model.steps.RemoveContainerStep
 import batect.model.steps.StopContainerStep
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -34,11 +35,11 @@ import org.jetbrains.spek.api.dsl.on
 
 object ContainerStoppedEventSpec : Spek({
     describe("a 'container stopped' event") {
-        val dependency1 = Container("dependency-container-1", "/dependency-container-1-build-dir")
-        val dependency2 = Container("dependency-container-2", "/dependency-container-2-build-dir")
-        val dependency3 = Container("dependency-container-3", "/dependency-container-3-build-dir", dependencies = setOf(dependency2.name))
+        val dependency1 = Container("dependency-container-1", imageSourceDoesNotMatter())
+        val dependency2 = Container("dependency-container-2", imageSourceDoesNotMatter())
+        val dependency3 = Container("dependency-container-3", imageSourceDoesNotMatter(), dependencies = setOf(dependency2.name))
 
-        val container = Container("container-1", "/container-1-build-dir", dependencies = setOf(dependency1.name, dependency2.name))
+        val container = Container("container-1", imageSourceDoesNotMatter(), dependencies = setOf(dependency1.name, dependency2.name))
         val event = ContainerStoppedEvent(container)
 
         describe("being applied") {

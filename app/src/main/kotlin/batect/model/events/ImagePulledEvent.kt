@@ -21,32 +21,26 @@ import batect.config.PullImage
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.model.steps.CreateContainerStep
-import batect.model.steps.DeleteTaskNetworkStep
 
-data class TaskNetworkCreatedEvent(val network: DockerNetwork) : TaskEvent() {
+data class ImagePulledEvent(val image: DockerImage) : TaskEvent() {
     override fun apply(context: TaskEventContext) {
         if (context.isAborting) {
-            context.queueStep(DeleteTaskNetworkStep(network))
             return
         }
 
-        context.getPastEventsOfType<ImageBuiltEvent>()
-            .forEach { createContainer(it.container, it.image, context) }
+        val networkCreationEvent = context.getSinglePastEventOfType<TaskNetworkCreatedEvent>()
 
-        context.getPastEventsOfType<ImagePulledEvent>()
-            .forEach { createContainersForImage(it.image, context) }
+        if (networkCreationEvent != null) {
+            context.allTaskContainers
+                .filter { it.imageSource == PullImage(image.id) }
+                .forEach { createContainer(it, networkCreationEvent.network, context) }
+        }
     }
 
-    private fun createContainersForImage(image: DockerImage, context: TaskEventContext) {
-        context.allTaskContainers
-            .filter { it.imageSource == PullImage(image.id) }
-            .forEach { createContainer(it, image, context) }
-    }
-
-    private fun createContainer(container: Container, image: DockerImage, context: TaskEventContext) {
+    private fun createContainer(container: Container, network: DockerNetwork, context: TaskEventContext) {
         val command = context.commandForContainer(container)
         context.queueStep(CreateContainerStep(container, command, image, network))
     }
 
-    override fun toString() = "${this::class.simpleName}(network ID: '${network.id}')"
+    override fun toString() = "${this::class.simpleName}(image: '${image.id}')"
 }

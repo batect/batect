@@ -16,6 +16,7 @@
 
 package batect.config.io
 
+import batect.config.BuildImage
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
@@ -28,6 +29,7 @@ import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import batect.config.Configuration
+import batect.config.ImageSource
 import batect.config.PortMapping
 import batect.config.VolumeMount
 import batect.testutils.withLineNumber
@@ -248,7 +250,7 @@ object ConfigurationLoaderSpec : Spek({
             it("should load the build directory specified for the container and resolve it to an absolute path") {
                 val container = config.containers["container-1"]!!
                 assertThat(container.name, equalTo("container-1"))
-                assertThat(container.buildDirectory, equalTo("/resolved/container-1-build-dir"))
+                assertThat(container.imageSource, equalTo<ImageSource>(BuildImage("/resolved/container-1-build-dir")))
             }
         }
 
@@ -285,7 +287,7 @@ object ConfigurationLoaderSpec : Spek({
             it("should load all of the configuration specified for the container") {
                 val container = config.containers["container-1"]!!
                 assertThat(container.name, equalTo("container-1"))
-                assertThat(container.buildDirectory, equalTo("/resolved/container-1-build-dir"))
+                assertThat(container.imageSource, equalTo<ImageSource>(BuildImage("/resolved/container-1-build-dir")))
                 assertThat(container.command, equalTo("do-the-thing.sh some-param"))
                 assertThat(container.environment, equalTo(mapOf("OPTS" to "-Dthing", "BOOL_VALUE" to "1")))
                 assertThat(container.workingDirectory, equalTo("/here"))

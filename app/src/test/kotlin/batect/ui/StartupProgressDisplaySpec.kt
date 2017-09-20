@@ -21,6 +21,7 @@ import batect.docker.DockerNetwork
 import batect.model.events.TaskNetworkCreatedEvent
 import batect.model.steps.BuildImageStep
 import batect.testutils.CreateForEachTest
+import batect.testutils.imageSourceDoesNotMatter
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.reset
@@ -48,7 +49,7 @@ object StartupProgressDisplaySpec : Spek({
         }
 
         on("receiving notification that a step is about to start") {
-            val step = BuildImageStep("some-project", Container("some-container", "/some-build-dir"))
+            val step = BuildImageStep("some-project", Container("some-container", imageSourceDoesNotMatter()))
             display.onStepStarting(step)
 
             it("forwards it to each progress line") {

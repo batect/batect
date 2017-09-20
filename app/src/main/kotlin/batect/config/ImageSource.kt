@@ -16,12 +16,6 @@
 
 package batect.config
 
-data class Container(
-        val name: String,
-        val imageSource: ImageSource,
-        val command: String? = null,
-        val environment: Map<String, String> = emptyMap(),
-        val workingDirectory: String? = null,
-        val volumeMounts: Set<VolumeMount> = emptySet(),
-        val portMappings: Set<PortMapping> = emptySet(),
-        val dependencies: Set<String> = emptySet())
+sealed class ImageSource
+data class BuildImage(val buildDirectory: String) : ImageSource()
+data class PullImage(val imageName: String) : ImageSource()

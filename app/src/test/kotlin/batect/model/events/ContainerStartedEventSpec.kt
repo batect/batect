@@ -26,6 +26,7 @@ import com.nhaarman.mockito_kotlin.verify
 import batect.model.steps.WaitForContainerToBecomeHealthyStep
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -33,13 +34,13 @@ import org.jetbrains.spek.api.dsl.on
 
 object ContainerStartedEventSpec : Spek({
     describe("a 'container started' event") {
-        val container = Container("container-1", "/build-dir")
+        val container = Container("container-1", imageSourceDoesNotMatter())
         val event = ContainerStartedEvent(container)
 
         describe("being applied") {
             on("when the task is not aborting") {
                 val dockerContainer = DockerContainer("container-1-dc")
-                val otherContainer = Container("container-2", "/other-build-dir")
+                val otherContainer = Container("container-2", imageSourceDoesNotMatter())
                 val otherDockerContainer = DockerContainer("container-2-dc")
 
                 val context = mock<TaskEventContext> {

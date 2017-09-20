@@ -26,6 +26,7 @@ import batect.model.steps.StopContainerStep
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
+import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -33,7 +34,7 @@ import org.jetbrains.spek.api.dsl.on
 
 object PostTaskRunCleanupFailureEventSpec : Spek({
     describe("a 'post-task run cleanup failure' event") {
-        val container = Container("some-container", "/some-build-dir")
+        val container = Container("some-container", imageSourceDoesNotMatter())
         val event = object : PostTaskRunCleanupFailureEvent(container) {
             override val messageToDisplay: String
                 get() = "the container couldn't be somethinged: Something went wrong"
@@ -64,7 +65,7 @@ object PostTaskRunCleanupFailureEventSpec : Spek({
             }
 
             on("when the task is not already aborting") {
-                val otherContainer = Container("some-other-container", "/some-other-build-dir")
+                val otherContainer = Container("some-other-container", imageSourceDoesNotMatter())
                 val otherDockerContainer = DockerContainer("some-other-container-id")
 
                 val context = mock<TaskEventContext>() {

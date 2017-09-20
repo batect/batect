@@ -24,6 +24,7 @@ import com.nhaarman.mockito_kotlin.verify
 import batect.model.steps.DisplayTaskFailureStep
 import batect.config.Container
 import batect.docker.DockerNetwork
+import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -37,7 +38,7 @@ object TaskNetworkDeletionFailedEventSpec : Spek({
             val network = DockerNetwork("the-network")
 
             on("when the task is not already aborting") {
-                val container = Container("some-container", "/some-build-dir")
+                val container = Container("some-container", imageSourceDoesNotMatter())
                 val context = mock<TaskEventContext> {
                     on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
                     on { getSinglePastEventOfType<RunningContainerExitedEvent>() } doReturn RunningContainerExitedEvent(container, 123)

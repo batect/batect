@@ -22,6 +22,7 @@ import com.natpryce.hamkrest.throws
 import batect.config.Container
 import batect.config.PortMapping
 import batect.config.VolumeMount
+import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -34,7 +35,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
         val generator = DockerContainerCreationCommandGenerator()
 
         given("a simple container definition, a built image and an explicit command to run for the task") {
-            val container = Container("the-container", "/this/does/not/matter")
+            val container = Container("the-container", imageSourceDoesNotMatter())
             val command = "doStuff"
             val image = DockerImage("the-image")
             val network = DockerNetwork("the-network")
@@ -56,7 +57,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
         }
 
         given("a simple container definition, a built image and no explicit command to run for the container") {
-            val container = Container("the-container", "/this/does/not/matter")
+            val container = Container("the-container", imageSourceDoesNotMatter())
             val command = null
             val image = DockerImage("the-image")
             val network = DockerNetwork("the-network")
@@ -77,7 +78,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
         }
 
         given("a simple container definition, a built image and an explicit command to run for the container") {
-            val container = Container("the-container", "/this/does/not/matter", "some-command-from-the-container")
+            val container = Container("the-container", imageSourceDoesNotMatter(), "some-command-from-the-container")
             val command = "some-explicit-command"
             val image = DockerImage("the-image")
             val network = DockerNetwork("the-network")
@@ -100,7 +101,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
 
         given("a container configuration with all optional configuration options specified") {
             val container = Container("the-container",
-                    "/this/does/not/matter",
+                    imageSourceDoesNotMatter(),
                     "the-container-command",
                     mapOf("SOME_VAR" to "SOME_VALUE", "OTHER_VAR" to "OTHER_VALUE"),
                     "/workingdir",
@@ -153,7 +154,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 """sh -c 'echo "\"un'\''kno\"wn\$\$\$'\'' with \$\"\$\$. \"zzz\""'""" to listOf("sh", "-c", """echo "\"un'kno\"wn\$\$\$' with \$\"\$\$. \"zzz\""""")
         ).forEach { command, expectedSplit ->
             given("a simple container definition, a built image and the command '$command'") {
-                val container = Container("the-container", "/this/does/not/matter")
+                val container = Container("the-container", imageSourceDoesNotMatter())
                 val image = DockerImage("the-image")
                 val network = DockerNetwork("the-network")
 
@@ -180,7 +181,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 """echo "hello\""" to """it ends with a backslash (backslashes always escape the following character, for a literal backslash, use '\\')"""
         ).forEach { command, expectedErrorMessage ->
             given("a simple container definition, a built image and the command '$command'") {
-                val container = Container("the-container", "/this/does/not/matter")
+                val container = Container("the-container", imageSourceDoesNotMatter())
                 val image = DockerImage("the-image")
                 val network = DockerNetwork("the-network")
 

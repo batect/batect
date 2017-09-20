@@ -16,6 +16,7 @@
 
 package batect.config.io
 
+import batect.config.BuildImage
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import batect.config.Configuration
@@ -61,7 +62,7 @@ data class ContainerFromFile(
             resolveVolumeMount(it, name, pathResolver)
         }.toSet()
 
-        return Container(name, resolvedBuildDirectory, command, environment, workingDirectory, resolvedVolumeMounts, portMappings, dependencies)
+        return Container(name, BuildImage(resolvedBuildDirectory), command, environment, workingDirectory, resolvedVolumeMounts, portMappings, dependencies)
     }
 
     private fun resolveBuildDirectory(containerName: String, pathResolver: PathResolver): String {

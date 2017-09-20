@@ -19,6 +19,7 @@ package batect.ui
 import batect.config.Container
 import batect.model.DependencyGraph
 import batect.model.DependencyGraphNode
+import batect.testutils.imageSourceDoesNotMatter
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
@@ -40,8 +41,8 @@ object StartupProgressDisplayProviderSpec : Spek({
         }
 
         on("creating a progress display for a dependency graph") {
-            val container1 = Container("container-1", "/container-1-build-dir")
-            val container2 = Container("container-2", "/container-2-build-dir")
+            val container1 = Container("container-1", imageSourceDoesNotMatter())
+            val container2 = Container("container-2", imageSourceDoesNotMatter())
 
             val container1Dependencies = setOf(container2)
             val container2Dependencies = emptySet<Container>()

@@ -29,6 +29,7 @@ import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -36,13 +37,13 @@ import org.jetbrains.spek.api.dsl.on
 
 object ContainerBecameHealthyEventSpec : Spek({
     describe("a 'container became healthy' event") {
-        val containerA = Container("container-a", "/container-a-build-dir")
+        val containerA = Container("container-a", imageSourceDoesNotMatter())
         val event = ContainerBecameHealthyEvent(containerA)
 
         describe("being applied") {
             describe("when the container that became healthy (A) is depended on by another container (B)") {
-                val otherDependencyOfB = Container("other-dependency", "/other-dependency-build-dir")
-                val containerB = Container("container-b", "/container-b-build-dir", dependencies = setOf(containerA.name, otherDependencyOfB.name))
+                val otherDependencyOfB = Container("other-dependency", imageSourceDoesNotMatter())
+                val containerB = Container("container-b", imageSourceDoesNotMatter(), dependencies = setOf(containerA.name, otherDependencyOfB.name))
 
                 val context = mock<TaskEventContext>()
 

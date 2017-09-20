@@ -27,6 +27,7 @@ import batect.model.steps.DisplayTaskFailureStep
 import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.testutils.CreateForEachTest
+import batect.testutils.imageSourceDoesNotMatter
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.doReturn
@@ -81,7 +82,7 @@ object FancyEventLoggerSpec : Spek({
         }
 
         describe("when logging that a step is starting") {
-            val container = Container("task-container", "/task-dir")
+            val container = Container("task-container", imageSourceDoesNotMatter())
             val dockerContainer = DockerContainer("some-id")
 
             on("while the task is starting up") {
@@ -141,7 +142,7 @@ object FancyEventLoggerSpec : Spek({
                             }
 
                             on("and a 'remove container' step has already been run") {
-                                val previousStep = RemoveContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id"))
+                                val previousStep = RemoveContainerStep(Container("other-container", imageSourceDoesNotMatter()), DockerContainer("some-other-id"))
                                 logger.onStartingTaskStep(previousStep)
 
                                 logger.onStartingTaskStep(step)
@@ -160,7 +161,7 @@ object FancyEventLoggerSpec : Spek({
                             }
 
                             on("and a 'clean up container' step has already been run") {
-                                val previousStep = CleanUpContainerStep(Container("other-container", "/other-build-dir"), DockerContainer("some-other-id"))
+                                val previousStep = CleanUpContainerStep(Container("other-container", imageSourceDoesNotMatter()), DockerContainer("some-other-id"))
                                 logger.onStartingTaskStep(previousStep)
 
                                 logger.onStartingTaskStep(step)
@@ -205,7 +206,7 @@ object FancyEventLoggerSpec : Spek({
 
         describe("when logging an event") {
             on("while the task is starting up") {
-                val event = ContainerBecameHealthyEvent(Container("some-container", "/some-dir"))
+                val event = ContainerBecameHealthyEvent(Container("some-container", imageSourceDoesNotMatter()))
                 logger.postEvent(event)
 
                 it("notifies the startup progress display of the event and then reprints it") {
@@ -217,10 +218,10 @@ object FancyEventLoggerSpec : Spek({
             }
 
             on("after the task has run") {
-                logger.onStartingTaskStep(RunContainerStep(Container("task-container", "/task-dir"), DockerContainer("some-id")))
+                logger.onStartingTaskStep(RunContainerStep(Container("task-container", imageSourceDoesNotMatter()), DockerContainer("some-id")))
                 reset(startupProgressDisplay)
 
-                val event = ContainerRemovedEvent(Container("some-container", "/some-dir"))
+                val event = ContainerRemovedEvent(Container("some-container", imageSourceDoesNotMatter()))
                 logger.postEvent(event)
 
                 it("does not reprint the startup progress display") {
@@ -236,7 +237,7 @@ object FancyEventLoggerSpec : Spek({
                 logger.onStartingTaskStep(DisplayTaskFailureStep("Something went wrong"))
                 reset(startupProgressDisplay)
 
-                val event = ContainerBecameHealthyEvent(Container("some-container", "/some-dir"))
+                val event = ContainerBecameHealthyEvent(Container("some-container", imageSourceDoesNotMatter()))
                 logger.postEvent(event)
 
                 it("does not reprint the startup progress display") {

@@ -16,6 +16,7 @@
 
 package batect.model.steps
 
+import batect.config.BuildImage
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.doThrow
@@ -38,6 +39,7 @@ import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.HealthStatus
 import batect.docker.ImageBuildFailedException
+import batect.docker.ImagePullFailedException
 import batect.docker.NetworkCreationFailedException
 import batect.docker.NetworkDeletionFailedException
 import batect.model.events.ContainerBecameHealthyEvent
@@ -52,6 +54,8 @@ import batect.model.events.ContainerStopFailedEvent
 import batect.model.events.ContainerStoppedEvent
 import batect.model.events.ImageBuildFailedEvent
 import batect.model.events.ImageBuiltEvent
+import batect.model.events.ImagePullFailedEvent
+import batect.model.events.ImagePulledEvent
 import batect.model.events.RunningContainerExitedEvent
 import batect.model.events.TaskEventSink
 import batect.model.events.TaskNetworkCreatedEvent
@@ -59,6 +63,7 @@ import batect.model.events.TaskNetworkCreationFailedEvent
 import batect.model.events.TaskNetworkDeletedEvent
 import batect.model.events.TaskNetworkDeletionFailedEvent
 import batect.model.events.TaskStartedEvent
+import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -86,7 +91,7 @@ object TaskStepRunnerSpec : Spek({
             }
 
             describe("running a 'build image' step") {
-                val container = Container("some-container", "/some-build-dir")
+                val container = Container("some-container", BuildImage("/some-build-dir"))
                 val step = BuildImageStep("some-project-name", container)
 
                 on("when building the image succeeds") {
@@ -107,6 +112,31 @@ object TaskStepRunnerSpec : Spek({
 
                     it("emits a 'image build failed' event") {
                         verify(eventSink).postEvent(ImageBuildFailedEvent(container, "Image build failed. Output from Docker was: Something went wrong."))
+                    }
+                }
+            }
+
+            describe("running a 'pull image' step") {
+                val step = PullImageStep("some-image")
+
+                on("when pulling the image succeeds") {
+                    val image = DockerImage("some-image")
+                    whenever(dockerClient.pullImage("some-image")).thenReturn(image)
+
+                    runner.run(step, eventSink)
+
+                    it("emits a 'image pulled' event") {
+                        verify(eventSink).postEvent(ImagePulledEvent(image))
+                    }
+                }
+
+                on("when building the image fails") {
+                    whenever(dockerClient.pullImage("some-image")).thenThrow(ImagePullFailedException("Pulling image 'some-image' failed. Output from Docker was: Something went wrong."))
+
+                    runner.run(step, eventSink)
+
+                    it("emits a 'image pull failed' event") {
+                        verify(eventSink).postEvent(ImagePullFailedEvent("some-image", "Pulling image 'some-image' failed. Output from Docker was: Something went wrong."))
                     }
                 }
             }
@@ -137,7 +167,7 @@ object TaskStepRunnerSpec : Spek({
             }
 
             describe("running a 'create container' step") {
-                val container = Container("some-container", "/some-build-dir")
+                val container = Container("some-container", imageSourceDoesNotMatter())
                 val command = "do-stuff"
                 val image = DockerImage("some-image")
                 val network = DockerNetwork("some-network")
@@ -166,7 +196,7 @@ object TaskStepRunnerSpec : Spek({
             }
 
             on("running a 'run container' step") {
-                val container = Container("some-container", "/some-build-dir")
+                val container = Container("some-container", imageSourceDoesNotMatter())
                 val dockerContainer = DockerContainer("some-id")
                 val step = RunContainerStep(container, dockerContainer)
 
@@ -180,7 +210,7 @@ object TaskStepRunnerSpec : Spek({
             }
 
             describe("running a 'start container' step") {
-                val container = Container("some-container", "/some-build-dir")
+                val container = Container("some-container", imageSourceDoesNotMatter())
                 val dockerContainer = DockerContainer("some-id")
                 val step = StartContainerStep(container, dockerContainer)
 
@@ -208,7 +238,7 @@ object TaskStepRunnerSpec : Spek({
             }
 
             describe("running a 'stop container' step") {
-                val container = Container("some-container", "/some-build-dir")
+                val container = Container("some-container", imageSourceDoesNotMatter())
                 val dockerContainer = DockerContainer("some-id")
                 val step = StopContainerStep(container, dockerContainer)
 
@@ -236,7 +266,7 @@ object TaskStepRunnerSpec : Spek({
             }
 
             describe("running a 'clean up container' step") {
-                val container = Container("some-container", "/some-build-dir")
+                val container = Container("some-container", imageSourceDoesNotMatter())
                 val dockerContainer = DockerContainer("some-id")
                 val step = CleanUpContainerStep(container, dockerContainer)
 
@@ -274,7 +304,7 @@ object TaskStepRunnerSpec : Spek({
             }
 
             describe("running a 'remove container' step") {
-                val container = Container("some-container", "/some-build-dir")
+                val container = Container("some-container", imageSourceDoesNotMatter())
                 val dockerContainer = DockerContainer("some-id")
                 val step = RemoveContainerStep(container, dockerContainer)
 
@@ -312,7 +342,7 @@ object TaskStepRunnerSpec : Spek({
             }
 
             describe("running a 'wait for container to become healthy' step") {
-                val container = Container("some-container", "/some-build-dir")
+                val container = Container("some-container", imageSourceDoesNotMatter())
                 val dockerContainer = DockerContainer("some-id")
                 val step = WaitForContainerToBecomeHealthyStep(container, dockerContainer)
 

@@ -14,14 +14,9 @@
    limitations under the License.
 */
 
-package batect.config
+package batect.testutils
 
-data class Container(
-        val name: String,
-        val imageSource: ImageSource,
-        val command: String? = null,
-        val environment: Map<String, String> = emptyMap(),
-        val workingDirectory: String? = null,
-        val volumeMounts: Set<VolumeMount> = emptySet(),
-        val portMappings: Set<PortMapping> = emptySet(),
-        val dependencies: Set<String> = emptySet())
+import batect.config.ImageSource
+import com.nhaarman.mockito_kotlin.mock
+
+fun imageSourceDoesNotMatter() : ImageSource = mock<ImageSource>()

@@ -31,6 +31,10 @@ data class BuildImageStep(val projectName: String, val container: Container) : T
     override fun toString() = super.toString() + "(project name: '$projectName', container: '${container.name}')"
 }
 
+data class PullImageStep(val imageName: String) : TaskStep() {
+    override fun toString() = super.toString() + "(image name: '$imageName')"
+}
+
 object CreateTaskNetworkStep : TaskStep()
 
 data class CreateContainerStep(val container: Container, val command: String?, val image: DockerImage, val network: DockerNetwork) : TaskStep() {

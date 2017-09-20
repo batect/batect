@@ -28,6 +28,7 @@ import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -35,10 +36,10 @@ import org.jetbrains.spek.api.dsl.on
 
 object ContainerCreatedEventSpec : Spek({
     describe("a 'container created' event") {
-        val dependency1 = Container("dependency-container-1", "/dependency-container-1-build-dir")
-        val dependency2 = Container("dependency-container-2", "/dependency-container-2-build-dir")
+        val dependency1 = Container("dependency-container-1", imageSourceDoesNotMatter())
+        val dependency2 = Container("dependency-container-2", imageSourceDoesNotMatter())
 
-        val container = Container("container-1", "/container-1-build-dir", dependencies = setOf(dependency1.name, dependency2.name))
+        val container = Container("container-1", imageSourceDoesNotMatter(), dependencies = setOf(dependency1.name, dependency2.name))
         val dockerContainer = DockerContainer("docker-container-1")
         val event = ContainerCreatedEvent(container, dockerContainer)
 

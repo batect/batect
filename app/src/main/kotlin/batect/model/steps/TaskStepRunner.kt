@@ -25,6 +25,7 @@ import batect.docker.ContainerStopFailedException
 import batect.docker.DockerClient
 import batect.docker.HealthStatus
 import batect.docker.ImageBuildFailedException
+import batect.docker.ImagePullFailedException
 import batect.docker.NetworkCreationFailedException
 import batect.docker.NetworkDeletionFailedException
 import batect.model.events.ContainerBecameHealthyEvent
@@ -39,6 +40,8 @@ import batect.model.events.ContainerStopFailedEvent
 import batect.model.events.ContainerStoppedEvent
 import batect.model.events.ImageBuildFailedEvent
 import batect.model.events.ImageBuiltEvent
+import batect.model.events.ImagePullFailedEvent
+import batect.model.events.ImagePulledEvent
 import batect.model.events.RunningContainerExitedEvent
 import batect.model.events.TaskEventSink
 import batect.model.events.TaskNetworkCreatedEvent
@@ -52,6 +55,7 @@ class TaskStepRunner(private val dockerClient: DockerClient) {
         when (step) {
             is BeginTaskStep -> eventSink.postEvent(TaskStartedEvent)
             is BuildImageStep -> handleBuildImageStep(step, eventSink)
+            is PullImageStep -> handlePullImageStep(step, eventSink)
             is CreateTaskNetworkStep -> handleCreateTaskNetworkStep(eventSink)
             is CreateContainerStep -> handleCreateContainerStep(step, eventSink)
             is RunContainerStep -> handleRunContainerStep(step, eventSink)
@@ -72,6 +76,15 @@ class TaskStepRunner(private val dockerClient: DockerClient) {
             eventSink.postEvent(ImageBuiltEvent(step.container, image))
         } catch (e: ImageBuildFailedException) {
             eventSink.postEvent(ImageBuildFailedEvent(step.container, e.message ?: ""))
+        }
+    }
+
+    private fun handlePullImageStep(step: PullImageStep, eventSink: TaskEventSink) {
+        try {
+            val image = dockerClient.pullImage(step.imageName)
+            eventSink.postEvent(ImagePulledEvent(image))
+        } catch (e: ImagePullFailedException) {
+            eventSink.postEvent(ImagePullFailedEvent(step.imageName, e.message ?: ""))
         }
     }
 

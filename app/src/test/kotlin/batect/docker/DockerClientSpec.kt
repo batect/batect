@@ -16,6 +16,7 @@
 
 package batect.docker
 
+import batect.config.BuildImage
 import batect.os.Exited
 import batect.os.KillProcess
 import batect.os.KilledDuringProcessing
@@ -27,6 +28,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import batect.config.Container
+import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withCause
 import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
@@ -69,14 +71,15 @@ object DockerClientSpec : Spek({
 
         describe("building an image") {
             given("a container configuration") {
-                val container = Container("the-container", "/path/to/build/dir")
+                val buildDirectory = "/path/to/build/dir"
+                val container = Container("the-container", BuildImage(buildDirectory))
 
                 on("a successful build") {
                     whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(0, "Some output"))
                     val result = client.build("the-project", container)
 
                     it("builds the image") {
-                        verify(processRunner).runAndCaptureOutput(listOf("docker", "build", "--tag", imageLabel, container.buildDirectory))
+                        verify(processRunner).runAndCaptureOutput(listOf("docker", "build", "--tag", imageLabel, buildDirectory))
                     }
 
                     it("returns the ID of the created image") {
@@ -96,7 +99,7 @@ object DockerClientSpec : Spek({
 
         describe("creating a container") {
             given("a container configuration and a built image") {
-                val container = Container("the-container", "/this/does/not/matter")
+                val container = Container("the-container", imageSourceDoesNotMatter())
                 val command = "doStuff"
                 val image = DockerImage("the-image")
                 val network = DockerNetwork("the-network")

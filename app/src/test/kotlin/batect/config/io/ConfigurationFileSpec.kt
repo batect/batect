@@ -16,6 +16,7 @@
 
 package batect.config.io
 
+import batect.config.BuildImage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isEmpty
@@ -118,7 +119,7 @@ object ConfigurationFileSpec : Spek({
                     assertThat(resultingConfig.containers, equalTo(ContainerMap(
                             Container(
                                     containerName,
-                                    resolvedBuildDirectory,
+                                    BuildImage(resolvedBuildDirectory),
                                     container.command,
                                     container.environment,
                                     container.workingDirectory,

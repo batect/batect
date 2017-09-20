@@ -16,22 +16,28 @@
 
 package batect.ui
 
+import batect.config.BuildImage
 import batect.config.Container
+import batect.config.PullImage
 import batect.model.events.ContainerBecameHealthyEvent
 import batect.model.events.ContainerCreatedEvent
 import batect.model.events.ContainerStartedEvent
 import batect.model.events.ImageBuiltEvent
+import batect.model.events.ImagePulledEvent
 import batect.model.events.TaskEvent
 import batect.model.events.TaskNetworkCreatedEvent
 import batect.model.steps.BuildImageStep
 import batect.model.steps.CreateContainerStep
+import batect.model.steps.PullImageStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.model.steps.TaskStep
 
 class ContainerStartupProgressLine(val container: Container, val dependencies: Set<Container>) {
     private var isBuilding = false
+    private var isPulling = false
     private var hasBeenBuilt = false
+    private var hasBeenPulled = false
     private var isCreating = false
     private var hasBeenCreated = false
     private var isStarting = false
@@ -58,10 +64,27 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
                 isCreating -> print("creating container...")
                 hasBeenBuilt && networkHasBeenCreated -> print("image built, ready to create container")
                 hasBeenBuilt && !networkHasBeenCreated -> print("image built, waiting for network to be ready...")
+                hasBeenPulled && networkHasBeenCreated -> print("image pulled, ready to create container")
+                hasBeenPulled && !networkHasBeenCreated -> print("image pulled, waiting for network to be ready...")
                 isBuilding -> print("building image...")
-                else -> print("ready to build image")
+                isPulling -> printDescriptionWhenPulling(this)
+                else -> printDescriptionWhenWaitingToBuildOrPull(this)
             }
         }
+    }
+
+    private fun printDescriptionWhenWaitingToBuildOrPull(console: Console) {
+        when (container.imageSource) {
+            is BuildImage -> console.print("ready to build image")
+            is PullImage -> console.print("ready to pull image")
+        }
+    }
+
+    private val containerImageName by lazy { (container.imageSource as PullImage).imageName }
+
+    private fun printDescriptionWhenPulling(console: Console) {
+        console.print("pulling ")
+        console.printBold(containerImageName)
     }
 
     private fun printDescriptionWhenWaitingToStart(console: Console) {
@@ -106,6 +129,7 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
     fun onStepStarting(step: TaskStep) {
         when (step) {
             is BuildImageStep -> onBuildImageStepStarting(step)
+            is PullImageStep -> onPullImageStepStarting(step)
             is CreateContainerStep -> onCreateContainerStepStarting(step)
             is StartContainerStep -> onStartContainerStepStarting(step)
             is RunContainerStep -> onRunContainerStepStarting(step)
@@ -115,6 +139,12 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
     private fun onBuildImageStepStarting(step: BuildImageStep) {
         if (step.container == container) {
             isBuilding = true
+        }
+    }
+
+    private fun onPullImageStepStarting(step: PullImageStep) {
+        if (container.imageSource is PullImage && step.imageName == container.imageSource.imageName) {
+            isPulling = true
         }
     }
 
@@ -140,6 +170,7 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
     fun onEventPosted(event: TaskEvent) {
         when (event) {
             is ImageBuiltEvent -> onImageBuiltEventPosted(event)
+            is ImagePulledEvent -> onImagePulledEventPosted(event)
             is TaskNetworkCreatedEvent -> networkHasBeenCreated = true
             is ContainerCreatedEvent -> onContainerCreatedEventPosted(event)
             is ContainerStartedEvent -> onContainerStartedEventPosted(event)
@@ -150,6 +181,12 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
     private fun onImageBuiltEventPosted(event: ImageBuiltEvent) {
         if (event.container == container) {
             hasBeenBuilt = true
+        }
+    }
+
+    private fun onImagePulledEventPosted(event: ImagePulledEvent) {
+        if (container.imageSource is PullImage && container.imageSource.imageName == event.image.id) {
+            hasBeenPulled = true
         }
     }
 

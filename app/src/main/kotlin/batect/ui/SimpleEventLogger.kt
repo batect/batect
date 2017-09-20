@@ -23,6 +23,7 @@ import batect.model.steps.BuildImageStep
 import batect.model.steps.CleanUpContainerStep
 import batect.model.steps.CreateContainerStep
 import batect.model.steps.DisplayTaskFailureStep
+import batect.model.steps.PullImageStep
 import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
@@ -39,6 +40,7 @@ class SimpleEventLogger(private val console: Console, private val errorConsole: 
         synchronized(lock) {
             when (step) {
                 is BuildImageStep -> logImageBuildStarting(step.container)
+                is PullImageStep -> logImagePullStarting(step.imageName)
                 is StartContainerStep -> logDependencyContainerStarting(step.container)
                 is RunContainerStep -> logCommandStarting(step.container, commands[step.container])
                 is DisplayTaskFailureStep -> logTaskFailure(step.message)
@@ -53,6 +55,14 @@ class SimpleEventLogger(private val console: Console, private val errorConsole: 
         console.withColor(ConsoleColor.White) {
             print("Building ")
             printBold(container.name)
+            println("...")
+        }
+    }
+
+    private fun logImagePullStarting(imageName: String) {
+        console.withColor(ConsoleColor.White) {
+            print("Pulling ")
+            printBold(imageName)
             println("...")
         }
     }

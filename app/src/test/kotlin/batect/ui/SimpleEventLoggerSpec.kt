@@ -25,6 +25,7 @@ import batect.model.steps.CleanUpContainerStep
 import batect.model.steps.CreateContainerStep
 import batect.model.steps.CreateTaskNetworkStep
 import batect.model.steps.DisplayTaskFailureStep
+import batect.model.steps.PullImageStep
 import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
@@ -77,6 +78,19 @@ object SimpleEventLoggerSpec : Spek({
                     inOrder(whiteConsole) {
                         verify(whiteConsole).print("Building ")
                         verify(whiteConsole).printBold("the-cool-container")
+                        verify(whiteConsole).println("...")
+                    }
+                }
+            }
+
+            on("when a 'pull image' step is starting") {
+                val step = PullImageStep("some-image:1.2.3")
+                logger.onStartingTaskStep(step)
+
+                it("prints a message to the output") {
+                    inOrder(whiteConsole) {
+                        verify(whiteConsole).print("Pulling ")
+                        verify(whiteConsole).printBold("some-image:1.2.3")
                         verify(whiteConsole).println("...")
                     }
                 }

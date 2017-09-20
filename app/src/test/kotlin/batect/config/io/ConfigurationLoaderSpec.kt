@@ -31,6 +31,7 @@ import com.nhaarman.mockito_kotlin.mock
 import batect.config.Configuration
 import batect.config.ImageSource
 import batect.config.PortMapping
+import batect.config.PullImage
 import batect.config.VolumeMount
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
@@ -251,6 +252,61 @@ object ConfigurationLoaderSpec : Spek({
                 val container = config.containers["container-1"]!!
                 assertThat(container.name, equalTo("container-1"))
                 assertThat(container.imageSource, equalTo<ImageSource>(BuildImage("/resolved/container-1-build-dir")))
+            }
+        }
+
+        on("loading a valid configuration file with a container with just an image configured") {
+            val configString = """
+                    |project_name: the_cool_project
+                    |
+                    |containers:
+                    |  container-1:
+                    |    image: some-image:1.2.3
+                    """.trimMargin()
+
+            val config = loadConfiguration(configString)
+
+            it("should load the project name") {
+                assertThat(config.projectName, equalTo("the_cool_project"))
+            }
+
+            it("should load the single container specified") {
+                assertThat(config.containers.keys, equalTo(setOf("container-1")))
+            }
+
+            it("should load the image specified for the container") {
+                val container = config.containers["container-1"]!!
+                assertThat(container.name, equalTo("container-1"))
+                assertThat(container.imageSource, equalTo<ImageSource>(PullImage("some-image:1.2.3")))
+            }
+        }
+
+        on("loading a configuration file with a container without a build directory or image") {
+            val config = """
+                    |project_name: the_cool_project
+                    |
+                    |containers:
+                    |  container-1:
+                    |    working_directory: /there
+                    """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Could not load configuration file: Container 'container-1' is invalid: either build_directory or image must be specified.")))
+            }
+        }
+
+        on("loading a configuration file with a container with both a build directory and an image") {
+            val config = """
+                    |project_name: the_cool_project
+                    |
+                    |containers:
+                    |  container-1:
+                    |    build_directory: /there
+                    |    image: some-image:1.2.3
+                    """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Could not load configuration file: Container 'container-1' is invalid: only one of build_directory or image can be specified, but both have been provided.")))
             }
         }
 

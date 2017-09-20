@@ -22,7 +22,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import batect.config.Configuration
 import batect.config.Container
 import batect.config.ContainerMap
+import batect.config.ImageSource
 import batect.config.PortMapping
+import batect.config.PullImage
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
@@ -47,7 +49,8 @@ data class TaskFromFile(@JsonProperty("run") val runConfiguration: TaskRunConfig
 }
 
 data class ContainerFromFile(
-        val buildDirectory: String,
+        val buildDirectory: String? = null,
+        @JsonProperty("image") val imageName: String? = null,
         val command: String? = null,
         @JsonDeserialize(using = EnvironmentDeserializer::class) val environment: Map<String, String> = emptyMap(),
         val workingDirectory: String? = null,
@@ -56,16 +59,32 @@ data class ContainerFromFile(
         @JsonDeserialize(using = StringSetDeserializer::class) val dependencies: Set<String> = emptySet()) {
 
     fun toContainer(name: String, pathResolver: PathResolver): Container {
-        val resolvedBuildDirectory = resolveBuildDirectory(name, pathResolver)
+        val imageSource = resolveImageSource(name, pathResolver)
 
         val resolvedVolumeMounts = volumeMounts.map {
             resolveVolumeMount(it, name, pathResolver)
         }.toSet()
 
-        return Container(name, BuildImage(resolvedBuildDirectory), command, environment, workingDirectory, resolvedVolumeMounts, portMappings, dependencies)
+        return Container(name, imageSource, command, environment, workingDirectory, resolvedVolumeMounts, portMappings, dependencies)
     }
 
-    private fun resolveBuildDirectory(containerName: String, pathResolver: PathResolver): String {
+    private fun resolveImageSource(containerName: String, pathResolver: PathResolver): ImageSource {
+        if (buildDirectory == null && imageName == null) {
+            throw ConfigurationException("Container '$containerName' is invalid: either build_directory or image must be specified.")
+        }
+
+        if (buildDirectory != null && imageName != null) {
+            throw ConfigurationException("Container '$containerName' is invalid: only one of build_directory or image can be specified, but both have been provided.")
+        }
+
+        if (buildDirectory != null) {
+            return BuildImage(resolveBuildDirectory(containerName, pathResolver, buildDirectory))
+        } else {
+            return PullImage(imageName!!)
+        }
+    }
+
+    private fun resolveBuildDirectory(containerName: String, pathResolver: PathResolver, buildDirectory: String): String {
         val result = pathResolver.resolve(buildDirectory)
 
         return when (result) {

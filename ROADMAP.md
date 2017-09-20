@@ -12,7 +12,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * warn if a dependency is specified twice (either for a task or for a container)
 
 ### Features
-* just use an existing image, pulling if necessary (ie. don't require a local Dockerfile)
 * allow the user to keep containers after failure so they can examine logs
 * overridable health check parameters for containers (so that you can have the health check poll very frequently when waiting for something to
   come up for tests, but less frequently if that container is used in production)
@@ -39,6 +38,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * batch up printing updates to the console when using fancy output mode, rather than reprinting progress information on every event
 * check that Docker client is available before trying to use it
 * check that Docker client and server are compatible versions
+* warn when using an image without a tag or with tag `latest`
 
 ### Other
 * make test names consistent (eg. `it("should do something")` vs `it("does something")`)

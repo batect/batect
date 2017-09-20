@@ -17,12 +17,6 @@
 package batect.config.io
 
 import batect.config.BuildImage
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.isEmpty
-import com.natpryce.hamkrest.throws
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
 import batect.config.Container
 import batect.config.ContainerMap
 import batect.config.PortMapping
@@ -31,6 +25,12 @@ import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.config.VolumeMount
 import batect.testutils.withMessage
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.isEmpty
+import com.natpryce.hamkrest.throws
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -72,7 +72,7 @@ object ConfigurationFileSpec : Spek({
 
                 it("returns a configuration object with the task") {
                     assertThat(resultingConfig.tasks, equalTo(TaskMap(
-                            Task(taskName, task.runConfiguration, "Some description", task.dependencies)
+                        Task(taskName, task.runConfiguration, "Some description", task.dependencies)
                     )))
                 }
 
@@ -89,13 +89,13 @@ object ConfigurationFileSpec : Spek({
                 val volumeMountTargetPath = "/remote"
 
                 val container = ContainerFromFile(
-                        originalBuildDirectory,
-                        "the-command",
-                        mapOf("ENV_VAR" to "/here"),
-                        "working_dir",
-                        setOf(VolumeMount(originalVolumeMountPath, volumeMountTargetPath, "some-options")),
-                        setOf(PortMapping(1234, 5678)),
-                        setOf("some-dependency"))
+                    buildDirectory = originalBuildDirectory,
+                    command = "the-command",
+                    environment = mapOf("ENV_VAR" to "/here"),
+                    workingDirectory = "working_dir",
+                    volumeMounts = setOf(VolumeMount(originalVolumeMountPath, volumeMountTargetPath, "some-options")),
+                    portMappings = setOf(PortMapping(1234, 5678)),
+                    dependencies = setOf("some-dependency"))
 
                 val containerName = "the_container_name"
                 val configFile = ConfigurationFile("the_project_name", containers = mapOf(containerName to container))
@@ -117,23 +117,23 @@ object ConfigurationFileSpec : Spek({
 
                 it("returns a configuration object with the container") {
                     assertThat(resultingConfig.containers, equalTo(ContainerMap(
-                            Container(
-                                    containerName,
-                                    BuildImage(resolvedBuildDirectory),
-                                    container.command,
-                                    container.environment,
-                                    container.workingDirectory,
-                                    setOf(VolumeMount(resolvedVolumeMountPath, volumeMountTargetPath, "some-options")),
-                                    container.portMappings,
-                                    container.dependencies)
+                        Container(
+                            containerName,
+                            BuildImage(resolvedBuildDirectory),
+                            container.command,
+                            container.environment,
+                            container.workingDirectory,
+                            setOf(VolumeMount(resolvedVolumeMountPath, volumeMountTargetPath, "some-options")),
+                            container.portMappings,
+                            container.dependencies)
                     )))
                 }
             }
 
             on("converting a configuration file with a container that has a build directory that %s",
-                    data("does not exist", NotFound("/some_resolved_path") as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' does not exist."),
-                    data("is not a directory", ResolvedToFile("/some_resolved_path") as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."),
-                    data("is an invalid path", InvalidPath as PathResolutionResult, "Build directory 'build_dir' for container 'the_container_name' is not a valid path."))
+                data("does not exist", NotFound("/some_resolved_path") as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' does not exist."),
+                data("is not a directory", ResolvedToFile("/some_resolved_path") as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."),
+                data("is an invalid path", InvalidPath as PathResolutionResult, "Build directory 'build_dir' for container 'the_container_name' is not a valid path."))
             { _, resolution, expectedMessage ->
                 val originalBuildDirectory = "build_dir"
                 val container = ContainerFromFile(originalBuildDirectory)
@@ -149,9 +149,9 @@ object ConfigurationFileSpec : Spek({
             }
 
             on("converting a configuration file with a container that has a volume mount that %s",
-                    data("is a directory", ResolvedToDirectory("/some_resolved_path") as PathResolutionResult),
-                    data("is a file", ResolvedToFile("/some_resolved_path") as PathResolutionResult),
-                    data("does not exist", NotFound("/some_resolved_path") as PathResolutionResult)
+                data("is a directory", ResolvedToDirectory("/some_resolved_path") as PathResolutionResult),
+                data("is a file", ResolvedToFile("/some_resolved_path") as PathResolutionResult),
+                data("does not exist", NotFound("/some_resolved_path") as PathResolutionResult)
             ) { _, resolution ->
                 val originalBuildDirectory = "build_dir"
                 val originalVolumeMountPath = "local_volume_path"

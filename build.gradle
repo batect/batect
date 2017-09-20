@@ -27,3 +27,38 @@ allprojects {
 
     version = '0.1-preview'
 }
+
+apply from: "$rootDir/gradle/utilities.gradle"
+
+task assembleRelease(type: Copy) {
+    from project("app").getTasksByName("shadowJar", false)
+    from project("wrapper").getTasksByName("build", false)
+    into getBuildDir().toPath().resolve("release")
+}
+
+task validateIsReleaseBuild {
+    doLast {
+        if (!project.hasProperty("releaseBuild")) {
+            throw new Exception("The releaseBuild property was not set. This will cause the version information to be incorrect.")
+        }
+    }
+}
+
+task validateVersionMatchesTag {
+    doLast {
+        def gitTag = runProcess("git", "describe", "--dirty")
+
+        if (gitTag.contains("-dirty")) {
+            throw new Exception("The working copy is dirty.")
+        }
+
+        if (gitTag != project.version) {
+            throw new Exception("The tag for this commit is '$gitTag', but the project version is set to '$project.version'.")
+        }
+    }
+}
+
+task validateRelease {
+    dependsOn validateIsReleaseBuild
+    dependsOn validateVersionMatchesTag
+}

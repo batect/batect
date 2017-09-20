@@ -17,20 +17,7 @@
 import java.nio.file.Paths
 import java.text.SimpleDateFormat
 
-String runProcess(String... args) {
-    def process = new ProcessBuilder(args)
-            .redirectErrorStream(true)
-            .start()
-
-    def exitCode = process.waitFor()
-    def output = process.inputStream.getText()
-
-    if (exitCode != 0) {
-        throw RuntimeException("$args failed with exit code $exitCode. Output was: $output")
-    }
-
-    return output.trim()
-}
+apply from: "$rootDir/gradle/utilities.gradle"
 
 String getCurrentGitCommit() {
     return runProcess('git', 'describe', '--always', '--dirty', '--exclude', '*', '--abbrev=0')
@@ -52,7 +39,7 @@ String getBuildDate() {
 
 String versionInfoFileContents() {
     kotlinLicenseHeader +
-            """ |package batect
+    """ |package batect
         |
         |// This file is generated automatically by the $generateVersionInfoFile.name Gradle task.
         |// Do not edit it (it will be overwritten on the next build anyway).

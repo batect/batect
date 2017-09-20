@@ -29,6 +29,7 @@ jobs:
       script: ./gradlew journeyTest
 
     - stage: release
+      install: skip
       script: ./gradlew assembleRelease
       before_deploy: ./gradlew validateRelease
       deploy:

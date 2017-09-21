@@ -30,9 +30,9 @@ object EventLoggerProviderSpec : Spek({
         val simpleEventLogger = mock<SimpleEventLogger>()
         val fancyEventLogger = mock<FancyEventLogger>()
 
-        on("when a TTY is connected to STDIN") {
+        on("when the console supports interactivity") {
             val consoleInfo = mock<ConsoleInfo> {
-                on { stdinIsTTY } doReturn true
+                on { supportsInteractivity } doReturn true
             }
 
             val provider = EventLoggerProvider(simpleEventLogger, fancyEventLogger, consoleInfo)
@@ -43,9 +43,9 @@ object EventLoggerProviderSpec : Spek({
             }
         }
 
-        on("when a TTY is not connected to STDIN") {
+        on("when the console does not support interactivity") {
             val consoleInfo = mock<ConsoleInfo> {
-                on { stdinIsTTY } doReturn false
+                on { supportsInteractivity } doReturn false
             }
 
             val provider = EventLoggerProvider(simpleEventLogger, fancyEventLogger, consoleInfo)

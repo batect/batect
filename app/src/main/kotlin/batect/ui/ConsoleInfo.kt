@@ -18,8 +18,12 @@ package batect.ui
 
 import batect.os.ProcessRunner
 
-class ConsoleInfo(private val processRunner: ProcessRunner) {
+class ConsoleInfo(private val processRunner: ProcessRunner, private val environment: Map<String, String>) {
     val stdinIsTTY: Boolean by lazy {
         processRunner.runAndCaptureOutput(listOf("tty")).exitCode == 0
+    }
+
+    val supportsInteractivity: Boolean by lazy {
+        stdinIsTTY && environment.getOrDefault("TERM", "dumb") != "dumb"
     }
 }

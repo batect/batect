@@ -35,7 +35,7 @@ object ConsoleInfoSpec : Spek({
                     on { runAndCaptureOutput(listOf("tty")) } doReturn ProcessOutput(0, "/dev/pts/0")
                 }
 
-                val consoleInfo = ConsoleInfo(processRunner)
+                val consoleInfo = ConsoleInfo(processRunner, emptyMap())
 
                 it("returns true") {
                     assertThat(consoleInfo.stdinIsTTY, equalTo(true))
@@ -47,10 +47,54 @@ object ConsoleInfoSpec : Spek({
                     on { runAndCaptureOutput(listOf("tty")) } doReturn ProcessOutput(1, "not a tty")
                 }
 
-                val consoleInfo = ConsoleInfo(processRunner)
+                val consoleInfo = ConsoleInfo(processRunner, emptyMap())
 
                 it("returns false") {
                     assertThat(consoleInfo.stdinIsTTY, equalTo(false))
+                }
+            }
+        }
+
+        describe("determining if the console supports interactivity") {
+            describe("on STDIN being connected to a TTY") {
+                val processRunner = mock<ProcessRunner>() {
+                    on { runAndCaptureOutput(listOf("tty")) } doReturn ProcessOutput(0, "/dev/pts/0")
+                }
+
+                on("the TERM environment variable being set to 'dumb'") {
+                    val consoleInfo = ConsoleInfo(processRunner, mapOf("TERM" to "dumb"))
+
+                    it("returns true") {
+                        assertThat(consoleInfo.supportsInteractivity, equalTo(false))
+                    }
+                }
+
+                on("the TERM environment variable not being set") {
+                    val consoleInfo = ConsoleInfo(processRunner, emptyMap())
+
+                    it("returns false") {
+                        assertThat(consoleInfo.supportsInteractivity, equalTo(false))
+                    }
+                }
+
+                on("the TERM environment variable being set to something else") {
+                    val consoleInfo = ConsoleInfo(processRunner, mapOf("TERM" to "other-terminal"))
+
+                    it("returns true") {
+                        assertThat(consoleInfo.supportsInteractivity, equalTo(true))
+                    }
+                }
+            }
+
+            on("STDIN not being connected to a TTY") {
+                val processRunner = mock<ProcessRunner>() {
+                    on { runAndCaptureOutput(listOf("tty")) } doReturn ProcessOutput(1, "not a tty")
+                }
+
+                val consoleInfo = ConsoleInfo(processRunner, mapOf("TERM" to "other-terminal"))
+
+                it("returns false") {
+                    assertThat(consoleInfo.supportsInteractivity, equalTo(false))
                 }
             }
         }

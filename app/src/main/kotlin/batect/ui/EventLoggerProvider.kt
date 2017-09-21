@@ -22,7 +22,7 @@ class EventLoggerProvider(
         private val consoleInfo: ConsoleInfo
 ) {
     fun getEventLogger(): EventLogger {
-        if (consoleInfo.stdinIsTTY) {
+        if (consoleInfo.supportsInteractivity) {
             return fancyEventLogger
         } else {
             return simpleEventLogger

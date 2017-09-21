@@ -33,6 +33,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * prerequisites for tasks (eg. run the build before running journey tests)
 * display help if command name is followed by `--help` (eg. `batect run --help`)
 * show more detailed image build progress (eg. `build-env: Building step 1/7: FROM alpine:3.5`)
+* show more detailed image pull progress (eg. `build-env: Pulling some-image:1.2.3: 25%`)
 * performance improvements
   * prioritise running steps that lie on the critical path (eg. favour pulling image for leaf of dependency graph over creating container for task container)
   * batch up printing updates to the console when using fancy output mode, rather than reprinting progress information on every event

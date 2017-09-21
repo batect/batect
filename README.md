@@ -45,12 +45,19 @@ batect helps solve these problems by:
 * taking advantage of Docker's networking features to set up an isolated network for every command
 * enabling you to use existing Docker images as-is (or easily use custom Dockerfiles) to quickly get up and running
 
-## Can I start using this now?
+## How do I use this?
+
+Take a look at the [getting started guide](docs/GettingStarted.md), or consult the 
+[configuration file reference](docs/ConfigFile.md).
+
+There's also a [sample application](https://github.com/charleskorn/batect-sample) you can try.
+
+## Should I start using this now?
 
 **Short answer**: if you're feeling adventurous
 
-**Longer answer**: the most important features have been implemented, but there are still [a lot of rough edges and missing pieces](ROADMAP.md).
-Furthermore, there is currently no documentation and I cannot promise any backwards compatibility between releases. (I'm not
+**Longer answer**: the most important features have been implemented, but there are still [some rough edges and missing pieces](ROADMAP.md).
+Furthermore, there is currently only basic documentation and I cannot promise any backwards compatibility between releases. (I'm not
 planning any massive breaking changes, but I don't want to guarantee this at such an early stage.)
 
 If you do try it out, please [send me your feedback](mailto:me@charleskorn.com) and [report any issues you find](https://github.com/charleskorn/batect/issues/new).

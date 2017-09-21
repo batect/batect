@@ -46,10 +46,27 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertIn("404 File not found", result.stdout.decode())
         self.assertNotEqual(result.returncode, 0)
 
-    def run_script(self, args, download_url=default_download_url):
+    def test_no_curl(self):
+        result = self.run_script([], path="/bin")
+
+        self.assertIn("curl is not installed or not on your PATH. Please install it and try again.", result.stdout.decode())
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_no_java(self):
+        path_dir = tempfile.mkdtemp()
+        self.addCleanup(lambda: shutil.rmtree(path_dir))
+        os.symlink("/usr/bin/curl", os.path.join(path_dir, "curl"))
+
+        result = self.run_script([], path=path_dir + ":/bin")
+
+        self.assertIn("Java is not installed or not on your PATH. Please install it and try again.", result.stdout.decode())
+        self.assertNotEqual(result.returncode, 0)
+
+    def run_script(self, args, download_url=default_download_url, path=os.environ["PATH"]):
         env = {
             "BATECT_CACHE_DIR": self.cache_dir,
-            "BATECT_DOWNLOAD_URL": download_url
+            "BATECT_DOWNLOAD_URL": download_url,
+            "PATH": path
         }
 
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "src", "template.sh")

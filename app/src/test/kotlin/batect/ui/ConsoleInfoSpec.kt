@@ -18,6 +18,7 @@ package batect.ui
 
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
+import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
@@ -95,6 +96,26 @@ object ConsoleInfoSpec : Spek({
 
                 it("returns false") {
                     assertThat(consoleInfo.supportsInteractivity, equalTo(false))
+                }
+            }
+        }
+
+        describe("getting the type of terminal") {
+            val processRunner = mock<ProcessRunner>()
+
+            on("when the TERM environment variable is not set") {
+                val consoleInfo = ConsoleInfo(processRunner, emptyMap())
+
+                it("returns null") {
+                    assertThat(consoleInfo.terminalType, absent())
+                }
+            }
+
+            on("when the TERM environment variable is set") {
+                val consoleInfo = ConsoleInfo(processRunner, mapOf("TERM" to "some-terminal"))
+
+                it("returns its value") {
+                    assertThat(consoleInfo.terminalType, equalTo("some-terminal"))
                 }
             }
         }

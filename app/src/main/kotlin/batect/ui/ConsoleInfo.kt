@@ -24,6 +24,8 @@ class ConsoleInfo(private val processRunner: ProcessRunner, private val environm
     }
 
     val supportsInteractivity: Boolean by lazy {
-        stdinIsTTY && environment.getOrDefault("TERM", "dumb") != "dumb"
+        stdinIsTTY && terminalType != "dumb" && terminalType != null
     }
+
+    val terminalType: String? = environment["TERM"]
 }

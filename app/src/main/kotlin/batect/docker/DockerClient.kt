@@ -46,7 +46,7 @@ class DockerClient(
     }
 
     fun create(container: Container, command: String?, image: DockerImage, network: DockerNetwork): DockerContainer {
-        val args = creationCommandGenerator.createCommandLine(container, command, image, network)
+        val args = creationCommandGenerator.createCommandLine(container, command, image, network, consoleInfo)
         val result = processRunner.runAndCaptureOutput(args)
 
         if (failed(result)) {

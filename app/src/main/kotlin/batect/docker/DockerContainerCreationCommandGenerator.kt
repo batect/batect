@@ -17,22 +17,37 @@
 package batect.docker
 
 import batect.config.Container
+import batect.ui.ConsoleInfo
 
 class DockerContainerCreationCommandGenerator {
-    fun createCommandLine(container: Container, command: String?, image: DockerImage, network: DockerNetwork): Iterable<String> {
+    fun createCommandLine(container: Container, command: String?, image: DockerImage, network: DockerNetwork, consoleInfo: ConsoleInfo): Iterable<String> {
         return listOf("docker", "create", "-it",
-                "--network", network.id,
-                "--hostname", container.name,
-                "--network-alias", container.name) +
-                environmentVariableArguments(container) +
-                workingDirectoryArguments(container) +
-                volumeMountArguments(container) +
-                portMappingArguments(container) +
-                image.id +
-                commandArguments(command)
+            "--network", network.id,
+            "--hostname", container.name,
+            "--network-alias", container.name) +
+            environmentVariableArguments(container, consoleInfo) +
+            workingDirectoryArguments(container) +
+            volumeMountArguments(container) +
+            portMappingArguments(container) +
+            image.id +
+            commandArguments(command)
     }
 
-    private fun environmentVariableArguments(container: Container): Iterable<String> = container.environment.flatMap { (key, value) -> listOf("--env", "$key=$value") }
+    private fun environmentVariableArguments(container: Container, consoleInfo: ConsoleInfo): Iterable<String> {
+        return environmentVariablesFor(container, consoleInfo)
+            .flatMap { (key, value) -> listOf("--env", "$key=$value") }
+    }
+
+    private fun environmentVariablesFor(container: Container, consoleInfo: ConsoleInfo): Map<String, String> {
+        val termEnvironment = if (consoleInfo.terminalType == null) {
+            emptyMap<String, String>()
+        } else {
+            mapOf("TERM" to consoleInfo.terminalType)
+        }
+
+        return termEnvironment + container.environment
+    }
+
     private fun volumeMountArguments(container: Container): Iterable<String> = container.volumeMounts.flatMap { listOf("--volume", it.toString()) }
     private fun portMappingArguments(container: Container): Iterable<String> = container.portMappings.flatMap { listOf("--publish", it.toString()) }
 

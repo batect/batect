@@ -106,7 +106,7 @@ object DockerClientSpec : Spek({
                 val commandLine = listOf("docker", "doStuff", "please")
 
                 beforeEachTest {
-                    whenever(creationCommandGenerator.createCommandLine(container, command, image, network)).thenReturn(commandLine)
+                    whenever(creationCommandGenerator.createCommandLine(container, command, image, network, consoleInfo)).thenReturn(commandLine)
                 }
 
                 on("a successful creation") {

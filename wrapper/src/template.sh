@@ -30,7 +30,7 @@ function download() {
     fi
 
     mkdir -p "$CACHE_DIR"
-    curl -# --fail --silent --show-error --location --output "$JAR_PATH" "$DOWNLOAD_URL"
+    curl -# --fail --show-error --location --output "$JAR_PATH" "$DOWNLOAD_URL"
 }
 
 function runApplication() {

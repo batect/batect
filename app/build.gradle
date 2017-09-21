@@ -69,6 +69,10 @@ junitPlatform {
     }
 }
 
+shadowJar {
+    classifier = null
+}
+
 apply from: 'scripts/journeyTest.gradle'
 apply from: 'scripts/spotless.gradle'
 apply from: 'scripts/versionInfo.gradle'

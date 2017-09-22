@@ -12,6 +12,8 @@ The samples shown below are all taken from the [sample project](https://github.c
 The `batect` script is designed to be committed alongside your project, and not installed globally. It will 
 automatically pull down the correct version of batect for your operating system. 
 
+Note that a JVM must be installed to use batect. This requirement will be removed in a future release.
+
 ## First steps: build environment
 
 To start, we're going to configure a simple build environment, where you can build your application and run unit 

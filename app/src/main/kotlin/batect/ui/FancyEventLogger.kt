@@ -16,7 +16,6 @@
 
 package batect.ui
 
-import batect.model.DependencyGraph
 import batect.model.events.TaskEvent
 import batect.model.steps.CleanUpContainerStep
 import batect.model.steps.DisplayTaskFailureStep
@@ -25,18 +24,13 @@ import batect.model.steps.RunContainerStep
 import batect.model.steps.TaskStep
 
 class FancyEventLogger(
-        private val console: Console,
-        private val errorConsole: Console,
-        private val startupProgressDisplayProvider: StartupProgressDisplayProvider
+    val console: Console,
+    val errorConsole: Console,
+    val startupProgressDisplay: StartupProgressDisplay
 ) : EventLogger(errorConsole) {
     private val lock = Object()
     private var keepUpdatingStartupProgress = true
     private var haveStartedCleanUp = false
-    private var startupProgressDisplay: StartupProgressDisplay? = null
-
-    override fun onDependencyGraphCreated(graph: DependencyGraph) {
-        startupProgressDisplay = startupProgressDisplayProvider.createForDependencyGraph(graph)
-    }
 
     override fun onStartingTaskStep(step: TaskStep) {
         synchronized(lock) {
@@ -53,8 +47,8 @@ class FancyEventLogger(
             }
 
             if (keepUpdatingStartupProgress) {
-                startupProgressDisplay!!.onStepStarting(step)
-                startupProgressDisplay!!.print(console)
+                startupProgressDisplay.onStepStarting(step)
+                startupProgressDisplay.print(console)
             }
 
             if (step is RunContainerStep) {
@@ -86,8 +80,8 @@ class FancyEventLogger(
     override fun postEvent(event: TaskEvent) {
         synchronized(lock) {
             if (keepUpdatingStartupProgress) {
-                startupProgressDisplay!!.onEventPosted(event)
-                startupProgressDisplay!!.print(console)
+                startupProgressDisplay.onEventPosted(event)
+                startupProgressDisplay.print(console)
             }
         }
     }

@@ -29,9 +29,8 @@ data class TaskRunner(
         private val executionManagerProvider: ParallelExecutionManagerProvider
 ) {
     fun run(config: Configuration, task: Task, maximumConcurrentSteps: Int): Int {
-        val eventLogger = eventLoggerProvider.getEventLogger()
         val graph = graphProvider.createGraph(config, task)
-        eventLogger.onDependencyGraphCreated(graph)
+        val eventLogger = eventLoggerProvider.getEventLogger(graph)
 
         val stateMachine = stateMachineProvider.createStateMachine(graph)
         val executionManager = executionManagerProvider.createParallelExecutionManager(eventLogger, stateMachine, task.name, maximumConcurrentSteps)

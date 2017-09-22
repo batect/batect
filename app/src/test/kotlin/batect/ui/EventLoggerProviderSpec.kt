@@ -16,8 +16,10 @@
 
 package batect.ui
 
+import batect.model.DependencyGraph
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.isA
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
@@ -27,32 +29,60 @@ import org.jetbrains.spek.api.dsl.on
 
 object EventLoggerProviderSpec : Spek({
     describe("an event logger provider") {
-        val simpleEventLogger = mock<SimpleEventLogger>()
-        val fancyEventLogger = mock<FancyEventLogger>()
+        val console = mock<Console>()
+        val errorConsole = mock<Console>()
+        val graph = mock<DependencyGraph>()
 
         on("when the console supports interactivity") {
+            val startupProgressDisplay = mock<StartupProgressDisplay>()
+            val startupProgressDisplayProvider = mock<StartupProgressDisplayProvider> {
+                on { createForDependencyGraph(graph) } doReturn startupProgressDisplay
+            }
+
             val consoleInfo = mock<ConsoleInfo> {
                 on { supportsInteractivity } doReturn true
             }
 
-            val provider = EventLoggerProvider(simpleEventLogger, fancyEventLogger, consoleInfo)
-            val logger = provider.getEventLogger()
+            val provider = EventLoggerProvider(console, errorConsole, startupProgressDisplayProvider, consoleInfo)
+            val logger = provider.getEventLogger(graph)
 
-            it("returns the fancy event logger") {
-                assertThat(logger, equalTo<EventLogger>(fancyEventLogger))
+            it("returns a fancy event logger") {
+                assertThat(logger, isA<FancyEventLogger>())
+            }
+
+            it("passes the console to the event logger") {
+                assertThat((logger as FancyEventLogger).console, equalTo(console))
+            }
+
+            it("passes the error console to the event logger") {
+                assertThat((logger as FancyEventLogger).errorConsole, equalTo(errorConsole))
+            }
+
+            it("passes the startup progress display to the event logger") {
+                assertThat((logger as FancyEventLogger).startupProgressDisplay, equalTo(startupProgressDisplay))
             }
         }
 
         on("when the console does not support interactivity") {
+            val startupProgressDisplayProvider = mock<StartupProgressDisplayProvider>()
+
             val consoleInfo = mock<ConsoleInfo> {
                 on { supportsInteractivity } doReturn false
             }
 
-            val provider = EventLoggerProvider(simpleEventLogger, fancyEventLogger, consoleInfo)
-            val logger = provider.getEventLogger()
+            val provider = EventLoggerProvider(console, errorConsole, startupProgressDisplayProvider, consoleInfo)
+            val logger = provider.getEventLogger(graph)
 
-            it("returns the simple event logger") {
-                assertThat(logger, equalTo<EventLogger>(simpleEventLogger))
+            it("returns a simple event logger") {
+                assertThat(logger, isA<SimpleEventLogger>())
+            }
+
+            it("passes the console to the event logger") {
+                assertThat((logger as SimpleEventLogger).console, equalTo(console))
+            }
+
+            it("passes the error console to the event logger") {
+                assertThat((logger as SimpleEventLogger).errorConsole, equalTo(errorConsole))
             }
         }
     }

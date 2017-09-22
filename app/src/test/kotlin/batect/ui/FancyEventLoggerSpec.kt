@@ -18,7 +18,6 @@ package batect.ui
 
 import batect.config.Container
 import batect.docker.DockerContainer
-import batect.model.DependencyGraph
 import batect.model.events.ContainerBecameHealthyEvent
 import batect.model.events.ContainerRemovedEvent
 import batect.model.steps.CleanUpContainerStep
@@ -30,7 +29,6 @@ import batect.testutils.CreateForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
-import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
@@ -65,20 +63,10 @@ object FancyEventLoggerSpec : Spek({
             }
         }
 
-        val graph = mock<DependencyGraph>()
         val startupProgressDisplay by CreateForEachTest(this) { mock<StartupProgressDisplay>() }
-        val startupProgressDisplayProvider by CreateForEachTest(this) {
-            mock<StartupProgressDisplayProvider> {
-                on { createForDependencyGraph(graph) } doReturn startupProgressDisplay
-            }
-        }
 
         val logger by CreateForEachTest(this) {
-            FancyEventLogger(console, errorConsole, startupProgressDisplayProvider)
-        }
-
-        beforeEachTest {
-            logger.onDependencyGraphCreated(graph)
+            FancyEventLogger(console, errorConsole, startupProgressDisplay)
         }
 
         describe("when logging that a step is starting") {

@@ -17,7 +17,6 @@
 package batect.ui
 
 import batect.config.Container
-import batect.model.DependencyGraph
 import batect.model.events.TaskEvent
 import batect.model.steps.BuildImageStep
 import batect.model.steps.CleanUpContainerStep
@@ -29,7 +28,7 @@ import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.model.steps.TaskStep
 
-class SimpleEventLogger(private val console: Console, private val errorConsole: Console) : EventLogger(errorConsole) {
+class SimpleEventLogger(val console: Console, val errorConsole: Console) : EventLogger(errorConsole) {
     private val commands = mutableMapOf<Container, String?>()
     private var haveStartedCleanUp = false
     private val lock = Object()
@@ -107,6 +106,4 @@ class SimpleEventLogger(private val console: Console, private val errorConsole: 
             println(message)
         }
     }
-
-    override fun onDependencyGraphCreated(graph: DependencyGraph) {}
 }

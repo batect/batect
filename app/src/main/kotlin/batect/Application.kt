@@ -34,8 +34,6 @@ import batect.os.SystemInfo
 import batect.ui.Console
 import batect.ui.ConsoleInfo
 import batect.ui.EventLoggerProvider
-import batect.ui.FancyEventLogger
-import batect.ui.SimpleEventLogger
 import batect.ui.StartupProgressDisplayProvider
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.KodeinAware
@@ -60,7 +58,7 @@ fun main(args: Array<String>) {
 
 class Application(override val kodein: Kodein) : KodeinAware {
     constructor(outputStream: PrintStream, errorStream: PrintStream) :
-            this(createDefaultKodeinConfiguration(outputStream, errorStream))
+        this(createDefaultKodeinConfiguration(outputStream, errorStream))
 
     private val errorStream: PrintStream = instance(PrintStreamType.Error)
     private val commandLineParser: CommandLineParser = instance()
@@ -97,9 +95,7 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<DockerImageLabellingStrategy>() with singleton { DockerImageLabellingStrategy() }
     bind<ProcessRunner>() with singleton { ProcessRunner() }
     bind<DockerContainerCreationCommandGenerator>() with singleton { DockerContainerCreationCommandGenerator() }
-    bind<EventLoggerProvider>() with singleton { EventLoggerProvider(instance(), instance(), instance()) }
-    bind<SimpleEventLogger>() with singleton { SimpleEventLogger(instance(PrintStreamType.Output), instance(PrintStreamType.Error)) }
-    bind<FancyEventLogger>() with singleton { FancyEventLogger(instance(PrintStreamType.Output), instance(PrintStreamType.Error), instance()) }
+    bind<EventLoggerProvider>() with singleton { EventLoggerProvider(instance(PrintStreamType.Output), instance(PrintStreamType.Error), instance(), instance()) }
     bind<Console>(PrintStreamType.Output) with singleton { Console(instance(PrintStreamType.Output)) }
     bind<Console>(PrintStreamType.Error) with singleton { Console(instance(PrintStreamType.Error)) }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)

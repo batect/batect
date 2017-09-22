@@ -32,7 +32,6 @@ import batect.ui.EventLoggerProvider
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.reset
 import com.nhaarman.mockito_kotlin.verify
@@ -44,13 +43,14 @@ import org.jetbrains.spek.api.dsl.on
 
 object TaskRunnerSpec : Spek({
     describe("a task runner") {
-        val eventLogger = mock<EventLogger>()
-        val eventLoggerProvider = mock<EventLoggerProvider> {
-            on { getEventLogger() } doReturn eventLogger
-        }
-
         val graph = mock<DependencyGraph>()
         val graphProvider = mock<DependencyGraphProvider>()
+
+        val eventLogger = mock<EventLogger>()
+        val eventLoggerProvider = mock<EventLoggerProvider> {
+            on { getEventLogger(graph) } doReturn eventLogger
+        }
+
         val stateMachine = mock<TaskStateMachine>()
         val executionManager = mock<ParallelExecutionManager>()
         val levelOfParallelism = 64
@@ -81,19 +81,12 @@ object TaskRunnerSpec : Spek({
 
             val exitCode = taskRunner.run(config, task, levelOfParallelism)
 
-            it("passes the dependency graph to the event logger") {
-                verify(eventLogger).onDependencyGraphCreated(graph)
-            }
-
             it("returns the exit code from the execution manager") {
                 assertThat(exitCode, equalTo(100))
             }
 
-            it("passes the dependency graph to the event logger before running the task") {
-                inOrder(eventLogger, executionManager) {
-                    verify(eventLogger).onDependencyGraphCreated(graph)
-                    verify(executionManager).run()
-                }
+            it("runs the task") {
+                verify(executionManager).run()
             }
         }
     }

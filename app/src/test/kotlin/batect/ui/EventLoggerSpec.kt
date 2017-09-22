@@ -16,7 +16,6 @@
 
 package batect.ui
 
-import batect.model.DependencyGraph
 import batect.model.events.TaskEvent
 import batect.model.steps.TaskStep
 import batect.testutils.CreateForEachTest
@@ -44,7 +43,6 @@ object EventLoggerSpec : Spek({
 
         val logger by CreateForEachTest(this) {
             object : EventLogger(errorConsole) {
-                override fun onDependencyGraphCreated(graph: DependencyGraph) = throw NotImplementedError()
                 override fun onStartingTaskStep(step: TaskStep) = throw NotImplementedError()
                 override fun postEvent(event: TaskEvent) = throw NotImplementedError()
             }

@@ -16,16 +16,19 @@
 
 package batect.ui
 
+import batect.model.DependencyGraph
+
 class EventLoggerProvider(
-        private val simpleEventLogger: SimpleEventLogger,
-        private val fancyEventLogger: FancyEventLogger,
-        private val consoleInfo: ConsoleInfo
+    private val console: Console,
+    private val errorConsole: Console,
+    private val startupProgressDisplayProvider: StartupProgressDisplayProvider,
+    private val consoleInfo: ConsoleInfo
 ) {
-    fun getEventLogger(): EventLogger {
+    fun getEventLogger(graph: DependencyGraph): EventLogger {
         if (consoleInfo.supportsInteractivity) {
-            return fancyEventLogger
+            return FancyEventLogger(console, errorConsole, startupProgressDisplayProvider.createForDependencyGraph(graph))
         } else {
-            return simpleEventLogger
+            return SimpleEventLogger(console, errorConsole)
         }
     }
 }

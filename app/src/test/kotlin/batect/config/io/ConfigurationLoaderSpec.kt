@@ -111,7 +111,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.name, equalTo("first_task"))
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, equalTo("./gradlew doStuff"))
-                assertThat(task.dependencies, isEmpty)
+                assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.description, isEmptyString)
             }
         }
@@ -141,7 +141,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.name, equalTo("first_task"))
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, absent())
-                assertThat(task.dependencies, isEmpty)
+                assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.description, isEmptyString)
             }
         }
@@ -172,7 +172,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.name, equalTo("first_task"))
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, absent())
-                assertThat(task.dependencies, isEmpty)
+                assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.description, equalTo("The very first task."))
             }
         }
@@ -206,7 +206,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.name, equalTo("first_task"))
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, equalTo("./gradlew doStuff"))
-                assertThat(task.dependencies, equalTo(setOf("dependency-1", "dependency-2")))
+                assertThat(task.dependsOnContainers, equalTo(setOf("dependency-1", "dependency-2")))
                 assertThat(task.description, isEmptyString)
             }
         }

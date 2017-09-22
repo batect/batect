@@ -37,13 +37,13 @@ data class DependencyGraph(val config: Configuration, val task: Task) {
     }
 
     private fun createNodes(): Map<Container, DependencyGraphNode> {
-        if (task.dependencies.contains(task.runConfiguration.container)) {
+        if (task.dependsOnContainers.contains(task.runConfiguration.container)) {
             throw DependencyResolutionFailedException("The task '${task.name}' cannot start the container '${task.runConfiguration.container}' and also run it.")
         }
 
         val taskContainer = findContainer(task.runConfiguration.container, "task '${task.name}'")
         val nodesCreated = mutableMapOf<Container, DependencyGraphNode>()
-        val taskDependencies = findContainers(task.dependencies, "task '${task.name}'") + findContainers(taskContainer.dependencies, "container '${taskContainer.name}'")
+        val taskDependencies = findContainers(task.dependsOnContainers, "task '${task.name}'") + findContainers(taskContainer.dependencies, "container '${taskContainer.name}'")
         getOrCreateNode(taskContainer, taskDependencies, true, nodesCreated, emptyList())
 
         return nodesCreated
@@ -95,7 +95,7 @@ data class DependencyGraph(val config: Configuration, val task: Task) {
 
     private fun dependencyCycleException(path: List<Container>): DependencyResolutionFailedException {
         val introduction = "There is a dependency cycle in task '${task.name}'. "
-        val isCycleDueToTaskDependency = task.dependencies.contains(path[1].name)
+        val isCycleDueToTaskDependency = task.dependsOnContainers.contains(path[1].name)
         val description = if (isCycleDueToTaskDependency) descriptionForTaskDependencyCycle(path) else descriptionForContainerDependencyCycle(path)
 
         return DependencyResolutionFailedException(introduction + description)

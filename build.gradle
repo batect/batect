@@ -46,7 +46,7 @@ task validateIsReleaseBuild {
 
 task validateVersionMatchesTag {
     doLast {
-        def gitTag = runProcess("git", "describe", "--dirty")
+        def gitTag = runProcess("git", "describe", "--dirty", "--candidates=0")
 
         if (gitTag.contains("-dirty")) {
             throw new Exception("The working copy is dirty.")

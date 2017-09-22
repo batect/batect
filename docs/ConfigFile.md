@@ -116,3 +116,4 @@ Each task definition is made up of:
 | `description` | Description shown when running `batect tasks`. |
 | `run` | Container (`container`) and command (`command`) to run for this task. **`container` is required.** `command` overrides any command specifed on the container definition and the default image command. |
 | `start` | List of other containers that should be started and healthy before starting the task container given in `run`. The behaviour is the same as the `dependencies` property on a container definition. |
+| `prerequisites` | List of other tasks that should be run before running this task. If a prerequisite task finishes with a non-zero exit code, then neither this task nor any other prerequisites will be run. | 

@@ -216,12 +216,15 @@ tasks:
       command: ./gradlew journeyTest
     start:
       - international-transfers-service
+    prerequisites:
+      - build
 
 ```
 
 Note that in this case, we specify that the database container is a dependency of the application container - this means that batect will first
 start the database container and wait for it to become healthy, then start the application and wait for it to become healthy, and then run the 
-journey tests. 
+journey tests. We also specify that the build task should run before starting the journey tests - this is so that when we start the application,
+we start the most recent version of it. 
 
 ## Where to get help
 

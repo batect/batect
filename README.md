@@ -54,7 +54,7 @@ There's also a [sample application](https://github.com/charleskorn/batect-sample
 
 ## Should I start using this now?
 
-**Short answer**: if you're feeling adventurous
+**Short answer**: if you don't mind some rough edges
 
 **Longer answer**: the most important features have been implemented, but there are still [some rough edges and missing pieces](ROADMAP.md).
 Furthermore, there is currently only basic documentation and I cannot promise any backwards compatibility between releases. (I'm not

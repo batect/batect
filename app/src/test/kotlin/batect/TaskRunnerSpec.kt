@@ -70,20 +70,7 @@ object TaskRunnerSpec : Spek({
             reset(stateMachine)
         }
 
-        on("attempting to run a task that does not exist") {
-            val config = Configuration("some-project", TaskMap(), ContainerMap())
-            val exitCode = taskRunner.run(config, "some-task", levelOfParallelism)
-
-            it("logs that the task does not exist") {
-                verify(eventLogger).onTaskDoesNotExist("some-task")
-            }
-
-            it("returns a non-zero exit code") {
-                assertThat(exitCode, !equalTo(0))
-            }
-        }
-
-        on("running a task that exists") {
+        on("running a task") {
             val container = Container("some-container", imageSourceDoesNotMatter())
             val runConfiguration = TaskRunConfiguration(container.name)
             val task = Task("some-task", runConfiguration)
@@ -92,7 +79,7 @@ object TaskRunnerSpec : Spek({
             whenever(graphProvider.createGraph(config, task)).thenReturn(graph)
             whenever(executionManager.run()).doReturn(100)
 
-            val exitCode = taskRunner.run(config, "some-task", levelOfParallelism)
+            val exitCode = taskRunner.run(config, task, levelOfParallelism)
 
             it("passes the dependency graph to the event logger") {
                 verify(eventLogger).onDependencyGraphCreated(graph)

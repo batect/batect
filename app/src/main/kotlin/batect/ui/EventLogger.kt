@@ -24,14 +24,6 @@ abstract class EventLogger(private val errorConsole: Console) : TaskEventSink {
     abstract fun onDependencyGraphCreated(graph: DependencyGraph)
     abstract fun onStartingTaskStep(step: TaskStep)
 
-    fun onTaskDoesNotExist(taskName: String) {
-        errorConsole.withColor(ConsoleColor.Red) {
-            print("The task ")
-            printBold(taskName)
-            println(" does not exist.")
-        }
-    }
-
     fun onTaskFailed(taskName: String) {
         errorConsole.withColor(ConsoleColor.Red) {
             println()

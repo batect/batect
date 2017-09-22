@@ -17,6 +17,7 @@
 package batect
 
 import batect.config.Configuration
+import batect.config.Task
 import batect.model.DependencyGraphProvider
 import batect.model.TaskStateMachineProvider
 import batect.ui.EventLoggerProvider
@@ -27,20 +28,13 @@ data class TaskRunner(
         private val stateMachineProvider: TaskStateMachineProvider,
         private val executionManagerProvider: ParallelExecutionManagerProvider
 ) {
-    fun run(config: Configuration, taskName: String, maximumConcurrentSteps: Int): Int {
+    fun run(config: Configuration, task: Task, maximumConcurrentSteps: Int): Int {
         val eventLogger = eventLoggerProvider.getEventLogger()
-        val resolvedTask = config.tasks[taskName]
-
-        if (resolvedTask == null) {
-            eventLogger.onTaskDoesNotExist(taskName)
-            return -1
-        }
-
-        val graph = graphProvider.createGraph(config, resolvedTask)
+        val graph = graphProvider.createGraph(config, task)
         eventLogger.onDependencyGraphCreated(graph)
 
         val stateMachine = stateMachineProvider.createStateMachine(graph)
-        val executionManager = executionManagerProvider.createParallelExecutionManager(eventLogger, stateMachine, taskName, maximumConcurrentSteps)
+        val executionManager = executionManagerProvider.createParallelExecutionManager(eventLogger, stateMachine, task.name, maximumConcurrentSteps)
 
         return executionManager.run()
     }

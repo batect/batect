@@ -26,6 +26,7 @@ import batect.docker.DockerClient
 import batect.docker.DockerContainerCreationCommandGenerator
 import batect.docker.DockerImageLabellingStrategy
 import batect.model.DependencyGraphProvider
+import batect.model.TaskExecutionOrderResolver
 import batect.model.TaskStateMachineProvider
 import batect.model.steps.TaskStepRunner
 import batect.os.ProcessRunner
@@ -109,6 +110,7 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider() }
     bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance()) }
     bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider() }
+    bind<TaskExecutionOrderResolver>() with singleton { TaskExecutionOrderResolver() }
     bind<ConsoleInfo>() with singleton { ConsoleInfo(instance(), System.getenv()) }
     bind<VersionInfo>() with singleton { VersionInfo() }
     bind<SystemInfo>() with singleton { SystemInfo(System.getProperties()) }

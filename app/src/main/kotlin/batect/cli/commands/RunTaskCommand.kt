@@ -16,42 +16,75 @@
 
 package batect.cli.commands
 
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.instance
+import batect.PrintStreamType
 import batect.TaskRunner
 import batect.cli.CommonOptions
 import batect.cli.options.LevelOfParallelismDefaultValueProvider
 import batect.cli.options.ValueConverters
+import batect.config.Configuration
+import batect.config.Task
 import batect.config.io.ConfigurationLoader
+import batect.model.TaskExecutionOrderResolutionException
+import batect.model.TaskExecutionOrderResolver
+import batect.ui.Console
+import batect.ui.ConsoleColor
+import com.github.salomonbrys.kodein.Kodein
+import com.github.salomonbrys.kodein.instance
 
 class RunTaskCommandDefinition : CommandDefinition("run", "Run a task.") {
     val taskName: String by RequiredPositionalParameter("TASK", "The name of the task to run.")
 
     val levelOfParallelism: Int by valueOption(
-            "level-of-parallelism",
-            "Maximum number of operations to run in parallel.",
-            LevelOfParallelismDefaultValueProvider,
-            ValueConverters::positiveInteger,
-            'p')
+        "level-of-parallelism",
+        "Maximum number of operations to run in parallel.",
+        LevelOfParallelismDefaultValueProvider,
+        ValueConverters::positiveInteger,
+        'p')
 
     override fun createCommand(kodein: Kodein): Command = RunTaskCommand(
-            kodein.instance(CommonOptions.ConfigurationFileName),
-            taskName,
-            levelOfParallelism,
-            kodein.instance(),
-            kodein.instance())
+        kodein.instance(CommonOptions.ConfigurationFileName),
+        taskName,
+        levelOfParallelism,
+        kodein.instance(),
+        kodein.instance(),
+        kodein.instance(),
+        kodein.instance(PrintStreamType.Error))
 }
 
 data class RunTaskCommand(
-        val configFile: String,
-        val taskName: String,
-        val levelOfParallelism: Int,
-        val configLoader: ConfigurationLoader,
-        val taskRunner: TaskRunner) : Command {
+    val configFile: String,
+    val taskName: String,
+    val levelOfParallelism: Int,
+    val configLoader: ConfigurationLoader,
+    val taskExecutionOrderResolver: TaskExecutionOrderResolver,
+    val taskRunner: TaskRunner,
+    val errorConsole: Console) : Command {
 
     override fun run(): Int {
         val config = configLoader.loadConfig(configFile)
 
-        return taskRunner.run(config, taskName, levelOfParallelism)
+        try {
+            val tasks = taskExecutionOrderResolver.resolveExecutionOrder(config, taskName)
+            return runTasks(config, tasks)
+
+        } catch (e: TaskExecutionOrderResolutionException) {
+            errorConsole.withColor(ConsoleColor.Red) {
+                println(e.message ?: "")
+            }
+
+            return -1
+        }
+    }
+
+    private fun runTasks(config: Configuration, tasks: List<Task>): Int {
+        for (task in tasks) {
+            val exitCode = taskRunner.run(config, task, levelOfParallelism)
+
+            if (exitCode != 0) {
+                return exitCode
+            }
+        }
+
+        return 0
     }
 }

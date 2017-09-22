@@ -47,7 +47,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use Docker API directly rather than using Docker CLI (would allow for more detailed progress and error reporting)
 * documentation
-  * getting started guide
   * examples for common languages and scenarios
   * CI setup - reminder to clean up stale images regularly
   * performance tips
@@ -55,12 +54,7 @@ If there's something you're really keen to see, pull requests are always welcome
     * bake schema into DB containers used for integration or journey testing
   * importance of idempotency
   * integration with IDEs (eg. how to reference the Ruby runtime inside a Docker container for code completion etc.)
-* examples (update or remove `sample` directory)
 * use `--iidfile` to get image ID after build and stop relying on tag
-* wrapper script to pull appropriate binary down (like `gradlew`)
-  * should be OS independent (so it can be committed with application code) and pull down correct binary
-  * should lock to particular version (how to warn about newer available version?)
-  * should not require anything beyond what would already be installed on a standard OS X or Linux install (Bash and `curl` or `wget`)
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
 * regularly check for updates and notify the user if there is one available
 * move to Kotlin/Native

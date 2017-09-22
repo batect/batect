@@ -72,7 +72,7 @@ object ConfigurationFileSpec : Spek({
 
                 it("returns a configuration object with the task") {
                     assertThat(resultingConfig.tasks, equalTo(TaskMap(
-                        Task(taskName, task.runConfiguration, "Some description", task.dependsOnContainers, task.dependsOnTasks)
+                        Task(taskName, task.runConfiguration, "Some description", task.dependsOnContainers, task.prerequisiteTasks)
                     )))
                 }
 

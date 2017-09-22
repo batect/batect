@@ -20,6 +20,6 @@ data class Task(val name: String,
                 val runConfiguration: TaskRunConfiguration,
                 val description: String = "",
                 val dependsOnContainers: Set<String> = emptySet(),
-                val dependsOnTasks: Set<String> = emptySet())
+                val prerequisiteTasks: Set<String> = emptySet())
 
 data class TaskRunConfiguration(val container: String, val command: String? = null)

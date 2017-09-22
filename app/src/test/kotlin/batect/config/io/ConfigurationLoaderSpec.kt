@@ -112,7 +112,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, equalTo("./gradlew doStuff"))
                 assertThat(task.dependsOnContainers, isEmpty)
-                assertThat(task.dependsOnTasks, isEmpty)
+                assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, isEmptyString)
             }
         }
@@ -143,7 +143,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, absent())
                 assertThat(task.dependsOnContainers, isEmpty)
-                assertThat(task.dependsOnTasks, isEmpty)
+                assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, isEmptyString)
             }
         }
@@ -175,7 +175,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, absent())
                 assertThat(task.dependsOnContainers, isEmpty)
-                assertThat(task.dependsOnTasks, isEmpty)
+                assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, equalTo("The very first task."))
             }
         }
@@ -210,7 +210,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, equalTo("./gradlew doStuff"))
                 assertThat(task.dependsOnContainers, equalTo(setOf("dependency-1", "dependency-2")))
-                assertThat(task.dependsOnTasks, isEmpty)
+                assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, isEmptyString)
             }
         }
@@ -233,7 +233,7 @@ object ConfigurationLoaderSpec : Spek({
             }
         }
 
-        on("loading a valid configuration file with a task with some task dependencies") {
+        on("loading a valid configuration file with a task with some prerequisite tasks") {
             val configString = """
                 |project_name: the_cool_project
                 |
@@ -242,7 +242,7 @@ object ConfigurationLoaderSpec : Spek({
                 |    run:
                 |      container: build-env
                 |      command: ./gradlew doStuff
-                |    depends_on_tasks:
+                |    prerequisites:
                 |      - other-task
                 |      - another-task
                 """.trimMargin()
@@ -263,12 +263,12 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, equalTo("./gradlew doStuff"))
                 assertThat(task.dependsOnContainers, isEmpty)
-                assertThat(task.dependsOnTasks, equalTo(setOf("other-task", "another-task")))
+                assertThat(task.prerequisiteTasks, equalTo(setOf("other-task", "another-task")))
                 assertThat(task.description, isEmptyString)
             }
         }
 
-        on("loading a configuration file with a task that has a task dependency defined twice") {
+        on("loading a configuration file with a task that has a prerequisite task defined twice") {
             val config = """
                 |project_name: the_cool_project
                 |
@@ -276,7 +276,7 @@ object ConfigurationLoaderSpec : Spek({
                 |  first_task:
                 |    run:
                 |      container: build-env
-                |    depends_on_tasks:
+                |    prerequisites:
                 |      - dependency-1
                 |      - dependency-1
                 """.trimMargin()

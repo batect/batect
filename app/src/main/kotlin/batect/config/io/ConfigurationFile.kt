@@ -44,10 +44,10 @@ data class ConfigurationFile(
 data class TaskFromFile(@JsonProperty("run") val runConfiguration: TaskRunConfiguration,
                         val description: String = "",
                         @JsonProperty("start") @JsonDeserialize(using = StringSetDeserializer::class) val dependsOnContainers: Set<String> = emptySet(),
-                        @JsonProperty("depends_on_tasks") @JsonDeserialize(using = StringSetDeserializer::class) val dependsOnTasks: Set<String> = emptySet()
+                        @JsonProperty("prerequisites") @JsonDeserialize(using = StringSetDeserializer::class) val prerequisiteTasks: Set<String> = emptySet()
 ) {
 
-    fun toTask(name: String): Task = Task(name, runConfiguration, description, dependsOnContainers, dependsOnTasks)
+    fun toTask(name: String): Task = Task(name, runConfiguration, description, dependsOnContainers, prerequisiteTasks)
 }
 
 data class ContainerFromFile(

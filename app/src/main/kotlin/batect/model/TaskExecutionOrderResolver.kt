@@ -27,7 +27,7 @@ class TaskExecutionOrderResolver {
             throw TaskExecutionOrderResolutionException("The task '$taskName' does not exist.")
         }
 
-        val allTasksToSchedule = resolveDependenciesForTask(config, task, listOf(task)) + task
+        val allTasksToSchedule = resolvePrerequisitesForTask(config, task, listOf(task)) + task
         var remainingTasksToSchedule = allTasksToSchedule
         var scheduledTasks = emptyList<Task>()
 
@@ -42,43 +42,43 @@ class TaskExecutionOrderResolver {
         return scheduledTasks
     }
 
-    private fun resolveDependenciesForTask(config: Configuration, parentTask: Task, path: List<Task>): Set<Task> {
-        val dependencies = parentTask.dependsOnTasks
-            .mapTo(mutableSetOf<Task>()) { dependencyTaskName -> resolveDependencyForTask(config, parentTask, dependencyTaskName, path) }
+    private fun resolvePrerequisitesForTask(config: Configuration, parentTask: Task, path: List<Task>): Set<Task> {
+        val prerequisites = parentTask.prerequisiteTasks
+            .mapTo(mutableSetOf<Task>()) { prerequisiteTaskName -> resolvePrerequisiteForTask(config, parentTask, prerequisiteTaskName, path) }
 
-        val childDependencies = dependencies
-            .flatMapTo(mutableSetOf<Task>()) { dependency -> resolveDependenciesForTask(config, dependency, path + dependency) }
+        val childPrerequisites = prerequisites
+            .flatMapTo(mutableSetOf<Task>()) { prerequisite -> resolvePrerequisitesForTask(config, prerequisite, path + prerequisite) }
 
-        return dependencies + childDependencies
+        return prerequisites + childPrerequisites
     }
 
-    private fun resolveDependencyForTask(config: Configuration, parentTask: Task, dependencyTaskName: String, path: List<Task>): Task {
-        val dependency = config.tasks[dependencyTaskName]
+    private fun resolvePrerequisiteForTask(config: Configuration, parentTask: Task, prerequisiteTaskName: String, path: List<Task>): Task {
+        val prerequisite = config.tasks[prerequisiteTaskName]
 
-        if (dependency == null) {
-            throw TaskExecutionOrderResolutionException("The task '$dependencyTaskName' given as a dependency of '${parentTask.name}' does not exist.")
+        if (prerequisite == null) {
+            throw TaskExecutionOrderResolutionException("The task '$prerequisiteTaskName' given as a prerequisite of '${parentTask.name}' does not exist.")
         }
 
-        if (path.contains(dependency)) {
-            val description = cycleDescription(path + dependency)
+        if (path.contains(prerequisite)) {
+            val description = cycleDescription(path + prerequisite)
             throw TaskExecutionOrderResolutionException("There is a dependency cycle between tasks: $description.")
         }
 
-        return dependency
+        return prerequisite
     }
 
     private fun cycleDescription(path: List<Task>): String {
         val taskNames = path.map { "'${it.name}'" }
-        val firstPart = "task ${taskNames[0]} depends on ${taskNames[1]}"
+        val firstPart = "task ${taskNames[0]} has ${taskNames[1]} as a prerequisite"
 
         val remainingNames = taskNames.drop(2)
-        val remainingPart = remainingNames.map { ", which depends on $it" }.joinToString("")
+        val remainingPart = remainingNames.map { ", which has $it as a prerequisite" }.joinToString("")
 
         return firstPart + remainingPart
     }
 
     private fun canBeScheduled(task: Task, tasksAlreadyScheduled: List<Task>): Boolean
-        = tasksAlreadyScheduled.map { it.name }.containsAll(task.dependsOnTasks)
+        = tasksAlreadyScheduled.map { it.name }.containsAll(task.prerequisiteTasks)
 }
 
 class TaskExecutionOrderResolutionException(message: String) : RuntimeException(message)

@@ -112,6 +112,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, equalTo("./gradlew doStuff"))
                 assertThat(task.dependsOnContainers, isEmpty)
+                assertThat(task.dependsOnTasks, isEmpty)
                 assertThat(task.description, isEmptyString)
             }
         }
@@ -142,6 +143,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, absent())
                 assertThat(task.dependsOnContainers, isEmpty)
+                assertThat(task.dependsOnTasks, isEmpty)
                 assertThat(task.description, isEmptyString)
             }
         }
@@ -173,11 +175,12 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, absent())
                 assertThat(task.dependsOnContainers, isEmpty)
+                assertThat(task.dependsOnTasks, isEmpty)
                 assertThat(task.description, equalTo("The very first task."))
             }
         }
 
-        on("loading a valid configuration file with a task with some dependencies") {
+        on("loading a valid configuration file with a task with some container dependencies") {
             val configString = """
                 |project_name: the_cool_project
                 |
@@ -207,11 +210,12 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, equalTo("./gradlew doStuff"))
                 assertThat(task.dependsOnContainers, equalTo(setOf("dependency-1", "dependency-2")))
+                assertThat(task.dependsOnTasks, isEmpty)
                 assertThat(task.description, isEmptyString)
             }
         }
 
-        on("loading a configuration file with a task that has a dependency defined twice") {
+        on("loading a configuration file with a task that has a container dependency defined twice") {
             val config = """
                 |project_name: the_cool_project
                 |
@@ -220,6 +224,59 @@ object ConfigurationLoaderSpec : Spek({
                 |    run:
                 |      container: build-env
                 |    start:
+                |      - dependency-1
+                |      - dependency-1
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate value 'dependency-1'") and withLineNumber(9)))
+            }
+        }
+
+        on("loading a valid configuration file with a task with some task dependencies") {
+            val configString = """
+                |project_name: the_cool_project
+                |
+                |tasks:
+                |  first_task:
+                |    run:
+                |      container: build-env
+                |      command: ./gradlew doStuff
+                |    depends_on_tasks:
+                |      - other-task
+                |      - another-task
+                """.trimMargin()
+
+            val config = loadConfiguration(configString)
+
+            it("should load the project name") {
+                assertThat(config.projectName, equalTo("the_cool_project"))
+            }
+
+            it("should load the single task specified") {
+                assertThat(config.tasks.keys, equalTo(setOf("first_task")))
+            }
+
+            it("should load the configuration for the task") {
+                val task = config.tasks["first_task"]!!
+                assertThat(task.name, equalTo("first_task"))
+                assertThat(task.runConfiguration.container, equalTo("build-env"))
+                assertThat(task.runConfiguration.command, equalTo("./gradlew doStuff"))
+                assertThat(task.dependsOnContainers, isEmpty)
+                assertThat(task.dependsOnTasks, equalTo(setOf("other-task", "another-task")))
+                assertThat(task.description, isEmptyString)
+            }
+        }
+
+        on("loading a configuration file with a task that has a task dependency defined twice") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |tasks:
+                |  first_task:
+                |    run:
+                |      container: build-env
+                |    depends_on_tasks:
                 |      - dependency-1
                 |      - dependency-1
                 """.trimMargin()

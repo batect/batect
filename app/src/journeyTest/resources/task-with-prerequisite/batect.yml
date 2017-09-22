@@ -1,0 +1,18 @@
+project_name: task-with-prerequisite-test
+
+containers:
+  build-env:
+    image: alpine:3.6
+
+tasks:
+  build:
+    run:
+      container: build-env
+      command: echo "This is some output from the build task"
+
+  do-stuff:
+    run:
+      container: build-env
+      command: sh -c 'echo "This is some output from the main task" && exit 123'
+    prerequisites:
+      - build

@@ -32,6 +32,7 @@ import batect.ui.EventLoggerProvider
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.reset
 import com.nhaarman.mockito_kotlin.verify
@@ -81,12 +82,23 @@ object TaskRunnerSpec : Spek({
 
             val exitCode = taskRunner.run(config, task, levelOfParallelism)
 
-            it("returns the exit code from the execution manager") {
-                assertThat(exitCode, equalTo(100))
+            it("logs that the task is starting") {
+                verify(eventLogger).onTaskStarting("some-task")
             }
 
             it("runs the task") {
                 verify(executionManager).run()
+            }
+
+            it("logs that the task is starting before running the task") {
+                inOrder(eventLogger, executionManager) {
+                    verify(eventLogger).onTaskStarting("some-task")
+                    verify(executionManager).run()
+                }
+            }
+
+            it("returns the exit code from the execution manager") {
+                assertThat(exitCode, equalTo(100))
             }
         }
     }

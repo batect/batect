@@ -19,7 +19,7 @@ package batect.ui
 import batect.model.events.TaskEventSink
 import batect.model.steps.TaskStep
 
-abstract class EventLogger(private val errorConsole: Console) : TaskEventSink {
+abstract class EventLogger(private val console: Console, private val errorConsole: Console) : TaskEventSink {
     abstract fun onStartingTaskStep(step: TaskStep)
 
     fun onTaskFailed(taskName: String) {
@@ -28,6 +28,14 @@ abstract class EventLogger(private val errorConsole: Console) : TaskEventSink {
             print("The task ")
             printBold(taskName)
             println(" failed. See above for details.")
+        }
+    }
+
+    fun onTaskStarting(taskName: String) {
+        console.withColor(ConsoleColor.White) {
+            print("Running ")
+            printBold(taskName)
+            println("...")
         }
     }
 }

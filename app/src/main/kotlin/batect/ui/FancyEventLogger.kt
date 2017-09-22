@@ -27,7 +27,7 @@ class FancyEventLogger(
     val console: Console,
     val errorConsole: Console,
     val startupProgressDisplay: StartupProgressDisplay
-) : EventLogger(errorConsole) {
+) : EventLogger(console, errorConsole) {
     private val lock = Object()
     private var keepUpdatingStartupProgress = true
     private var haveStartedCleanUp = false

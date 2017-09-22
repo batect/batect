@@ -31,6 +31,16 @@ import org.jetbrains.spek.api.dsl.on
 
 object EventLoggerSpec : Spek({
     describe("an event logger") {
+        val whiteConsole by CreateForEachTest(this) { mock<Console>() }
+        val console by CreateForEachTest(this) {
+            mock<Console> {
+                on { withColor(eq(ConsoleColor.White), any()) } doAnswer {
+                    val printStatements = it.getArgument<Console.() -> Unit>(1)
+                    printStatements(whiteConsole)
+                }
+            }
+        }
+
         val redErrorConsole by CreateForEachTest(this) { mock<Console>() }
         val errorConsole by CreateForEachTest(this) {
             mock<Console> {
@@ -42,9 +52,21 @@ object EventLoggerSpec : Spek({
         }
 
         val logger by CreateForEachTest(this) {
-            object : EventLogger(errorConsole) {
+            object : EventLogger(console, errorConsole) {
                 override fun onStartingTaskStep(step: TaskStep) = throw NotImplementedError()
                 override fun postEvent(event: TaskEvent) = throw NotImplementedError()
+            }
+        }
+
+        on("when the task starts") {
+            logger.onTaskStarting("some-task")
+
+            it("prints a message to the output") {
+                inOrder(whiteConsole) {
+                    verify(whiteConsole).print("Running ")
+                    verify(whiteConsole).printBold("some-task")
+                    verify(whiteConsole).println("...")
+                }
             }
         }
 

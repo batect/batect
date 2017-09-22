@@ -28,7 +28,7 @@ import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.model.steps.TaskStep
 
-class SimpleEventLogger(val console: Console, val errorConsole: Console) : EventLogger(errorConsole) {
+class SimpleEventLogger(val console: Console, val errorConsole: Console) : EventLogger(console, errorConsole) {
     private val commands = mutableMapOf<Container, String?>()
     private var haveStartedCleanUp = false
     private val lock = Object()

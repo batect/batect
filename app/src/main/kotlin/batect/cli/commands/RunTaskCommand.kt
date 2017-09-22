@@ -48,6 +48,7 @@ class RunTaskCommandDefinition : CommandDefinition("run", "Run a task.") {
         kodein.instance(),
         kodein.instance(),
         kodein.instance(),
+        kodein.instance(PrintStreamType.Output),
         kodein.instance(PrintStreamType.Error))
 }
 
@@ -58,6 +59,7 @@ data class RunTaskCommand(
     val configLoader: ConfigurationLoader,
     val taskExecutionOrderResolver: TaskExecutionOrderResolver,
     val taskRunner: TaskRunner,
+    val console: Console,
     val errorConsole: Console) : Command {
 
     override fun run(): Int {
@@ -83,6 +85,8 @@ data class RunTaskCommand(
             if (exitCode != 0) {
                 return exitCode
             }
+
+            console.println()
         }
 
         return 0

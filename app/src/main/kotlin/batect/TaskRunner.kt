@@ -31,6 +31,7 @@ data class TaskRunner(
     fun run(config: Configuration, task: Task, maximumConcurrentSteps: Int): Int {
         val graph = graphProvider.createGraph(config, task)
         val eventLogger = eventLoggerProvider.getEventLogger(graph)
+        eventLogger.onTaskStarting(task.name)
 
         val stateMachine = stateMachineProvider.createStateMachine(graph)
         val executionManager = executionManagerProvider.createParallelExecutionManager(eventLogger, stateMachine, task.name, maximumConcurrentSteps)

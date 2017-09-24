@@ -48,7 +48,7 @@ object ProcessRunnerSpec : Spek({
         }
 
         on("running a process and capturing the output") {
-            val command = listOf("sh", "-c", "echo hello world && echo hello error world 2>&1 && echo more non-error output && exit 201")
+            val command = listOf("sh", "-c", "echo hello world && echo hello error world 1>&2 && echo more non-error output && exit 201")
             val result = runner.runAndCaptureOutput(command)
 
             it("returns the exit code of the command") {
@@ -83,7 +83,7 @@ object ProcessRunnerSpec : Spek({
                 val tempFile = File.createTempFile("processrunner", ".tmp")
                 tempFile.deleteOnExit()
 
-                val command = listOf("sh", "-c", "echo line1 && echo line2 2>&1 && sleep 0.1 && echo This should never happen > '$tempFile' && exit 123")
+                val command = listOf("sh", "-c", "echo line1 && echo line2 1>&2 && sleep 0.1 && echo This should never happen > '$tempFile' && exit 123")
                 val linesProcessed = mutableListOf<String>()
 
                 val result = runner.runAndProcessOutput<String>(command) { line ->
@@ -109,6 +109,27 @@ object ProcessRunnerSpec : Spek({
                     Thread.sleep(200)
                     assertThat(tempFile.length(), equalTo(0L))
                 }
+            }
+        }
+
+        describe("running a process and streaming the output") {
+            val command = listOf("sh", "-c", "echo line1 && echo line2 1>&2 && echo line3 && exit 123")
+            val linesProcessed = mutableListOf<String>()
+
+            val result = runner.runAndStreamOutput(command) { line ->
+                linesProcessed.add(line)
+            }
+
+            it("calls the processing method provided for each line written to stdout or stderr") {
+                assertThat(linesProcessed, equalTo(listOf("line1", "line2", "line3")))
+            }
+
+            it("returns the exit code of the command") {
+                assertThat(result.exitCode, equalTo(123))
+            }
+
+            it("returns the combined stdout and stderr of the command") {
+                assertThat(result.output, equalTo("line1\nline2\nline3\n"))
             }
         }
     }

@@ -73,6 +73,29 @@ class ProcessRunner {
             process.destroyForcibly()
         }
     }
+
+    fun runAndStreamOutput(command: Iterable<String>, outputProcessor: (String) -> Unit): ProcessOutput {
+        val process = ProcessBuilder(command.toList())
+            .redirectErrorStream(true)
+            .start()
+
+        try {
+            val reader = InputStreamReader(process.inputStream)
+            val output = StringBuilder()
+
+            reader.useLines { lines ->
+                for (line in lines) {
+                    outputProcessor(line)
+                    output.appendln(line)
+                }
+            }
+
+            val exitCode = process.waitFor()
+            return ProcessOutput(exitCode, output.toString())
+        } finally {
+            process.destroyForcibly()
+        }
+    }
 }
 
 data class ProcessOutput(val exitCode: Int, val output: String)

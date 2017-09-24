@@ -17,23 +17,23 @@
 package batect.docker
 
 import batect.config.BuildImage
+import batect.config.Container
 import batect.os.Exited
 import batect.os.KillProcess
 import batect.os.KilledDuringProcessing
 import batect.os.OutputProcessing
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
-import com.natpryce.hamkrest.Matcher
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.throws
-import batect.config.Container
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withCause
 import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
+import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.and
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isA
+import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.check
 import com.nhaarman.mockito_kotlin.doReturn
@@ -75,23 +75,60 @@ object DockerClientSpec : Spek({
                 val container = Container("the-container", BuildImage(buildDirectory))
 
                 on("a successful build") {
-                    whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(0, "Some output"))
-                    val result = client.build("the-project", container)
+                    val output = """
+                        |Sending build context to Docker daemon  3.072kB
+                        |Step 1/3 : FROM nginx:1.13.0
+                        | ---> 3448f27c273f
+                        |Step 2/3 : COPY health-check.sh /tools/
+                        | ---> Using cache
+                        | ---> 071856168043
+                        |Step 3/3 : HEALTHCHECK --interval=2s --retries=1 CMD /tools/health-check.sh
+                        | ---> Using cache
+                        | ---> 11d3e1df9526
+                        |Successfully built 11d3e1df9526
+                        |""".trimMargin()
+
+                    whenever(processRunner.runAndStreamOutput(any(), any()))
+                        .then { invocation ->
+                            @Suppress("UNCHECKED_CAST")
+                            val outputProcessor: (String) -> OutputProcessing<Unit> = invocation.arguments[1] as (String) -> OutputProcessing<Unit>
+                            output.lines().forEach { outputProcessor(it) }
+
+                            ProcessOutput(0, output)
+                        }
+
+                    val statusUpdates = mutableListOf<DockerImageBuildProgress>()
+
+                    val onStatusUpdate = fun(p: DockerImageBuildProgress) {
+                        statusUpdates.add(p)
+                    }
+
+                    val result = client.build("the-project", container, onStatusUpdate)
 
                     it("builds the image") {
-                        verify(processRunner).runAndCaptureOutput(listOf("docker", "build", "--tag", imageLabel, buildDirectory))
+                        verify(processRunner).runAndStreamOutput(eq(listOf("docker", "build", "--tag", imageLabel, buildDirectory)), any())
                     }
 
                     it("returns the ID of the created image") {
-                        assertThat(result.id, equalTo(imageLabel))
+                        assertThat(result.id, equalTo("11d3e1df9526"))
+                    }
+
+                    it("sends status updates as the build progresses") {
+                        assertThat(statusUpdates, equalTo(listOf(
+                            DockerImageBuildProgress(1, 3, "FROM nginx:1.13.0"),
+                            DockerImageBuildProgress(2, 3, "COPY health-check.sh /tools/"),
+                            DockerImageBuildProgress(3, 3, "HEALTHCHECK --interval=2s --retries=1 CMD /tools/health-check.sh")
+                        )))
                     }
                 }
 
                 on("a failed build") {
-                    whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Some output from Docker"))
+                    val onStatusUpdate = { _: DockerImageBuildProgress -> }
+
+                    whenever(processRunner.runAndStreamOutput(any(), any())).thenReturn(ProcessOutput(1, "Some output from Docker"))
 
                     it("raises an appropriate exception") {
-                        assertThat({ client.build("the-project", container) }, throws<ImageBuildFailedException>())
+                        assertThat({ client.build("the-project", container, onStatusUpdate) }, throws<ImageBuildFailedException>(withMessage("Image build failed. Output from Docker was: Some output from Docker")))
                     }
                 }
             }

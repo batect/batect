@@ -31,8 +31,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * default to just terminating all containers at clean up time with option to gracefully shut down on individual containers
   (eg. database where data is shared between invocations and we don't want to corrupt it)
 * display help if command name is followed by `--help` (eg. `batect run --help`)
-* show more detailed image build progress (eg. `build-env: Building step 1/7: FROM alpine:3.5`)
-* show more detailed image pull progress (eg. `build-env: Pulling some-image:1.2.3: 25%`)
+* show more detailed image pull progress (eg. `build-env: Pulling some-image:1.2.3: 25%`) - requires using Docker API to get this level of detail
 * performance improvements
   * prioritise running steps that lie on the critical path (eg. favour pulling image for leaf of dependency graph over creating container for task container)
   * batch up printing updates to the console when using fancy output mode, rather than reprinting progress information on every event
@@ -54,7 +53,6 @@ If there's something you're really keen to see, pull requests are always welcome
     * bake schema into DB containers used for integration or journey testing
   * importance of idempotency
   * integration with IDEs (eg. how to reference the Ruby runtime inside a Docker container for code completion etc.)
-* use `--iidfile` to get image ID after build and stop relying on tag
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
 * regularly check for updates and notify the user if there is one available
 * move to Kotlin/Native

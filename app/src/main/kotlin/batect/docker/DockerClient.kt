@@ -27,22 +27,32 @@ import batect.ui.ConsoleInfo
 import java.util.UUID
 
 class DockerClient(
-        private val imageLabellingStrategy: DockerImageLabellingStrategy,
-        private val processRunner: ProcessRunner,
-        private val creationCommandGenerator: DockerContainerCreationCommandGenerator,
-        private val consoleInfo: ConsoleInfo
+    private val imageLabellingStrategy: DockerImageLabellingStrategy,
+    private val processRunner: ProcessRunner,
+    private val creationCommandGenerator: DockerContainerCreationCommandGenerator,
+    private val consoleInfo: ConsoleInfo
 ) {
+    private val buildImageIdLineRegex = """^Successfully built (.*)$""".toRegex(RegexOption.MULTILINE)
 
-    fun build(projectName: String, container: Container): DockerImage {
+    fun build(projectName: String, container: Container, onStatusUpdate: (DockerImageBuildProgress) -> Unit): DockerImage {
         val label = imageLabellingStrategy.labelImage(projectName, container)
         val command = listOf("docker", "build", "--tag", label, (container.imageSource as BuildImage).buildDirectory)
-        val result = processRunner.runAndCaptureOutput(command)
+
+        val result = processRunner.runAndStreamOutput(command) { line ->
+            val progress = DockerImageBuildProgress.fromBuildOutput(line)
+
+            if (progress != null) {
+                onStatusUpdate(progress)
+            }
+        }
 
         if (failed(result)) {
             throw ImageBuildFailedException(result.output.trim())
         }
 
-        return DockerImage(label)
+        val imageId = buildImageIdLineRegex.find(result.output)?.groupValues?.get(1) ?: label
+
+        return DockerImage(imageId)
     }
 
     fun create(container: Container, command: String?, image: DockerImage, network: DockerNetwork): DockerContainer {
@@ -83,10 +93,10 @@ class DockerClient(
         }
 
         val command = listOf("docker", "events", "--since=0",
-                "--format", "{{.Status}}",
-                "--filter", "container=${container.id}",
-                "--filter", "event=die",
-                "--filter", "event=health_status")
+            "--format", "{{.Status}}",
+            "--filter", "container=${container.id}",
+            "--filter", "event=die",
+            "--filter", "event=health_status")
 
         val result = processRunner.runAndProcessOutput(command) { line ->
             when {
@@ -223,6 +233,22 @@ data class DockerImage(val id: String)
 data class DockerContainer(val id: String)
 data class DockerContainerRunResult(val exitCode: Int)
 data class DockerNetwork(val id: String)
+
+data class DockerImageBuildProgress(val currentStep: Int, val totalSteps: Int, val message: String) {
+    companion object {
+        private val buildStepLineRegex = """^Step (\d+)/(\d+) : (.*)$""".toRegex()
+
+        fun fromBuildOutput(line: String): DockerImageBuildProgress? {
+            val stepLineMatch = buildStepLineRegex.matchEntire(line)
+
+            if (stepLineMatch == null) {
+                return null
+            }
+
+            return DockerImageBuildProgress(stepLineMatch.groupValues[1].toInt(), stepLineMatch.groupValues[2].toInt(), stepLineMatch.groupValues[3])
+        }
+    }
+}
 
 class ImageBuildFailedException(val outputFromDocker: String) : RuntimeException("Image build failed. Output from Docker was: $outputFromDocker")
 class ContainerCreationFailedException(message: String) : RuntimeException(message)

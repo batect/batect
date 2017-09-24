@@ -64,6 +64,7 @@ import batect.model.events.TaskNetworkDeletedEvent
 import batect.model.events.TaskNetworkDeletionFailedEvent
 import batect.model.events.TaskStartedEvent
 import batect.testutils.imageSourceDoesNotMatter
+import com.nhaarman.mockito_kotlin.eq
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -96,7 +97,7 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when building the image succeeds") {
                     val image = DockerImage("some-image")
-                    whenever(dockerClient.build("some-project-name", container)).thenReturn(image)
+                    whenever(dockerClient.build(eq("some-project-name"), eq(container), any())).thenReturn(image)
 
                     runner.run(step, eventSink)
 
@@ -106,7 +107,7 @@ object TaskStepRunnerSpec : Spek({
                 }
 
                 on("when building the image fails") {
-                    whenever(dockerClient.build("some-project-name", container)).thenThrow(ImageBuildFailedException("Something went wrong."))
+                    whenever(dockerClient.build(eq("some-project-name"), eq(container), any())).thenThrow(ImageBuildFailedException("Something went wrong."))
 
                     runner.run(step, eventSink)
 

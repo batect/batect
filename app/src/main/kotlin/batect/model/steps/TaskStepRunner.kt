@@ -23,6 +23,7 @@ import batect.docker.ContainerRemovalFailedException
 import batect.docker.ContainerStartFailedException
 import batect.docker.ContainerStopFailedException
 import batect.docker.DockerClient
+import batect.docker.DockerImageBuildProgress
 import batect.docker.HealthStatus
 import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
@@ -72,7 +73,8 @@ class TaskStepRunner(private val dockerClient: DockerClient) {
 
     private fun handleBuildImageStep(step: BuildImageStep, eventSink: TaskEventSink) {
         try {
-            val image = dockerClient.build(step.projectName, step.container)
+            val onStatusUpdate = { _: DockerImageBuildProgress -> }
+            val image = dockerClient.build(step.projectName, step.container, onStatusUpdate)
             eventSink.postEvent(ImageBuiltEvent(step.container, image))
         } catch (e: ImageBuildFailedException) {
             eventSink.postEvent(ImageBuildFailedEvent(step.container, e.message ?: ""))

@@ -73,6 +73,15 @@ shadowJar {
     classifier = null
 }
 
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
 apply from: 'scripts/journeyTest.gradle'
 apply from: 'scripts/spotless.gradle'
 apply from: 'scripts/versionInfo.gradle'

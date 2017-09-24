@@ -21,10 +21,12 @@ import batect.config.Container
 import batect.config.PullImage
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
+import batect.docker.DockerImageBuildProgress
 import batect.docker.DockerNetwork
 import batect.model.events.ContainerBecameHealthyEvent
 import batect.model.events.ContainerCreatedEvent
 import batect.model.events.ContainerStartedEvent
+import batect.model.events.ImageBuildProgressEvent
 import batect.model.events.ImageBuiltEvent
 import batect.model.events.ImagePulledEvent
 import batect.model.events.TaskNetworkCreatedEvent
@@ -101,6 +103,28 @@ object ContainerStartupProgressLineSpec : Spek({
                 on("that notification being for another container") {
                     val step = BuildImageStep("some-project", otherContainer)
                     line.onStepStarting(step)
+                    line.print(console)
+
+                    it("prints that the container is still waiting to build its image") {
+                        verifyPrintedDescription("ready to build image")
+                    }
+                }
+            }
+
+            describe("after receiving an 'image build progress' notification") {
+                on("that notification being for this line's container") {
+                    val event = ImageBuildProgressEvent(container, DockerImageBuildProgress(2, 5, "COPY health-check.sh /tools/"))
+                    line.onEventPosted(event)
+                    line.print(console)
+
+                    it("prints detailed build progress") {
+                        verifyPrintedDescription("building image: step 2 of 5: COPY health-check.sh /tools/")
+                    }
+                }
+
+                on("that notification being for another container") {
+                    val event = ImageBuildProgressEvent(otherContainer, DockerImageBuildProgress(2, 5, "COPY health-check.sh /tools/"))
+                    line.onEventPosted(event)
                     line.print(console)
 
                     it("prints that the container is still waiting to build its image") {

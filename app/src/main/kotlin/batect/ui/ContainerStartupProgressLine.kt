@@ -19,9 +19,11 @@ package batect.ui
 import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
+import batect.docker.DockerImageBuildProgress
 import batect.model.events.ContainerBecameHealthyEvent
 import batect.model.events.ContainerCreatedEvent
 import batect.model.events.ContainerStartedEvent
+import batect.model.events.ImageBuildProgressEvent
 import batect.model.events.ImageBuiltEvent
 import batect.model.events.ImagePulledEvent
 import batect.model.events.TaskEvent
@@ -35,6 +37,7 @@ import batect.model.steps.TaskStep
 
 class ContainerStartupProgressLine(val container: Container, val dependencies: Set<Container>) {
     private var isBuilding = false
+    private var lastBuildProgressUpdate: DockerImageBuildProgress? = null
     private var isPulling = false
     private var hasBeenBuilt = false
     private var hasBeenPulled = false
@@ -66,7 +69,8 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
                 hasBeenBuilt && !networkHasBeenCreated -> print("image built, waiting for network to be ready...")
                 hasBeenPulled && networkHasBeenCreated -> print("image pulled, ready to create container")
                 hasBeenPulled && !networkHasBeenCreated -> print("image pulled, waiting for network to be ready...")
-                isBuilding -> print("building image...")
+                isBuilding && lastBuildProgressUpdate == null -> print("building image...")
+                isBuilding && lastBuildProgressUpdate != null -> print("building image: step ${lastBuildProgressUpdate!!.currentStep} of ${lastBuildProgressUpdate!!.totalSteps}: ${lastBuildProgressUpdate!!.message}")
                 isPulling -> printDescriptionWhenPulling(this)
                 else -> printDescriptionWhenWaitingToBuildOrPull(this)
             }
@@ -169,12 +173,20 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
 
     fun onEventPosted(event: TaskEvent) {
         when (event) {
+            is ImageBuildProgressEvent -> onImageBuildProgressEventPosted(event)
             is ImageBuiltEvent -> onImageBuiltEventPosted(event)
             is ImagePulledEvent -> onImagePulledEventPosted(event)
             is TaskNetworkCreatedEvent -> networkHasBeenCreated = true
             is ContainerCreatedEvent -> onContainerCreatedEventPosted(event)
             is ContainerStartedEvent -> onContainerStartedEventPosted(event)
             is ContainerBecameHealthyEvent -> onContainerBecameHealthyEventPosted(event)
+        }
+    }
+
+    private fun onImageBuildProgressEventPosted(event: ImageBuildProgressEvent) {
+        if (event.container == container) {
+            isBuilding = true
+            lastBuildProgressUpdate = event.progress
         }
     }
 

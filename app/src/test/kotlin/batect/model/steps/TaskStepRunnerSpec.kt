@@ -36,6 +36,7 @@ import batect.docker.DockerClient
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerRunResult
 import batect.docker.DockerImage
+import batect.docker.DockerImageBuildProgress
 import batect.docker.DockerNetwork
 import batect.docker.HealthStatus
 import batect.docker.ImageBuildFailedException
@@ -53,6 +54,7 @@ import batect.model.events.ContainerStartedEvent
 import batect.model.events.ContainerStopFailedEvent
 import batect.model.events.ContainerStoppedEvent
 import batect.model.events.ImageBuildFailedEvent
+import batect.model.events.ImageBuildProgressEvent
 import batect.model.events.ImageBuiltEvent
 import batect.model.events.ImagePullFailedEvent
 import batect.model.events.ImagePulledEvent
@@ -97,9 +99,26 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when building the image succeeds") {
                     val image = DockerImage("some-image")
-                    whenever(dockerClient.build(eq("some-project-name"), eq(container), any())).thenReturn(image)
+                    val update1 = DockerImageBuildProgress(1, 2, "First step")
+                    val update2 = DockerImageBuildProgress(2, 2, "Second step")
+
+                    whenever(dockerClient.build(eq("some-project-name"), eq(container), any()))
+                        .then { invocation ->
+                            @Suppress("UNCHECKED_CAST")
+                            val onStatusUpdate: (DockerImageBuildProgress) -> Unit = invocation.arguments[2] as (DockerImageBuildProgress) -> Unit
+
+                            onStatusUpdate(update1)
+                            onStatusUpdate(update2)
+
+                            image
+                        }
 
                     runner.run(step, eventSink)
+
+                    it("emits a 'image build progress' event for each update received from Docker") {
+                        verify(eventSink).postEvent(ImageBuildProgressEvent(container, update1))
+                        verify(eventSink).postEvent(ImageBuildProgressEvent(container, update2))
+                    }
 
                     it("emits a 'image built' event") {
                         verify(eventSink).postEvent(ImageBuiltEvent(container, image))

@@ -45,6 +45,7 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.1'
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.1'
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.1'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.1'
     compile 'com.github.salomonbrys.kodein:kodein:4.1.0'
 
     testCompile 'com.natpryce:hamkrest:1.4.2.0'

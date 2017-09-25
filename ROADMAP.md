@@ -42,6 +42,7 @@ If there's something you're really keen to see, pull requests are always welcome
 ### Other
 * make test names consistent (eg. `it("should do something")` vs `it("does something")`)
 * logging (for batect internals)
+  * include process ID with each message (this is non-trivial in versions prior to Java 9: https://stackoverflow.com/questions/35842/how-can-a-java-program-get-its-own-process-id)
 * option to print full stack trace on non-fatal exceptions
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use Docker API directly rather than using Docker CLI (would allow for more detailed progress and error reporting)

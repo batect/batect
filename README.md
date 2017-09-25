@@ -7,7 +7,7 @@ _Build and testing environments as code_
 
 * Consistent, fast, repeatable, isolated builds and test runs everywhere: your computer, your colleagues' computers and on CI
 * Manage dependencies for integration and end-to-end testing with ease
-* No installation required, only dependencies are Bash, Docker and either `curl` or `wget`*
+* No installation required, only dependencies are Bash, Docker and `curl`*
 * Works with your existing CI system, and your chosen language's existing tooling
 * Take advantage of existing Docker images to get started quickly
 

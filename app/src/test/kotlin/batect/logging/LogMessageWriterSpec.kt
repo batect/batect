@@ -33,7 +33,7 @@ object LogMessageWriterSpec : Spek({
         val messageTime = ZonedDateTime.of(2017, 9, 25, 11, 55, 13, 1 * 1000 * 1000, ZoneOffset.UTC)
 
         on("writing a message with no extra data") {
-            val message = LogMessage(Severity.INFO, "This is the message", messageTime, emptyMap())
+            val message = LogMessage(Severity.Info, "This is the message", messageTime, emptyMap())
             val output = ByteArrayOutputStream()
             writer.writeTo(message, output)
 
@@ -48,7 +48,7 @@ object LogMessageWriterSpec : Spek({
             }
 
             it("includes the severity") {
-                assertThat(parsed["@severity"].textValue(), equalTo("INFO"))
+                assertThat(parsed["@severity"].textValue(), equalTo("Info"))
             }
 
             it("does not include any other fields") {
@@ -58,7 +58,7 @@ object LogMessageWriterSpec : Spek({
 
         on("writing a message with extra data") {
             val message = LogMessage(
-                Severity.INFO,
+                Severity.Info,
                 "This is the message",
                 messageTime,
                 mapOf(
@@ -80,7 +80,7 @@ object LogMessageWriterSpec : Spek({
             }
 
             it("includes the severity") {
-                assertThat(parsed["@severity"].textValue(), equalTo("INFO"))
+                assertThat(parsed["@severity"].textValue(), equalTo("Info"))
             }
 
             it("includes the user-provided fields") {

@@ -16,15 +16,21 @@
 
 package batect.cli
 
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.bind
-import com.github.salomonbrys.kodein.instance
 import batect.cli.commands.ListTasksCommandDefinition
 import batect.cli.commands.RunTaskCommandDefinition
 import batect.cli.commands.VersionInfoCommandDefinition
+import batect.logging.FileLogSink
+import batect.logging.LogSink
+import batect.logging.NullLogSink
+import com.github.salomonbrys.kodein.Kodein
+import com.github.salomonbrys.kodein.bind
+import com.github.salomonbrys.kodein.instance
+import com.github.salomonbrys.kodein.singleton
+import java.nio.file.FileSystem
 
 class BatectCommandLineParser(kodein: Kodein) : CommandLineParser(kodein, "batect", "For documentation and further information on batect, visit https://github.com/charleskorn/batect.") {
     val configurationFileName: String by valueOption("config-file", "The configuration file to use.", "batect.yml", 'f')
+    val logFileName: String? by valueOption("log-file", "Write internal batect logs to file.")
 
     init {
         addCommandDefinition(RunTaskCommandDefinition())
@@ -35,6 +41,16 @@ class BatectCommandLineParser(kodein: Kodein) : CommandLineParser(kodein, "batec
     override fun createBindings(): Kodein.Module {
         return Kodein.Module {
             bind<String>(CommonOptions.ConfigurationFileName) with instance(configurationFileName)
+
+            bind<LogSink>() with singleton {
+                if (logFileName == null) {
+                    NullLogSink()
+                } else {
+                    val fileSystem = instance<FileSystem>()
+
+                    FileLogSink(fileSystem.getPath(logFileName), instance(), instance())
+                }
+            }
         }
     }
 }

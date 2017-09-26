@@ -21,8 +21,8 @@ import java.time.ZonedDateTime
 data class LogMessage(val severity: Severity, val message: String, val timestamp: ZonedDateTime, val additionalData: Map<String, Any>)
 
 enum class Severity {
-    DEBUG,
-    INFO,
-    WARNING,
-    ERROR
+    Debug,
+    Info,
+    Warning,
+    Error
 }

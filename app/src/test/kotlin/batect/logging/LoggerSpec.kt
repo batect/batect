@@ -35,7 +35,7 @@ object LoggerSpec : Spek({
             logger.debug(buildFun)
 
             it("forwards the message to the log sink with the name of the source") {
-                verify(sink).write(Severity.DEBUG, mapOf("@source" to "some.source"), buildFun)
+                verify(sink).write(Severity.Debug, mapOf("@source" to "some.source"), buildFun)
             }
         }
 
@@ -43,7 +43,7 @@ object LoggerSpec : Spek({
             logger.info(buildFun)
 
             it("forwards the message to the log sink with the name of the source") {
-                verify(sink).write(Severity.INFO, mapOf("@source" to "some.source"), buildFun)
+                verify(sink).write(Severity.Info, mapOf("@source" to "some.source"), buildFun)
             }
         }
 
@@ -51,7 +51,7 @@ object LoggerSpec : Spek({
             logger.warn(buildFun)
 
             it("forwards the message to the log sink with the name of the source") {
-                verify(sink).write(Severity.WARNING, mapOf("@source" to "some.source"), buildFun)
+                verify(sink).write(Severity.Warning, mapOf("@source" to "some.source"), buildFun)
             }
         }
 
@@ -59,7 +59,7 @@ object LoggerSpec : Spek({
             logger.error(buildFun)
 
             it("forwards the message to the log sink with the name of the source") {
-                verify(sink).write(Severity.ERROR, mapOf("@source" to "some.source"), buildFun)
+                verify(sink).write(Severity.Error, mapOf("@source" to "some.source"), buildFun)
             }
         }
     }

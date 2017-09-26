@@ -59,12 +59,12 @@ object FileLogSinkSpec : Spek({
         val sink = FileLogSink(path, writer, standardAdditionalDataSource, timestampSource)
 
         on("writing a log message") {
-            sink.write(Severity.INFO, mapOf("someAdditionalInfo" to "someValue")) {
+            sink.write(Severity.Info, mapOf("someAdditionalInfo" to "someValue")) {
                 message("This is the message")
                 data("someLocalInfo", 888)
             }
 
-            val expectedMessage = LogMessage(Severity.INFO, "This is the message", timestampToUse, mapOf(
+            val expectedMessage = LogMessage(Severity.Info, "This is the message", timestampToUse, mapOf(
                 "someAdditionalInfo" to "someValue",
                 "someLocalInfo" to 888,
                 "someStandardInfo" to false

@@ -23,7 +23,7 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
 class FileLogSink(
-    private val path: Path,
+    val path: Path,
     private val writer: LogMessageWriter,
     private val standardAdditionalDataSource: StandardAdditionalDataSource,
     private val timestampSource: () -> ZonedDateTime

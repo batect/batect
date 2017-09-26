@@ -17,10 +17,10 @@
 package batect.logging
 
 class Logger(private val sourceName: String, private val destination: LogSink) {
-    fun debug(build: LogMessageBuilder.() -> LogMessageBuilder) = destination.write(Severity.DEBUG, additionalInfo, build)
-    fun info(build: LogMessageBuilder.() -> LogMessageBuilder) = destination.write(Severity.INFO, additionalInfo, build)
-    fun warn(build: LogMessageBuilder.() -> LogMessageBuilder) = destination.write(Severity.WARNING, additionalInfo, build)
-    fun error(build: LogMessageBuilder.() -> LogMessageBuilder) = destination.write(Severity.ERROR, additionalInfo, build)
+    fun debug(build: LogMessageBuilder.() -> LogMessageBuilder) = destination.write(Severity.Debug, additionalInfo, build)
+    fun info(build: LogMessageBuilder.() -> LogMessageBuilder) = destination.write(Severity.Info, additionalInfo, build)
+    fun warn(build: LogMessageBuilder.() -> LogMessageBuilder) = destination.write(Severity.Warning, additionalInfo, build)
+    fun error(build: LogMessageBuilder.() -> LogMessageBuilder) = destination.write(Severity.Error, additionalInfo, build)
 
     private val additionalInfo = mapOf("@source" to sourceName)
 }

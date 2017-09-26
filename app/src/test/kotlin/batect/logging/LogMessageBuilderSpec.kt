@@ -39,11 +39,11 @@ object LogMessageBuilderSpec : Spek({
         }
 
         on("building a log message with no message or additional information") {
-            val builder = LogMessageBuilder(Severity.INFO)
+            val builder = LogMessageBuilder(Severity.Info)
             val message = builder.build(timestampSource, standardAdditionalDataSource)
 
             it("returns a log message with the provided severity") {
-                assertThat(message.severity, equalTo(Severity.INFO))
+                assertThat(message.severity, equalTo(Severity.Info))
             }
 
             it("returns a log message with an empty message") {
@@ -62,13 +62,13 @@ object LogMessageBuilderSpec : Spek({
         }
 
         on("building a log message with a message") {
-            val builder = LogMessageBuilder(Severity.DEBUG)
+            val builder = LogMessageBuilder(Severity.Debug)
                 .message("Some message")
 
             val message = builder.build(timestampSource, standardAdditionalDataSource)
 
             it("returns a log message with the provided severity") {
-                assertThat(message.severity, equalTo(Severity.DEBUG))
+                assertThat(message.severity, equalTo(Severity.Debug))
             }
 
             it("returns a log message with the provided message") {
@@ -87,14 +87,14 @@ object LogMessageBuilderSpec : Spek({
         }
 
         on("building a log message with some additional data") {
-            val builder = LogMessageBuilder(Severity.INFO)
+            val builder = LogMessageBuilder(Severity.Info)
                 .data("some-key", 123)
                 .data("some-other-data", "value")
 
             val message = builder.build(timestampSource, standardAdditionalDataSource)
 
             it("returns a log message with the provided severity") {
-                assertThat(message.severity, equalTo(Severity.INFO))
+                assertThat(message.severity, equalTo(Severity.Info))
             }
 
             it("returns a log message with an empty message") {
@@ -115,14 +115,14 @@ object LogMessageBuilderSpec : Spek({
         }
 
         on("building a log message with some logger-provided additional data") {
-            val builder = LogMessageBuilder(Severity.INFO, mapOf("@source" to "some.class.name"))
+            val builder = LogMessageBuilder(Severity.Info, mapOf("@source" to "some.class.name"))
                 .data("some-key", 123)
                 .data("some-other-data", "value")
 
             val message = builder.build(timestampSource, standardAdditionalDataSource)
 
             it("returns a log message with the provided severity") {
-                assertThat(message.severity, equalTo(Severity.INFO))
+                assertThat(message.severity, equalTo(Severity.Info))
             }
 
             it("returns a log message with an empty message") {
@@ -144,7 +144,7 @@ object LogMessageBuilderSpec : Spek({
         }
 
         on("building a log message with some additional data with a key that starts with a '@'") {
-            val builder = LogMessageBuilder(Severity.INFO)
+            val builder = LogMessageBuilder(Severity.Info)
 
             it("throws an exception when attempting to add that additional data") {
                 assertThat({ builder.data("@some-data", "some-value") }, throws(withMessage("Cannot add additional data with the key '@some-data': keys may not start with '@'.")))

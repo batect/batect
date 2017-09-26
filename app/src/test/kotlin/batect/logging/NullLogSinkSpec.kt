@@ -30,7 +30,7 @@ object NullLogSinkSpec : Spek({
         on("receiving a log message") {
             var invoked = false
 
-            sink.write(Severity.INFO, emptyMap()) {
+            sink.write(Severity.Info, emptyMap()) {
                 invoked = true
                 this
             }

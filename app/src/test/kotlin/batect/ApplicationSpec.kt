@@ -29,6 +29,11 @@ import batect.cli.commands.Command
 import batect.cli.CommandLineParser
 import batect.cli.Failed
 import batect.cli.Succeeded
+import batect.logging.ApplicationInfoLogger
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.argumentCaptor
+import com.nhaarman.mockito_kotlin.eq
+import com.nhaarman.mockito_kotlin.verify
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -62,7 +67,12 @@ object ApplicationSpec : Spek({
                     override fun run(): Int = 123
                 }
 
-                whenever(commandLineParser.parse(args)).thenReturn(Succeeded(command))
+                whenever(commandLineParser.parse(eq(args), any())).thenReturn(Succeeded(command))
+
+                val infoLogger = mock<ApplicationInfoLogger>()
+                val initialisationFunctionKodein = Kodein {
+                    bind<ApplicationInfoLogger>() with instance(infoLogger)
+                }
 
                 val exitCode = application.run(args)
 
@@ -73,12 +83,22 @@ object ApplicationSpec : Spek({
                 it("returns the exit code from the command") {
                     assertThat(exitCode, equalTo(123))
                 }
+
+                it("passes an initialisation function to the command line parser that starts logging") {
+                    argumentCaptor<(Kodein) -> Unit>().apply {
+                        verify(commandLineParser).parse(any(), capture())
+
+                        firstValue(initialisationFunctionKodein)
+
+                        verify(infoLogger).logApplicationInfo(args)
+                    }
+                }
             }
         }
 
         given("the command line parser returns an error") {
             on("running the application") {
-                whenever(commandLineParser.parse(args)).thenReturn(Failed("Something went wrong while parsing arguments"))
+                whenever(commandLineParser.parse(eq(args), any())).thenReturn(Failed("Something went wrong while parsing arguments"))
 
                 val exitCode = application.run(args)
 
@@ -94,7 +114,7 @@ object ApplicationSpec : Spek({
 
         given("the command line parser throws an exception") {
             on("running the application") {
-                whenever(commandLineParser.parse(args)).thenThrow(RuntimeException("Everything is broken"))
+                whenever(commandLineParser.parse(eq(args), any())).thenThrow(RuntimeException("Everything is broken"))
 
                 val exitCode = application.run(args)
 
@@ -114,7 +134,7 @@ object ApplicationSpec : Spek({
                     override fun run(): Int = throw RuntimeException("Everything is broken")
                 }
 
-                whenever(commandLineParser.parse(args)).thenReturn(Succeeded(command))
+                whenever(commandLineParser.parse(eq(args), any())).thenReturn(Succeeded(command))
 
                 val exitCode = application.run(args)
 

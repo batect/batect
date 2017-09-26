@@ -16,10 +16,8 @@
 
 package batect.logging
 
-import com.natpryce.hamkrest.MatchResult
-import com.natpryce.hamkrest.Matcher
+import batect.testutils.hasKeyWithValue
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.describe
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
@@ -49,16 +47,3 @@ object StandardAdditionalDataSourceSpec : Spek({
         }
     }
 })
-
-fun hasKeyWithValue(key: String, value: Any): Matcher<Map<String, Any>> = object : Matcher.Primitive<Map<String, Any>>() {
-    override fun invoke(actual: Map<String, Any>): MatchResult {
-        if (actual.get(key) == value) {
-            return MatchResult.Match
-        } else {
-            return MatchResult.Mismatch("was ${describe(actual)}")
-        }
-    }
-
-    override val description: String get() = "contains entry with key ${describe(key)} and value ${describe(value)}"
-    override val negatedDescription: String get() = "does not contain entry with key ${describe(key)} and value ${describe(value)}"
-}

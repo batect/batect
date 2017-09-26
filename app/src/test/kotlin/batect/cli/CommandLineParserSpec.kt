@@ -66,9 +66,24 @@ object CommandLineParserSpec : Spek({
 
             parser.addCommandDefinition(commandDefinition)
 
+            var initializeAfterCommonOptionsParsedCalled = false
+            var originalKodeinContainerValueSeenInInitializeFunction: String? = null
+            var createdKodeinContainerValueSeenInInitializeFunction: String? = null
+
+            val initializeAfterCommonOptionsParsed = { kodein: Kodein ->
+                originalKodeinContainerValueSeenInInitializeFunction = kodein.instance<String>("the-string-from-original-container")
+                createdKodeinContainerValueSeenInInitializeFunction = kodein.instance<String>("the-string-from-created-container")
+
+                initializeAfterCommonOptionsParsedCalled = true
+            }
+
             beforeEachTest {
                 reset(optionParser)
                 reset(commandDefinition)
+
+                initializeAfterCommonOptionsParsedCalled = false
+                originalKodeinContainerValueSeenInInitializeFunction = null
+                createdKodeinContainerValueSeenInInitializeFunction = null
             }
 
             describe("when the option parser returns an error") {
@@ -78,8 +93,12 @@ object CommandLineParserSpec : Spek({
 
                 on("parsing a list of arguments") {
                     it("indicates that parsing failed") {
-                        assertThat(parser.parse(listOf("abc", "123")),
-                                equalTo<CommandLineParsingResult>(Failed("Something was invalid")))
+                        assertThat(parser.parse(listOf("abc", "123"), initializeAfterCommonOptionsParsed),
+                            equalTo<CommandLineParsingResult>(Failed("Something was invalid")))
+                    }
+
+                    it("does not call the post-common options parsing initialisation function") {
+                        assertThat(initializeAfterCommonOptionsParsedCalled, equalTo(false))
                     }
                 }
             }
@@ -90,26 +109,38 @@ object CommandLineParserSpec : Spek({
                 }
 
                 on("parsing a list of arguments where the option parser consumes all the arguments") {
-                    val result = parser.parse(listOf("--some-option", "--some-other-option"))
+                    val result = parser.parse(listOf("--some-option", "--some-other-option"), initializeAfterCommonOptionsParsed)
 
                     it("indicates that parsing failed because no command was provided") {
                         assertThat(result, equalTo<CommandLineParsingResult>(Failed("No command specified. Run 'the-cool-app help' for a list of valid commands.")))
                     }
+
+                    it("does not call the post-common options parsing initialisation function") {
+                        assertThat(initializeAfterCommonOptionsParsedCalled, equalTo(false))
+                    }
                 }
 
                 on("parsing a list of arguments where the command given does not exist") {
-                    val result = parser.parse(listOf("--some-option", "--some-other-option", "some-non-existent-command"))
+                    val result = parser.parse(listOf("--some-option", "--some-other-option", "some-non-existent-command"), initializeAfterCommonOptionsParsed)
 
                     it("indicates that parsing failed") {
                         assertThat(result, equalTo<CommandLineParsingResult>(Failed("Invalid command 'some-non-existent-command'. Run 'the-cool-app help' for a list of valid commands.")))
                     }
+
+                    it("does not call the post-common options parsing initialisation function") {
+                        assertThat(initializeAfterCommonOptionsParsedCalled, equalTo(false))
+                    }
                 }
 
                 on("parsing a list of arguments where the option given does not exist") {
-                    val result = parser.parse(listOf("--some-option", "--some-other-option", "--some-unknown-option", "do-stuff"))
+                    val result = parser.parse(listOf("--some-option", "--some-other-option", "--some-unknown-option", "do-stuff"), initializeAfterCommonOptionsParsed)
 
                     it("indicates that parsing failed") {
                         assertThat(result, equalTo<CommandLineParsingResult>(Failed("Invalid option '--some-unknown-option'. Run 'the-cool-app help' for a list of valid options.")))
+                    }
+
+                    it("does not call the post-common options parsing initialisation function") {
+                        assertThat(initializeAfterCommonOptionsParsedCalled, equalTo(false))
                     }
                 }
 
@@ -122,7 +153,7 @@ object CommandLineParserSpec : Spek({
                         }
 
                         on("no command-specific options being provided") {
-                            val result = parser.parse(listOf("--some-option", "--some-other-option", "do-stuff"))
+                            val result = parser.parse(listOf("--some-option", "--some-other-option", "do-stuff"), initializeAfterCommonOptionsParsed)
 
                             it("indicates that parsing succeeded") {
                                 assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(command)))
@@ -139,10 +170,22 @@ object CommandLineParserSpec : Spek({
                             it("passes a Kodein container containing the injections created by the parser to the command") {
                                 verify(commandDefinition).parse(any(), argThat { instance<String>("the-string-from-created-container") == "The additional string" })
                             }
+
+                            it("calls the post-common options parsing initialisation function") {
+                                assertThat(initializeAfterCommonOptionsParsedCalled, equalTo(true))
+                            }
+
+                            it("includes the original injections in the container passed to the initialisation function") {
+                                assertThat(originalKodeinContainerValueSeenInInitializeFunction, equalTo("The original string"))
+                            }
+
+                            it("includes the created injections in the container passed to the initialisation function") {
+                                assertThat(createdKodeinContainerValueSeenInInitializeFunction, equalTo("The additional string"))
+                            }
                         }
 
                         on("some command-specific options being provided") {
-                            val result = parser.parse(listOf("--some-option", "--some-other-option", "do-stuff", "some-command-parameter"))
+                            val result = parser.parse(listOf("--some-option", "--some-other-option", "do-stuff", "some-command-parameter"), initializeAfterCommonOptionsParsed)
 
                             it("indicates that parsing succeeded") {
                                 assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(command)))
@@ -159,6 +202,18 @@ object CommandLineParserSpec : Spek({
                             it("passes a Kodein container containing the injections created by the parser to the command") {
                                 verify(commandDefinition).parse(any(), argThat { instance<String>("the-string-from-created-container") == "The additional string" })
                             }
+
+                            it("calls the post-common options parsing initialisation function") {
+                                assertThat(initializeAfterCommonOptionsParsedCalled, equalTo(true))
+                            }
+
+                            it("includes the original injections in the container passed to the initialisation function") {
+                                assertThat(originalKodeinContainerValueSeenInInitializeFunction, equalTo("The original string"))
+                            }
+
+                            it("includes the created injections in the container passed to the initialisation function") {
+                                assertThat(createdKodeinContainerValueSeenInInitializeFunction, equalTo("The additional string"))
+                            }
                         }
                     }
 
@@ -168,10 +223,14 @@ object CommandLineParserSpec : Spek({
                         }
 
                         on("parsing a list of arguments") {
-                            val result = parser.parse(listOf("--some-option", "--some-other-option", "do-stuff"))
+                            val result = parser.parse(listOf("--some-option", "--some-other-option", "do-stuff"), initializeAfterCommonOptionsParsed)
 
                             it("indicates that parsing failed") {
                                 assertThat(result, equalTo<CommandLineParsingResult>(Failed("Something went wrong")))
+                            }
+
+                            it("still calls the post-common options parsing initialisation function") {
+                                assertThat(initializeAfterCommonOptionsParsedCalled, equalTo(true))
                             }
                         }
                     }
@@ -184,10 +243,14 @@ object CommandLineParserSpec : Spek({
                         }
 
                         on("parsing a list of arguments") {
-                            val result = parser.parse(listOf("--some-option", "--some-other-option", "ds"))
+                            val result = parser.parse(listOf("--some-option", "--some-other-option", "ds"), initializeAfterCommonOptionsParsed)
 
                             it("indicates that parsing succeeded") {
                                 assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(command)))
+                            }
+
+                            it("calls the post-common options parsing initialisation function") {
+                                assertThat(initializeAfterCommonOptionsParsedCalled, equalTo(true))
                             }
                         }
                     }

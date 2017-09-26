@@ -20,7 +20,6 @@ import batect.PrintStreamType
 import batect.VersionInfo
 import batect.cli.CommandLineParser
 import batect.docker.DockerClient
-import batect.docker.DockerVersionInfoRetrievalFailedException
 import batect.os.SystemInfo
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
@@ -28,15 +27,15 @@ import java.io.PrintStream
 
 class VersionInfoCommandDefinition : CommandDefinition("version", "Display version information for batect.", setOf("--version")) {
     override fun createCommand(kodein: Kodein): Command =
-            VersionInfoCommand(kodein.instance(), kodein.instance(PrintStreamType.Output), kodein.instance(), kodein.instance(), kodein.instance())
+        VersionInfoCommand(kodein.instance(), kodein.instance(PrintStreamType.Output), kodein.instance(), kodein.instance(), kodein.instance())
 }
 
 data class VersionInfoCommand(
-        private val versionInfo: VersionInfo,
-        private val outputStream: PrintStream,
-        private val systemInfo: SystemInfo,
-        private val dockerClient: DockerClient,
-        private val commandLineParser: CommandLineParser
+    private val versionInfo: VersionInfo,
+    private val outputStream: PrintStream,
+    private val systemInfo: SystemInfo,
+    private val dockerClient: DockerClient,
+    private val commandLineParser: CommandLineParser
 ) : Command {
     override fun run(): Int {
         outputStream.println("batect version:    ${versionInfo.version}")
@@ -44,19 +43,11 @@ data class VersionInfoCommand(
         outputStream.println("Built from commit: ${versionInfo.gitCommitHash} (commit date: ${versionInfo.gitCommitDate})")
         outputStream.println("JVM version:       ${systemInfo.jvmVersion}")
         outputStream.println("OS version:        ${systemInfo.osVersion}")
-        outputStream.println("Docker version:    ${getDockerVersion()}")
+        outputStream.println("Docker version:    ${dockerClient.getDockerVersionInfo()}")
         outputStream.println()
         outputStream.println(commandLineParser.helpBlurb)
         outputStream.println()
 
         return 0
-    }
-
-    private fun getDockerVersion(): String {
-        try {
-            return dockerClient.getDockerVersionInfo()
-        } catch (e: DockerVersionInfoRetrievalFailedException) {
-            return "(${e.message})"
-        }
     }
 }

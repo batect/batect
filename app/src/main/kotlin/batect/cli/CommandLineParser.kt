@@ -37,13 +37,14 @@ open class CommandLineParser(
     private val commandDefinitions = mutableSetOf<CommandDefinition>()
     private val commandAliases = mutableMapOf<String, CommandDefinition>()
 
-    constructor(kodein: Kodein, applicationName: String, helpBlurb: String) : this(kodein, applicationName, helpBlurb, OptionParser())
+    constructor(kodein: Kodein, applicationName: String, helpBlurb: String)
+        : this(kodein, applicationName, helpBlurb, OptionParser())
 
     init {
         addCommandDefinition(helpCommand)
     }
 
-    fun parse(args: Iterable<String>): CommandLineParsingResult {
+    fun parse(args: Iterable<String>, initializationAfterCommonOptionsParsed: (Kodein) -> Unit): CommandLineParsingResult {
         val optionParsingResult = optionParser.parseOptions(args)
 
         when (optionParsingResult) {
@@ -54,13 +55,13 @@ open class CommandLineParser(
                 if (remainingArgs.isEmpty()) {
                     return noCommand()
                 } else {
-                    return parseAndRunCommand(remainingArgs.first(), remainingArgs.drop(1))
+                    return parseAndRunCommand(remainingArgs.first(), remainingArgs.drop(1), initializationAfterCommonOptionsParsed)
                 }
             }
         }
     }
 
-    private fun parseAndRunCommand(name: String, remainingArgs: Iterable<String>): CommandLineParsingResult {
+    private fun parseAndRunCommand(name: String, remainingArgs: Iterable<String>, initializationAfterCommonOptionsParsed: (Kodein) -> Unit): CommandLineParsingResult {
         val command = commandAliases[name]
 
         if (command == null) {
@@ -71,6 +72,8 @@ open class CommandLineParser(
             extend(kodein)
             import(createBindings())
         }
+
+        initializationAfterCommonOptionsParsed(extendedKodein)
 
         return command.parse(remainingArgs, extendedKodein)
     }

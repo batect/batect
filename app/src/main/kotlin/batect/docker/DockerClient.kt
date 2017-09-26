@@ -181,22 +181,18 @@ class DockerClient(
     }
 
     fun getDockerVersionInfo(): String {
-        val result = tryToGetDockerVersionInfo()
-
-        if (failed(result)) {
-            throw DockerVersionInfoRetrievalFailedException("Could not get Docker version information: ${result.output.trim()}")
-        }
-
-        return result.output.trim()
-    }
-
-    private fun tryToGetDockerVersionInfo(): ProcessOutput {
         val command = listOf("docker", "version", "--format", "Client: {{.Client.Version}} (API: {{.Client.APIVersion}}, commit: {{.Client.GitCommit}}), Server: {{.Server.Version}} (API: {{.Server.APIVersion}}, minimum supported API: {{.Server.MinAPIVersion}}, commit: {{.Server.GitCommit}})")
 
         try {
-            return processRunner.runAndCaptureOutput(command)
+            val result = processRunner.runAndCaptureOutput(command)
+
+            if (failed(result)) {
+                return "(Could not get Docker version information: ${result.output.trim()})"
+            }
+
+            return result.output.trim()
         } catch (t: Throwable) {
-            throw DockerVersionInfoRetrievalFailedException("Could not get Docker version information because ${t.javaClass.simpleName} was thrown: ${t.message}", t)
+            return "(Could not get Docker version information because ${t.javaClass.simpleName} was thrown: ${t.message})"
         }
     }
 
@@ -260,7 +256,6 @@ class ContainerHealthCheckException(message: String) : RuntimeException(message)
 class NetworkCreationFailedException(val outputFromDocker: String) : RuntimeException("Creation of network failed. Output from Docker was: $outputFromDocker")
 class ContainerRemovalFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Removal of container '$containerId' failed. Output from Docker was: $outputFromDocker")
 class NetworkDeletionFailedException(val networkId: String, val outputFromDocker: String) : RuntimeException("Deletion of network '$networkId' failed. Output from Docker was: $outputFromDocker")
-class DockerVersionInfoRetrievalFailedException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
 enum class HealthStatus {
     NoHealthCheck,

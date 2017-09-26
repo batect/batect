@@ -25,6 +25,11 @@ import batect.config.io.PathResolverFactory
 import batect.docker.DockerClient
 import batect.docker.DockerContainerCreationCommandGenerator
 import batect.docker.DockerImageLabellingStrategy
+import batect.logging.ApplicationInfoLogger
+import batect.logging.LogMessageWriter
+import batect.logging.Logger
+import batect.logging.StandardAdditionalDataSource
+import batect.logging.singletonWithLogger
 import batect.model.DependencyGraphProvider
 import batect.model.TaskExecutionOrderResolver
 import batect.model.TaskStateMachineProvider
@@ -39,10 +44,13 @@ import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.KodeinAware
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
+import com.github.salomonbrys.kodein.multiton
 import com.github.salomonbrys.kodein.singleton
 import java.io.PrintStream
 import java.nio.file.FileSystem
 import java.nio.file.FileSystems
+import kotlin.reflect.KClass
+import kotlin.reflect.jvm.jvmName
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
@@ -65,7 +73,9 @@ class Application(override val kodein: Kodein) : KodeinAware {
 
     fun run(args: Iterable<String>): Int {
         try {
-            val result = commandLineParser.parse(args)
+            val result = commandLineParser.parse(args) { kodein ->
+                kodein.instance<ApplicationInfoLogger>().logApplicationInfo(args)
+            }
 
             return when (result) {
                 is Failed -> {
@@ -110,4 +120,8 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<ConsoleInfo>() with singleton { ConsoleInfo(instance(), System.getenv()) }
     bind<VersionInfo>() with singleton { VersionInfo() }
     bind<SystemInfo>() with singleton { SystemInfo(System.getProperties()) }
+    bind<Logger>() with multiton { cls: KClass<*> -> Logger(cls.jvmName, instance()) }
+    bind<LogMessageWriter>() with singleton { LogMessageWriter() }
+    bind<StandardAdditionalDataSource>() with singleton { StandardAdditionalDataSource() }
+    bind<ApplicationInfoLogger>() with singletonWithLogger { logger -> ApplicationInfoLogger(logger, instance(), instance(), instance(), System.getenv()) }
 }

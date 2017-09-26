@@ -17,7 +17,9 @@
 package batect.testutils
 
 import batect.config.io.ConfigurationException
+import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
+import com.natpryce.hamkrest.describe
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 
@@ -31,4 +33,17 @@ fun withCause(cause: Throwable): Matcher<Throwable> {
 
 fun withLineNumber(lineNumber: Int): Matcher<ConfigurationException> {
     return has(ConfigurationException::lineNumber, equalTo(lineNumber))
+}
+
+fun hasKeyWithValue(key: String, value: Any): Matcher<Map<String, Any>> = object : Matcher.Primitive<Map<String, Any>>() {
+    override fun invoke(actual: Map<String, Any>): MatchResult {
+        if (actual.get(key) == value) {
+            return MatchResult.Match
+        } else {
+            return MatchResult.Mismatch("was ${describe(actual)}")
+        }
+    }
+
+    override val description: String get() = "contains entry with key ${describe(key)} and value ${describe(value)}"
+    override val negatedDescription: String get() = "does not contain entry with key ${describe(key)} and value ${describe(value)}"
 }

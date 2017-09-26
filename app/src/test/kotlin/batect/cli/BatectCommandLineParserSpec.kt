@@ -43,7 +43,7 @@ object BatectCommandLineParserSpec : Spek({
 
         given("no configuration file name or log file name have been provided") {
             val parser = BatectCommandLineParser(emptyKodein)
-            parser.parse(emptyList())
+            parser.parse(emptyList(), {})
 
             on("creating the set of Kodein bindings") {
                 val bindings = Kodein {
@@ -62,7 +62,7 @@ object BatectCommandLineParserSpec : Spek({
 
         given("a non-standard configuration file name has been provided") {
             val parser = BatectCommandLineParser(emptyKodein)
-            parser.parse(listOf("--config-file", "some-other-file.yml"))
+            parser.parse(listOf("--config-file", "some-other-file.yml"), {})
 
             on("creating the set of Kodein bindings") {
                 val bindings = Kodein {
@@ -81,7 +81,7 @@ object BatectCommandLineParserSpec : Spek({
             val fileSystem = Jimfs.newFileSystem(Configuration.unix())
 
             val parser = BatectCommandLineParser(emptyKodein)
-            parser.parse(listOf("--log-file", "log.log"))
+            parser.parse(listOf("--log-file", "log.log"), {})
 
             on("creating the set of Kodein bindings") {
                 val bindings = Kodein {

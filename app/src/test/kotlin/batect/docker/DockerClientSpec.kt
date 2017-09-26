@@ -25,11 +25,9 @@ import batect.os.OutputProcessing
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.testutils.imageSourceDoesNotMatter
-import batect.testutils.withCause
 import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
 import com.natpryce.hamkrest.Matcher
-import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isA
@@ -484,8 +482,8 @@ object DockerClientSpec : Spek({
             on("the Docker version command invocation failing") {
                 whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong\n"))
 
-                it("throws an appropriate exception") {
-                    assertThat({ client.getDockerVersionInfo() }, throws<DockerVersionInfoRetrievalFailedException>(withMessage("Could not get Docker version information: Something went wrong")))
+                it("returns an appropriate message") {
+                    assertThat(client.getDockerVersionInfo(), equalTo("(Could not get Docker version information: Something went wrong)"))
                 }
             }
 
@@ -493,11 +491,8 @@ object DockerClientSpec : Spek({
                 val exception = RuntimeException("Something went wrong")
                 whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenThrow(exception)
 
-                it("throws an appropriate exception") {
-                    assertThat({ client.getDockerVersionInfo() }, throws<DockerVersionInfoRetrievalFailedException>(
-                        withMessage("Could not get Docker version information because RuntimeException was thrown: Something went wrong")
-                            and withCause(exception)
-                    ))
+                it("returns an appropriate message") {
+                    assertThat(client.getDockerVersionInfo(), equalTo("(Could not get Docker version information because RuntimeException was thrown: Something went wrong)"))
                 }
             }
         }

@@ -35,7 +35,7 @@ object LogMessageWriterSpec : Spek({
         on("writing a message with no extra data") {
             val message = LogMessage(Severity.INFO, "This is the message", messageTime, emptyMap())
             val output = ByteArrayOutputStream()
-            val formatted = writer.writeTo(message, output)
+            writer.writeTo(message, output)
 
             val parsed = jacksonObjectMapper().readTree(output.toString())
 
@@ -67,7 +67,7 @@ object LogMessageWriterSpec : Spek({
                 ))
 
             val output = ByteArrayOutputStream()
-            val formatted = writer.writeTo(message, output)
+            writer.writeTo(message, output)
 
             val parsed = jacksonObjectMapper().readTree(output.toString())
 

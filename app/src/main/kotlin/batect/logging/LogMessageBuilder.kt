@@ -20,7 +20,7 @@ import java.time.ZonedDateTime
 
 class LogMessageBuilder(val severity: Severity, val loggerAdditionalData: Map<String, Any> = emptyMap()) {
     private var message: String = ""
-    private val data = HashMap<String, Any>()
+    private val data = HashMap<String, Any?>()
 
     fun message(value: String): LogMessageBuilder {
         message = value
@@ -29,7 +29,7 @@ class LogMessageBuilder(val severity: Severity, val loggerAdditionalData: Map<St
 
     fun exception(e: Throwable): LogMessageBuilder = data("exception", e)
 
-    fun data(key: String, value: Any): LogMessageBuilder {
+    fun data(key: String, value: Any?): LogMessageBuilder {
         if (key.startsWith('@')) {
             throw IllegalArgumentException("Cannot add additional data with the key '$key': keys may not start with '@'.")
         }

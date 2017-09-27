@@ -52,7 +52,7 @@ object LogMessageBuilderSpec : Spek({
             }
 
             it("returns a log message with only the standard additional data") {
-                assertThat(message.additionalData, equalTo(mapOf<String, Any>(
+                assertThat(message.additionalData, equalTo(mapOf<String, Any?>(
                     "@something" to 456
                 )))
             }
@@ -77,7 +77,7 @@ object LogMessageBuilderSpec : Spek({
             }
 
             it("returns a log message with only the standard additional data") {
-                assertThat(message.additionalData, equalTo(mapOf<String, Any>(
+                assertThat(message.additionalData, equalTo(mapOf<String, Any?>(
                     "@something" to 456
                 )))
             }
@@ -103,7 +103,7 @@ object LogMessageBuilderSpec : Spek({
             }
 
             it("returns a log message with the standard additional data and the user-provided additional data") {
-                assertThat(message.additionalData, equalTo(mapOf(
+                assertThat(message.additionalData, equalTo(mapOf<String, Any?>(
                     "some-key" to 123,
                     "some-other-data" to "value",
                     "@something" to 456
@@ -131,7 +131,7 @@ object LogMessageBuilderSpec : Spek({
             }
 
             it("returns a log message with the standard additional data, logger-provided additional data and the user-provided additional data") {
-                assertThat(message.additionalData, equalTo(mapOf(
+                assertThat(message.additionalData, equalTo(mapOf<String, Any?>(
                     "some-key" to 123,
                     "some-other-data" to "value",
                     "@something" to 456,

@@ -18,7 +18,7 @@ package batect.logging
 
 import java.time.ZonedDateTime
 
-data class LogMessage(val severity: Severity, val message: String, val timestamp: ZonedDateTime, val additionalData: Map<String, Any>)
+data class LogMessage(val severity: Severity, val message: String, val timestamp: ZonedDateTime, val additionalData: Map<String, Any?>)
 
 enum class Severity {
     Debug,

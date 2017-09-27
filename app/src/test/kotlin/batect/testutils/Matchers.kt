@@ -37,9 +37,9 @@ fun withLineNumber(lineNumber: Int): Matcher<ConfigurationException> {
     return has(ConfigurationException::lineNumber, equalTo(lineNumber))
 }
 
-fun hasKeyWithValue(key: String, value: Any): Matcher<Map<String, Any>> = object : Matcher.Primitive<Map<String, Any>>() {
-    override fun invoke(actual: Map<String, Any>): MatchResult {
-        if (actual.get(key) == value) {
+fun hasKeyWithValue(key: String, value: Any?): Matcher<Map<String, Any?>> = object : Matcher.Primitive<Map<String, Any?>>() {
+    override fun invoke(actual: Map<String, Any?>): MatchResult {
+        if (actual.containsKey(key) && actual.get(key) == value) {
             return MatchResult.Match
         } else {
             return MatchResult.Mismatch("was ${describe(actual)}")

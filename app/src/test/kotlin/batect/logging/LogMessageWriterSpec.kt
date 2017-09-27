@@ -58,6 +58,10 @@ object LogMessageWriterSpec : Spek({
             it("does not close the output stream") {
                 assertThat(output.isClosed, equalTo(false))
             }
+
+            it("appends a new line after the end of the message") {
+                assertThat(output.toString().last(), equalTo('\n'))
+            }
         }
 
         on("writing a message with extra data") {
@@ -98,6 +102,10 @@ object LogMessageWriterSpec : Spek({
 
             it("does not close the output stream") {
                 assertThat(output.isClosed, equalTo(false))
+            }
+
+            it("appends a new line after the end of the message") {
+                assertThat(output.toString().last(), equalTo('\n'))
             }
         }
     }

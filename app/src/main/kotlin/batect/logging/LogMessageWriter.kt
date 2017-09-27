@@ -36,5 +36,6 @@ class LogMessageWriter {
         ) + message.additionalData
 
         serializer.writeValue(outputStream, values)
+        outputStream.write("\n".toByteArray())
     }
 }

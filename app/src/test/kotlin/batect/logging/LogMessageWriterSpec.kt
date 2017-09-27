@@ -34,7 +34,7 @@ object LogMessageWriterSpec : Spek({
 
         on("writing a message with no extra data") {
             val message = LogMessage(Severity.Info, "This is the message", messageTime, emptyMap())
-            val output = ByteArrayOutputStream()
+            val output = ByteArrayOutputStreamWithClosedStatus()
             writer.writeTo(message, output)
 
             val parsed = jacksonObjectMapper().readTree(output.toString())
@@ -54,6 +54,10 @@ object LogMessageWriterSpec : Spek({
             it("does not include any other fields") {
                 assertThat(parsed.fieldNames().asSequence().toSet(), equalTo(setOf("@timestamp", "@message", "@severity")))
             }
+
+            it("does not close the output stream") {
+                assertThat(output.isClosed, equalTo(false))
+            }
         }
 
         on("writing a message with extra data") {
@@ -66,7 +70,7 @@ object LogMessageWriterSpec : Spek({
                     "some-int" to 123
                 ))
 
-            val output = ByteArrayOutputStream()
+            val output = ByteArrayOutputStreamWithClosedStatus()
             writer.writeTo(message, output)
 
             val parsed = jacksonObjectMapper().readTree(output.toString())
@@ -91,6 +95,20 @@ object LogMessageWriterSpec : Spek({
             it("does not include any other fields") {
                 assertThat(parsed.fieldNames().asSequence().toSet(), equalTo(setOf("@timestamp", "@message", "@severity", "some-text", "some-int")))
             }
+
+            it("does not close the output stream") {
+                assertThat(output.isClosed, equalTo(false))
+            }
         }
     }
 })
+
+class ByteArrayOutputStreamWithClosedStatus : ByteArrayOutputStream() {
+    var isClosed: Boolean = false
+        private set
+
+    override fun close() {
+        isClosed = true
+        super.close()
+    }
+}

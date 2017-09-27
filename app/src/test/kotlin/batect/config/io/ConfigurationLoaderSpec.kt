@@ -33,6 +33,8 @@ import batect.config.ImageSource
 import batect.config.PortMapping
 import batect.config.PullImage
 import batect.config.VolumeMount
+import batect.logging.Logger
+import batect.testutils.InMemoryLogSink
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
 import org.jetbrains.spek.api.Spek
@@ -57,8 +59,9 @@ object ConfigurationLoaderSpec : Spek({
             on { createResolver(fileSystem.getPath("/")) } doReturn pathResolver
         }
 
+        val logger = Logger("some.source", InMemoryLogSink())
         val testFileName = "/theTestFile.yml"
-        val loader = ConfigurationLoader(pathResolverFactory, fileSystem)
+        val loader = ConfigurationLoader(pathResolverFactory, fileSystem, logger)
 
         fun loadConfiguration(config: String): Configuration {
             val filePath = fileSystem.getPath(testFileName)

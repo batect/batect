@@ -16,6 +16,8 @@
 
 package batect.config.io
 
+import batect.config.Configuration
+import batect.logging.Logger
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonProcessingException
@@ -25,23 +27,43 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
-import batect.config.Configuration
 import java.io.InputStream
 import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
-class ConfigurationLoader(val pathResolverFactory: PathResolverFactory, val fileSystem: FileSystem) {
+class ConfigurationLoader(
+    private val pathResolverFactory: PathResolverFactory,
+    private val fileSystem: FileSystem,
+    private val logger: Logger
+) {
     fun loadConfig(fileName: String): Configuration {
         val path = fileSystem.getPath(fileName).toAbsolutePath()
 
+        logger.info {
+            message("Loading configuration.")
+            data("path", path.toString())
+        }
+
         if (!Files.exists(path)) {
+            logger.error {
+                message("Configuration file could not be found.")
+                data("path", path.toString())
+            }
+
             throw ConfigurationException("The file '$path' does not exist.")
         }
 
         Files.newInputStream(path, StandardOpenOption.READ).use {
-            return loadConfig(it, path)
+            val config = loadConfig(it, path)
+
+            logger.info {
+                message("Configuration loaded.")
+                data("config", config)
+            }
+
+            return config
         }
     }
 
@@ -55,8 +77,13 @@ class ConfigurationLoader(val pathResolverFactory: PathResolverFactory, val file
 
         try {
             return mapper.readValue(configurationStream, ConfigurationFile::class.java)
-                    .toConfiguration(pathResolver)
+                .toConfiguration(pathResolver)
         } catch (e: Throwable) {
+            logger.error {
+                message("Exception thrown while loading configuration.")
+                exception(e)
+            }
+
             throw mapException(e, filePath.toString())
         }
     }

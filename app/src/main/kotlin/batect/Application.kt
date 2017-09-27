@@ -97,11 +97,11 @@ enum class PrintStreamType {
 }
 
 private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStream): Kodein = Kodein {
-    bind<ConfigurationLoader>() with singleton { ConfigurationLoader(instance(), instance()) }
+    bind<ConfigurationLoader>() with singletonWithLogger { logger -> ConfigurationLoader(instance(), instance(), logger) }
     bind<PathResolverFactory>() with singleton { PathResolverFactory() }
     bind<FileSystem>() with singleton { FileSystems.getDefault() }
     bind<TaskRunner>() with singleton { TaskRunner(instance(), instance(), instance(), instance()) }
-    bind<DockerClient>() with singleton { DockerClient(instance(), instance(), instance(), instance()) }
+    bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), logger) }
     bind<DockerImageLabellingStrategy>() with singleton { DockerImageLabellingStrategy() }
     bind<ProcessRunner>() with singleton { ProcessRunner() }
     bind<DockerContainerCreationCommandGenerator>() with singleton { DockerContainerCreationCommandGenerator() }

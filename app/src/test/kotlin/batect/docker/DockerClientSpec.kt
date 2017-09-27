@@ -18,12 +18,14 @@ package batect.docker
 
 import batect.config.BuildImage
 import batect.config.Container
+import batect.logging.Logger
 import batect.os.Exited
 import batect.os.KillProcess
 import batect.os.KilledDuringProcessing
 import batect.os.OutputProcessing
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
+import batect.testutils.InMemoryLogSink
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
@@ -59,8 +61,9 @@ object DockerClientSpec : Spek({
         val processRunner = mock<ProcessRunner>()
         val creationCommandGenerator = mock<DockerContainerCreationCommandGenerator>()
         val consoleInfo = mock<ConsoleInfo>()
+        val logger = Logger("some.source", InMemoryLogSink())
 
-        val client = DockerClient(labeller, processRunner, creationCommandGenerator, consoleInfo)
+        val client = DockerClient(labeller, processRunner, creationCommandGenerator, consoleInfo, logger)
 
         beforeEachTest {
             reset(processRunner)

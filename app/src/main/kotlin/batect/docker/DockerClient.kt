@@ -18,6 +18,7 @@ package batect.docker
 
 import batect.config.BuildImage
 import batect.config.Container
+import batect.logging.Logger
 import batect.os.Exited
 import batect.os.KillProcess
 import batect.os.KilledDuringProcessing
@@ -30,15 +31,26 @@ class DockerClient(
     private val imageLabellingStrategy: DockerImageLabellingStrategy,
     private val processRunner: ProcessRunner,
     private val creationCommandGenerator: DockerContainerCreationCommandGenerator,
-    private val consoleInfo: ConsoleInfo
+    private val consoleInfo: ConsoleInfo,
+    private val logger: Logger
 ) {
     private val buildImageIdLineRegex = """^Successfully built (.*)$""".toRegex(RegexOption.MULTILINE)
 
     fun build(projectName: String, container: Container, onStatusUpdate: (DockerImageBuildProgress) -> Unit): DockerImage {
+        logger.info {
+            message("Building image.")
+            data("container", container)
+        }
+
         val label = imageLabellingStrategy.labelImage(projectName, container)
         val command = listOf("docker", "build", "--tag", label, (container.imageSource as BuildImage).buildDirectory)
 
         val result = processRunner.runAndStreamOutput(command) { line ->
+            logger.debug {
+                message("Received output from Docker during image build.")
+                data("outputLine", line)
+            }
+
             val progress = DockerImageBuildProgress.fromBuildOutput(line)
 
             if (progress != null) {
@@ -47,22 +59,52 @@ class DockerClient(
         }
 
         if (failed(result)) {
+            logger.error {
+                message("Image build failed.")
+                data("result", result)
+            }
+
             throw ImageBuildFailedException(result.output.trim())
         }
 
         val imageId = buildImageIdLineRegex.find(result.output)?.groupValues?.get(1) ?: label
 
+        logger.info {
+            message("Image build succeeded.")
+            data("imageId", imageId)
+        }
+
         return DockerImage(imageId)
     }
 
     fun create(container: Container, command: String?, image: DockerImage, network: DockerNetwork): DockerContainer {
+        logger.info {
+            message("Creating container.")
+            data("container", container)
+            data("command", command)
+            data("image", image)
+            data("network", network)
+        }
+
         val args = creationCommandGenerator.createCommandLine(container, command, image, network, consoleInfo)
         val result = processRunner.runAndCaptureOutput(args)
 
         if (failed(result)) {
+            logger.error {
+                message("Container creation failed.")
+                data("result", result)
+            }
+
             throw ContainerCreationFailedException("Output from Docker was: ${result.output.trim()}")
         } else {
-            return DockerContainer(result.output.trim())
+            val containerId = result.output.trim()
+
+            logger.info {
+                message("Container created.")
+                data("containerId", containerId)
+            }
+
+            return DockerContainer(containerId)
         }
     }
 
@@ -73,22 +115,57 @@ class DockerClient(
             listOf("docker", "start", "--attach", container.id)
         }
 
+        logger.info {
+            message("Running container.")
+            data("container", container)
+            data("interactiveMode", consoleInfo.stdinIsTTY)
+        }
+
         val exitCode = processRunner.run(command)
+
+        logger.info {
+            message("Container run finished.")
+            data("exitCode", exitCode)
+        }
 
         return DockerContainerRunResult(exitCode)
     }
 
     fun start(container: DockerContainer) {
+        logger.info {
+            message("Starting container.")
+            data("container", container)
+        }
+
         val command = listOf("docker", "start", container.id)
         val result = processRunner.runAndCaptureOutput(command)
 
         if (failed(result)) {
+            logger.error {
+                message("Starting container failed.")
+                data("result", result)
+            }
+
             throw ContainerStartFailedException(container.id, result.output)
+        }
+
+        logger.info {
+            message("Container started.")
+            data("container", container)
         }
     }
 
     fun waitForHealthStatus(container: DockerContainer): HealthStatus {
+        logger.info {
+            message("Checking health status of container.")
+            data("container", container)
+        }
+
         if (!hasHealthCheck(container)) {
+            logger.warn {
+                message("Container has no health check.")
+            }
+
             return HealthStatus.NoHealthCheck
         }
 
@@ -99,6 +176,11 @@ class DockerClient(
             "--filter", "event=health_status")
 
         val result = processRunner.runAndProcessOutput(command) { line ->
+            logger.debug {
+                message("Received event notification from Docker.")
+                data("event", line)
+            }
+
             when {
                 line == "health_status: healthy" -> KillProcess(HealthStatus.BecameHealthy)
                 line == "health_status: unhealthy" -> KillProcess(HealthStatus.BecameUnhealthy)
@@ -108,9 +190,25 @@ class DockerClient(
             }
         }
 
-        return when (result) {
-            is KilledDuringProcessing -> result.result
-            is Exited -> throw ContainerHealthCheckException("Event stream for container '${container.id}' exited early with exit code ${result.exitCode}.")
+        when (result) {
+            is KilledDuringProcessing -> {
+                val healthStatus = result.result
+
+                logger.info {
+                    message("Received health status for container.")
+                    data("status", healthStatus)
+                }
+
+                return healthStatus
+            }
+            is Exited -> {
+                logger.error {
+                    message("Event stream for container exited early.")
+                    data("result", result)
+                }
+
+                throw ContainerHealthCheckException("Event stream for container '${container.id}' exited early with exit code ${result.exitCode}.")
+            }
         }
     }
 
@@ -119,6 +217,11 @@ class DockerClient(
         val result = processRunner.runAndCaptureOutput(command)
 
         if (failed(result)) {
+            logger.error {
+                message("Could not determine if container has a health check or not.")
+                data("result", result)
+            }
+
             throw ContainerHealthCheckException("Checking if container '${container.id}' has a healthcheck failed. Output from Docker was: ${result.output.trim()}")
         }
 
@@ -126,57 +229,129 @@ class DockerClient(
     }
 
     fun stop(container: DockerContainer) {
+        logger.info {
+            message("Stopping container.")
+            data("container", container)
+        }
+
         val command = listOf("docker", "stop", container.id)
         val result = processRunner.runAndCaptureOutput(command)
 
         if (failed(result)) {
+            logger.error {
+                message("Could not stop container.")
+                data("result", result)
+            }
+
             throw ContainerStopFailedException(container.id, result.output.trim())
+        }
+
+        logger.info {
+            message("Container stopped.")
         }
     }
 
     fun createNewBridgeNetwork(): DockerNetwork {
+        logger.info {
+            message("Creating new network.")
+        }
+
         val command = listOf("docker", "network", "create", "--driver", "bridge", UUID.randomUUID().toString())
         val result = processRunner.runAndCaptureOutput(command)
 
         if (failed(result)) {
+            logger.error {
+                message("Could not create network.")
+                data("result", result)
+            }
+
             throw NetworkCreationFailedException(result.output.trim())
         }
 
-        return DockerNetwork(result.output.trim())
+        val networkId = result.output.trim()
+
+        logger.info {
+            message("Network created.")
+            data("networkId", networkId)
+        }
+
+        return DockerNetwork(networkId)
     }
 
     fun deleteNetwork(network: DockerNetwork) {
+        logger.info {
+            message("Deleting network.")
+            data("network", network)
+        }
+
         val command = listOf("docker", "network", "rm", network.id)
         val result = processRunner.runAndCaptureOutput(command)
 
         if (failed(result)) {
+            logger.error {
+                message("Could not delete network.")
+                data("result", result)
+            }
+
             throw NetworkDeletionFailedException(network.id, result.output.trim())
+        }
+
+        logger.info {
+            message("Network deleted.")
         }
     }
 
     fun remove(container: DockerContainer) {
+        logger.info {
+            message("Removing container.")
+            data("container", container)
+        }
+
         val command = listOf("docker", "rm", container.id)
         val result = processRunner.runAndCaptureOutput(command)
 
         if (failed(result)) {
+            logger.error {
+                message("Could not remove container.")
+                data("result", result)
+            }
+
             if (result.output.startsWith("Error response from daemon: No such container: ")) {
                 throw ContainerDoesNotExistException("Removing container '${container.id}' failed because it does not exist.")
             } else {
                 throw ContainerRemovalFailedException(container.id, result.output.trim())
             }
         }
+
+        logger.info {
+            message("Container removed.")
+        }
     }
 
     fun forciblyRemove(container: DockerContainer) {
+        logger.info {
+            message("Forcibly removing container.")
+            data("container", container)
+        }
+
         val command = listOf("docker", "rm", "--force", container.id)
         val result = processRunner.runAndCaptureOutput(command)
 
         if (failed(result)) {
+            logger.error {
+                message("Could not forcibly remove container.")
+                data("result", result)
+            }
+
             if (result.output.startsWith("Error response from daemon: No such container: ")) {
                 throw ContainerDoesNotExistException("Removing container '${container.id}' failed because it does not exist.")
             } else {
                 throw ContainerRemovalFailedException(container.id, result.output.trim())
             }
+        }
+
+        logger.info {
+            message("Container forcibly removed.")
         }
     }
 
@@ -187,11 +362,21 @@ class DockerClient(
             val result = processRunner.runAndCaptureOutput(command)
 
             if (failed(result)) {
+                logger.error {
+                    message("Could not get Docker version info.")
+                    data("result", result)
+                }
+
                 return "(Could not get Docker version information: ${result.output.trim()})"
             }
 
             return result.output.trim()
         } catch (t: Throwable) {
+            logger.error {
+                message("An exception was thrown while getting Docker version info.")
+                exception(t)
+            }
+
             return "(Could not get Docker version information because ${t.javaClass.simpleName} was thrown: ${t.message})"
         }
     }
@@ -201,25 +386,56 @@ class DockerClient(
             return DockerImage(imageName)
         }
 
+        logger.info {
+            message("Pulling image.")
+            data("imageName", imageName)
+        }
+
         val command = listOf("docker", "pull", imageName)
         val result = processRunner.runAndCaptureOutput(command)
 
         if (failed(result)) {
+            logger.error {
+                message("Could not pull image.")
+                data("result", result)
+            }
+
             throw ImagePullFailedException("Pulling image '$imageName' failed. Output from Docker was: ${result.output.trim()}")
+        }
+
+        logger.info {
+            message("Image pulled.")
         }
 
         return DockerImage(imageName)
     }
 
     private fun haveImageLocally(imageName: String): Boolean {
+        logger.info {
+            message("Checking if image exists locally.")
+            data("imageName", imageName)
+        }
+
         val command = listOf("docker", "images", "-q", imageName)
         val result = processRunner.runAndCaptureOutput(command)
 
         if (failed(result)) {
+            logger.error {
+                message("Could not check if image exists locally.")
+                data("result", result)
+            }
+
             throw ImagePullFailedException("Checking if image '$imageName' has already been pulled failed. Output from Docker was: ${result.output.trim()}")
         }
 
-        return result.output.trim().isNotEmpty()
+        val haveImage = result.output.trim().isNotEmpty()
+
+        logger.info {
+            message("Checking if image exists locally succeeded.")
+            data("haveImage", haveImage)
+        }
+
+        return haveImage
     }
 
     private fun failed(result: ProcessOutput): Boolean = result.exitCode != 0

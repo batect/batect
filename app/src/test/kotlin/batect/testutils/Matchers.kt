@@ -17,6 +17,8 @@
 package batect.testutils
 
 import batect.config.io.ConfigurationException
+import batect.logging.LogMessage
+import batect.logging.Severity
 import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.describe
@@ -47,3 +49,27 @@ fun hasKeyWithValue(key: String, value: Any): Matcher<Map<String, Any>> = object
     override val description: String get() = "contains entry with key ${describe(key)} and value ${describe(value)}"
     override val negatedDescription: String get() = "does not contain entry with key ${describe(key)} and value ${describe(value)}"
 }
+
+fun hasMessage(messageCriteria: Matcher<LogMessage>): Matcher<InMemoryLogSink> {
+    return object : Matcher<InMemoryLogSink> {
+        override fun invoke(actual: InMemoryLogSink): MatchResult {
+            if (actual.loggedMessages.isEmpty()) {
+                return MatchResult.Mismatch("no messages were logged")
+            }
+
+            if (actual.loggedMessages.any { messageCriteria(it) == MatchResult.Match }) {
+                return MatchResult.Match
+            } else {
+                val logMessages = actual.loggedMessages.joinToString("\n")
+                return MatchResult.Mismatch("none of the logged messaged matched that criteria, messages logged were:\n$logMessages")
+            }
+        }
+
+        override val description: String get() = "has a log message that ${describe(messageCriteria)}"
+        override val negatedDescription: String get() = "does not have a log message that ${describe(messageCriteria)}"
+    }
+}
+
+fun withSeverity(severity: Severity): Matcher<LogMessage> = has(LogMessage::severity, equalTo(severity))
+fun withAdditionalData(key: String, value: Any): Matcher<LogMessage> = has(LogMessage::additionalData, hasKeyWithValue(key, value))
+fun withException(exception: Throwable): Matcher<LogMessage> = withAdditionalData("exception", exception)

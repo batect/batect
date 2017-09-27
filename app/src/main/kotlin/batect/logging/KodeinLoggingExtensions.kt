@@ -29,3 +29,7 @@ inline fun <reified T : Any> Kodein.Builder.singletonWithLogger(noinline creator
         creator(With(erased(), T::class).instance())
     }
 }
+
+inline fun <reified T : Any> Kodein.logger(): Logger {
+    return this.With(erased(), T::class).instance()
+}

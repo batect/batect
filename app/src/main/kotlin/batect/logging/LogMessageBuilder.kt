@@ -27,6 +27,8 @@ class LogMessageBuilder(val severity: Severity, val loggerAdditionalData: Map<St
         return this
     }
 
+    fun exception(e: Throwable): LogMessageBuilder = data("exception", e)
+
     fun data(key: String, value: Any): LogMessageBuilder {
         if (key.startsWith('@')) {
             throw IllegalArgumentException("Cannot add additional data with the key '$key': keys may not start with '@'.")

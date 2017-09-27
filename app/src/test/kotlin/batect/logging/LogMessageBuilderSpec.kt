@@ -16,6 +16,7 @@
 
 package batect.logging
 
+import batect.testutils.hasKeyWithValue
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -148,6 +149,18 @@ object LogMessageBuilderSpec : Spek({
 
             it("throws an exception when attempting to add that additional data") {
                 assertThat({ builder.data("@some-data", "some-value") }, throws(withMessage("Cannot add additional data with the key '@some-data': keys may not start with '@'.")))
+            }
+        }
+
+        on("building a log message with an exception") {
+            val exception = RuntimeException("Something went wrong")
+            val builder = LogMessageBuilder(Severity.Debug)
+                .exception(exception)
+
+            val message = builder.build(timestampSource, standardAdditionalDataSource)
+
+            it("returns a log message with the exception in the additional data") {
+                assertThat(message.additionalData, hasKeyWithValue("exception", exception))
             }
         }
     }

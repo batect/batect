@@ -24,6 +24,8 @@ import batect.cli.options.ValueConverters
 import batect.config.Configuration
 import batect.config.Task
 import batect.config.io.ConfigurationLoader
+import batect.logging.Logger
+import batect.logging.logger
 import batect.model.TaskExecutionOrderResolutionException
 import batect.model.TaskExecutionOrderResolver
 import batect.ui.Console
@@ -49,7 +51,8 @@ class RunTaskCommandDefinition : CommandDefinition("run", "Run a task.") {
         kodein.instance(),
         kodein.instance(),
         kodein.instance(PrintStreamType.Output),
-        kodein.instance(PrintStreamType.Error))
+        kodein.instance(PrintStreamType.Error),
+        kodein.logger<RunTaskCommand>())
 }
 
 data class RunTaskCommand(
@@ -60,7 +63,8 @@ data class RunTaskCommand(
     val taskExecutionOrderResolver: TaskExecutionOrderResolver,
     val taskRunner: TaskRunner,
     val console: Console,
-    val errorConsole: Console) : Command {
+    val errorConsole: Console,
+    val logger: Logger) : Command {
 
     override fun run(): Int {
         val config = configLoader.loadConfig(configFile)
@@ -70,6 +74,11 @@ data class RunTaskCommand(
             return runTasks(config, tasks)
 
         } catch (e: TaskExecutionOrderResolutionException) {
+            logger.error {
+                message("Could not resolve task execution order.")
+                exception(e)
+            }
+
             errorConsole.withColor(ConsoleColor.Red) {
                 println(e.message ?: "")
             }

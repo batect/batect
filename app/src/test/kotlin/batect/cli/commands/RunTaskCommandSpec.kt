@@ -27,14 +27,22 @@ import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.config.io.ConfigurationLoader
+import batect.logging.Logger
+import batect.logging.Severity
 import batect.model.TaskExecutionOrderResolutionException
 import batect.model.TaskExecutionOrderResolver
 import batect.testutils.CreateForEachTest
+import batect.testutils.InMemoryLogSink
+import batect.testutils.hasMessage
+import batect.testutils.withException
+import batect.testutils.withSeverity
 import batect.ui.Console
 import batect.ui.ConsoleColor
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
+import com.github.salomonbrys.kodein.multiton
+import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isA
@@ -51,6 +59,7 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import kotlin.reflect.KClass
 
 object RunTaskCommandSpec : Spek({
     describe("a 'run task' command") {
@@ -61,6 +70,7 @@ object RunTaskCommandSpec : Spek({
             val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver>()
             val console = mock<Console>()
             val errorConsole = mock<Console>()
+            val logger = mock<Logger>()
 
             val kodein = Kodein {
                 bind<ConfigurationLoader>() with instance(configLoader)
@@ -69,6 +79,7 @@ object RunTaskCommandSpec : Spek({
                 bind<String>(CommonOptions.ConfigurationFileName) with instance("thefile.yml")
                 bind<Console>(PrintStreamType.Output) with instance(console)
                 bind<Console>(PrintStreamType.Error) with instance(errorConsole)
+                bind<Logger>() with multiton { _: KClass<*> -> logger }
             }
 
             describe("when given one parameter") {
@@ -80,7 +91,7 @@ object RunTaskCommandSpec : Spek({
 
                 it("returns a command instance ready for use") {
                     assertThat((result as Succeeded).command, equalTo<Command>(
-                        RunTaskCommand("thefile.yml", "the-task", LevelOfParallelismDefaultValueProvider.value, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole)))
+                        RunTaskCommand("thefile.yml", "the-task", LevelOfParallelismDefaultValueProvider.value, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole, logger)))
                 }
             }
 
@@ -93,7 +104,7 @@ object RunTaskCommandSpec : Spek({
 
                 it("returns a command instance ready for use with the desired level of parallelism") {
                     assertThat((result as Succeeded).command, equalTo<Command>(
-                        RunTaskCommand("thefile.yml", "the-task", 123, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole)))
+                        RunTaskCommand("thefile.yml", "the-task", 123, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole, logger)))
                 }
             }
         }
@@ -105,6 +116,8 @@ object RunTaskCommandSpec : Spek({
             val config = Configuration("the_project", TaskMap(), ContainerMap())
             val expectedTaskExitCode = 123
             val levelOfParallelism = 64
+            val logSink = InMemoryLogSink()
+            val logger = Logger("test.source", logSink)
 
             val configLoader = mock<ConfigurationLoader> {
                 on { loadConfig(configFile) } doReturn config
@@ -130,7 +143,7 @@ object RunTaskCommandSpec : Spek({
                     on { run(config, mainTask, levelOfParallelism) } doReturn expectedTaskExitCode
                 }
 
-                val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole)
+                val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole, logger)
                 val exitCode = command.run()
 
                 it("runs the task") {
@@ -159,7 +172,7 @@ object RunTaskCommandSpec : Spek({
                         on { run(config, mainTask, levelOfParallelism) } doReturn expectedTaskExitCode
                     }
 
-                    val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole)
+                    val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole, logger)
                     val exitCode = command.run()
 
                     it("runs the dependency task") {
@@ -188,7 +201,7 @@ object RunTaskCommandSpec : Spek({
                         on { run(config, otherTask, levelOfParallelism) } doReturn 1
                     }
 
-                    val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole)
+                    val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole, logger)
                     val exitCode = command.run()
 
                     it("runs the dependency task") {
@@ -206,13 +219,14 @@ object RunTaskCommandSpec : Spek({
             }
 
             on("when the determining the task execution order fails") {
+                val exception = TaskExecutionOrderResolutionException("Something went wrong.")
                 val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {
-                    on { resolveExecutionOrder(config, taskName) } doThrow TaskExecutionOrderResolutionException("Something went wrong.")
+                    on { resolveExecutionOrder(config, taskName) } doThrow exception
                 }
 
                 val taskRunner = mock<TaskRunner>()
 
-                val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole)
+                val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole, logger)
                 val exitCode = command.run()
 
                 it("prints a message to the output") {
@@ -221,6 +235,10 @@ object RunTaskCommandSpec : Spek({
 
                 it("returns a non-zero exit code") {
                     assertThat(exitCode, !equalTo(0))
+                }
+
+                it("logs a message with the exception") {
+                    assertThat(logSink, hasMessage(withSeverity(Severity.Error) and withException(exception)))
                 }
             }
         }

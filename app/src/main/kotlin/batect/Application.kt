@@ -97,7 +97,7 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<ConfigurationLoader>() with singletonWithLogger { logger -> ConfigurationLoader(instance(), instance(), logger) }
     bind<PathResolverFactory>() with singleton { PathResolverFactory() }
     bind<FileSystem>() with singleton { FileSystems.getDefault() }
-    bind<TaskRunner>() with singleton { TaskRunner(instance(), instance(), instance(), instance()) }
+    bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(), instance(), logger) }
     bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), logger) }
     bind<DockerImageLabellingStrategy>() with singleton { DockerImageLabellingStrategy() }
     bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }

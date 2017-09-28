@@ -22,10 +22,12 @@ import batect.config.ContainerMap
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
+import batect.logging.Logger
 import batect.model.DependencyGraph
 import batect.model.DependencyGraphProvider
 import batect.model.TaskStateMachine
 import batect.model.TaskStateMachineProvider
+import batect.testutils.InMemoryLogSink
 import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.EventLogger
 import batect.ui.EventLoggerProvider
@@ -64,7 +66,8 @@ object TaskRunnerSpec : Spek({
             on { createParallelExecutionManager(eventLogger, stateMachine, "some-task", levelOfParallelism) } doReturn executionManager
         }
 
-        val taskRunner = TaskRunner(eventLoggerProvider, graphProvider, stateMachineProvider, executionManagerProvider)
+        val logger = Logger("some.source", InMemoryLogSink())
+        val taskRunner = TaskRunner(eventLoggerProvider, graphProvider, stateMachineProvider, executionManagerProvider, logger)
 
         beforeEachTest {
             reset(eventLogger)

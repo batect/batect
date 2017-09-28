@@ -16,8 +16,10 @@
 
 package batect.ui
 
+import batect.logging.Logger
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
+import batect.testutils.InMemoryLogSink
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -30,13 +32,15 @@ import org.jetbrains.spek.api.dsl.on
 
 object ConsoleInfoSpec : Spek({
     describe("a console information provider") {
+        val logger = Logger("some.source", InMemoryLogSink())
+
         describe("determining if STDIN is connected to a TTY") {
             on("STDIN being connected to a TTY") {
                 val processRunner = mock<ProcessRunner>() {
                     on { runAndCaptureOutput(listOf("tty")) } doReturn ProcessOutput(0, "/dev/pts/0")
                 }
 
-                val consoleInfo = ConsoleInfo(processRunner, emptyMap())
+                val consoleInfo = ConsoleInfo(processRunner, emptyMap(), logger)
 
                 it("returns true") {
                     assertThat(consoleInfo.stdinIsTTY, equalTo(true))
@@ -48,7 +52,7 @@ object ConsoleInfoSpec : Spek({
                     on { runAndCaptureOutput(listOf("tty")) } doReturn ProcessOutput(1, "not a tty")
                 }
 
-                val consoleInfo = ConsoleInfo(processRunner, emptyMap())
+                val consoleInfo = ConsoleInfo(processRunner, emptyMap(), logger)
 
                 it("returns false") {
                     assertThat(consoleInfo.stdinIsTTY, equalTo(false))
@@ -63,7 +67,7 @@ object ConsoleInfoSpec : Spek({
                 }
 
                 on("the TERM environment variable being set to 'dumb'") {
-                    val consoleInfo = ConsoleInfo(processRunner, mapOf("TERM" to "dumb"))
+                    val consoleInfo = ConsoleInfo(processRunner, mapOf("TERM" to "dumb"), logger)
 
                     it("returns true") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -71,7 +75,7 @@ object ConsoleInfoSpec : Spek({
                 }
 
                 on("the TERM environment variable not being set") {
-                    val consoleInfo = ConsoleInfo(processRunner, emptyMap())
+                    val consoleInfo = ConsoleInfo(processRunner, emptyMap(), logger)
 
                     it("returns false") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -79,7 +83,7 @@ object ConsoleInfoSpec : Spek({
                 }
 
                 on("the TERM environment variable being set to something else") {
-                    val consoleInfo = ConsoleInfo(processRunner, mapOf("TERM" to "other-terminal"))
+                    val consoleInfo = ConsoleInfo(processRunner, mapOf("TERM" to "other-terminal"), logger)
 
                     it("returns true") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(true))
@@ -92,7 +96,7 @@ object ConsoleInfoSpec : Spek({
                     on { runAndCaptureOutput(listOf("tty")) } doReturn ProcessOutput(1, "not a tty")
                 }
 
-                val consoleInfo = ConsoleInfo(processRunner, mapOf("TERM" to "other-terminal"))
+                val consoleInfo = ConsoleInfo(processRunner, mapOf("TERM" to "other-terminal"), logger)
 
                 it("returns false") {
                     assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -104,7 +108,7 @@ object ConsoleInfoSpec : Spek({
             val processRunner = mock<ProcessRunner>()
 
             on("when the TERM environment variable is not set") {
-                val consoleInfo = ConsoleInfo(processRunner, emptyMap())
+                val consoleInfo = ConsoleInfo(processRunner, emptyMap(), logger)
 
                 it("returns null") {
                     assertThat(consoleInfo.terminalType, absent())
@@ -112,7 +116,7 @@ object ConsoleInfoSpec : Spek({
             }
 
             on("when the TERM environment variable is set") {
-                val consoleInfo = ConsoleInfo(processRunner, mapOf("TERM" to "some-terminal"))
+                val consoleInfo = ConsoleInfo(processRunner, mapOf("TERM" to "some-terminal"), logger)
 
                 it("returns its value") {
                     assertThat(consoleInfo.terminalType, equalTo("some-terminal"))

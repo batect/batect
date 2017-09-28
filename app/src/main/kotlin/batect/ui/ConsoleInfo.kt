@@ -16,14 +16,32 @@
 
 package batect.ui
 
+import batect.logging.Logger
 import batect.os.ProcessRunner
 
-class ConsoleInfo(private val processRunner: ProcessRunner, private val environment: Map<String, String>) {
+class ConsoleInfo(
+    private val processRunner: ProcessRunner,
+    private val environment: Map<String, String>,
+    private val logger: Logger
+) {
     val stdinIsTTY: Boolean by lazy {
-        processRunner.runAndCaptureOutput(listOf("tty")).exitCode == 0
+        val result = processRunner.runAndCaptureOutput(listOf("tty"))
+
+        logger.info {
+            message("Ran 'tty' to determine if STDIN is a TTY.")
+            data("result", result)
+        }
+
+        result.exitCode == 0
     }
 
     val supportsInteractivity: Boolean by lazy {
+        logger.info {
+            message("Checking if terminal supports interactivity.")
+            data("stdinIsTTY", stdinIsTTY)
+            data("terminalType", terminalType)
+        }
+
         stdinIsTTY && terminalType != "dumb" && terminalType != null
     }
 

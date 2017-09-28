@@ -16,12 +16,15 @@
 
 package batect.model
 
+import batect.logging.Logger
 import batect.logging.LoggerFactory
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.mock
 import batect.model.steps.BeginTaskStep
 import batect.model.steps.TaskStep
+import batect.testutils.InMemoryLogSink
+import com.nhaarman.mockito_kotlin.doReturn
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -31,10 +34,19 @@ object TaskStateMachineProviderSpec : Spek({
     describe("a task state machine provider") {
         on("providing a task state machine") {
             val graph = mock<DependencyGraph>()
-            val loggerFactory = mock<LoggerFactory>()
+            val logger = Logger("TaskStateMachine", InMemoryLogSink())
+
+            val loggerFactory = mock<LoggerFactory> {
+                on { createLoggerForClass(TaskStateMachine::class) } doReturn logger
+            }
+
             val provider = TaskStateMachineProvider(loggerFactory)
             val stateMachine = provider.createStateMachine(graph)
             val firstStep = stateMachine.popNextStep()
+
+            it("creates a state machine with the correct logger") {
+                assertThat(stateMachine.logger, equalTo(logger))
+            }
 
             it("queues a 'begin task' step") {
                 assertThat(firstStep, equalTo<TaskStep>(BeginTaskStep))

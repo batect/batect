@@ -21,7 +21,7 @@ import batect.model.steps.BeginTaskStep
 
 class TaskStateMachineProvider(private val loggerFactory: LoggerFactory) {
     fun createStateMachine(graph: DependencyGraph): TaskStateMachine {
-        val stateMachine = TaskStateMachine(graph, loggerFactory)
+        val stateMachine = TaskStateMachine(graph, loggerFactory.createLoggerForClass(TaskStateMachine::class), loggerFactory)
         stateMachine.queueStep(BeginTaskStep)
 
         return stateMachine

@@ -16,15 +16,6 @@
 
 package batect.model
 
-import com.natpryce.hamkrest.absent
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.isEmpty
-import com.natpryce.hamkrest.throws
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doAnswer
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.verify
 import batect.config.Configuration
 import batect.config.Container
 import batect.config.ContainerMap
@@ -43,9 +34,19 @@ import batect.model.steps.DeleteTaskNetworkStep
 import batect.model.steps.DisplayTaskFailureStep
 import batect.model.steps.TaskStep
 import batect.testutils.CreateForEachTest
+import batect.testutils.InMemoryLogSink
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
+import com.natpryce.hamkrest.absent
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.isEmpty
+import com.natpryce.hamkrest.throws
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.verify
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -68,13 +69,14 @@ object TaskStateMachineSpec : Spek({
         val task = Task("the-task", runConfig)
         val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, unrelatedContainer))
         val graph = DependencyGraph(config, task)
-        val logger = mock<Logger>()
+        val loggerCreatedByFactory = mock<Logger>()
         val loggerFactory = mock<LoggerFactory> {
-            on { createLoggerForClass(any()) } doReturn logger
+            on { createLoggerForClass(any()) } doReturn loggerCreatedByFactory
         }
 
         val stateMachine by CreateForEachTest(this) {
-            TaskStateMachine(graph, loggerFactory)
+            val logger = Logger("stateMachine", InMemoryLogSink())
+            TaskStateMachine(graph, logger, loggerFactory)
         }
 
         describe("queuing, popping and querying steps") {
@@ -213,7 +215,7 @@ object TaskStateMachineSpec : Spek({
 
                     it("returns that step in the list of pending and processed steps") {
                         assertThat(stateMachine.getPendingAndProcessedStepsOfType(CreateTaskNetworkStep::class),
-                                equalTo(setOf(CreateTaskNetworkStep)))
+                            equalTo(setOf(CreateTaskNetworkStep)))
                     }
                 }
 
@@ -227,12 +229,12 @@ object TaskStateMachineSpec : Spek({
 
                         it("returns that step in the list of pending and processed steps") {
                             assertThat(stateMachine.getPendingAndProcessedStepsOfType(CreateTaskNetworkStep::class),
-                                    equalTo(setOf(CreateTaskNetworkStep)))
+                                equalTo(setOf(CreateTaskNetworkStep)))
                         }
 
                         it("returns that step in the list of processed steps") {
                             assertThat(stateMachine.getProcessedStepsOfType(CreateTaskNetworkStep::class),
-                                    equalTo(setOf(CreateTaskNetworkStep)))
+                                equalTo(setOf(CreateTaskNetworkStep)))
                         }
                     }
 
@@ -241,7 +243,7 @@ object TaskStateMachineSpec : Spek({
 
                         it("returns that step in the list of pending and processed steps") {
                             assertThat(stateMachine.getPendingAndProcessedStepsOfType(CreateTaskNetworkStep::class),
-                                    equalTo(setOf(CreateTaskNetworkStep)))
+                                equalTo(setOf(CreateTaskNetworkStep)))
                         }
                     }
                 }
@@ -268,7 +270,7 @@ object TaskStateMachineSpec : Spek({
 
                     it("returns pending or processed steps of other types") {
                         assertThat(stateMachine.getPendingAndProcessedStepsOfType(CreateTaskNetworkStep::class),
-                                equalTo(setOf(CreateTaskNetworkStep)))
+                            equalTo(setOf(CreateTaskNetworkStep)))
                     }
                 }
 
@@ -277,7 +279,7 @@ object TaskStateMachineSpec : Spek({
 
                     it("returns the steps in the list of pending and processed steps") {
                         assertThat(stateMachine.getPendingAndProcessedStepsOfType(DisplayTaskFailureStep::class),
-                                equalTo(setOf(step1, step2, step3)))
+                            equalTo(setOf(step1, step2, step3)))
                     }
                 }
 
@@ -291,12 +293,12 @@ object TaskStateMachineSpec : Spek({
 
                         it("returns only the processed step when asked for pending or processed steps of that type") {
                             assertThat(stateMachine.getPendingAndProcessedStepsOfType(DisplayTaskFailureStep::class),
-                                    equalTo(setOf(step1)))
+                                equalTo(setOf(step1)))
                         }
 
                         it("returns only the processed step when asked for processed steps of that type") {
                             assertThat(stateMachine.getProcessedStepsOfType(DisplayTaskFailureStep::class),
-                                    equalTo(setOf(step1)))
+                                equalTo(setOf(step1)))
                         }
                     }
                 }
@@ -335,7 +337,7 @@ object TaskStateMachineSpec : Spek({
                 stateMachine.postEvent(event)
 
                 it("applies the event") {
-                    verify(event).apply(stateMachine, logger)
+                    verify(event).apply(stateMachine, loggerCreatedByFactory)
                 }
 
                 it("adds the event to the list of past events before applying it") {
@@ -377,7 +379,7 @@ object TaskStateMachineSpec : Spek({
                 on("when that event type has multiple past events") {
                     it("returns all past events of that type") {
                         assertThat(stateMachine.getPastEventsOfType(HarmlessTestEvent::class),
-                                equalTo(setOf(testEvent1, testEvent2)))
+                            equalTo(setOf(testEvent1, testEvent2)))
                     }
                 }
             }
@@ -398,7 +400,7 @@ object TaskStateMachineSpec : Spek({
                 on("when that event type has multiple past events") {
                     it("throws an exception") {
                         assertThat({ stateMachine.getSinglePastEventOfType(HarmlessTestEvent::class) },
-                                throws<IllegalStateException>(withMessage("Multiple events of type HarmlessTestEvent found.")))
+                            throws<IllegalStateException>(withMessage("Multiple events of type HarmlessTestEvent found.")))
                     }
                 }
             }
@@ -431,7 +433,7 @@ object TaskStateMachineSpec : Spek({
                     val otherTask = Task("the-other-task", otherRunConfiguration)
                     val otherConfig = Configuration("the-project", TaskMap(otherTask), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, unrelatedContainer))
                     val otherGraph = DependencyGraph(otherConfig, otherTask)
-                    val otherStateMachine = TaskStateMachine(otherGraph, loggerFactory)
+                    val otherStateMachine = TaskStateMachine(otherGraph, Logger("other.logger", InMemoryLogSink()), loggerFactory)
 
                     it("returns the command from the container configuration") {
                         assertThat(otherStateMachine.commandForContainer(taskContainer), equalTo(taskContainer.command))

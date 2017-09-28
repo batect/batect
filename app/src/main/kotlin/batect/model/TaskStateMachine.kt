@@ -17,6 +17,7 @@
 package batect.model
 
 import batect.config.Container
+import batect.logging.Logger
 import batect.logging.LoggerFactory
 import batect.model.events.TaskEvent
 import batect.model.events.TaskEventContext
@@ -31,7 +32,7 @@ import kotlin.reflect.KClass
 
 // FIXME: this is really two things: the state machine and a collection of utility functions
 // for events
-class TaskStateMachine(private val graph: DependencyGraph, private val loggerFactory: LoggerFactory) : TaskEventContext, TaskEventSink {
+class TaskStateMachine(val graph: DependencyGraph, val logger: Logger, val loggerFactory: LoggerFactory) : TaskEventContext, TaskEventSink {
     private val stepQueue: Queue<TaskStep> = LinkedList<TaskStep>()
     private val processedSteps = mutableSetOf<TaskStep>()
     private val processedEvents = mutableSetOf<TaskEvent>()
@@ -41,6 +42,11 @@ class TaskStateMachine(private val graph: DependencyGraph, private val loggerFac
     private val lock = ReentrantLock()
 
     override fun queueStep(step: TaskStep) {
+        logger.info {
+            message("Queuing step.")
+            data("step", step.toString())
+        }
+
         stepQueue.add(step)
     }
 
@@ -67,15 +73,29 @@ class TaskStateMachine(private val graph: DependencyGraph, private val loggerFac
     }
 
     override fun <T : TaskStep> removePendingStepsOfType(clazz: KClass<T>) {
+        logger.info {
+            message("Removing pending steps of a particular type.")
+            data("type", clazz.qualifiedName)
+        }
+
         stepQueue.removeIf { clazz.isInstance(it) }
     }
 
     override fun abort() {
+        logger.info {
+            message("Marking the task as aborted.")
+        }
+
         isAborting = true
     }
 
     override fun postEvent(event: TaskEvent) {
         lock.withLock {
+            logger.info {
+                message("Event received.")
+                data("event", event.toString())
+            }
+
             processedEvents.add(event)
             event.apply(this, loggerFactory.createLoggerForClass(event::class))
         }

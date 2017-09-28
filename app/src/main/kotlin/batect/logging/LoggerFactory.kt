@@ -16,18 +16,12 @@
 
 package batect.logging
 
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.bindings.NoArgBindingKodein
-import com.github.salomonbrys.kodein.bindings.SingletonBinding
-import com.github.salomonbrys.kodein.instance
-import com.github.salomonbrys.kodein.singleton
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.KClass
 
-inline fun <reified T : Any> Kodein.Builder.singletonWithLogger(noinline creator: NoArgBindingKodein.(Logger) -> T): SingletonBinding<T> {
-    return singleton {
-        creator(logger<T>())
-    }
-}
+class LoggerFactory(private val logSink: LogSink) {
+    private val loggers = ConcurrentHashMap<KClass<*>, Logger>()
 
-inline fun <reified T : Any> Kodein.logger(): Logger {
-    return this.instance<LoggerFactory>().createLoggerForClass(T::class)
+    fun createLoggerForClass(clazz: KClass<*>): Logger
+        = loggers.getOrPut(clazz) { Logger(clazz.qualifiedName!!, logSink) }
 }

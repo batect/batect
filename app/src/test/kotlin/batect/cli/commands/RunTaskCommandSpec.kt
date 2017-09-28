@@ -28,6 +28,7 @@ import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.config.io.ConfigurationLoader
 import batect.logging.Logger
+import batect.logging.LoggerFactory
 import batect.logging.Severity
 import batect.model.TaskExecutionOrderResolutionException
 import batect.model.TaskExecutionOrderResolver
@@ -41,7 +42,6 @@ import batect.ui.ConsoleColor
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
-import com.github.salomonbrys.kodein.multiton
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -59,7 +59,6 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
-import kotlin.reflect.KClass
 
 object RunTaskCommandSpec : Spek({
     describe("a 'run task' command") {
@@ -71,6 +70,9 @@ object RunTaskCommandSpec : Spek({
             val console = mock<Console>()
             val errorConsole = mock<Console>()
             val logger = mock<Logger>()
+            val loggerFactory = mock<LoggerFactory> {
+                on { createLoggerForClass(RunTaskCommand::class) } doReturn logger
+            }
 
             val kodein = Kodein {
                 bind<ConfigurationLoader>() with instance(configLoader)
@@ -79,7 +81,7 @@ object RunTaskCommandSpec : Spek({
                 bind<String>(CommonOptions.ConfigurationFileName) with instance("thefile.yml")
                 bind<Console>(PrintStreamType.Output) with instance(console)
                 bind<Console>(PrintStreamType.Error) with instance(errorConsole)
-                bind<Logger>() with multiton { _: KClass<*> -> logger }
+                bind<LoggerFactory>() with instance(loggerFactory)
             }
 
             describe("when given one parameter") {

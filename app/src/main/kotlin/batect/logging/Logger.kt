@@ -16,7 +16,7 @@
 
 package batect.logging
 
-class Logger(private val sourceName: String, private val destination: LogSink) {
+class Logger(val sourceName: String, val destination: LogSink) {
     fun debug(build: LogMessageBuilder.() -> LogMessageBuilder) = destination.write(Severity.Debug, additionalInfo, build)
     fun info(build: LogMessageBuilder.() -> LogMessageBuilder) = destination.write(Severity.Info, additionalInfo, build)
     fun warn(build: LogMessageBuilder.() -> LogMessageBuilder) = destination.write(Severity.Warning, additionalInfo, build)

@@ -24,6 +24,8 @@ import com.nhaarman.mockito_kotlin.verify
 import batect.model.steps.DisplayTaskFailureStep
 import batect.config.Container
 import batect.docker.DockerNetwork
+import batect.logging.Logger
+import batect.testutils.InMemoryLogSink
 import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -36,6 +38,7 @@ object TaskNetworkDeletionFailedEventSpec : Spek({
 
         describe("being applied") {
             val network = DockerNetwork("the-network")
+            val logger = Logger("test.source", InMemoryLogSink())
 
             on("when the task is not already aborting") {
                 val container = Container("some-container", imageSourceDoesNotMatter())
@@ -44,7 +47,7 @@ object TaskNetworkDeletionFailedEventSpec : Spek({
                     on { getSinglePastEventOfType<RunningContainerExitedEvent>() } doReturn RunningContainerExitedEvent(container, 123)
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("queues showing a message to the user") {
                     verify(context).queueStep(DisplayTaskFailureStep("""
@@ -66,7 +69,7 @@ object TaskNetworkDeletionFailedEventSpec : Spek({
                     on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("queues showing a message to the user") {
                     verify(context).queueStep(DisplayTaskFailureStep("""

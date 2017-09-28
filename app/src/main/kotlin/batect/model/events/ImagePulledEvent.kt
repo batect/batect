@@ -20,10 +20,11 @@ import batect.config.Container
 import batect.config.PullImage
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.logging.Logger
 import batect.model.steps.CreateContainerStep
 
 data class ImagePulledEvent(val image: DockerImage) : TaskEvent() {
-    override fun apply(context: TaskEventContext) {
+    override fun apply(context: TaskEventContext, logger: Logger) {
         if (context.isAborting) {
             return
         }

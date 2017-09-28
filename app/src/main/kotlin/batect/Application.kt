@@ -110,7 +110,7 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<CommandLineParser>() with singleton { BatectCommandLineParser(this) }
     bind<TaskStepRunner>() with singleton { TaskStepRunner(instance()) }
     bind<DependencyGraphProvider>() with singleton { DependencyGraphProvider() }
-    bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider() }
+    bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance()) }
     bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance()) }
     bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider() }
     bind<TaskExecutionOrderResolver>() with singleton { TaskExecutionOrderResolver() }

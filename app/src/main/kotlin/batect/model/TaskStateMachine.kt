@@ -17,6 +17,7 @@
 package batect.model
 
 import batect.config.Container
+import batect.logging.LoggerFactory
 import batect.model.events.TaskEvent
 import batect.model.events.TaskEventContext
 import batect.model.events.TaskEventSink
@@ -29,7 +30,7 @@ import kotlin.reflect.KClass
 
 // FIXME: this is really two things: the state machine and a collection of utility functions
 // for events
-class TaskStateMachine(private val graph: DependencyGraph) : TaskEventContext, TaskEventSink {
+class TaskStateMachine(private val graph: DependencyGraph, private val loggerFactory: LoggerFactory) : TaskEventContext, TaskEventSink {
     private val stepQueue: Queue<TaskStep> = LinkedList<TaskStep>()
     private val processedSteps = mutableSetOf<TaskStep>()
     private val processedEvents = mutableSetOf<TaskEvent>()
@@ -75,7 +76,7 @@ class TaskStateMachine(private val graph: DependencyGraph) : TaskEventContext, T
     override fun postEvent(event: TaskEvent) {
         lock.withLock {
             processedEvents.add(event)
-            event.apply(this)
+            event.apply(this, loggerFactory.createLoggerForClass(event::class))
         }
     }
 

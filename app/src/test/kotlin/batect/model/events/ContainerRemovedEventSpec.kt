@@ -28,6 +28,8 @@ import batect.model.steps.DeleteTaskNetworkStep
 import batect.config.Container
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.logging.Logger
+import batect.testutils.InMemoryLogSink
 import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -45,6 +47,7 @@ object ContainerRemovedEventSpec : Spek({
             val containerThatFailedToCreate = Container("failed-to-create", imageSourceDoesNotMatter())
             val image = DockerImage("some-image")
             val network = DockerNetwork("the-network")
+            val logger = Logger("test.source", InMemoryLogSink())
 
             on("when all containers with a pending or processed creation step have been removed or reported that they failed to be created") {
                 val context = mock<TaskEventContext> {
@@ -68,7 +71,7 @@ object ContainerRemovedEventSpec : Spek({
                     on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("queues a 'delete task network' step") {
                     verify(context).queueStep(DeleteTaskNetworkStep(network))
@@ -94,7 +97,7 @@ object ContainerRemovedEventSpec : Spek({
                     )
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("does not queue any further work") {
                     verify(context, never()).queueStep(any())

@@ -31,6 +31,8 @@ import batect.config.ContainerMap
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
+import batect.logging.Logger
+import batect.logging.LoggerFactory
 import batect.model.events.ContainerBecameHealthyEvent
 import batect.model.events.TaskEvent
 import batect.model.events.TaskEventContext
@@ -43,6 +45,7 @@ import batect.model.steps.TaskStep
 import batect.testutils.CreateForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
+import com.nhaarman.mockito_kotlin.doReturn
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -65,9 +68,13 @@ object TaskStateMachineSpec : Spek({
         val task = Task("the-task", runConfig)
         val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, unrelatedContainer))
         val graph = DependencyGraph(config, task)
+        val logger = mock<Logger>()
+        val loggerFactory = mock<LoggerFactory> {
+            on { createLoggerForClass(any()) } doReturn logger
+        }
 
         val stateMachine by CreateForEachTest(this) {
-            TaskStateMachine(graph)
+            TaskStateMachine(graph, loggerFactory)
         }
 
         describe("queuing, popping and querying steps") {
@@ -317,7 +324,7 @@ object TaskStateMachineSpec : Spek({
             on("receiving an event") {
                 var sawSelfInEventList = false
                 val event = mock<TaskEvent> {
-                    on { apply(any()) } doAnswer { invocation ->
+                    on { apply(any(), any()) } doAnswer { invocation ->
                         val appliedToStateMachine = invocation.getArgument<TaskStateMachine>(0)
                         sawSelfInEventList = appliedToStateMachine.getPastEventsOfType(TaskEvent::class).contains(invocation.mock)
 
@@ -328,7 +335,7 @@ object TaskStateMachineSpec : Spek({
                 stateMachine.postEvent(event)
 
                 it("applies the event") {
-                    verify(event).apply(stateMachine)
+                    verify(event).apply(stateMachine, logger)
                 }
 
                 it("adds the event to the list of past events before applying it") {
@@ -339,7 +346,7 @@ object TaskStateMachineSpec : Spek({
 
         describe("getting past events") {
             data class HarmlessTestEvent(val someAttribute: String) : TaskEvent() {
-                override fun apply(context: TaskEventContext) {
+                override fun apply(context: TaskEventContext, logger: Logger) {
                     // Do nothing.
                 }
             }
@@ -424,7 +431,7 @@ object TaskStateMachineSpec : Spek({
                     val otherTask = Task("the-other-task", otherRunConfiguration)
                     val otherConfig = Configuration("the-project", TaskMap(otherTask), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, unrelatedContainer))
                     val otherGraph = DependencyGraph(otherConfig, otherTask)
-                    val otherStateMachine = TaskStateMachine(otherGraph)
+                    val otherStateMachine = TaskStateMachine(otherGraph, loggerFactory)
 
                     it("returns the command from the container configuration") {
                         assertThat(otherStateMachine.commandForContainer(taskContainer), equalTo(taskContainer.command))

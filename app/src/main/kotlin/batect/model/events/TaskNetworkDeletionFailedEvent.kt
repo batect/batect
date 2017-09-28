@@ -16,10 +16,11 @@
 
 package batect.model.events
 
+import batect.logging.Logger
 import batect.model.steps.DisplayTaskFailureStep
 
 data class TaskNetworkDeletionFailedEvent(val message: String) : TaskEvent() {
-    override fun apply(context: TaskEventContext) {
+    override fun apply(context: TaskEventContext, logger: Logger) {
         val network = context.getSinglePastEventOfType<TaskNetworkCreatedEvent>()!!.network
 
         val message = "${situationDescription(context)}, the network '${network.id}' could not be deleted: $message\n\n" +

@@ -21,9 +21,10 @@ import batect.model.steps.DisplayTaskFailureStep
 import batect.model.steps.RemoveContainerStep
 import batect.model.steps.StopContainerStep
 import batect.config.Container
+import batect.logging.Logger
 
 abstract class PostTaskRunCleanupFailureEvent(open val container: Container) : TaskEvent() {
-    override fun apply(context: TaskEventContext) {
+    override fun apply(context: TaskEventContext, logger: Logger) {
         val dockerContainer = context.getPastEventsOfType<ContainerCreatedEvent>()
                 .single { it.container == container }
                 .dockerContainer

@@ -27,6 +27,8 @@ import batect.model.steps.RemoveContainerStep
 import batect.model.steps.StopContainerStep
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.logging.Logger
+import batect.testutils.InMemoryLogSink
 import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -43,6 +45,8 @@ object ContainerStoppedEventSpec : Spek({
         val event = ContainerStoppedEvent(container)
 
         describe("being applied") {
+            val logger = Logger("test.source", InMemoryLogSink())
+
             on("when the task is not aborting") {
                 val dockerContainer = DockerContainer("container-1-container")
                 val dependency1DockerContainer = DockerContainer("dependency-container-1-container")
@@ -62,7 +66,7 @@ object ContainerStoppedEventSpec : Spek({
                     on { containersThatDependOn(dependency2) } doReturn setOf(container, dependency3)
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("queues a 'remove container' step for the container that stopped") {
                     verify(context).queueStep(RemoveContainerStep(container, dockerContainer))
@@ -81,7 +85,7 @@ object ContainerStoppedEventSpec : Spek({
                 val context = mock<TaskEventContext> {
                     on { isAborting } doReturn true
                 }
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("does not queue any further work") {
                     verify(context, never()).queueStep(any())

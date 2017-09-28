@@ -19,9 +19,10 @@ package batect.model.events
 import batect.model.steps.CreateContainerStep
 import batect.model.steps.DeleteTaskNetworkStep
 import batect.config.Container
+import batect.logging.Logger
 
 data class ContainerRemovedEvent(val container: Container) : TaskEvent() {
-    override fun apply(context: TaskEventContext) {
+    override fun apply(context: TaskEventContext, logger: Logger) {
         val containersToRemove = context.getPendingAndProcessedStepsOfType<CreateContainerStep>()
                 .mapTo(mutableSetOf()) { it.container }
 

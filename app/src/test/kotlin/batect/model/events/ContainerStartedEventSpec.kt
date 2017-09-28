@@ -26,6 +26,8 @@ import com.nhaarman.mockito_kotlin.verify
 import batect.model.steps.WaitForContainerToBecomeHealthyStep
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.logging.Logger
+import batect.testutils.InMemoryLogSink
 import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -38,6 +40,8 @@ object ContainerStartedEventSpec : Spek({
         val event = ContainerStartedEvent(container)
 
         describe("being applied") {
+            val logger = Logger("test.source", InMemoryLogSink())
+
             on("when the task is not aborting") {
                 val dockerContainer = DockerContainer("container-1-dc")
                 val otherContainer = Container("container-2", imageSourceDoesNotMatter())
@@ -50,7 +54,7 @@ object ContainerStartedEventSpec : Spek({
                     )
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("queues a 'wait for container to become healthy step'") {
                     verify(context).queueStep(WaitForContainerToBecomeHealthyStep(container, dockerContainer))
@@ -61,7 +65,7 @@ object ContainerStartedEventSpec : Spek({
                 val context = mock<TaskEventContext> {
                     on { isAborting } doReturn true
                 }
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("does not queue any further work") {
                     verify(context, never()).queueStep(any())

@@ -21,8 +21,10 @@ import batect.config.Container
 import batect.config.PullImage
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.logging.Logger
 import batect.model.steps.CreateContainerStep
 import batect.model.steps.DeleteTaskNetworkStep
+import batect.testutils.InMemoryLogSink
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.any
@@ -47,9 +49,11 @@ object TaskNetworkCreatedEventSpec : Spek({
         val image2 = DockerImage("image-2")
 
         describe("being applied") {
+            val logger = Logger("test.source", InMemoryLogSink())
+
             on("when no images have been built or pulled yet") {
                 val context = mock<TaskEventContext> { }
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("does not queue any further work") {
                     verify(context, never()).queueStep(any())
@@ -72,7 +76,7 @@ object TaskNetworkCreatedEventSpec : Spek({
                     on { allTaskContainers } doReturn setOf(containerWithImageToBuild, containerWithImageToPull)
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("queues 'create container' steps for them") {
                     verify(context).queueStep(CreateContainerStep(containerWithImageToBuild, "command-1", image1, network))
@@ -95,7 +99,7 @@ object TaskNetworkCreatedEventSpec : Spek({
                     )
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("queues a 'delete task network' step") {
                     verify(context).queueStep(DeleteTaskNetworkStep(network))

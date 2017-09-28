@@ -26,6 +26,8 @@ import batect.model.steps.StopContainerStep
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
+import batect.logging.Logger
+import batect.testutils.InMemoryLogSink
 import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -43,6 +45,7 @@ object PostTaskRunCleanupFailureEventSpec : Spek({
         describe("being applied") {
             val dockerContainer = DockerContainer("some-container-id")
             val network = DockerNetwork("some-network")
+            val logger = Logger("test.source", InMemoryLogSink())
 
             on("when the task is already aborting") {
                 val context = mock<TaskEventContext>() {
@@ -51,7 +54,7 @@ object PostTaskRunCleanupFailureEventSpec : Spek({
                     on { getPastEventsOfType<ContainerCreatedEvent>() } doReturn setOf(ContainerCreatedEvent(container, dockerContainer))
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("queues showing a message to the user") {
                     verify(context).queueStep(DisplayTaskFailureStep("""
@@ -79,7 +82,7 @@ object PostTaskRunCleanupFailureEventSpec : Spek({
                     )
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("queues showing a message to the user") {
                     verify(context).queueStep(DisplayTaskFailureStep("""

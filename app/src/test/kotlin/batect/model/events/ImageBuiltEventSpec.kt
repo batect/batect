@@ -27,6 +27,8 @@ import batect.model.steps.CreateContainerStep
 import batect.config.Container
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.logging.Logger
+import batect.testutils.InMemoryLogSink
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -39,12 +41,14 @@ object ImageBuiltEventSpec : Spek({
         val event = ImageBuiltEvent(container, image)
 
         describe("being applied") {
+            val logger = Logger("test.source", InMemoryLogSink())
+
             on("when the task network has not been created yet") {
                 val context = mock<TaskEventContext> {
                     on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn null as TaskNetworkCreatedEvent?
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("does not queue any further work") {
                     verify(context, never()).queueStep(any())
@@ -58,7 +62,7 @@ object ImageBuiltEventSpec : Spek({
                     on { commandForContainer(container) } doReturn "do-stuff"
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("queues a 'create container' step") {
                     verify(context).queueStep(CreateContainerStep(container, "do-stuff", image, network))
@@ -70,7 +74,7 @@ object ImageBuiltEventSpec : Spek({
                     on { isAborting } doReturn true
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("does not queue any further work") {
                     verify(context, never()).queueStep(any())

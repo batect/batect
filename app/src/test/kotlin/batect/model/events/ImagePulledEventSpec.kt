@@ -21,7 +21,9 @@ import batect.config.Container
 import batect.config.PullImage
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.logging.Logger
 import batect.model.steps.CreateContainerStep
+import batect.testutils.InMemoryLogSink
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doReturn
@@ -40,12 +42,14 @@ object ImagePulledEventSpec : Spek({
         val event = ImagePulledEvent(image)
 
         describe("being applied") {
+            val logger = Logger("test.source", InMemoryLogSink())
+
             on("when the task network has not been created yet") {
                 val context = mock<TaskEventContext> {
                     on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn null as TaskNetworkCreatedEvent?
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("does not queue any further work") {
                     verify(context, never()).queueStep(any())
@@ -68,7 +72,7 @@ object ImagePulledEventSpec : Spek({
                     )
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("queues a 'create container' step for each container that requires the image") {
                     verify(context).queueStep(CreateContainerStep(containerWithThisImage1, "do-stuff", image, network))
@@ -85,7 +89,7 @@ object ImagePulledEventSpec : Spek({
                     on { isAborting } doReturn true
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("does not queue any further work") {
                     verify(context, never()).queueStep(any())

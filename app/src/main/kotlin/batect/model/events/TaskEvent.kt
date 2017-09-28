@@ -16,6 +16,8 @@
 
 package batect.model.events
 
+import batect.logging.Logger
+
 abstract class TaskEvent {
-    abstract fun apply(context: TaskEventContext)
+    abstract fun apply(context: TaskEventContext, logger: Logger)
 }

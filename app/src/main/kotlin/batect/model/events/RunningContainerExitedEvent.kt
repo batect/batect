@@ -19,9 +19,10 @@ package batect.model.events
 import batect.model.steps.RemoveContainerStep
 import batect.model.steps.StopContainerStep
 import batect.config.Container
+import batect.logging.Logger
 
 data class RunningContainerExitedEvent(val container: Container, val exitCode: Int) : TaskEvent() {
-    override fun apply(context: TaskEventContext) {
+    override fun apply(context: TaskEventContext, logger: Logger) {
         if (!context.isTaskContainer(container)) {
             throw IllegalArgumentException("The container '${container.name}' is not the task container.")
         }

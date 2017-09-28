@@ -19,6 +19,8 @@ package batect.model.events
 import batect.config.BuildImage
 import batect.config.Container
 import batect.docker.DockerImageBuildProgress
+import batect.logging.Logger
+import batect.testutils.InMemoryLogSink
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verifyZeroInteractions
@@ -34,7 +36,9 @@ object ImageBuildProgressEventSpec : Spek({
 
         on("being applied") {
             val context = mock<TaskEventContext>()
-            event.apply(context)
+            val logger = Logger("test.source", InMemoryLogSink())
+
+            event.apply(context, logger)
 
             it("does not do anything") {
                 verifyZeroInteractions(context)

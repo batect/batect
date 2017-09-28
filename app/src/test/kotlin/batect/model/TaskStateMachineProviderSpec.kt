@@ -16,6 +16,7 @@
 
 package batect.model
 
+import batect.logging.LoggerFactory
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.mock
@@ -30,7 +31,8 @@ object TaskStateMachineProviderSpec : Spek({
     describe("a task state machine provider") {
         on("providing a task state machine") {
             val graph = mock<DependencyGraph>()
-            val provider = TaskStateMachineProvider()
+            val loggerFactory = mock<LoggerFactory>()
+            val provider = TaskStateMachineProvider(loggerFactory)
             val stateMachine = provider.createStateMachine(graph)
             val firstStep = stateMachine.popNextStep()
 

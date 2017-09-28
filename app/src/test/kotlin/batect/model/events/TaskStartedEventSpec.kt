@@ -26,7 +26,9 @@ import batect.model.steps.BuildImageStep
 import batect.model.steps.CreateTaskNetworkStep
 import batect.config.Container
 import batect.config.PullImage
+import batect.logging.Logger
 import batect.model.steps.PullImageStep
+import batect.testutils.InMemoryLogSink
 import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.times
 import org.jetbrains.spek.api.Spek
@@ -43,13 +45,14 @@ object TaskStartedEventSpec : Spek({
             val container2 = Container("container-2", BuildImage("/container-2-build-dir"))
             val container3 = Container("container-3", PullImage("common-image"))
             val container4 = Container("container-4", PullImage("common-image"))
+            val logger = Logger("test.source", InMemoryLogSink())
 
             val context = mock<TaskEventContext> {
                 on { allTaskContainers } doReturn setOf(container1, container2, container3, container4)
                 on { projectName } doReturn "the-project"
             }
 
-            event.apply(context)
+            event.apply(context, logger)
 
             it("queues 'build image' steps for each container in the task dependency graph that requires a image to be built") {
                 verify(context).queueStep(BuildImageStep("the-project", container1))

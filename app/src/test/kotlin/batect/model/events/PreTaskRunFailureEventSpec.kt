@@ -32,7 +32,9 @@ import batect.model.steps.WaitForContainerToBecomeHealthyStep
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
+import batect.logging.Logger
 import batect.model.steps.PullImageStep
+import batect.testutils.InMemoryLogSink
 import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -47,13 +49,15 @@ object PreTaskRunFailureEventSpec : Spek({
         }
 
         describe("being applied") {
+            val logger = Logger("test.source", InMemoryLogSink())
+
             on("when the task network has not been created yet") {
                 val context = mock<TaskEventContext> {
                     on { getPastEventsOfType<ContainerCreatedEvent>() } doReturn emptySet<ContainerCreatedEvent>()
                     on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn null as TaskNetworkCreatedEvent?
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("aborts the task") {
                     verify(context).abort()
@@ -95,7 +99,7 @@ object PreTaskRunFailureEventSpec : Spek({
                     on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("aborts the task") {
                     verify(context).abort()
@@ -145,7 +149,7 @@ object PreTaskRunFailureEventSpec : Spek({
                     on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("aborts the task") {
                     verify(context).abort()

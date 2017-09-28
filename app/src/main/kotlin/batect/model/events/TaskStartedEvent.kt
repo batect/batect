@@ -18,12 +18,13 @@ package batect.model.events
 
 import batect.config.BuildImage
 import batect.config.PullImage
+import batect.logging.Logger
 import batect.model.steps.BuildImageStep
 import batect.model.steps.CreateTaskNetworkStep
 import batect.model.steps.PullImageStep
 
 object TaskStartedEvent : TaskEvent() {
-    override fun apply(context: TaskEventContext) {
+    override fun apply(context: TaskEventContext, logger: Logger) {
         context.queueStep(CreateTaskNetworkStep)
 
         buildImages(context)

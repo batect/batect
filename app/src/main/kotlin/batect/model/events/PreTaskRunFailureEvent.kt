@@ -16,6 +16,7 @@
 
 package batect.model.events
 
+import batect.logging.Logger
 import batect.model.steps.BuildImageStep
 import batect.model.steps.CleanUpContainerStep
 import batect.model.steps.CreateContainerStep
@@ -27,7 +28,7 @@ import batect.model.steps.StartContainerStep
 import batect.model.steps.WaitForContainerToBecomeHealthyStep
 
 abstract class PreTaskRunFailureEvent() : TaskEvent() {
-    override fun apply(context: TaskEventContext) {
+    override fun apply(context: TaskEventContext, logger: Logger) {
         context.abort()
         context.removePendingStepsOfType<BuildImageStep>()
         context.removePendingStepsOfType<PullImageStep>()

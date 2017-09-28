@@ -28,6 +28,8 @@ import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.logging.Logger
+import batect.testutils.InMemoryLogSink
 import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -44,6 +46,8 @@ object ContainerCreatedEventSpec : Spek({
         val event = ContainerCreatedEvent(container, dockerContainer)
 
         describe("being applied") {
+            val logger = Logger("test.source", InMemoryLogSink())
+
             describe("when all of the container's dependencies are healthy") {
                 on("when the container is the task container") {
                     val context = mock<TaskEventContext> {
@@ -58,7 +62,7 @@ object ContainerCreatedEventSpec : Spek({
                         )
                     }
 
-                    event.apply(context)
+                    event.apply(context, logger)
 
                     it("queues a 'run container' step") {
                         verify(context).queueStep(RunContainerStep(container, dockerContainer))
@@ -78,7 +82,7 @@ object ContainerCreatedEventSpec : Spek({
                         )
                     }
 
-                    event.apply(context)
+                    event.apply(context, logger)
 
                     it("queues a 'start container' step") {
                         verify(context).queueStep(StartContainerStep(container, dockerContainer))
@@ -97,7 +101,7 @@ object ContainerCreatedEventSpec : Spek({
                     )
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("does not queue any further work") {
                     verify(context, never()).queueStep(any())
@@ -109,7 +113,7 @@ object ContainerCreatedEventSpec : Spek({
                     on { isAborting } doReturn true
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("queues a 'clean up container' step") {
                     verify(context).queueStep(CleanUpContainerStep(container, dockerContainer))

@@ -24,8 +24,10 @@ import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.logging.Logger
 import batect.model.steps.RemoveContainerStep
 import batect.model.steps.StopContainerStep
+import batect.testutils.InMemoryLogSink
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
 import org.jetbrains.spek.api.Spek
@@ -42,6 +44,8 @@ object RunningContainerExitedEventSpec : Spek({
         val event = RunningContainerExitedEvent(container, 123)
 
         describe("being applied") {
+            val logger = Logger("test.source", InMemoryLogSink())
+
             on("when the container that exited was the task container") {
                 val dockerContainer = DockerContainer("container-1-container")
                 val dependency1DockerContainer = DockerContainer("dependency-container-1-container")
@@ -57,7 +61,7 @@ object RunningContainerExitedEventSpec : Spek({
                     on { dependenciesOf(container) } doReturn setOf(dependency1, dependency2)
                 }
 
-                event.apply(context)
+                event.apply(context, logger)
 
                 it("queues a 'remove container' step for the container that exited") {
                     verify(context).queueStep(RemoveContainerStep(container, dockerContainer))
@@ -75,7 +79,7 @@ object RunningContainerExitedEventSpec : Spek({
                 }
 
                 it("throws an exception") {
-                    assertThat({ event.apply(context) }, throws<IllegalArgumentException>(withMessage("The container 'container-1' is not the task container.")))
+                    assertThat({ event.apply(context, logger) }, throws<IllegalArgumentException>(withMessage("The container 'container-1' is not the task container.")))
                 }
             }
         }

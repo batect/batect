@@ -19,9 +19,10 @@ package batect.model.events
 import batect.model.steps.CreateContainerStep
 import batect.config.Container
 import batect.docker.DockerImage
+import batect.logging.Logger
 
 data class ImageBuiltEvent(val container: Container, val image: DockerImage) : TaskEvent() {
-    override fun apply(context: TaskEventContext) {
+    override fun apply(context: TaskEventContext, logger: Logger) {
         if (context.isAborting) {
             return
         }

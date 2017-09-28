@@ -20,9 +20,10 @@ import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.logging.Logger
 
 data class ContainerBecameHealthyEvent(val container: Container) : TaskEvent() {
-    override fun apply(context: TaskEventContext) {
+    override fun apply(context: TaskEventContext, logger: Logger) {
         if (context.isAborting) {
             return
         }

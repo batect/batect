@@ -16,11 +16,11 @@
 
 package batect.model.events
 
+import batect.logging.Logger
 import batect.model.steps.FinishTaskStep
 
-// if aborting, do nothing, otherwise, finish task with exit code
 object TaskNetworkDeletedEvent : TaskEvent() {
-    override fun apply(context: TaskEventContext) {
+    override fun apply(context: TaskEventContext, logger: Logger) {
         if (context.isAborting) {
             return
         }

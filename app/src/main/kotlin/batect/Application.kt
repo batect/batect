@@ -113,7 +113,7 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance()) }
     bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance()) }
     bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider() }
-    bind<TaskExecutionOrderResolver>() with singleton { TaskExecutionOrderResolver() }
+    bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(logger) }
     bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), System.getenv(), logger) }
     bind<VersionInfo>() with singleton { VersionInfo() }
     bind<SystemInfo>() with singleton { SystemInfo(System.getProperties()) }

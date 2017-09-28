@@ -21,9 +21,17 @@ import batect.config.ContainerMap
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
+import batect.logging.Logger
+import batect.logging.Severity
+import batect.testutils.InMemoryLogSink
+import batect.testutils.hasMessage
+import batect.testutils.withAdditionalData
+import batect.testutils.withLogMessage
 import batect.testutils.withMessage
+import batect.testutils.withSeverity
 import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
+import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
@@ -34,9 +42,11 @@ import org.jetbrains.spek.api.dsl.on
 
 object TaskExecutionOrderResolverSpec : Spek({
     describe("a task execution order resolver") {
+        val logSink = InMemoryLogSink()
+        val logger = Logger("some.source", logSink)
         val taskRunConfiguration = TaskRunConfiguration("some-container")
 
-        val resolver = TaskExecutionOrderResolver()
+        val resolver = TaskExecutionOrderResolver(logger)
 
         on("resolving the execution order for a task that does not depend on any tasks") {
             val task = Task("some-task", taskRunConfiguration)
@@ -46,6 +56,14 @@ object TaskExecutionOrderResolverSpec : Spek({
 
             it("returns just that task") {
                 assertThat(executionOrder, equalTo(listOf(task)))
+            }
+
+            it("logs the execution order") {
+                assertThat(logSink, hasMessage(
+                    withSeverity(Severity.Info) and
+                        withLogMessage("Resolved task execution order.") and
+                        withAdditionalData("executionOrder", listOf(task.name))
+                ))
             }
         }
 

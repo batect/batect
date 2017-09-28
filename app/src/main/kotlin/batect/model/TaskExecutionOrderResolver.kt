@@ -18,8 +18,9 @@ package batect.model
 
 import batect.config.Configuration
 import batect.config.Task
+import batect.logging.Logger
 
-class TaskExecutionOrderResolver {
+class TaskExecutionOrderResolver(private val logger: Logger) {
     fun resolveExecutionOrder(config: Configuration, taskName: String): List<Task> {
         val task = config.tasks[taskName]
 
@@ -35,8 +36,17 @@ class TaskExecutionOrderResolver {
             val tasksThatCanBeScheduled = remainingTasksToSchedule
                 .filter { canBeScheduled(it, scheduledTasks) }
 
+            if (tasksThatCanBeScheduled.isEmpty()) {
+                throw RuntimeException("No tasks can be scheduled. (This should never happen, this should be caught earlier.)")
+            }
+
             scheduledTasks += tasksThatCanBeScheduled
             remainingTasksToSchedule -= tasksThatCanBeScheduled
+        }
+
+        logger.info {
+            message("Resolved task execution order.")
+            data("executionOrder", scheduledTasks.map { it.name })
         }
 
         return scheduledTasks

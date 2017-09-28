@@ -20,6 +20,7 @@ import batect.model.steps.RemoveContainerStep
 import batect.model.steps.StopContainerStep
 import batect.config.Container
 import batect.logging.Logger
+import batect.utils.mapToSet
 
 data class ContainerStoppedEvent(val container: Container) : TaskEvent() {
     override fun apply(context: TaskEventContext, logger: Logger) {
@@ -39,7 +40,7 @@ data class ContainerStoppedEvent(val container: Container) : TaskEvent() {
         context.queueStep(RemoveContainerStep(container, dockerContainer))
 
         val stoppedContainers = context.getPastEventsOfType<ContainerStoppedEvent>()
-                .mapTo(mutableSetOf()) { it.container }
+                .mapToSet() { it.container }
 
         context.dependenciesOf(container)
                 .filter { noContainersRunningThatDependOn(it, stoppedContainers, context) }

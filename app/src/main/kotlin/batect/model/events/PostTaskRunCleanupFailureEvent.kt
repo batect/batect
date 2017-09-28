@@ -22,6 +22,7 @@ import batect.model.steps.RemoveContainerStep
 import batect.model.steps.StopContainerStep
 import batect.config.Container
 import batect.logging.Logger
+import batect.utils.mapToSet
 
 abstract class PostTaskRunCleanupFailureEvent(open val container: Container) : TaskEvent() {
     override fun apply(context: TaskEventContext, logger: Logger) {
@@ -62,7 +63,7 @@ abstract class PostTaskRunCleanupFailureEvent(open val container: Container) : T
                 .associate { it.container to it.dockerContainer }
 
         val containersAlreadyRemoved = context.getProcessedStepsOfType<RemoveContainerStep>()
-                .mapTo(mutableSetOf()) { it.container }
+                .mapToSet() { it.container }
 
         val containersLeftToRemove = containersCreated - containersAlreadyRemoved
 

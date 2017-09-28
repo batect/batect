@@ -22,6 +22,7 @@ import batect.model.events.TaskEvent
 import batect.model.events.TaskEventContext
 import batect.model.events.TaskEventSink
 import batect.model.steps.TaskStep
+import batect.utils.mapToSet
 import java.util.LinkedList
 import java.util.Queue
 import java.util.concurrent.locks.ReentrantLock
@@ -106,7 +107,7 @@ class TaskStateMachine(private val graph: DependencyGraph, private val loggerFac
     override fun isTaskContainer(container: Container) = container == graph.taskContainerNode.container
     override fun dependenciesOf(container: Container) = graph.nodeFor(container).dependsOnContainers
     override fun containersThatDependOn(container: Container) = graph.nodeFor(container).dependedOnByContainers
-    override val allTaskContainers: Set<Container> by lazy { graph.allNodes.mapTo(mutableSetOf()) { it.container } }
+    override val allTaskContainers: Set<Container> by lazy { graph.allNodes.mapToSet() { it.container } }
 
     override var isAborting: Boolean = false
         private set

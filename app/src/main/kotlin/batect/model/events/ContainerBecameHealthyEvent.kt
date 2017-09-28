@@ -21,6 +21,7 @@ import batect.model.steps.StartContainerStep
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.logging.Logger
+import batect.utils.mapToSet
 
 data class ContainerBecameHealthyEvent(val container: Container) : TaskEvent() {
     override fun apply(context: TaskEventContext, logger: Logger) {
@@ -35,7 +36,7 @@ data class ContainerBecameHealthyEvent(val container: Container) : TaskEvent() {
 
         val containersThatDependOnThisContainer = context.containersThatDependOn(container)
         val healthyContainers = context.getPastEventsOfType<ContainerBecameHealthyEvent>()
-                .mapTo(mutableSetOf()) { it.container }
+                .mapToSet() { it.container }
 
         containersThatDependOnThisContainer
                 .filter { dependenciesAreHealthy(it, healthyContainers, context) }

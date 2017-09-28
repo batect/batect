@@ -18,7 +18,24 @@ package batect.model
 
 import batect.config.Configuration
 import batect.config.Task
+import batect.logging.Logger
+import batect.utils.mapToSet
 
-class DependencyGraphProvider {
-    fun createGraph(config: Configuration, task: Task) = DependencyGraph(config, task)
+class DependencyGraphProvider(private val logger: Logger) {
+    fun createGraph(config: Configuration, task: Task): DependencyGraph {
+        val graph = DependencyGraph(config, task)
+
+        logger.info {
+            val dependenciesList = graph.allNodes
+                .associate { it.container.name to dependencyNames(it) }
+
+            message("Dependency graph for task created.")
+            data("task", task)
+            data("dependencies", dependenciesList)
+        }
+
+        return graph
+    }
+
+    private fun dependencyNames(node: DependencyGraphNode): Set<String> = node.dependsOnContainers.mapToSet { it.name }
 }

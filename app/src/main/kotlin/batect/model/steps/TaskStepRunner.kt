@@ -29,6 +29,7 @@ import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.NetworkCreationFailedException
 import batect.docker.NetworkDeletionFailedException
+import batect.logging.Logger
 import batect.model.events.ContainerBecameHealthyEvent
 import batect.model.events.ContainerCreatedEvent
 import batect.model.events.ContainerCreationFailedEvent
@@ -52,8 +53,13 @@ import batect.model.events.TaskNetworkDeletedEvent
 import batect.model.events.TaskNetworkDeletionFailedEvent
 import batect.model.events.TaskStartedEvent
 
-class TaskStepRunner(private val dockerClient: DockerClient) {
+class TaskStepRunner(private val dockerClient: DockerClient, private val logger: Logger) {
     fun run(step: TaskStep, eventSink: TaskEventSink) {
+        logger.info {
+            message("Running step.")
+            data("step", step.toString())
+        }
+
         when (step) {
             is BeginTaskStep -> eventSink.postEvent(TaskStartedEvent)
             is BuildImageStep -> handleBuildImageStep(step, eventSink)
@@ -69,6 +75,11 @@ class TaskStepRunner(private val dockerClient: DockerClient) {
             is DeleteTaskNetworkStep -> handleDeleteTaskNetworkStep(step, eventSink)
             is DisplayTaskFailureStep -> ignore()
             is FinishTaskStep -> ignore()
+        }
+
+        logger.info {
+            message("Step completed.")
+            data("step", step.toString())
         }
     }
 

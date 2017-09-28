@@ -17,14 +17,6 @@
 package batect.model.steps
 
 import batect.config.BuildImage
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.doThrow
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.never
-import com.nhaarman.mockito_kotlin.reset
-import com.nhaarman.mockito_kotlin.verify
-import com.nhaarman.mockito_kotlin.whenever
 import batect.config.Container
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerDoesNotExistException
@@ -43,6 +35,8 @@ import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.NetworkCreationFailedException
 import batect.docker.NetworkDeletionFailedException
+import batect.logging.Logger
+import batect.logging.Severity
 import batect.model.events.ContainerBecameHealthyEvent
 import batect.model.events.ContainerCreatedEvent
 import batect.model.events.ContainerCreationFailedEvent
@@ -65,8 +59,23 @@ import batect.model.events.TaskNetworkCreationFailedEvent
 import batect.model.events.TaskNetworkDeletedEvent
 import batect.model.events.TaskNetworkDeletionFailedEvent
 import batect.model.events.TaskStartedEvent
+import batect.testutils.InMemoryLogSink
+import batect.testutils.hasMessage
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.withAdditionalData
+import batect.testutils.withLogMessage
+import batect.testutils.withSeverity
+import com.natpryce.hamkrest.and
+import com.natpryce.hamkrest.assertion.assertThat
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.doThrow
 import com.nhaarman.mockito_kotlin.eq
+import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.never
+import com.nhaarman.mockito_kotlin.reset
+import com.nhaarman.mockito_kotlin.verify
+import com.nhaarman.mockito_kotlin.whenever
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -76,7 +85,9 @@ object TaskStepRunnerSpec : Spek({
     describe("a task step runner") {
         val eventSink = mock<TaskEventSink>()
         val dockerClient = mock<DockerClient>()
-        val runner = TaskStepRunner(dockerClient)
+        val logSink = InMemoryLogSink()
+        val logger = Logger("some.source", logSink)
+        val runner = TaskStepRunner(dockerClient, logger)
 
         beforeEachTest {
             reset(eventSink)
@@ -84,6 +95,28 @@ object TaskStepRunnerSpec : Spek({
         }
 
         describe("running steps") {
+            on("running any step") {
+                val step = mock<TaskStep> {
+                    on { toString() } doReturn "The step description"
+                }
+
+                runner.run(step, eventSink)
+
+                it("logs that the step is starting") {
+                    assertThat(logSink, hasMessage(
+                        withSeverity(Severity.Info) and
+                            withLogMessage("Running step.") and
+                            withAdditionalData("step", "The step description")))
+                }
+
+                it("logs that the step has finished") {
+                    assertThat(logSink, hasMessage(
+                        withSeverity(Severity.Info) and
+                            withLogMessage("Step completed.") and
+                            withAdditionalData("step", "The step description")))
+                }
+            }
+
             on("running a 'begin task' step") {
                 val step = BeginTaskStep
                 runner.run(step, eventSink)

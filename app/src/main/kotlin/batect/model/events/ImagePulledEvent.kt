@@ -26,6 +26,11 @@ import batect.model.steps.CreateContainerStep
 data class ImagePulledEvent(val image: DockerImage) : TaskEvent() {
     override fun apply(context: TaskEventContext, logger: Logger) {
         if (context.isAborting) {
+            logger.info {
+                message("Task is aborting, not queuing any further work.")
+                data("event", this@ImagePulledEvent.toString())
+            }
+
             return
         }
 
@@ -35,6 +40,11 @@ data class ImagePulledEvent(val image: DockerImage) : TaskEvent() {
             context.allTaskContainers
                 .filter { it.imageSource == PullImage(image.id) }
                 .forEach { createContainer(it, networkCreationEvent.network, context) }
+        } else {
+            logger.info {
+                message("Task network hasn't been created yet, not queuing create container step.")
+                data("event", this@ImagePulledEvent.toString())
+            }
         }
     }
 

@@ -43,11 +43,27 @@ abstract class PreTaskRunFailureEvent() : TaskEvent() {
         val networkCreationEvent = context.getSinglePastEventOfType<TaskNetworkCreatedEvent>()
 
         if (containerCreationEvents.isNotEmpty()) {
+            logger.info {
+                message("Need to clean up some containers that have already been created.")
+                data("containers", containerCreationEvents.map { it.container.name })
+                data("event", this@PreTaskRunFailureEvent.toString())
+            }
+
             containerCreationEvents.forEach {
                 context.queueStep(CleanUpContainerStep(it.container, it.dockerContainer))
             }
         } else if (networkCreationEvent != null) {
+            logger.info {
+                message("No containers have been created yet, but do need to remove network.")
+                data("event", this@PreTaskRunFailureEvent.toString())
+            }
+
             context.queueStep(DeleteTaskNetworkStep(networkCreationEvent.network))
+        } else {
+            logger.info {
+                message("Neither the network nor any containers have been created yet, no clean up required.")
+                data("event", this@PreTaskRunFailureEvent.toString())
+            }
         }
     }
 

@@ -24,6 +24,11 @@ import batect.logging.Logger
 data class ImageBuiltEvent(val container: Container, val image: DockerImage) : TaskEvent() {
     override fun apply(context: TaskEventContext, logger: Logger) {
         if (context.isAborting) {
+            logger.info {
+                message("Task is aborting, not queuing any further work.")
+                data("event", this@ImageBuiltEvent.toString())
+            }
+
             return
         }
 
@@ -32,6 +37,11 @@ data class ImageBuiltEvent(val container: Container, val image: DockerImage) : T
         if (networkCreationEvent != null) {
             val command = context.commandForContainer(container)
             context.queueStep(CreateContainerStep(container, command, image, networkCreationEvent.network))
+        } else {
+            logger.info {
+                message("Task network hasn't been created yet, not queuing create container step.")
+                data("event", this@ImageBuiltEvent.toString())
+            }
         }
     }
 

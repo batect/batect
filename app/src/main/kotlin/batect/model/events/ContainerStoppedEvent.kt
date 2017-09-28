@@ -24,6 +24,11 @@ import batect.logging.Logger
 data class ContainerStoppedEvent(val container: Container) : TaskEvent() {
     override fun apply(context: TaskEventContext, logger: Logger) {
         if (context.isAborting) {
+            logger.info {
+                message("Task is aborting, not queuing any further work.")
+                data("event", this@ContainerStoppedEvent.toString())
+            }
+
             return
         }
 

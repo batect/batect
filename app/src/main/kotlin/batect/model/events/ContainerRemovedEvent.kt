@@ -35,9 +35,22 @@ data class ContainerRemovedEvent(val container: Container) : TaskEvent() {
         val containersEffectivelyRemoved = containersRemoved + containersThatFailedToBeCreated
 
         if (containersEffectivelyRemoved.containsAll(containersToRemove)) {
+            logger.info {
+                message("All containers that need to be removed have been removed, deleting network.")
+                data("event", this@ContainerRemovedEvent.toString())
+            }
+
             val network = context.getSinglePastEventOfType<TaskNetworkCreatedEvent>()!!.network
 
             context.queueStep(DeleteTaskNetworkStep(network))
+        } else {
+            logger.debug {
+                message("Not deleting network yet, some containers still need to be removed.")
+                data("event", this@ContainerRemovedEvent.toString())
+                data("containersToRemove", containersToRemove.map { it.name })
+                data("containersRemoved", containersRemoved.map { it.name })
+                data("containersThatFailedToBeCreated", containersThatFailedToBeCreated.map { it.name })
+            }
         }
     }
 

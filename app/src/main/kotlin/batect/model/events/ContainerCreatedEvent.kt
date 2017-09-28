@@ -26,6 +26,11 @@ import batect.logging.Logger
 data class ContainerCreatedEvent(val container: Container, val dockerContainer: DockerContainer) : TaskEvent() {
     override fun apply(context: TaskEventContext, logger: Logger) {
         if (context.isAborting) {
+            logger.info {
+                message("Task is aborting, queuing clean up of container that was just created.")
+                data("event", this@ContainerCreatedEvent.toString())
+            }
+
             context.queueStep(CleanUpContainerStep(container, dockerContainer))
             return
         }

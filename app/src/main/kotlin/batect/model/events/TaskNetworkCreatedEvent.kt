@@ -27,6 +27,11 @@ import batect.model.steps.DeleteTaskNetworkStep
 data class TaskNetworkCreatedEvent(val network: DockerNetwork) : TaskEvent() {
     override fun apply(context: TaskEventContext, logger: Logger) {
         if (context.isAborting) {
+            logger.info {
+                message("Task is aborting, deleting network that was just created.")
+                data("event", this@TaskNetworkCreatedEvent.toString())
+            }
+
             context.queueStep(DeleteTaskNetworkStep(network))
             return
         }

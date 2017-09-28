@@ -100,7 +100,7 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<TaskRunner>() with singleton { TaskRunner(instance(), instance(), instance(), instance()) }
     bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), logger) }
     bind<DockerImageLabellingStrategy>() with singleton { DockerImageLabellingStrategy() }
-    bind<ProcessRunner>() with singleton { ProcessRunner() }
+    bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }
     bind<DockerContainerCreationCommandGenerator>() with singleton { DockerContainerCreationCommandGenerator() }
     bind<EventLoggerProvider>() with singleton { EventLoggerProvider(instance(PrintStreamType.Output), instance(PrintStreamType.Error), instance(), instance()) }
     bind<Console>(PrintStreamType.Output) with singleton { Console(instance(PrintStreamType.Output)) }

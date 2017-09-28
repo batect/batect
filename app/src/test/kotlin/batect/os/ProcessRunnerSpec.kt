@@ -16,6 +16,15 @@
 
 package batect.os
 
+import batect.logging.Logger
+import batect.logging.Severity
+import batect.testutils.CreateForEachTest
+import batect.testutils.InMemoryLogSink
+import batect.testutils.hasMessage
+import batect.testutils.withAdditionalData
+import batect.testutils.withLogMessage
+import batect.testutils.withSeverity
+import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
@@ -26,24 +35,39 @@ import java.io.File
 
 object ProcessRunnerSpec : Spek({
     describe("a process runner") {
-        val runner = ProcessRunner()
+        val logSink by CreateForEachTest(this) { InMemoryLogSink() }
+        val logger by CreateForEachTest(this) { Logger("some.source", logSink) }
+        val runner by CreateForEachTest(this) { ProcessRunner(logger) }
 
         on("running a process") {
+            val filePath = File.createTempFile("processrunner", ".tmp")
+            filePath.deleteOnExit()
+
+            val command = listOf("sh", "-c", "rm '${filePath.absoluteFile}' && exit 123")
+            val exitCode = runner.run(command)
+
             it("executes the command given") {
-                val filePath = File.createTempFile("processrunner", ".tmp")
-                filePath.deleteOnExit()
-
-                val command = listOf("rm", filePath.absolutePath)
-                runner.run(command)
-
                 assertThat(filePath.exists(), equalTo(false))
             }
 
             it("returns the exit code of the command") {
-                val command = listOf("sh", "-c", "exit 123")
-                val exitCode = runner.run(command)
-
                 assertThat(exitCode, equalTo(123))
+            }
+
+            it("logs before running the command") {
+                assertThat(logSink, hasMessage(
+                    withSeverity(Severity.Debug) and
+                        withLogMessage("Starting process.") and
+                        withAdditionalData("command", command)))
+            }
+
+            it("logs the result of running the command") {
+                assertThat(logSink, hasMessage(
+                    withSeverity(Severity.Debug) and
+                        withLogMessage("Process exited.") and
+                        withAdditionalData("command", command) and
+                        withAdditionalData("exitCode", 123)
+                ))
             }
         }
 
@@ -57,6 +81,22 @@ object ProcessRunnerSpec : Spek({
 
             it("returns the combined standard output and standard error of the command") {
                 assertThat(result.output, equalTo("hello world\nhello error world\nmore non-error output\n"))
+            }
+
+            it("logs before running the command") {
+                assertThat(logSink, hasMessage(
+                    withSeverity(Severity.Debug) and
+                        withLogMessage("Starting process.") and
+                        withAdditionalData("command", command)))
+            }
+
+            it("logs the result of running the command") {
+                assertThat(logSink, hasMessage(
+                    withSeverity(Severity.Debug) and
+                        withLogMessage("Process exited.") and
+                        withAdditionalData("command", command) and
+                        withAdditionalData("exitCode", 201)
+                ))
             }
         }
 
@@ -76,6 +116,22 @@ object ProcessRunnerSpec : Spek({
 
                 it("returns the exit code of the process") {
                     assertThat(result, equalTo(Exited<Any>(123) as RunAndProcessOutputResult<Any>))
+                }
+
+                it("logs before running the command") {
+                    assertThat(logSink, hasMessage(
+                        withSeverity(Severity.Debug) and
+                            withLogMessage("Starting process.") and
+                            withAdditionalData("command", command)))
+                }
+
+                it("logs the result of running the command") {
+                    assertThat(logSink, hasMessage(
+                        withSeverity(Severity.Debug) and
+                            withLogMessage("Process exited normally.") and
+                            withAdditionalData("command", command) and
+                            withAdditionalData("exitCode", 123)
+                    ))
                 }
             }
 
@@ -109,10 +165,25 @@ object ProcessRunnerSpec : Spek({
                     Thread.sleep(200)
                     assertThat(tempFile.length(), equalTo(0L))
                 }
+
+                it("logs before running the command") {
+                    assertThat(logSink, hasMessage(
+                        withSeverity(Severity.Debug) and
+                            withLogMessage("Starting process.") and
+                            withAdditionalData("command", command)))
+                }
+
+                it("logs the result of running the command") {
+                    assertThat(logSink, hasMessage(
+                        withSeverity(Severity.Debug) and
+                            withLogMessage("Terminated process early after being requested to do so by application.") and
+                            withAdditionalData("command", command)
+                    ))
+                }
             }
         }
 
-        describe("running a process and streaming the output") {
+        on("running a process and streaming the output") {
             val command = listOf("sh", "-c", "echo line1 && echo line2 1>&2 && echo line3 && exit 123")
             val linesProcessed = mutableListOf<String>()
 
@@ -130,6 +201,22 @@ object ProcessRunnerSpec : Spek({
 
             it("returns the combined stdout and stderr of the command") {
                 assertThat(result.output, equalTo("line1\nline2\nline3\n"))
+            }
+
+            it("logs before running the command") {
+                assertThat(logSink, hasMessage(
+                    withSeverity(Severity.Debug) and
+                        withLogMessage("Starting process.") and
+                        withAdditionalData("command", command)))
+            }
+
+            it("logs the result of running the command") {
+                assertThat(logSink, hasMessage(
+                    withSeverity(Severity.Debug) and
+                        withLogMessage("Process exited.") and
+                        withAdditionalData("command", command) and
+                        withAdditionalData("exitCode", 123)
+                ))
             }
         }
     }

@@ -16,10 +16,11 @@
 
 package batect.os
 
+import batect.logging.Logger
 import java.io.InputStreamReader
 
-class ProcessRunner {
-    // NOTESTS
+class ProcessRunner(private val logger: Logger) {
+    // NOTESTS (for input / output redirection)
     // The Docker CLI behaves differently if stdin, stdout or stderr are redirected.
     // For example, the fancy progress display while pulling an image is disabled if it detects that
     // stdout is redirected.
@@ -29,14 +30,34 @@ class ProcessRunner {
     // that that method wouldn't work.
     // I can't find a nice way to test this. Once we move to using the Docker API directly,
     // this whole method becomes unnecessary anyway, so I'm not too concerned about this.
-    fun run(command: Iterable<String>): Int = ProcessBuilder(command.toList())
+    fun run(command: Iterable<String>): Int {
+        logger.debug {
+            message("Starting process.")
+            data("command", command)
+        }
+
+        val exitCode = ProcessBuilder(command.toList())
             .redirectOutput(ProcessBuilder.Redirect.INHERIT)
             .redirectInput(ProcessBuilder.Redirect.INHERIT)
             .redirectError(ProcessBuilder.Redirect.INHERIT)
             .start()
             .waitFor()
 
+        logger.debug {
+            message("Process exited.")
+            data("command", command)
+            data("exitCode", exitCode)
+        }
+
+        return exitCode
+    }
+
     fun runAndCaptureOutput(command: Iterable<String>): ProcessOutput {
+        logger.debug {
+            message("Starting process.")
+            data("command", command)
+        }
+
         val process = ProcessBuilder(command.toList())
                 .redirectErrorStream(true)
                 .redirectInput(ProcessBuilder.Redirect.INHERIT)
@@ -45,10 +66,21 @@ class ProcessRunner {
         val exitCode = process.waitFor()
         val output = InputStreamReader(process.inputStream).readText()
 
+        logger.debug {
+            message("Process exited.")
+            data("command", command)
+            data("exitCode", exitCode)
+        }
+
         return ProcessOutput(exitCode, output)
     }
 
     fun <T> runAndProcessOutput(command: Iterable<String>, outputProcessor: (String) -> OutputProcessing<T>): RunAndProcessOutputResult<T> {
+        logger.debug {
+            message("Starting process.")
+            data("command", command)
+        }
+
         val process = ProcessBuilder(command.toList())
                 .redirectErrorStream(true)
                 .start()
@@ -62,12 +94,25 @@ class ProcessRunner {
 
                     if (result is KillProcess) {
                         process.destroy()
+
+                        logger.debug {
+                            message("Terminated process early after being requested to do so by application.")
+                            data("command", command)
+                        }
+
                         return KilledDuringProcessing(result.result)
                     }
                 }
             }
 
             val exitCode = process.waitFor()
+
+            logger.debug {
+                message("Process exited normally.")
+                data("command", command)
+                data("exitCode", exitCode)
+            }
+
             return Exited(exitCode)
         } finally {
             process.destroyForcibly()
@@ -75,6 +120,11 @@ class ProcessRunner {
     }
 
     fun runAndStreamOutput(command: Iterable<String>, outputProcessor: (String) -> Unit): ProcessOutput {
+        logger.debug {
+            message("Starting process.")
+            data("command", command)
+        }
+
         val process = ProcessBuilder(command.toList())
             .redirectErrorStream(true)
             .start()
@@ -91,6 +141,13 @@ class ProcessRunner {
             }
 
             val exitCode = process.waitFor()
+
+            logger.debug {
+                message("Process exited.")
+                data("command", command)
+                data("exitCode", exitCode)
+            }
+
             return ProcessOutput(exitCode, output.toString())
         } finally {
             process.destroyForcibly()

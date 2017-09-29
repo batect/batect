@@ -19,7 +19,7 @@ package batect.cli.options
 abstract class OptionDefinition(val longName: String,
                                 val description: String,
                                 val shortName: Char? = null) {
-    private var valueHasBeenSet: Boolean = false
+    private var alreadySeen: Boolean = false
 
     val longOption = "--$longName"
     val shortOption = if (shortName != null) "-$shortName" else null
@@ -51,7 +51,7 @@ abstract class OptionDefinition(val longName: String,
             throw IllegalArgumentException("List of arguments cannot be empty.")
         }
 
-        if (valueHasBeenSet) {
+        if (alreadySeen) {
             return specifiedMultipleTimesError()
         }
 
@@ -62,27 +62,9 @@ abstract class OptionDefinition(val longName: String,
             throw IllegalArgumentException("Next argument in list of arguments is not for this option.")
         }
 
-        val useNextArgumentForValue = !arg.contains("=")
-        val argValue = if (useNextArgumentForValue) {
-            if (args.count() == 1) return OptionParsingResult.InvalidOption("Option '$arg' requires a value to be provided, either in the form '$argName=<value>' or '$argName <value>'.")
-            args.elementAt(1)
-        } else {
-            val value = arg.drop(2).substringAfter("=", "")
-            if (value == "") return OptionParsingResult.InvalidOption("Option '$arg' is in an invalid format, you must provide a value after '='.")
-            value
-        }
+        alreadySeen = true
 
-        valueHasBeenSet = true
-        val applicationResult = applyValue(argValue)
-
-        return when (applicationResult) {
-            is InvalidValue -> OptionParsingResult.InvalidOption("The value '$argValue' for option '$arg' is invalid: ${applicationResult.message}")
-            is ValidValue -> if (useNextArgumentForValue) {
-                OptionParsingResult.ReadOption(2)
-            } else {
-                OptionParsingResult.ReadOption(1)
-            }
-        }
+        return parseValue(args)
     }
 
     private fun specifiedMultipleTimesError(): OptionParsingResult {
@@ -94,11 +76,7 @@ abstract class OptionDefinition(val longName: String,
         return nameFromArgument == longOption || nameFromArgument == shortOption
     }
 
-    internal abstract fun applyValue(newValue: String): ValueApplicationResult
+    internal abstract fun parseValue(args: Iterable<String>): OptionParsingResult
 
     open val descriptionForHelp: String = description
 }
-
-sealed class ValueApplicationResult
-data class InvalidValue(val message: String) : ValueApplicationResult()
-object ValidValue : ValueApplicationResult()

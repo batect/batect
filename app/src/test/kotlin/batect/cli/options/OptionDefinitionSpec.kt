@@ -32,7 +32,7 @@ object OptionDefinitionSpec : Spek({
     describe("a option definition") {
         fun createOption(longName: String, description: String, shortName: Char? = null): OptionDefinition {
             return object : OptionDefinition(longName, description, shortName) {
-                override fun applyValue(newValue: String) = throw NotImplementedError()
+                override fun parseValue(args: Iterable<String>): OptionParsingResult = throw NotImplementedError()
             }
         }
 
@@ -96,16 +96,7 @@ object OptionDefinitionSpec : Spek({
             class TestOptionDefinition(name: String,
                                        description: String,
                                        shortName: Char? = null) : OptionDefinition(name, description, shortName) {
-                var lastAppliedValue: String? = null
-
-                override fun applyValue(newValue: String): ValueApplicationResult {
-                    lastAppliedValue = newValue
-
-                    return when (newValue) {
-                        "thing" -> ValidValue
-                        else -> InvalidValue("that's not allowed")
-                    }
-                }
+                override fun parseValue(args: Iterable<String>): OptionParsingResult = OptionParsingResult.ReadOption(1234)
             }
 
             given("an option with short and long names") {
@@ -123,63 +114,21 @@ object OptionDefinitionSpec : Spek({
                     }
                 }
 
-                listOf("--value", "-v").forEach { format ->
-                    on("parsing a list of arguments where the option is specified in the form '$format thing'") {
-                        val result = option.parse(listOf(format, "thing", "do-stuff"))
-
-                        it("indicates that parsing succeeded and that two arguments were consumed") {
-                            assertThat(result, equalTo<OptionParsingResult>(OptionParsingResult.ReadOption(2)))
-                        }
-
-                        it("sets the option's value") {
-                            assertThat(option.lastAppliedValue, equalTo("thing"))
-                        }
-                    }
-
-                    on("parsing a list of arguments where the option is specified in the form '$format=thing'") {
-                        val result = option.parse(listOf("$format=thing", "do-stuff"))
-
-                        it("indicates that parsing succeeded and that one argument was consumed") {
-                            assertThat(result, equalTo<OptionParsingResult>(OptionParsingResult.ReadOption(1)))
-                        }
-
-                        it("sets the option's value") {
-                            assertThat(option.lastAppliedValue, equalTo("thing"))
-                        }
-                    }
-
-                    on("parsing a list of arguments where the option is specified in a valid form but the value is not valid") {
-                        val result = option.parse(listOf(format, "invalid-thing", "do-stuff"))
-
-                        it("indicates that parsing failed") {
-                            assertThat(result, equalTo<OptionParsingResult>(OptionParsingResult.InvalidOption("The value 'invalid-thing' for option '$format' is invalid: that's not allowed")))
-                        }
-                    }
-
-                    on("parsing a list of arguments where the option is given in the form '$format=thing' but no value is provided after the equals sign") {
-                        val result = option.parse(listOf("$format=", "do-stuff"))
-
-                        it("indicates that parsing failed") {
-                            assertThat(result, equalTo<OptionParsingResult>(OptionParsingResult.InvalidOption("Option '$format=' is in an invalid format, you must provide a value after '='.")))
-                        }
-                    }
-
-                    on("parsing a list of arguments where the option is given in the form '$format thing' but no second argument is provided") {
-                        val result = option.parse(listOf(format))
-
-                        it("indicates that parsing failed") {
-                            assertThat(result, equalTo<OptionParsingResult>(OptionParsingResult.InvalidOption("Option '$format' requires a value to be provided, either in the form '$format=<value>' or '$format <value>'.")))
+                setOf("--value", "-v").forEach { format ->
+                    on("parsing a list of arguments that has the correct option name in the format $format") {
+                        it("returns the parsing result from the concrete implementation") {
+                            assertThat(option.parse(listOf(format, "something")), equalTo<OptionParsingResult>(OptionParsingResult.ReadOption(1234)))
                         }
                     }
                 }
 
                 setOf(
-                        Pair(listOf("--value=thing"), listOf("--value=other-thing")),
-                        Pair(listOf("-v=thing"), listOf("--value=other-thing")),
-                        Pair(listOf("--value=thing"), listOf("-v=other-thing")),
-                        Pair(listOf("-v=thing"), listOf("-v=other-thing")),
-                        Pair(listOf("--value=thing"), listOf("--value", "other-thing")),
-                        Pair(listOf("--value", "thing"), listOf("--value=other-thing"))
+                    Pair(listOf("--value=thing"), listOf("--value=other-thing")),
+                    Pair(listOf("-v=thing"), listOf("--value=other-thing")),
+                    Pair(listOf("--value=thing"), listOf("-v=other-thing")),
+                    Pair(listOf("-v=thing"), listOf("-v=other-thing")),
+                    Pair(listOf("--value=thing"), listOf("--value", "other-thing")),
+                    Pair(listOf("--value", "thing"), listOf("--value=other-thing"))
                 ).forEach { (first, second) ->
                     on("parsing a list of arguments where the option is valid but given twice in the form ${first + second}") {
                         option.parse(first + second + "do-stuff")

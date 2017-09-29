@@ -21,25 +21,44 @@ import kotlin.reflect.KProperty
 
 // Why the two generic parameters here?
 // StorageType defines how the value is stored - for example, for a String value with a null default, StorageType would be String?.
-// ValueType defines what type user-provided values should be - for example, String.
+// ValueType defines what type user-provided values should be converted to - for example, String.
 // This allows us to provide type safety but also differentiate between 'not provided' (null) and 'provided' where needed.
 class ValueOption<StorageType, ValueType : StorageType>(name: String,
                                                         description: String,
                                                         val defaultValueProvider: DefaultValueProvider<StorageType>,
                                                         val valueConverter: (String) -> ValueConversionResult<ValueType>,
-                                                        shortName: Char? = null) :
-        OptionDefinition(name, description, shortName), ReadOnlyProperty<OptionParserContainer, StorageType> {
+                                                        shortName: Char? = null
+) : OptionDefinition(name, description, shortName), ReadOnlyProperty<OptionParserContainer, StorageType> {
+
     var value: StorageType = defaultValueProvider.value
 
-    override fun applyValue(newValue: String): ValueApplicationResult {
-        val conversionResult = valueConverter(newValue)
+    override fun parseValue(args: Iterable<String>): OptionParsingResult {
+        val arg = args.first()
+        val argName = arg.substringBefore("=")
+
+        val useNextArgumentForValue = !arg.contains("=")
+        val argValue = if (useNextArgumentForValue) {
+            if (args.count() == 1) return OptionParsingResult.InvalidOption("Option '$arg' requires a value to be provided, either in the form '$argName=<value>' or '$argName <value>'.")
+            args.elementAt(1)
+        } else {
+            val value = arg.drop(2).substringAfter("=", "")
+            if (value == "") return OptionParsingResult.InvalidOption("Option '$arg' is in an invalid format, you must provide a value after '='.")
+            value
+        }
+
+        val conversionResult = valueConverter(argValue)
 
         return when (conversionResult) {
+            is ConversionFailed -> OptionParsingResult.InvalidOption("The value '$argValue' for option '$arg' is invalid: ${conversionResult.message}")
             is ConversionSucceeded -> {
                 value = conversionResult.value
-                ValidValue
+
+                if (useNextArgumentForValue) {
+                    OptionParsingResult.ReadOption(2)
+                } else {
+                    OptionParsingResult.ReadOption(1)
+                }
             }
-            is ConversionFailed -> InvalidValue(conversionResult.message)
         }
     }
 

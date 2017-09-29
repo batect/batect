@@ -18,7 +18,7 @@ package batect.cli.commands
 
 import batect.cli.CommandLineParser
 import batect.cli.options.OptionDefinition
-import batect.cli.options.ValueApplicationResult
+import batect.cli.options.OptionParsingResult
 import batect.cli.testutils.NullCommand
 import com.github.salomonbrys.kodein.Kodein
 import com.natpryce.hamkrest.assertion.assertThat
@@ -43,11 +43,11 @@ object HelpCommandSpec : Spek({
         }
 
         fun createOption(longName: String, description: String, shortName: Char? = null): OptionDefinition =
-                object : OptionDefinition(longName, description, shortName) {
-                    override fun applyValue(newValue: String): ValueApplicationResult = throw NotImplementedError()
-                    override val descriptionForHelp: String
-                        get() = description + " (extra help info)"
-                }
+            object : OptionDefinition(longName, description, shortName) {
+                override fun parseValue(args: Iterable<String>): OptionParsingResult = throw NotImplementedError()
+                override val descriptionForHelp: String
+                    get() = description + " (extra help info)"
+            }
 
         given("no command name to show help for") {
             given("and the root parser has no common options") {
@@ -92,10 +92,10 @@ object HelpCommandSpec : Spek({
                     on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
                     on { getAllCommandDefinitions() } doReturn setOf(firstCommandDefinition, secondCommandDefinition)
                     on { getCommonOptions() } doReturn setOf<OptionDefinition>(
-                            createOption("awesomeness-level", "Level of awesomeness to use."),
-                            createOption("booster-level", "Level of boosters to use."),
-                            createOption("file", "File name to use.", 'f'),
-                            createOption("sensible-default", "Something you can override if you want.")
+                        createOption("awesomeness-level", "Level of awesomeness to use."),
+                        createOption("booster-level", "Level of boosters to use."),
+                        createOption("file", "File name to use.", 'f'),
+                        createOption("sensible-default", "Something you can override if you want.")
                     )
                 }
 

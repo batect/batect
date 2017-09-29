@@ -19,7 +19,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * some way to propagate environment variables from host environment to target environment
 * some way to add additional environment variables at the task level (for the target container only, not dependencies)
 * flag (eg. `--quiet`) to only show output from task
-* flag (eg. `--no-colors`) to disable coloured and bold output (implies `--simple-output`) from batect (task process can still do whatever it wants)
 * automatically enable `--no-colours` or `--simple-output` if console doesn't support it (use terminfo database rather than current detection system)
 * fancy progress bar output for building images and starting dependencies
   * make sure accidental input on stdin doesn't mangle it

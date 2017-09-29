@@ -31,7 +31,8 @@ import java.nio.file.FileSystem
 class BatectCommandLineParser(kodein: Kodein) : CommandLineParser(kodein, "batect", "For documentation and further information on batect, visit https://github.com/charleskorn/batect.") {
     val configurationFileName: String by valueOption("config-file", "The configuration file to use.", "batect.yml", 'f')
     val logFileName: String? by valueOption("log-file", "Write internal batect logs to file.")
-    val forceSimpleOutputMode: Boolean by flagOption("simple-output", "Force simple output (eg. no updating text). Automatically enabled if your console is detected to not support these features.")
+    val forceSimpleOutputMode: Boolean by flagOption("simple-output", "Force simple output (eg. no updating text) from batect. Automatically enabled if your console is detected to not support these features. Does not affect task command output.")
+    val disableColorOutput: Boolean by flagOption("no-colors", "Disable colored output from batect. Does not affect task command output. (implies --simple-output)")
 
     init {
         addCommandDefinition(RunTaskCommandDefinition())
@@ -42,7 +43,8 @@ class BatectCommandLineParser(kodein: Kodein) : CommandLineParser(kodein, "batec
     override fun createBindings(): Kodein.Module {
         return Kodein.Module {
             bind<String>(CommonOptions.ConfigurationFileName) with instance(configurationFileName)
-            bind<Boolean>(CommonOptions.ForceSimpleOutputMode) with instance(forceSimpleOutputMode)
+            bind<Boolean>(CommonOptions.ForceSimpleOutputMode) with instance(forceSimpleOutputMode || disableColorOutput)
+            bind<Boolean>(CommonOptions.DisableColorOutput) with instance(disableColorOutput)
 
             bind<LogSink>() with singleton {
                 if (logFileName == null) {

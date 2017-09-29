@@ -30,15 +30,15 @@ import java.io.PrintStream
 // console.print("normal text")
 //
 // Reference: https://en.wikipedia.org/wiki/ANSI_escape_code
-class Console(private val outputStream: PrintStream, private val color: ConsoleColor?, private val isBold: Boolean) {
-    constructor(outputStream: PrintStream) : this(outputStream, color = null, isBold = false)
+class Console(private val outputStream: PrintStream, private val color: ConsoleColor?, private val isBold: Boolean, private val enableComplexOutput: Boolean) {
+    constructor(outputStream: PrintStream, enableComplexOutput: Boolean) : this(outputStream, color = null, isBold = false, enableComplexOutput = enableComplexOutput)
 
     fun print(text: String) = outputStream.print(text)
     fun println(text: String) = outputStream.println(text)
     fun println() = outputStream.println()
 
     fun withColor(color: ConsoleColor, printStatements: Console.() -> Unit) {
-        if (color == this.color) {
+        if (color == this.color || !enableComplexOutput) {
             printStatements()
             return
         }
@@ -52,18 +52,18 @@ class Console(private val outputStream: PrintStream, private val color: ConsoleC
         }
 
         outputStream.print(colorEscapeSequence(color.code))
-        printStatements(Console(outputStream, color, isBold))
+        printStatements(Console(outputStream, color, isBold, enableComplexOutput))
         returnConsoleToCurrentState()
     }
 
     fun inBold(printStatements: Console.() -> Unit) {
-        if (this.isBold) {
+        if (this.isBold || !enableComplexOutput) {
             printStatements()
             return
         }
 
         outputStream.print(boldEscapeSequence)
-        printStatements(Console(outputStream, color, true))
+        printStatements(Console(outputStream, color, true, enableComplexOutput))
         returnConsoleToCurrentState()
     }
 
@@ -86,6 +86,10 @@ class Console(private val outputStream: PrintStream, private val color: ConsoleC
     }
 
     fun moveCursorUp(lines: Int = 1) {
+        if (!enableComplexOutput) {
+            throw UnsupportedOperationException("Cannot move the cursor when complex output is disabled.")
+        }
+
         if (lines < 1) {
             throw IllegalArgumentException("Number of lines must be positive.")
         }
@@ -94,6 +98,10 @@ class Console(private val outputStream: PrintStream, private val color: ConsoleC
     }
 
     fun moveCursorDown(lines: Int = 1) {
+        if (!enableComplexOutput) {
+            throw UnsupportedOperationException("Cannot move the cursor when complex output is disabled.")
+        }
+
         if (lines < 1) {
             throw IllegalArgumentException("Number of lines must be positive.")
         }
@@ -102,10 +110,18 @@ class Console(private val outputStream: PrintStream, private val color: ConsoleC
     }
 
     fun moveCursorToStartOfLine() {
+        if (!enableComplexOutput) {
+            throw UnsupportedOperationException("Cannot move the cursor when complex output is disabled.")
+        }
+
         outputStream.print("\r")
     }
 
     fun clearCurrentLine() {
+        if (!enableComplexOutput) {
+            throw UnsupportedOperationException("Cannot clear the current line when complex output is disabled.")
+        }
+
         moveCursorToStartOfLine()
         outputStream.print("$ESC[K")
     }

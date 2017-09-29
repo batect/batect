@@ -18,5 +18,6 @@ package batect.cli
 
 enum class CommonOptions {
     ConfigurationFileName,
-    ForceSimpleOutputMode
+    ForceSimpleOutputMode,
+    DisableColorOutput
 }

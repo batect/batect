@@ -35,237 +35,352 @@ object ConsoleSpec : Spek({
     val reset = "$ESC[0m"
 
     describe("a console") {
-        val output = ByteArrayOutputStream()
-        val console = Console(PrintStream(output))
+        describe("when complex output is enabled") {
+            val output = ByteArrayOutputStream()
+            val console = Console(PrintStream(output), enableComplexOutput = true)
 
-        beforeEachTest {
-            output.reset()
-        }
-
-        on("printing text") {
-            console.print("This is some text")
-
-            it("writes the text directly to the output") {
-                assertThat(output.toString(), equalTo("This is some text"))
-            }
-        }
-
-        on("printing a line of text") {
-            console.println("This is some text")
-
-            it("writes the text directly to the output") {
-                assertThat(output.toString(), equalTo("This is some text\n"))
-            }
-        }
-
-        on("printing a blank line of text") {
-            console.println()
-
-            it("writes a blank line directly to the output") {
-                assertThat(output.toString(), equalTo("\n"))
-            }
-        }
-
-        on("printing coloured text") {
-            console.withColor(ConsoleColor.White) {
-                print("the white text")
+            beforeEachTest {
+                output.reset()
             }
 
-            it("writes the text to the output with the appropriate escape codes") {
-                assertThat(output.toString(), equalTo("${whiteText}the white text$reset"))
+            on("printing text") {
+                console.print("This is some text")
+
+                it("writes the text directly to the output") {
+                    assertThat(output.toString(), equalTo("This is some text"))
+                }
             }
-        }
 
-        on("nesting coloured text") {
-            console.withColor(ConsoleColor.White) {
-                println("white")
+            on("printing a line of text") {
+                console.println("This is some text")
 
-                withColor(ConsoleColor.Red) {
-                    println("red")
+                it("writes the text directly to the output") {
+                    assertThat(output.toString(), equalTo("This is some text\n"))
+                }
+            }
+
+            on("printing a blank line of text") {
+                console.println()
+
+                it("writes a blank line directly to the output") {
+                    assertThat(output.toString(), equalTo("\n"))
+                }
+            }
+
+            on("printing coloured text") {
+                console.withColor(ConsoleColor.White) {
+                    print("the white text")
                 }
 
-                println("more white")
+                it("writes the text to the output with the appropriate escape codes") {
+                    assertThat(output.toString(), equalTo("${whiteText}the white text$reset"))
+                }
             }
 
-            it("writes the text to the output with the appropriate escape codes") {
-                assertThat(output.toString(), equalTo("${whiteText}white\n${reset}${redText}red\n${reset}${whiteText}more white\n$reset"))
-            }
-        }
+            on("nesting coloured text") {
+                console.withColor(ConsoleColor.White) {
+                    println("white")
 
-        on("nesting coloured text of the same colour") {
-            console.withColor(ConsoleColor.White) {
-                println("white 1")
+                    withColor(ConsoleColor.Red) {
+                        println("red")
+                    }
 
-                withColor(ConsoleColor.White) {
-                    println("white 2")
+                    println("more white")
                 }
 
-                println("white 3")
+                it("writes the text to the output with the appropriate escape codes") {
+                    assertThat(output.toString(), equalTo("${whiteText}white\n${reset}${redText}red\n${reset}${whiteText}more white\n$reset"))
+                }
             }
 
-            it("writes the text to the output with the appropriate escape codes") {
-                assertThat(output.toString(), equalTo("${whiteText}white 1\nwhite 2\nwhite 3\n$reset"))
+            on("nesting coloured text of the same colour") {
+                console.withColor(ConsoleColor.White) {
+                    println("white 1")
+
+                    withColor(ConsoleColor.White) {
+                        println("white 2")
+                    }
+
+                    println("white 3")
+                }
+
+                it("writes the text to the output with the appropriate escape codes") {
+                    assertThat(output.toString(), equalTo("${whiteText}white 1\nwhite 2\nwhite 3\n$reset"))
+                }
             }
-        }
 
-        on("printing bold text using a lambda") {
-            console.inBold {
-                print("the bold text")
-            }
-
-            it("writes the text to the output with the appropriate escape codes") {
-                assertThat(output.toString(), equalTo("${boldText}the bold text$reset"))
-            }
-        }
-
-        on("printing bold text from a string") {
-            console.printBold("the bold text")
-
-            it("writes the text to the output with the appropriate escape codes") {
-                assertThat(output.toString(), equalTo("${boldText}the bold text$reset"))
-            }
-        }
-
-        on("nesting bold text inside bold text") {
-            console.inBold {
-                inBold {
+            on("printing bold text using a lambda") {
+                console.inBold {
                     print("the bold text")
                 }
-            }
 
-            it("writes the text to the output with the appropriate escape codes") {
-                assertThat(output.toString(), equalTo("${boldText}the bold text$reset"))
-            }
-        }
-
-        on("nesting bold text inside coloured text") {
-            console.withColor(ConsoleColor.Red) {
-                print("red")
-                inBold {
-                    print("bold")
+                it("writes the text to the output with the appropriate escape codes") {
+                    assertThat(output.toString(), equalTo("${boldText}the bold text$reset"))
                 }
-                print("more red")
             }
 
-            it("writes the text to the output with the appropriate escape codes") {
-                assertThat(output.toString(), equalTo("${redText}red${boldText}bold${reset}${redText}more red$reset"))
-            }
-        }
+            on("printing bold text from a string") {
+                console.printBold("the bold text")
 
-        on("nesting coloured text inside bold text") {
-            console.inBold {
-                print("bold")
-                withColor(ConsoleColor.Red) {
+                it("writes the text to the output with the appropriate escape codes") {
+                    assertThat(output.toString(), equalTo("${boldText}the bold text$reset"))
+                }
+            }
+
+            on("nesting bold text inside bold text") {
+                console.inBold {
+                    inBold {
+                        print("the bold text")
+                    }
+                }
+
+                it("writes the text to the output with the appropriate escape codes") {
+                    assertThat(output.toString(), equalTo("${boldText}the bold text$reset"))
+                }
+            }
+
+            on("nesting bold text inside coloured text") {
+                console.withColor(ConsoleColor.Red) {
                     print("red")
+                    inBold {
+                        print("bold")
+                    }
+                    print("more red")
                 }
-                print("more bold")
+
+                it("writes the text to the output with the appropriate escape codes") {
+                    assertThat(output.toString(), equalTo("${redText}red${boldText}bold${reset}${redText}more red$reset"))
+                }
             }
 
-            it("writes the text to the output with the appropriate escape codes") {
-                assertThat(output.toString(), equalTo("${boldText}bold${redText}red${reset}${boldText}more bold$reset"))
-            }
-        }
-
-        on("nested coloured text printing inside bold text") {
-            console.inBold {
-                print("bold")
-
-                withColor(ConsoleColor.White) {
-                    print("white")
-
+            on("nesting coloured text inside bold text") {
+                console.inBold {
+                    print("bold")
                     withColor(ConsoleColor.Red) {
                         print("red")
                     }
-
-                    print("more white")
+                    print("more bold")
                 }
 
-                print("more bold")
+                it("writes the text to the output with the appropriate escape codes") {
+                    assertThat(output.toString(), equalTo("${boldText}bold${redText}red${reset}${boldText}more bold$reset"))
+                }
             }
 
-            it("writes the text to the output with the appropriate escape codes") {
-                val expected = "${boldText}bold${whiteText}white$reset" +
+            on("nested coloured text printing inside bold text") {
+                console.inBold {
+                    print("bold")
+
+                    withColor(ConsoleColor.White) {
+                        print("white")
+
+                        withColor(ConsoleColor.Red) {
+                            print("red")
+                        }
+
+                        print("more white")
+                    }
+
+                    print("more bold")
+                }
+
+                it("writes the text to the output with the appropriate escape codes") {
+                    val expected = "${boldText}bold${whiteText}white$reset" +
                         "${boldText}${redText}red$reset" +
                         "${boldText}${whiteText}more white$reset" +
                         "${boldText}more bold$reset"
 
-                assertThat(output.toString(), equalTo(expected))
+                    assertThat(output.toString(), equalTo(expected))
+                }
+            }
+
+            describe("moving the cursor up") {
+                on("moving the cursor up one line") {
+                    console.moveCursorUp()
+
+                    it("writes the appropriate escape code to the output") {
+                        assertThat(output.toString(), equalTo("$ESC[1A"))
+                    }
+                }
+
+                on("moving the cursor up multiple lines") {
+                    console.moveCursorUp(23)
+
+                    it("writes the appropriate escape code to the output") {
+                        assertThat(output.toString(), equalTo("$ESC[23A"))
+                    }
+                }
+
+                on("attempting to move the cursor up zero lines") {
+                    it("throws an appropriate exception") {
+                        assertThat({ console.moveCursorUp(0) }, throws<IllegalArgumentException>(withMessage("Number of lines must be positive.")))
+                    }
+                }
+
+                on("attempting to move the cursor up a negative number of lines") {
+                    it("throws an appropriate exception") {
+                        assertThat({ console.moveCursorUp(-1) }, throws<IllegalArgumentException>(withMessage("Number of lines must be positive.")))
+                    }
+                }
+            }
+
+            describe("moving the cursor down") {
+                on("moving the cursor down one line") {
+                    console.moveCursorDown()
+
+                    it("writes the appropriate escape code to the output") {
+                        assertThat(output.toString(), equalTo("$ESC[1B"))
+                    }
+                }
+
+                on("moving the cursor down multiple lines") {
+                    console.moveCursorDown(23)
+
+                    it("writes the appropriate escape code to the output") {
+                        assertThat(output.toString(), equalTo("$ESC[23B"))
+                    }
+                }
+
+                on("attempting to move the cursor down zero lines") {
+                    it("throws an appropriate exception") {
+                        assertThat({ console.moveCursorDown(0) }, throws<IllegalArgumentException>(withMessage("Number of lines must be positive.")))
+                    }
+                }
+
+                on("attempting to move the cursor down a negative number of lines") {
+                    it("throws an appropriate exception") {
+                        assertThat({ console.moveCursorDown(-1) }, throws<IllegalArgumentException>(withMessage("Number of lines must be positive.")))
+                    }
+                }
+            }
+
+            on("clearing the current line") {
+                console.clearCurrentLine()
+
+                it("writes the appropriate escape code sequence to the output") {
+                    assertThat(output.toString(), equalTo("\r$ESC[K"))
+                }
+            }
+
+            on("moving to the start of the current line") {
+                console.moveCursorToStartOfLine()
+
+                it("writes the appropriate escape code to the output") {
+                    assertThat(output.toString(), equalTo("\r"))
+                }
             }
         }
 
-        describe("moving the cursor up") {
-            on("moving the cursor up one line") {
-                console.moveCursorUp()
+        describe("when complex output is disabled") {
+            val output = ByteArrayOutputStream()
+            val console = Console(PrintStream(output), enableComplexOutput = false)
 
-                it("writes the appropriate escape code to the output") {
-                    assertThat(output.toString(), equalTo("$ESC[1A"))
+            beforeEachTest {
+                output.reset()
+            }
+
+            on("printing text") {
+                console.print("This is some text")
+
+                it("writes the text directly to the output") {
+                    assertThat(output.toString(), equalTo("This is some text"))
                 }
             }
 
-            on("moving the cursor up multiple lines") {
-                console.moveCursorUp(23)
+            on("printing a line of text") {
+                console.println("This is some text")
 
-                it("writes the appropriate escape code to the output") {
-                    assertThat(output.toString(), equalTo("$ESC[23A"))
+                it("writes the text directly to the output") {
+                    assertThat(output.toString(), equalTo("This is some text\n"))
                 }
             }
 
-            on("attempting to move the cursor up zero lines") {
+            on("printing a blank line of text") {
+                console.println()
+
+                it("writes a blank line directly to the output") {
+                    assertThat(output.toString(), equalTo("\n"))
+                }
+            }
+
+            on("printing coloured text") {
+                console.withColor(ConsoleColor.White) {
+                    print("the white text")
+                }
+
+                it("writes the text to the output without any escape codes") {
+                    assertThat(output.toString(), equalTo("the white text"))
+                }
+            }
+
+            on("printing bold text using a lambda") {
+                console.inBold {
+                    print("the bold text")
+                }
+
+                it("writes the text to the output without any escape codes") {
+                    assertThat(output.toString(), equalTo("the bold text"))
+                }
+            }
+
+            on("printing bold text from a string") {
+                console.printBold("the bold text")
+
+                it("writes the text to the output without any escape codes") {
+                    assertThat(output.toString(), equalTo("the bold text"))
+                }
+            }
+
+            on("nesting bold text inside coloured text") {
+                console.withColor(ConsoleColor.Red) {
+                    print("red ")
+                    inBold {
+                        print("bold")
+                    }
+                    print(" more red")
+                }
+
+                it("writes the text to the output without any escape codes") {
+                    assertThat(output.toString(), equalTo("red bold more red"))
+                }
+            }
+
+            on("nesting coloured text inside bold text") {
+                console.inBold {
+                    print("bold ")
+                    withColor(ConsoleColor.Red) {
+                        print("red")
+                    }
+                    print(" more bold")
+                }
+
+                it("writes the text to the output without any escape codes") {
+                    assertThat(output.toString(), equalTo("bold red more bold"))
+                }
+            }
+
+            on("moving the cursor up") {
                 it("throws an appropriate exception") {
-                    assertThat({ console.moveCursorUp(0) }, throws<IllegalArgumentException>(withMessage("Number of lines must be positive.")))
+                    assertThat({ console.moveCursorUp(1) }, throws<UnsupportedOperationException>(withMessage("Cannot move the cursor when complex output is disabled.")))
                 }
             }
 
-            on("attempting to move the cursor up a negative number of lines") {
+            on("moving the cursor down") {
                 it("throws an appropriate exception") {
-                    assertThat({ console.moveCursorUp(-1) }, throws<IllegalArgumentException>(withMessage("Number of lines must be positive.")))
-                }
-            }
-        }
-
-        describe("moving the cursor down") {
-            on("moving the cursor down one line") {
-                console.moveCursorDown()
-
-                it("writes the appropriate escape code to the output") {
-                    assertThat(output.toString(), equalTo("$ESC[1B"))
+                    assertThat({ console.moveCursorDown(1) }, throws<UnsupportedOperationException>(withMessage("Cannot move the cursor when complex output is disabled.")))
                 }
             }
 
-            on("moving the cursor down multiple lines") {
-                console.moveCursorDown(23)
-
-                it("writes the appropriate escape code to the output") {
-                    assertThat(output.toString(), equalTo("$ESC[23B"))
-                }
-            }
-
-            on("attempting to move the cursor down zero lines") {
+            on("clearing the current line") {
                 it("throws an appropriate exception") {
-                    assertThat({ console.moveCursorDown(0) }, throws<IllegalArgumentException>(withMessage("Number of lines must be positive.")))
+                    assertThat({ console.clearCurrentLine() }, throws<UnsupportedOperationException>(withMessage("Cannot clear the current line when complex output is disabled.")))
                 }
             }
 
-            on("attempting to move the cursor down a negative number of lines") {
+            on("moving to the start of the current line") {
                 it("throws an appropriate exception") {
-                    assertThat({ console.moveCursorDown(-1) }, throws<IllegalArgumentException>(withMessage("Number of lines must be positive.")))
+                    assertThat({ console.moveCursorToStartOfLine() }, throws<UnsupportedOperationException>(withMessage("Cannot move the cursor when complex output is disabled.")))
                 }
-            }
-        }
-
-        on("clearing the current line") {
-            console.clearCurrentLine()
-
-            it("writes the appropriate escape code sequence to the output") {
-                assertThat(output.toString(), equalTo("\r$ESC[K"))
-            }
-        }
-
-        on("moving to the start of the current line") {
-            console.moveCursorToStartOfLine()
-
-            it("writes the appropriate escape code to the output") {
-                assertThat(output.toString(), equalTo("\r"))
             }
         }
     }

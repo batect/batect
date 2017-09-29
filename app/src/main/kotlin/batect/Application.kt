@@ -103,8 +103,8 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }
     bind<DockerContainerCreationCommandGenerator>() with singleton { DockerContainerCreationCommandGenerator() }
     bind<EventLoggerProvider>() with singleton { EventLoggerProvider(instance(PrintStreamType.Output), instance(PrintStreamType.Error), instance(), instance(), instance(CommonOptions.ForceSimpleOutputMode)) }
-    bind<Console>(PrintStreamType.Output) with singleton { Console(instance(PrintStreamType.Output)) }
-    bind<Console>(PrintStreamType.Error) with singleton { Console(instance(PrintStreamType.Error)) }
+    bind<Console>(PrintStreamType.Output) with singleton { Console(instance(PrintStreamType.Output), enableComplexOutput = !instance<Boolean>(CommonOptions.DisableColorOutput)) }
+    bind<Console>(PrintStreamType.Error) with singleton { Console(instance(PrintStreamType.Error), enableComplexOutput = !instance<Boolean>(CommonOptions.DisableColorOutput)) }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
     bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
     bind<CommandLineParser>() with singleton { BatectCommandLineParser(this) }

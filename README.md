@@ -15,6 +15,12 @@ _Build and testing environments as code_
 
 [![Build Status](https://travis-ci.org/charleskorn/batect.svg?branch=master)](https://travis-ci.org/charleskorn/batect)
 
+## batect in action
+
+[![asciicast](https://asciinema.org/a/vBV5iQz4jqyhKPEfkiJyM4kEt.png)](https://asciinema.org/a/vBV5iQz4jqyhKPEfkiJyM4kEt)
+
+Want to try this for yourself? Take a look at the [sample project](https://github.com/charleskorn/batect-sample).
+
 ## Why would I use this?
 
 Every application has a build environment - the tools and configuration needed to take the source code and produce an artifact
@@ -50,7 +56,7 @@ batect helps solve these problems by:
 Take a look at the [getting started guide](docs/GettingStarted.md), or consult the 
 [configuration file reference](docs/ConfigFile.md).
 
-There's also a [sample application](https://github.com/charleskorn/batect-sample) you can try.
+There's also a [sample project](https://github.com/charleskorn/batect-sample) you can try.
 
 ## Should I start using this now?
 

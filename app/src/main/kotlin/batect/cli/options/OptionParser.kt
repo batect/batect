@@ -72,20 +72,23 @@ class OptionParser {
 interface OptionParserContainer {
     val optionParser: OptionParser
 
-    fun valueOption(name: String, description: String, shortName: Char? = null)
-            = valueOption(name, description, ValueConverters::string, shortName)
+    fun valueOption(longName: String, description: String, shortName: Char? = null)
+            = valueOption(longName, description, ValueConverters::string, shortName)
 
-    fun <V> valueOption(name: String, description: String, valueConverter: (String) -> ValueConversionResult<V>, shortName: Char? = null)
-            = ValueOption(name, description, StaticDefaultValueProvider<V?>(null), valueConverter, shortName)
+    fun <V> valueOption(longName: String, description: String, valueConverter: (String) -> ValueConversionResult<V>, shortName: Char? = null)
+            = ValueOption(longName, description, StaticDefaultValueProvider<V?>(null), valueConverter, shortName)
 
-    fun valueOption(name: String, description: String, defaultValue: String, shortName: Char? = null)
-            = valueOption(name, description, defaultValue, ValueConverters::string, shortName)
+    fun valueOption(longName: String, description: String, defaultValue: String, shortName: Char? = null)
+            = valueOption(longName, description, defaultValue, ValueConverters::string, shortName)
 
-    fun <V> valueOption(name: String, description: String, defaultValue: V, valueConverter: (String) -> ValueConversionResult<V>, shortName: Char? = null)
-            = ValueOption(name, description, StaticDefaultValueProvider(defaultValue), valueConverter, shortName)
+    fun <V> valueOption(longName: String, description: String, defaultValue: V, valueConverter: (String) -> ValueConversionResult<V>, shortName: Char? = null)
+            = ValueOption(longName, description, StaticDefaultValueProvider(defaultValue), valueConverter, shortName)
 
-    fun valueOption(name: String, description: String, defaultValueProvider: DefaultValueProvider<Int>, valueConverter: (String) -> ValueConversionResult<Int>, shortName: Char? = null)
-            = ValueOption(name, description, defaultValueProvider, valueConverter, shortName)
+    fun valueOption(longName: String, description: String, defaultValueProvider: DefaultValueProvider<Int>, valueConverter: (String) -> ValueConversionResult<Int>, shortName: Char? = null)
+            = ValueOption(longName, description, defaultValueProvider, valueConverter, shortName)
+
+    fun flagOption(longName: String, description: String, shortName: Char? = null)
+        = FlagOption(longName, description, shortName)
 }
 
 sealed class OptionsParsingResult

@@ -18,9 +18,8 @@ package batect.cli
 
 import batect.cli.commands.Command
 import batect.cli.commands.CommandDefinition
-import batect.cli.options.InvalidOptions
 import batect.cli.options.OptionParser
-import batect.cli.options.ReadOptions
+import batect.cli.options.OptionsParsingResult
 import batect.cli.testutils.NullCommand
 import batect.testutils.withMessage
 import com.github.salomonbrys.kodein.Kodein
@@ -88,7 +87,7 @@ object CommandLineParserSpec : Spek({
 
             describe("when the option parser returns an error") {
                 beforeEachTest {
-                    whenever(optionParser.parseOptions(any())).thenReturn(InvalidOptions("Something was invalid"))
+                    whenever(optionParser.parseOptions(any())).thenReturn(OptionsParsingResult.InvalidOptions("Something was invalid"))
                 }
 
                 on("parsing a list of arguments") {
@@ -105,7 +104,7 @@ object CommandLineParserSpec : Spek({
 
             describe("when the option parser indicates that option parsing succeeded") {
                 beforeEachTest {
-                    whenever(optionParser.parseOptions(any())).thenReturn(ReadOptions(2))
+                    whenever(optionParser.parseOptions(any())).thenReturn(OptionsParsingResult.ReadOptions(2))
                 }
 
                 on("parsing a list of arguments where the option parser consumes all the arguments") {

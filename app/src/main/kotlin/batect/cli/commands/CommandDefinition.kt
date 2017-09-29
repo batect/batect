@@ -19,10 +19,9 @@ package batect.cli.commands
 import batect.cli.CommandLineParsingResult
 import batect.cli.Failed
 import batect.cli.Succeeded
-import batect.cli.options.InvalidOptions
 import batect.cli.options.OptionParser
 import batect.cli.options.OptionParserContainer
-import batect.cli.options.ReadOptions
+import batect.cli.options.OptionsParsingResult
 import com.github.salomonbrys.kodein.Kodein
 
 abstract class CommandDefinition(val commandName: String, val description: String, override val optionParser: OptionParser, val aliases: Set<String> = emptySet()) : OptionParserContainer {
@@ -46,8 +45,8 @@ abstract class CommandDefinition(val commandName: String, val description: Strin
         val optionParsingResult = optionParser.parseOptions(args)
 
         return when (optionParsingResult) {
-            is InvalidOptions -> Failed(optionParsingResult.message)
-            is ReadOptions -> parseParameters(args.drop(optionParsingResult.argumentsConsumed), kodein)
+            is OptionsParsingResult.InvalidOptions -> Failed(optionParsingResult.message)
+            is OptionsParsingResult.ReadOptions -> parseParameters(args.drop(optionParsingResult.argumentsConsumed), kodein)
         }
     }
 

@@ -20,9 +20,8 @@ import batect.cli.CommandLineParsingResult
 import batect.cli.Failed
 import batect.cli.testutils.NullCommand
 import batect.cli.Succeeded
-import batect.cli.options.InvalidOptions
 import batect.cli.options.OptionParser
-import batect.cli.options.ReadOptions
+import batect.cli.options.OptionsParsingResult
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
@@ -71,7 +70,7 @@ object CommandDefinitionSpec : Spek({
                 val command = NullCommand()
 
                 val optionParser = mock<OptionParser> {
-                    on { parseOptions(any()) } doReturn ReadOptions(0)
+                    on { parseOptions(any()) } doReturn OptionsParsingResult.ReadOptions(0)
                 }
 
                 val commandDefinition = object : CommandDefinition("test-command", "Do the thing.", optionParser) {
@@ -99,7 +98,7 @@ object CommandDefinitionSpec : Spek({
                 val emptyKodein = Kodein {}
 
                 val optionParser = mock<OptionParser> {
-                    on { parseOptions(any()) } doReturn ReadOptions(0)
+                    on { parseOptions(any()) } doReturn OptionsParsingResult.ReadOptions(0)
                 }
 
                 data class TestCommand(val value: String) : Command {
@@ -141,7 +140,7 @@ object CommandDefinitionSpec : Spek({
                 val emptyKodein = Kodein {}
 
                 val optionParser = mock<OptionParser> {
-                    on { parseOptions(any()) } doReturn ReadOptions(0)
+                    on { parseOptions(any()) } doReturn OptionsParsingResult.ReadOptions(0)
                 }
 
                 data class TestCommand(val value: String?) : Command {
@@ -183,7 +182,7 @@ object CommandDefinitionSpec : Spek({
                 val emptyKodein = Kodein {}
 
                 val optionParser = mock<OptionParser> {
-                    on { parseOptions(any()) } doReturn ReadOptions(0)
+                    on { parseOptions(any()) } doReturn OptionsParsingResult.ReadOptions(0)
                 }
 
                 data class TestCommand(val requiredValue: String, val optionalValue: String?) : Command {
@@ -234,7 +233,7 @@ object CommandDefinitionSpec : Spek({
                 val emptyKodein = Kodein {}
 
                 val optionParser = mock<OptionParser> {
-                    on { parseOptions(any()) } doReturn ReadOptions(0)
+                    on { parseOptions(any()) } doReturn OptionsParsingResult.ReadOptions(0)
                 }
 
                 data class TestCommand(val requiredValue: String, val firstOptionalValue: String?, val secondOptionalValue: String?) : Command {
@@ -294,7 +293,7 @@ object CommandDefinitionSpec : Spek({
                 val emptyKodein = Kodein {}
 
                 val optionParser = mock<OptionParser> {
-                    on { parseOptions(any()) } doReturn ReadOptions(0)
+                    on { parseOptions(any()) } doReturn OptionsParsingResult.ReadOptions(0)
                 }
 
                 data class TestCommand(val firstValue: String, val secondValue: String) : Command {
@@ -343,7 +342,7 @@ object CommandDefinitionSpec : Spek({
 
             given("a command definition and a non-empty Kodein container") {
                 val optionParser = mock<OptionParser> {
-                    on { parseOptions(any()) } doReturn ReadOptions(0)
+                    on { parseOptions(any()) } doReturn OptionsParsingResult.ReadOptions(0)
                 }
 
                 val kodeinContainer = Kodein {
@@ -370,9 +369,9 @@ object CommandDefinitionSpec : Spek({
             given("a command definition and some options") {
                 val emptyKodein = Kodein {}
                 val optionParser = mock<OptionParser> {
-                    on { parseOptions(listOf("invalid-arg")) } doReturn InvalidOptions("The option parser said that's not possible")
-                    on { parseOptions(listOf("--some-option")) } doReturn ReadOptions(1)
-                    on { parseOptions(listOf("--some-option", "the-value")) } doReturn ReadOptions(1)
+                    on { parseOptions(listOf("invalid-arg")) } doReturn OptionsParsingResult.InvalidOptions("The option parser said that's not possible")
+                    on { parseOptions(listOf("--some-option")) } doReturn OptionsParsingResult.ReadOptions(1)
+                    on { parseOptions(listOf("--some-option", "the-value")) } doReturn OptionsParsingResult.ReadOptions(1)
                 }
 
                 data class TestCommand(val value: String) : Command {

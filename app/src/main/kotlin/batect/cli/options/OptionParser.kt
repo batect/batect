@@ -28,12 +28,12 @@ class OptionParser {
 
             when (optionParsingResult) {
                 is OptionParsingResult.ReadOption -> argIndex += optionParsingResult.argumentsConsumed
-                is OptionParsingResult.InvalidOption -> return InvalidOptions(optionParsingResult.message)
-                is OptionParsingResult.NoOption -> return ReadOptions(argIndex)
+                is OptionParsingResult.InvalidOption -> return OptionsParsingResult.InvalidOptions(optionParsingResult.message)
+                is OptionParsingResult.NoOption -> return OptionsParsingResult.ReadOptions(argIndex)
             }
         }
 
-        return ReadOptions(argIndex)
+        return OptionsParsingResult.ReadOptions(argIndex)
     }
 
     private fun parseOption(args: Iterable<String>, currentIndex: Int): OptionParsingResult {
@@ -91,9 +91,10 @@ interface OptionParserContainer {
         = FlagOption(longName, description, shortName)
 }
 
-sealed class OptionsParsingResult
-data class ReadOptions(val argumentsConsumed: Int) : OptionsParsingResult()
-data class InvalidOptions(val message: String) : OptionsParsingResult()
+sealed class OptionsParsingResult {
+    data class ReadOptions(val argumentsConsumed: Int) : OptionsParsingResult()
+    data class InvalidOptions(val message: String) : OptionsParsingResult()
+}
 
 sealed class OptionParsingResult {
     data class ReadOption(val argumentsConsumed: Int) : OptionParsingResult()

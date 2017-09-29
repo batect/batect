@@ -122,13 +122,13 @@ object OptionDefinitionSpec : Spek({
                     }
                 }
 
-                setOf(
-                    Pair(listOf("--value=thing"), listOf("--value=other-thing")),
-                    Pair(listOf("-v=thing"), listOf("--value=other-thing")),
-                    Pair(listOf("--value=thing"), listOf("-v=other-thing")),
-                    Pair(listOf("-v=thing"), listOf("-v=other-thing")),
-                    Pair(listOf("--value=thing"), listOf("--value", "other-thing")),
-                    Pair(listOf("--value", "thing"), listOf("--value=other-thing"))
+                allPairs(
+                    listOf("--value=thing"),
+                    listOf("--value", "thing"),
+                    listOf("--value"),
+                    listOf("-v=thing"),
+                    listOf("-v", "thing"),
+                    listOf("-v")
                 ).forEach { (first, second) ->
                     on("parsing a list of arguments where the option is valid but given twice in the form ${first + second}") {
                         option.parse(first + second + "do-stuff")
@@ -187,3 +187,6 @@ object OptionDefinitionSpec : Spek({
         }
     }
 })
+
+fun <T> allPairs(vararg possibilities: T): Iterable<Pair<T, T>>
+    = possibilities.flatMap { first -> possibilities.map { second -> first to second } }

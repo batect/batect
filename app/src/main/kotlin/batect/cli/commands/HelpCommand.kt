@@ -48,7 +48,6 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
     private fun printRootHelp() {
         val commands = parser.getAllCommandDefinitions().sortedBy { it.commandName }.associate { it.commandName to it.description }
         val options = formatListOfOptions(parser.getCommonOptions())
-        val alignToColumn = (commands.keys + options.keys).map { it.length }.max() ?: 0
 
         outputStream.print("Usage: ${parser.applicationName} ")
 
@@ -60,12 +59,12 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
         outputStream.println()
 
         outputStream.println("Commands:")
-        printInColumns(commands, alignToColumn)
+        printInColumns(commands)
         outputStream.println()
 
         if (options.isNotEmpty()) {
             outputStream.println("Common options:")
-            printInColumns(options, alignToColumn)
+            printInColumns(options)
             outputStream.println()
         }
 
@@ -148,22 +147,23 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
 
         val formattedOptions = formatListOfOptions(options)
         val formattedParameters = positionalParameters.associate { it.name to descriptionForPositionalParameter(it) }
-        val alignToColumn = (formattedOptions.keys + formattedParameters.keys).map { it.length }.max() ?: 0
 
         if (options.isNotEmpty()) {
             outputStream.println("Options:")
-            printInColumns(formattedOptions, alignToColumn)
+            printInColumns(formattedOptions)
             outputStream.println()
         }
 
         if (positionalParameters.isNotEmpty()) {
             outputStream.println("Parameters:")
-            printInColumns(formattedParameters, alignToColumn)
+            printInColumns(formattedParameters)
             outputStream.println()
         }
     }
 
-    private fun printInColumns(items: Map<String, String>, alignToColumn: Int = items.keys.map { it.length }.max() ?: 0) {
+    private fun printInColumns(items: Map<String, String>) {
+        val alignToColumn = items.keys.map { it.length }.max() ?: 0
+
         items.forEach { firstColumn, secondColumn ->
             val indentationCount = 4 + alignToColumn - firstColumn.length
             val indentation = " ".repeat(indentationCount)

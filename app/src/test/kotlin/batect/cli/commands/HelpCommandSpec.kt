@@ -107,8 +107,8 @@ object HelpCommandSpec : Spek({
                         |Usage: the-cool-app [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]
                         |
                         |Commands:
-                        |  do-other-stuff                   Do the other thing.
-                        |  do-stuff                         Do the thing.
+                        |  do-other-stuff    Do the other thing.
+                        |  do-stuff          Do the thing.
                         |
                         |Common options:
                         |      --awesomeness-level=value    Level of awesomeness to use. (extra help info)
@@ -400,8 +400,8 @@ object HelpCommandSpec : Spek({
                             |  -o, --some-option=value       Some option that you can set.
                             |
                             |Parameters:
-                            |  THING                         Thing to do.
-                            |  OTHER-THING                   (optional) Other thing to do.
+                            |  THING          Thing to do.
+                            |  OTHER-THING    (optional) Other thing to do.
                             |
                             |For help on the common options available for all commands, run 'the-cool-app help'.
                             |

@@ -47,7 +47,7 @@ open class CommandLineParser(
         val optionParsingResult = optionParser.parseOptions(args)
 
         when (optionParsingResult) {
-            is OptionsParsingResult.InvalidOptions -> return Failed(optionParsingResult.message)
+            is OptionsParsingResult.InvalidOptions -> return CommandLineParsingResult.Failed(optionParsingResult.message)
             is OptionsParsingResult.ReadOptions -> {
                 val remainingArgs = args.drop(optionParsingResult.argumentsConsumed)
 
@@ -77,12 +77,12 @@ open class CommandLineParser(
         return command.parse(remainingArgs, extendedKodein)
     }
 
-    private fun noCommand(): CommandLineParsingResult = Failed("No command specified. Run '$applicationName help' for a list of valid commands.")
+    private fun noCommand(): CommandLineParsingResult = CommandLineParsingResult.Failed("No command specified. Run '$applicationName help' for a list of valid commands.")
 
     private fun invalidArg(arg: String): CommandLineParsingResult {
         val guessedType = if (arg.startsWith("-")) "option" else "command"
 
-        return Failed("Invalid $guessedType '$arg'. Run '$applicationName help' for a list of valid ${guessedType}s.")
+        return CommandLineParsingResult.Failed("Invalid $guessedType '$arg'. Run '$applicationName help' for a list of valid ${guessedType}s.")
     }
 
     fun addCommandDefinition(command: CommandDefinition) {
@@ -105,6 +105,7 @@ open class CommandLineParser(
     open fun createBindings(): Kodein.Module = Kodein.Module {}
 }
 
-sealed class CommandLineParsingResult
-data class Succeeded(val command: Command) : CommandLineParsingResult()
-data class Failed(val error: String) : CommandLineParsingResult()
+sealed class CommandLineParsingResult {
+    data class Succeeded(val command: Command) : CommandLineParsingResult()
+    data class Failed(val error: String) : CommandLineParsingResult()
+}

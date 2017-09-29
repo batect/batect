@@ -50,8 +50,8 @@ class ValueOption<StorageType, ValueType : StorageType>(longName: String,
         val conversionResult = valueConverter(argValue)
 
         return when (conversionResult) {
-            is ConversionFailed -> OptionParsingResult.InvalidOption("The value '$argValue' for option '$arg' is invalid: ${conversionResult.message}")
-            is ConversionSucceeded -> {
+            is ValueConversionResult.ConversionFailed -> OptionParsingResult.InvalidOption("The value '$argValue' for option '$arg' is invalid: ${conversionResult.message}")
+            is ValueConversionResult.ConversionSucceeded -> {
                 value = conversionResult.value
 
                 if (useNextArgumentForValue) {
@@ -82,6 +82,7 @@ class ValueOption<StorageType, ValueType : StorageType>(longName: String,
         }
 }
 
-sealed class ValueConversionResult<V>
-data class ConversionSucceeded<V>(val value: V) : ValueConversionResult<V>()
-data class ConversionFailed<V>(val message: String) : ValueConversionResult<V>()
+sealed class ValueConversionResult<V> {
+    data class ConversionSucceeded<V>(val value: V) : ValueConversionResult<V>()
+    data class ConversionFailed<V>(val message: String) : ValueConversionResult<V>()
+}

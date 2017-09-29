@@ -17,9 +17,7 @@
 package batect.cli.commands
 
 import batect.cli.CommandLineParsingResult
-import batect.cli.Failed
 import batect.cli.testutils.NullCommand
-import batect.cli.Succeeded
 import batect.cli.options.OptionParser
 import batect.cli.options.OptionsParsingResult
 import com.github.salomonbrys.kodein.Kodein
@@ -81,7 +79,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(emptyList(), emptyKodein)
 
                     it("indicates that parsing succeeded and returns a command instance ready for use") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(command)))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(command)))
                     }
                 }
 
@@ -89,7 +87,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("some-arg"), emptyKodein)
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Command 'test-command' does not take any parameters. ('some-arg' is the first extra parameter.)")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Command 'test-command' does not take any parameters. ('some-arg' is the first extra parameter.)")))
                     }
                 }
             }
@@ -115,7 +113,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(emptyList(), emptyKodein)
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Command 'do-stuff' requires at least 1 parameter. The parameter 'THING' was not supplied.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Command 'do-stuff' requires at least 1 parameter. The parameter 'THING' was not supplied.")))
                     }
                 }
 
@@ -123,7 +121,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("some value"), emptyKodein)
 
                     it("indicates that parsing succeeded and returns a command instance ready for use") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(TestCommand("some value"))))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(TestCommand("some value"))))
                     }
                 }
 
@@ -131,7 +129,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("some value", "some extra value"), emptyKodein)
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Command 'do-stuff' takes at most 1 parameter. ('some extra value' is the first extra parameter.)")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Command 'do-stuff' takes at most 1 parameter. ('some extra value' is the first extra parameter.)")))
                     }
                 }
             }
@@ -157,7 +155,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(emptyList(), emptyKodein)
 
                     it("indicates that parsing succeeded and returns a command instance ready for use") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(TestCommand(null))))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(TestCommand(null))))
                     }
                 }
 
@@ -165,7 +163,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("some value"), emptyKodein)
 
                     it("indicates that parsing succeeded and returns a command instance ready for use") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(TestCommand("some value"))))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(TestCommand("some value"))))
                     }
                 }
 
@@ -173,7 +171,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("some value", "some extra value"), emptyKodein)
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Command 'do-stuff' takes at most 1 parameter. ('some extra value' is the first extra parameter.)")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Command 'do-stuff' takes at most 1 parameter. ('some extra value' is the first extra parameter.)")))
                     }
                 }
             }
@@ -200,7 +198,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(emptyList(), emptyKodein)
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Command 'do-stuff' requires at least 1 parameter. The parameter 'THING' was not supplied.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Command 'do-stuff' requires at least 1 parameter. The parameter 'THING' was not supplied.")))
                     }
                 }
 
@@ -208,7 +206,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("some value"), emptyKodein)
 
                     it("indicates that parsing succeeded and returns a command instance ready for use") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(TestCommand("some value", null))))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(TestCommand("some value", null))))
                     }
                 }
 
@@ -216,7 +214,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("some value", "some other value"), emptyKodein)
 
                     it("indicates that parsing succeeded and returns a command instance ready for use") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(TestCommand("some value", "some other value"))))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(TestCommand("some value", "some other value"))))
                     }
                 }
 
@@ -224,7 +222,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("some value", "some other value", "some extra value"), emptyKodein)
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Command 'do-stuff' takes at most 2 parameters. ('some extra value' is the first extra parameter.)")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Command 'do-stuff' takes at most 2 parameters. ('some extra value' is the first extra parameter.)")))
                     }
                 }
             }
@@ -252,7 +250,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(emptyList(), emptyKodein)
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Command 'do-stuff' requires at least 1 parameter. The parameter 'THING' was not supplied.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Command 'do-stuff' requires at least 1 parameter. The parameter 'THING' was not supplied.")))
                     }
                 }
 
@@ -260,7 +258,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("some value"), emptyKodein)
 
                     it("indicates that parsing succeeded and returns a command instance ready for use") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(TestCommand("some value", null, null))))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(TestCommand("some value", null, null))))
                     }
                 }
 
@@ -268,7 +266,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("some value", "first optional value"), emptyKodein)
 
                     it("indicates that parsing succeeded and returns a command instance ready for use") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(TestCommand("some value", "first optional value", null))))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(TestCommand("some value", "first optional value", null))))
                     }
                 }
 
@@ -276,7 +274,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("some value", "first optional value", "second optional value"), emptyKodein)
 
                     it("indicates that parsing succeeded and returns a command instance ready for use") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(TestCommand("some value", "first optional value", "second optional value"))))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(TestCommand("some value", "first optional value", "second optional value"))))
                     }
                 }
 
@@ -284,7 +282,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("some value", "first value", "second value", "some extra value"), emptyKodein)
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Command 'do-stuff' takes at most 3 parameters. ('some extra value' is the first extra parameter.)")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Command 'do-stuff' takes at most 3 parameters. ('some extra value' is the first extra parameter.)")))
                     }
                 }
             }
@@ -311,7 +309,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(emptyList(), emptyKodein)
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Command 'do-stuff' requires at least 2 parameters. The parameter 'FIRST-THING' was not supplied.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Command 'do-stuff' requires at least 2 parameters. The parameter 'FIRST-THING' was not supplied.")))
                     }
                 }
 
@@ -319,7 +317,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("some value"), emptyKodein)
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Command 'do-stuff' requires at least 2 parameters. The parameter 'SECOND-THING' was not supplied.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Command 'do-stuff' requires at least 2 parameters. The parameter 'SECOND-THING' was not supplied.")))
                     }
                 }
 
@@ -327,7 +325,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("some value", "some other value"), emptyKodein)
 
                     it("indicates that parsing succeeded and returns a command instance ready for use") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(TestCommand("some value", "some other value"))))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(TestCommand("some value", "some other value"))))
                     }
                 }
 
@@ -335,7 +333,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("some value", "some other value", "some extra value"), emptyKodein)
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Command 'do-stuff' takes at most 2 parameters. ('some extra value' is the first extra parameter.)")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Command 'do-stuff' takes at most 2 parameters. ('some extra value' is the first extra parameter.)")))
                     }
                 }
             }
@@ -361,7 +359,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(emptyList(), kodeinContainer)
 
                     it("indicates that parsing succeeded and returns a command instance populated with the value from the container") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(TestCommand("This is the value"))))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(TestCommand("This is the value"))))
                     }
                 }
             }
@@ -388,7 +386,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("invalid-arg"), emptyKodein)
 
                     it("indicates that parsing failed and propagates the error message from the option parser") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("The option parser said that's not possible")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("The option parser said that's not possible")))
                     }
                 }
 
@@ -396,7 +394,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("--some-option"), emptyKodein)
 
                     it("indicates that parsing failed because the required parameter was not provided") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Command 'do-stuff' requires at least 1 parameter. The parameter 'THING' was not supplied.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Command 'do-stuff' requires at least 1 parameter. The parameter 'THING' was not supplied.")))
                     }
                 }
 
@@ -404,7 +402,7 @@ object CommandDefinitionSpec : Spek({
                     val result = commandDefinition.parse(listOf("--some-option", "the-value"), emptyKodein)
 
                     it("indicates that parsing failed because the required parameter was not provided") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(TestCommand("the-value"))))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(TestCommand("the-value"))))
                     }
                 }
             }

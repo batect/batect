@@ -17,19 +17,19 @@
 package batect.cli.options
 
 object ValueConverters {
-    fun string(value: String): ValueConversionResult<String> = ConversionSucceeded(value)
+    fun string(value: String): ValueConversionResult<String> = ValueConversionResult.ConversionSucceeded(value)
 
     fun positiveInteger(value: String): ValueConversionResult<Int> {
         try {
             val parsedValue = Integer.parseInt(value)
 
             if (parsedValue <= 0) {
-                return ConversionFailed("Value must be positive.")
+                return ValueConversionResult.ConversionFailed("Value must be positive.")
             }
 
-            return ConversionSucceeded(parsedValue)
+            return ValueConversionResult.ConversionSucceeded(parsedValue)
         } catch (_: NumberFormatException) {
-            return ConversionFailed("Value is not a valid integer.")
+            return ValueConversionResult.ConversionFailed("Value is not a valid integer.")
         }
     }
 }

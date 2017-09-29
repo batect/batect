@@ -19,7 +19,7 @@ package batect.cli.commands
 import batect.PrintStreamType
 import batect.VersionInfo
 import batect.cli.CommandLineParser
-import batect.cli.Succeeded
+import batect.cli.CommandLineParsingResult
 import batect.docker.DockerClient
 import batect.os.SystemInfo
 import com.github.salomonbrys.kodein.Kodein
@@ -60,11 +60,11 @@ object VersionInfoCommandSpec : Spek({
                 val result = commandLine.parse(emptyList(), kodein)
 
                 it("indicates that parsing succeeded") {
-                    assertThat(result, isA<Succeeded>())
+                    assertThat(result, isA<CommandLineParsingResult.Succeeded>())
                 }
 
                 it("returns a command instance ready for use") {
-                    assertThat((result as Succeeded).command,
+                    assertThat((result as CommandLineParsingResult.Succeeded).command,
                         equalTo<Command>(VersionInfoCommand(versionInfo, outputStream, systemInfo, dockerClient, commandLineParser)))
                 }
             }

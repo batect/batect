@@ -90,10 +90,10 @@ data class ContainerFromFile(
         val result = pathResolver.resolve(buildDirectory)
 
         return when (result) {
-            is ResolvedToDirectory -> result.path
-            is ResolvedToFile -> throw ConfigurationException("Build directory '$buildDirectory' (resolved to '${result.path}') for container '$containerName' is not a directory.")
-            is NotFound -> throw ConfigurationException("Build directory '$buildDirectory' (resolved to '${result.path}') for container '$containerName' does not exist.")
-            is InvalidPath -> throw ConfigurationException("Build directory '$buildDirectory' for container '$containerName' is not a valid path.")
+            is PathResolutionResult.ResolvedToDirectory -> result.path
+            is PathResolutionResult.ResolvedToFile -> throw ConfigurationException("Build directory '$buildDirectory' (resolved to '${result.path}') for container '$containerName' is not a directory.")
+            is PathResolutionResult.NotFound -> throw ConfigurationException("Build directory '$buildDirectory' (resolved to '${result.path}') for container '$containerName' does not exist.")
+            is PathResolutionResult.InvalidPath -> throw ConfigurationException("Build directory '$buildDirectory' for container '$containerName' is not a valid path.")
         }
     }
 
@@ -101,10 +101,10 @@ data class ContainerFromFile(
         val result = pathResolver.resolve(volumeMount.localPath)
 
         val resolvedLocalPath = when (result) {
-            is ResolvedToDirectory -> result.path
-            is ResolvedToFile -> result.path
-            is NotFound -> result.path
-            is InvalidPath -> throw ConfigurationException("Local path '${volumeMount.localPath}' for volume mount in container '$containerName' is not a valid path.")
+            is PathResolutionResult.ResolvedToDirectory -> result.path
+            is PathResolutionResult.ResolvedToFile -> result.path
+            is PathResolutionResult.NotFound -> result.path
+            is PathResolutionResult.InvalidPath -> throw ConfigurationException("Local path '${volumeMount.localPath}' for volume mount in container '$containerName' is not a valid path.")
         }
 
         return VolumeMount(resolvedLocalPath, volumeMount.containerPath, volumeMount.options)

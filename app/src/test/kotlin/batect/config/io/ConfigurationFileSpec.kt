@@ -101,8 +101,8 @@ object ConfigurationFileSpec : Spek({
                 val configFile = ConfigurationFile("the_project_name", containers = mapOf(containerName to container))
 
                 val pathResolver = mock<PathResolver> {
-                    on { resolve(originalBuildDirectory) } doReturn ResolvedToDirectory(resolvedBuildDirectory)
-                    on { resolve(originalVolumeMountPath) } doReturn ResolvedToDirectory(resolvedVolumeMountPath)
+                    on { resolve(originalBuildDirectory) } doReturn PathResolutionResult.ResolvedToDirectory(resolvedBuildDirectory)
+                    on { resolve(originalVolumeMountPath) } doReturn PathResolutionResult.ResolvedToDirectory(resolvedVolumeMountPath)
                 }
 
                 val resultingConfig = configFile.toConfiguration(pathResolver)
@@ -131,9 +131,9 @@ object ConfigurationFileSpec : Spek({
             }
 
             on("converting a configuration file with a container that has a build directory that %s",
-                data("does not exist", NotFound("/some_resolved_path") as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' does not exist."),
-                data("is not a directory", ResolvedToFile("/some_resolved_path") as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."),
-                data("is an invalid path", InvalidPath as PathResolutionResult, "Build directory 'build_dir' for container 'the_container_name' is not a valid path."))
+                data("does not exist", PathResolutionResult.NotFound("/some_resolved_path") as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' does not exist."),
+                data("is not a directory", PathResolutionResult.ResolvedToFile("/some_resolved_path") as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."),
+                data("is an invalid path", PathResolutionResult.InvalidPath as PathResolutionResult, "Build directory 'build_dir' for container 'the_container_name' is not a valid path."))
             { _, resolution, expectedMessage ->
                 val originalBuildDirectory = "build_dir"
                 val container = ContainerFromFile(originalBuildDirectory)
@@ -149,9 +149,9 @@ object ConfigurationFileSpec : Spek({
             }
 
             on("converting a configuration file with a container that has a volume mount that %s",
-                data("is a directory", ResolvedToDirectory("/some_resolved_path") as PathResolutionResult),
-                data("is a file", ResolvedToFile("/some_resolved_path") as PathResolutionResult),
-                data("does not exist", NotFound("/some_resolved_path") as PathResolutionResult)
+                data("is a directory", PathResolutionResult.ResolvedToDirectory("/some_resolved_path") as PathResolutionResult),
+                data("is a file", PathResolutionResult.ResolvedToFile("/some_resolved_path") as PathResolutionResult),
+                data("does not exist", PathResolutionResult.NotFound("/some_resolved_path") as PathResolutionResult)
             ) { _, resolution ->
                 val originalBuildDirectory = "build_dir"
                 val originalVolumeMountPath = "local_volume_path"
@@ -159,7 +159,7 @@ object ConfigurationFileSpec : Spek({
                 val configFile = ConfigurationFile("the_project_name", containers = mapOf("the_container_name" to container))
 
                 val pathResolver = mock<PathResolver> {
-                    on { resolve(originalBuildDirectory) } doReturn ResolvedToDirectory("/resolved_build_dir")
+                    on { resolve(originalBuildDirectory) } doReturn PathResolutionResult.ResolvedToDirectory("/resolved_build_dir")
                     on { resolve(originalVolumeMountPath) } doReturn resolution
                 }
 
@@ -178,8 +178,8 @@ object ConfigurationFileSpec : Spek({
                 val configFile = ConfigurationFile("the_project_name", containers = mapOf("the_container_name" to container))
 
                 val pathResolver = mock<PathResolver> {
-                    on { resolve(originalBuildDirectory) } doReturn ResolvedToDirectory("/resolved_build_dir")
-                    on { resolve(originalVolumeMountPath) } doReturn InvalidPath
+                    on { resolve(originalBuildDirectory) } doReturn PathResolutionResult.ResolvedToDirectory("/resolved_build_dir")
+                    on { resolve(originalVolumeMountPath) } doReturn PathResolutionResult.InvalidPath
                 }
 
                 it("fails with an appropriate error message") {

@@ -17,10 +17,8 @@
 package batect.cli.options
 
 import batect.testutils.CreateForEachTest
-import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
@@ -33,8 +31,8 @@ object ValueOptionSpec : Spek({
     describe("a value option") {
         val converter = { value: String ->
             when (value) {
-                "valid-value" -> ConversionSucceeded(123)
-                else -> ConversionFailed<Int>("'$value' is not a acceptable value.")
+                "valid-value" -> ValueConversionResult.ConversionSucceeded(123)
+                else -> ValueConversionResult.ConversionFailed<Int>("'$value' is not a acceptable value.")
             }
         }
 
@@ -42,8 +40,8 @@ object ValueOptionSpec : Spek({
             given("an option with short and long names") {
                 val valueConverter = { value: String ->
                     when (value) {
-                        "invalid-thing" -> ConversionFailed<String>("that's not allowed")
-                        else -> ConversionSucceeded<String>(value)
+                        "invalid-thing" -> ValueConversionResult.ConversionFailed<String>("that's not allowed")
+                        else -> ValueConversionResult.ConversionSucceeded<String>(value)
                     }
                 }
 

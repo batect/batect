@@ -17,8 +17,6 @@
 package batect.cli.commands
 
 import batect.cli.CommandLineParsingResult
-import batect.cli.Failed
-import batect.cli.Succeeded
 import batect.cli.options.OptionParser
 import batect.cli.options.OptionParserContainer
 import batect.cli.options.OptionsParsingResult
@@ -45,7 +43,7 @@ abstract class CommandDefinition(val commandName: String, val description: Strin
         val optionParsingResult = optionParser.parseOptions(args)
 
         return when (optionParsingResult) {
-            is OptionsParsingResult.InvalidOptions -> Failed(optionParsingResult.message)
+            is OptionsParsingResult.InvalidOptions -> CommandLineParsingResult.Failed(optionParsingResult.message)
             is OptionsParsingResult.ReadOptions -> parseParameters(args.drop(optionParsingResult.argumentsConsumed), kodein)
         }
     }
@@ -55,7 +53,7 @@ abstract class CommandDefinition(val commandName: String, val description: Strin
             val firstMissingParam = requiredPositionalParameters.drop(args.count()).first()
             val noun = if (requiredPositionalParameters.count() == 1) "parameter" else "parameters"
 
-            return Failed("Command '$commandName' requires at least ${requiredPositionalParameters.count()} $noun. The parameter '${firstMissingParam.name}' was not supplied.")
+            return CommandLineParsingResult.Failed("Command '$commandName' requires at least ${requiredPositionalParameters.count()} $noun. The parameter '${firstMissingParam.name}' was not supplied.")
         }
 
         val maxParameters = requiredPositionalParameters.count() + optionalPositionalParameters.count()
@@ -68,7 +66,7 @@ abstract class CommandDefinition(val commandName: String, val description: Strin
                 else -> "takes at most $maxParameters parameters"
             }
 
-            return Failed("Command '$commandName' $message. ('$firstInvalid' is the first extra parameter.)")
+            return CommandLineParsingResult.Failed("Command '$commandName' $message. ('$firstInvalid' is the first extra parameter.)")
         }
 
         val requiredParameterValues = args.take(requiredPositionalParameters.count())
@@ -78,7 +76,7 @@ abstract class CommandDefinition(val commandName: String, val description: Strin
         optionalParameterValues.zip(optionalPositionalParameters).forEach { (arg, param) -> param.value = arg }
         optionalPositionalParameters.drop(optionalParameterValues.count()).forEach { it.value = null }
 
-        return Succeeded(this.createCommand(kodein))
+        return CommandLineParsingResult.Succeeded(this.createCommand(kodein))
     }
 
     abstract fun createCommand(kodein: Kodein): Command

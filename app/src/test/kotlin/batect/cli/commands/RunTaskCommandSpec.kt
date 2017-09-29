@@ -18,8 +18,8 @@ package batect.cli.commands
 
 import batect.PrintStreamType
 import batect.TaskRunner
+import batect.cli.CommandLineParsingResult
 import batect.cli.CommonOptions
-import batect.cli.Succeeded
 import batect.cli.options.LevelOfParallelismDefaultValueProvider
 import batect.config.Configuration
 import batect.config.ContainerMap
@@ -88,11 +88,11 @@ object RunTaskCommandSpec : Spek({
                 val result = commandLine.parse(listOf("the-task"), kodein)
 
                 it("indicates that parsing succeeded") {
-                    assertThat(result, isA<Succeeded>())
+                    assertThat(result, isA<CommandLineParsingResult.Succeeded>())
                 }
 
                 it("returns a command instance ready for use") {
-                    assertThat((result as Succeeded).command, equalTo<Command>(
+                    assertThat((result as CommandLineParsingResult.Succeeded).command, equalTo<Command>(
                         RunTaskCommand("thefile.yml", "the-task", LevelOfParallelismDefaultValueProvider.value, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole, logger)))
                 }
             }
@@ -101,11 +101,11 @@ object RunTaskCommandSpec : Spek({
                 val result = commandLine.parse(listOf("--level-of-parallelism", "123", "the-task"), kodein)
 
                 it("indicates that parsing succeeded") {
-                    assertThat(result, isA<Succeeded>())
+                    assertThat(result, isA<CommandLineParsingResult.Succeeded>())
                 }
 
                 it("returns a command instance ready for use with the desired level of parallelism") {
-                    assertThat((result as Succeeded).command, equalTo<Command>(
+                    assertThat((result as CommandLineParsingResult.Succeeded).command, equalTo<Command>(
                         RunTaskCommand("thefile.yml", "the-task", 123, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole, logger)))
                 }
             }

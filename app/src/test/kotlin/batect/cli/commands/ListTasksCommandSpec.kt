@@ -25,8 +25,8 @@ import com.natpryce.hamkrest.isA
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import batect.PrintStreamType
+import batect.cli.CommandLineParsingResult
 import batect.cli.CommonOptions
-import batect.cli.Succeeded
 import batect.config.Configuration
 import batect.config.ContainerMap
 import batect.config.Task
@@ -56,11 +56,11 @@ object ListTasksCommandSpec : Spek({
                 val result = commandLine.parse(emptyList(), kodein)
 
                 it("indicates that parsing succeeded") {
-                    assertThat(result, isA<Succeeded>())
+                    assertThat(result, isA<CommandLineParsingResult.Succeeded>())
                 }
 
                 it("returns a command instance ready for use") {
-                    assertThat((result as Succeeded).command, equalTo<Command>(ListTasksCommand("thefile.yml", configLoader, outputStream)))
+                    assertThat((result as CommandLineParsingResult.Succeeded).command, equalTo<Command>(ListTasksCommand("thefile.yml", configLoader, outputStream)))
                 }
             }
         }

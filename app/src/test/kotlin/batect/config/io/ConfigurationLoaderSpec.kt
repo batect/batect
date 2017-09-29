@@ -51,7 +51,7 @@ object ConfigurationLoaderSpec : Spek({
         val pathResolver = mock<PathResolver> {
             on { resolve(anyString()) } doAnswer { invocation ->
                 val path = invocation.arguments[0] as String
-                ResolvedToDirectory("/resolved/$path")
+                PathResolutionResult.ResolvedToDirectory("/resolved/$path")
             }
         }
 

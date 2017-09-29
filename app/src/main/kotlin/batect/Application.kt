@@ -18,8 +18,7 @@ package batect
 
 import batect.cli.BatectCommandLineParser
 import batect.cli.CommandLineParser
-import batect.cli.Failed
-import batect.cli.Succeeded
+import batect.cli.CommandLineParsingResult
 import batect.config.io.ConfigurationLoader
 import batect.config.io.PathResolverFactory
 import batect.docker.DockerClient
@@ -75,11 +74,11 @@ class Application(override val kodein: Kodein) : KodeinAware {
             }
 
             return when (result) {
-                is Failed -> {
+                is CommandLineParsingResult.Failed -> {
                     errorStream.println(result.error)
                     -1
                 }
-                is Succeeded -> result.command.run()
+                is CommandLineParsingResult.Succeeded -> result.command.run()
             }
         } catch (e: Throwable) {
             errorStream.println(e)

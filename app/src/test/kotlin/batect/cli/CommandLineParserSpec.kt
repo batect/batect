@@ -93,7 +93,7 @@ object CommandLineParserSpec : Spek({
                 on("parsing a list of arguments") {
                     it("indicates that parsing failed") {
                         assertThat(parser.parse(listOf("abc", "123"), initializeAfterCommonOptionsParsed),
-                            equalTo<CommandLineParsingResult>(Failed("Something was invalid")))
+                            equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Something was invalid")))
                     }
 
                     it("does not call the post-common options parsing initialisation function") {
@@ -111,7 +111,7 @@ object CommandLineParserSpec : Spek({
                     val result = parser.parse(listOf("--some-option", "--some-other-option"), initializeAfterCommonOptionsParsed)
 
                     it("indicates that parsing failed because no command was provided") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("No command specified. Run 'the-cool-app help' for a list of valid commands.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("No command specified. Run 'the-cool-app help' for a list of valid commands.")))
                     }
 
                     it("does not call the post-common options parsing initialisation function") {
@@ -123,7 +123,7 @@ object CommandLineParserSpec : Spek({
                     val result = parser.parse(listOf("--some-option", "--some-other-option", "some-non-existent-command"), initializeAfterCommonOptionsParsed)
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Invalid command 'some-non-existent-command'. Run 'the-cool-app help' for a list of valid commands.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Invalid command 'some-non-existent-command'. Run 'the-cool-app help' for a list of valid commands.")))
                     }
 
                     it("does not call the post-common options parsing initialisation function") {
@@ -135,7 +135,7 @@ object CommandLineParserSpec : Spek({
                     val result = parser.parse(listOf("--some-option", "--some-other-option", "--some-unknown-option", "do-stuff"), initializeAfterCommonOptionsParsed)
 
                     it("indicates that parsing failed") {
-                        assertThat(result, equalTo<CommandLineParsingResult>(Failed("Invalid option '--some-unknown-option'. Run 'the-cool-app help' for a list of valid options.")))
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Invalid option '--some-unknown-option'. Run 'the-cool-app help' for a list of valid options.")))
                     }
 
                     it("does not call the post-common options parsing initialisation function") {
@@ -148,14 +148,14 @@ object CommandLineParserSpec : Spek({
                         val command = NullCommand()
 
                         beforeEachTest {
-                            whenever(commandDefinition.parse(any(), any())).thenReturn(Succeeded(command))
+                            whenever(commandDefinition.parse(any(), any())).thenReturn(CommandLineParsingResult.Succeeded(command))
                         }
 
                         on("no command-specific options being provided") {
                             val result = parser.parse(listOf("--some-option", "--some-other-option", "do-stuff"), initializeAfterCommonOptionsParsed)
 
                             it("indicates that parsing succeeded") {
-                                assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(command)))
+                                assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(command)))
                             }
 
                             it("passes an empty list of arguments to the command") {
@@ -187,7 +187,7 @@ object CommandLineParserSpec : Spek({
                             val result = parser.parse(listOf("--some-option", "--some-other-option", "do-stuff", "some-command-parameter"), initializeAfterCommonOptionsParsed)
 
                             it("indicates that parsing succeeded") {
-                                assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(command)))
+                                assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(command)))
                             }
 
                             it("passes the command-specific arguments to the command") {
@@ -218,14 +218,14 @@ object CommandLineParserSpec : Spek({
 
                     describe("and the command does not parse its arguments successfully") {
                         beforeEachTest {
-                            whenever(commandDefinition.parse(any(), any())).thenReturn(Failed("Something went wrong"))
+                            whenever(commandDefinition.parse(any(), any())).thenReturn(CommandLineParsingResult.Failed("Something went wrong"))
                         }
 
                         on("parsing a list of arguments") {
                             val result = parser.parse(listOf("--some-option", "--some-other-option", "do-stuff"), initializeAfterCommonOptionsParsed)
 
                             it("indicates that parsing failed") {
-                                assertThat(result, equalTo<CommandLineParsingResult>(Failed("Something went wrong")))
+                                assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Something went wrong")))
                             }
 
                             it("still calls the post-common options parsing initialisation function") {
@@ -238,14 +238,14 @@ object CommandLineParserSpec : Spek({
                         val command = NullCommand()
 
                         beforeEachTest {
-                            whenever(commandDefinition.parse(any(), any())).thenReturn(Succeeded(command))
+                            whenever(commandDefinition.parse(any(), any())).thenReturn(CommandLineParsingResult.Succeeded(command))
                         }
 
                         on("parsing a list of arguments") {
                             val result = parser.parse(listOf("--some-option", "--some-other-option", "ds"), initializeAfterCommonOptionsParsed)
 
                             it("indicates that parsing succeeded") {
-                                assertThat(result, equalTo<CommandLineParsingResult>(Succeeded(command)))
+                                assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(command)))
                             }
 
                             it("calls the post-common options parsing initialisation function") {

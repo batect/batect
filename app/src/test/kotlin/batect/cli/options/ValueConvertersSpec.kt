@@ -28,7 +28,7 @@ object ValueConvertersSpec : Spek({
         describe("string value converter") {
             it("returns the value passed to it") {
                 assertThat(ValueConverters.string("some-value"),
-                        equalTo<ValueConversionResult<String>>(ConversionSucceeded("some-value")))
+                        equalTo<ValueConversionResult<String>>(ValueConversionResult.ConversionSucceeded("some-value")))
             }
         }
 
@@ -36,42 +36,42 @@ object ValueConvertersSpec : Spek({
             given("a positive integer") {
                 it("returns the parsed representation of that integer") {
                     assertThat(ValueConverters.positiveInteger("1"),
-                            equalTo<ValueConversionResult<Int>>(ConversionSucceeded(1)))
+                            equalTo<ValueConversionResult<Int>>(ValueConversionResult.ConversionSucceeded(1)))
                 }
             }
 
             given("zero") {
                 it("returns an error") {
                     assertThat(ValueConverters.positiveInteger("0"),
-                            equalTo<ValueConversionResult<Int>>(ConversionFailed("Value must be positive.")))
+                            equalTo<ValueConversionResult<Int>>(ValueConversionResult.ConversionFailed("Value must be positive.")))
                 }
             }
 
             given("a negative integer") {
                 it("returns an error") {
                     assertThat(ValueConverters.positiveInteger("-1"),
-                            equalTo<ValueConversionResult<Int>>(ConversionFailed("Value must be positive.")))
+                            equalTo<ValueConversionResult<Int>>(ValueConversionResult.ConversionFailed("Value must be positive.")))
                 }
             }
 
             given("an empty string") {
                 it("returns an error") {
                     assertThat(ValueConverters.positiveInteger(""),
-                            equalTo<ValueConversionResult<Int>>(ConversionFailed("Value is not a valid integer.")))
+                            equalTo<ValueConversionResult<Int>>(ValueConversionResult.ConversionFailed("Value is not a valid integer.")))
                 }
             }
 
             given("a hexadecimal number") {
                 it("returns an error") {
                     assertThat(ValueConverters.positiveInteger("123AAA"),
-                            equalTo<ValueConversionResult<Int>>(ConversionFailed("Value is not a valid integer.")))
+                            equalTo<ValueConversionResult<Int>>(ValueConversionResult.ConversionFailed("Value is not a valid integer.")))
                 }
             }
 
             given("something that is not a number") {
                 it("returns an error") {
                     assertThat(ValueConverters.positiveInteger("x"),
-                            equalTo<ValueConversionResult<Int>>(ConversionFailed("Value is not a valid integer.")))
+                            equalTo<ValueConversionResult<Int>>(ValueConversionResult.ConversionFailed("Value is not a valid integer.")))
                 }
             }
         }

@@ -27,8 +27,7 @@ import com.nhaarman.mockito_kotlin.reset
 import com.nhaarman.mockito_kotlin.whenever
 import batect.cli.commands.Command
 import batect.cli.CommandLineParser
-import batect.cli.Failed
-import batect.cli.Succeeded
+import batect.cli.CommandLineParsingResult
 import batect.logging.ApplicationInfoLogger
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.argumentCaptor
@@ -67,7 +66,7 @@ object ApplicationSpec : Spek({
                     override fun run(): Int = 123
                 }
 
-                whenever(commandLineParser.parse(eq(args), any())).thenReturn(Succeeded(command))
+                whenever(commandLineParser.parse(eq(args), any())).thenReturn(CommandLineParsingResult.Succeeded(command))
 
                 val infoLogger = mock<ApplicationInfoLogger>()
                 val initialisationFunctionKodein = Kodein {
@@ -98,7 +97,7 @@ object ApplicationSpec : Spek({
 
         given("the command line parser returns an error") {
             on("running the application") {
-                whenever(commandLineParser.parse(eq(args), any())).thenReturn(Failed("Something went wrong while parsing arguments"))
+                whenever(commandLineParser.parse(eq(args), any())).thenReturn(CommandLineParsingResult.Failed("Something went wrong while parsing arguments"))
 
                 val exitCode = application.run(args)
 
@@ -134,7 +133,7 @@ object ApplicationSpec : Spek({
                     override fun run(): Int = throw RuntimeException("Everything is broken")
                 }
 
-                whenever(commandLineParser.parse(eq(args), any())).thenReturn(Succeeded(command))
+                whenever(commandLineParser.parse(eq(args), any())).thenReturn(CommandLineParsingResult.Succeeded(command))
 
                 val exitCode = application.run(args)
 

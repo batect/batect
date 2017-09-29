@@ -81,7 +81,7 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
     }
 
     private fun nameFor(option: OptionDefinition): String {
-        val longNamePart = "${option.longOption}=value"
+        val longNamePart = if (option.acceptsValue) "${option.longOption}=value" else option.longOption
 
         return when {
             option.shortName == null -> "    $longNamePart"

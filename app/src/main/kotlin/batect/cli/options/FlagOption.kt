@@ -22,7 +22,7 @@ import kotlin.reflect.KProperty
 class FlagOption(longName: String,
                  description: String,
                  shortName: Char? = null)
-    : OptionDefinition(longName, description, shortName), ReadOnlyProperty<OptionParserContainer, Boolean> {
+    : OptionDefinition(longName, description, false, shortName), ReadOnlyProperty<OptionParserContainer, Boolean> {
     var value = false
         private set
 

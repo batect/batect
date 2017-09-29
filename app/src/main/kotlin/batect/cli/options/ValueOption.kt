@@ -28,7 +28,7 @@ class ValueOption<StorageType, ValueType : StorageType>(longName: String,
                                                         val defaultValueProvider: DefaultValueProvider<StorageType>,
                                                         val valueConverter: (String) -> ValueConversionResult<ValueType>,
                                                         shortName: Char? = null
-) : OptionDefinition(longName, description, shortName), ReadOnlyProperty<OptionParserContainer, StorageType> {
+) : OptionDefinition(longName, description, true, shortName), ReadOnlyProperty<OptionParserContainer, StorageType> {
 
     var value: StorageType = defaultValueProvider.value
         private set

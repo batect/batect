@@ -42,8 +42,8 @@ object HelpCommandSpec : Spek({
             override fun createCommand(kodein: Kodein): Command = NullCommand()
         }
 
-        fun createOption(longName: String, description: String, shortName: Char? = null): OptionDefinition =
-            object : OptionDefinition(longName, description, shortName) {
+        fun createOption(longName: String, description: String, acceptsValue: Boolean, shortName: Char? = null): OptionDefinition =
+            object : OptionDefinition(longName, description, acceptsValue, shortName) {
                 override fun parseValue(args: Iterable<String>): OptionParsingResult = throw NotImplementedError()
                 override val descriptionForHelp: String
                     get() = description + " (extra help info)"
@@ -92,10 +92,10 @@ object HelpCommandSpec : Spek({
                     on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
                     on { getAllCommandDefinitions() } doReturn setOf(firstCommandDefinition, secondCommandDefinition)
                     on { getCommonOptions() } doReturn setOf<OptionDefinition>(
-                        createOption("awesomeness-level", "Level of awesomeness to use."),
-                        createOption("booster-level", "Level of boosters to use."),
-                        createOption("file", "File name to use.", 'f'),
-                        createOption("sensible-default", "Something you can override if you want.")
+                        createOption("awesomeness-level", "Level of awesomeness to use.", true),
+                        createOption("booster-level", "Level of boosters to use.", true),
+                        createOption("file", "File name to use.", true, 'f'),
+                        createOption("enable-extra-stuff", "Something you can enable if you want.", false)
                     )
                 }
 
@@ -113,8 +113,8 @@ object HelpCommandSpec : Spek({
                         |Common options:
                         |      --awesomeness-level=value    Level of awesomeness to use. (extra help info)
                         |      --booster-level=value        Level of boosters to use. (extra help info)
+                        |      --enable-extra-stuff         Something you can enable if you want. (extra help info)
                         |  -f, --file=value                 File name to use. (extra help info)
-                        |      --sensible-default=value     Something you can override if you want. (extra help info)
                         |
                         |For help on the options available for a command, run 'the-cool-app help <command>'.
                         |
@@ -132,7 +132,7 @@ object HelpCommandSpec : Spek({
         given("a command name to show help for") {
             given("and that command name is a valid command name") {
                 given("the root parser has some common options") {
-                    val commonOptions = setOf(createOption("some-option", "Some common option."))
+                    val commonOptions = setOf(createOption("some-option", "Some common option.", true))
 
                     given("and that command has no options or positional parameters") {
                         val output = ByteArrayOutputStream()
@@ -337,6 +337,7 @@ object HelpCommandSpec : Spek({
                             on { getCommonOptions() } doReturn commonOptions
                             on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
                                 val someOption: String? by valueOption("some-option", "Some option that you can set.", 'o')
+                                val someFlag: Boolean by flagOption("some-flag", "Some flag that you can set.")
 
                                 override fun createCommand(kodein: Kodein): Command = NullCommand()
                             }
@@ -352,6 +353,7 @@ object HelpCommandSpec : Spek({
                             |Do the thing.
                             |
                             |Options:
+                            |      --some-flag            Some flag that you can set.
                             |  -o, --some-option=value    Some option that you can set.
                             |
                             |For help on the common options available for all commands, run 'the-cool-app help'.

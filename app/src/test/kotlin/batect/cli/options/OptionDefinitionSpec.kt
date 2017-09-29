@@ -31,7 +31,7 @@ import org.jetbrains.spek.api.dsl.on
 object OptionDefinitionSpec : Spek({
     describe("a option definition") {
         fun createOption(longName: String, description: String, shortName: Char? = null): OptionDefinition {
-            return object : OptionDefinition(longName, description, shortName) {
+            return object : OptionDefinition(longName, description, false, shortName) {
                 override fun parseValue(args: Iterable<String>): OptionParsingResult = throw NotImplementedError()
             }
         }
@@ -95,7 +95,7 @@ object OptionDefinitionSpec : Spek({
         describe("parsing") {
             class TestOptionDefinition(name: String,
                                        description: String,
-                                       shortName: Char? = null) : OptionDefinition(name, description, shortName) {
+                                       shortName: Char? = null) : OptionDefinition(name, description, false, shortName) {
                 override fun parseValue(args: Iterable<String>): OptionParsingResult = OptionParsingResult.ReadOption(1234)
             }
 

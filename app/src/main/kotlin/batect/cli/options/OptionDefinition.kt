@@ -18,6 +18,7 @@ package batect.cli.options
 
 abstract class OptionDefinition(val longName: String,
                                 val description: String,
+                                val acceptsValue: Boolean,
                                 val shortName: Char? = null) {
     private var alreadySeen: Boolean = false
 

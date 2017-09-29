@@ -31,6 +31,7 @@ import java.nio.file.FileSystem
 class BatectCommandLineParser(kodein: Kodein) : CommandLineParser(kodein, "batect", "For documentation and further information on batect, visit https://github.com/charleskorn/batect.") {
     val configurationFileName: String by valueOption("config-file", "The configuration file to use.", "batect.yml", 'f')
     val logFileName: String? by valueOption("log-file", "Write internal batect logs to file.")
+    val forceSimpleOutputMode: Boolean by flagOption("simple-output", "Force simple output (eg. no updating text). Automatically enabled if your console is detected to not support these features.")
 
     init {
         addCommandDefinition(RunTaskCommandDefinition())
@@ -41,6 +42,7 @@ class BatectCommandLineParser(kodein: Kodein) : CommandLineParser(kodein, "batec
     override fun createBindings(): Kodein.Module {
         return Kodein.Module {
             bind<String>(CommonOptions.ConfigurationFileName) with instance(configurationFileName)
+            bind<Boolean>(CommonOptions.ForceSimpleOutputMode) with instance(forceSimpleOutputMode)
 
             bind<LogSink>() with singleton {
                 if (logFileName == null) {

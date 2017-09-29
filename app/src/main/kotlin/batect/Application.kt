@@ -19,6 +19,7 @@ package batect
 import batect.cli.BatectCommandLineParser
 import batect.cli.CommandLineParser
 import batect.cli.CommandLineParsingResult
+import batect.cli.CommonOptions
 import batect.config.io.ConfigurationLoader
 import batect.config.io.PathResolverFactory
 import batect.docker.DockerClient
@@ -101,7 +102,7 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<DockerImageLabellingStrategy>() with singleton { DockerImageLabellingStrategy() }
     bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }
     bind<DockerContainerCreationCommandGenerator>() with singleton { DockerContainerCreationCommandGenerator() }
-    bind<EventLoggerProvider>() with singleton { EventLoggerProvider(instance(PrintStreamType.Output), instance(PrintStreamType.Error), instance(), instance()) }
+    bind<EventLoggerProvider>() with singleton { EventLoggerProvider(instance(PrintStreamType.Output), instance(PrintStreamType.Error), instance(), instance(), instance(CommonOptions.ForceSimpleOutputMode)) }
     bind<Console>(PrintStreamType.Output) with singleton { Console(instance(PrintStreamType.Output)) }
     bind<Console>(PrintStreamType.Error) with singleton { Console(instance(PrintStreamType.Error)) }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)

@@ -17,5 +17,6 @@
 package batect.cli
 
 enum class CommonOptions {
-    ConfigurationFileName
+    ConfigurationFileName,
+    ForceSimpleOutputMode
 }

@@ -57,6 +57,10 @@ object BatectCommandLineParserSpec : Spek({
                 it("creates a null log sink to use") {
                     assertThat(bindings.instance<LogSink>(), isA<NullLogSink>())
                 }
+
+                it("does not enable the simple output mode") {
+                    assertThat(bindings.instance<Boolean>(CommonOptions.ForceSimpleOutputMode), equalTo(false))
+                }
             }
         }
 
@@ -100,6 +104,21 @@ object BatectCommandLineParserSpec : Spek({
 
                 it("creates the file log sink with the expected file name") {
                     assertThat((logSink as FileLogSink).path, equalTo(fileSystem.getPath("log.log")))
+                }
+            }
+        }
+
+        given("the simple output mode has been enabled") {
+            val parser = BatectCommandLineParser(emptyKodein)
+            parser.parse(listOf("--simple-output"), {})
+
+            on("creating the set of Kodein bindings") {
+                val bindings = Kodein {
+                    import(parser.createBindings())
+                }
+
+                it("enables the simple output mode") {
+                    assertThat(bindings.instance<Boolean>(CommonOptions.ForceSimpleOutputMode), equalTo(true))
                 }
             }
         }

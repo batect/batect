@@ -22,10 +22,11 @@ class EventLoggerProvider(
     private val console: Console,
     private val errorConsole: Console,
     private val startupProgressDisplayProvider: StartupProgressDisplayProvider,
-    private val consoleInfo: ConsoleInfo
+    private val consoleInfo: ConsoleInfo,
+    private val forceSimpleOutputMode: Boolean
 ) {
     fun getEventLogger(graph: DependencyGraph): EventLogger {
-        if (consoleInfo.supportsInteractivity) {
+        if (consoleInfo.supportsInteractivity && !forceSimpleOutputMode) {
             return FancyEventLogger(console, errorConsole, startupProgressDisplayProvider.createForDependencyGraph(graph))
         } else {
             return SimpleEventLogger(console, errorConsole)

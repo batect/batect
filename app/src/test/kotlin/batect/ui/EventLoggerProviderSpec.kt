@@ -33,7 +33,7 @@ object EventLoggerProviderSpec : Spek({
         val errorConsole = mock<Console>()
         val graph = mock<DependencyGraph>()
 
-        on("when the console supports interactivity") {
+        on("when the console supports interactivity and simple output mode has not been forced on") {
             val startupProgressDisplay = mock<StartupProgressDisplay>()
             val startupProgressDisplayProvider = mock<StartupProgressDisplayProvider> {
                 on { createForDependencyGraph(graph) } doReturn startupProgressDisplay
@@ -43,7 +43,7 @@ object EventLoggerProviderSpec : Spek({
                 on { supportsInteractivity } doReturn true
             }
 
-            val provider = EventLoggerProvider(console, errorConsole, startupProgressDisplayProvider, consoleInfo)
+            val provider = EventLoggerProvider(console, errorConsole, startupProgressDisplayProvider, consoleInfo, false)
             val logger = provider.getEventLogger(graph)
 
             it("returns a fancy event logger") {
@@ -70,7 +70,30 @@ object EventLoggerProviderSpec : Spek({
                 on { supportsInteractivity } doReturn false
             }
 
-            val provider = EventLoggerProvider(console, errorConsole, startupProgressDisplayProvider, consoleInfo)
+            val provider = EventLoggerProvider(console, errorConsole, startupProgressDisplayProvider, consoleInfo, false)
+            val logger = provider.getEventLogger(graph)
+
+            it("returns a simple event logger") {
+                assertThat(logger, isA<SimpleEventLogger>())
+            }
+
+            it("passes the console to the event logger") {
+                assertThat((logger as SimpleEventLogger).console, equalTo(console))
+            }
+
+            it("passes the error console to the event logger") {
+                assertThat((logger as SimpleEventLogger).errorConsole, equalTo(errorConsole))
+            }
+        }
+
+        on("when simple output mode has been forced on") {
+            val startupProgressDisplayProvider = mock<StartupProgressDisplayProvider>()
+
+            val consoleInfo = mock<ConsoleInfo> {
+                on { supportsInteractivity } doReturn true
+            }
+
+            val provider = EventLoggerProvider(console, errorConsole, startupProgressDisplayProvider, consoleInfo, true)
             val logger = provider.getEventLogger(graph)
 
             it("returns a simple event logger") {

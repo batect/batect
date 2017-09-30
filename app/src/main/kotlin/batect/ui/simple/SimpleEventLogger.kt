@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.ui
+package batect.ui.simple
 
 import batect.config.Container
 import batect.model.events.TaskEvent
@@ -27,6 +27,9 @@ import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.model.steps.TaskStep
+import batect.ui.Console
+import batect.ui.ConsoleColor
+import batect.ui.EventLogger
 
 class SimpleEventLogger(val console: Console, val errorConsole: Console) : EventLogger(console, errorConsole) {
     private val commands = mutableMapOf<Container, String?>()

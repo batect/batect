@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.ui
+package batect.ui.fancy
 
 import batect.config.BuildImage
 import batect.config.Container
@@ -34,6 +34,8 @@ import batect.model.steps.PullImageStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.model.steps.TaskStep
+import batect.ui.Console
+import batect.ui.ConsoleColor
 
 class ContainerStartupProgressLine(val container: Container, val dependencies: Set<Container>) {
     private var isBuilding = false

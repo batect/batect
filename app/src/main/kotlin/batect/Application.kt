@@ -39,7 +39,7 @@ import batect.os.SystemInfo
 import batect.ui.Console
 import batect.ui.ConsoleInfo
 import batect.ui.EventLoggerProvider
-import batect.ui.StartupProgressDisplayProvider
+import batect.ui.fancy.StartupProgressDisplayProvider
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.KodeinAware
 import com.github.salomonbrys.kodein.bind

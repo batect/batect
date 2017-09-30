@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.ui
+package batect.ui.fancy
 
 import batect.config.Container
 import batect.docker.DockerNetwork
@@ -22,6 +22,7 @@ import batect.model.events.TaskNetworkCreatedEvent
 import batect.model.steps.BuildImageStep
 import batect.testutils.CreateForEachTest
 import batect.testutils.imageSourceDoesNotMatter
+import batect.ui.Console
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.reset

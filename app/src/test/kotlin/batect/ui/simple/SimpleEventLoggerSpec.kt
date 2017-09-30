@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.ui
+package batect.ui.simple
 
 import batect.config.Container
 import batect.docker.DockerContainer
@@ -31,6 +31,8 @@ import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.testutils.CreateForEachTest
 import batect.testutils.imageSourceDoesNotMatter
+import batect.ui.Console
+import batect.ui.ConsoleColor
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.eq

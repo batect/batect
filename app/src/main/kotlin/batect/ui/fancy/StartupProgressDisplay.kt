@@ -14,10 +14,11 @@
    limitations under the License.
 */
 
-package batect.ui
+package batect.ui.fancy
 
 import batect.model.events.TaskEvent
 import batect.model.steps.TaskStep
+import batect.ui.Console
 
 class StartupProgressDisplay(val containerLines: List<ContainerStartupProgressLine>) {
     private var havePrintedOnceBefore = false

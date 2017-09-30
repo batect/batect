@@ -17,6 +17,9 @@
 package batect.ui
 
 import batect.model.DependencyGraph
+import batect.ui.fancy.FancyEventLogger
+import batect.ui.fancy.StartupProgressDisplayProvider
+import batect.ui.simple.SimpleEventLogger
 
 class EventLoggerProvider(
     private val console: Console,

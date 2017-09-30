@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.ui
+package batect.ui.fancy
 
 import batect.config.Container
 import batect.model.DependencyGraph

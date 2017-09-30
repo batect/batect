@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.ui
+package batect.ui.fancy
 
 import batect.model.events.TaskEvent
 import batect.model.steps.CleanUpContainerStep
@@ -22,6 +22,9 @@ import batect.model.steps.DisplayTaskFailureStep
 import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.TaskStep
+import batect.ui.Console
+import batect.ui.ConsoleColor
+import batect.ui.EventLogger
 
 class FancyEventLogger(
     val console: Console,

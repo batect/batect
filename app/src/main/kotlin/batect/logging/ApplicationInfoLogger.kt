@@ -27,6 +27,9 @@ class ApplicationInfoLogger(
     private val dockerClient: DockerClient,
     private val environmentVariables: Map<String, String>
 ) {
+    constructor(logger: Logger, versionInfo: VersionInfo, systemInfo: SystemInfo, dockerClient: DockerClient)
+        : this(logger, versionInfo, systemInfo, dockerClient, System.getenv())
+
     fun logApplicationInfo(commandLineArgs: Iterable<String>) {
         logger.info {
             message("Application started.")

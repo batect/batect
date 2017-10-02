@@ -24,6 +24,8 @@ class ConsoleInfo(
     private val environment: Map<String, String>,
     private val logger: Logger
 ) {
+    constructor(processRunner: ProcessRunner, logger: Logger) : this(processRunner, System.getenv(), logger)
+
     val stdinIsTTY: Boolean by lazy {
         val result = processRunner.runAndCaptureOutput(listOf("tty"))
 

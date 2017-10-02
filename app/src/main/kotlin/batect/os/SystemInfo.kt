@@ -19,6 +19,8 @@ package batect.os
 import java.util.Properties
 
 class SystemInfo(private val systemProperties: Properties) {
+    constructor() : this(System.getProperties())
+
     private val jvmVendor = systemProperties.getProperty("java.vm.vendor")
     private val jvmName = systemProperties.getProperty("java.vm.name")
     private val javaVersion = systemProperties.getProperty("java.version")

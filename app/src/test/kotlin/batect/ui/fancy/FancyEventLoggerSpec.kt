@@ -120,10 +120,7 @@ object FancyEventLoggerSpec : Spek({
                     }
 
                     it("prints the cleanup progress to the console") {
-                        inOrder(console, cleanupProgressDisplay) {
-                            verify(cleanupProgressDisplay).print(console)
-                            verify(console).println()
-                        }
+                        verify(cleanupProgressDisplay).print(console)
                     }
 
                     it("prints the error message before printing the cleanup progress, with a blank line in between") {
@@ -162,12 +159,10 @@ object FancyEventLoggerSpec : Spek({
 
                     it("clears the existing cleanup progress before printing the error message and reprinting the cleanup progress") {
                         inOrder(console, redErrorConsole, cleanupProgressDisplay) {
-                            verify(console).moveCursorUp()
-                            verify(console).clearCurrentLine()
+                            verify(cleanupProgressDisplay).clear(console)
                             verify(redErrorConsole).println(step.message)
                             verify(redErrorConsole).println()
                             verify(cleanupProgressDisplay).print(console)
-                            verify(console).println()
                         }
                     }
                 }
@@ -217,14 +212,11 @@ object FancyEventLoggerSpec : Spek({
                         verify(cleanupProgressDisplay).onEventPosted(event)
                         verify(console).println()
                         verify(cleanupProgressDisplay).print(console)
-                        verify(console).println()
                     }
                 }
 
-                it("does not move the console cursor or clear the current line") {
-                    verify(console, never()).moveCursorDown()
-                    verify(console, never()).moveCursorUp()
-                    verify(console, never()).clearCurrentLine()
+                it("does attempt to clear the previous cleanup progress") {
+                    verify(cleanupProgressDisplay, never()).clear(console)
                 }
             }
 
@@ -253,13 +245,10 @@ object FancyEventLoggerSpec : Spek({
                     }
                 }
 
-                it("clears the previously displayed cleanup progress and reprints it") {
-                    inOrder(console, cleanupProgressDisplay) {
-                        verify(console).moveCursorUp()
-                        verify(console).clearCurrentLine()
+                it("clears the previously displayed cleanup progress before reprinting it") {
+                    inOrder(cleanupProgressDisplay) {
+                        verify(cleanupProgressDisplay).clear(console)
                         verify(cleanupProgressDisplay).print(console)
-                        verify(console).moveCursorDown()
-                        verify(console).moveCursorToStartOfLine()
                     }
                 }
             }
@@ -287,13 +276,10 @@ object FancyEventLoggerSpec : Spek({
                     }
                 }
 
-                it("clears the previously displayed cleanup progress and reprints it") {
-                    inOrder(console, cleanupProgressDisplay) {
-                        verify(console).moveCursorUp()
-                        verify(console).clearCurrentLine()
+                it("clears the previously displayed cleanup progress before reprinting it") {
+                    inOrder(cleanupProgressDisplay) {
+                        verify(cleanupProgressDisplay).clear(console)
                         verify(cleanupProgressDisplay).print(console)
-                        verify(console).moveCursorDown()
-                        verify(console).moveCursorToStartOfLine()
                     }
                 }
             }

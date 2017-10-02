@@ -44,15 +44,15 @@ class CleanupProgressDisplay {
         console.withColor(ConsoleColor.White) {
             when {
                 containersStillToCleanUp().isNotEmpty() -> printContainerCleanupStatus(this)
-                networkHasBeenCreated && !networkHasBeenDeleted -> print("Cleaning up: removing task network...")
-                else -> print("Clean up: done")
+                networkHasBeenCreated && !networkHasBeenDeleted -> println("Cleaning up: removing task network...")
+                else -> println("Clean up: done")
             }
         }
     }
 
     private fun containersStillToCleanUp(): Set<Container> = containersCreated - containersRemoved
 
-    fun printContainerCleanupStatus(console: Console) {
+    private fun printContainerCleanupStatus(console: Console) {
         val containers = containersStillToCleanUp().map { it.name }.sorted()
 
         if (containers.size == 1) {
@@ -71,6 +71,11 @@ class CleanupProgressDisplay {
             console.printBold(containers[containers.lastIndex])
         }
 
-        console.print(") left to remove...")
+        console.println(") left to remove...")
+    }
+
+    fun clear(console: Console) {
+        console.moveCursorUp()
+        console.clearCurrentLine()
     }
 }

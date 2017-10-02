@@ -57,7 +57,7 @@ class FancyEventLogger(
 
     private fun displayTaskFailure(step: DisplayTaskFailureStep) {
         if (haveStartedCleanup) {
-            clearExistingCleanupStatus()
+            cleanupProgressDisplay.clear(console)
         } else {
             console.println()
         }
@@ -67,29 +67,18 @@ class FancyEventLogger(
             println()
         }
 
-        displayCleanupStatusForFirstTime()
+        cleanupProgressDisplay.print(console)
+        haveStartedCleanup = true
     }
 
     private fun displayCleanupStatus() {
         if (haveStartedCleanup) {
-            clearExistingCleanupStatus()
-            cleanupProgressDisplay.print(console)
-            console.moveCursorDown()
-            console.moveCursorToStartOfLine()
+            cleanupProgressDisplay.clear(console)
         } else {
             console.println()
-            displayCleanupStatusForFirstTime()
         }
-    }
 
-    private fun clearExistingCleanupStatus() {
-        console.moveCursorUp()
-        console.clearCurrentLine()
-    }
-
-    private fun displayCleanupStatusForFirstTime() {
         cleanupProgressDisplay.print(console)
-        console.println()
         haveStartedCleanup = true
     }
 

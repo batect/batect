@@ -42,16 +42,7 @@ class StartupProgressDisplay(val containerLines: List<ContainerStartupProgressLi
             }
 
             it.print(console)
-
-            if (havePrintedOnceBefore) {
-                console.moveCursorDown()
-            } else {
-                console.println()
-            }
-        }
-
-        if (havePrintedOnceBefore) {
-            console.moveCursorToStartOfLine()
+            console.println()
         }
 
         havePrintedOnceBefore = true

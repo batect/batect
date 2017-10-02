@@ -88,13 +88,11 @@ object StartupProgressDisplaySpec : Spek({
 
                         verify(console).clearCurrentLine()
                         verify(line1).print(console)
-                        verify(console).moveCursorDown()
+                        verify(console).println()
 
                         verify(console).clearCurrentLine()
                         verify(line2).print(console)
-                        verify(console).moveCursorDown()
-
-                        verify(console).moveCursorToStartOfLine()
+                        verify(console).println()
                     }
                 }
             }

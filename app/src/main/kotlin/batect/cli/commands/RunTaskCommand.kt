@@ -95,7 +95,9 @@ data class RunTaskCommand(
                 return exitCode
             }
 
-            console.println()
+            if (task != tasks.last()) {
+                console.println()
+            }
         }
 
         return 0

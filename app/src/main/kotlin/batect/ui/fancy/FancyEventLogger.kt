@@ -16,10 +16,9 @@
 
 package batect.ui.fancy
 
+import batect.model.events.RunningContainerExitedEvent
 import batect.model.events.TaskEvent
-import batect.model.steps.CleanUpContainerStep
 import batect.model.steps.DisplayTaskFailureStep
-import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.TaskStep
 import batect.ui.Console
@@ -29,23 +28,18 @@ import batect.ui.EventLogger
 class FancyEventLogger(
     val console: Console,
     val errorConsole: Console,
-    val startupProgressDisplay: StartupProgressDisplay
+    val startupProgressDisplay: StartupProgressDisplay,
+    val cleanupProgressDisplay: CleanupProgressDisplay
 ) : EventLogger(console, errorConsole) {
     private val lock = Object()
     private var keepUpdatingStartupProgress = true
-    private var haveStartedCleanUp = false
+    private var haveStartedCleanup = false
 
     override fun onStartingTaskStep(step: TaskStep) {
         synchronized(lock) {
             if (step is DisplayTaskFailureStep) {
                 keepUpdatingStartupProgress = false
                 displayTaskFailure(step)
-                return
-            }
-
-            if (step is RemoveContainerStep || step is CleanUpContainerStep) {
-                keepUpdatingStartupProgress = false
-                logCleanUpStarting()
                 return
             }
 
@@ -62,22 +56,41 @@ class FancyEventLogger(
     }
 
     private fun displayTaskFailure(step: DisplayTaskFailureStep) {
+        if (haveStartedCleanup) {
+            clearExistingCleanupStatus()
+        } else {
+            console.println()
+        }
+
         errorConsole.withColor(ConsoleColor.Red) {
-            println()
             println(step.message)
+            println()
+        }
+
+        displayCleanupStatusForFirstTime()
+    }
+
+    private fun displayCleanupStatus() {
+        if (haveStartedCleanup) {
+            clearExistingCleanupStatus()
+            cleanupProgressDisplay.print(console)
+            console.moveCursorDown()
+            console.moveCursorToStartOfLine()
+        } else {
+            console.println()
+            displayCleanupStatusForFirstTime()
         }
     }
 
-    private fun logCleanUpStarting() {
-        if (haveStartedCleanUp) {
-            return
-        }
+    private fun clearExistingCleanupStatus() {
+        console.moveCursorUp()
+        console.clearCurrentLine()
+    }
 
-        console.withColor(ConsoleColor.White) {
-            println("\nCleaning up...")
-        }
-
-        haveStartedCleanUp = true
+    private fun displayCleanupStatusForFirstTime() {
+        cleanupProgressDisplay.print(console)
+        console.println()
+        haveStartedCleanup = true
     }
 
     override fun postEvent(event: TaskEvent) {
@@ -85,6 +98,12 @@ class FancyEventLogger(
             if (keepUpdatingStartupProgress) {
                 startupProgressDisplay.onEventPosted(event)
                 startupProgressDisplay.print(console)
+            }
+
+            cleanupProgressDisplay.onEventPosted(event)
+
+            if (haveStartedCleanup || event is RunningContainerExitedEvent) {
+                displayCleanupStatus()
             }
         }
     }

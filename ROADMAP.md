@@ -23,8 +23,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * fancy progress bar output for building images and starting dependencies
   * make sure accidental input on stdin doesn't mangle it
   * test with different console colour schemes (eg. white background, black background, OS X default, Ubuntu default, Ubuntu GUI terminal default)
-* show a message when cleaning up
-  * second pass: show what still remains to be cleaned up (eg. 'Cleaning up... 3 containers (X, Y, Z) still running')
 * easy way to mount Docker socket and statically linked binary into container (eg. for building other containers from within that container)
 * default to just terminating all containers at clean up time with option to gracefully shut down on individual containers
   (eg. database where data is shared between invocations and we don't want to corrupt it)

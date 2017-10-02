@@ -136,28 +136,51 @@ object RunTaskCommandSpec : Spek({
                 }
             }
 
-            on("when the configuration file can be loaded and the task has no dependencies") {
+            describe("when the configuration file can be loaded and the task has no dependencies") {
                 val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {
                     on { resolveExecutionOrder(config, taskName) } doReturn listOf(mainTask)
                 }
 
-                val taskRunner = mock<TaskRunner> {
-                    on { run(config, mainTask, levelOfParallelism) } doReturn expectedTaskExitCode
+                on("and that task returns a non-zero exit code") {
+                    val taskRunner = mock<TaskRunner> {
+                        on { run(config, mainTask, levelOfParallelism) } doReturn expectedTaskExitCode
+                    }
+
+                    val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole, logger)
+                    val exitCode = command.run()
+
+                    it("runs the task") {
+                        verify(taskRunner).run(config, mainTask, levelOfParallelism)
+                    }
+
+                    it("returns the exit code of the task") {
+                        assertThat(exitCode, equalTo(expectedTaskExitCode))
+                    }
+
+                    it("does not print any blank lines after the task") {
+                        verify(console, never()).println()
+                    }
                 }
 
-                val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole, logger)
-                val exitCode = command.run()
+                on("and that task returns a zero exit code") {
+                    val taskRunner = mock<TaskRunner> {
+                        on { run(config, mainTask, levelOfParallelism) } doReturn 0
+                    }
 
-                it("runs the task") {
-                    verify(taskRunner).run(config, mainTask, levelOfParallelism)
-                }
+                    val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskExecutionOrderResolver, taskRunner, console, errorConsole, logger)
+                    val exitCode = command.run()
 
-                it("returns the exit code of the task") {
-                    assertThat(exitCode, equalTo(expectedTaskExitCode))
-                }
+                    it("runs the task") {
+                        verify(taskRunner).run(config, mainTask, levelOfParallelism)
+                    }
 
-                it("does not print any blank lines") {
-                    verify(console, never()).println()
+                    it("returns the exit code of the task") {
+                        assertThat(exitCode, equalTo(0))
+                    }
+
+                    it("does not print any blank lines after the task") {
+                        verify(console, never()).println()
+                    }
                 }
             }
 

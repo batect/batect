@@ -17,6 +17,7 @@
 package batect.ui
 
 import batect.model.DependencyGraph
+import batect.ui.fancy.CleanupProgressDisplay
 import batect.ui.fancy.FancyEventLogger
 import batect.ui.fancy.StartupProgressDisplayProvider
 import batect.ui.simple.SimpleEventLogger
@@ -30,7 +31,7 @@ class EventLoggerProvider(
 ) {
     fun getEventLogger(graph: DependencyGraph): EventLogger {
         if (consoleInfo.supportsInteractivity && !forceSimpleOutputMode) {
-            return FancyEventLogger(console, errorConsole, startupProgressDisplayProvider.createForDependencyGraph(graph))
+            return FancyEventLogger(console, errorConsole, startupProgressDisplayProvider.createForDependencyGraph(graph), CleanupProgressDisplay())
         } else {
             return SimpleEventLogger(console, errorConsole)
         }

@@ -43,6 +43,11 @@ If there's something you're really keen to see, pull requests are always welcome
 * use Docker API directly rather than using Docker CLI (would allow for more detailed progress and error reporting)
 * documentation
   * examples for common languages and scenarios
+    * Golang
+    * Ruby
+    * NodeJS
+      * frontend
+      * backend
   * CI setup - reminder to clean up stale images regularly
   * performance tips
     * use ':cached' mode for mounts for performance (https://docs.docker.com/docker-for-mac/osxfs-caching/)
@@ -51,6 +56,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * integration with IDEs (eg. how to reference the Ruby runtime inside a Docker container for code completion etc.)
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
 * easy way to update to new versions when notified (eg. `batect update` downloads new wrapper script and replaces it in place)
+* use batect to build batect (self-hosting)
 * move to Kotlin/Native
   * Why? Don't want to require users to install a JVM to use batect, also want to remove as much overhead as possible
 

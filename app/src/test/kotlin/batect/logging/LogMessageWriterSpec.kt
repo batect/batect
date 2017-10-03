@@ -48,7 +48,7 @@ object LogMessageWriterSpec : Spek({
             }
 
             it("includes the severity") {
-                assertThat(parsed["@severity"].textValue(), equalTo("Info"))
+                assertThat(parsed["@severity"].textValue(), equalTo("info"))
             }
 
             it("does not include any other fields") {
@@ -88,7 +88,7 @@ object LogMessageWriterSpec : Spek({
             }
 
             it("includes the severity") {
-                assertThat(parsed["@severity"].textValue(), equalTo("Info"))
+                assertThat(parsed["@severity"].textValue(), equalTo("info"))
             }
 
             it("includes the user-provided fields") {

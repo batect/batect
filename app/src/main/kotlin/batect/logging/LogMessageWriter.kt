@@ -32,7 +32,7 @@ class LogMessageWriter {
         val values = mapOf(
             "@timestamp" to message.timestamp,
             "@message" to message.message,
-            "@severity" to message.severity
+            "@severity" to message.severity.toString().toLowerCase()
         ) + message.additionalData
 
         serializer.writeValue(outputStream, values)

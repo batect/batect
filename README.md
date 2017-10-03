@@ -53,7 +53,7 @@ batect helps solve these problems by:
 
 ## How do I use this?
 
-Take a look at the [getting started guide](docs/GettingStarted.md), or consult the 
+Take a look at the [getting started guide](docs/GettingStarted.md), or consult the
 [configuration file reference](docs/ConfigFile.md).
 
 There's also a [sample project](https://github.com/charleskorn/batect-sample) you can try.

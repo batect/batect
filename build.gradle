@@ -29,6 +29,7 @@ allprojects {
 }
 
 apply from: "$rootDir/gradle/utilities.gradle"
+apply from: "$rootDir/gradle/spotless.gradle"
 
 task assembleRelease(type: Copy) {
     from project("app").getTasksByName("shadowJar", false)

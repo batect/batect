@@ -1,8 +1,8 @@
 # `batect.yml` reference
 
-Batect uses a YAML-based configuration file. 
+Batect uses a YAML-based configuration file.
 
-By convention, this file is called `batect.yml` and is placed in the root of your project (alongside the `batect` script). 
+By convention, this file is called `batect.yml` and is placed in the root of your project (alongside the `batect` script).
 You can, however, use a different name or location, and tell `batect` where to find it with the `-f` option.
 
 ## Sample configuration file
@@ -99,7 +99,7 @@ Each container definition is made up of:
 | Name | Description |
 |---|---|
 | `image` | Image name (in standard Docker image reference format) to use for this container. **One of `image` or `build_directory` is required.** |
-| `build_directory` | Path (relative to the configuration file's directory) to a directory containing a Dockerfile to build and use as an image for this container. **One of `image` or `build_directory` is required.** | 
+| `build_directory` | Path (relative to the configuration file's directory) to a directory containing a Dockerfile to build and use as an image for this container. **One of `image` or `build_directory` is required.** |
 | `command` | Command to run when the container starts. If not provided, the default command for the image will be run. Both of these can be overridden for an individual task by specifying a `command` at the task level. |
 | `environment` | List of environment variables (in `name=value` format) for the container. |
 | `working_directory` | Working directory to start the container in. If not provided, the default working directory for the image will be used. |
@@ -116,4 +116,4 @@ Each task definition is made up of:
 | `description` | Description shown when running `batect tasks`. |
 | `run` | Container (`container`) and command (`command`) to run for this task. **`container` is required.** `command` overrides any command specifed on the container definition and the default image command. |
 | `start` | List of other containers that should be started and healthy before starting the task container given in `run`. The behaviour is the same as the `dependencies` property on a container definition. |
-| `prerequisites` | List of other tasks that should be run before running this task. If a prerequisite task finishes with a non-zero exit code, then neither this task nor any other prerequisites will be run. | 
+| `prerequisites` | List of other tasks that should be run before running this task. If a prerequisite task finishes with a non-zero exit code, then neither this task nor any other prerequisites will be run. |

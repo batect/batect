@@ -18,7 +18,7 @@ package batect.os
 
 import batect.logging.Logger
 import batect.logging.Severity
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import batect.testutils.InMemoryLogSink
 import batect.testutils.hasMessage
 import batect.testutils.withAdditionalData
@@ -35,9 +35,9 @@ import java.io.File
 
 object ProcessRunnerSpec : Spek({
     describe("a process runner") {
-        val logSink by CreateForEachTest(this) { InMemoryLogSink() }
-        val logger by CreateForEachTest(this) { Logger("some.source", logSink) }
-        val runner by CreateForEachTest(this) { ProcessRunner(logger) }
+        val logSink by createForEachTest { InMemoryLogSink() }
+        val logger by createForEachTest { Logger("some.source", logSink) }
+        val runner by createForEachTest { ProcessRunner(logger) }
 
         on("running a process") {
             val filePath = File.createTempFile("processrunner", ".tmp")

@@ -16,7 +16,7 @@
 
 package batect.cli.options
 
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
@@ -45,7 +45,7 @@ object ValueOptionSpec : Spek({
                     }
                 }
 
-                val option by CreateForEachTest(this) { ValueOption("value", "The value", StaticDefaultValueProvider("default-value"), valueConverter, 'v') }
+                val option by createForEachTest { ValueOption("value", "The value", StaticDefaultValueProvider("default-value"), valueConverter, 'v') }
 
                 listOf("--value", "-v").forEach { format ->
                     on("parsing a list of arguments where the option is specified in the form '$format thing'") {

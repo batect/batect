@@ -16,7 +16,7 @@
 
 package batect.updates
 
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import batect.testutils.withCause
 import batect.testutils.withMessage
 import batect.utils.Version
@@ -50,9 +50,9 @@ import java.time.ZonedDateTime
 object UpdateInfoDownloaderSpec : Spek({
     describe("an update information downloader") {
         val expectedUrl = "https://api.github.com/repos/charleskorn/batect/releases/latest"
-        val call by CreateForEachTest(this) { mock<Call>() }
+        val call by createForEachTest { mock<Call>() }
 
-        val client by CreateForEachTest(this) {
+        val client by createForEachTest {
             mock<OkHttpClient> {
                 on { newCall(argThat { method() == "GET" && url().equals(expectedUrl) }) } doReturn call
             }
@@ -60,7 +60,7 @@ object UpdateInfoDownloaderSpec : Spek({
 
         val dateTime = ZonedDateTime.of(2017, 10, 3, 11, 2, 0, 0, ZoneOffset.UTC)
         val dateTimeProvider = { dateTime }
-        val downloader by CreateForEachTest(this) { UpdateInfoDownloader(client, dateTimeProvider) }
+        val downloader by createForEachTest { UpdateInfoDownloader(client, dateTimeProvider) }
 
         on("when the latest release information can be retrieved successfully") {
             val responseBody = """{

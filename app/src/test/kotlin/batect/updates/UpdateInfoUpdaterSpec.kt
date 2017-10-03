@@ -18,7 +18,7 @@ package batect.updates
 
 import batect.logging.Logger
 import batect.logging.Severity
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import batect.testutils.InMemoryLogSink
 import batect.testutils.hasMessage
 import batect.testutils.withException
@@ -42,16 +42,16 @@ import java.time.ZonedDateTime
 object UpdateInfoUpdaterSpec : Spek({
     describe("an update info updater") {
         val updateInfo = UpdateInfo(Version(0, 1, 2), "https://something.com/batect/0.1.2", ZonedDateTime.now(ZoneOffset.UTC))
-        val updateInfoDownloader by CreateForEachTest(this) { mock<UpdateInfoDownloader>() }
-        val updateInfoStorage by CreateForEachTest(this) { mock<UpdateInfoStorage>() }
-        val logSink by CreateForEachTest(this) { InMemoryLogSink() }
-        val logger by CreateForEachTest(this) { Logger("some.source", logSink) }
+        val updateInfoDownloader by createForEachTest { mock<UpdateInfoDownloader>() }
+        val updateInfoStorage by createForEachTest { mock<UpdateInfoStorage>() }
+        val logSink by createForEachTest { InMemoryLogSink() }
+        val logger by createForEachTest { Logger("some.source", logSink) }
         var backgroundProcess: BackgroundProcess? = null
         val threadRunner = { code: BackgroundProcess ->
             backgroundProcess = code
         }
 
-        val updateInfoUpdater by CreateForEachTest(this) { UpdateInfoUpdater(updateInfoDownloader, updateInfoStorage, logger, threadRunner) }
+        val updateInfoUpdater by createForEachTest { UpdateInfoUpdater(updateInfoDownloader, updateInfoStorage, logger, threadRunner) }
 
         beforeEachTest {
             backgroundProcess = null

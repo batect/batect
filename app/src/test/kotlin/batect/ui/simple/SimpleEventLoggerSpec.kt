@@ -29,7 +29,7 @@ import batect.model.steps.PullImageStep
 import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console
 import batect.ui.ConsoleColor
@@ -48,8 +48,8 @@ import org.jetbrains.spek.api.dsl.on
 
 object SimpleEventLoggerSpec : Spek({
     describe("a simple event logger") {
-        val whiteConsole by CreateForEachTest(this) { mock<Console>() }
-        val console by CreateForEachTest(this) {
+        val whiteConsole by createForEachTest { mock<Console>() }
+        val console by createForEachTest {
             mock<Console> {
                 on { withColor(eq(ConsoleColor.White), any()) } doAnswer {
                     val printStatements = it.getArgument<Console.() -> Unit>(1)
@@ -58,8 +58,8 @@ object SimpleEventLoggerSpec : Spek({
             }
         }
 
-        val redErrorConsole by CreateForEachTest(this) { mock<Console>() }
-        val errorConsole by CreateForEachTest(this) {
+        val redErrorConsole by createForEachTest { mock<Console>() }
+        val errorConsole by createForEachTest {
             mock<Console> {
                 on { withColor(eq(ConsoleColor.Red), any()) } doAnswer {
                     val printStatements = it.getArgument<Console.() -> Unit>(1)
@@ -68,7 +68,7 @@ object SimpleEventLoggerSpec : Spek({
             }
         }
 
-        val logger by CreateForEachTest(this) { SimpleEventLogger(console, errorConsole) }
+        val logger by createForEachTest { SimpleEventLogger(console, errorConsole) }
         val container = Container("the-cool-container", imageSourceDoesNotMatter())
 
         describe("handling when steps start") {

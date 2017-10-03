@@ -16,7 +16,7 @@
 
 package batect.logging
 
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
 import org.jetbrains.spek.api.Spek
@@ -26,8 +26,8 @@ import org.jetbrains.spek.api.dsl.on
 
 object LoggerSpec : Spek({
     describe("a logger") {
-        val sink by CreateForEachTest(this) { mock<LogSink>() }
-        val logger by CreateForEachTest(this) { Logger("some.source", sink) }
+        val sink by createForEachTest { mock<LogSink>() }
+        val logger by createForEachTest { Logger("some.source", sink) }
 
         val buildFun: LogMessageBuilder.() -> LogMessageBuilder = { this }
 

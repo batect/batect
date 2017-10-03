@@ -24,7 +24,7 @@ import batect.model.events.RunningContainerExitedEvent
 import batect.model.steps.CreateTaskNetworkStep
 import batect.model.steps.DisplayTaskFailureStep
 import batect.model.steps.RunContainerStep
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console
 import batect.ui.ConsoleColor
@@ -43,8 +43,8 @@ import org.jetbrains.spek.api.dsl.on
 
 object FancyEventLoggerSpec : Spek({
     describe("a fancy event logger") {
-        val whiteConsole by CreateForEachTest(this) { mock<Console>() }
-        val console by CreateForEachTest(this) {
+        val whiteConsole by createForEachTest { mock<Console>() }
+        val console by createForEachTest {
             mock<Console> {
                 on { withColor(eq(ConsoleColor.White), any()) } doAnswer {
                     val printStatements = it.getArgument<Console.() -> Unit>(1)
@@ -53,8 +53,8 @@ object FancyEventLoggerSpec : Spek({
             }
         }
 
-        val redErrorConsole by CreateForEachTest(this) { mock<Console>() }
-        val errorConsole by CreateForEachTest(this) {
+        val redErrorConsole by createForEachTest { mock<Console>() }
+        val errorConsole by createForEachTest {
             mock<Console> {
                 on { withColor(eq(ConsoleColor.Red), any()) } doAnswer {
                     val printStatements = it.getArgument<Console.() -> Unit>(1)
@@ -63,10 +63,10 @@ object FancyEventLoggerSpec : Spek({
             }
         }
 
-        val startupProgressDisplay by CreateForEachTest(this) { mock<StartupProgressDisplay>() }
-        val cleanupProgressDisplay by CreateForEachTest(this) { mock<CleanupProgressDisplay>() }
+        val startupProgressDisplay by createForEachTest { mock<StartupProgressDisplay>() }
+        val cleanupProgressDisplay by createForEachTest { mock<CleanupProgressDisplay>() }
 
-        val logger by CreateForEachTest(this) {
+        val logger by createForEachTest {
             FancyEventLogger(console, errorConsole, startupProgressDisplay, cleanupProgressDisplay)
         }
 

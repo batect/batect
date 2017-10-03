@@ -18,7 +18,7 @@ package batect.ui
 
 import batect.model.events.TaskEvent
 import batect.model.steps.TaskStep
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.eq
@@ -31,8 +31,8 @@ import org.jetbrains.spek.api.dsl.on
 
 object EventLoggerSpec : Spek({
     describe("an event logger") {
-        val whiteConsole by CreateForEachTest(this) { mock<Console>() }
-        val console by CreateForEachTest(this) {
+        val whiteConsole by createForEachTest { mock<Console>() }
+        val console by createForEachTest {
             mock<Console> {
                 on { withColor(eq(ConsoleColor.White), any()) } doAnswer {
                     val printStatements = it.getArgument<Console.() -> Unit>(1)
@@ -41,8 +41,8 @@ object EventLoggerSpec : Spek({
             }
         }
 
-        val redErrorConsole by CreateForEachTest(this) { mock<Console>() }
-        val errorConsole by CreateForEachTest(this) {
+        val redErrorConsole by createForEachTest { mock<Console>() }
+        val errorConsole by createForEachTest {
             mock<Console> {
                 on { withColor(eq(ConsoleColor.Red), any()) } doAnswer {
                     val printStatements = it.getArgument<Console.() -> Unit>(1)
@@ -51,7 +51,7 @@ object EventLoggerSpec : Spek({
             }
         }
 
-        val logger by CreateForEachTest(this) {
+        val logger by createForEachTest {
             object : EventLogger(console, errorConsole) {
                 override fun onStartingTaskStep(step: TaskStep) = throw NotImplementedError()
                 override fun postEvent(event: TaskEvent) = throw NotImplementedError()

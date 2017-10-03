@@ -16,7 +16,7 @@
 
 package batect.cli.options
 
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
@@ -26,7 +26,7 @@ import org.jetbrains.spek.api.dsl.on
 
 object FlagOptionSpec : Spek({
     describe("a flag option") {
-        val option by CreateForEachTest(this) { FlagOption("enable-extra-awesomeness", "Enable the extra awesome features.") }
+        val option by createForEachTest { FlagOption("enable-extra-awesomeness", "Enable the extra awesome features.") }
 
         on("the option not being provided") {
             it("gives the value as false") {

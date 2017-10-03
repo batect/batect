@@ -20,7 +20,7 @@ import batect.config.Container
 import batect.docker.DockerNetwork
 import batect.model.events.TaskNetworkCreatedEvent
 import batect.model.steps.BuildImageStep
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console
 import com.nhaarman.mockito_kotlin.inOrder
@@ -34,10 +34,10 @@ import org.jetbrains.spek.api.dsl.on
 
 object StartupProgressDisplaySpec : Spek({
     describe("a startup progress display") {
-        val line1 by CreateForEachTest(this) { mock<ContainerStartupProgressLine>() }
-        val line2 by CreateForEachTest(this) { mock<ContainerStartupProgressLine>() }
+        val line1 by createForEachTest { mock<ContainerStartupProgressLine>() }
+        val line2 by createForEachTest { mock<ContainerStartupProgressLine>() }
 
-        val display by CreateForEachTest(this) { StartupProgressDisplay(listOf(line1, line2)) }
+        val display by createForEachTest { StartupProgressDisplay(listOf(line1, line2)) }
 
         on("receiving an event") {
             val event = TaskNetworkCreatedEvent(DockerNetwork("some-id"))

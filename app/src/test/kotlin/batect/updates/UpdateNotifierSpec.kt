@@ -18,7 +18,7 @@ package batect.updates
 
 import batect.VersionInfo
 import batect.logging.Logger
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import batect.testutils.InMemoryLogSink
 import batect.ui.Console
 import batect.utils.Version
@@ -37,11 +37,11 @@ import java.time.ZonedDateTime
 
 object UpdateNotifierSpec : Spek({
     describe("an update notifier") {
-        val updateInfoStorage by CreateForEachTest(this) { mock<UpdateInfoStorage>() }
-        val updateInfoUpdater by CreateForEachTest(this) { mock<UpdateInfoUpdater>() }
-        val versionInfo by CreateForEachTest(this) { mock<VersionInfo>() }
-        val console by CreateForEachTest(this) { mock<Console>() }
-        val logger by CreateForEachTest(this) { Logger("some.source", InMemoryLogSink()) }
+        val updateInfoStorage by createForEachTest { mock<UpdateInfoStorage>() }
+        val updateInfoUpdater by createForEachTest { mock<UpdateInfoUpdater>() }
+        val versionInfo by createForEachTest { mock<VersionInfo>() }
+        val console by createForEachTest { mock<Console>() }
+        val logger by createForEachTest { Logger("some.source", InMemoryLogSink()) }
         var currentTime = ZonedDateTime.of(0, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)
 
         beforeEachTest {
@@ -66,7 +66,7 @@ object UpdateNotifierSpec : Spek({
         }
 
         describe("when the update notification is enabled") {
-            val updateNotifier by CreateForEachTest(this) { UpdateNotifier(false, updateInfoStorage, updateInfoUpdater, versionInfo, console, logger, { currentTime }) }
+            val updateNotifier by createForEachTest { UpdateNotifier(false, updateInfoStorage, updateInfoUpdater, versionInfo, console, logger, { currentTime }) }
 
             on("when no cached update information is available") {
                 whenever(updateInfoStorage.read()).thenReturn(null)

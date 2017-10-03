@@ -32,7 +32,7 @@ import batect.logging.LoggerFactory
 import batect.logging.Severity
 import batect.model.TaskExecutionOrderResolutionException
 import batect.model.TaskExecutionOrderResolver
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import batect.testutils.InMemoryLogSink
 import batect.testutils.hasMessage
 import batect.testutils.withException
@@ -129,10 +129,10 @@ object RunTaskCommandSpec : Spek({
                 on { loadConfig(configFile) } doReturn config
             }
 
-            val updateNotifier by CreateForEachTest(this) { mock<UpdateNotifier>() }
-            val console by CreateForEachTest(this) { mock<Console>() }
-            val redErrorConsole by CreateForEachTest(this) { mock<Console>() }
-            val errorConsole by CreateForEachTest(this) {
+            val updateNotifier by createForEachTest { mock<UpdateNotifier>() }
+            val console by createForEachTest { mock<Console>() }
+            val redErrorConsole by createForEachTest { mock<Console>() }
+            val errorConsole by createForEachTest {
                 mock<Console> {
                     on { withColor(eq(ConsoleColor.Red), any()) } doAnswer {
                         val printStatements = it.getArgument<Console.() -> Unit>(1)

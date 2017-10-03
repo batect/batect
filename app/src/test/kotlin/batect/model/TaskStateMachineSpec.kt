@@ -33,7 +33,7 @@ import batect.model.steps.CreateTaskNetworkStep
 import batect.model.steps.DeleteTaskNetworkStep
 import batect.model.steps.DisplayTaskFailureStep
 import batect.model.steps.TaskStep
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import batect.testutils.InMemoryLogSink
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
@@ -74,7 +74,7 @@ object TaskStateMachineSpec : Spek({
             on { createLoggerForClass(any()) } doReturn loggerCreatedByFactory
         }
 
-        val stateMachine by CreateForEachTest(this) {
+        val stateMachine by createForEachTest {
             val logger = Logger("stateMachine", InMemoryLogSink())
             TaskStateMachine(graph, logger, loggerFactory)
         }

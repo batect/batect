@@ -17,7 +17,7 @@
 package batect.updates
 
 import batect.os.SystemInfo
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import batect.utils.Version
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
@@ -37,7 +37,7 @@ import java.time.ZonedDateTime
 
 object UpdateInfoStorageSpec : Spek({
     describe("update information storage") {
-        val fileSystem by CreateForEachTest(this) { Jimfs.newFileSystem(Configuration.unix()) }
+        val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
 
         val homeDir = "/some/home/dir"
         val expectedUpdateInfoDirectory = "$homeDir/.batect/updates"
@@ -47,7 +47,7 @@ object UpdateInfoStorageSpec : Spek({
             on { homeDirectory } doReturn homeDir
         }
 
-        val storage by CreateForEachTest(this) { UpdateInfoStorage(fileSystem, systemInfo) }
+        val storage by createForEachTest { UpdateInfoStorage(fileSystem, systemInfo) }
 
         describe("reading update information from disk") {
             on("when no update information has been written to disk") {

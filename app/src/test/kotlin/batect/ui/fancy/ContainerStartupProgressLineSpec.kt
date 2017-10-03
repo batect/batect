@@ -35,7 +35,7 @@ import batect.model.steps.CreateContainerStep
 import batect.model.steps.PullImageStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console
 import batect.ui.ConsoleColor
@@ -58,8 +58,8 @@ object ContainerStartupProgressLineSpec : Spek({
         val otherContainer = Container("other-container", BuildImage("/other-build-dir"))
         val containerName = "some-container"
 
-        val whiteConsole by CreateForEachTest(this) { mock<Console>() }
-        val console by CreateForEachTest(this) {
+        val whiteConsole by createForEachTest { mock<Console>() }
+        val console by createForEachTest {
             mock<Console> {
                 on { withColor(eq(ConsoleColor.White), any()) } doAnswer {
                     val printStatements = it.getArgument<Console.() -> Unit>(1)
@@ -79,7 +79,7 @@ object ContainerStartupProgressLineSpec : Spek({
         given("the container's image comes from building an image") {
             val container = Container(containerName, BuildImage("/some-build-dir"))
 
-            val line: ContainerStartupProgressLine by CreateForEachTest(this) {
+            val line: ContainerStartupProgressLine by createForEachTest {
                 ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC))
             }
 
@@ -448,7 +448,7 @@ object ContainerStartupProgressLineSpec : Spek({
         given("the container's image comes from a pre-existing image that needs to be pulled") {
             val container = Container(containerName, PullImage("some-image"))
 
-            val line: ContainerStartupProgressLine by CreateForEachTest(this) {
+            val line: ContainerStartupProgressLine by createForEachTest {
                 ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC))
             }
 

@@ -23,7 +23,7 @@ import batect.model.events.ContainerCreatedEvent
 import batect.model.events.ContainerRemovedEvent
 import batect.model.events.TaskNetworkCreatedEvent
 import batect.model.events.TaskNetworkDeletedEvent
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console
 import batect.ui.ConsoleColor
@@ -39,8 +39,8 @@ import org.jetbrains.spek.api.dsl.on
 
 object CleanupProgressDisplaySpec : Spek({
     describe("a cleanup progress display") {
-        val whiteConsole by CreateForEachTest(this) { mock<Console>() }
-        val console by CreateForEachTest(this) {
+        val whiteConsole by createForEachTest { mock<Console>() }
+        val console by createForEachTest {
             mock<Console> {
                 on { withColor(eq(ConsoleColor.White), any()) } doAnswer {
                     val printStatements = it.getArgument<Console.() -> Unit>(1)
@@ -49,7 +49,7 @@ object CleanupProgressDisplaySpec : Spek({
             }
         }
 
-        val cleanupDisplay by CreateForEachTest(this) { CleanupProgressDisplay() }
+        val cleanupDisplay by createForEachTest { CleanupProgressDisplay() }
 
         describe("printing cleanup progress to the console") {
             on("when there is nothing to clean up") {

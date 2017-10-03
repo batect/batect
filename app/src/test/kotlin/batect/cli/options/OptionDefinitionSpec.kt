@@ -16,7 +16,7 @@
 
 package batect.cli.options
 
-import batect.testutils.CreateForEachTest
+import batect.testutils.createForEachTest
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
@@ -100,7 +100,7 @@ object OptionDefinitionSpec : Spek({
             }
 
             given("an option with short and long names") {
-                val option by CreateForEachTest(this) { TestOptionDefinition("value", "The value", 'v') }
+                val option by createForEachTest { TestOptionDefinition("value", "The value", 'v') }
 
                 on("parsing an empty list of arguments") {
                     it("throws an exception") {

@@ -16,6 +16,8 @@
 
 package batect.cli.commands
 
+import batect.PrintStreamType
+import batect.cli.CommandLineParser
 import batect.cli.CommandLineParsingResult
 import batect.cli.testutils.NullCommand
 import batect.cli.options.OptionParser
@@ -35,6 +37,7 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import java.io.PrintStream
 
 object CommandDefinitionSpec : Spek({
     describe("a command definition") {
@@ -64,7 +67,6 @@ object CommandDefinitionSpec : Spek({
 
         describe("parsing arguments") {
             given("a command definition with no parameters or options defined") {
-                val emptyKodein = Kodein {}
                 val command = NullCommand()
 
                 val optionParser = mock<OptionParser> {
@@ -76,7 +78,8 @@ object CommandDefinitionSpec : Spek({
                 }
 
                 on("parsing an empty list of arguments") {
-                    val result = commandDefinition.parse(emptyList(), emptyKodein)
+                    val kodein = Kodein {}
+                    val result = commandDefinition.parse(emptyList(), kodein)
 
                     it("indicates that parsing succeeded and returns a command instance ready for use") {
                         assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(command)))
@@ -84,10 +87,27 @@ object CommandDefinitionSpec : Spek({
                 }
 
                 on("parsing a non-empty list of arguments") {
-                    val result = commandDefinition.parse(listOf("some-arg"), emptyKodein)
+                    val kodein = Kodein {}
+                    val result = commandDefinition.parse(listOf("some-arg"), kodein)
 
                     it("indicates that parsing failed") {
                         assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Failed("Command 'test-command' does not take any parameters. ('some-arg' is the first extra parameter.)")))
+                    }
+                }
+
+                on("parsing a list of arguments that starts with --help") {
+                    val parser = mock<CommandLineParser>()
+                    val outputStream = mock<PrintStream>()
+
+                    val kodein = Kodein {
+                        bind<CommandLineParser>() with instance(parser)
+                        bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
+                    }
+
+                    val result = commandDefinition.parse(listOf("--help"), kodein)
+
+                    it("indicates that parsing succeeded and returns a help command instance ready for use") {
+                        assertThat(result, equalTo<CommandLineParsingResult>(CommandLineParsingResult.Succeeded(HelpCommand("test-command", parser, outputStream))))
                     }
                 }
             }

@@ -16,11 +16,13 @@
 
 package batect.cli.commands
 
+import batect.PrintStreamType
 import batect.cli.CommandLineParsingResult
 import batect.cli.options.OptionParser
 import batect.cli.options.OptionParserContainer
 import batect.cli.options.OptionsParsingResult
 import com.github.salomonbrys.kodein.Kodein
+import com.github.salomonbrys.kodein.instance
 
 abstract class CommandDefinition(val commandName: String, val description: String, override val optionParser: OptionParser, val aliases: Set<String> = emptySet()) : OptionParserContainer {
     val requiredPositionalParameters = mutableListOf<RequiredPositionalParameter>()
@@ -40,6 +42,10 @@ abstract class CommandDefinition(val commandName: String, val description: Strin
     }
 
     open fun parse(args: Iterable<String>, kodein: Kodein): CommandLineParsingResult {
+        if (args.count() == 1 && args.single() == "--help") {
+            return CommandLineParsingResult.Succeeded(HelpCommand(commandName, kodein.instance(), kodein.instance(PrintStreamType.Output)))
+        }
+
         val optionParsingResult = optionParser.parseOptions(args)
 
         return when (optionParsingResult) {

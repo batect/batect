@@ -26,7 +26,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * easy way to mount Docker socket and statically linked binary into container (eg. for building other containers from within that container)
 * default to just terminating all containers at clean up time with option to gracefully shut down on individual containers
   (eg. database where data is shared between invocations and we don't want to corrupt it)
-* display help if command name is followed by `--help` (eg. `batect run --help`)
 * show more detailed image pull progress (eg. `build-env: Pulling some-image:1.2.3: 25%`) - requires using Docker API to get this level of detail
 * performance improvements
   * prioritise running steps that lie on the critical path (eg. favour pulling image for leaf of dependency graph over creating container for task container)

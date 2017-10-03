@@ -31,4 +31,5 @@ class SystemInfo(private val systemProperties: Properties) {
 
     val jvmVersion = "$jvmVendor $jvmName $javaVersion"
     val osVersion = "$osName $rawOSVersion ($osArch)"
+    val homeDirectory: String = systemProperties.getProperty("user.home")
 }

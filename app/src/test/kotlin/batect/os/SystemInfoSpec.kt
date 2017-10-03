@@ -33,6 +33,7 @@ object SystemInfoSpec : Spek({
         systemProperties.setProperty("os.name", "Best OS Ever")
         systemProperties.setProperty("os.arch", "x86")
         systemProperties.setProperty("os.version", "4.5.6")
+        systemProperties.setProperty("user.home", "/some/home/dir")
 
         val systemInfo = SystemInfo(systemProperties)
 
@@ -49,6 +50,14 @@ object SystemInfoSpec : Spek({
 
             it("returns a formatted string containing the details of the OS") {
                 assertThat(osVersion, equalTo("Best OS Ever 4.5.6 (x86)"))
+            }
+        }
+
+        on("getting the home directory") {
+            val homeDir = systemInfo.homeDirectory
+
+            it("returns the user's home directory") {
+                assertThat(homeDir, equalTo("/some/home/dir"))
             }
         }
     }

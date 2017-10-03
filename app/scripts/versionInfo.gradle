@@ -41,13 +41,15 @@ String versionInfoFileContents() {
     kotlinLicenseHeader +
     """ |package batect
         |
+        |import batect.utils.Version
+        |
         |// This file is generated automatically by the $generateVersionInfoFile.name Gradle task.
         |// Do not edit it (it will be overwritten on the next build anyway).
         |// Do not commit it.
         |class VersionInfo {
         |    val gitCommitHash = "${getCurrentGitCommit()}"
         |    val gitCommitDate = "${getCurrentGitCommitDate()}"
-        |    val version = "$project.version"
+        |    val version = Version.parse("$project.version")
         |    val buildDate = "${getBuildDate()}"
         |}
         |""".stripMargin("|")

@@ -33,6 +33,7 @@ class BatectCommandLineParser(kodein: Kodein) : CommandLineParser(kodein, "batec
     val logFileName: String? by valueOption("log-file", "Write internal batect logs to file.")
     val forceSimpleOutputMode: Boolean by flagOption("simple-output", "Force simple output (eg. no updating text) from batect. Automatically enabled if your console is detected to not support these features. Does not affect task command output.")
     val disableColorOutput: Boolean by flagOption("no-colors", "Disable colored output from batect. Does not affect task command output. (implies --simple-output)")
+    val disableUpdateNotification: Boolean by flagOption("disable-update-notification", "Disable checking for updates to batect and notifying you when a new version is available.")
 
     init {
         addCommandDefinition(RunTaskCommandDefinition())
@@ -45,6 +46,7 @@ class BatectCommandLineParser(kodein: Kodein) : CommandLineParser(kodein, "batec
             bind<String>(CommonOptions.ConfigurationFileName) with instance(configurationFileName)
             bind<Boolean>(CommonOptions.ForceSimpleOutputMode) with instance(forceSimpleOutputMode || disableColorOutput)
             bind<Boolean>(CommonOptions.DisableColorOutput) with instance(disableColorOutput)
+            bind<Boolean>(CommonOptions.DisableUpdateNotification) with instance(disableUpdateNotification)
 
             bind<LogSink>() with singleton {
                 if (logFileName == null) {

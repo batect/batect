@@ -65,6 +65,10 @@ object BatectCommandLineParserSpec : Spek({
                 it("does not disable colored output") {
                     assertThat(bindings.instance<Boolean>(CommonOptions.DisableColorOutput), equalTo(false))
                 }
+
+                it("does not disable the update notification") {
+                    assertThat(bindings.instance<Boolean>(CommonOptions.DisableUpdateNotification), equalTo(false))
+                }
             }
         }
 
@@ -146,6 +150,21 @@ object BatectCommandLineParserSpec : Spek({
 
                 it("disables color output") {
                     assertThat(bindings.instance<Boolean>(CommonOptions.DisableColorOutput), equalTo(true))
+                }
+            }
+        }
+
+        given("the update notification has been disabled") {
+            val parser = BatectCommandLineParser(emptyKodein)
+            parser.parse(listOf("--disable-update-notification"), {})
+
+            on("creating the set of Kodein bindings") {
+                val bindings = Kodein {
+                    import(parser.createBindings())
+                }
+
+                it("disables the update notification") {
+                    assertThat(bindings.instance<Boolean>(CommonOptions.DisableUpdateNotification), equalTo(true))
                 }
             }
         }

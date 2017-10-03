@@ -22,6 +22,7 @@ import batect.cli.CommandLineParser
 import batect.cli.CommandLineParsingResult
 import batect.docker.DockerClient
 import batect.os.SystemInfo
+import batect.utils.Version
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
@@ -72,7 +73,7 @@ object VersionInfoCommandSpec : Spek({
 
         on("when invoked") {
             val versionInfo = mock<VersionInfo> {
-                on { version } doReturn "THE BATECT VERSION"
+                on { version } doReturn Version(1, 2, 3)
                 on { buildDate } doReturn "THE BUILD DATE"
                 on { gitCommitHash } doReturn "THE BUILD COMMIT"
                 on { gitCommitDate } doReturn "COMMIT DATE"
@@ -98,7 +99,7 @@ object VersionInfoCommandSpec : Spek({
 
             it("prints version information") {
                 assertThat(output, equalTo("""
-                    |batect version:    THE BATECT VERSION
+                    |batect version:    1.2.3
                     |Built:             THE BUILD DATE
                     |Built from commit: THE BUILD COMMIT (commit date: COMMIT DATE)
                     |JVM version:       THE JVM VERSION

@@ -30,6 +30,7 @@ import batect.model.TaskExecutionOrderResolutionException
 import batect.model.TaskExecutionOrderResolver
 import batect.ui.Console
 import batect.ui.ConsoleColor
+import batect.updates.UpdateNotifier
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
 
@@ -50,6 +51,7 @@ class RunTaskCommandDefinition : CommandDefinition("run", "Run a task.") {
         kodein.instance(),
         kodein.instance(),
         kodein.instance(),
+        kodein.instance(),
         kodein.instance(PrintStreamType.Output),
         kodein.instance(PrintStreamType.Error),
         kodein.logger<RunTaskCommand>())
@@ -62,6 +64,7 @@ data class RunTaskCommand(
     val configLoader: ConfigurationLoader,
     val taskExecutionOrderResolver: TaskExecutionOrderResolver,
     val taskRunner: TaskRunner,
+    val updateNotifier: UpdateNotifier,
     val console: Console,
     val errorConsole: Console,
     val logger: Logger) : Command {
@@ -71,6 +74,9 @@ data class RunTaskCommand(
 
         try {
             val tasks = taskExecutionOrderResolver.resolveExecutionOrder(config, taskName)
+
+            updateNotifier.run()
+
             return runTasks(config, tasks)
 
         } catch (e: TaskExecutionOrderResolutionException) {

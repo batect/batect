@@ -40,11 +40,16 @@ import batect.ui.Console
 import batect.ui.ConsoleInfo
 import batect.ui.EventLoggerProvider
 import batect.ui.fancy.StartupProgressDisplayProvider
+import batect.updates.UpdateInfoDownloader
+import batect.updates.UpdateInfoStorage
+import batect.updates.UpdateInfoUpdater
+import batect.updates.UpdateNotifier
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.KodeinAware
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
 import com.github.salomonbrys.kodein.singleton
+import okhttp3.OkHttpClient
 import java.io.PrintStream
 import java.nio.file.FileSystem
 import java.nio.file.FileSystems
@@ -121,4 +126,9 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<LogMessageWriter>() with singleton { LogMessageWriter() }
     bind<StandardAdditionalDataSource>() with singleton { StandardAdditionalDataSource() }
     bind<ApplicationInfoLogger>() with singletonWithLogger { logger -> ApplicationInfoLogger(logger, instance(), instance(), instance()) }
+    bind<UpdateNotifier>() with singletonWithLogger { logger -> UpdateNotifier(instance(CommonOptions.DisableUpdateNotification), instance(), instance(), instance(), instance(PrintStreamType.Output), logger) }
+    bind<UpdateInfoStorage>() with singleton { UpdateInfoStorage(instance(), instance()) }
+    bind<UpdateInfoDownloader>() with singleton { UpdateInfoDownloader(instance()) }
+    bind<UpdateInfoUpdater>() with singletonWithLogger { logger -> UpdateInfoUpdater(instance(), instance(), logger) }
+    bind<OkHttpClient>() with singleton { OkHttpClient.Builder().build() }
 }

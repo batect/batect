@@ -51,7 +51,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * importance of idempotency
   * integration with IDEs (eg. how to reference the Ruby runtime inside a Docker container for code completion etc.)
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
-* regularly check for updates and notify the user if there is one available
 * move to Kotlin/Native
   * Why? Don't want to require users to install a JVM to use batect, also want to remove as much overhead as possible
 

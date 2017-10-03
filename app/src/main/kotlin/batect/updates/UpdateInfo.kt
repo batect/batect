@@ -14,11 +14,9 @@
    limitations under the License.
 */
 
-package batect.cli
+package batect.updates
 
-enum class CommonOptions {
-    ConfigurationFileName,
-    ForceSimpleOutputMode,
-    DisableColorOutput,
-    DisableUpdateNotification
-}
+import batect.utils.Version
+import java.time.ZonedDateTime
+
+data class UpdateInfo(val version: Version, val url: String, val lastUpdated: ZonedDateTime)

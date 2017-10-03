@@ -84,6 +84,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     }
 }
 
-apply from: 'scripts/journeyTest.gradle'
-apply from: 'scripts/spotless.gradle'
-apply from: 'scripts/versionInfo.gradle'
+apply from: 'gradle/journeyTest.gradle'
+apply from: 'gradle/spotless.gradle'
+apply from: 'gradle/versionInfo.gradle'

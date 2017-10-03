@@ -21,13 +21,14 @@ import batect.VersionInfo
 import batect.cli.CommandLineParser
 import batect.docker.DockerClient
 import batect.os.SystemInfo
+import batect.updates.UpdateNotifier
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
 import java.io.PrintStream
 
 class VersionInfoCommandDefinition : CommandDefinition("version", "Display version information for batect.", setOf("--version")) {
     override fun createCommand(kodein: Kodein): Command =
-        VersionInfoCommand(kodein.instance(), kodein.instance(PrintStreamType.Output), kodein.instance(), kodein.instance(), kodein.instance())
+        VersionInfoCommand(kodein.instance(), kodein.instance(PrintStreamType.Output), kodein.instance(), kodein.instance(), kodein.instance(), kodein.instance())
 }
 
 data class VersionInfoCommand(
@@ -35,9 +36,12 @@ data class VersionInfoCommand(
     private val outputStream: PrintStream,
     private val systemInfo: SystemInfo,
     private val dockerClient: DockerClient,
-    private val commandLineParser: CommandLineParser
+    private val commandLineParser: CommandLineParser,
+    private val updateNotifier: UpdateNotifier
 ) : Command {
     override fun run(): Int {
+        updateNotifier.run()
+
         outputStream.println("batect version:    ${versionInfo.version}")
         outputStream.println("Built:             ${versionInfo.buildDate}")
         outputStream.println("Built from commit: ${versionInfo.gitCommitHash} (commit date: ${versionInfo.gitCommitDate})")

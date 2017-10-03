@@ -22,6 +22,7 @@ import batect.cli.CommandLineParser
 import batect.cli.CommandLineParsingResult
 import batect.docker.DockerClient
 import batect.os.SystemInfo
+import batect.updates.UpdateNotifier
 import batect.utils.Version
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
@@ -31,6 +32,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.verify
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -48,6 +50,7 @@ object VersionInfoCommandSpec : Spek({
             val systemInfo = mock<SystemInfo>()
             val dockerClient = mock<DockerClient>()
             val commandLineParser = mock<CommandLineParser>()
+            val updateNotifier = mock<UpdateNotifier>()
 
             val kodein = Kodein {
                 bind<VersionInfo>() with instance(versionInfo)
@@ -55,6 +58,7 @@ object VersionInfoCommandSpec : Spek({
                 bind<SystemInfo>() with instance(systemInfo)
                 bind<DockerClient>() with instance(dockerClient)
                 bind<CommandLineParser>() with instance(commandLineParser)
+                bind<UpdateNotifier>() with instance(updateNotifier)
             }
 
             describe("when given no parameters") {
@@ -66,7 +70,7 @@ object VersionInfoCommandSpec : Spek({
 
                 it("returns a command instance ready for use") {
                     assertThat((result as CommandLineParsingResult.Succeeded).command,
-                        equalTo<Command>(VersionInfoCommand(versionInfo, outputStream, systemInfo, dockerClient, commandLineParser)))
+                        equalTo<Command>(VersionInfoCommand(versionInfo, outputStream, systemInfo, dockerClient, commandLineParser, updateNotifier)))
                 }
             }
         }
@@ -93,7 +97,8 @@ object VersionInfoCommandSpec : Spek({
             }
 
             val outputStream = ByteArrayOutputStream()
-            val command = VersionInfoCommand(versionInfo, PrintStream(outputStream), systemInfo, dockerClient, commandLineParser)
+            val updateNotifier = mock<UpdateNotifier>()
+            val command = VersionInfoCommand(versionInfo, PrintStream(outputStream), systemInfo, dockerClient, commandLineParser, updateNotifier)
             val exitCode = command.run()
             val output = outputStream.toString()
 
@@ -113,6 +118,10 @@ object VersionInfoCommandSpec : Spek({
 
             it("returns a zero exit code") {
                 assertThat(exitCode, equalTo(0))
+            }
+
+            it("notifies the user of any updates") {
+                verify(updateNotifier).run()
             }
         }
     }

@@ -28,10 +28,14 @@ apply plugin: com.diffplug.gradle.spotless.SpotlessPlugin
 
 spotless {
     format 'misc', {
-        target '**/*.gradle', '**/*.md', '**/.gitignore', '**/*.yaml', '**/*.yml'
+        target '**/*.gradle', '**/*.md', '**/.gitignore', '**/*.yaml', '**/*.yml', '**/*.sh', '**/Dockerfile', '**/*.py'
 
         trimTrailingWhitespace()
         indentWithSpaces()
         endWithNewline()
     }
+}
+
+task check {
+    dependsOn ':spotlessCheck'
 }

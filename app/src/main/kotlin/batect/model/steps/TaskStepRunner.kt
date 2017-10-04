@@ -144,7 +144,7 @@ class TaskStepRunner(private val dockerClient: DockerClient, private val logger:
             val event = when (result) {
                 HealthStatus.NoHealthCheck -> ContainerBecameHealthyEvent(step.container)
                 HealthStatus.BecameHealthy -> ContainerBecameHealthyEvent(step.container)
-                HealthStatus.BecameUnhealthy -> ContainerDidNotBecomeHealthyEvent(step.container, "The configured health check did not report the container as healthy within the timeout period.")
+                HealthStatus.BecameUnhealthy -> ContainerDidNotBecomeHealthyEvent(step.container, "The configured health check did not indicate that the container was healthy within the timeout period.")
                 HealthStatus.Exited -> ContainerDidNotBecomeHealthyEvent(step.container, "The container exited before becoming healthy.")
             }
 

@@ -50,6 +50,7 @@ If there's something you're really keen to see, pull requests are always welcome
     * NodeJS
       * frontend
       * backend
+    * Android app
     * building and pushing an image as a build task
   * CI setup - reminder to clean up stale images regularly
   * performance tips

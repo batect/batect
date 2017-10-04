@@ -33,6 +33,8 @@ If there's something you're really keen to see, pull requests are always welcome
 * check that Docker client is available before trying to use it
 * check that Docker client and server are compatible versions
 * warn when using an image without a tag or with tag `latest`
+* start containers with `--user $(id -u):$(id -g)` so that any files created in any mounted directories have the current user as their owner
+  * some applications won't like the fact that the user doesn't actually exist, so a configuration option on the container level to turn this off is necessary
 
 ### Other
 * make test names consistent (eg. `it("should do something")` vs `it("does something")`)
@@ -48,6 +50,7 @@ If there's something you're really keen to see, pull requests are always welcome
     * NodeJS
       * frontend
       * backend
+    * building and pushing an image as a build task
   * CI setup - reminder to clean up stale images regularly
   * performance tips
     * use ':cached' mode for mounts for performance (https://docs.docker.com/docker-for-mac/osxfs-caching/)

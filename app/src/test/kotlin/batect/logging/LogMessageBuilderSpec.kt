@@ -16,10 +16,11 @@
 
 package batect.logging
 
-import batect.testutils.hasKeyWithValue
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.hasElement
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
@@ -153,14 +154,17 @@ object LogMessageBuilderSpec : Spek({
         }
 
         on("building a log message with an exception") {
-            val exception = RuntimeException("Something went wrong")
+            val exceptionCause = RuntimeException("Something else went wrong")
+            val exception = RuntimeException("Something went wrong", exceptionCause)
             val builder = LogMessageBuilder(Severity.Debug)
                 .exception(exception)
 
             val message = builder.build(timestampSource, standardAdditionalDataSource)
 
-            it("returns a log message with the exception in the additional data") {
-                assertThat(message.additionalData, hasKeyWithValue("exception", exception))
+            it("returns a log message with a formatted version of the exception in the additional data") {
+                assertThat(message.additionalData.keys, hasElement("exception"))
+                assertThat(message.additionalData["exception"] as String, containsSubstring("java.lang.RuntimeException: Something went wrong"))
+                assertThat(message.additionalData["exception"] as String, containsSubstring("Caused by: java.lang.RuntimeException: Something else went wrong"))
             }
         }
     }

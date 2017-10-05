@@ -16,6 +16,7 @@
 
 package batect.logging
 
+import batect.utils.toDetailedString
 import java.time.ZonedDateTime
 
 class LogMessageBuilder(val severity: Severity, val loggerAdditionalData: Map<String, Any> = emptyMap()) {
@@ -27,7 +28,7 @@ class LogMessageBuilder(val severity: Severity, val loggerAdditionalData: Map<St
         return this
     }
 
-    fun exception(e: Throwable): LogMessageBuilder = data("exception", e)
+    fun exception(e: Throwable): LogMessageBuilder = data("exception", e.toDetailedString())
 
     fun data(key: String, value: Any?): LogMessageBuilder {
         if (key.startsWith('@')) {

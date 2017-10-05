@@ -19,6 +19,7 @@ package batect.testutils
 import batect.config.io.ConfigurationException
 import batect.logging.LogMessage
 import batect.logging.Severity
+import batect.utils.toDetailedString
 import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.describe
@@ -73,4 +74,4 @@ fun hasMessage(messageCriteria: Matcher<LogMessage>): Matcher<InMemoryLogSink> {
 fun withLogMessage(message: String): Matcher<LogMessage> = has(LogMessage::message, equalTo(message))
 fun withSeverity(severity: Severity): Matcher<LogMessage> = has(LogMessage::severity, equalTo(severity))
 fun withAdditionalData(key: String, value: Any): Matcher<LogMessage> = has(LogMessage::additionalData, hasKeyWithValue(key, value))
-fun withException(exception: Throwable): Matcher<LogMessage> = withAdditionalData("exception", exception)
+fun withException(exception: Throwable): Matcher<LogMessage> = withAdditionalData("exception", exception.toDetailedString())

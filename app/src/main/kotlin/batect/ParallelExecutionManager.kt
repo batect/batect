@@ -16,6 +16,7 @@
 
 package batect
 
+import batect.logging.Logger
 import batect.model.TaskStateMachine
 import batect.model.events.TaskEvent
 import batect.model.events.TaskEventSink
@@ -35,11 +36,12 @@ import java.util.concurrent.TimeUnit
 // all handled by the state machine, so all we need to do is only submit work to the thread pool when we there are
 // fewer threads running than our maximum concurrent threads limit.
 class ParallelExecutionManager(
-        private val eventLogger: EventLogger,
-        private val taskStepRunner: TaskStepRunner,
-        private val stateMachine: TaskStateMachine,
-        private val taskName: String,
-        private val maximumConcurrentSteps: Int
+    private val eventLogger: EventLogger,
+    private val taskStepRunner: TaskStepRunner,
+    private val stateMachine: TaskStateMachine,
+    private val taskName: String,
+    private val maximumConcurrentSteps: Int,
+    private val logger: Logger
 ) {
     private val eventSink = createEventSink()
     private val threadPool = createThreadPool()
@@ -67,12 +69,20 @@ class ParallelExecutionManager(
     }
 
     private fun createThreadPool() =
-            object : ThreadPoolExecutor(maximumConcurrentSteps, maximumConcurrentSteps, 0, TimeUnit.NANOSECONDS, LinkedBlockingQueue<Runnable>()) {
-                override fun afterExecute(r: Runnable?, t: Throwable?) {
-                    super.afterExecute(r, t)
-                    afterStepFinished()
+        object : ThreadPoolExecutor(maximumConcurrentSteps, maximumConcurrentSteps, 0, TimeUnit.NANOSECONDS, LinkedBlockingQueue<Runnable>()) {
+            override fun afterExecute(r: Runnable?, t: Throwable?) {
+                super.afterExecute(r, t)
+
+                if (t != null) {
+                    logger.error {
+                        message("Unhandled exception during task step execution.")
+                        exception(t)
+                    }
                 }
+
+                afterStepFinished()
             }
+        }
 
     private fun createEventSink() = object : TaskEventSink {
         override fun postEvent(event: TaskEvent) {

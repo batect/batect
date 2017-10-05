@@ -116,7 +116,7 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), logger) }
     bind<DependencyGraphProvider>() with singletonWithLogger { logger -> DependencyGraphProvider(logger) }
     bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance()) }
-    bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance()) }
+    bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance(), instance()) }
     bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider() }
     bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(logger) }
     bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), logger) }

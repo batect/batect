@@ -22,7 +22,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * fancy progress bar output for building images and starting dependencies
   * make sure accidental input on stdin doesn't mangle it
   * test with different console colour schemes (eg. white background, black background, OS X default, Ubuntu default, Ubuntu GUI terminal default)
-* easy way to mount Docker socket and statically linked binary into container (eg. for building other containers from within that container)
 * default to just terminating all containers at clean up time with option to gracefully shut down on individual containers
   (eg. database where data is shared between invocations and we don't want to corrupt it)
 * show more detailed image pull progress (eg. `build-env: Pulling some-image:1.2.3: 25%`) - requires using Docker API to get this level of detail

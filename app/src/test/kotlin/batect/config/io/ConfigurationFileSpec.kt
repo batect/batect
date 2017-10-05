@@ -101,8 +101,8 @@ object ConfigurationFileSpec : Spek({
                 val configFile = ConfigurationFile("the_project_name", containers = mapOf(containerName to container))
 
                 val pathResolver = mock<PathResolver> {
-                    on { resolve(originalBuildDirectory) } doReturn PathResolutionResult.ResolvedToDirectory(resolvedBuildDirectory)
-                    on { resolve(originalVolumeMountPath) } doReturn PathResolutionResult.ResolvedToDirectory(resolvedVolumeMountPath)
+                    on { resolve(originalBuildDirectory) } doReturn PathResolutionResult.Resolved(resolvedBuildDirectory, PathType.Directory)
+                    on { resolve(originalVolumeMountPath) } doReturn PathResolutionResult.Resolved(resolvedVolumeMountPath, PathType.Directory)
                 }
 
                 val resultingConfig = configFile.toConfiguration(pathResolver)
@@ -131,8 +131,9 @@ object ConfigurationFileSpec : Spek({
             }
 
             on("converting a configuration file with a container that has a build directory that %s",
-                data("does not exist", PathResolutionResult.NotFound("/some_resolved_path") as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' does not exist."),
-                data("is not a directory", PathResolutionResult.ResolvedToFile("/some_resolved_path") as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."),
+                data("does not exist", PathResolutionResult.Resolved("/some_resolved_path", PathType.DoesNotExist) as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' does not exist."),
+                data("is a file", PathResolutionResult.Resolved("/some_resolved_path", PathType.File) as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."),
+                data("is neither a file or directory", PathResolutionResult.Resolved("/some_resolved_path", PathType.Other) as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."),
                 data("is an invalid path", PathResolutionResult.InvalidPath as PathResolutionResult, "Build directory 'build_dir' for container 'the_container_name' is not a valid path."))
             { _, resolution, expectedMessage ->
                 val originalBuildDirectory = "build_dir"
@@ -148,17 +149,13 @@ object ConfigurationFileSpec : Spek({
                 }
             }
 
-            on("converting a configuration file with a container that has a volume mount with a local path that %s",
-                data("is a directory", PathResolutionResult.ResolvedToDirectory("/some_resolved_path") as PathResolutionResult),
-                data("is a file", PathResolutionResult.ResolvedToFile("/some_resolved_path") as PathResolutionResult),
-                data("does not exist", PathResolutionResult.NotFound("/some_resolved_path") as PathResolutionResult)
-            ) { _, resolution ->
+            on("converting a configuration file with a container that has a volume mount with a local path that can be resolved") {
                 val originalVolumeMountPath = "local_volume_path"
                 val container = ContainerFromFile(imageName = "some-image", volumeMounts = setOf(VolumeMount(originalVolumeMountPath, "/container_path", "some-options")))
                 val configFile = ConfigurationFile("the_project_name", containers = mapOf("the_container_name" to container))
 
                 val pathResolver = mock<PathResolver> {
-                    on { resolve(originalVolumeMountPath) } doReturn resolution
+                    on { resolve(originalVolumeMountPath) } doReturn PathResolutionResult.Resolved("/some_resolved_path", PathType.File)
                 }
 
                 val resultingConfig = configFile.toConfiguration(pathResolver)

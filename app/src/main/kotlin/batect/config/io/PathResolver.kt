@@ -28,29 +28,30 @@ data class PathResolver(val relativeTo: Path) {
     fun resolve(path: String): PathResolutionResult {
         try {
             val resolvedPath = relativeTo.resolve(path).normalize()
-
-            if (!Files.exists(resolvedPath)) {
-                return PathResolutionResult.NotFound(resolvedPath.toString())
-            }
-
-            if (Files.isDirectory(resolvedPath)) {
-                return PathResolutionResult.ResolvedToDirectory(resolvedPath.toString())
-            }
-
-            if (Files.isRegularFile(resolvedPath)) {
-                return PathResolutionResult.ResolvedToFile(resolvedPath.toString())
-            }
-
-            throw RuntimeException("Path '$path' represents neither a directory nor a file.")
+            return PathResolutionResult.Resolved(resolvedPath.toString(), pathType(resolvedPath))
         } catch (e: InvalidPathException) {
             return PathResolutionResult.InvalidPath
+        }
+    }
+
+    private fun pathType(path: Path): PathType {
+        return when {
+            !Files.exists(path) -> PathType.DoesNotExist
+            Files.isRegularFile(path) -> PathType.File
+            Files.isDirectory(path) -> PathType.Directory
+            else -> PathType.Other
         }
     }
 }
 
 sealed class PathResolutionResult {
-    data class ResolvedToFile(val path: String) : PathResolutionResult()
-    data class ResolvedToDirectory(val path: String) : PathResolutionResult()
-    data class NotFound(val path: String) : PathResolutionResult()
+    data class Resolved(val absolutePath: String, val pathType: PathType) : PathResolutionResult()
     object InvalidPath : PathResolutionResult()
+}
+
+enum class PathType {
+    DoesNotExist,
+    File,
+    Directory,
+    Other
 }

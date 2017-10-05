@@ -40,7 +40,7 @@ object PathResolverSpec : Spek({
             val path = ""
 
             it("resolves to the original directory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.ResolvedToDirectory("/thing/place") as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("/thing/place", PathType.Directory) as PathResolutionResult))
             }
         }
 
@@ -48,7 +48,7 @@ object PathResolverSpec : Spek({
             val path = "."
 
             it("resolves to the original directory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.ResolvedToDirectory("/thing/place") as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("/thing/place", PathType.Directory) as PathResolutionResult))
             }
         }
 
@@ -57,7 +57,7 @@ object PathResolverSpec : Spek({
             Files.createDirectories(relativeTo.resolve(path))
 
             it("resolves to the subdirectory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.ResolvedToDirectory("/thing/place/stuff") as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("/thing/place/stuff", PathType.Directory) as PathResolutionResult))
             }
         }
 
@@ -65,7 +65,7 @@ object PathResolverSpec : Spek({
             val path = ".."
 
             it("resolves to the parent directory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.ResolvedToDirectory("/thing") as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("/thing", PathType.Directory) as PathResolutionResult))
             }
         }
 
@@ -74,7 +74,7 @@ object PathResolverSpec : Spek({
             Files.createDirectories(fileSystem.getPath("/thing/something"))
 
             it("resolves to the parent directory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.ResolvedToDirectory("/thing/something") as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("/thing/something", PathType.Directory) as PathResolutionResult))
             }
         }
 
@@ -83,7 +83,7 @@ object PathResolverSpec : Spek({
             Files.createDirectories(fileSystem.getPath(path))
 
             it("resolves to the absolute path") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.ResolvedToDirectory("/other") as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("/other", PathType.Directory) as PathResolutionResult))
             }
         }
 
@@ -91,7 +91,7 @@ object PathResolverSpec : Spek({
             val path = "doesnotexist"
 
             it("reports that the path does not exist") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.NotFound("/thing/place/doesnotexist") as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("/thing/place/doesnotexist", PathType.DoesNotExist) as PathResolutionResult))
             }
         }
 
@@ -100,7 +100,7 @@ object PathResolverSpec : Spek({
             Files.createFile(relativeTo.resolve(path))
 
             it("resolves to the file") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.ResolvedToFile("/thing/place/thefile.txt") as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("/thing/place/thefile.txt", PathType.File) as PathResolutionResult))
             }
         }
 

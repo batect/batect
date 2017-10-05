@@ -70,6 +70,7 @@ class ProcessRunner(private val logger: Logger) {
             message("Process exited.")
             data("command", command)
             data("exitCode", exitCode)
+            data("output", output)
         }
 
         return ProcessOutput(exitCode, output)

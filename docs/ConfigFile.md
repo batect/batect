@@ -132,6 +132,8 @@ Each task definition is made up of:
 * `run`:
     * `container` [Container](#container-definitions) to run for this task. **Required.**
     * `command` Command to run for this task. Overrides any command specified on the container definition and the default image command.
+    * `environment` List of environment variables (in `name=value` format) for the container. If a variable is specified both here and on the container
+      itself, the value given here will override the value defined on the container.
 
 * `start` List of other containers that should be started and healthy before starting the task container given in `run`. The behaviour is the same as the
   `dependencies` property on a container definition.

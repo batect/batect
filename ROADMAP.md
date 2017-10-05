@@ -16,7 +16,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * overridable health check parameters for containers (so that you can have the health check poll very frequently when waiting for something to
   come up for tests, but less frequently if that container is used in production)
 * some way to propagate environment variables from host environment to target environment
-* some way to add additional environment variables at the task level (for the target container only, not dependencies)
 * flag (eg. `--quiet`) to only show output from task
 * automatically enable `--no-colours` or `--simple-output` if console doesn't support it (use terminfo database rather than current detection system)
 * fancy progress bar output for building images and starting dependencies

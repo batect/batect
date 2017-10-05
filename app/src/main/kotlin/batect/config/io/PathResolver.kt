@@ -41,7 +41,7 @@ data class PathResolver(val relativeTo: Path) {
                 return PathResolutionResult.ResolvedToFile(resolvedPath.toString())
             }
 
-            throw RuntimeException("Path represents neither a directory nor a file.")
+            throw RuntimeException("Path '$path' represents neither a directory nor a file.")
         } catch (e: InvalidPathException) {
             return PathResolutionResult.InvalidPath
         }

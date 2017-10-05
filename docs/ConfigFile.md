@@ -86,34 +86,55 @@ tasks:
 
 The root of the configuration file is made up of:
 
-| Name | Description |
-|---|---|
-| `project_name` | The name of your project. Used to label any images built. **Required.** |
-| `containers` | Definitions for each of the containers that make up your various environments. [See details below.](#container-definitions) |
-| `tasks` | Definitions for each of your tasks. [See details below.](#task-definitions) |
+* `project_name` The name of your project. Used to label any images built. **Required.**
+
+* `containers` Definitions for each of the containers that make up your various environments. [See details below.](#container-definitions)
+
+* `tasks` Definitions for each of your tasks. [See details below.](#task-definitions)
 
 ### Container definitions
 
 Each container definition is made up of:
 
-| Name | Description |
-|---|---|
-| `image` | Image name (in standard Docker image reference format) to use for this container. **One of `image` or `build_directory` is required.** |
-| `build_directory` | Path (relative to the configuration file's directory) to a directory containing a Dockerfile to build and use as an image for this container. **One of `image` or `build_directory` is required.** |
-| `command` | Command to run when the container starts. If not provided, the default command for the image will be run. Both of these can be overridden for an individual task by specifying a `command` at the task level. |
-| `environment` | List of environment variables (in `name=value` format) for the container. |
-| `working_directory` | Working directory to start the container in. If not provided, the default working directory for the image will be used. |
-| `volumes` | List of volume mounts (in standard Docker `local:container` or `local:container:mode` format) to create for the container). Relative local paths will be resolved relative to the configuration file's directory. |
-| `ports` | List of ports (in standard Docker `local:container` format) to make available to the host machine. For example, `123:456` will make port 456 inside the container available on the host machine at port 123.<br /><br />Only TCP ports are supported at present.<br /><br />This does not affect the visibility of ports within the network created for all containers in a task - any container started as part of a task will be able to access any port on any other container at the address `container_name:container_port`. For example, if a process running in the `http-server` container listens on port 2000, any other container in the task can access that at `http-server:2000` without port 2000 being listed in `ports`. |
-| `dependencies` | List of other containers that should be started and healthy before starting this container. If a dependency's image does not contain a [health check](https://docs.docker.com/engine/reference/builder/#healthcheck), then as soon as it has started, it is considered to be healthy. |
+* `image` Image name (in standard Docker image reference format) to use for this container. **One of `image` or `build_directory` is required.**
+
+* `build_directory` Path (relative to the configuration file's directory) to a directory containing a Dockerfile to build and use as an image for
+  this container. **One of `image` or `build_directory` is required.**
+
+* `command` Command to run when the container starts. If not provided, the default command for the image will be run. Both of these can be overridden
+  for an individual task by specifying a `command` at the task level.
+
+* `environment` List of environment variables (in `name=value` format) for the container.
+
+* `working_directory` Working directory to start the container in. If not provided, the default working directory for the image will be used.
+
+* `volumes` List of volume mounts (in standard Docker `local:container` or `local:container:mode` format) to create for the container). Relative local
+  paths will be resolved relative to the configuration file's directory.
+
+* `ports` List of ports (in standard Docker `local:container` format) to make available to the host machine. For example, `123:456` will make port 456
+  inside the container available on the host machine at port 123.
+
+  Only TCP ports are supported at present.
+
+  This does not affect the visibility of ports within the network created for all containers in a task - any container started as part of a task will be
+  able to access any port on any other container at the address `container_name:container_port`. For example, if a process running in the `http-server`
+  container listens on port 2000, any other container in the task can access that at `http-server:2000` without port 2000 being listed in `ports`.
+
+* `dependencies` List of other containers that should be started and healthy before starting this container. If a dependency's image does not contain a
+  [health check](https://docs.docker.com/engine/reference/builder/#healthcheck), then as soon as it has started, it is considered to be healthy.
 
 ### Task definitions
 
 Each task definition is made up of:
 
-| Name | Description |
-|---|---|
-| `description` | Description shown when running `batect tasks`. |
-| `run` | Container (`container`) and command (`command`) to run for this task. **`container` is required.** `command` overrides any command specifed on the container definition and the default image command. |
-| `start` | List of other containers that should be started and healthy before starting the task container given in `run`. The behaviour is the same as the `dependencies` property on a container definition. |
-| `prerequisites` | List of other tasks that should be run before running this task. If a prerequisite task finishes with a non-zero exit code, then neither this task nor any other prerequisites will be run. |
+* `description` Description shown when running `batect tasks`.
+
+* `run`:
+    * `container` [Container](#container-definitions) to run for this task. **Required.**
+    * `command` Command to run for this task. Overrides any command specified on the container definition and the default image command.
+
+* `start` List of other containers that should be started and healthy before starting the task container given in `run`. The behaviour is the same as the
+  `dependencies` property on a container definition.
+
+* `prerequisites` List of other tasks that should be run before running this task. If a prerequisite task finishes with a non-zero exit code, then neither
+  this task nor any other prerequisites will be run.

@@ -1,0 +1,13 @@
+project_name: simple-task-with-environment-from-host-task
+
+containers:
+  build-env:
+    image: alpine:3.6
+
+tasks:
+  the-task:
+    run:
+      container: build-env
+      command: sh -c "echo $MESSAGE && exit 123"
+      environment:
+        - MESSAGE=$MESSAGE

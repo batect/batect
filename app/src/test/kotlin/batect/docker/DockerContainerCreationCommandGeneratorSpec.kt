@@ -35,7 +35,8 @@ import org.jetbrains.spek.api.dsl.on
 
 object DockerContainerCreationCommandGeneratorSpec : Spek({
     describe("a Docker container creation command generator") {
-        val generator = DockerContainerCreationCommandGenerator()
+        val hostEnvironmentVariables = mapOf("SOME_HOST_VARIABLE" to "some value from the host")
+        val generator = DockerContainerCreationCommandGenerator(hostEnvironmentVariables)
 
         given("a simple container definition, a built image and an explicit command to run") {
             val container = Container("the-container", imageSourceDoesNotMatter())
@@ -106,7 +107,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
             }
         }
 
-        given("a container with some additional environment variables that override values for enviroment variables for the container") {
+        given("a container with some additional environment variables that override values for environment variables for the container") {
             val container = Container("the-container", imageSourceDoesNotMatter(), environment = mapOf("SOME_VAR" to "original value"))
             val command = null
             val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
@@ -125,6 +126,110 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                         "--hostname", container.name,
                         "--network-alias", container.name,
                         "--env", "SOME_VAR=some value",
+                        image.id).asIterable()))
+                }
+            }
+        }
+
+        given("a container with an environment variable that takes its value from the host environment") {
+            val container = Container("the-container", imageSourceDoesNotMatter(), environment = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE"))
+            val command = null
+            val additionalEnvironmentVariables = emptyMap<String, String>()
+            val image = DockerImage("the-image")
+            val network = DockerNetwork("the-network")
+            val consoleInfo = mock<ConsoleInfo>()
+
+            on("generating the command") {
+                val commandLine = generator.createCommandLine(container, command, additionalEnvironmentVariables, image, network, consoleInfo)
+
+                it("generates the correct command line, taking the environment variable value from the host environment variables") {
+                    assertThat(commandLine, equalTo(listOf(
+                        "docker", "create",
+                        "-it",
+                        "--network", network.id,
+                        "--hostname", container.name,
+                        "--network-alias", container.name,
+                        "--env", "SOME_VAR=some value from the host",
+                        image.id).asIterable()))
+                }
+            }
+        }
+
+        given("a container with an environment variable that takes its value from a host variable that doesn't exist") {
+            val container = Container("the-container", imageSourceDoesNotMatter(), environment = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE_THAT_DOES_NOT_EXIST"))
+            val command = null
+            val additionalEnvironmentVariables = emptyMap<String, String>()
+            val image = DockerImage("the-image")
+            val network = DockerNetwork("the-network")
+            val consoleInfo = mock<ConsoleInfo>()
+
+            on("generating the command") {
+                it("throws an appropriate exception") {
+                    assertThat({ generator.createCommandLine(container, command, additionalEnvironmentVariables, image, network, consoleInfo) },
+                        throws<ContainerCreationFailedException>(withMessage("The environment variable 'SOME_VAR' refers to host environment variable 'SOME_HOST_VARIABLE_THAT_DOES_NOT_EXIST', but it is not set.")))
+                }
+            }
+        }
+
+        given("a container with an additional environment variable that takes its value from the host environment") {
+            val container = Container("the-container", imageSourceDoesNotMatter())
+            val command = null
+            val additionalEnvironmentVariables = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE")
+            val image = DockerImage("the-image")
+            val network = DockerNetwork("the-network")
+            val consoleInfo = mock<ConsoleInfo>()
+
+            on("generating the command") {
+                val commandLine = generator.createCommandLine(container, command, additionalEnvironmentVariables, image, network, consoleInfo)
+
+                it("generates the correct command line, taking the environment variable value from the host environment variables") {
+                    assertThat(commandLine, equalTo(listOf(
+                        "docker", "create",
+                        "-it",
+                        "--network", network.id,
+                        "--hostname", container.name,
+                        "--network-alias", container.name,
+                        "--env", "SOME_VAR=some value from the host",
+                        image.id).asIterable()))
+                }
+            }
+        }
+
+        given("a container with an additional environment variable that takes its value from a host variable that doesn't exist") {
+            val container = Container("the-container", imageSourceDoesNotMatter())
+            val command = null
+            val additionalEnvironmentVariables = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE_THAT_DOES_NOT_EXIST")
+            val image = DockerImage("the-image")
+            val network = DockerNetwork("the-network")
+            val consoleInfo = mock<ConsoleInfo>()
+
+            on("generating the command") {
+                it("throws an appropriate exception") {
+                    assertThat({ generator.createCommandLine(container, command, additionalEnvironmentVariables, image, network, consoleInfo) },
+                        throws<ContainerCreationFailedException>(withMessage("The environment variable 'SOME_VAR' refers to host environment variable 'SOME_HOST_VARIABLE_THAT_DOES_NOT_EXIST', but it is not set.")))
+                }
+            }
+        }
+
+        given("a container with an environment variable that takes its value from a host variable that doesn't exist that is overridden by an additional environment variable with a literal value") {
+            val container = Container("the-container", imageSourceDoesNotMatter(), environment = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE_THAT_DOES_NOT_EXIST"))
+            val command = null
+            val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value from the additional environment variables")
+            val image = DockerImage("the-image")
+            val network = DockerNetwork("the-network")
+            val consoleInfo = mock<ConsoleInfo>()
+
+            on("generating the command") {
+                val commandLine = generator.createCommandLine(container, command, additionalEnvironmentVariables, image, network, consoleInfo)
+
+                it("generates the correct command line, taking the environment variable value from the additional environment variables") {
+                    assertThat(commandLine, equalTo(listOf(
+                        "docker", "create",
+                        "-it",
+                        "--network", network.id,
+                        "--hostname", container.name,
+                        "--network-alias", container.name,
+                        "--env", "SOME_VAR=some value from the additional environment variables",
                         image.id).asIterable()))
                 }
             }

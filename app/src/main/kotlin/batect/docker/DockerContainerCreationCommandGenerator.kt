@@ -19,7 +19,9 @@ package batect.docker
 import batect.config.Container
 import batect.ui.ConsoleInfo
 
-class DockerContainerCreationCommandGenerator {
+class DockerContainerCreationCommandGenerator(private val hostEnvironmentVariables: Map<String, String>) {
+    constructor() : this(System.getenv())
+
     fun createCommandLine(
         container: Container,
         command: String?,
@@ -52,7 +54,25 @@ class DockerContainerCreationCommandGenerator {
             mapOf("TERM" to consoleInfo.terminalType)
         }
 
-        return termEnvironment + container.environment + additionalEnvironmentVariables
+        return termEnvironment + substituteEnvironmentVariables(container.environment + additionalEnvironmentVariables)
+    }
+
+    private fun substituteEnvironmentVariables(original: Map<String, String>): Map<String, String> =
+        original.mapValues { (name, value) -> substituteEnvironmentVariable(name, value) }
+
+    private fun substituteEnvironmentVariable(name: String, originalValue: String): String {
+        if (originalValue.startsWith('$')) {
+            val variableName = originalValue.drop(1)
+            val valueFromHost = hostEnvironmentVariables.get(variableName)
+
+            if (valueFromHost == null) {
+                throw ContainerCreationFailedException("The environment variable '$name' refers to host environment variable '$variableName', but it is not set.")
+            }
+
+            return valueFromHost
+        } else {
+            return originalValue
+        }
     }
 
     private fun volumeMountArguments(container: Container): Iterable<String> = container.volumeMounts.flatMap { listOf("--volume", it.toString()) }

@@ -106,6 +106,12 @@ Each container definition is made up of:
 
 * `environment` List of environment variables (in `name=value` format) for the container.
 
+  You can pass environment variables from the host (ie. where you run batect) to the container by using `$<name>`. For example, to pass
+  the value of the `SUPER_SECRET_PASSWORD` variable in the container to the value of the `MY_PASSWORD` variable on the host, use
+  `SUPER_SECRET_PASSWORD=$MY_PASSWORD`. Substitutions in the middle of values is not supported (eg. `SUPER_SECRET_PASSWORD=My password is $MY_PASSWORD`
+  will not work). Be careful when using this - by relying on the host's environment variables, you are introducing inconsistency to how the container
+  runs between hosts, which is something you generally want to avoid.
+
 * `working_directory` Working directory to start the container in. If not provided, the default working directory for the image will be used.
 
 * `volumes` List of volume mounts (in standard Docker `local:container` or `local:container:mode` format) to create for the container). Relative local
@@ -133,7 +139,8 @@ Each task definition is made up of:
     * `container` [Container](#container-definitions) to run for this task. **Required.**
     * `command` Command to run for this task. Overrides any command specified on the container definition and the default image command.
     * `environment` List of environment variables (in `name=value` format) for the container. If a variable is specified both here and on the container
-      itself, the value given here will override the value defined on the container.
+      itself, the value given here will override the value defined on the container. Just like when specifying a variable directly on the container,
+      you can pass variables from the host to the container in the `CONTAINER_VARIABLE=$HOST_VARIABLE` format.
 
 * `start` List of other containers that should be started and healthy before starting the task container given in `run`. The behaviour is the same as the
   `dependencies` property on a container definition.

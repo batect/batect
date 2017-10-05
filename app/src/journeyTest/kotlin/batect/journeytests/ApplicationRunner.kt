@@ -35,19 +35,21 @@ data class ApplicationRunner(val testName: String) {
         }
     }
 
-    fun runApplication(arguments: Iterable<String>): ApplicationResult {
+    fun runApplication(arguments: Iterable<String>, environment: Map<String, String> = emptyMap()): ApplicationResult {
         val commandLine = commandLineForApplication(arguments)
 
-        return runCommandLine(commandLine)
+        return runCommandLine(commandLine, environment)
     }
 
-    fun runCommandLine(commandLine: List<String>): ApplicationResult {
+    fun runCommandLine(commandLine: List<String>, environment: Map<String, String> = emptyMap()): ApplicationResult {
         val containersBefore = getAllCreatedContainers()
-        val process = ProcessBuilder(commandLine)
-                .directory(testDirectory.toFile())
-                .redirectErrorStream(true)
-                .start()
+        val builder = ProcessBuilder(commandLine)
+            .directory(testDirectory.toFile())
+            .redirectErrorStream(true)
 
+        builder.environment().putAll(environment)
+
+        val process = builder.start()
         process.waitFor()
         val output = InputStreamReader(process.inputStream).readText()
 
@@ -60,8 +62,8 @@ data class ApplicationRunner(val testName: String) {
     private fun getAllCreatedContainers(): Set<String> {
         val commandLine = listOf("docker", "ps", "--all", "--format", "{{.Names}} ({{.ID}}): {{.Image}}")
         val process = ProcessBuilder(commandLine)
-                .redirectErrorStream(true)
-                .start()
+            .redirectErrorStream(true)
+            .start()
 
         val exitCode = process.waitFor()
         val output = InputStreamReader(process.inputStream).readText()

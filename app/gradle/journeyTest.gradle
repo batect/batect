@@ -45,6 +45,8 @@ task journeyTest(type: JavaExec) {
     dependsOn journeyTestClasses
     dependsOn installShadowDist
 
+    inputs.files installShadowDist
+
     def reportDir = "$buildDir/test-results/journey-tests"
     outputs.dir reportDir
 

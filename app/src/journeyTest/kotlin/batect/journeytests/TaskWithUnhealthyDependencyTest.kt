@@ -36,6 +36,12 @@ object TaskWithUnhealthyDependencyTest : Spek({
                 assertThat(result.output, containsSubstring("Dependency 'http-server' did not become healthy: The configured health check did not indicate that the container was healthy within the timeout period."))
             }
 
+            it("prints details of the failing health check") {
+                assertThat(result.output, containsSubstring("The last health check exited with code 1 and output:"))
+                assertThat(result.output, containsSubstring("This is some normal output"))
+                assertThat(result.output, containsSubstring("This is some error output"))
+            }
+
             it("returns a non-zero exit code") {
                 assertThat(result.exitCode, !equalTo(0))
             }

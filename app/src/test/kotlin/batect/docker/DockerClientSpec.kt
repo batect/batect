@@ -359,7 +359,7 @@ object DockerClientSpec : Spek({
 
         describe("getting the last health check result for a container") {
             val container = DockerContainer("some-container")
-            val expectedCommand = listOf("docker", "inspect", container.id, "--format='{{json .State.Health}}'")
+            val expectedCommand = listOf("docker", "inspect", container.id, "--format={{json .State.Health}}")
 
             on("the container only having one last health check result") {
                 val response = """{

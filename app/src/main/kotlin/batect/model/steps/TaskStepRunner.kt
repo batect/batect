@@ -23,6 +23,7 @@ import batect.docker.ContainerRemovalFailedException
 import batect.docker.ContainerStartFailedException
 import batect.docker.ContainerStopFailedException
 import batect.docker.DockerClient
+import batect.docker.DockerContainer
 import batect.docker.DockerImageBuildProgress
 import batect.docker.HealthStatus
 import batect.docker.ImageBuildFailedException
@@ -144,7 +145,7 @@ class TaskStepRunner(private val dockerClient: DockerClient, private val logger:
             val event = when (result) {
                 HealthStatus.NoHealthCheck -> ContainerBecameHealthyEvent(step.container)
                 HealthStatus.BecameHealthy -> ContainerBecameHealthyEvent(step.container)
-                HealthStatus.BecameUnhealthy -> ContainerDidNotBecomeHealthyEvent(step.container, "The configured health check did not indicate that the container was healthy within the timeout period.")
+                HealthStatus.BecameUnhealthy -> ContainerDidNotBecomeHealthyEvent(step.container, containerBecameUnhealthyMessage(step.dockerContainer))
                 HealthStatus.Exited -> ContainerDidNotBecomeHealthyEvent(step.container, "The container exited before becoming healthy.")
             }
 
@@ -152,6 +153,18 @@ class TaskStepRunner(private val dockerClient: DockerClient, private val logger:
         } catch (e: ContainerHealthCheckException) {
             eventSink.postEvent(ContainerDidNotBecomeHealthyEvent(step.container, "Waiting for the container's health status failed: ${e.message}"))
         }
+    }
+
+    private fun containerBecameUnhealthyMessage(container: DockerContainer): String {
+        val lastHealthCheckResult = dockerClient.getLastHealthCheckResult(container)
+
+        val message = when {
+            lastHealthCheckResult.exitCode == 0 -> "The most recent health check exited with code 0, which usually indicates that the container became healthy just after the timeout period expired."
+            lastHealthCheckResult.output.isEmpty() -> "The last health check exited with code ${lastHealthCheckResult.exitCode} but did not produce any output."
+            else -> "The last health check exited with code ${lastHealthCheckResult.exitCode} and output: ${lastHealthCheckResult.output}"
+        }
+
+        return "The configured health check did not indicate that the container was healthy within the timeout period. " + message
     }
 
     private fun handleStopContainerStep(step: StopContainerStep, eventSink: TaskEventSink) {

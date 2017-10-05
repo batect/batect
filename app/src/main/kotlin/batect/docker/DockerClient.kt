@@ -232,7 +232,7 @@ class DockerClient(
     }
 
     fun getLastHealthCheckResult(container: DockerContainer): DockerHealthCheckResult {
-        val command = listOf("docker", "inspect", container.id, "--format='{{json .State.Health}}'")
+        val command = listOf("docker", "inspect", container.id, "--format={{json .State.Health}}")
         val result = processRunner.runAndCaptureOutput(command)
 
         if (failed(result)) {

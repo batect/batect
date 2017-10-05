@@ -15,7 +15,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * allow the user to keep containers after failure so they can examine logs
 * overridable health check parameters for containers (so that you can have the health check poll very frequently when waiting for something to
   come up for tests, but less frequently if that container is used in production)
-* if a dependency container fails to become healthy, show output and exit code from last health check attempt
 * some way to propagate environment variables from host environment to target environment
 * some way to add additional environment variables at the task level (for the target container only, not dependencies)
 * flag (eg. `--quiet`) to only show output from task

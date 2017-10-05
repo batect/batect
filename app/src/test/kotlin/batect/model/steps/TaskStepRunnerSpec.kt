@@ -27,6 +27,7 @@ import batect.docker.ContainerStopFailedException
 import batect.docker.DockerClient
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerRunResult
+import batect.docker.DockerHealthCheckResult
 import batect.docker.DockerImage
 import batect.docker.DockerImageBuildProgress
 import batect.docker.DockerNetwork
@@ -419,13 +420,55 @@ object TaskStepRunnerSpec : Spek({
                     }
                 }
 
-                on("when the container becomes unhealthy") {
-                    whenever(dockerClient.waitForHealthStatus(dockerContainer)).doReturn(HealthStatus.BecameUnhealthy)
+                describe("when the container becomes unhealthy") {
+                    beforeEachTest {
+                        whenever(dockerClient.waitForHealthStatus(dockerContainer)).doReturn(HealthStatus.BecameUnhealthy)
+                    }
 
-                    runner.run(step, eventSink)
+                    describe("when the last health check returned a non-zero exit code") {
+                        on("and produced no output") {
+                            whenever(dockerClient.getLastHealthCheckResult(dockerContainer)).doReturn(DockerHealthCheckResult(2, ""))
 
-                    it("emits a 'container did not become healthy' event") {
-                        verify(eventSink).postEvent(ContainerDidNotBecomeHealthyEvent(container, "The configured health check did not indicate that the container was healthy within the timeout period."))
+                            runner.run(step, eventSink)
+
+                            it("emits a 'container did not become healthy' event with details of the last health check") {
+                                verify(eventSink).postEvent(ContainerDidNotBecomeHealthyEvent(container,
+                                    "The configured health check did not indicate that the container was healthy within the timeout period. The last health check exited with code 2 but did not produce any output."))
+                            }
+                        }
+
+                        on("and produced some output") {
+                            whenever(dockerClient.getLastHealthCheckResult(dockerContainer)).doReturn(DockerHealthCheckResult(2, "Something's not ready yet."))
+
+                            runner.run(step, eventSink)
+
+                            it("emits a 'container did not become healthy' event with details of the last health check") {
+                                verify(eventSink).postEvent(ContainerDidNotBecomeHealthyEvent(container,
+                                    "The configured health check did not indicate that the container was healthy within the timeout period. The last health check exited with code 2 and output: Something's not ready yet."))
+                            }
+                        }
+                    }
+
+                    on("when the last health check returned a zero exit code") {
+                        whenever(dockerClient.getLastHealthCheckResult(dockerContainer)).doReturn(DockerHealthCheckResult(0, ""))
+
+                        runner.run(step, eventSink)
+
+                        it("emits a 'container did not become healthy' event with an explanation of the race condition") {
+                            verify(eventSink).postEvent(ContainerDidNotBecomeHealthyEvent(container,
+                                "The configured health check did not indicate that the container was healthy within the timeout period. The most recent health check exited with code 0, which usually indicates that the container became healthy just after the timeout period expired."))
+                        }
+                    }
+
+                    on("when getting the last health check result throws an exception") {
+                        whenever(dockerClient.getLastHealthCheckResult(dockerContainer)).doThrow(ContainerHealthCheckException("Something went wrong."))
+
+                        runner.run(step, eventSink)
+
+                        it("emits a 'container did not become healthy' event with details of the last health check") {
+                            verify(eventSink).postEvent(ContainerDidNotBecomeHealthyEvent(container,
+                                "Waiting for the container's health status failed: Something went wrong."))
+                        }
                     }
                 }
 

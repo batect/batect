@@ -41,13 +41,21 @@ data class ConfigurationFile(
         ContainerMap(containers.map { (name, container) -> container.toContainer(name, pathResolver) }))
 }
 
-data class TaskFromFile(@JsonProperty("run") val runConfiguration: TaskRunConfiguration,
+data class TaskFromFile(@JsonProperty("run") val runConfiguration: TaskRunConfigurationFromFile,
                         val description: String = "",
                         @JsonProperty("start") @JsonDeserialize(using = StringSetDeserializer::class) val dependsOnContainers: Set<String> = emptySet(),
                         @JsonProperty("prerequisites") @JsonDeserialize(using = StringSetDeserializer::class) val prerequisiteTasks: Set<String> = emptySet()
 ) {
 
-    fun toTask(name: String): Task = Task(name, runConfiguration, description, dependsOnContainers, prerequisiteTasks)
+    fun toTask(name: String): Task = Task(name, runConfiguration.toRunConfiguration(), description, dependsOnContainers, prerequisiteTasks)
+}
+
+data class TaskRunConfigurationFromFile(
+    val container: String,
+    val command: String? = null,
+    @JsonDeserialize(using = EnvironmentDeserializer::class) @JsonProperty("environment") val additionalEnvironmentVariables: Map<String, String> = emptyMap()
+) {
+    fun toRunConfiguration(): TaskRunConfiguration = TaskRunConfiguration(container, command, additionalEnvironmentVariables)
 }
 
 data class ContainerFromFile(

@@ -16,6 +16,14 @@
 
 package batect.model.events
 
+import batect.config.Container
+import batect.docker.DockerImage
+import batect.docker.DockerNetwork
+import batect.logging.Logger
+import batect.model.steps.CreateContainerStep
+import batect.model.steps.DeleteTaskNetworkStep
+import batect.testutils.InMemoryLogSink
+import batect.testutils.imageSourceDoesNotMatter
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.any
@@ -23,14 +31,6 @@ import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
-import batect.model.steps.CreateContainerStep
-import batect.model.steps.DeleteTaskNetworkStep
-import batect.config.Container
-import batect.docker.DockerImage
-import batect.docker.DockerNetwork
-import batect.logging.Logger
-import batect.testutils.InMemoryLogSink
-import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -52,10 +52,10 @@ object ContainerRemovedEventSpec : Spek({
             on("when all containers with a pending or processed creation step have been removed or reported that they failed to be created") {
                 val context = mock<TaskEventContext> {
                     on { getPendingAndProcessedStepsOfType<CreateContainerStep>() } doReturn setOf(
-                            CreateContainerStep(container, "some-command", image, network),
-                            CreateContainerStep(otherContainer1, "some-command", image, network),
-                            CreateContainerStep(otherContainer2, "some-command", image, network),
-                            CreateContainerStep(containerThatFailedToCreate, "some-command", image, network)
+                        CreateContainerStep(container, "some-command", emptyMap(), image, network),
+                        CreateContainerStep(otherContainer1, "some-command", emptyMap(), image, network),
+                        CreateContainerStep(otherContainer2, "some-command", emptyMap(), image, network),
+                        CreateContainerStep(containerThatFailedToCreate, "some-command", emptyMap(), image, network)
                     )
 
                     on { getPastEventsOfType<ContainerRemovedEvent>() } doReturn setOf(
@@ -81,10 +81,10 @@ object ContainerRemovedEventSpec : Spek({
             on("when some containers with a pending or processed creation step have not been removed or reported that they failed to be created") {
                 val context = mock<TaskEventContext> {
                     on { getPendingAndProcessedStepsOfType<CreateContainerStep>() } doReturn setOf(
-                            CreateContainerStep(container, "some-command", image, network),
-                            CreateContainerStep(otherContainer1, "some-command", image, network),
-                            CreateContainerStep(otherContainer2, "some-command", image, network),
-                            CreateContainerStep(containerThatFailedToCreate, "some-command", image, network)
+                        CreateContainerStep(container, "some-command", emptyMap(), image, network),
+                        CreateContainerStep(otherContainer1, "some-command", emptyMap(), image, network),
+                        CreateContainerStep(otherContainer2, "some-command", emptyMap(), image, network),
+                        CreateContainerStep(containerThatFailedToCreate, "some-command", emptyMap(), image, network)
                     )
 
                     on { getPastEventsOfType<ContainerRemovedEvent>() } doReturn setOf(

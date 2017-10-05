@@ -223,13 +223,14 @@ object TaskStepRunnerSpec : Spek({
             describe("running a 'create container' step") {
                 val container = Container("some-container", imageSourceDoesNotMatter())
                 val command = "do-stuff"
+                val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
                 val image = DockerImage("some-image")
                 val network = DockerNetwork("some-network")
-                val step = CreateContainerStep(container, command, image, network)
+                val step = CreateContainerStep(container, command, additionalEnvironmentVariables, image, network)
 
                 on("when creating the container succeeds") {
                     val dockerContainer = DockerContainer("some-id")
-                    whenever(dockerClient.create(container, command, image, network)).doReturn(dockerContainer)
+                    whenever(dockerClient.create(container, command, additionalEnvironmentVariables, image, network)).doReturn(dockerContainer)
 
                     runner.run(step, eventSink)
 
@@ -239,7 +240,7 @@ object TaskStepRunnerSpec : Spek({
                 }
 
                 on("when creating the container fails") {
-                    whenever(dockerClient.create(container, command, image, network)).doThrow(ContainerCreationFailedException("Something went wrong."))
+                    whenever(dockerClient.create(container, command, additionalEnvironmentVariables, image, network)).doThrow(ContainerCreationFailedException("Something went wrong."))
 
                     runner.run(step, eventSink)
 

@@ -117,7 +117,7 @@ class TaskStepRunner(private val dockerClient: DockerClient, private val logger:
 
     private fun handleCreateContainerStep(step: CreateContainerStep, eventSink: TaskEventSink) {
         try {
-            val dockerContainer = dockerClient.create(step.container, step.command, step.image, step.network)
+            val dockerContainer = dockerClient.create(step.container, step.command, step.additionalEnvironmentVariables, step.image, step.network)
             eventSink.postEvent(ContainerCreatedEvent(step.container, dockerContainer))
         } catch (e: ContainerCreationFailedException) {
             eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))

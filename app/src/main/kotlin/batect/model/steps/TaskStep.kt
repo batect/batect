@@ -37,8 +37,8 @@ data class PullImageStep(val imageName: String) : TaskStep() {
 
 object CreateTaskNetworkStep : TaskStep()
 
-data class CreateContainerStep(val container: Container, val command: String?, val image: DockerImage, val network: DockerNetwork) : TaskStep() {
-    override fun toString() = super.toString() + "(container: '${container.name}', command: '${(command ?: "")}', image '${image.id}', network: '${network.id}')"
+data class CreateContainerStep(val container: Container, val command: String?, val additionalEnvironmentVariables: Map<String, String>, val image: DockerImage, val network: DockerNetwork) : TaskStep() {
+    override fun toString() = super.toString() + "(container: '${container.name}', command: '${(command ?: "")}', additional environment variables: $additionalEnvironmentVariables, image '${image.id}', network: '${network.id}')"
 }
 
 data class RunContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {

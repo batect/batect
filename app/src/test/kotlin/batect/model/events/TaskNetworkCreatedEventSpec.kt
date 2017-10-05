@@ -61,6 +61,8 @@ object TaskNetworkCreatedEventSpec : Spek({
             }
 
             on("when some images have been built or pulled already") {
+                val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
+
                 val context = mock<TaskEventContext> {
                     on { getPastEventsOfType<ImageBuiltEvent>() } doReturn setOf(
                         ImageBuiltEvent(containerWithImageToBuild, image1)
@@ -71,7 +73,9 @@ object TaskNetworkCreatedEventSpec : Spek({
                     )
 
                     on { commandForContainer(containerWithImageToBuild) } doReturn "command-1"
+                    on { additionalEnvironmentVariablesForContainer(containerWithImageToBuild) } doReturn additionalEnvironmentVariables
                     on { commandForContainer(containerWithImageToPull) } doReturn "command-2"
+                    on { additionalEnvironmentVariablesForContainer(containerWithImageToPull) } doReturn emptyMap()
 
                     on { allTaskContainers } doReturn setOf(containerWithImageToBuild, containerWithImageToPull)
                 }
@@ -79,8 +83,8 @@ object TaskNetworkCreatedEventSpec : Spek({
                 event.apply(context, logger)
 
                 it("queues 'create container' steps for them") {
-                    verify(context).queueStep(CreateContainerStep(containerWithImageToBuild, "command-1", image1, network))
-                    verify(context).queueStep(CreateContainerStep(containerWithImageToPull, "command-2", image2, network))
+                    verify(context).queueStep(CreateContainerStep(containerWithImageToBuild, "command-1", additionalEnvironmentVariables, image1, network))
+                    verify(context).queueStep(CreateContainerStep(containerWithImageToPull, "command-2", emptyMap(), image2, network))
                 }
 
                 it("does not queue a 'delete task network' step") {

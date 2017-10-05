@@ -22,4 +22,8 @@ data class Task(val name: String,
                 val dependsOnContainers: Set<String> = emptySet(),
                 val prerequisiteTasks: Set<String> = emptySet())
 
-data class TaskRunConfiguration(val container: String, val command: String? = null)
+data class TaskRunConfiguration(
+    val container: String,
+    val command: String? = null,
+    val additionalEnvironmentVariables: Map<String, String> = emptyMap()
+)

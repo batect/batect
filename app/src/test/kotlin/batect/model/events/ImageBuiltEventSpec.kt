@@ -56,16 +56,18 @@ object ImageBuiltEventSpec : Spek({
             }
 
             on("when the task network has already been created") {
+                val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
                 val network = DockerNetwork("the-network")
                 val context = mock<TaskEventContext> {
                     on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
                     on { commandForContainer(container) } doReturn "do-stuff"
+                    on { additionalEnvironmentVariablesForContainer(container) } doReturn additionalEnvironmentVariables
                 }
 
                 event.apply(context, logger)
 
                 it("queues a 'create container' step") {
-                    verify(context).queueStep(CreateContainerStep(container, "do-stuff", image, network))
+                    verify(context).queueStep(CreateContainerStep(container, "do-stuff", additionalEnvironmentVariables, image, network))
                 }
             }
 

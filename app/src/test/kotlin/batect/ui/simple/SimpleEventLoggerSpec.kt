@@ -127,7 +127,7 @@ object SimpleEventLoggerSpec : Spek({
 
                 describe("and a 'create container' step has been seen") {
                     on("and that step did not contain a command") {
-                        val createContainerStep = CreateContainerStep(container, null, DockerImage("some-image"), DockerNetwork("some-network"))
+                        val createContainerStep = CreateContainerStep(container, null, emptyMap(), DockerImage("some-image"), DockerNetwork("some-network"))
                         val runContainerStep = RunContainerStep(container, DockerContainer("not-important"))
 
                         logger.onStartingTaskStep(createContainerStep)
@@ -143,7 +143,7 @@ object SimpleEventLoggerSpec : Spek({
                     }
 
                     on("and that step contained a command") {
-                        val createContainerStep = CreateContainerStep(container, "do-stuff.sh", DockerImage("some-image"), DockerNetwork("some-network"))
+                        val createContainerStep = CreateContainerStep(container, "do-stuff.sh", emptyMap(), DockerImage("some-image"), DockerNetwork("some-network"))
                         val runContainerStep = RunContainerStep(container, DockerContainer("not-important"))
 
                         logger.onStartingTaskStep(createContainerStep)

@@ -36,7 +36,8 @@ data class ImageBuiltEvent(val container: Container, val image: DockerImage) : T
 
         if (networkCreationEvent != null) {
             val command = context.commandForContainer(container)
-            context.queueStep(CreateContainerStep(container, command, image, networkCreationEvent.network))
+            val additionalEnvironmentVariables = context.additionalEnvironmentVariablesForContainer(container)
+            context.queueStep(CreateContainerStep(container, command, additionalEnvironmentVariables, image, networkCreationEvent.network))
         } else {
             logger.info {
                 message("Task network hasn't been created yet, not queuing create container step.")

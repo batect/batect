@@ -36,6 +36,7 @@ interface TaskEventContext {
 
     fun isTaskContainer(container: Container): Boolean
     fun commandForContainer(container: Container): String?
+    fun additionalEnvironmentVariablesForContainer(container: Container): Map<String, String>
     fun dependenciesOf(container: Container): Set<Container>
     fun containersThatDependOn(container: Container): Set<Container>
 

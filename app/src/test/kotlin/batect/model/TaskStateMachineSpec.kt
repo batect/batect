@@ -65,7 +65,7 @@ object TaskStateMachineSpec : Spek({
                 command = "do-stuff-in-task-container")
 
         val unrelatedContainer = Container("some-other-container", imageSourceDoesNotMatter())
-        val runConfig = TaskRunConfiguration(taskContainer.name, "some-command")
+        val runConfig = TaskRunConfiguration(taskContainer.name, "some-command", mapOf("SOME_VAR" to "some value"))
         val task = Task("the-task", runConfig)
         val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, unrelatedContainer))
         val graph = DependencyGraph(config, task)
@@ -438,6 +438,20 @@ object TaskStateMachineSpec : Spek({
                     it("returns the command from the container configuration") {
                         assertThat(otherStateMachine.commandForContainer(taskContainer), equalTo(taskContainer.command))
                     }
+                }
+            }
+        }
+
+        describe("getting additional environment variables for a container") {
+            on("when the container is not the task container") {
+                it("returns an empty set of additional environment variables") {
+                    assertThat(stateMachine.additionalEnvironmentVariablesForContainer(dependencyContainer1), equalTo(emptyMap()))
+                }
+            }
+
+            on("when the container is the task container") {
+                it("returns the set of additional environment variables from the task run configuration") {
+                    assertThat(stateMachine.additionalEnvironmentVariablesForContainer(taskContainer), equalTo(runConfig.additionalEnvironmentVariables))
                 }
             }
         }

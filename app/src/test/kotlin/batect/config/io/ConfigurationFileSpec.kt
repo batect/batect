@@ -60,7 +60,8 @@ object ConfigurationFileSpec : Spek({
             }
 
             on("converting a configuration file with a task") {
-                val task = TaskFromFile(TaskRunConfiguration("some_container", "some_command"), "Some description", setOf("dependency-1"), setOf("other-task"))
+                val runConfiguration = TaskRunConfigurationFromFile("some_container", "some_command", mapOf("SOME_VAR" to "some value"))
+                val task = TaskFromFile(runConfiguration, "Some description", setOf("dependency-1"), setOf("other-task"))
                 val taskName = "the_task_name"
                 val configFile = ConfigurationFile("the_project_name", mapOf(taskName to task))
                 val pathResolver = mock<PathResolver>()
@@ -72,7 +73,13 @@ object ConfigurationFileSpec : Spek({
 
                 it("returns a configuration object with the task") {
                     assertThat(resultingConfig.tasks, equalTo(TaskMap(
-                        Task(taskName, task.runConfiguration, "Some description", task.dependsOnContainers, task.prerequisiteTasks)
+                        Task(
+                            taskName,
+                            TaskRunConfiguration(runConfiguration.container, runConfiguration.command, runConfiguration.additionalEnvironmentVariables),
+                            "Some description",
+                            task.dependsOnContainers,
+                            task.prerequisiteTasks
+                        )
                     )))
                 }
 

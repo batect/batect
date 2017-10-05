@@ -139,19 +139,20 @@ object DockerClientSpec : Spek({
             given("a container configuration and a built image") {
                 val container = Container("the-container", imageSourceDoesNotMatter())
                 val command = "doStuff"
+                val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
                 val image = DockerImage("the-image")
                 val network = DockerNetwork("the-network")
                 val commandLine = listOf("docker", "doStuff", "please")
 
                 beforeEachTest {
-                    whenever(creationCommandGenerator.createCommandLine(container, command, image, network, consoleInfo)).thenReturn(commandLine)
+                    whenever(creationCommandGenerator.createCommandLine(container, command, additionalEnvironmentVariables, image, network, consoleInfo)).thenReturn(commandLine)
                 }
 
                 on("a successful creation") {
                     val containerId = "abc123"
                     whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(0, containerId + "\n"))
 
-                    val result = client.create(container, command, image, network)
+                    val result = client.create(container, command, additionalEnvironmentVariables, image, network)
 
                     it("creates the container") {
                         verify(processRunner).runAndCaptureOutput(commandLine)
@@ -166,7 +167,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Something went wrong."))
 
                     it("raises an appropriate exception") {
-                        assertThat({ client.create(container, command, image, network) }, throws<ContainerCreationFailedException>(withMessage("Output from Docker was: Something went wrong.")))
+                        assertThat({ client.create(container, command, additionalEnvironmentVariables, image, network) }, throws<ContainerCreationFailedException>(withMessage("Output from Docker was: Something went wrong.")))
                     }
                 }
             }

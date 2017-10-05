@@ -97,6 +97,8 @@ object ConfigurationLoaderSpec : Spek({
                 |    run:
                 |      container: build-env
                 |      command: ./gradlew doStuff
+                |      environment:
+                |        - SOME_VAR=value
                 """.trimMargin()
 
             val config = loadConfiguration(configString)
@@ -114,6 +116,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.name, equalTo("first_task"))
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, equalTo("./gradlew doStuff"))
+                assertThat(task.runConfiguration.additionalEnvironmentVariables, equalTo(mapOf("SOME_VAR" to "value")))
                 assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, isEmptyString)

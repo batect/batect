@@ -61,11 +61,14 @@ object ImagePulledEventSpec : Spek({
                 val containerWithThisImage1 = Container("container-2", PullImage(image.id))
                 val containerWithThisImage2 = Container("container-3", PullImage(image.id))
                 val containerWithAnotherImageToPull = Container("container-4", PullImage("other-image"))
+                val additionalEnvironmentVariablesForContainer1 = mapOf("SOME_VAR" to "some value")
 
                 val network = DockerNetwork("the-network")
                 val context = mock<TaskEventContext> {
                     on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
                     on { commandForContainer(containerWithThisImage1) } doReturn "do-stuff"
+                    on { additionalEnvironmentVariablesForContainer(containerWithThisImage1) } doReturn additionalEnvironmentVariablesForContainer1
+                    on { additionalEnvironmentVariablesForContainer(containerWithThisImage2) } doReturn emptyMap()
                     on { commandForContainer(containerWithThisImage2) } doReturn "do-other-stuff"
                     on { allTaskContainers } doReturn setOf(
                         containerWithImageToBuild, containerWithThisImage1, containerWithThisImage2, containerWithAnotherImageToPull
@@ -75,8 +78,8 @@ object ImagePulledEventSpec : Spek({
                 event.apply(context, logger)
 
                 it("queues a 'create container' step for each container that requires the image") {
-                    verify(context).queueStep(CreateContainerStep(containerWithThisImage1, "do-stuff", image, network))
-                    verify(context).queueStep(CreateContainerStep(containerWithThisImage2, "do-other-stuff", image, network))
+                    verify(context).queueStep(CreateContainerStep(containerWithThisImage1, "do-stuff", additionalEnvironmentVariablesForContainer1, image, network))
+                    verify(context).queueStep(CreateContainerStep(containerWithThisImage2, "do-other-stuff", emptyMap(), image, network))
                 }
 
                 it("does not queue any other work") {

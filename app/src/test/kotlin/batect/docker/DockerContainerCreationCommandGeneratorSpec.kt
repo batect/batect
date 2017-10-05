@@ -45,7 +45,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
             val consoleInfo = mock<ConsoleInfo>()
 
             on("generating the command") {
-                val commandLine = generator.createCommandLine(container, command, image, network, consoleInfo)
+                val commandLine = generator.createCommandLine(container, command, emptyMap(), image, network, consoleInfo)
 
                 it("generates the correct command line, taking the command from the task") {
                     assertThat(commandLine, equalTo(listOf(
@@ -68,7 +68,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
             val consoleInfo = mock<ConsoleInfo>()
 
             on("generating the command") {
-                val commandLine = generator.createCommandLine(container, command, image, network, consoleInfo)
+                val commandLine = generator.createCommandLine(container, command, emptyMap(), image, network, consoleInfo)
 
                 it("generates the correct command line, taking the command from the container") {
                     assertThat(commandLine, equalTo(listOf(
@@ -82,6 +82,54 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
             }
         }
 
+        given("a container with some additional environment variables") {
+            val container = Container("the-container", imageSourceDoesNotMatter())
+            val command = null
+            val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
+            val image = DockerImage("the-image")
+            val network = DockerNetwork("the-network")
+            val consoleInfo = mock<ConsoleInfo>()
+
+            on("generating the command") {
+                val commandLine = generator.createCommandLine(container, command, additionalEnvironmentVariables, image, network, consoleInfo)
+
+                it("generates the correct command line, taking the command from the container") {
+                    assertThat(commandLine, equalTo(listOf(
+                        "docker", "create",
+                        "-it",
+                        "--network", network.id,
+                        "--hostname", container.name,
+                        "--network-alias", container.name,
+                        "--env", "SOME_VAR=some value",
+                        image.id).asIterable()))
+                }
+            }
+        }
+
+        given("a container with some additional environment variables that override values for enviroment variables for the container") {
+            val container = Container("the-container", imageSourceDoesNotMatter(), environment = mapOf("SOME_VAR" to "original value"))
+            val command = null
+            val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
+            val image = DockerImage("the-image")
+            val network = DockerNetwork("the-network")
+            val consoleInfo = mock<ConsoleInfo>()
+
+            on("generating the command") {
+                val commandLine = generator.createCommandLine(container, command, additionalEnvironmentVariables, image, network, consoleInfo)
+
+                it("generates the correct command line, taking the command from the container") {
+                    assertThat(commandLine, equalTo(listOf(
+                        "docker", "create",
+                        "-it",
+                        "--network", network.id,
+                        "--hostname", container.name,
+                        "--network-alias", container.name,
+                        "--env", "SOME_VAR=some value",
+                        image.id).asIterable()))
+                }
+            }
+        }
+
         given("the host console does not have the TERM environment variable set") {
             val container = Container("the-container", imageSourceDoesNotMatter())
             val command = null
@@ -90,7 +138,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
             val consoleInfo = mock<ConsoleInfo>()
 
             on("generating the command") {
-                val commandLine = generator.createCommandLine(container, command, image, network, consoleInfo)
+                val commandLine = generator.createCommandLine(container, command, emptyMap(), image, network, consoleInfo)
 
                 it("generates the correct command line, not setting the TERM environment variable of the container") {
                     assertThat(commandLine, equalTo(listOf(
@@ -116,7 +164,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 val container = Container("the-container", imageSourceDoesNotMatter())
 
                 on("generating the command") {
-                    val commandLine = generator.createCommandLine(container, command, image, network, consoleInfo)
+                    val commandLine = generator.createCommandLine(container, command, emptyMap(), image, network, consoleInfo)
 
                     it("generates the correct command line, setting the TERM environment variable of the container to the value of the host") {
                         assertThat(commandLine, equalTo(listOf(
@@ -138,7 +186,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                     environment = mapOf("TERM" to "container-terminal"))
 
                 on("generating the command") {
-                    val commandLine = generator.createCommandLine(container, command, image, network, consoleInfo)
+                    val commandLine = generator.createCommandLine(container, command, emptyMap(), image, network, consoleInfo)
 
                     it("generates the correct command line, setting the TERM environment variable of the container to the value from the container configuration") {
                         assertThat(commandLine, equalTo(listOf(
@@ -168,7 +216,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
             val consoleInfo = mock<ConsoleInfo>()
 
             on("generating the command") {
-                val commandLine = generator.createCommandLine(container, "some-command", image, network, consoleInfo)
+                val commandLine = generator.createCommandLine(container, "some-command", emptyMap(), image, network, consoleInfo)
 
                 it("generates the correct command line") {
                     assertThat(commandLine, equalTo(listOf(
@@ -216,7 +264,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 val consoleInfo = mock<ConsoleInfo>()
 
                 on("generating the command") {
-                    val commandLine = generator.createCommandLine(container, command, image, network, consoleInfo)
+                    val commandLine = generator.createCommandLine(container, command, emptyMap(), image, network, consoleInfo)
                     val expectedCommandLine = listOf("docker", "create",
                         "-it",
                         "--network", network.id,
@@ -245,7 +293,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
 
                 on("generating the command") {
                     it("throws an exception with the message '$expectedErrorMessage'") {
-                        assertThat({ generator.createCommandLine(container, command, image, network, consoleInfo) },
+                        assertThat({ generator.createCommandLine(container, command, emptyMap(), image, network, consoleInfo) },
                             throws<ContainerCreationFailedException>(withMessage("Command line `$command` is invalid: $expectedErrorMessage")))
                     }
                 }

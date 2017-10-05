@@ -124,6 +124,14 @@ class TaskStateMachine(val graph: DependencyGraph, val logger: Logger, val logge
         return container.command
     }
 
+    override fun additionalEnvironmentVariablesForContainer(container: Container): Map<String, String> {
+        if (isTaskContainer(container)) {
+            return graph.task.runConfiguration.additionalEnvironmentVariables
+        }
+
+        return emptyMap()
+    }
+
     override fun isTaskContainer(container: Container) = container == graph.taskContainerNode.container
     override fun dependenciesOf(container: Container) = graph.nodeFor(container).dependsOnContainers
     override fun containersThatDependOn(container: Container) = graph.nodeFor(container).dependedOnByContainers

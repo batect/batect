@@ -50,7 +50,8 @@ data class ImagePulledEvent(val image: DockerImage) : TaskEvent() {
 
     private fun createContainer(container: Container, network: DockerNetwork, context: TaskEventContext) {
         val command = context.commandForContainer(container)
-        context.queueStep(CreateContainerStep(container, command, image, network))
+        val additionalEnvironmentVariables = context.additionalEnvironmentVariablesForContainer(container)
+        context.queueStep(CreateContainerStep(container, command, additionalEnvironmentVariables, image, network))
     }
 
     override fun toString() = "${this::class.simpleName}(image: '${image.id}')"

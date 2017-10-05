@@ -148,18 +148,16 @@ object ConfigurationFileSpec : Spek({
                 }
             }
 
-            on("converting a configuration file with a container that has a volume mount that %s",
+            on("converting a configuration file with a container that has a volume mount with a local path that %s",
                 data("is a directory", PathResolutionResult.ResolvedToDirectory("/some_resolved_path") as PathResolutionResult),
                 data("is a file", PathResolutionResult.ResolvedToFile("/some_resolved_path") as PathResolutionResult),
                 data("does not exist", PathResolutionResult.NotFound("/some_resolved_path") as PathResolutionResult)
             ) { _, resolution ->
-                val originalBuildDirectory = "build_dir"
                 val originalVolumeMountPath = "local_volume_path"
-                val container = ContainerFromFile(originalBuildDirectory, volumeMounts = setOf(VolumeMount(originalVolumeMountPath, "/container_path", "some-options")))
+                val container = ContainerFromFile(imageName = "some-image", volumeMounts = setOf(VolumeMount(originalVolumeMountPath, "/container_path", "some-options")))
                 val configFile = ConfigurationFile("the_project_name", containers = mapOf("the_container_name" to container))
 
                 val pathResolver = mock<PathResolver> {
-                    on { resolve(originalBuildDirectory) } doReturn PathResolutionResult.ResolvedToDirectory("/resolved_build_dir")
                     on { resolve(originalVolumeMountPath) } doReturn resolution
                 }
 
@@ -172,13 +170,11 @@ object ConfigurationFileSpec : Spek({
             }
 
             on("converting a configuration file with a container that has a volume mount that has a local path that is an invalid path") {
-                val originalBuildDirectory = "build_dir"
                 val originalVolumeMountPath = "local_volume_path"
-                val container = ContainerFromFile(originalBuildDirectory, volumeMounts = setOf(VolumeMount(originalVolumeMountPath, "/container_path", "some-options")))
+                val container = ContainerFromFile(imageName = "some-image", volumeMounts = setOf(VolumeMount(originalVolumeMountPath, "/container_path", "some-options")))
                 val configFile = ConfigurationFile("the_project_name", containers = mapOf("the_container_name" to container))
 
                 val pathResolver = mock<PathResolver> {
-                    on { resolve(originalBuildDirectory) } doReturn PathResolutionResult.ResolvedToDirectory("/resolved_build_dir")
                     on { resolve(originalVolumeMountPath) } doReturn PathResolutionResult.InvalidPath
                 }
 

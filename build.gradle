@@ -25,7 +25,7 @@ allprojects {
         mavenCentral()
     }
 
-    version = '0.4'
+    version = '0.5'
 }
 
 apply from: "$rootDir/gradle/utilities.gradle"

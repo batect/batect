@@ -26,6 +26,7 @@ import batect.config.Task
 import batect.config.io.ConfigurationLoader
 import batect.logging.Logger
 import batect.logging.logger
+import batect.model.BehaviourAfterFailure
 import batect.model.TaskExecutionOrderResolutionException
 import batect.model.TaskExecutionOrderResolver
 import batect.ui.Console
@@ -35,19 +36,24 @@ import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
 
 class RunTaskCommandDefinition : CommandDefinition("run", "Run a task.") {
-    val taskName: String by RequiredPositionalParameter("TASK", "The name of the task to run.")
+    private val taskName: String by RequiredPositionalParameter("TASK", "The name of the task to run.")
 
-    val levelOfParallelism: Int by valueOption(
+    private val levelOfParallelism: Int by valueOption(
         "level-of-parallelism",
         "Maximum number of operations to run in parallel.",
         LevelOfParallelismDefaultValueProvider,
         ValueConverters::positiveInteger,
         'p')
 
+    private val disableCleanupAfterFailure: Boolean by flagOption(
+        "no-cleanup-after-failure",
+        "If an error occurs before the task runs, leave created containers running so that the issue can be investigated.")
+
     override fun createCommand(kodein: Kodein): Command = RunTaskCommand(
         kodein.instance(CommonOptions.ConfigurationFileName),
         taskName,
         levelOfParallelism,
+        if (disableCleanupAfterFailure) BehaviourAfterFailure.DontCleanup else BehaviourAfterFailure.Cleanup,
         kodein.instance(),
         kodein.instance(),
         kodein.instance(),
@@ -61,6 +67,7 @@ data class RunTaskCommand(
     val configFile: String,
     val taskName: String,
     val levelOfParallelism: Int,
+    val behaviourAfterFailure: BehaviourAfterFailure,
     val configLoader: ConfigurationLoader,
     val taskExecutionOrderResolver: TaskExecutionOrderResolver,
     val taskRunner: TaskRunner,
@@ -95,7 +102,7 @@ data class RunTaskCommand(
 
     private fun runTasks(config: Configuration, tasks: List<Task>): Int {
         for (task in tasks) {
-            val exitCode = taskRunner.run(config, task, levelOfParallelism)
+            val exitCode = taskRunner.run(config, task, levelOfParallelism, behaviourAfterFailure)
 
             if (exitCode != 0) {
                 return exitCode

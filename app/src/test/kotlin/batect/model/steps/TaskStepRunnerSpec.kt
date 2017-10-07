@@ -439,7 +439,7 @@ object TaskStepRunnerSpec : Spek({
                         }
 
                         on("and produced some output") {
-                            whenever(dockerClient.getLastHealthCheckResult(dockerContainer)).doReturn(DockerHealthCheckResult(2, "Something's not ready yet."))
+                            whenever(dockerClient.getLastHealthCheckResult(dockerContainer)).doReturn(DockerHealthCheckResult(2, "Something's not ready yet.\n"))
 
                             runner.run(step, eventSink)
 

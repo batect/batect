@@ -33,8 +33,8 @@ import batect.model.steps.CreateTaskNetworkStep
 import batect.model.steps.DeleteTaskNetworkStep
 import batect.model.steps.DisplayTaskFailureStep
 import batect.model.steps.TaskStep
-import batect.testutils.createForEachTest
 import batect.testutils.InMemoryLogSink
+import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.absent
@@ -57,12 +57,12 @@ object TaskStateMachineSpec : Spek({
         val dependencyContainer1 = Container("dependency-container-1", imageSourceDoesNotMatter())
 
         val dependencyContainer2 = Container("dependency-container-2", imageSourceDoesNotMatter(),
-                dependencies = setOf(dependencyContainer1.name),
-                command = "do-stuff-in-container-2")
+            dependencies = setOf(dependencyContainer1.name),
+            command = "do-stuff-in-container-2")
 
         val taskContainer = Container("some-container", imageSourceDoesNotMatter(),
-                dependencies = setOf(dependencyContainer2.name),
-                command = "do-stuff-in-task-container")
+            dependencies = setOf(dependencyContainer2.name),
+            command = "do-stuff-in-task-container")
 
         val unrelatedContainer = Container("some-other-container", imageSourceDoesNotMatter())
         val runConfig = TaskRunConfiguration(taskContainer.name, "some-command", mapOf("SOME_VAR" to "some value"))
@@ -76,7 +76,7 @@ object TaskStateMachineSpec : Spek({
 
         val stateMachine by createForEachTest {
             val logger = Logger("stateMachine", InMemoryLogSink())
-            TaskStateMachine(graph, logger, loggerFactory)
+            TaskStateMachine(graph, BehaviourAfterFailure.DontCleanup, logger, loggerFactory)
         }
 
         describe("queuing, popping and querying steps") {
@@ -433,7 +433,7 @@ object TaskStateMachineSpec : Spek({
                     val otherTask = Task("the-other-task", otherRunConfiguration)
                     val otherConfig = Configuration("the-project", TaskMap(otherTask), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, unrelatedContainer))
                     val otherGraph = DependencyGraph(otherConfig, otherTask)
-                    val otherStateMachine = TaskStateMachine(otherGraph, Logger("other.logger", InMemoryLogSink()), loggerFactory)
+                    val otherStateMachine = TaskStateMachine(otherGraph, BehaviourAfterFailure.DontCleanup, Logger("other.logger", InMemoryLogSink()), loggerFactory)
 
                     it("returns the command from the container configuration") {
                         assertThat(otherStateMachine.commandForContainer(taskContainer), equalTo(taskContainer.command))

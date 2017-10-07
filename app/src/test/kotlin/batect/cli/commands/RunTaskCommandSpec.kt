@@ -30,10 +30,11 @@ import batect.config.io.ConfigurationLoader
 import batect.logging.Logger
 import batect.logging.LoggerFactory
 import batect.logging.Severity
+import batect.model.BehaviourAfterFailure
 import batect.model.TaskExecutionOrderResolutionException
 import batect.model.TaskExecutionOrderResolver
-import batect.testutils.createForEachTest
 import batect.testutils.InMemoryLogSink
+import batect.testutils.createForEachTest
 import batect.testutils.hasMessage
 import batect.testutils.withException
 import batect.testutils.withSeverity
@@ -65,7 +66,7 @@ import org.jetbrains.spek.api.dsl.on
 object RunTaskCommandSpec : Spek({
     describe("a 'run task' command") {
         describe("command line interface") {
-            val commandLine = RunTaskCommandDefinition()
+            val commandLine by createForEachTest { RunTaskCommandDefinition() }
             val configLoader = mock<ConfigurationLoader>()
             val taskRunner = mock<TaskRunner>()
             val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver>()
@@ -88,7 +89,7 @@ object RunTaskCommandSpec : Spek({
                 bind<LoggerFactory>() with instance(loggerFactory)
             }
 
-            describe("when given one parameter") {
+            on("when given one parameter") {
                 val result = commandLine.parse(listOf("the-task"), kodein)
 
                 it("indicates that parsing succeeded") {
@@ -97,11 +98,11 @@ object RunTaskCommandSpec : Spek({
 
                 it("returns a command instance ready for use") {
                     assertThat((result as CommandLineParsingResult.Succeeded).command, equalTo<Command>(
-                        RunTaskCommand("thefile.yml", "the-task", LevelOfParallelismDefaultValueProvider.value, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)))
+                        RunTaskCommand("thefile.yml", "the-task", LevelOfParallelismDefaultValueProvider.value, BehaviourAfterFailure.Cleanup, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)))
                 }
             }
 
-            describe("when given one parameter and a level of parallelism") {
+            on("when given one parameter and a level of parallelism") {
                 val result = commandLine.parse(listOf("--level-of-parallelism", "123", "the-task"), kodein)
 
                 it("indicates that parsing succeeded") {
@@ -110,7 +111,20 @@ object RunTaskCommandSpec : Spek({
 
                 it("returns a command instance ready for use with the desired level of parallelism") {
                     assertThat((result as CommandLineParsingResult.Succeeded).command, equalTo<Command>(
-                        RunTaskCommand("thefile.yml", "the-task", 123, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)))
+                        RunTaskCommand("thefile.yml", "the-task", 123, BehaviourAfterFailure.Cleanup, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)))
+                }
+            }
+
+            on("when given one parameter and a flag to disable removing containers after a failure") {
+                val result = commandLine.parse(listOf("--no-cleanup-after-failure", "the-task"), kodein)
+
+                it("indicates that parsing succeeded") {
+                    assertThat(result, isA<CommandLineParsingResult.Succeeded>())
+                }
+
+                it("returns a command instance ready for use with the desired cleanup mode") {
+                    assertThat((result as CommandLineParsingResult.Succeeded).command, equalTo<Command>(
+                        RunTaskCommand("thefile.yml", "the-task", LevelOfParallelismDefaultValueProvider.value, BehaviourAfterFailure.DontCleanup, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)))
                 }
             }
         }
@@ -148,14 +162,14 @@ object RunTaskCommandSpec : Spek({
 
                 on("and that task returns a non-zero exit code") {
                     val taskRunner = mock<TaskRunner> {
-                        on { run(config, mainTask, levelOfParallelism) } doReturn expectedTaskExitCode
+                        on { run(config, mainTask, levelOfParallelism, BehaviourAfterFailure.Cleanup) } doReturn expectedTaskExitCode
                     }
 
-                    val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
+                    val command = RunTaskCommand(configFile, taskName, levelOfParallelism, BehaviourAfterFailure.Cleanup, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
                     val exitCode = command.run()
 
                     it("runs the task") {
-                        verify(taskRunner).run(config, mainTask, levelOfParallelism)
+                        verify(taskRunner).run(config, mainTask, levelOfParallelism, BehaviourAfterFailure.Cleanup)
                     }
 
                     it("returns the exit code of the task") {
@@ -169,21 +183,21 @@ object RunTaskCommandSpec : Spek({
                     it("displays any update notifications before running the task") {
                         inOrder(taskRunner, updateNotifier) {
                             verify(updateNotifier).run()
-                            verify(taskRunner).run(any(), any(), any())
+                            verify(taskRunner).run(any(), any(), any(), any())
                         }
                     }
                 }
 
                 on("and that task returns a zero exit code") {
                     val taskRunner = mock<TaskRunner> {
-                        on { run(config, mainTask, levelOfParallelism) } doReturn 0
+                        on { run(config, mainTask, levelOfParallelism, BehaviourAfterFailure.Cleanup) } doReturn 0
                     }
 
-                    val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
+                    val command = RunTaskCommand(configFile, taskName, levelOfParallelism, BehaviourAfterFailure.Cleanup, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
                     val exitCode = command.run()
 
                     it("runs the task") {
-                        verify(taskRunner).run(config, mainTask, levelOfParallelism)
+                        verify(taskRunner).run(config, mainTask, levelOfParallelism, BehaviourAfterFailure.Cleanup)
                     }
 
                     it("returns the exit code of the task") {
@@ -197,7 +211,7 @@ object RunTaskCommandSpec : Spek({
                     it("displays any update notifications before running the task") {
                         inOrder(taskRunner, updateNotifier) {
                             verify(updateNotifier).run()
-                            verify(taskRunner).run(any(), any(), any())
+                            verify(taskRunner).run(any(), any(), any(), any())
                         }
                     }
                 }
@@ -212,26 +226,26 @@ object RunTaskCommandSpec : Spek({
 
                 on("and the dependency finishes with an exit code of 0") {
                     val taskRunner = mock<TaskRunner> {
-                        on { run(config, otherTask, levelOfParallelism) } doReturn 0
-                        on { run(config, mainTask, levelOfParallelism) } doReturn expectedTaskExitCode
+                        on { run(config, otherTask, levelOfParallelism, BehaviourAfterFailure.Cleanup) } doReturn 0
+                        on { run(config, mainTask, levelOfParallelism, BehaviourAfterFailure.Cleanup) } doReturn expectedTaskExitCode
                     }
 
-                    val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
+                    val command = RunTaskCommand(configFile, taskName, levelOfParallelism, BehaviourAfterFailure.Cleanup, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
                     val exitCode = command.run()
 
                     it("runs the dependency task") {
-                        verify(taskRunner).run(config, otherTask, levelOfParallelism)
+                        verify(taskRunner).run(config, otherTask, levelOfParallelism, BehaviourAfterFailure.Cleanup)
                     }
 
                     it("runs the main task") {
-                        verify(taskRunner).run(config, mainTask, levelOfParallelism)
+                        verify(taskRunner).run(config, mainTask, levelOfParallelism, BehaviourAfterFailure.Cleanup)
                     }
 
                     it("runs the dependency before the main task, and prints a blank line in between") {
                         inOrder(taskRunner, console) {
-                            verify(taskRunner).run(config, otherTask, levelOfParallelism)
+                            verify(taskRunner).run(config, otherTask, levelOfParallelism, BehaviourAfterFailure.Cleanup)
                             verify(console).println()
-                            verify(taskRunner).run(config, mainTask, levelOfParallelism)
+                            verify(taskRunner).run(config, mainTask, levelOfParallelism, BehaviourAfterFailure.Cleanup)
                         }
                     }
 
@@ -242,25 +256,25 @@ object RunTaskCommandSpec : Spek({
                     it("displays any update notifications before running the task") {
                         inOrder(taskRunner, updateNotifier) {
                             verify(updateNotifier).run()
-                            verify(taskRunner, atLeastOnce()).run(any(), any(), any())
+                            verify(taskRunner, atLeastOnce()).run(any(), any(), any(), any())
                         }
                     }
                 }
 
                 on("and the dependency finishes with a non-zero exit code") {
                     val taskRunner = mock<TaskRunner> {
-                        on { run(config, otherTask, levelOfParallelism) } doReturn 1
+                        on { run(config, otherTask, levelOfParallelism, BehaviourAfterFailure.Cleanup) } doReturn 1
                     }
 
-                    val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
+                    val command = RunTaskCommand(configFile, taskName, levelOfParallelism, BehaviourAfterFailure.Cleanup, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
                     val exitCode = command.run()
 
                     it("runs the dependency task") {
-                        verify(taskRunner).run(config, otherTask, levelOfParallelism)
+                        verify(taskRunner).run(config, otherTask, levelOfParallelism, BehaviourAfterFailure.Cleanup)
                     }
 
                     it("does not run the main task") {
-                        verify(taskRunner, never()).run(config, mainTask, levelOfParallelism)
+                        verify(taskRunner, never()).run(config, mainTask, levelOfParallelism, BehaviourAfterFailure.Cleanup)
                     }
 
                     it("returns the exit code of the dependency task") {
@@ -270,7 +284,7 @@ object RunTaskCommandSpec : Spek({
                     it("displays any update notifications before running the task") {
                         inOrder(taskRunner, updateNotifier) {
                             verify(updateNotifier).run()
-                            verify(taskRunner).run(any(), any(), any())
+                            verify(taskRunner).run(any(), any(), any(), any())
                         }
                     }
                 }
@@ -284,7 +298,7 @@ object RunTaskCommandSpec : Spek({
 
                 val taskRunner = mock<TaskRunner>()
 
-                val command = RunTaskCommand(configFile, taskName, levelOfParallelism, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
+                val command = RunTaskCommand(configFile, taskName, levelOfParallelism, BehaviourAfterFailure.Cleanup, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
                 val exitCode = command.run()
 
                 it("prints a message to the output") {

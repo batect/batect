@@ -40,12 +40,17 @@ object TaskStateMachineProviderSpec : Spek({
                 on { createLoggerForClass(TaskStateMachine::class) } doReturn logger
             }
 
+            val behaviourAfterFailure = BehaviourAfterFailure.Cleanup
             val provider = TaskStateMachineProvider(loggerFactory)
-            val stateMachine = provider.createStateMachine(graph)
+            val stateMachine = provider.createStateMachine(graph, behaviourAfterFailure)
             val firstStep = stateMachine.popNextStep()
 
             it("creates a state machine with the correct logger") {
                 assertThat(stateMachine.logger, equalTo(logger))
+            }
+
+            it("creates a state machine with the provided behaviour after failure") {
+                assertThat(stateMachine.behaviourAfterFailure, equalTo(behaviourAfterFailure))
             }
 
             it("queues a 'begin task' step") {

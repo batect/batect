@@ -33,10 +33,12 @@ import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
 import batect.logging.Logger
+import batect.model.BehaviourAfterFailure
 import batect.model.steps.PullImageStep
 import batect.testutils.InMemoryLogSink
 import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
+import org.jetbrains.spek.api.dsl.TestContainer
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
@@ -49,24 +51,7 @@ object PreTaskRunFailureEventSpec : Spek({
         }
 
         describe("being applied") {
-            val logger = Logger("test.source", InMemoryLogSink())
-
-            on("when the task network has not been created yet") {
-                val context = mock<TaskEventContext> {
-                    on { getPastEventsOfType<ContainerCreatedEvent>() } doReturn emptySet<ContainerCreatedEvent>()
-                    on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn null as TaskNetworkCreatedEvent?
-                }
-
-                event.apply(context, logger)
-
-                it("aborts the task") {
-                    verify(context).abort()
-                }
-
-                it("queues a step to display an error message to the user") {
-                    verify(context).queueStep(DisplayTaskFailureStep("This is the message to display"))
-                }
-
+            fun TestContainer.itRemovesAllPendingPreTaskSteps(context: TaskEventContext) {
                 it("removes all pending image build steps") {
                     verify(context).removePendingStepsOfType(BuildImageStep::class)
                 }
@@ -92,100 +77,195 @@ object PreTaskRunFailureEventSpec : Spek({
                 }
             }
 
-            on("when the task network has been created but no containers have been created") {
-                val network = DockerNetwork("the-id")
-                val context = mock<TaskEventContext> {
-                    on { getPastEventsOfType<ContainerCreatedEvent>() } doReturn emptySet<ContainerCreatedEvent>()
-                    on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
+            val logger = Logger("test.source", InMemoryLogSink())
+
+            describe("when cleanup after failure is enabled") {
+                on("when the task network has not been created yet") {
+                    val context = mock<TaskEventContext> {
+                        on { behaviourAfterFailure } doReturn BehaviourAfterFailure.Cleanup
+                        on { getPastEventsOfType<ContainerCreatedEvent>() } doReturn emptySet<ContainerCreatedEvent>()
+                        on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn null as TaskNetworkCreatedEvent?
+                    }
+
+                    event.apply(context, logger)
+
+                    it("aborts the task") {
+                        verify(context).abort()
+                    }
+
+                    it("queues a step to display an error message to the user") {
+                        verify(context).queueStep(DisplayTaskFailureStep("This is the message to display"))
+                    }
+
+                    itRemovesAllPendingPreTaskSteps(context)
                 }
 
-                event.apply(context, logger)
+                on("when the task network has been created but no containers have been created") {
+                    val network = DockerNetwork("the-id")
+                    val context = mock<TaskEventContext> {
+                        on { behaviourAfterFailure } doReturn BehaviourAfterFailure.Cleanup
+                        on { getPastEventsOfType<ContainerCreatedEvent>() } doReturn emptySet<ContainerCreatedEvent>()
+                        on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
+                    }
 
-                it("aborts the task") {
-                    verify(context).abort()
+                    event.apply(context, logger)
+
+                    it("aborts the task") {
+                        verify(context).abort()
+                    }
+
+                    it("queues a step to display an error message to the user") {
+                        verify(context).queueStep(DisplayTaskFailureStep("This is the message to display"))
+                    }
+
+                    itRemovesAllPendingPreTaskSteps(context)
+
+                    it("queues a 'delete task network' step") {
+                        verify(context).queueStep(DeleteTaskNetworkStep(network))
+                    }
                 }
 
-                it("queues a step to display an error message to the user") {
-                    verify(context).queueStep(DisplayTaskFailureStep("This is the message to display"))
-                }
+                on("when the task network has been created and some containers have been created") {
+                    val network = DockerNetwork("the-id")
+                    val container1 = Container("container-1", imageSourceDoesNotMatter())
+                    val container2 = Container("container-2", imageSourceDoesNotMatter())
+                    val dockerContainer1 = DockerContainer("docker-container-1")
+                    val dockerContainer2 = DockerContainer("docker-container-2")
 
-                it("removes all pending image build steps") {
-                    verify(context).removePendingStepsOfType<BuildImageStep>()
-                }
+                    val context = mock<TaskEventContext> {
+                        on { behaviourAfterFailure } doReturn BehaviourAfterFailure.Cleanup
+                        on { getPastEventsOfType<ContainerCreatedEvent>() } doReturn setOf(
+                            ContainerCreatedEvent(container1, dockerContainer1),
+                            ContainerCreatedEvent(container2, dockerContainer2)
+                        )
+                        on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
+                    }
 
-                it("removes all pending container creation steps") {
-                    verify(context).removePendingStepsOfType<CreateContainerStep>()
-                }
+                    event.apply(context, logger)
 
-                it("removes all pending network creation steps") {
-                    verify(context).removePendingStepsOfType<CreateTaskNetworkStep>()
-                }
+                    it("aborts the task") {
+                        verify(context).abort()
+                    }
 
-                it("removes all pending start container steps") {
-                    verify(context).removePendingStepsOfType<StartContainerStep>()
-                }
+                    it("queues a step to display an error message to the user") {
+                        verify(context).queueStep(DisplayTaskFailureStep("This is the message to display"))
+                    }
 
-                it("removes all pending 'wait for container to become healthy' steps") {
-                    verify(context).removePendingStepsOfType<WaitForContainerToBecomeHealthyStep>()
-                }
+                    itRemovesAllPendingPreTaskSteps(context)
 
-                it("queues a 'delete task network' step") {
-                    verify(context).queueStep(DeleteTaskNetworkStep(network))
+                    it("queues a 'clean up container' step for any container that has already been created") {
+                        verify(context).queueStep(CleanUpContainerStep(container1, dockerContainer1))
+                        verify(context).queueStep(CleanUpContainerStep(container2, dockerContainer2))
+                    }
+
+                    it("does not queue a 'delete task network' step") {
+                        verify(context, never()).queueStep(any<DeleteTaskNetworkStep>())
+                    }
                 }
             }
 
-            on("when the task network has been created and some containers have been created") {
-                val network = DockerNetwork("the-id")
-                val container1 = Container("container-1", imageSourceDoesNotMatter())
-                val container2 = Container("container-2", imageSourceDoesNotMatter())
-                val dockerContainer1 = DockerContainer("docker-container-1")
-                val dockerContainer2 = DockerContainer("docker-container-2")
+            describe("when cleanup after failure is disabled") {
+                on("when the task network has not been created yet") {
+                    val context = mock<TaskEventContext> {
+                        on { behaviourAfterFailure } doReturn BehaviourAfterFailure.DontCleanup
+                        on { getPastEventsOfType<ContainerCreatedEvent>() } doReturn emptySet<ContainerCreatedEvent>()
+                        on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn null as TaskNetworkCreatedEvent?
+                    }
 
-                val context = mock<TaskEventContext> {
-                    on { getPastEventsOfType<ContainerCreatedEvent>() } doReturn setOf(
+                    event.apply(context, logger)
+
+                    it("aborts the task") {
+                        verify(context).abort()
+                    }
+
+                    it("queues a step to display an error message to the user") {
+                        verify(context).queueStep(DisplayTaskFailureStep("This is the message to display"))
+                    }
+
+                    itRemovesAllPendingPreTaskSteps(context)
+                }
+
+                on("when the task network has been created but no containers have been created") {
+                    val network = DockerNetwork("the-id")
+                    val context = mock<TaskEventContext> {
+                        on { behaviourAfterFailure } doReturn BehaviourAfterFailure.DontCleanup
+                        on { getPastEventsOfType<ContainerCreatedEvent>() } doReturn emptySet<ContainerCreatedEvent>()
+                        on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
+                    }
+
+                    event.apply(context, logger)
+
+                    it("aborts the task") {
+                        verify(context).abort()
+                    }
+
+                    it("queues a step to display an error message to the user") {
+                        verify(context).queueStep(DisplayTaskFailureStep("This is the message to display"))
+                    }
+
+                    itRemovesAllPendingPreTaskSteps(context)
+
+                    it("queues a 'delete task network' step") {
+                        verify(context).queueStep(DeleteTaskNetworkStep(network))
+                    }
+                }
+
+                on("when the task network has been created and some containers have been created") {
+                    val network = DockerNetwork("the-id")
+                    val container1 = Container("container-1", imageSourceDoesNotMatter())
+                    val container2 = Container("container-2", imageSourceDoesNotMatter())
+                    val container3 = Container("container-3", imageSourceDoesNotMatter())
+                    val dockerContainer1 = DockerContainer("docker-container-1")
+                    val dockerContainer2 = DockerContainer("docker-container-2")
+                    val dockerContainer3 = DockerContainer("docker-container-3")
+
+                    val context = mock<TaskEventContext> {
+                        on { behaviourAfterFailure } doReturn BehaviourAfterFailure.DontCleanup
+
+                        on { getPastEventsOfType<ContainerCreatedEvent>() } doReturn setOf(
                             ContainerCreatedEvent(container1, dockerContainer1),
-                            ContainerCreatedEvent(container2, dockerContainer2)
-                    )
-                    on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
-                }
+                            ContainerCreatedEvent(container2, dockerContainer2),
+                            ContainerCreatedEvent(container3, dockerContainer3)
+                        )
 
-                event.apply(context, logger)
+                        on { getPastEventsOfType<ContainerStartedEvent>() } doReturn setOf(
+                            ContainerStartedEvent(container1),
+                            ContainerStartedEvent(container2)
+                        )
 
-                it("aborts the task") {
-                    verify(context).abort()
-                }
+                        on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
+                    }
 
-                it("queues a step to display an error message to the user") {
-                    verify(context).queueStep(DisplayTaskFailureStep("This is the message to display"))
-                }
+                    event.apply(context, logger)
 
-                it("removes all pending image build steps") {
-                    verify(context).removePendingStepsOfType<BuildImageStep>()
-                }
+                    it("aborts the task") {
+                        verify(context).abort()
+                    }
 
-                it("removes all pending container creation steps") {
-                    verify(context).removePendingStepsOfType<CreateContainerStep>()
-                }
+                    it("queues a step to display an error message to the user with information on how to view logs from the containers that started and remove them") {
+                        val expectedMessage = """
+                            This is the message to display
 
-                it("removes all pending network creation steps") {
-                    verify(context).removePendingStepsOfType<CreateTaskNetworkStep>()
-                }
+                            As the task was run with --no-cleanup-after-failure, the created containers will not be cleaned up.
 
-                it("removes all pending start container steps") {
-                    verify(context).removePendingStepsOfType<StartContainerStep>()
-                }
+                            You can view the logs for container 'container-1' by running 'docker logs docker-container-1'.
+                            You can view the logs for container 'container-2' by running 'docker logs docker-container-2'.
 
-                it("removes all pending 'wait for container to become healthy' steps") {
-                    verify(context).removePendingStepsOfType<WaitForContainerToBecomeHealthyStep>()
-                }
+                            To clean up the containers and task network once you have finished investigating the issue, run 'docker rm --force docker-container-1 docker-container-2 docker-container-3 && docker network rm the-id'.
+                        """.trimIndent()
 
-                it("queues a 'clean up container' step for any container that has already been created") {
-                    verify(context).queueStep(CleanUpContainerStep(container1, dockerContainer1))
-                    verify(context).queueStep(CleanUpContainerStep(container2, dockerContainer2))
-                }
+                        verify(context).queueStep(DisplayTaskFailureStep(expectedMessage))
+                    }
 
-                it("does not queue a 'delete task network' step") {
-                    verify(context, never()).queueStep(any<DeleteTaskNetworkStep>())
+                    itRemovesAllPendingPreTaskSteps(context)
+
+                    it("does not queue a 'clean up container' step") {
+                        verify(context, never()).queueStep(any<CleanUpContainerStep>())
+                    }
+
+                    it("does not queue a 'delete task network' step") {
+                        verify(context, never()).queueStep(any<DeleteTaskNetworkStep>())
+                    }
                 }
             }
         }

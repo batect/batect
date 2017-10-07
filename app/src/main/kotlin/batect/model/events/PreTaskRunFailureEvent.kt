@@ -17,6 +17,7 @@
 package batect.model.events
 
 import batect.logging.Logger
+import batect.model.BehaviourAfterFailure
 import batect.model.steps.BuildImageStep
 import batect.model.steps.CleanUpContainerStep
 import batect.model.steps.CreateContainerStep
@@ -26,6 +27,7 @@ import batect.model.steps.DisplayTaskFailureStep
 import batect.model.steps.PullImageStep
 import batect.model.steps.StartContainerStep
 import batect.model.steps.WaitForContainerToBecomeHealthyStep
+import batect.utils.mapToSet
 
 abstract class PreTaskRunFailureEvent() : TaskEvent() {
     override fun apply(context: TaskEventContext, logger: Logger) {
@@ -37,21 +39,13 @@ abstract class PreTaskRunFailureEvent() : TaskEvent() {
         context.removePendingStepsOfType<StartContainerStep>()
         context.removePendingStepsOfType<WaitForContainerToBecomeHealthyStep>()
 
-        context.queueStep(DisplayTaskFailureStep(messageToDisplay))
-
         val containerCreationEvents = context.getPastEventsOfType<ContainerCreatedEvent>()
         val networkCreationEvent = context.getSinglePastEventOfType<TaskNetworkCreatedEvent>()
 
-        if (containerCreationEvents.isNotEmpty()) {
-            logger.info {
-                message("Need to clean up some containers that have already been created.")
-                data("containers", containerCreationEvents.map { it.container.name })
-                data("event", this@PreTaskRunFailureEvent.toString())
-            }
+        queueDisplayingMessage(containerCreationEvents, networkCreationEvent, context)
 
-            containerCreationEvents.forEach {
-                context.queueStep(CleanUpContainerStep(it.container, it.dockerContainer))
-            }
+        if (containerCreationEvents.isNotEmpty()) {
+            cleanUpContainers(containerCreationEvents, context, logger)
         } else if (networkCreationEvent != null) {
             logger.info {
                 message("No containers have been created yet, but do need to remove network.")
@@ -62,6 +56,57 @@ abstract class PreTaskRunFailureEvent() : TaskEvent() {
         } else {
             logger.info {
                 message("Neither the network nor any containers have been created yet, no clean up required.")
+                data("event", this@PreTaskRunFailureEvent.toString())
+            }
+        }
+    }
+
+    private fun queueDisplayingMessage(
+        containerCreationEvents: Set<ContainerCreatedEvent>,
+        networkCreatedEvent: TaskNetworkCreatedEvent?,
+        context: TaskEventContext
+    ) {
+        if (containerCreationEvents.isNotEmpty() && context.behaviourAfterFailure == BehaviourAfterFailure.DontCleanup) {
+            val containersStarted = context.getPastEventsOfType<ContainerStartedEvent>()
+                .mapToSet { it.container }
+
+            val logInstructions = containerCreationEvents
+                .filter { it.container in containersStarted }
+                .map { "You can view the logs for container '${it.container.name}' by running 'docker logs ${it.dockerContainer.id}'." }
+                .joinToString("\n")
+
+            val dockerContainerIDs = containerCreationEvents.map { it.dockerContainer.id }.joinToString(" ")
+            val cleanupCommand = "docker rm --force $dockerContainerIDs && docker network rm ${networkCreatedEvent!!.network.id}"
+
+            val message = "$messageToDisplay\n" +
+                "\n" +
+                "As the task was run with --no-cleanup-after-failure, the created containers will not be cleaned up.\n" +
+                "\n" +
+                logInstructions + "\n" +
+                "\n" +
+                "To clean up the containers and task network once you have finished investigating the issue, run '$cleanupCommand'."
+
+            context.queueStep(DisplayTaskFailureStep(message))
+        } else {
+            context.queueStep(DisplayTaskFailureStep(messageToDisplay))
+        }
+    }
+
+    private fun cleanUpContainers(containerCreationEvents: Set<ContainerCreatedEvent>, context: TaskEventContext, logger: Logger) {
+        if (context.behaviourAfterFailure == BehaviourAfterFailure.Cleanup) {
+            logger.info {
+                message("Need to clean up some containers that have already been created.")
+                data("containers", containerCreationEvents.map { it.container.name })
+                data("event", this@PreTaskRunFailureEvent.toString())
+            }
+
+            containerCreationEvents.forEach {
+                context.queueStep(CleanUpContainerStep(it.container, it.dockerContainer))
+            }
+        } else {
+            logger.info {
+                message("Not cleaning up containers that have already been created because task was started with --no-cleanup-after-failure.")
+                data("containers", containerCreationEvents.map { it.container.name })
                 data("event", this@PreTaskRunFailureEvent.toString())
             }
         }

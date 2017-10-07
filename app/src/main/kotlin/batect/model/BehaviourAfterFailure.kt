@@ -16,19 +16,7 @@
 
 package batect.model
 
-import batect.logging.LoggerFactory
-import batect.model.steps.BeginTaskStep
-
-class TaskStateMachineProvider(private val loggerFactory: LoggerFactory) {
-    fun createStateMachine(graph: DependencyGraph, behaviourAfterFailure: BehaviourAfterFailure): TaskStateMachine {
-        val stateMachine = TaskStateMachine(
-            graph,
-            behaviourAfterFailure,
-            loggerFactory.createLoggerForClass(TaskStateMachine::class),
-            loggerFactory)
-
-        stateMachine.queueStep(BeginTaskStep)
-
-        return stateMachine
-    }
+enum class BehaviourAfterFailure {
+    Cleanup,
+    DontCleanup
 }

@@ -32,7 +32,12 @@ import kotlin.reflect.KClass
 
 // FIXME: this is really two things: the state machine and a collection of utility functions
 // for events
-class TaskStateMachine(val graph: DependencyGraph, val logger: Logger, val loggerFactory: LoggerFactory) : TaskEventContext, TaskEventSink {
+class TaskStateMachine(
+    val graph: DependencyGraph,
+    override val behaviourAfterFailure: BehaviourAfterFailure,
+    val logger: Logger,
+    val loggerFactory: LoggerFactory
+) : TaskEventContext, TaskEventSink {
     private val stepQueue: Queue<TaskStep> = LinkedList<TaskStep>()
     private val processedSteps = mutableSetOf<TaskStep>()
     private val processedEvents = mutableSetOf<TaskEvent>()

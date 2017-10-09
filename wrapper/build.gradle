@@ -19,6 +19,9 @@ import java.nio.file.Files
 def templateFile = project.file 'src/template.sh'
 
 task shellcheck(type: Exec) {
+    description 'Runs the shellcheck linter on the wrapper script template.'
+    group 'Verification'
+
     def upToDateFile = getTemporaryDir().toPath().resolve("lastRun")
 
     inputs.file templateFile
@@ -36,11 +39,17 @@ task shellcheck(type: Exec) {
 }
 
 task copyTestJar(type: Copy) {
+    description 'Copies the test application JAR into place for use during the wrapper script tests.'
+    group 'Build'
+
     from project("testapp").getTasksByName("jar", false)
     into "test"
 }
 
 task test(type: Exec) {
+    description 'Runs the unit tests.'
+    group 'Verification'
+
     def upToDateFile = getTemporaryDir().toPath().resolve("lastRun")
 
     inputs.files fileTree(dir: 'test', include: '**/*')
@@ -58,11 +67,17 @@ task test(type: Exec) {
 }
 
 task check {
+    description 'Runs all checks.'
+    group 'Verification'
+
     dependsOn shellcheck
     dependsOn test
 }
 
 task build {
+    description 'Build the wrapper script.'
+    group 'Build'
+
     def scriptDir = getBuildDir().toPath().resolve("scripts")
     def scriptFile = scriptDir.resolve(rootProject.name)
 

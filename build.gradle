@@ -32,12 +32,18 @@ apply from: "$rootDir/gradle/utilities.gradle"
 apply from: "$rootDir/gradle/spotless.gradle"
 
 task assembleRelease(type: Copy) {
+    description 'Prepares files for release.'
+    group 'Distribution'
+
     from project("app").getTasksByName("shadowJar", false)
     from project("wrapper").getTasksByName("build", false)
     into getBuildDir().toPath().resolve("release")
 }
 
 task validateIsReleaseBuild {
+    description 'Validates that the current build is a release build.'
+    group 'Verification'
+
     doLast {
         if (!project.hasProperty("releaseBuild")) {
             throw new Exception("The releaseBuild property was not set. This will cause the version information to be incorrect.")
@@ -46,6 +52,9 @@ task validateIsReleaseBuild {
 }
 
 task validateVersionMatchesTag {
+    description 'Validates that the version currently configured in Gradle matches the current Git commit tag.'
+    group 'Verification'
+
     doLast {
         def gitTag = runProcess("git", "describe", "--dirty", "--candidates=0")
 
@@ -60,6 +69,9 @@ task validateVersionMatchesTag {
 }
 
 task validateRelease {
+    description 'Validates that the current commit is ready to be released.'
+    group 'Verification'
+
     dependsOn validateIsReleaseBuild
     dependsOn validateVersionMatchesTag
 }

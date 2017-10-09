@@ -37,5 +37,8 @@ spotless {
 }
 
 task check {
+    description 'Runs all checks.'
+    group 'Verification'
+
     dependsOn ':spotlessCheck'
 }

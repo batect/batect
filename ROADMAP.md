@@ -19,8 +19,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * fancy progress bar output for building images and starting dependencies
   * make sure accidental input on stdin doesn't mangle it
   * test with different console colour schemes (eg. white background, black background, OS X default, Ubuntu default, Ubuntu GUI terminal default)
-* default to just terminating all containers at clean up time with option to gracefully shut down on individual containers
-  (eg. database where data is shared between invocations and we don't want to corrupt it)
 * show more detailed image pull progress (eg. `build-env: Pulling some-image:1.2.3: 25%`) - requires using Docker API to get this level of detail
 * performance improvements
   * prioritise running steps that lie on the critical path (eg. favour pulling image for leaf of dependency graph over creating container for task container)
@@ -108,3 +106,5 @@ If there's something you're really keen to see, pull requests are always welcome
   * means user doesn't see irrelevant error messages
 * when starting up containers and displaying progress, show countdown to health check (eg. 'waiting for container to become healthy, next check in 3 seconds')
 * warn if a dependency does not have a health check defined
+* default to just terminating all containers at clean up time with option to gracefully shut down on individual containers
+  (eg. database where data is shared between invocations and we don't want to corrupt it)

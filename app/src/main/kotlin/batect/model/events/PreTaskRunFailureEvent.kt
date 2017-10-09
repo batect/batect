@@ -72,7 +72,7 @@ abstract class PreTaskRunFailureEvent() : TaskEvent() {
 
             val logInstructions = containerCreationEvents
                 .filter { it.container in containersStarted }
-                .map { "You can view the logs for container '${it.container.name}' by running 'docker logs ${it.dockerContainer.id}'." }
+                .map { "For container '${it.container.name}': view its output by running 'docker logs ${it.dockerContainer.id}', or run a command in the container with 'docker exec -it ${it.dockerContainer.id} <command>'." }
                 .joinToString("\n")
 
             val dockerContainerIDs = containerCreationEvents.map { it.dockerContainer.id }.joinToString(" ")

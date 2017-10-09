@@ -248,8 +248,8 @@ object PreTaskRunFailureEventSpec : Spek({
 
                             As the task was run with --no-cleanup-after-failure, the created containers will not be cleaned up.
 
-                            You can view the logs for container 'container-1' by running 'docker logs docker-container-1'.
-                            You can view the logs for container 'container-2' by running 'docker logs docker-container-2'.
+                            For container 'container-1': view its output by running 'docker logs docker-container-1', or run a command in the container with 'docker exec -it docker-container-1 <command>'.
+                            For container 'container-2': view its output by running 'docker logs docker-container-2', or run a command in the container with 'docker exec -it docker-container-2 <command>'.
 
                             To clean up the containers and task network once you have finished investigating the issue, run 'docker rm --force docker-container-1 docker-container-2 docker-container-3 && docker network rm the-id'.
                         """.trimIndent()

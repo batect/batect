@@ -16,7 +16,7 @@
 
 package batect.model.events
 
-data class ImagePullFailedEvent(val imageName: String, val message: String) : PreTaskRunFailureEvent() {
+data class ImagePullFailedEvent(val imageName: String, val message: String) : PreTaskRunFailureEvent(false) {
     override val messageToDisplay: String
         get() = message
 

@@ -16,6 +16,7 @@
 
 package batect.model.events
 
+import batect.cli.commands.RunTaskCommandDefinition
 import batect.logging.Logger
 import batect.model.BehaviourAfterFailure
 import batect.model.steps.BuildImageStep
@@ -29,7 +30,7 @@ import batect.model.steps.StartContainerStep
 import batect.model.steps.WaitForContainerToBecomeHealthyStep
 import batect.utils.mapToSet
 
-abstract class PreTaskRunFailureEvent() : TaskEvent() {
+abstract class PreTaskRunFailureEvent(private val displayCleanupFlagMessage: Boolean) : TaskEvent() {
     override fun apply(context: TaskEventContext, logger: Logger) {
         context.abort()
         context.removePendingStepsOfType<BuildImageStep>()
@@ -80,13 +81,15 @@ abstract class PreTaskRunFailureEvent() : TaskEvent() {
 
             val message = "$messageToDisplay\n" +
                 "\n" +
-                "As the task was run with --no-cleanup-after-failure, the created containers will not be cleaned up.\n" +
+                "As the task was run with --${RunTaskCommandDefinition.disableCleanupAfterFailureFlagName}, the created containers will not be cleaned up.\n" +
                 "\n" +
                 logInstructions + "\n" +
                 "\n" +
                 "To clean up the containers and task network once you have finished investigating the issue, run '$cleanupCommand'."
 
             context.queueStep(DisplayTaskFailureStep(message))
+        } else if (displayCleanupFlagMessage) {
+            context.queueStep(DisplayTaskFailureStep(messageToDisplay + "\n\nYou can re-run the task with --${RunTaskCommandDefinition.disableCleanupAfterFailureFlagName} to leave the created containers running to diagnose the issue."))
         } else {
             context.queueStep(DisplayTaskFailureStep(messageToDisplay))
         }
@@ -105,7 +108,7 @@ abstract class PreTaskRunFailureEvent() : TaskEvent() {
             }
         } else {
             logger.info {
-                message("Not cleaning up containers that have already been created because task was started with --no-cleanup-after-failure.")
+                message("Not cleaning up containers that have already been created because task was started with --${RunTaskCommandDefinition.disableCleanupAfterFailureFlagName}.")
                 data("containers", containerCreationEvents.map { it.container.name })
                 data("event", this@PreTaskRunFailureEvent.toString())
             }

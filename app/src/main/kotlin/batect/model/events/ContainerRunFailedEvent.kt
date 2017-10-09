@@ -18,7 +18,7 @@ package batect.model.events
 
 import batect.config.Container
 
-data class ContainerRunFailedEvent(val container: Container, val message: String) : PreTaskRunFailureEvent() {
+data class ContainerRunFailedEvent(val container: Container, val message: String) : PreTaskRunFailureEvent(true) {
     override val messageToDisplay: String
         get() = "Could not run container '${container.name}': $message"
 

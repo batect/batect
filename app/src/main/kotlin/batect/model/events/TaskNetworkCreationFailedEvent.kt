@@ -16,7 +16,7 @@
 
 package batect.model.events
 
-data class TaskNetworkCreationFailedEvent(val message: String) : PreTaskRunFailureEvent() {
+data class TaskNetworkCreationFailedEvent(val message: String) : PreTaskRunFailureEvent(false) {
     override val messageToDisplay: String
         get() = "Could not create network for task: $message"
 

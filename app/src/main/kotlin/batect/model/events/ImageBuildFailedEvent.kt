@@ -18,7 +18,7 @@ package batect.model.events
 
 import batect.config.Container
 
-data class ImageBuildFailedEvent(val container: Container, val message: String) : PreTaskRunFailureEvent() {
+data class ImageBuildFailedEvent(val container: Container, val message: String) : PreTaskRunFailureEvent(false) {
     override val messageToDisplay: String
         get() = "Could not build image for container '${container.name}': $message"
 

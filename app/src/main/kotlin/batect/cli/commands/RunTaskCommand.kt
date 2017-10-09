@@ -36,6 +36,10 @@ import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.instance
 
 class RunTaskCommandDefinition : CommandDefinition("run", "Run a task.") {
+    companion object {
+        val disableCleanupAfterFailureFlagName = "no-cleanup-after-failure"
+    }
+
     private val taskName: String by RequiredPositionalParameter("TASK", "The name of the task to run.")
 
     private val levelOfParallelism: Int by valueOption(
@@ -46,7 +50,7 @@ class RunTaskCommandDefinition : CommandDefinition("run", "Run a task.") {
         'p')
 
     private val disableCleanupAfterFailure: Boolean by flagOption(
-        "no-cleanup-after-failure",
+        disableCleanupAfterFailureFlagName,
         "If an error occurs before the task runs, leave created containers running so that the issue can be investigated.")
 
     override fun createCommand(kodein: Kodein): Command = RunTaskCommand(

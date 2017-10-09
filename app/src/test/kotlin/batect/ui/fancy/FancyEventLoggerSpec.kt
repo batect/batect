@@ -18,11 +18,15 @@ package batect.ui.fancy
 
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.docker.DockerNetwork
 import batect.model.events.ContainerBecameHealthyEvent
 import batect.model.events.ContainerRemovedEvent
 import batect.model.events.RunningContainerExitedEvent
+import batect.model.steps.CleanUpContainerStep
 import batect.model.steps.CreateTaskNetworkStep
+import batect.model.steps.DeleteTaskNetworkStep
 import batect.model.steps.DisplayTaskFailureStep
+import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
@@ -107,8 +111,61 @@ object FancyEventLoggerSpec : Spek({
                 }
             }
 
+            mapOf(
+                "remove container" to RemoveContainerStep(Container("some-container", imageSourceDoesNotMatter()), DockerContainer("some-id")),
+                "clean up container" to CleanUpContainerStep(Container("some-container", imageSourceDoesNotMatter()), DockerContainer("some-id")),
+                "remove network" to DeleteTaskNetworkStep(DockerNetwork("some-network-id"))
+            ).forEach { (description, step) ->
+                describe("and that step is a '$description' step") {
+                    on("and clean up has not started yet") {
+                        logger.onStartingTaskStep(step)
+
+                        it("prints a blank line before printing the cleanup progress") {
+                            inOrder(console, cleanupProgressDisplay) {
+                                verify(console).println()
+                                verify(cleanupProgressDisplay).print(console)
+                            }
+                        }
+
+                        it("does not attempt to clear the existing cleanup progress") {
+                            verify(cleanupProgressDisplay, never()).clear(console)
+                        }
+
+                        it("does not notify the startup progress display") {
+                            verify(startupProgressDisplay, never()).onStepStarting(step)
+                        }
+
+                        it("does not reprint the startup progress display") {
+                            verify(startupProgressDisplay, never()).print(console)
+                        }
+                    }
+
+                    on("and clean up has already started") {
+                        logger.onStartingTaskStep(DeleteTaskNetworkStep(DockerNetwork("some-network-id")))
+                        reset(cleanupProgressDisplay)
+
+                        logger.onStartingTaskStep(step)
+
+                        it("clears the existing cleanup progress before reprinting the cleanup progress") {
+                            inOrder(console, redErrorConsole, cleanupProgressDisplay) {
+                                verify(cleanupProgressDisplay).clear(console)
+                                verify(cleanupProgressDisplay).print(console)
+                            }
+                        }
+
+                        it("does not notify the startup progress display") {
+                            verify(startupProgressDisplay, never()).onStepStarting(step)
+                        }
+
+                        it("does not reprint the startup progress display") {
+                            verify(startupProgressDisplay, never()).print(console)
+                        }
+                    }
+                }
+            }
+
             describe("and that step is to display an error message") {
-                on("and no error messages have been displayed yet") {
+                on("and clean up has not started yet") {
                     val step = DisplayTaskFailureStep("Something went wrong.")
                     logger.onStartingTaskStep(step)
 
@@ -116,19 +173,12 @@ object FancyEventLoggerSpec : Spek({
                         inOrder(console, redErrorConsole) {
                             verify(console).println()
                             verify(redErrorConsole).println(step.message)
-                        }
-                    }
-
-                    it("prints the cleanup progress to the console") {
-                        verify(cleanupProgressDisplay).print(console)
-                    }
-
-                    it("prints the error message before printing the cleanup progress, with a blank line in between") {
-                        inOrder(redErrorConsole, cleanupProgressDisplay) {
-                            verify(redErrorConsole).println(step.message)
                             verify(redErrorConsole).println()
-                            verify(cleanupProgressDisplay).print(console)
                         }
+                    }
+
+                    it("does not print the cleanup progress to the console") {
+                        verify(cleanupProgressDisplay, never()).print(console)
                     }
 
                     it("does not notify the startup progress display") {
@@ -140,8 +190,8 @@ object FancyEventLoggerSpec : Spek({
                     }
                 }
 
-                on("and an error message has already been displayed") {
-                    logger.onStartingTaskStep(DisplayTaskFailureStep("Something went wrong the first time."))
+                on("and clean up has already started") {
+                    logger.onStartingTaskStep(DeleteTaskNetworkStep(DockerNetwork("some-network-id")))
                     reset(redErrorConsole)
                     reset(console)
                     reset(cleanupProgressDisplay)
@@ -253,33 +303,39 @@ object FancyEventLoggerSpec : Spek({
                 }
             }
 
-            on("after an error message has been displayed") {
-                logger.onStartingTaskStep(DisplayTaskFailureStep("Something went wrong"))
-                reset(startupProgressDisplay)
-                reset(cleanupProgressDisplay)
+            mapOf(
+                "remove container" to RemoveContainerStep(Container("some-container", imageSourceDoesNotMatter()), DockerContainer("some-id")),
+                "clean up container" to CleanUpContainerStep(Container("some-container", imageSourceDoesNotMatter()), DockerContainer("some-id")),
+                "remove network" to DeleteTaskNetworkStep(DockerNetwork("some-network-id"))
+            ).forEach { (description, step) ->
+                on("after a '$description' step has been run") {
+                    logger.onStartingTaskStep(step)
+                    reset(startupProgressDisplay)
+                    reset(cleanupProgressDisplay)
 
-                val event = ContainerBecameHealthyEvent(Container("some-container", imageSourceDoesNotMatter()))
-                logger.postEvent(event)
+                    val event = ContainerBecameHealthyEvent(Container("some-container", imageSourceDoesNotMatter()))
+                    logger.postEvent(event)
 
-                it("does not reprint the startup progress display") {
-                    verify(startupProgressDisplay, never()).print(any())
-                }
-
-                it("does not notify the startup progress display of the event") {
-                    verify(startupProgressDisplay, never()).onEventPosted(event)
-                }
-
-                it("notifies the cleanup progress display of the event before reprinting it") {
-                    inOrder(cleanupProgressDisplay) {
-                        verify(cleanupProgressDisplay).onEventPosted(event)
-                        verify(cleanupProgressDisplay).print(console)
+                    it("does not reprint the startup progress display") {
+                        verify(startupProgressDisplay, never()).print(any())
                     }
-                }
 
-                it("clears the previously displayed cleanup progress before reprinting it") {
-                    inOrder(cleanupProgressDisplay) {
-                        verify(cleanupProgressDisplay).clear(console)
-                        verify(cleanupProgressDisplay).print(console)
+                    it("does not notify the startup progress display of the event") {
+                        verify(startupProgressDisplay, never()).onEventPosted(event)
+                    }
+
+                    it("notifies the cleanup progress display of the event before reprinting it") {
+                        inOrder(cleanupProgressDisplay) {
+                            verify(cleanupProgressDisplay).onEventPosted(event)
+                            verify(cleanupProgressDisplay).print(console)
+                        }
+                    }
+
+                    it("clears the previously displayed cleanup progress before reprinting it") {
+                        inOrder(cleanupProgressDisplay) {
+                            verify(cleanupProgressDisplay).clear(console)
+                            verify(cleanupProgressDisplay).print(console)
+                        }
                     }
                 }
             }

@@ -18,7 +18,10 @@ package batect.ui.fancy
 
 import batect.model.events.RunningContainerExitedEvent
 import batect.model.events.TaskEvent
+import batect.model.steps.CleanUpContainerStep
+import batect.model.steps.DeleteTaskNetworkStep
 import batect.model.steps.DisplayTaskFailureStep
+import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.TaskStep
 import batect.ui.Console
@@ -40,6 +43,12 @@ class FancyEventLogger(
             if (step is DisplayTaskFailureStep) {
                 keepUpdatingStartupProgress = false
                 displayTaskFailure(step)
+                return
+            }
+
+            if (step is CleanUpContainerStep || step is RemoveContainerStep || step is DeleteTaskNetworkStep) {
+                displayCleanupStatus()
+                keepUpdatingStartupProgress = false
                 return
             }
 
@@ -67,8 +76,9 @@ class FancyEventLogger(
             println()
         }
 
-        cleanupProgressDisplay.print(console)
-        haveStartedCleanup = true
+        if (haveStartedCleanup) {
+            cleanupProgressDisplay.print(console)
+        }
     }
 
     private fun displayCleanupStatus() {

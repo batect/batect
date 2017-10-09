@@ -60,7 +60,7 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
 
         on("running that task with the '--no-cleanup-on-failure' option") {
             val result = runner.runApplication(listOf("run", "--no-cleanup-after-failure", "the-task"))
-            val logMessageRegex = """For container 'http-server': view its output by running 'docker logs (?<id>.*)', or run a command in the container with 'docker exec -it \1 <command>'\.""".toRegex()
+            val commandsRegex = """For container 'http-server': view its output by running '(?<logsCommand>docker logs (?<id>.*))', or run a command in the container with 'docker exec -it \2 <command>'\.""".toRegex()
             val cleanupRegex = """To clean up the containers and task network once you have finished investigating the issue, run '(?<command>docker rm --force ([a-z0-9]+\s)+&& docker network rm [a-z0-9]+)'\.""".toRegex()
             val cleanupCommand = cleanupRegex.find(result.output)?.groups?.get("command")?.value
 
@@ -76,8 +76,8 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
                 assertThat(result.output, containsSubstring("Dependency 'http-server' did not become healthy: The configured health check did not indicate that the container was healthy within the timeout period."))
             }
 
-            it("prints a message explaining how to see the logs of that dependency") {
-                assertThat(result.output, contains(logMessageRegex))
+            it("prints a message explaining how to see the logs of that dependency and how to run a command in the container") {
+                assertThat(result.output, contains(commandsRegex))
             }
 
             it("prints a message explaining how to clean up any containers left behind") {
@@ -85,7 +85,7 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
             }
 
             it("does not stop the container") {
-                val containerId = logMessageRegex.find(result.output)?.groups?.get("id")?.value
+                val containerId = commandsRegex.find(result.output)?.groups?.get("id")?.value
 
                 assertThat(containerId, !absent<String>())
 
@@ -97,6 +97,21 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
 
                 assertThat(inspectProcess.exitValue(), equalTo(0))
                 assertThat(InputStreamReader(inspectProcess.inputStream).readText().trim(), equalTo("running"))
+            }
+
+            it("the command given to view the logs displays the logs from the container") {
+                val logsCommand = commandsRegex.find(result.output)?.groups?.get("logsCommand")?.value
+
+                assertThat(logsCommand, !absent<String>())
+
+                val logsProcess = ProcessBuilder("/usr/bin/env", "bash", "-c", logsCommand)
+                    .redirectErrorStream(true)
+                    .start()
+
+                logsProcess.waitFor()
+
+                assertThat(InputStreamReader(logsProcess.inputStream).readText().trim(), equalTo("This is some output from the HTTP server"))
+                assertThat(logsProcess.exitValue(), equalTo(0))
             }
 
             it("exits with a non-zero code") {

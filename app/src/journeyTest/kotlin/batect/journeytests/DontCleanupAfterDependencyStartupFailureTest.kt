@@ -21,6 +21,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.contains
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.isEmpty
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
@@ -31,6 +32,13 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
     given("a task with an unhealthy dependency") {
         val runner = ApplicationRunner("task-with-unhealthy-dependency")
         val cleanupCommands = mutableListOf<String>()
+        var containersBeforeTest = emptySet<String>()
+        var networksBeforeTest = emptySet<String>()
+
+        beforeGroup {
+            containersBeforeTest = DockerUtils.getAllCreatedContainers()
+            networksBeforeTest = DockerUtils.getAllNetworks()
+        }
 
         afterGroup {
             cleanupCommands.forEach {
@@ -40,6 +48,14 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
 
                 assertThat(exitCode, equalTo(0))
             }
+
+            val containersAfterTest = DockerUtils.getAllCreatedContainers()
+            val orphanedContainers = containersAfterTest - containersBeforeTest
+            assertThat(orphanedContainers, isEmpty)
+
+            val networksAfterTest = DockerUtils.getAllNetworks()
+            val orphanedNetworks = networksAfterTest - networksBeforeTest
+            assertThat(orphanedNetworks, isEmpty)
         }
 
         on("running that task with the '--no-cleanup-on-failure' option") {
@@ -86,7 +102,6 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
             it("exits with a non-zero code") {
                 assertThat(result.exitCode, !equalTo(0))
             }
-
         }
     }
 })

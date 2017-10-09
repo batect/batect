@@ -42,7 +42,7 @@ data class ApplicationRunner(val testName: String) {
     }
 
     fun runCommandLine(commandLine: List<String>, environment: Map<String, String> = emptyMap()): ApplicationResult {
-        val containersBefore = getAllCreatedContainers()
+        val containersBefore = DockerUtils.getAllCreatedContainers()
         val builder = ProcessBuilder(commandLine)
             .directory(testDirectory.toFile())
             .redirectErrorStream(true)
@@ -53,26 +53,10 @@ data class ApplicationRunner(val testName: String) {
         process.waitFor()
         val output = InputStreamReader(process.inputStream).readText()
 
-        val containersAfter = getAllCreatedContainers()
+        val containersAfter = DockerUtils.getAllCreatedContainers()
         val potentiallyOrphanedContainers = containersAfter - containersBefore
 
         return ApplicationResult(process.exitValue(), output, potentiallyOrphanedContainers)
-    }
-
-    private fun getAllCreatedContainers(): Set<String> {
-        val commandLine = listOf("docker", "ps", "--all", "--format", "{{.Names}} ({{.ID}}): {{.Image}}")
-        val process = ProcessBuilder(commandLine)
-            .redirectErrorStream(true)
-            .start()
-
-        val exitCode = process.waitFor()
-        val output = InputStreamReader(process.inputStream).readText()
-
-        if (exitCode != 0) {
-            throw Exception("Retrieving list of containers from Docker failed with exit code $exitCode. Output from Docker was: $output")
-        }
-
-        return output.split("\n").toSet()
     }
 
     fun commandLineForApplication(arguments: Iterable<String>): List<String> {

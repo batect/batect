@@ -29,6 +29,8 @@ import batect.model.steps.StartContainerStep
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.logging.Logger
+import batect.model.BehaviourAfterFailure
+import batect.model.steps.DisplayTaskFailureStep
 import batect.testutils.InMemoryLogSink
 import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
@@ -108,15 +110,31 @@ object ContainerCreatedEventSpec : Spek({
                 }
             }
 
-            on("when the task is aborting") {
-                val context = mock<TaskEventContext> {
-                    on { isAborting } doReturn true
+            describe("when the task is aborting") {
+                on("and the task is set to clean up after failure") {
+                    val context = mock<TaskEventContext> {
+                        on { isAborting } doReturn true
+                        on { behaviourAfterFailure } doReturn BehaviourAfterFailure.Cleanup
+                    }
+
+                    event.apply(context, logger)
+
+                    it("queues a 'clean up container' step") {
+                        verify(context).queueStep(CleanUpContainerStep(container, dockerContainer))
+                    }
                 }
 
-                event.apply(context, logger)
+                on("and the task is set to not clean up after failure") {
+                    val context = mock<TaskEventContext> {
+                        on { isAborting } doReturn true
+                        on { behaviourAfterFailure } doReturn BehaviourAfterFailure.DontCleanup
+                    }
 
-                it("queues a 'clean up container' step") {
-                    verify(context).queueStep(CleanUpContainerStep(container, dockerContainer))
+                    event.apply(context, logger)
+
+                    it("queues a 'display task failure' step to explain to the user what has happened") {
+                        verify(context).queueStep(DisplayTaskFailureStep("The creation of container 'container-1' finished after the previous task failure. You can remove it by running 'docker rm --force docker-container-1'."))
+                    }
                 }
             }
         }

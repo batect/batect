@@ -30,7 +30,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * some applications won't like the fact that the user doesn't actually exist, so a configuration option on the container level to turn this off is necessary
 
 ### Other
-* make test names consistent (eg. `it("should do something")` vs `it("does something")`)
 * logging (for batect internals)
   * include process ID with each message (this is non-trivial in versions prior to Java 9: https://stackoverflow.com/questions/35842/how-can-a-java-program-get-its-own-process-id)
 * option to print full stack trace on non-fatal exceptions

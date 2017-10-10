@@ -44,9 +44,6 @@ If there's something you're really keen to see, pull requests are always welcome
       * backend
     * Android app
     * building and pushing an image as a build task
-  * performance tips
-    * use ':cached' mode for mounts for performance (https://docs.docker.com/docker-for-mac/osxfs-caching/)
-    * bake schema into DB containers used for integration or journey testing
   * importance of idempotency
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
 * easy way to update to new versions when notified (eg. `batect update` downloads new wrapper script and replaces it in place)

@@ -106,8 +106,8 @@ Each container definition is made up of:
 
 * `environment` List of environment variables (in `name=value` format) for the container.
 
-  You can pass environment variables from the host (ie. where you run batect) to the container by using `$<name>`. For example, to pass
-  the value of the `SUPER_SECRET_PASSWORD` variable in the container to the value of the `MY_PASSWORD` variable on the host, use
+  You can pass environment variables from the host (ie. where you run batect) to the container by using `$<name>`. For example, to set
+  `SUPER_SECRET_PASSWORD` in the container to the value of the `MY_PASSWORD` variable on the host, use
   `SUPER_SECRET_PASSWORD=$MY_PASSWORD`. Substitutions in the middle of values is not supported (eg. `SUPER_SECRET_PASSWORD=My password is $MY_PASSWORD`
   will not work). Be careful when using this - by relying on the host's environment variables, you are introducing inconsistency to how the container
   runs between hosts, which is something you generally want to avoid.

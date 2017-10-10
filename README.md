@@ -56,7 +56,8 @@ batect helps solve these problems by:
 Take a look at the [getting started guide](docs/GettingStarted.md), or consult the
 [configuration file reference](docs/ConfigFile.md).
 
-There's also a [sample project](https://github.com/charleskorn/batect-sample) you can try.
+There's also a [sample project](https://github.com/charleskorn/batect-sample) you can try, and some
+[tips and tricks](docs/TipsAndTricks.md) you might want to look at.
 
 ## Should I start using this now?
 

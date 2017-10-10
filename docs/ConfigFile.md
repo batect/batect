@@ -111,6 +111,8 @@ Each container definition is made up of:
   `SUPER_SECRET_PASSWORD=$MY_PASSWORD`. Substitutions in the middle of values is not supported (eg. `SUPER_SECRET_PASSWORD=My password is $MY_PASSWORD`
   will not work). Be careful when using this - by relying on the host's environment variables, you are introducing inconsistency to how the container
   runs between hosts, which is something you generally want to avoid.
+  
+  The `TERM` environment variable, if set on the host, is always automatically passed through to the container.
 
 * `working_directory` Working directory to start the container in. If not provided, the default working directory for the image will be used.
 

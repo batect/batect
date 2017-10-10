@@ -16,9 +16,6 @@ If there's something you're really keen to see, pull requests are always welcome
   come up for tests, but less frequently if that container is used in production)
 * flag (eg. `--quiet`) to only show output from task
 * automatically enable `--no-colours` or `--simple-output` if console doesn't support it (use terminfo database rather than current detection system)
-* fancy progress bar output for building images and starting dependencies
-  * make sure accidental input on stdin doesn't mangle it
-  * test with different console colour schemes (eg. white background, black background, OS X default, Ubuntu default, Ubuntu GUI terminal default)
 * show more detailed image pull progress (eg. `build-env: Pulling some-image:1.2.3: 25%`) - requires using Docker API to get this level of detail
 * performance improvements
   * prioritise running steps that lie on the critical path (eg. favour pulling image for leaf of dependency graph over creating container for task container)
@@ -102,3 +99,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * warn if a dependency does not have a health check defined
 * default to just terminating all containers at clean up time with option to gracefully shut down on individual containers
   (eg. database where data is shared between invocations and we don't want to corrupt it)
+* fancy progress bar output for building images and starting dependencies
+  * make sure accidental input on stdin doesn't mangle it
+  * test with different console colour schemes (eg. white background, black background, OS X default, Ubuntu default, Ubuntu GUI terminal default)

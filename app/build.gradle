@@ -58,9 +58,8 @@ dependencies {
         exclude group: 'org.jetbrains.kotlin'
     }
 
-    testRuntime("org.jetbrains.spek:spek-junit-platform-engine:$spek_version") {
-        exclude group: 'org.junit.platform'
-    }
+    testRuntime "org.jetbrains.spek:spek-junit-platform-engine:$spek_version"
+    testRuntime "org.junit.platform:junit-platform-runner:$junit_version"
 }
 
 junitPlatform {

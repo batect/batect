@@ -65,3 +65,23 @@ go in your Dockerfile are:
 
 1. Copy schema and test data scripts into container
 2. Temporarily start database daemon and run schema and data scripts against database instance, then shut down database daemon
+
+### Shutdown time
+
+If you notice that post-task cleanup for a container is taking longer than expected, and that container starts the main process from a
+Bash script, make sure that signals such as SIGTERM and SIGKILL are being forwarded to the process. (Otherwise Docker will wait 10
+seconds for the application to respond to the signal before just terminating the process.)
+
+For example, instead of using:
+
+```bash
+/app/my-really-cool-app --do-stuff
+```
+
+use this:
+
+```bash
+exec /app/my-really-cool-app --do-stuff
+```
+
+([source](https://unix.stackexchange.com/a/196053/258093))

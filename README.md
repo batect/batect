@@ -19,6 +19,14 @@
 
 Want to try this for yourself? Take a look at the [sample project](https://github.com/charleskorn/batect-sample).
 
+## How do I use this?
+
+Take a look at the [getting started guide](docs/GettingStarted.md), or consult the
+[configuration file reference](docs/ConfigFile.md).
+
+There's also a [sample project](https://github.com/charleskorn/batect-sample) you can try, and some
+[tips and tricks](docs/TipsAndTricks.md) you might want to look at.
+
 ## Why would I use this?
 
 Every application has a build environment - the tools and configuration needed to take the source code and produce an artifact
@@ -48,14 +56,6 @@ batect helps solve these problems by:
 * using some smart dependency management logic and Docker's caching features to do all of this very, very quickly
 * taking advantage of Docker's networking features to set up an isolated network for every command
 * enabling you to use existing Docker images as-is (or easily use custom Dockerfiles) to quickly get up and running
-
-## How do I use this?
-
-Take a look at the [getting started guide](docs/GettingStarted.md), or consult the
-[configuration file reference](docs/ConfigFile.md).
-
-There's also a [sample project](https://github.com/charleskorn/batect-sample) you can try, and some
-[tips and tricks](docs/TipsAndTricks.md) you might want to look at.
 
 ## Should I start using this now?
 

@@ -24,8 +24,8 @@ Want to try this for yourself? Take a look at the [sample project](https://githu
 Take a look at the [getting started guide](docs/GettingStarted.md), or consult the
 [configuration file reference](docs/ConfigFile.md).
 
-There's also a [sample project](https://github.com/charleskorn/batect-sample) you can try, and some
-[tips and tricks](docs/TipsAndTricks.md) you might want to look at.
+There are also [Java](https://github.com/charleskorn/batect-sample) and [Ruby](https://github.com/charleskorn/batect-sample-ruby)
+sample projects you can use for inspiration, and some [tips and tricks](docs/TipsAndTricks.md) you might want to look at.
 
 :warning: Please note that Java 9 is not supported at the moment. Please see [#1](https://github.com/charleskorn/batect/issues/1)
 for details.

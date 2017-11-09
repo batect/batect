@@ -37,12 +37,10 @@ If there's something you're really keen to see, pull requests are always welcome
 * documentation
   * examples for common languages and scenarios
     * Golang
-    * Ruby
     * NodeJS
       * frontend
       * backend
     * Android app
-    * building and pushing an image as a build task
   * importance of idempotency
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
 * easy way to update to new versions when notified (eg. `batect update` downloads new wrapper script and replaces it in place)

@@ -25,6 +25,8 @@ If there's something you're really keen to see, pull requests are always welcome
 * warn when using an image without a tag or with tag `latest`
 * start containers with `--user $(id -u):$(id -g)` so that any files created in any mounted directories have the current user as their owner
   * some applications won't like the fact that the user doesn't actually exist, so a configuration option on the container level to turn this off is necessary
+* some way to group tasks shown when running `batect tasks`
+* show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 
 ### Other
 * logging (for batect internals)

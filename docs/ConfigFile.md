@@ -7,7 +7,7 @@ You can, however, use a different name or location, and tell `batect` where to f
 
 ## Sample configuration file
 
-Taken from the [sample project](https://github.com/charleskorn/batect-sample):
+Taken from the [Java sample project](https://github.com/charleskorn/batect-sample-java):
 
 ```yaml
 project_name: international-transfers-service

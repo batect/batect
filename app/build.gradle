@@ -49,7 +49,7 @@ dependencies {
     compile 'com.github.salomonbrys.kodein:kodein:4.1.0'
     compile 'com.squareup.okhttp3:okhttp:3.9.0'
 
-    testCompile 'com.natpryce:hamkrest:1.4.2.0'
+    testCompile 'com.natpryce:hamkrest:1.4.2.2'
     testCompile 'com.nhaarman:mockito-kotlin-kt1.1:1.5.0'
     testCompile 'com.google.jimfs:jimfs:1.1'
     testCompile "org.jetbrains.spek:spek-api:$spek_version"

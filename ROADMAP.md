@@ -9,7 +9,7 @@ If there's something you're really keen to see, pull requests are always welcome
 
 ### Config file handling
 * better error message when a key (eg. a task name) is used twice (at the moment it's `Duplicate field 'duplicated_task_name'`)
-* warn if a dependency is specified twice (either for a task or for a container)
+* better error message when a dependency is given twice (at the moment it's `Duplicate value 'dependency-name''`)
 
 ### Features
 * overridable health check parameters for containers (so that you can have the health check poll very frequently when waiting for something to
@@ -19,13 +19,13 @@ If there's something you're really keen to see, pull requests are always welcome
 * show more detailed image pull progress (eg. `build-env: Pulling some-image:1.2.3: 25%`) - requires using Docker API to get this level of detail
 * performance improvements
   * prioritise running steps that lie on the critical path (eg. favour pulling image for leaf of dependency graph over creating container for task container)
+  * print updates to the console asynchronously (they currently block whatever thread posts the event or is starting the step)
   * batch up printing updates to the console when using fancy output mode, rather than reprinting progress information on every event
 * check that Docker client is available before trying to use it
 * check that Docker client and server are compatible versions
 * warn when using an image without a tag or with tag `latest`
 * start containers with `--user $(id -u):$(id -g)` so that any files created in any mounted directories have the current user as their owner
   * some applications won't like the fact that the user doesn't actually exist, so a configuration option on the container level to turn this off is necessary
-* some way to group tasks shown when running `batect tasks`
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 
 ### Other
@@ -49,14 +49,12 @@ If there's something you're really keen to see, pull requests are always welcome
   * Why? Don't want to require users to install a JVM to use batect, also want to remove as much overhead as possible
 
 ### Things that would have to be changed when moving to Kotlin/Native
-
 * would most likely need to replace YAML parsing code (although this would be a good opportunity to simplify it a
   bit and do more things while parsing the document rather than afterwards)
 * file I/O and path resolution logic
 * process creation / monitoring
 
 ### Things blocking move to Kotlin/Native
-
 * unit testing support and associated library
 * file I/O support
 * process creation / monitoring support
@@ -102,3 +100,4 @@ If there's something you're really keen to see, pull requests are always welcome
 * fancy progress bar output for building images and starting dependencies
   * make sure accidental input on stdin doesn't mangle it
   * test with different console colour schemes (eg. white background, black background, OS X default, Ubuntu default, Ubuntu GUI terminal default)
+* some way to group tasks shown when running `batect tasks`

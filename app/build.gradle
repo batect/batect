@@ -30,7 +30,6 @@ plugins {
 }
 
 apply plugin: 'application'
-apply plugin: 'kotlin'
 apply plugin: 'org.junit.platform.gradle.plugin'
 
 applicationName = 'batect'
@@ -39,7 +38,11 @@ mainClassName = 'batect.ApplicationKt'
 
 dependencies {
     compile 'org.jetbrains.kotlin:kotlin-stdlib-jre8'
-    compile 'org.jetbrains.kotlin:kotlin-reflect' // Override the version of kotlin-reflect used by jackson-module-kotlin
+    // Override the version of kotlin-reflect used by jackson-module-kotlin.
+    // We don't have to specify a version ourselves (the Kotlin plugin will do that for us),
+    // but if we don't reference it here, the version that jackson-module-kotlin refers to
+    // is used.
+    compile 'org.jetbrains.kotlin:kotlin-reflect'
 
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.1'
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.1'

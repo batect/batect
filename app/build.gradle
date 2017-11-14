@@ -15,17 +15,16 @@
 */
 
 buildscript {
-    ext.kotlin_version = '1.1.51'
     ext.junit_version = '1.0.1'
     ext.spek_version = '1.1.5'
 
     dependencies {
         classpath "org.junit.platform:junit-platform-gradle-plugin:$junit_version"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
 plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.1.60'
     id 'com.github.ben-manes.versions' version '0.17.0'
     id 'com.github.johnrengelman.shadow' version '2.0.1'
 }
@@ -39,8 +38,8 @@ archivesBaseName = 'batect'
 mainClassName = 'batect.ApplicationKt'
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
-    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version" // Override the version of kotlin-reflect used by jackson-module-kotlin
+    compile 'org.jetbrains.kotlin:kotlin-stdlib-jre8'
+    compile 'org.jetbrains.kotlin:kotlin-reflect' // Override the version of kotlin-reflect used by jackson-module-kotlin
 
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.1'
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.1'

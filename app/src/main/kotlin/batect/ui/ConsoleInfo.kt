@@ -42,10 +42,12 @@ class ConsoleInfo(
             message("Checking if terminal supports interactivity.")
             data("stdinIsTTY", stdinIsTTY)
             data("terminalType", terminalType)
+            data("isTravis", isTravis)
         }
 
-        stdinIsTTY && terminalType != "dumb" && terminalType != null
+        stdinIsTTY && !isTravis && terminalType != "dumb" && terminalType != null
     }
 
     val terminalType: String? = environment["TERM"]
+    private val isTravis: Boolean = environment["TRAVIS"] == "true"
 }

@@ -69,12 +69,12 @@ object ConsoleInfoSpec : Spek({
                 on("the TERM environment variable being set to 'dumb'") {
                     val consoleInfo = ConsoleInfo(processRunner, mapOf("TERM" to "dumb"), logger)
 
-                    it("returns true") {
+                    it("returns false") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(false))
                     }
                 }
 
-                on("the TERM environment variable not being set") {
+                on("the TERM environment variables not being set") {
                     val consoleInfo = ConsoleInfo(processRunner, emptyMap(), logger)
 
                     it("returns false") {
@@ -82,11 +82,19 @@ object ConsoleInfoSpec : Spek({
                     }
                 }
 
-                on("the TERM environment variable being set to something else") {
+                on("the TERM environment variable being set to something other than 'dumb' and the TRAVIS environment variable not being set") {
                     val consoleInfo = ConsoleInfo(processRunner, mapOf("TERM" to "other-terminal"), logger)
 
                     it("returns true") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(true))
+                    }
+                }
+
+                on("the TERM environment variable being set to something other than 'dumb' and the TRAVIS environment variable being set") {
+                    val consoleInfo = ConsoleInfo(processRunner, mapOf("TERM" to "other-terminal", "TRAVIS" to "true"), logger)
+
+                    it("returns false") {
+                        assertThat(consoleInfo.supportsInteractivity, equalTo(false))
                     }
                 }
             }

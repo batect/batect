@@ -20,6 +20,7 @@ import batect.config.BuildImage
 import batect.config.Configuration
 import batect.config.Container
 import batect.config.ContainerMap
+import batect.config.HealthCheckConfig
 import batect.config.ImageSource
 import batect.config.PortMapping
 import batect.config.PullImage
@@ -66,7 +67,8 @@ data class ContainerFromFile(
     val workingDirectory: String? = null,
     @JsonProperty("volumes") val volumeMounts: Set<VolumeMount> = emptySet(),
     @JsonProperty("ports") val portMappings: Set<PortMapping> = emptySet(),
-    @JsonDeserialize(using = StringSetDeserializer::class) val dependencies: Set<String> = emptySet()) {
+    @JsonDeserialize(using = StringSetDeserializer::class) val dependencies: Set<String> = emptySet(),
+    @JsonProperty("health_check") val healthCheckConfig: HealthCheckConfig = HealthCheckConfig()) {
 
     fun toContainer(name: String, pathResolver: PathResolver): Container {
         val imageSource = resolveImageSource(name, pathResolver)
@@ -75,7 +77,7 @@ data class ContainerFromFile(
             resolveVolumeMount(it, name, pathResolver)
         }.toSet()
 
-        return Container(name, imageSource, command, environment, workingDirectory, resolvedVolumeMounts, portMappings, dependencies)
+        return Container(name, imageSource, command, environment, workingDirectory, resolvedVolumeMounts, portMappings, dependencies, healthCheckConfig)
     }
 
     private fun resolveImageSource(containerName: String, pathResolver: PathResolver): ImageSource {

@@ -38,6 +38,7 @@ class DockerContainerCreationCommandGenerator(private val hostEnvironmentVariabl
             workingDirectoryArguments(container) +
             volumeMountArguments(container) +
             portMappingArguments(container) +
+            healthCheckArguments(container) +
             image.id +
             commandArguments(command)
     }
@@ -81,6 +82,27 @@ class DockerContainerCreationCommandGenerator(private val hostEnvironmentVariabl
     private fun workingDirectoryArguments(container: Container): Iterable<String> = when (container.workingDirectory) {
         null -> emptyList()
         else -> listOf("--workdir", container.workingDirectory)
+    }
+
+    private fun healthCheckArguments(container: Container): Iterable<String> {
+        return healthCheckIntervalArguments(container) +
+            healthCheckRetriesArguments(container) +
+            healthCheckStartPeriodArguments(container)
+    }
+
+    private fun healthCheckIntervalArguments(container: Container): Iterable<String> = when (container.healthCheckConfig.interval) {
+        null -> emptyList()
+        else -> listOf("--health-interval", container.healthCheckConfig.interval)
+    }
+
+    private fun healthCheckRetriesArguments(container: Container): Iterable<String> = when (container.healthCheckConfig.retries) {
+        null -> emptyList()
+        else -> listOf("--health-retries", container.healthCheckConfig.retries.toString())
+    }
+
+    private fun healthCheckStartPeriodArguments(container: Container): Iterable<String> = when (container.healthCheckConfig.startPeriod) {
+        null -> emptyList()
+        else -> listOf("--health-start-period", container.healthCheckConfig.startPeriod)
     }
 
     private val backslash: Char = '\\'

@@ -1,0 +1,20 @@
+project_name: container-with-health-check-overrides-test
+
+containers:
+  build-env:
+    build_directory: build-env
+    dependencies:
+      - dependency
+
+  dependency:
+    build_directory: dependency
+    health_check:
+      interval: 0.1s
+      retries: 10
+      start_period: 0.5s
+
+tasks:
+  the-task:
+    run:
+      container: build-env
+      command: sh -c "echo 'This is some output from the task' && exit 123"

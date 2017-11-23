@@ -17,6 +17,7 @@
 package batect.docker
 
 import batect.config.Container
+import batect.config.HealthCheckConfig
 import batect.config.PortMapping
 import batect.config.VolumeMount
 import batect.testutils.imageSourceDoesNotMatter
@@ -37,12 +38,12 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
     describe("a Docker container creation command generator") {
         val hostEnvironmentVariables = mapOf("SOME_HOST_VARIABLE" to "some value from the host")
         val generator = DockerContainerCreationCommandGenerator(hostEnvironmentVariables)
+        val image = DockerImage("the-image")
+        val network = DockerNetwork("the-network")
 
         given("a simple container definition, a built image and an explicit command to run") {
             val container = Container("the-container", imageSourceDoesNotMatter())
             val command = "doStuff"
-            val image = DockerImage("the-image")
-            val network = DockerNetwork("the-network")
             val consoleInfo = mock<ConsoleInfo>()
 
             on("generating the command") {
@@ -64,8 +65,6 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
         given("a simple container definition, a built image and no explicit command to run") {
             val container = Container("the-container", imageSourceDoesNotMatter())
             val command = null
-            val image = DockerImage("the-image")
-            val network = DockerNetwork("the-network")
             val consoleInfo = mock<ConsoleInfo>()
 
             on("generating the command") {
@@ -87,8 +86,6 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
             val container = Container("the-container", imageSourceDoesNotMatter())
             val command = null
             val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
-            val image = DockerImage("the-image")
-            val network = DockerNetwork("the-network")
             val consoleInfo = mock<ConsoleInfo>()
 
             on("generating the command") {
@@ -111,8 +108,6 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
             val container = Container("the-container", imageSourceDoesNotMatter(), environment = mapOf("SOME_VAR" to "original value"))
             val command = null
             val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
-            val image = DockerImage("the-image")
-            val network = DockerNetwork("the-network")
             val consoleInfo = mock<ConsoleInfo>()
 
             on("generating the command") {
@@ -135,8 +130,6 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
             val container = Container("the-container", imageSourceDoesNotMatter(), environment = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE"))
             val command = null
             val additionalEnvironmentVariables = emptyMap<String, String>()
-            val image = DockerImage("the-image")
-            val network = DockerNetwork("the-network")
             val consoleInfo = mock<ConsoleInfo>()
 
             on("generating the command") {
@@ -159,8 +152,6 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
             val container = Container("the-container", imageSourceDoesNotMatter(), environment = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE_THAT_DOES_NOT_EXIST"))
             val command = null
             val additionalEnvironmentVariables = emptyMap<String, String>()
-            val image = DockerImage("the-image")
-            val network = DockerNetwork("the-network")
             val consoleInfo = mock<ConsoleInfo>()
 
             on("generating the command") {
@@ -175,8 +166,6 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
             val container = Container("the-container", imageSourceDoesNotMatter())
             val command = null
             val additionalEnvironmentVariables = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE")
-            val image = DockerImage("the-image")
-            val network = DockerNetwork("the-network")
             val consoleInfo = mock<ConsoleInfo>()
 
             on("generating the command") {
@@ -199,8 +188,6 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
             val container = Container("the-container", imageSourceDoesNotMatter())
             val command = null
             val additionalEnvironmentVariables = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE_THAT_DOES_NOT_EXIST")
-            val image = DockerImage("the-image")
-            val network = DockerNetwork("the-network")
             val consoleInfo = mock<ConsoleInfo>()
 
             on("generating the command") {
@@ -215,8 +202,6 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
             val container = Container("the-container", imageSourceDoesNotMatter(), environment = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE_THAT_DOES_NOT_EXIST"))
             val command = null
             val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value from the additional environment variables")
-            val image = DockerImage("the-image")
-            val network = DockerNetwork("the-network")
             val consoleInfo = mock<ConsoleInfo>()
 
             on("generating the command") {
@@ -238,8 +223,6 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
         given("the host console does not have the TERM environment variable set") {
             val container = Container("the-container", imageSourceDoesNotMatter())
             val command = null
-            val image = DockerImage("the-image")
-            val network = DockerNetwork("the-network")
             val consoleInfo = mock<ConsoleInfo>()
 
             on("generating the command") {
@@ -259,8 +242,6 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
 
         given("the host console has the TERM environment variable set") {
             val command = null
-            val image = DockerImage("the-image")
-            val network = DockerNetwork("the-network")
             val consoleInfo = mock<ConsoleInfo> {
                 on { terminalType } doReturn "some-terminal"
             }
@@ -284,7 +265,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 }
             }
 
-            given("and the container configuration does have a definition for the TERM environment variable") {
+            given("and the container configuration has a definition for the TERM environment variable") {
                 val container = Container(
                     "the-container",
                     imageSourceDoesNotMatter(),
@@ -314,10 +295,9 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 mapOf("SOME_VAR" to "SOME_VALUE", "OTHER_VAR" to "OTHER_VALUE"),
                 "/workingdir",
                 setOf(VolumeMount("/local1", "/container1", null), VolumeMount("/local2", "/container2", "ro")),
-                setOf(PortMapping(1000, 2000), PortMapping(3000, 4000)))
+                setOf(PortMapping(1000, 2000), PortMapping(3000, 4000)),
+                healthCheckConfig = HealthCheckConfig("3s", 5, "1.5s"))
 
-            val image = DockerImage("the-image")
-            val network = DockerNetwork("the-network")
             val consoleInfo = mock<ConsoleInfo>()
 
             on("generating the command") {
@@ -337,8 +317,92 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                         "--volume", "/local2:/container2:ro",
                         "--publish", "1000:2000",
                         "--publish", "3000:4000",
+                        "--health-interval", "3s",
+                        "--health-retries", "5",
+                        "--health-start-period", "1.5s",
                         image.id,
                         "some-command").asIterable()))
+                }
+            }
+        }
+
+        given("a container with an override for just the health check interval") {
+            val container = Container(
+                "the-container",
+                imageSourceDoesNotMatter(),
+                healthCheckConfig = HealthCheckConfig(interval = "2s")
+            )
+
+            val command = "doStuff"
+            val consoleInfo = mock<ConsoleInfo>()
+
+            on("generating the command") {
+                val commandLine = generator.createCommandLine(container, command, emptyMap(), image, network, consoleInfo)
+
+                it("generates the correct command line") {
+                    assertThat(commandLine, equalTo(listOf(
+                        "docker", "create",
+                        "-it",
+                        "--network", network.id,
+                        "--hostname", container.name,
+                        "--network-alias", container.name,
+                        "--health-interval", "2s",
+                        image.id,
+                        command).asIterable()))
+                }
+            }
+        }
+
+        given("a container with an override for just the number of health check retries") {
+            val container = Container(
+                "the-container",
+                imageSourceDoesNotMatter(),
+                healthCheckConfig = HealthCheckConfig(retries = 2)
+            )
+
+            val command = "doStuff"
+            val consoleInfo = mock<ConsoleInfo>()
+
+            on("generating the command") {
+                val commandLine = generator.createCommandLine(container, command, emptyMap(), image, network, consoleInfo)
+
+                it("generates the correct command line") {
+                    assertThat(commandLine, equalTo(listOf(
+                        "docker", "create",
+                        "-it",
+                        "--network", network.id,
+                        "--hostname", container.name,
+                        "--network-alias", container.name,
+                        "--health-retries", "2",
+                        image.id,
+                        command).asIterable()))
+                }
+            }
+        }
+
+        given("a container with an override for just the health check start period") {
+            val container = Container(
+                "the-container",
+                imageSourceDoesNotMatter(),
+                healthCheckConfig = HealthCheckConfig(startPeriod = "3s")
+            )
+
+            val command = "doStuff"
+            val consoleInfo = mock<ConsoleInfo>()
+
+            on("generating the command") {
+                val commandLine = generator.createCommandLine(container, command, emptyMap(), image, network, consoleInfo)
+
+                it("generates the correct command line") {
+                    assertThat(commandLine, equalTo(listOf(
+                        "docker", "create",
+                        "-it",
+                        "--network", network.id,
+                        "--hostname", container.name,
+                        "--network-alias", container.name,
+                        "--health-start-period", "3s",
+                        image.id,
+                        command).asIterable()))
                 }
             }
         }
@@ -364,8 +428,6 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
         ).forEach { command, expectedSplit ->
             given("a simple container definition, a built image and the command '$command'") {
                 val container = Container("the-container", imageSourceDoesNotMatter())
-                val image = DockerImage("the-image")
-                val network = DockerNetwork("the-network")
                 val consoleInfo = mock<ConsoleInfo>()
 
                 on("generating the command") {
@@ -392,8 +454,6 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
         ).forEach { command, expectedErrorMessage ->
             given("a simple container definition, a built image and the command '$command'") {
                 val container = Container("the-container", imageSourceDoesNotMatter())
-                val image = DockerImage("the-image")
-                val network = DockerNetwork("the-network")
                 val consoleInfo = mock<ConsoleInfo>()
 
                 on("generating the command") {

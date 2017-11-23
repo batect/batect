@@ -16,13 +16,11 @@
 
 package batect.config
 
-data class Container(
-        val name: String,
-        val imageSource: ImageSource,
-        val command: String? = null,
-        val environment: Map<String, String> = emptyMap(),
-        val workingDirectory: String? = null,
-        val volumeMounts: Set<VolumeMount> = emptySet(),
-        val portMappings: Set<PortMapping> = emptySet(),
-        val dependencies: Set<String> = emptySet(),
-        val healthCheckConfig: HealthCheckConfig = HealthCheckConfig())
+data class HealthCheckConfig(
+    val interval: DockerDuration? = null,
+    val retries: Int? = null,
+    val startPeriod: DockerDuration? = null
+)
+
+// FIXME This is a placeholder for something more sophisticated (eg. with parsing and validation).
+typealias DockerDuration = String

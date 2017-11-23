@@ -27,11 +27,12 @@ import org.jetbrains.spek.api.dsl.on
 
 object SimpleTaskJourneyTests : Spek({
     mapOf(
-            "simple-task" to "a simple task with the command specified on the task in the configuration file",
-            "simple-task-using-image" to "a simple task that uses an existing image",
-            "simple-task-dockerfile-command" to "a simple task with the command specified in the Dockerfile",
-            "simple-task-container-command" to "a simple task with the command specified on the container in the configuration file",
-            "simple-task-with-environment" to "a simple task with a task-level environment variable"
+        "simple-task" to "a simple task with the command specified on the task in the configuration file",
+        "simple-task-using-image" to "a simple task that uses an existing image",
+        "simple-task-dockerfile-command" to "a simple task with the command specified in the Dockerfile",
+        "simple-task-container-command" to "a simple task with the command specified on the container in the configuration file",
+        "simple-task-with-environment" to "a simple task with a task-level environment variable",
+        "container-with-health-check-overrides" to "a task with a dependency container that has a batect-specific health check configuration"
     ).forEach { testName, description ->
         given(description) {
             val runner = ApplicationRunner(testName)

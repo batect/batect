@@ -29,6 +29,7 @@ import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import batect.config.Configuration
+import batect.config.HealthCheckConfig
 import batect.config.ImageSource
 import batect.config.PortMapping
 import batect.config.PullImage
@@ -391,6 +392,10 @@ object ConfigurationLoaderSpec : Spek({
                     |    ports:
                     |      - "1234:5678"
                     |      - "9012:3456"
+                    |    health_check:
+                    |      interval: 2s
+                    |      retries: 10
+                    |      start_period: 1s
                     """.trimMargin()
 
             val config = loadConfiguration(configString)
@@ -411,6 +416,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.environment, equalTo(mapOf("OPTS" to "-Dthing", "BOOL_VALUE" to "1")))
                 assertThat(container.workingDirectory, equalTo("/here"))
                 assertThat(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
+                assertThat(container.healthCheckConfig, equalTo(HealthCheckConfig("2s", 10, "1s")))
                 assertThat(container.volumeMounts, equalTo(setOf(
                         VolumeMount("/resolved/../", "/here", null),
                         VolumeMount("/resolved//somewhere", "/else", "ro")

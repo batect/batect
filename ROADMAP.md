@@ -12,8 +12,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * better error message when a dependency is given twice (at the moment it's `Duplicate value 'dependency-name''`)
 
 ### Features
-* overridable health check parameters for containers (so that you can have the health check poll very frequently when waiting for something to
-  come up for tests, but less frequently if that container is used in production)
 * flag (eg. `--quiet`) to only show output from task
 * automatically enable `--no-colours` or `--simple-output` if console doesn't support it (use terminfo database rather than current detection system)
 * show more detailed image pull progress (eg. `build-env: Pulling some-image:1.2.3: 25%`) - requires using Docker API to get this level of detail

@@ -31,7 +31,7 @@ import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.ui.EventLogger
 
-class SimpleEventLogger(val console: Console, val errorConsole: Console) : EventLogger(console, errorConsole) {
+class SimpleEventLogger(val console: Console, val errorConsole: Console) : EventLogger() {
     private val commands = mutableMapOf<Container, String?>()
     private var haveStartedCleanUp = false
     private val lock = Object()
@@ -107,6 +107,23 @@ class SimpleEventLogger(val console: Console, val errorConsole: Console) : Event
         errorConsole.withColor(ConsoleColor.Red) {
             println()
             println(message)
+        }
+    }
+
+    override fun onTaskFailed(taskName: String) {
+        errorConsole.withColor(ConsoleColor.Red) {
+            println()
+            print("The task ")
+            printBold(taskName)
+            println(" failed. See above for details.")
+        }
+    }
+
+    override fun onTaskStarting(taskName: String) {
+        console.withColor(ConsoleColor.White) {
+            print("Running ")
+            printBold(taskName)
+            println("...")
         }
     }
 }

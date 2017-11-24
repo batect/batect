@@ -33,7 +33,7 @@ class FancyEventLogger(
     val errorConsole: Console,
     val startupProgressDisplay: StartupProgressDisplay,
     val cleanupProgressDisplay: CleanupProgressDisplay
-) : EventLogger(console, errorConsole) {
+) : EventLogger() {
     private val lock = Object()
     private var keepUpdatingStartupProgress = true
     private var haveStartedCleanup = false
@@ -104,6 +104,23 @@ class FancyEventLogger(
             if (haveStartedCleanup || event is RunningContainerExitedEvent) {
                 displayCleanupStatus()
             }
+        }
+    }
+
+    override fun onTaskFailed(taskName: String) {
+        errorConsole.withColor(ConsoleColor.Red) {
+            println()
+            print("The task ")
+            printBold(taskName)
+            println(" failed. See above for details.")
+        }
+    }
+
+    override fun onTaskStarting(taskName: String) {
+        console.withColor(ConsoleColor.White) {
+            print("Running ")
+            printBold(taskName)
+            println("...")
         }
     }
 }

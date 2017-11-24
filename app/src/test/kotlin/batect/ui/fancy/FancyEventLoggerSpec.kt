@@ -340,5 +340,30 @@ object FancyEventLoggerSpec : Spek({
                 }
             }
         }
+
+        on("when the task starts") {
+            logger.onTaskStarting("some-task")
+
+            it("prints a message to the output") {
+                inOrder(whiteConsole) {
+                    verify(whiteConsole).print("Running ")
+                    verify(whiteConsole).printBold("some-task")
+                    verify(whiteConsole).println("...")
+                }
+            }
+        }
+
+        on("when the task fails") {
+            logger.onTaskFailed("some-task")
+
+            it("prints a message to the output") {
+                inOrder(redErrorConsole) {
+                    verify(redErrorConsole).println()
+                    verify(redErrorConsole).print("The task ")
+                    verify(redErrorConsole).printBold("some-task")
+                    verify(redErrorConsole).println(" failed. See above for details.")
+                }
+            }
+        }
     }
 })

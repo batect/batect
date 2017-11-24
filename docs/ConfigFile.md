@@ -131,6 +131,12 @@ Each container definition is made up of:
 * `dependencies` List of other containers that should be started and healthy before starting this container. If a dependency's image does not contain a
   [health check](https://docs.docker.com/engine/reference/builder/#healthcheck), then as soon as it has started, it is considered to be healthy.
 
+* `health_check` Overrides for health check configuration specified in image or Dockerfile:
+    * `retries` The number of times to perform the health check before considering the container unhealthy.
+    * `interval` The interval between runs of the health check.
+    * `start_period` The time to wait before failing health checks count against the retry count. The health check is still run during this period,
+      and if the check succeeds, the container is immediately considered healthy.
+
 ### Task definitions
 
 Each task definition is made up of:

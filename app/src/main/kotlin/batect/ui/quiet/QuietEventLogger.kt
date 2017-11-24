@@ -23,7 +23,7 @@ import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.ui.EventLogger
 
-class QuietEventLogger(private val errorConsole: Console) : EventLogger() {
+class QuietEventLogger(val errorConsole: Console) : EventLogger() {
     override fun onStartingTaskStep(step: TaskStep) {
         if (step is DisplayTaskFailureStep) {
             errorConsole.withColor(ConsoleColor.Red) {

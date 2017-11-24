@@ -62,6 +62,10 @@ object BatectCommandLineParserSpec : Spek({
                     assertThat(bindings.instance<Boolean>(CommonOptions.ForceSimpleOutputMode), equalTo(false))
                 }
 
+                it("does not enable the quiet output mode") {
+                    assertThat(bindings.instance<Boolean>(CommonOptions.ForceQuietOutputMode), equalTo(false))
+                }
+
                 it("does not disable colored output") {
                     assertThat(bindings.instance<Boolean>(CommonOptions.DisableColorOutput), equalTo(false))
                 }
@@ -150,6 +154,21 @@ object BatectCommandLineParserSpec : Spek({
 
                 it("disables color output") {
                     assertThat(bindings.instance<Boolean>(CommonOptions.DisableColorOutput), equalTo(true))
+                }
+            }
+        }
+
+        given("quiet output mode has been enabled") {
+            val parser = BatectCommandLineParser(emptyKodein)
+            parser.parse(listOf("--quiet"), {})
+
+            on("creating the set of Kodein bindings") {
+                val bindings = Kodein {
+                    import(parser.createBindings())
+                }
+
+                it("enables the quiet output mode") {
+                    assertThat(bindings.instance<Boolean>(CommonOptions.ForceQuietOutputMode), equalTo(true))
                 }
             }
         }

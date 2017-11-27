@@ -27,9 +27,6 @@ Take a look at the [getting started guide](docs/GettingStarted.md), or consult t
 There are also [Java](https://github.com/charleskorn/batect-sample-java) and [Ruby](https://github.com/charleskorn/batect-sample-ruby)
 sample projects you can use for inspiration, and some [tips and tricks](docs/TipsAndTricks.md) you might want to look at.
 
-:warning: Please note that Java 9 is not supported at the moment. Please see [#1](https://github.com/charleskorn/batect/issues/1)
-for details.
-
 ## Why would I use this?
 
 Every application has a build environment - the tools and configuration needed to take the source code and produce an artifact

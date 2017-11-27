@@ -45,15 +45,15 @@ data class Version(val major: Int, val minor: Int, val patch: Int) : Comparable<
                 throw IllegalArgumentException("The value '$value' is not recognised as a valid version.")
             }
 
-            val major = match.getIntegerMatch("major", 0)
-            val minor = match.getIntegerMatch("minor", 0)
-            val patch = match.getIntegerMatch("patch", 0)
+            val major = match.getIntegerMatch(1)
+            val minor = match.getIntegerMatch(3)
+            val patch = match.getIntegerMatch(5)
 
             return Version(major, minor, patch)
         }
 
-        private fun MatchResult.getIntegerMatch(name: String, default: Int): Int {
-            val group = this.groups[name]
+        private fun MatchResult.getIntegerMatch(index: Int, default: Int = 0): Int {
+            val group = this.groups[index]
 
             if (group == null) {
                 return default

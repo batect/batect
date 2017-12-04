@@ -25,14 +25,20 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import java.nio.file.Files
+import java.util.Properties
 
 object PathResolverSpec : Spek({
     describe("a path resolver") {
         val fileSystem = Jimfs.newFileSystem(Configuration.unix())
+        val homeDir = fileSystem.getPath("/home/username")
         val relativeTo = fileSystem.getPath("/thing/place")
-        val resolver = PathResolver(relativeTo)
+        val systemProperties = Properties()
+        systemProperties.setProperty("user.home", homeDir.toString())
+
+        val resolver = PathResolver(relativeTo, systemProperties)
 
         beforeGroup {
+            Files.createDirectories(homeDir)
             Files.createDirectories(relativeTo)
         }
 
@@ -54,7 +60,10 @@ object PathResolverSpec : Spek({
 
         given("a reference to a subdirectory") {
             val path = "stuff"
-            Files.createDirectories(relativeTo.resolve(path))
+
+            beforeGroup {
+                Files.createDirectories(relativeTo.resolve(path))
+            }
 
             it("resolves to the subdirectory") {
                 assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("/thing/place/stuff", PathType.Directory) as PathResolutionResult))
@@ -71,7 +80,10 @@ object PathResolverSpec : Spek({
 
         given("a reference to a directory in the parent directory") {
             val path = "../something"
-            Files.createDirectories(fileSystem.getPath("/thing/something"))
+
+            beforeGroup {
+                Files.createDirectories(fileSystem.getPath("/thing/something"))
+            }
 
             it("resolves to the parent directory") {
                 assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("/thing/something", PathType.Directory) as PathResolutionResult))
@@ -80,7 +92,10 @@ object PathResolverSpec : Spek({
 
         given("a reference an absolute path") {
             val path = "/other"
-            Files.createDirectories(fileSystem.getPath(path))
+
+            beforeGroup {
+                Files.createDirectories(fileSystem.getPath(path))
+            }
 
             it("resolves to the absolute path") {
                 assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("/other", PathType.Directory) as PathResolutionResult))
@@ -97,10 +112,33 @@ object PathResolverSpec : Spek({
 
         given("a reference to a file") {
             val path = "thefile.txt"
-            Files.createFile(relativeTo.resolve(path))
+
+            beforeGroup {
+                Files.createFile(relativeTo.resolve(path))
+            }
 
             it("resolves to the file") {
                 assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("/thing/place/thefile.txt", PathType.File) as PathResolutionResult))
+            }
+        }
+
+        given("a reference to the home directory") {
+            val path = "~"
+
+            it("resolves to the user's home directory") {
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("/home/username", PathType.Directory) as PathResolutionResult))
+            }
+        }
+
+        given("a reference to a path within the home directory") {
+            val path = "~/somefile.txt"
+
+            beforeGroup {
+                Files.createFile(homeDir.resolve("somefile.txt"))
+            }
+
+            it("resolves to the full path to the file") {
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("/home/username/somefile.txt", PathType.File) as PathResolutionResult))
             }
         }
 

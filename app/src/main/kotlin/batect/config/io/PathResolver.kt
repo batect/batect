@@ -19,18 +19,37 @@ package batect.config.io
 import java.nio.file.Files
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
+import java.util.Properties
 
 class PathResolverFactory {
     fun createResolver(relativeTo: Path): PathResolver = PathResolver(relativeTo)
 }
 
-data class PathResolver(val relativeTo: Path) {
+data class PathResolver(private val relativeTo: Path, private val systemProperties: Properties = System.getProperties()) {
+    private val homeDir = getPath(systemProperties.getProperty("user.home"))
+
     fun resolve(path: String): PathResolutionResult {
         try {
-            val resolvedPath = relativeTo.resolve(path).normalize()
+            val originalPath = resolveHomeDir(getPath(path))
+
+            println(originalPath)
+
+            val resolvedPath = relativeTo.resolve(originalPath).normalize()
             return PathResolutionResult.Resolved(resolvedPath.toString(), pathType(resolvedPath))
         } catch (e: InvalidPathException) {
             return PathResolutionResult.InvalidPath
+        }
+    }
+
+    private fun getPath(path: String): Path = relativeTo.fileSystem.getPath(path)
+
+    private fun resolveHomeDir(path: Path): Path {
+        val homeSymbol = getPath("~")
+
+        if (path.startsWith(homeSymbol)) {
+            return homeDir.resolve(homeSymbol.relativize(path))
+        } else {
+            return path
         }
     }
 

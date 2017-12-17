@@ -1,0 +1,24 @@
+*                text=auto
+
+*.MockMaker      text       eol=lf
+*.conf           text       eol=lf
+*.editorconfig   text       eol=lf
+*.gradle         text       eol=lf
+*.html           text       eol=lf
+*.java           text       eol=lf
+*.kt             text       eol=lf
+*.md             text       eol=lf
+*.properties     text       eol=lf
+*.py             text       eol=lf
+*.sh             text       eol=lf
+*.yml            text       eol=lf
+Dockerfile       text       eol=lf
+LICENSE          text       eol=lf
+gradlew          text       eol=lf
+
+*.bat            text       eol=crlf
+
+*.jar            binary
+
+*.gitignore      text=auto
+*.gitattributes  text=auto

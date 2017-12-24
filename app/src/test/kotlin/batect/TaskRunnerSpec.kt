@@ -26,6 +26,7 @@ import batect.logging.Logger
 import batect.model.BehaviourAfterFailure
 import batect.model.DependencyGraph
 import batect.model.DependencyGraphProvider
+import batect.model.RunOptions
 import batect.model.TaskStateMachine
 import batect.model.TaskStateMachineProvider
 import batect.testutils.InMemoryLogSink
@@ -59,6 +60,7 @@ object TaskRunnerSpec : Spek({
         val executionManager = mock<ParallelExecutionManager>()
         val levelOfParallelism = 64
         val behaviourAfterFailure = BehaviourAfterFailure.Cleanup
+        val runOptions = RunOptions(levelOfParallelism, behaviourAfterFailure)
 
         val stateMachineProvider = mock<TaskStateMachineProvider> {
             on { createStateMachine(graph, behaviourAfterFailure) } doReturn stateMachine
@@ -85,7 +87,7 @@ object TaskRunnerSpec : Spek({
             whenever(graphProvider.createGraph(config, task)).thenReturn(graph)
             whenever(executionManager.run()).doReturn(100)
 
-            val exitCode = taskRunner.run(config, task, levelOfParallelism, behaviourAfterFailure)
+            val exitCode = taskRunner.run(config, task, runOptions)
 
             it("logs that the task is starting") {
                 verify(eventLogger).onTaskStarting("some-task")

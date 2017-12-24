@@ -13,28 +13,24 @@
 
 \* at the moment, a JVM is also required, but this requirement will be removed before v1.0
 
-## batect in action
-
 [![asciicast](https://asciinema.org/a/vBV5iQz4jqyhKPEfkiJyM4kEt.png)](https://asciinema.org/a/vBV5iQz4jqyhKPEfkiJyM4kEt)
 
-Want to try this for yourself? Take a look at the [sample project](https://github.com/charleskorn/batect-sample-java).
+## Documentation
 
-## How do I use this?
-
-Take a look at the [getting started guide](docs/GettingStarted.md), or consult the
-[configuration file reference](docs/ConfigFile.md).
+* [Getting started guide](docs/GettingStarted.md)
+* [Configuration file reference](docs/ConfigFile.md)
+* [Tips and tricks](docs/TipsAndTricks.md)
 
 There are also [Java](https://github.com/charleskorn/batect-sample-java) and [Ruby](https://github.com/charleskorn/batect-sample-ruby)
-sample projects you can use for inspiration, and some [tips and tricks](docs/TipsAndTricks.md) you might want to look at.
+sample projects you can use as a basis for your application.
 
-## Why would I use this?
+## Motivation - why would I use this?
 
 Every application has a build environment - the tools and configuration needed to take the source code and produce an artifact
 ready for use. However, setting this up can be time consuming and frustrating. Too often new team members' first experience on
 a project is a few days working out which tools they need to install, and another few days of then discovering the magic
-combination of tool versions that will happily coexist. The same applies equally to CI agents as well. And as the application
-evolves and changes over time, maintaining and updating this environment across all developers' machines and CI agents can be
-incredibly painful.
+combination of tool versions that will happily coexist. And as the application evolves and changes over time, maintaining and
+updating this environment across all developers' machines and CI agents can be incredibly painful.
 
 Similarly, most applications have external dependencies - for example, other services, databases, caches, credential storage
 systems... the list is endless. Because of this, we would like to run integration, component or journey tests where the
@@ -53,16 +49,35 @@ batect helps solve these problems by:
 * ensuring that every single command invocation starts with a completely fresh environment based on your configuration file,
   making it impossible to get out-of-sync from the desired state
 * making use of Docker to do all of this in an isolated and low-overhead way
-* using some smart dependency management logic and Docker's caching features to do all of this very, very quickly
+* using some smart dependency management logic, parallelism and Docker's caching features to do all of this very, very quickly
 * taking advantage of Docker's networking features to set up an isolated network for every command
 * enabling you to use existing Docker images as-is (or easily use custom Dockerfiles) to quickly get up and running
 
-## Should I start using this now?
+# Why is batect better than...
 
-**Short answer**: if you don't mind some rough edges
+## ...Vagrant?
 
-**Longer answer**: the most important features have been implemented, but there are still [some rough edges and missing pieces](ROADMAP.md).
-Furthermore, there is currently only basic documentation and I cannot promise any backwards compatibility between releases. (I'm not
-planning any massive breaking changes, but I don't want to guarantee this at such an early stage.)
+Vagrant's use of virtual machines means that it is very heavyweight, making it difficult to run multiple projects'
+environments at once. This is especially problematic on CI servers where we'd like to run multiple builds in parallel.
 
-If you do try it out, please [send me your feedback](mailto:me@charleskorn.com) and [report any issues you find](https://github.com/charleskorn/batect/issues/new).
+Furthermore, the long-lived nature of virtual machines means that it's very easy for a developer's machine to get out of sync
+with the desired configuration, and nothing automatically re-provisions the machine when the configuration is changed - a
+developer has to remember to re-run the provisioning step if the configuration changes.
+
+## ...Docker Compose?
+
+In the past, I've used Docker Compose to implement the same idea that is at the core of batect. However, using Docker Compose
+for this purpose has a number of drawbacks. In particular, Docker Compose is geared towards configuring an application and its
+dependencies and deploying this whole stack to something like Docker Swarm. Its CLI is designed with this purpose in mind, making
+it frustrating to use day-to-day as a development tool and necessitating the use of a higher-level script to automate its usage.
+It also does not elegantly support pulling together a set of containers in different configurations (eg. integration vs journey
+testing), does each operation serially (instead of parallelising operations where possible) and has
+[one long-standing bug](https://github.com/docker/compose/issues/4369) that makes waiting for containers to report as healthy
+difficult.
+
+## Feedback
+
+Please [open an issue on GitHub](https://github.com/charleskorn/batect/issues/new) if you run into a problem, or you can also
+[email me your feedback](mailto:me@charleskorn.com).
+
+You can see what new features and improvements are planned in the [roadmap](ROADMAP.md).

@@ -114,6 +114,9 @@ Each container definition is made up of:
 
   The `TERM` environment variable, if set on the host, is always automatically passed through to the container.
 
+  Proxy-related environment variables, if set on the host, are passed through to the container at build and run time, but are not used for image pulls.
+  See [this page](Proxies.md) for more information on using Docker with proxies and how batect handles proxies.
+
 * `working_directory` Working directory to start the container in. If not provided, the default working directory for the image will be used.
 
 * `volumes` List of volume mounts (in standard Docker `local:container` or `local:container:mode` format) to create for the container). Relative local

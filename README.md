@@ -19,6 +19,7 @@
 
 * [Getting started guide](docs/GettingStarted.md)
 * [Configuration file reference](docs/ConfigFile.md)
+* [Dealing with proxies](docs/Proxies.md)
 * [Tips and tricks](docs/TipsAndTricks.md)
 
 There are also [Java](https://github.com/charleskorn/batect-sample-java) and [Ruby](https://github.com/charleskorn/batect-sample-ruby)

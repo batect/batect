@@ -17,6 +17,8 @@
 package batect
 
 import batect.logging.Logger
+import batect.model.BehaviourAfterFailure
+import batect.model.RunOptions
 import batect.model.TaskStateMachine
 import batect.model.events.TaskEvent
 import batect.model.events.TaskEventSink
@@ -50,9 +52,10 @@ object ParallelExecutionManagerSpec : Spek({
         val eventLogger = mock<EventLogger>()
         val taskStepRunner = mock<TaskStepRunner>()
         val stateMachine = mock<TaskStateMachine>()
+        val runOptions = RunOptions(2, BehaviourAfterFailure.Cleanup, true)
         val logger = Logger("some.source", InMemoryLogSink())
         val executionManager by createForEachTest {
-            ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, "some-task", 2, logger)
+            ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, "some-task", runOptions, logger)
         }
 
         beforeEachTest {
@@ -78,7 +81,7 @@ object ParallelExecutionManagerSpec : Spek({
             val eventToPost = mock<TaskEvent>()
 
             whenever(stateMachine.popNextStep()).doReturn(step, null)
-            whenever(taskStepRunner.run(eq(step), any())).then { invocation ->
+            whenever(taskStepRunner.run(eq(step), any(), eq(runOptions))).then { invocation ->
                 val eventSink = invocation.arguments[1] as TaskEventSink
                 eventSink.postEvent(eventToPost)
 
@@ -92,13 +95,13 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("runs the step") {
-                verify(taskStepRunner).run(eq(step), any())
+                verify(taskStepRunner).run(eq(step), any(), eq(runOptions))
             }
 
             it("logs the step to the event logger and then runs it") {
                 inOrder(eventLogger, taskStepRunner) {
                     verify(eventLogger).onStartingTaskStep(step)
-                    verify(taskStepRunner).run(eq(step), any())
+                    verify(taskStepRunner).run(eq(step), any(), eq(runOptions))
                 }
             }
 
@@ -129,13 +132,13 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("runs the step") {
-                verify(taskStepRunner).run(eq(step), any())
+                verify(taskStepRunner).run(eq(step), any(), eq(runOptions))
             }
 
             it("logs the step to the event logger and then runs it") {
                 inOrder(eventLogger, taskStepRunner) {
                     verify(eventLogger).onStartingTaskStep(step)
-                    verify(taskStepRunner).run(eq(step), any())
+                    verify(taskStepRunner).run(eq(step), any(), eq(runOptions))
                 }
             }
 
@@ -156,13 +159,13 @@ object ParallelExecutionManagerSpec : Spek({
             waitForStep1.acquire()
             waitForStep2.acquire()
 
-            whenever(taskStepRunner.run(eq(step1), any())).doAnswer {
+            whenever(taskStepRunner.run(eq(step1), any(), eq(runOptions))).doAnswer {
                 waitForStep1.release()
                 step1SawStep2 = waitForStep2.tryAcquire(100, TimeUnit.MILLISECONDS)
                 null
             }
 
-            whenever(taskStepRunner.run(eq(step2), any())).doAnswer {
+            whenever(taskStepRunner.run(eq(step2), any(), eq(runOptions))).doAnswer {
                 waitForStep2.release()
                 step2SawStep1 = waitForStep1.tryAcquire(100, TimeUnit.MILLISECONDS)
                 null
@@ -175,7 +178,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("runs the first step") {
-                verify(taskStepRunner).run(eq(step1), any())
+                verify(taskStepRunner).run(eq(step1), any(), eq(runOptions))
             }
 
             it("logs the second step to the event logger") {
@@ -183,7 +186,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("runs the second step") {
-                verify(taskStepRunner).run(eq(step2), any())
+                verify(taskStepRunner).run(eq(step2), any(), eq(runOptions))
             }
 
             it("runs step 1 in parallel with step 2") {
@@ -202,7 +205,7 @@ object ParallelExecutionManagerSpec : Spek({
             val waitForStep2 = Semaphore(1)
             waitForStep2.acquire()
 
-            whenever(taskStepRunner.run(eq(step1), any())).doAnswer { invocation ->
+            whenever(taskStepRunner.run(eq(step1), any(), eq(runOptions))).doAnswer { invocation ->
                 val eventSink = invocation.arguments[1] as TaskEventSink
                 eventSink.postEvent(step2TriggerEvent)
 
@@ -215,7 +218,7 @@ object ParallelExecutionManagerSpec : Spek({
                 null
             }
 
-            whenever(taskStepRunner.run(eq(step2), any())).doAnswer {
+            whenever(taskStepRunner.run(eq(step2), any(), eq(runOptions))).doAnswer {
                 waitForStep2.release()
                 null
             }
@@ -227,7 +230,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("runs the first step") {
-                verify(taskStepRunner).run(eq(step1), any())
+                verify(taskStepRunner).run(eq(step1), any(), eq(runOptions))
             }
 
             it("logs the second step to the event logger") {
@@ -235,7 +238,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("runs the second step") {
-                verify(taskStepRunner).run(eq(step2), any())
+                verify(taskStepRunner).run(eq(step2), any(), eq(runOptions))
             }
 
             it("runs the first step in parallel with the second step") {
@@ -252,7 +255,7 @@ object ParallelExecutionManagerSpec : Spek({
             val counter = Semaphore(2)
             val noMoreThanTwoTasksRunningAtTimeOfInvocation = ConcurrentHashMap<TaskStep, Boolean>()
 
-            whenever(taskStepRunner.run(any(), any())).doAnswer { invocation ->
+            whenever(taskStepRunner.run(any(), any(), eq(runOptions))).doAnswer { invocation ->
                 val step = invocation.arguments[0] as TaskStep
                 val acquired = counter.tryAcquire()
 
@@ -273,7 +276,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("runs the first step") {
-                verify(taskStepRunner).run(eq(step1), any())
+                verify(taskStepRunner).run(eq(step1), any(), eq(runOptions))
             }
 
             it("logs the second step to the event logger") {
@@ -281,7 +284,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("runs the second step") {
-                verify(taskStepRunner).run(eq(step2), any())
+                verify(taskStepRunner).run(eq(step2), any(), eq(runOptions))
             }
 
             it("logs the third step to the event logger") {
@@ -289,7 +292,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("runs the third step") {
-                verify(taskStepRunner).run(eq(step3), any())
+                verify(taskStepRunner).run(eq(step3), any(), eq(runOptions))
             }
         }
     }

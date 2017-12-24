@@ -98,7 +98,7 @@ object RunTaskCommandSpec : Spek({
                 }
 
                 it("returns a command instance ready for use") {
-                    val runOptions = RunOptions(LevelOfParallelismDefaultValueProvider.value, BehaviourAfterFailure.Cleanup)
+                    val runOptions = RunOptions(LevelOfParallelismDefaultValueProvider.value, BehaviourAfterFailure.Cleanup, true)
 
                     assertThat((result as CommandLineParsingResult.Succeeded).command, equalTo<Command>(
                         RunTaskCommand("thefile.yml", "the-task", runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)))
@@ -113,7 +113,7 @@ object RunTaskCommandSpec : Spek({
                 }
 
                 it("returns a command instance ready for use with the desired level of parallelism") {
-                    val runOptions = RunOptions(123, BehaviourAfterFailure.Cleanup)
+                    val runOptions = RunOptions(123, BehaviourAfterFailure.Cleanup, true)
 
                     assertThat((result as CommandLineParsingResult.Succeeded).command, equalTo<Command>(
                         RunTaskCommand("thefile.yml", "the-task", runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)))
@@ -128,7 +128,22 @@ object RunTaskCommandSpec : Spek({
                 }
 
                 it("returns a command instance ready for use with the desired cleanup mode") {
-                    val runOptions = RunOptions(LevelOfParallelismDefaultValueProvider.value, BehaviourAfterFailure.DontCleanup)
+                    val runOptions = RunOptions(LevelOfParallelismDefaultValueProvider.value, BehaviourAfterFailure.DontCleanup, true)
+
+                    assertThat((result as CommandLineParsingResult.Succeeded).command, equalTo<Command>(
+                        RunTaskCommand("thefile.yml", "the-task", runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)))
+                }
+            }
+
+            on("when given one parameter and a flag to disable propagating proxy-related environment variables") {
+                val result = commandLine.parse(listOf("--no-proxy-vars", "the-task"), kodein)
+
+                it("indicates that parsing succeeded") {
+                    assertThat(result, isA<CommandLineParsingResult.Succeeded>())
+                }
+
+                it("returns a command instance ready for use with propagating proxy-related environment variables disabled") {
+                    val runOptions = RunOptions(LevelOfParallelismDefaultValueProvider.value, BehaviourAfterFailure.Cleanup, false)
 
                     assertThat((result as CommandLineParsingResult.Succeeded).command, equalTo<Command>(
                         RunTaskCommand("thefile.yml", "the-task", runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)))
@@ -142,7 +157,7 @@ object RunTaskCommandSpec : Spek({
             val mainTask = Task(taskName, TaskRunConfiguration("the-container"))
             val config = Configuration("the_project", TaskMap(), ContainerMap())
             val expectedTaskExitCode = 123
-            val runOptions = RunOptions(64, BehaviourAfterFailure.Cleanup)
+            val runOptions = RunOptions(64, BehaviourAfterFailure.Cleanup, true)
             val logSink = InMemoryLogSink()
             val logger = Logger("test.source", logSink)
 

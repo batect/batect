@@ -58,16 +58,14 @@ object TaskRunnerSpec : Spek({
 
         val stateMachine = mock<TaskStateMachine>()
         val executionManager = mock<ParallelExecutionManager>()
-        val levelOfParallelism = 64
-        val behaviourAfterFailure = BehaviourAfterFailure.Cleanup
-        val runOptions = RunOptions(levelOfParallelism, behaviourAfterFailure)
+        val runOptions = RunOptions(64, BehaviourAfterFailure.Cleanup, true)
 
         val stateMachineProvider = mock<TaskStateMachineProvider> {
-            on { createStateMachine(graph, behaviourAfterFailure) } doReturn stateMachine
+            on { createStateMachine(graph, runOptions.behaviourAfterFailure) } doReturn stateMachine
         }
 
         val executionManagerProvider = mock<ParallelExecutionManagerProvider> {
-            on { createParallelExecutionManager(eventLogger, stateMachine, "some-task", levelOfParallelism) } doReturn executionManager
+            on { createParallelExecutionManager(eventLogger, stateMachine, "some-task", runOptions) } doReturn executionManager
         }
 
         val logger = Logger("some.source", InMemoryLogSink())

@@ -16,4 +16,8 @@
 
 package batect.model
 
-data class RunOptions(val levelOfParallelism: Int, val behaviourAfterFailure: BehaviourAfterFailure)
+data class RunOptions(
+    val levelOfParallelism: Int,
+    val behaviourAfterFailure: BehaviourAfterFailure,
+    val propagateProxyEnvironmentVariables: Boolean
+)

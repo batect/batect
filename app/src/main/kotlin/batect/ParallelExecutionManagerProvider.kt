@@ -17,17 +17,18 @@
 package batect
 
 import batect.logging.LoggerFactory
+import batect.model.RunOptions
 import batect.model.TaskStateMachine
 import batect.model.steps.TaskStepRunner
 import batect.ui.EventLogger
 
 class ParallelExecutionManagerProvider(private val taskStepRunner: TaskStepRunner, private val loggerFactory: LoggerFactory) {
-    fun createParallelExecutionManager(eventLogger: EventLogger, stateMachine: TaskStateMachine, taskName: String, maximumConcurrentSteps: Int) =
+    fun createParallelExecutionManager(eventLogger: EventLogger, stateMachine: TaskStateMachine, taskName: String, runOptions: RunOptions) =
             ParallelExecutionManager(
                 eventLogger,
                 taskStepRunner,
                 stateMachine,
                 taskName,
-                maximumConcurrentSteps,
+                runOptions,
                 loggerFactory.createLoggerForClass(ParallelExecutionManager::class))
 }

@@ -48,14 +48,25 @@ class RunTaskCommandDefinition : CommandDefinition("run", "Run a task.") {
         "Maximum number of operations to run in parallel.",
         LevelOfParallelismDefaultValueProvider,
         ValueConverters::positiveInteger,
-        'p')
+        'p'
+    )
 
     private val disableCleanupAfterFailure: Boolean by flagOption(
         disableCleanupAfterFailureFlagName,
-        "If an error occurs before the task runs, leave created containers running so that the issue can be investigated.")
+        "If an error occurs before the task runs, leave created containers running so that the issue can be investigated."
+    )
+
+    private val dontPropagateProxyEnvironmentVariables: Boolean by flagOption(
+        "no-proxy-vars",
+        "Don't propagate proxy-related environment variables such as http_proxy and no_proxy to image builds or containers."
+    )
 
     override fun createCommand(kodein: Kodein): Command {
-        val runConfiguration = RunOptions(levelOfParallelism, if (disableCleanupAfterFailure) BehaviourAfterFailure.DontCleanup else BehaviourAfterFailure.Cleanup)
+        val runConfiguration = RunOptions(
+            levelOfParallelism,
+            if (disableCleanupAfterFailure) BehaviourAfterFailure.DontCleanup else BehaviourAfterFailure.Cleanup,
+            !dontPropagateProxyEnvironmentVariables
+        )
 
         return RunTaskCommand(
             kodein.instance(CommonOptions.ConfigurationFileName),

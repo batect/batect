@@ -17,6 +17,7 @@
 package batect
 
 import batect.logging.Logger
+import batect.model.RunOptions
 import batect.model.TaskStateMachine
 import batect.model.events.TaskEvent
 import batect.model.events.TaskEventSink
@@ -40,7 +41,7 @@ class ParallelExecutionManager(
     private val taskStepRunner: TaskStepRunner,
     private val stateMachine: TaskStateMachine,
     private val taskName: String,
-    private val maximumConcurrentSteps: Int,
+    private val runOptions: RunOptions,
     private val logger: Logger
 ) {
     private val eventSink = createEventSink()
@@ -69,7 +70,7 @@ class ParallelExecutionManager(
     }
 
     private fun createThreadPool() =
-        object : ThreadPoolExecutor(maximumConcurrentSteps, maximumConcurrentSteps, 0, TimeUnit.NANOSECONDS, LinkedBlockingQueue<Runnable>()) {
+        object : ThreadPoolExecutor(runOptions.levelOfParallelism, runOptions.levelOfParallelism, 0, TimeUnit.NANOSECONDS, LinkedBlockingQueue<Runnable>()) {
             override fun afterExecute(r: Runnable?, t: Throwable?) {
                 super.afterExecute(r, t)
 
@@ -98,7 +99,7 @@ class ParallelExecutionManager(
                 runningSteps--
             }
 
-            while (runningSteps < maximumConcurrentSteps) {
+            while (runningSteps < runOptions.levelOfParallelism) {
                 val step = stateMachine.popNextStep()
 
                 if (step == null) {
@@ -118,7 +119,7 @@ class ParallelExecutionManager(
     private fun runStep(step: TaskStep, threadPool: ThreadPoolExecutor, eventSink: TaskEventSink) {
         threadPool.execute {
             eventLogger.onStartingTaskStep(step)
-            taskStepRunner.run(step, eventSink)
+            taskStepRunner.run(step, eventSink, runOptions)
 
             if (step is FinishTaskStep) {
                 exitCode = step.exitCode

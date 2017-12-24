@@ -31,6 +31,7 @@ import batect.docker.ImagePullFailedException
 import batect.docker.NetworkCreationFailedException
 import batect.docker.NetworkDeletionFailedException
 import batect.logging.Logger
+import batect.model.RunOptions
 import batect.model.events.ContainerBecameHealthyEvent
 import batect.model.events.ContainerCreatedEvent
 import batect.model.events.ContainerCreationFailedEvent
@@ -56,7 +57,7 @@ import batect.model.events.TaskStartedEvent
 import batect.os.ProxyEnvironmentVariablesProvider
 
 class TaskStepRunner(private val dockerClient: DockerClient, private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider, private val logger: Logger) {
-    fun run(step: TaskStep, eventSink: TaskEventSink) {
+    fun run(step: TaskStep, eventSink: TaskEventSink, runOptions: RunOptions) {
         logger.info {
             message("Running step.")
             data("step", step.toString())
@@ -64,10 +65,10 @@ class TaskStepRunner(private val dockerClient: DockerClient, private val proxyEn
 
         when (step) {
             is BeginTaskStep -> eventSink.postEvent(TaskStartedEvent)
-            is BuildImageStep -> handleBuildImageStep(step, eventSink)
+            is BuildImageStep -> handleBuildImageStep(step, eventSink, runOptions)
             is PullImageStep -> handlePullImageStep(step, eventSink)
             is CreateTaskNetworkStep -> handleCreateTaskNetworkStep(eventSink)
-            is CreateContainerStep -> handleCreateContainerStep(step, eventSink)
+            is CreateContainerStep -> handleCreateContainerStep(step, eventSink, runOptions)
             is RunContainerStep -> handleRunContainerStep(step, eventSink)
             is StartContainerStep -> handleStartContainerStep(step, eventSink)
             is WaitForContainerToBecomeHealthyStep -> handleWaitForContainerToBecomeHealthyStep(step, eventSink)
@@ -85,13 +86,13 @@ class TaskStepRunner(private val dockerClient: DockerClient, private val proxyEn
         }
     }
 
-    private fun handleBuildImageStep(step: BuildImageStep, eventSink: TaskEventSink) {
+    private fun handleBuildImageStep(step: BuildImageStep, eventSink: TaskEventSink, runOptions: RunOptions) {
         try {
             val onStatusUpdate = { p: DockerImageBuildProgress ->
                 eventSink.postEvent(ImageBuildProgressEvent(step.container, p))
             }
 
-            val image = dockerClient.build(step.projectName, step.container, proxyEnvironmentVariablesProvider.proxyEnvironmentVariables, onStatusUpdate)
+            val image = dockerClient.build(step.projectName, step.container, proxyEnvironmentVariablesForOptions(runOptions), onStatusUpdate)
             eventSink.postEvent(ImageBuiltEvent(step.container, image))
         } catch (e: ImageBuildFailedException) {
             eventSink.postEvent(ImageBuildFailedEvent(step.container, e.message ?: ""))
@@ -116,9 +117,9 @@ class TaskStepRunner(private val dockerClient: DockerClient, private val proxyEn
         }
     }
 
-    private fun handleCreateContainerStep(step: CreateContainerStep, eventSink: TaskEventSink) {
+    private fun handleCreateContainerStep(step: CreateContainerStep, eventSink: TaskEventSink, runOptions: RunOptions) {
         try {
-            val additionalEnvironmentVariables = proxyEnvironmentVariablesProvider.proxyEnvironmentVariables + step.additionalEnvironmentVariables
+            val additionalEnvironmentVariables = proxyEnvironmentVariablesForOptions(runOptions) + step.additionalEnvironmentVariables
             val dockerContainer = dockerClient.create(step.container, step.command, additionalEnvironmentVariables, step.image, step.network)
             eventSink.postEvent(ContainerCreatedEvent(step.container, dockerContainer))
         } catch (e: ContainerCreationFailedException) {
@@ -211,5 +212,11 @@ class TaskStepRunner(private val dockerClient: DockerClient, private val proxyEn
 
     private fun ignore() {
         // Do nothing.
+    }
+
+    private fun proxyEnvironmentVariablesForOptions(runOptions: RunOptions): Map<String, String> = if (runOptions.propagateProxyEnvironmentVariables) {
+        proxyEnvironmentVariablesProvider.proxyEnvironmentVariables
+    } else {
+        emptyMap()
     }
 }

@@ -42,7 +42,7 @@ data class TaskRunner(
         eventLogger.onTaskStarting(task.name)
 
         val stateMachine = stateMachineProvider.createStateMachine(graph, runOptions.behaviourAfterFailure)
-        val executionManager = executionManagerProvider.createParallelExecutionManager(eventLogger, stateMachine, task.name, runOptions.levelOfParallelism)
+        val executionManager = executionManagerProvider.createParallelExecutionManager(eventLogger, stateMachine, task.name, runOptions)
 
         logger.info {
             message("Preparation complete, starting task.")

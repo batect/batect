@@ -35,6 +35,7 @@ import batect.model.TaskExecutionOrderResolver
 import batect.model.TaskStateMachineProvider
 import batect.model.steps.TaskStepRunner
 import batect.os.ProcessRunner
+import batect.os.ProxyEnvironmentVariablesProvider
 import batect.os.SystemInfo
 import batect.ui.Console
 import batect.ui.ConsoleInfo
@@ -124,7 +125,7 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
     bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
     bind<CommandLineParser>() with singleton { BatectCommandLineParser(this) }
-    bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), logger) }
+    bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), instance(), logger) }
     bind<DependencyGraphProvider>() with singletonWithLogger { logger -> DependencyGraphProvider(logger) }
     bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance()) }
     bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance(), instance()) }
@@ -142,4 +143,5 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<UpdateInfoDownloader>() with singleton { UpdateInfoDownloader(instance()) }
     bind<UpdateInfoUpdater>() with singletonWithLogger { logger -> UpdateInfoUpdater(instance(), instance(), logger) }
     bind<OkHttpClient>() with singleton { OkHttpClient.Builder().build() }
+    bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider() }
 }

@@ -74,6 +74,10 @@ object DockerClientSpec : Spek({
             given("a container configuration") {
                 val buildDirectory = "/path/to/build/dir"
                 val container = Container("the-container", BuildImage(buildDirectory))
+                val buildArgs = mapOf(
+                    "some_name" to "some_value",
+                    "some_other_name" to "some_other_value"
+                )
 
                 on("a successful build") {
                     val output = """
@@ -104,10 +108,16 @@ object DockerClientSpec : Spek({
                         statusUpdates.add(p)
                     }
 
-                    val result = client.build("the-project", container, onStatusUpdate)
+                    val result = client.build("the-project", container, buildArgs, onStatusUpdate)
 
                     it("builds the image") {
-                        verify(processRunner).runAndStreamOutput(eq(listOf("docker", "build", "--tag", imageLabel, buildDirectory)), any())
+                        verify(processRunner).runAndStreamOutput(eq(listOf(
+                            "docker", "build",
+                            "--build-arg", "some_name=some_value",
+                            "--build-arg", "some_other_name=some_other_value",
+                            "--tag", imageLabel,
+                            buildDirectory
+                        )), any())
                     }
 
                     it("returns the ID of the created image") {
@@ -129,7 +139,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndStreamOutput(any(), any())).thenReturn(ProcessOutput(1, "Some output from Docker"))
 
                     it("raises an appropriate exception") {
-                        assertThat({ client.build("the-project", container, onStatusUpdate) }, throws<ImageBuildFailedException>(withMessage("Image build failed. Output from Docker was: Some output from Docker")))
+                        assertThat({ client.build("the-project", container, emptyMap(), onStatusUpdate) }, throws<ImageBuildFailedException>(withMessage("Image build failed. Output from Docker was: Some output from Docker")))
                     }
                 }
             }

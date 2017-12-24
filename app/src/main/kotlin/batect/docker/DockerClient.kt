@@ -39,14 +39,17 @@ class DockerClient(
 ) {
     private val buildImageIdLineRegex = """^Successfully built (.*)$""".toRegex(RegexOption.MULTILINE)
 
-    fun build(projectName: String, container: Container, onStatusUpdate: (DockerImageBuildProgress) -> Unit): DockerImage {
+    fun build(projectName: String, container: Container, buildArgs: Map<String, String>, onStatusUpdate: (DockerImageBuildProgress) -> Unit): DockerImage {
         logger.info {
             message("Building image.")
             data("container", container)
+            data("buildArgs", buildArgs)
         }
 
         val label = imageLabellingStrategy.labelImage(projectName, container)
-        val command = listOf("docker", "build", "--tag", label, (container.imageSource as BuildImage).buildDirectory)
+        val command = listOf("docker", "build") +
+            buildArgs.flatMap { (name, value) -> listOf("--build-arg", "$name=$value") } +
+            listOf("--tag", label, (container.imageSource as BuildImage).buildDirectory)
 
         val result = processRunner.runAndStreamOutput(command) { line ->
             logger.debug {

@@ -25,13 +25,9 @@ If there's something you're really keen to see, pull requests are always welcome
   * some applications won't like the fact that the user doesn't actually exist, so a configuration option on the container level to turn this off is necessary
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 * handle HTTP proxy environment variables (`http_proxy`, `https_proxy`, `no_proxy` etc.) intelligently
-  * [build time](https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg)
-  * runtime with environment variables
-  * option to turn this off at a container level
-  * option to turn this off at a project level
   * option to turn this off with a command line flag
-  * container- or command-level environment variables with the same name override this at runtime
-  * document how to deal with proxies (eg. the fact that you have to configure the Docker daemon, you can't just rely on batect)
+  * document how to deal with proxies (eg. the fact that you have to configure the Docker daemon, you can't just rely on batect, and the fact that Docker will not rebuild
+    an image if one of the proxy variables changes - see https://docs.docker.com/engine/reference/builder/#predefined-args)
 
 ### Other
 * logging (for batect internals)

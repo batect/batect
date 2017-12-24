@@ -1,0 +1,11 @@
+project_name: proxy-variables-test
+
+containers:
+  build-env:
+    build_directory: build-env
+
+tasks:
+  the-task:
+    run:
+      container: build-env
+      command: /task.sh

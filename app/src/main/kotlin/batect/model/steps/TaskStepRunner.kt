@@ -53,8 +53,9 @@ import batect.model.events.TaskNetworkCreationFailedEvent
 import batect.model.events.TaskNetworkDeletedEvent
 import batect.model.events.TaskNetworkDeletionFailedEvent
 import batect.model.events.TaskStartedEvent
+import batect.os.ProxyEnvironmentVariablesProvider
 
-class TaskStepRunner(private val dockerClient: DockerClient, private val logger: Logger) {
+class TaskStepRunner(private val dockerClient: DockerClient, private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider, private val logger: Logger) {
     fun run(step: TaskStep, eventSink: TaskEventSink) {
         logger.info {
             message("Running step.")
@@ -90,7 +91,7 @@ class TaskStepRunner(private val dockerClient: DockerClient, private val logger:
                 eventSink.postEvent(ImageBuildProgressEvent(step.container, p))
             }
 
-            val image = dockerClient.build(step.projectName, step.container, onStatusUpdate)
+            val image = dockerClient.build(step.projectName, step.container, proxyEnvironmentVariablesProvider.proxyEnvironmentVariables, onStatusUpdate)
             eventSink.postEvent(ImageBuiltEvent(step.container, image))
         } catch (e: ImageBuildFailedException) {
             eventSink.postEvent(ImageBuildFailedEvent(step.container, e.message ?: ""))
@@ -117,7 +118,8 @@ class TaskStepRunner(private val dockerClient: DockerClient, private val logger:
 
     private fun handleCreateContainerStep(step: CreateContainerStep, eventSink: TaskEventSink) {
         try {
-            val dockerContainer = dockerClient.create(step.container, step.command, step.additionalEnvironmentVariables, step.image, step.network)
+            val additionalEnvironmentVariables = proxyEnvironmentVariablesProvider.proxyEnvironmentVariables + step.additionalEnvironmentVariables
+            val dockerContainer = dockerClient.create(step.container, step.command, additionalEnvironmentVariables, step.image, step.network)
             eventSink.postEvent(ContainerCreatedEvent(step.container, dockerContainer))
         } catch (e: ContainerCreationFailedException) {
             eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))

@@ -60,6 +60,7 @@ import batect.model.events.TaskNetworkCreationFailedEvent
 import batect.model.events.TaskNetworkDeletedEvent
 import batect.model.events.TaskNetworkDeletionFailedEvent
 import batect.model.events.TaskStartedEvent
+import batect.os.ProxyEnvironmentVariablesProvider
 import batect.testutils.InMemoryLogSink
 import batect.testutils.hasMessage
 import batect.testutils.imageSourceDoesNotMatter
@@ -86,9 +87,15 @@ object TaskStepRunnerSpec : Spek({
     describe("a task step runner") {
         val eventSink = mock<TaskEventSink>()
         val dockerClient = mock<DockerClient>()
+
+        val proxyVariables = mapOf("SOME_PROXY_CONFIG" to "some_proxy")
+        val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider> {
+            on { proxyEnvironmentVariables } doReturn proxyVariables
+        }
+
         val logSink = InMemoryLogSink()
         val logger = Logger("some.source", logSink)
-        val runner = TaskStepRunner(dockerClient, logger)
+        val runner = TaskStepRunner(dockerClient, proxyEnvironmentVariablesProvider, logger)
 
         beforeEachTest {
             reset(eventSink)
@@ -136,10 +143,10 @@ object TaskStepRunnerSpec : Spek({
                     val update1 = DockerImageBuildProgress(1, 2, "First step")
                     val update2 = DockerImageBuildProgress(2, 2, "Second step")
 
-                    whenever(dockerClient.build(eq("some-project-name"), eq(container), any()))
+                    whenever(dockerClient.build(eq("some-project-name"), eq(container), eq(proxyVariables), any()))
                         .then { invocation ->
                             @Suppress("UNCHECKED_CAST")
-                            val onStatusUpdate: (DockerImageBuildProgress) -> Unit = invocation.arguments[2] as (DockerImageBuildProgress) -> Unit
+                            val onStatusUpdate: (DockerImageBuildProgress) -> Unit = invocation.arguments[3] as (DockerImageBuildProgress) -> Unit
 
                             onStatusUpdate(update1)
                             onStatusUpdate(update2)
@@ -160,7 +167,7 @@ object TaskStepRunnerSpec : Spek({
                 }
 
                 on("when building the image fails") {
-                    whenever(dockerClient.build(eq("some-project-name"), eq(container), any())).thenThrow(ImageBuildFailedException("Something went wrong."))
+                    whenever(dockerClient.build(eq("some-project-name"), eq(container), any(), any())).thenThrow(ImageBuildFailedException("Something went wrong."))
 
                     runner.run(step, eventSink)
 
@@ -228,19 +235,47 @@ object TaskStepRunnerSpec : Spek({
                 val network = DockerNetwork("some-network")
                 val step = CreateContainerStep(container, command, additionalEnvironmentVariables, image, network)
 
-                on("when creating the container succeeds") {
-                    val dockerContainer = DockerContainer("some-id")
-                    whenever(dockerClient.create(container, command, additionalEnvironmentVariables, image, network)).doReturn(dockerContainer)
+                describe("when creating the container succeeds") {
+                    on("when the container configuration does not have any proxy-related environment variables") {
+                        val dockerContainer = DockerContainer("some-id")
+                        whenever(dockerClient.create(eq(container), eq(command), any(), eq(image), eq(network))).doReturn(dockerContainer)
 
-                    runner.run(step, eventSink)
+                        runner.run(step, eventSink)
 
-                    it("emits a 'container created' event") {
-                        verify(eventSink).postEvent(ContainerCreatedEvent(container, dockerContainer))
+                        it("creates the container with the environment variables from the container configuration and the host's proxy configuration") {
+                            verify(dockerClient).create(any(), any(), eq(mapOf(
+                                "SOME_VAR" to "some value",
+                                "SOME_PROXY_CONFIG" to "some_proxy"
+                            )), any(), any())
+                        }
+
+                        it("emits a 'container created' event") {
+                            verify(eventSink).postEvent(ContainerCreatedEvent(container, dockerContainer))
+                        }
+                    }
+
+                    on("when the container configuration overrides a proxy-related environment variable defined on the host") {
+                        val environmentVariablesWithOverride = mapOf("SOME_PROXY_CONFIG" to "some_overridden_proxy")
+                        val stepWithOverride = CreateContainerStep(container, command, environmentVariablesWithOverride, image, network)
+                        val dockerContainer = DockerContainer("some-id")
+                        whenever(dockerClient.create(eq(container), eq(command), any(), eq(image), eq(network))).doReturn(dockerContainer)
+
+                        runner.run(stepWithOverride, eventSink)
+
+                        it("creates the container with the environment variables from the container configuration and the host's proxy configuration") {
+                            verify(dockerClient).create(any(), any(), eq(mapOf(
+                                "SOME_PROXY_CONFIG" to "some_overridden_proxy"
+                            )), any(), any())
+                        }
+
+                        it("emits a 'container created' event") {
+                            verify(eventSink).postEvent(ContainerCreatedEvent(container, dockerContainer))
+                        }
                     }
                 }
 
                 on("when creating the container fails") {
-                    whenever(dockerClient.create(container, command, additionalEnvironmentVariables, image, network)).doThrow(ContainerCreationFailedException("Something went wrong."))
+                    whenever(dockerClient.create(container, command, additionalEnvironmentVariables + proxyVariables, image, network)).doThrow(ContainerCreationFailedException("Something went wrong."))
 
                     runner.run(step, eventSink)
 

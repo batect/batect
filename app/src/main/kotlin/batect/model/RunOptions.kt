@@ -16,8 +16,20 @@
 
 package batect.model
 
+import batect.cli.CommandLineOptions
+
 data class RunOptions(
     val levelOfParallelism: Int,
     val behaviourAfterFailure: BehaviourAfterFailure,
     val propagateProxyEnvironmentVariables: Boolean
-)
+) {
+    constructor(options: CommandLineOptions) : this(
+        options.levelOfParallelism,
+        if (options.disableCleanupAfterFailure) {
+            BehaviourAfterFailure.DontCleanup
+        } else {
+            BehaviourAfterFailure.Cleanup
+        },
+        !options.dontPropagateProxyEnvironmentVariables
+    )
+}

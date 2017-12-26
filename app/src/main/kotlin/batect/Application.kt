@@ -34,7 +34,6 @@ import batect.logging.LogMessageWriter
 import batect.logging.LoggerFactory
 import batect.logging.StandardAdditionalDataSource
 import batect.logging.singletonWithLogger
-import batect.model.BehaviourAfterFailure
 import batect.model.DependencyGraphProvider
 import batect.model.RunOptions
 import batect.model.TaskExecutionOrderResolver
@@ -160,16 +159,7 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<UpdateInfoUpdater>() with singletonWithLogger { logger -> UpdateInfoUpdater(instance(), instance(), logger) }
     bind<OkHttpClient>() with singleton { OkHttpClient.Builder().build() }
     bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider() }
-
-    bind<RunOptions>() with singleton {
-        val cleanupBehaviour = if (commandLineOptions().disableCleanupAfterFailure) {
-            BehaviourAfterFailure.DontCleanup
-        } else {
-            BehaviourAfterFailure.Cleanup
-        }
-
-        RunOptions(commandLineOptions().levelOfParallelism, cleanupBehaviour, !commandLineOptions().dontPropagateProxyEnvironmentVariables)
-    }
+    bind<RunOptions>() with singleton { RunOptions(commandLineOptions()) }
 
     bind<RunTaskCommand>() with singletonWithLogger { logger ->
         RunTaskCommand(

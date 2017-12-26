@@ -50,9 +50,7 @@ data class TaskNetworkCreatedEvent(val network: DockerNetwork) : TaskEvent() {
     }
 
     private fun createContainer(container: Container, image: DockerImage, context: TaskEventContext) {
-        val command = context.commandForContainer(container)
-        val additionalEnvironmentVariables = context.additionalEnvironmentVariablesForContainer(container)
-        context.queueStep(CreateContainerStep(container, command, additionalEnvironmentVariables, image, network))
+        context.queueStep(CreateContainerStep(container, image, network, context))
     }
 
     override fun toString() = "${this::class.simpleName}(network ID: '${network.id}')"

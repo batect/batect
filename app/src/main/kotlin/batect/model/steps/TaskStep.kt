@@ -20,6 +20,7 @@ import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.model.events.TaskEventContext
 
 sealed class TaskStep {
     override fun toString() = this.javaClass.canonicalName
@@ -39,6 +40,14 @@ object CreateTaskNetworkStep : TaskStep()
 
 data class CreateContainerStep(val container: Container, val command: String?, val additionalEnvironmentVariables: Map<String, String>, val image: DockerImage, val network: DockerNetwork) : TaskStep() {
     override fun toString() = super.toString() + "(container: '${container.name}', command: '${(command ?: "")}', additional environment variables: $additionalEnvironmentVariables, image '${image.id}', network: '${network.id}')"
+
+    constructor(container: Container, image: DockerImage, network: DockerNetwork, context: TaskEventContext) : this(
+        container,
+        context.commandForContainer(container),
+        context.additionalEnvironmentVariablesForContainer(container),
+        image,
+        network
+    )
 }
 
 data class RunContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {

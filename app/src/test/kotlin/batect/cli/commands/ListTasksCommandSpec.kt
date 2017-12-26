@@ -16,23 +16,16 @@
 
 package batect.cli.commands
 
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.bind
-import com.github.salomonbrys.kodein.instance
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.isA
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
-import batect.PrintStreamType
-import batect.cli.CommandLineParsingResult
-import batect.cli.CommonOptions
 import batect.config.Configuration
 import batect.config.ContainerMap
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.config.io.ConfigurationLoader
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -41,30 +34,6 @@ import java.io.PrintStream
 
 object ListTasksCommandSpec : Spek({
     describe("a 'list tasks' command") {
-        describe("command line interface") {
-            val commandLine = ListTasksCommandDefinition()
-            val configLoader = mock<ConfigurationLoader>()
-            val outputStream = mock<PrintStream>()
-
-            val kodein = Kodein {
-                bind<ConfigurationLoader>() with instance(configLoader)
-                bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
-                bind<String>(CommonOptions.ConfigurationFileName) with instance("thefile.yml")
-            }
-
-            describe("when given no parameters") {
-                val result = commandLine.parse(emptyList(), kodein)
-
-                it("indicates that parsing succeeded") {
-                    assertThat(result, isA<CommandLineParsingResult.Succeeded>())
-                }
-
-                it("returns a command instance ready for use") {
-                    assertThat((result as CommandLineParsingResult.Succeeded).command, equalTo<Command>(ListTasksCommand("thefile.yml", configLoader, outputStream)))
-                }
-            }
-        }
-
         describe("when invoked") {
             val configFile = "config.yml"
             val taskRunConfig = TaskRunConfiguration("some-container", "dont-care")

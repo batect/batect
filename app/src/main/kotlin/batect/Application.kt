@@ -16,10 +16,14 @@
 
 package batect
 
-import batect.cli.BatectCommandLineParser
-import batect.cli.CommandLineParser
-import batect.cli.CommandLineParsingResult
-import batect.cli.CommonOptions
+import batect.cli.CommandLineOptions
+import batect.cli.CommandLineOptionsParser
+import batect.cli.CommandLineOptionsParsingResult
+import batect.cli.commands.CommandFactory
+import batect.cli.commands.HelpCommand
+import batect.cli.commands.ListTasksCommand
+import batect.cli.commands.RunTaskCommand
+import batect.cli.commands.VersionInfoCommand
 import batect.config.io.ConfigurationLoader
 import batect.config.io.PathResolverFactory
 import batect.docker.DockerClient
@@ -30,7 +34,9 @@ import batect.logging.LogMessageWriter
 import batect.logging.LoggerFactory
 import batect.logging.StandardAdditionalDataSource
 import batect.logging.singletonWithLogger
+import batect.model.BehaviourAfterFailure
 import batect.model.DependencyGraphProvider
+import batect.model.RunOptions
 import batect.model.TaskExecutionOrderResolver
 import batect.model.TaskStateMachineProvider
 import batect.model.steps.TaskStepRunner
@@ -73,20 +79,27 @@ class Application(override val kodein: Kodein) : KodeinAware {
         this(createDefaultKodeinConfiguration(outputStream, errorStream))
 
     private val errorStream: PrintStream = instance(PrintStreamType.Error)
-    private val commandLineParser: CommandLineParser = instance()
+    private val commandLineOptionsParser: CommandLineOptionsParser = instance()
+    private val commandFactory: CommandFactory = instance()
 
     fun run(args: Iterable<String>): Int {
         try {
-            val result = commandLineParser.parse(args) { kodein ->
-                kodein.instance<ApplicationInfoLogger>().logApplicationInfo(args)
-            }
+            val result = commandLineOptionsParser.parse(args)
 
-            return when (result) {
-                is CommandLineParsingResult.Failed -> {
-                    errorStream.println(result.error)
-                    -1
+            when (result) {
+                is CommandLineOptionsParsingResult.Failed -> {
+                    errorStream.println(result.message)
+                    return -1
                 }
-                is CommandLineParsingResult.Succeeded -> result.command.run()
+                is CommandLineOptionsParsingResult.Succeeded -> {
+                    val extendedKodein = result.options.extend(kodein)
+
+                    val applicationInfoLogger = extendedKodein.instance<ApplicationInfoLogger>()
+                    applicationInfoLogger.logApplicationInfo(args)
+
+                    val command = commandFactory.createCommand(result.options, extendedKodein)
+                    return command.run()
+                }
             }
         } catch (e: Throwable) {
             errorStream.println(e)
@@ -117,16 +130,17 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
             instance(PrintStreamType.Error),
             instance(),
             instance(),
-            instance(CommonOptions.ForceSimpleOutputMode),
-            instance(CommonOptions.ForceQuietOutputMode)
+            commandLineOptions().forceSimpleOutputMode,
+            commandLineOptions().forceQuietOutputMode
         )
     }
 
-    bind<Console>(PrintStreamType.Output) with singleton { Console(instance(PrintStreamType.Output), enableComplexOutput = !instance<Boolean>(CommonOptions.DisableColorOutput)) }
-    bind<Console>(PrintStreamType.Error) with singleton { Console(instance(PrintStreamType.Error), enableComplexOutput = !instance<Boolean>(CommonOptions.DisableColorOutput)) }
+    bind<CommandLineOptionsParser>() with singleton { CommandLineOptionsParser() }
+    bind<CommandFactory>() with singleton { CommandFactory() }
+    bind<Console>(PrintStreamType.Output) with singleton { Console(instance(PrintStreamType.Output), enableComplexOutput = !commandLineOptions().disableColorOutput) }
+    bind<Console>(PrintStreamType.Error) with singleton { Console(instance(PrintStreamType.Error), enableComplexOutput = !commandLineOptions().disableColorOutput) }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
     bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
-    bind<CommandLineParser>() with singleton { BatectCommandLineParser(this) }
     bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), instance(), logger) }
     bind<DependencyGraphProvider>() with singletonWithLogger { logger -> DependencyGraphProvider(logger) }
     bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance()) }
@@ -140,10 +154,41 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<LogMessageWriter>() with singleton { LogMessageWriter() }
     bind<StandardAdditionalDataSource>() with singleton { StandardAdditionalDataSource() }
     bind<ApplicationInfoLogger>() with singletonWithLogger { logger -> ApplicationInfoLogger(logger, instance(), instance(), instance()) }
-    bind<UpdateNotifier>() with singletonWithLogger { logger -> UpdateNotifier(instance(CommonOptions.DisableUpdateNotification), instance(), instance(), instance(), instance(PrintStreamType.Output), logger) }
+    bind<UpdateNotifier>() with singletonWithLogger { logger -> UpdateNotifier(commandLineOptions().disableUpdateNotification, instance(), instance(), instance(), instance(PrintStreamType.Output), logger) }
     bind<UpdateInfoStorage>() with singleton { UpdateInfoStorage(instance(), instance()) }
     bind<UpdateInfoDownloader>() with singleton { UpdateInfoDownloader(instance()) }
     bind<UpdateInfoUpdater>() with singletonWithLogger { logger -> UpdateInfoUpdater(instance(), instance(), logger) }
     bind<OkHttpClient>() with singleton { OkHttpClient.Builder().build() }
     bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider() }
+
+    bind<RunOptions>() with singleton {
+        val cleanupBehaviour = if (commandLineOptions().disableCleanupAfterFailure) {
+            BehaviourAfterFailure.DontCleanup
+        } else {
+            BehaviourAfterFailure.Cleanup
+        }
+
+        RunOptions(commandLineOptions().levelOfParallelism, cleanupBehaviour, !commandLineOptions().dontPropagateProxyEnvironmentVariables)
+    }
+
+    bind<RunTaskCommand>() with singletonWithLogger { logger ->
+        RunTaskCommand(
+            commandLineOptions().configurationFileName,
+            commandLineOptions().taskName!!,
+            instance(),
+            instance(),
+            instance(),
+            instance(),
+            instance(),
+            instance(PrintStreamType.Output),
+            instance(PrintStreamType.Error),
+            logger
+        )
+    }
+
+    bind<ListTasksCommand>() with singleton { ListTasksCommand(commandLineOptions().configurationFileName, instance(), instance(PrintStreamType.Output)) }
+    bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(PrintStreamType.Output), instance(), instance(), instance()) }
+    bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(PrintStreamType.Output)) }
 }
+
+private fun Kodein.commandLineOptions(): CommandLineOptions = this.instance()

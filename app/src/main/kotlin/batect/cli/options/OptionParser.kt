@@ -42,7 +42,11 @@ class OptionParser {
         val option = optionNames[argName]
 
         if (option == null) {
-            return OptionParsingResult.NoOption
+            if (argName.startsWith("-")) {
+                return OptionParsingResult.InvalidOption("Invalid option '$argName'. Run 'batect --help' for a list of valid options.")
+            } else {
+                return OptionParsingResult.NoOption
+            }
         }
 
         return option.parse(args.drop(currentIndex))
@@ -66,7 +70,6 @@ class OptionParser {
     }
 
     fun getOptions(): Set<OptionDefinition> = options
-
 }
 
 interface OptionParserContainer {

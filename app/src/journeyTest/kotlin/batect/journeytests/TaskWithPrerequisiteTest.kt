@@ -30,7 +30,7 @@ object TaskWithPrerequisiteTest : Spek({
         val runner = ApplicationRunner("task-with-prerequisite")
 
         on("running that task") {
-            val result = runner.runApplication(listOf("run", "do-stuff"))
+            val result = runner.runApplication(listOf("do-stuff"))
 
             it("prints the output from the main task") {
                 assertThat(result.output, containsSubstring("This is some output from the main task\r\n"))

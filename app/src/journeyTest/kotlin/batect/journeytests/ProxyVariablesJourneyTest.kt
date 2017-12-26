@@ -35,7 +35,7 @@ object ProxyVariablesJourneyTest : Spek({
             val ftpProxy = "some-ftp-proxy"
             val noProxy = "bypass-proxy"
 
-            val result = runner.runApplication(listOf("run", "the-task"), mapOf(
+            val result = runner.runApplication(listOf("the-task"), mapOf(
                 "http_proxy" to httpProxy,
                 "https_proxy" to httpsProxy,
                 "ftp_proxy" to ftpProxy,

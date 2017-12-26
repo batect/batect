@@ -16,23 +16,24 @@
 
 package batect
 
+import batect.cli.CommandLineOptions
+import batect.cli.CommandLineOptionsParser
+import batect.cli.CommandLineOptionsParsingResult
+import batect.cli.commands.Command
+import batect.cli.commands.CommandFactory
+import batect.logging.ApplicationInfoLogger
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.instance
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.doThrow
+import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.reset
 import com.nhaarman.mockito_kotlin.whenever
-import batect.cli.commands.Command
-import batect.cli.CommandLineParser
-import batect.cli.CommandLineParsingResult
-import batect.logging.ApplicationInfoLogger
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.argumentCaptor
-import com.nhaarman.mockito_kotlin.eq
-import com.nhaarman.mockito_kotlin.verify
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -44,11 +45,13 @@ import java.io.PrintStream
 object ApplicationSpec : Spek({
     describe("an application") {
         val errorStream = ByteArrayOutputStream()
-        val commandLineParser = mock<CommandLineParser>()
+        val commandLineOptionsParser = mock<CommandLineOptionsParser>()
+        val commandFactory = mock<CommandFactory>()
 
         val dependencies = Kodein {
             bind<PrintStream>(PrintStreamType.Error) with instance(PrintStream(errorStream))
-            bind<CommandLineParser>() with instance(commandLineParser)
+            bind<CommandLineOptionsParser>() with instance(commandLineOptionsParser)
+            bind<CommandFactory>() with instance(commandFactory)
         }
 
         val application = Application(dependencies)
@@ -56,89 +59,87 @@ object ApplicationSpec : Spek({
 
         beforeEachTest {
             errorStream.reset()
-
-            reset(commandLineParser)
+            reset(commandLineOptionsParser)
+            reset(commandFactory)
         }
 
-        given("the command line parser returns a command") {
-            on("running the application") {
-                val command = object : Command {
-                    override fun run(): Int = 123
+        given("parsing the command line arguments succeeds") {
+            val applicationInfoLogger = mock<ApplicationInfoLogger>()
+
+            val extendedDependencies = Kodein {
+                bind<ApplicationInfoLogger>() with instance(applicationInfoLogger)
+            }
+
+            val options = mock<CommandLineOptions> {
+                on { extend(dependencies) } doReturn extendedDependencies
+            }
+
+            beforeEachTest {
+                whenever(commandLineOptionsParser.parse(args)).thenReturn(CommandLineOptionsParsingResult.Succeeded(options))
+            }
+
+            given("the command executes normally") {
+                val command = mock<Command> {
+                    on { run() } doReturn 123
                 }
 
-                whenever(commandLineParser.parse(eq(args), any())).thenReturn(CommandLineParsingResult.Succeeded(command))
-
-                val infoLogger = mock<ApplicationInfoLogger>()
-                val initialisationFunctionKodein = Kodein {
-                    bind<ApplicationInfoLogger>() with instance(infoLogger)
+                beforeEachTest {
+                    whenever(commandFactory.createCommand(options, extendedDependencies)).thenReturn(command)
                 }
 
-                val exitCode = application.run(args)
+                on("running the application") {
+                    val exitCode = application.run(args)
 
-                it("does not print anything to the error stream") {
-                    assertThat(errorStream.toString(), equalTo(""))
+                    it("does not print anything to the error stream") {
+                        assertThat(errorStream.toString(), equalTo(""))
+                    }
+
+                    it("returns the exit code from the command") {
+                        assertThat(exitCode, equalTo(123))
+                    }
+
+                    it("logs information about the application before running the command") {
+                        inOrder(command, applicationInfoLogger) {
+                            verify(applicationInfoLogger).logApplicationInfo(args)
+                            verify(command).run()
+                        }
+                    }
+                }
+            }
+
+            given("the command throws an exception") {
+                val command = mock<Command> {
+                    on { run() } doThrow RuntimeException("Everything is broken")
                 }
 
-                it("returns the exit code from the command") {
-                    assertThat(exitCode, equalTo(123))
+                beforeEachTest {
+                    whenever(commandFactory.createCommand(options, extendedDependencies)).thenReturn(command)
                 }
 
-                it("passes an initialisation function to the command line parser that starts logging") {
-                    argumentCaptor<(Kodein) -> Unit>().apply {
-                        verify(commandLineParser).parse(any(), capture())
+                on("running the application") {
+                    val exitCode = application.run(args)
 
-                        firstValue(initialisationFunctionKodein)
+                    it("prints the exception message to the error stream") {
+                        assertThat(errorStream.toString(), containsSubstring("Everything is broken"))
+                    }
 
-                        verify(infoLogger).logApplicationInfo(args)
+                    it("returns a non-zero exit code") {
+                        assertThat(exitCode, !equalTo(0))
                     }
                 }
             }
         }
 
-        given("the command line parser returns an error") {
-            on("running the application") {
-                whenever(commandLineParser.parse(eq(args), any())).thenReturn(CommandLineParsingResult.Failed("Something went wrong while parsing arguments"))
-
-                val exitCode = application.run(args)
-
-                it("prints the error message to the error stream") {
-                    assertThat(errorStream.toString(), equalTo("Something went wrong while parsing arguments\n"))
-                }
-
-                it("returns a non-zero exit code") {
-                    assertThat(exitCode, !equalTo(0))
-                }
+        given("parsing the command line arguments fails") {
+            beforeEachTest {
+                whenever(commandLineOptionsParser.parse(args)).thenReturn(CommandLineOptionsParsingResult.Failed("Everything is broken"))
             }
-        }
 
-        given("the command line parser throws an exception") {
             on("running the application") {
-                whenever(commandLineParser.parse(eq(args), any())).thenThrow(RuntimeException("Everything is broken"))
-
                 val exitCode = application.run(args)
 
                 it("prints the exception message to the error stream") {
-                    assertThat(errorStream.toString(), containsSubstring("Everything is broken"))
-                }
-
-                it("returns a non-zero exit code") {
-                    assertThat(exitCode, !equalTo(0))
-                }
-            }
-        }
-
-        given("the command throws an exception") {
-            on("running the application") {
-                val command = object : Command {
-                    override fun run(): Int = throw RuntimeException("Everything is broken")
-                }
-
-                whenever(commandLineParser.parse(eq(args), any())).thenReturn(CommandLineParsingResult.Succeeded(command))
-
-                val exitCode = application.run(args)
-
-                it("prints the exception message to the error stream") {
-                    assertThat(errorStream.toString(), containsSubstring("Everything is broken"))
+                    assertThat(errorStream.toString(), equalTo("Everything is broken\n"))
                 }
 
                 it("returns a non-zero exit code") {

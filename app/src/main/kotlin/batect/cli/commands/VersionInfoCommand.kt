@@ -16,27 +16,18 @@
 
 package batect.cli.commands
 
-import batect.PrintStreamType
 import batect.VersionInfo
-import batect.cli.CommandLineParser
+import batect.cli.CommandLineOptionsParser
 import batect.docker.DockerClient
 import batect.os.SystemInfo
 import batect.updates.UpdateNotifier
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.instance
 import java.io.PrintStream
 
-class VersionInfoCommandDefinition : CommandDefinition("version", "Display version information for batect.", setOf("--version")) {
-    override fun createCommand(kodein: Kodein): Command =
-        VersionInfoCommand(kodein.instance(), kodein.instance(PrintStreamType.Output), kodein.instance(), kodein.instance(), kodein.instance(), kodein.instance())
-}
-
-data class VersionInfoCommand(
+class VersionInfoCommand(
     private val versionInfo: VersionInfo,
     private val outputStream: PrintStream,
     private val systemInfo: SystemInfo,
     private val dockerClient: DockerClient,
-    private val commandLineParser: CommandLineParser,
     private val updateNotifier: UpdateNotifier
 ) : Command {
     override fun run(): Int {
@@ -49,7 +40,7 @@ data class VersionInfoCommand(
         outputStream.println("OS version:        ${systemInfo.osVersion}")
         outputStream.println("Docker version:    ${dockerClient.getDockerVersionInfo()}")
         outputStream.println()
-        outputStream.println(commandLineParser.helpBlurb)
+        outputStream.println(CommandLineOptionsParser.helpBlurb)
         outputStream.println()
 
         return 0

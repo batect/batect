@@ -14,12 +14,19 @@
    limitations under the License.
 */
 
-package batect.cli
+package batect.cli.commands
 
-enum class CommonOptions {
-    ConfigurationFileName,
-    ForceSimpleOutputMode,
-    ForceQuietOutputMode,
-    DisableColorOutput,
-    DisableUpdateNotification
+import batect.cli.CommandLineOptions
+import com.github.salomonbrys.kodein.Kodein
+import com.github.salomonbrys.kodein.instance
+
+class CommandFactory {
+    fun createCommand(options: CommandLineOptions, kodein: Kodein): Command {
+        when {
+            options.showHelp -> return kodein.instance<HelpCommand>()
+            options.showVersionInfo -> return kodein.instance<VersionInfoCommand>()
+            options.listTasks -> return kodein.instance<ListTasksCommand>()
+            else -> return kodein.instance<RunTaskCommand>()
+        }
+    }
 }

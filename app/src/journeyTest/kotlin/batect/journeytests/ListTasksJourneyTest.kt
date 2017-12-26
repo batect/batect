@@ -29,7 +29,7 @@ object ListTasksJourneyTest : Spek({
         val runner = ApplicationRunner("many-tasks")
 
         on("listing available tasks") {
-            val result = runner.runApplication(listOf("tasks"))
+            val result = runner.runApplication(listOf("--list-tasks"))
 
             it("prints a list of all available tasks") {
                 assertThat(result.output, containsSubstring("""

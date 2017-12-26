@@ -16,20 +16,13 @@
 
 package batect.cli.commands
 
-import batect.PrintStreamType
 import batect.VersionInfo
-import batect.cli.CommandLineParser
-import batect.cli.CommandLineParsingResult
 import batect.docker.DockerClient
 import batect.os.SystemInfo
 import batect.updates.UpdateNotifier
 import batect.utils.Version
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.bind
-import com.github.salomonbrys.kodein.instance
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.isA
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
@@ -42,39 +35,6 @@ import java.io.PrintStream
 
 object VersionInfoCommandSpec : Spek({
     describe("a 'version info' command") {
-        describe("command line interface") {
-            val commandLine = VersionInfoCommandDefinition()
-
-            val versionInfo = mock<VersionInfo>()
-            val outputStream = mock<PrintStream>()
-            val systemInfo = mock<SystemInfo>()
-            val dockerClient = mock<DockerClient>()
-            val commandLineParser = mock<CommandLineParser>()
-            val updateNotifier = mock<UpdateNotifier>()
-
-            val kodein = Kodein {
-                bind<VersionInfo>() with instance(versionInfo)
-                bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
-                bind<SystemInfo>() with instance(systemInfo)
-                bind<DockerClient>() with instance(dockerClient)
-                bind<CommandLineParser>() with instance(commandLineParser)
-                bind<UpdateNotifier>() with instance(updateNotifier)
-            }
-
-            describe("when given no parameters") {
-                val result = commandLine.parse(emptyList(), kodein)
-
-                it("indicates that parsing succeeded") {
-                    assertThat(result, isA<CommandLineParsingResult.Succeeded>())
-                }
-
-                it("returns a command instance ready for use") {
-                    assertThat((result as CommandLineParsingResult.Succeeded).command,
-                        equalTo<Command>(VersionInfoCommand(versionInfo, outputStream, systemInfo, dockerClient, commandLineParser, updateNotifier)))
-                }
-            }
-        }
-
         on("when invoked") {
             val versionInfo = mock<VersionInfo> {
                 on { version } doReturn Version(1, 2, 3)
@@ -88,17 +48,13 @@ object VersionInfoCommandSpec : Spek({
                 on { osVersion } doReturn "THE OS VERSION"
             }
 
-            val commandLineParser = mock<CommandLineParser> {
-                on { helpBlurb } doReturn "For more information on batect, go to www.help.com."
-            }
-
             val dockerClient = mock<DockerClient> {
                 on { getDockerVersionInfo() } doReturn "DOCKER VERSION INFO"
             }
 
             val outputStream = ByteArrayOutputStream()
             val updateNotifier = mock<UpdateNotifier>()
-            val command = VersionInfoCommand(versionInfo, PrintStream(outputStream), systemInfo, dockerClient, commandLineParser, updateNotifier)
+            val command = VersionInfoCommand(versionInfo, PrintStream(outputStream), systemInfo, dockerClient, updateNotifier)
             val exitCode = command.run()
             val output = outputStream.toString()
 
@@ -111,7 +67,7 @@ object VersionInfoCommandSpec : Spek({
                     |OS version:        THE OS VERSION
                     |Docker version:    DOCKER VERSION INFO
                     |
-                    |For more information on batect, go to www.help.com.
+                    |For documentation and further information on batect, visit https://github.com/charleskorn/batect.
                     |
                     |""".trimMargin()))
             }

@@ -16,73 +16,19 @@
 
 package batect.cli.commands
 
-import batect.PrintStreamType
 import batect.TaskRunner
-import batect.cli.CommonOptions
-import batect.cli.options.LevelOfParallelismDefaultValueProvider
-import batect.cli.options.ValueConverters
 import batect.config.Configuration
 import batect.config.Task
 import batect.config.io.ConfigurationLoader
 import batect.logging.Logger
-import batect.logging.logger
-import batect.model.BehaviourAfterFailure
 import batect.model.RunOptions
 import batect.model.TaskExecutionOrderResolutionException
 import batect.model.TaskExecutionOrderResolver
 import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.updates.UpdateNotifier
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.instance
 
-class RunTaskCommandDefinition : CommandDefinition("run", "Run a task.") {
-    companion object {
-        val disableCleanupAfterFailureFlagName = "no-cleanup-after-failure"
-    }
-
-    private val taskName: String by RequiredPositionalParameter("TASK", "The name of the task to run.")
-
-    private val levelOfParallelism: Int by valueOption(
-        "level-of-parallelism",
-        "Maximum number of operations to run in parallel.",
-        LevelOfParallelismDefaultValueProvider,
-        ValueConverters::positiveInteger,
-        'p'
-    )
-
-    private val disableCleanupAfterFailure: Boolean by flagOption(
-        disableCleanupAfterFailureFlagName,
-        "If an error occurs before the task runs, leave created containers running so that the issue can be investigated."
-    )
-
-    private val dontPropagateProxyEnvironmentVariables: Boolean by flagOption(
-        "no-proxy-vars",
-        "Don't propagate proxy-related environment variables such as http_proxy and no_proxy to image builds or containers."
-    )
-
-    override fun createCommand(kodein: Kodein): Command {
-        val runConfiguration = RunOptions(
-            levelOfParallelism,
-            if (disableCleanupAfterFailure) BehaviourAfterFailure.DontCleanup else BehaviourAfterFailure.Cleanup,
-            !dontPropagateProxyEnvironmentVariables
-        )
-
-        return RunTaskCommand(
-            kodein.instance(CommonOptions.ConfigurationFileName),
-            taskName,
-            runConfiguration,
-            kodein.instance(),
-            kodein.instance(),
-            kodein.instance(),
-            kodein.instance(),
-            kodein.instance(PrintStreamType.Output),
-            kodein.instance(PrintStreamType.Error),
-            kodein.logger<RunTaskCommand>())
-    }
-}
-
-data class RunTaskCommand(
+class RunTaskCommand(
     val configFile: String,
     val taskName: String,
     val runOptions: RunOptions,

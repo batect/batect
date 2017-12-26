@@ -16,67 +16,29 @@
 
 package batect.cli.commands
 
-import batect.PrintStreamType
-import batect.cli.CommandLineParser
+import batect.cli.CommandLineOptionsParser
 import batect.cli.options.OptionDefinition
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.instance
 import java.io.PrintStream
 
-class HelpCommandDefinition(val parser: CommandLineParser) : CommandDefinition("help", "Display information about available commands and options.", aliases = setOf("--help")) {
-    val showHelpForCommandName: String? by OptionalPositionalParameter("COMMAND", "Command to display help for. If no command specified, display overview of all available commands.")
-
-    override fun createCommand(kodein: Kodein): Command = HelpCommand(showHelpForCommandName, parser, kodein.instance(PrintStreamType.Error))
-}
-
-data class HelpCommand(val commandName: String?, val parser: CommandLineParser, val outputStream: PrintStream) : Command {
+class HelpCommand(val optionsParser: CommandLineOptionsParser, val outputStream: PrintStream) : Command {
     override fun run(): Int {
-        if (commandName == null) {
-            printRootHelp()
-        } else {
-            val command = parser.getCommandDefinitionByName(commandName)
+        outputStream.println("Usage: batect [options] task")
+        outputStream.println()
+        outputStream.println("Options:")
 
-            when (command) {
-                null -> outputStream.println("Invalid command '$commandName'. Run '${parser.applicationName} help' for a list of valid commands.")
-                else -> printCommandHelp(command)
-            }
-        }
+        val options = formatListOfOptions(optionsParser.optionParser.getOptions())
+        printInColumns(options)
+
+        outputStream.println()
+        outputStream.println(CommandLineOptionsParser.helpBlurb)
+        outputStream.println()
 
         return 1
     }
 
-    private fun printRootHelp() {
-        val commands = parser.getAllCommandDefinitions().sortedBy { it.commandName }.associate { it.commandName to it.description }
-        val options = formatListOfOptions(parser.getCommonOptions())
-
-        outputStream.print("Usage: ${parser.applicationName} ")
-
-        if (options.isNotEmpty()) {
-            outputStream.print("[COMMON OPTIONS] ")
-        }
-
-        outputStream.println("COMMAND [COMMAND OPTIONS]")
-        outputStream.println()
-
-        outputStream.println("Commands:")
-        printInColumns(commands)
-        outputStream.println()
-
-        if (options.isNotEmpty()) {
-            outputStream.println("Common options:")
-            printInColumns(options)
-            outputStream.println()
-        }
-
-        outputStream.println("For help on the options available for a command, run '${parser.applicationName} help <command>'.")
-        outputStream.println()
-        outputStream.println(parser.helpBlurb)
-        outputStream.println()
-    }
-
     private fun formatListOfOptions(options: Iterable<OptionDefinition>): Map<String, String> {
         return options.sortedBy { it.longName }
-                .associate { nameFor(it) to it.descriptionForHelp }
+            .associate { nameFor(it) to it.descriptionForHelp }
     }
 
     private fun nameFor(option: OptionDefinition): String {
@@ -85,79 +47,6 @@ data class HelpCommand(val commandName: String?, val parser: CommandLineParser, 
         return when {
             option.shortName == null -> "    $longNamePart"
             else -> "${option.shortOption}, $longNamePart"
-        }
-    }
-
-    private fun printCommandHelp(commandDefinition: CommandDefinition) {
-        printCommandHelpHeader(commandDefinition)
-
-        outputStream.println()
-        outputStream.println(commandDefinition.description)
-        outputStream.println()
-
-        printCommandOptionAndParameterInfo(commandDefinition)
-
-        if (parser.getCommonOptions().isNotEmpty()) {
-            outputStream.println("For help on the common options available for all commands, run '${parser.applicationName} help'.")
-            outputStream.println()
-        }
-
-        outputStream.println(parser.helpBlurb)
-        outputStream.println()
-    }
-
-    private fun printCommandHelpHeader(commandDefinition: CommandDefinition) {
-        outputStream.print("Usage: ${parser.applicationName} ")
-
-        if (parser.getCommonOptions().isNotEmpty()) {
-            outputStream.print("[COMMON OPTIONS] ")
-        }
-
-        outputStream.print(commandDefinition.commandName)
-
-        if (commandDefinition.optionParser.getOptions().isNotEmpty()) {
-            outputStream.print(" [OPTIONS]")
-        }
-
-        commandDefinition.getAllPositionalParameterDefinitions().forEach {
-            val formattedName = if (it.isOptional) "[${it.name}]" else it.name
-            outputStream.print(" $formattedName")
-        }
-
-        outputStream.println()
-    }
-
-    private fun descriptionForPositionalParameter(param: PositionalParameterDefinition): String {
-        if (param.isOptional) {
-            return "(optional) " + param.description
-        } else {
-            return param.description
-        }
-    }
-
-    private fun printCommandOptionAndParameterInfo(commandDefinition: CommandDefinition) {
-        val options = commandDefinition.optionParser.getOptions()
-        val positionalParameters = commandDefinition.getAllPositionalParameterDefinitions()
-
-        if (positionalParameters.isEmpty() && options.isEmpty()) {
-            outputStream.println("This command does not take any options.")
-            outputStream.println()
-            return
-        }
-
-        val formattedOptions = formatListOfOptions(options)
-        val formattedParameters = positionalParameters.associate { it.name to descriptionForPositionalParameter(it) }
-
-        if (options.isNotEmpty()) {
-            outputStream.println("Options:")
-            printInColumns(formattedOptions)
-            outputStream.println()
-        }
-
-        if (positionalParameters.isNotEmpty()) {
-            outputStream.println("Parameters:")
-            printInColumns(formattedParameters)
-            outputStream.println()
         }
     }
 

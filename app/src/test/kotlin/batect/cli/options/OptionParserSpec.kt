@@ -99,7 +99,7 @@ object OptionParserSpec : Spek({
                     val result = parser.parseOptions(listOf("--something-else"))
 
                     it("indicates that parsing succeeded and that no arguments were consumed") {
-                        assertThat(result, equalTo<OptionsParsingResult>(OptionsParsingResult.ReadOptions(0)))
+                        assertThat(result, equalTo<OptionsParsingResult>(OptionsParsingResult.InvalidOptions("Invalid option '--something-else'. Run 'batect --help' for a list of valid options.")))
                     }
 
                     it("does not ask the option to parse a value") {

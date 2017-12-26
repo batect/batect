@@ -30,7 +30,7 @@ object SimpleTaskWithEnvironmentFromHostTest : Spek({
         val runner = ApplicationRunner("simple-task-with-environment-from-host")
 
         on("running that task") {
-            val result = runner.runApplication(listOf("run", "the-task"), mapOf("MESSAGE" to "This is some output from the environment variable"))
+            val result = runner.runApplication(listOf("the-task"), mapOf("MESSAGE" to "This is some output from the environment variable"))
 
             it("prints the output from that task") {
                 assertThat(result.output, containsSubstring("This is some output from the environment variable\r\n"))

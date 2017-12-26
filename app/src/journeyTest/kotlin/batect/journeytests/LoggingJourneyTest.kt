@@ -33,7 +33,7 @@ object LoggingJourneyTest : Spek({
             val logPath = File.createTempFile("batect-log-journey-tests", ".log")
             logPath.deleteOnExit()
 
-            val result = runner.runApplication(listOf("--log-file=$logPath", "version"))
+            val result = runner.runApplication(listOf("--log-file=$logPath", "--version"))
 
             it("logs some information to the log file") {
                 assertThat(logPath.exists(), equalTo(true))

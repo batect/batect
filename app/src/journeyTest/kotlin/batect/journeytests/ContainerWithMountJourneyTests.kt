@@ -34,7 +34,7 @@ object ContainerWithMountJourneyTests : Spek({
             val runner = ApplicationRunner(testName)
 
             on("running that task") {
-                val result = runner.runApplication(listOf("run", "the-task"))
+                val result = runner.runApplication(listOf("the-task"))
 
                 it("prints the output from that task") {
                     assertThat(result.output, containsSubstring("This is some output from the script"))

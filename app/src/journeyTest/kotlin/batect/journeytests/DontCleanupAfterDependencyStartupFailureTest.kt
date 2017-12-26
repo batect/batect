@@ -59,7 +59,7 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
         }
 
         on("running that task with the '--no-cleanup-on-failure' option") {
-            val result = runner.runApplication(listOf("run", "--no-cleanup-after-failure", "the-task"))
+            val result = runner.runApplication(listOf("--no-cleanup-after-failure", "the-task"))
             val commandsRegex = """For container 'http-server': view its output by running '(?<logsCommand>docker logs (?<id>.*))', or run a command in the container with 'docker exec -it \2 <command>'\.""".toRegex()
             val cleanupRegex = """To clean up the containers and task network once you have finished investigating the issue, run '(?<command>docker rm --force ([a-z0-9]+\s)+&& docker network rm [a-z0-9]+)'\.""".toRegex()
             val cleanupCommand = cleanupRegex.find(result.output)?.groups?.get("command")?.value

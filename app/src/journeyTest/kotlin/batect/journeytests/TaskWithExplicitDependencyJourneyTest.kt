@@ -30,7 +30,7 @@ object TaskWithExplicitDependencyJourneyTest : Spek({
         val runner = ApplicationRunner("task-with-explicit-dependency")
 
         on("running that task") {
-            val result = runner.runApplication(listOf("run", "the-task"))
+            val result = runner.runApplication(listOf("the-task"))
 
             it("displays the output from that task") {
                 assertThat(result.output, containsSubstring("Status code for request: 200"))

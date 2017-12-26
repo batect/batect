@@ -16,7 +16,7 @@
 
 package batect.model.events
 
-import batect.cli.commands.RunTaskCommandDefinition
+import batect.cli.CommandLineOptionsParser
 import batect.logging.Logger
 import batect.model.BehaviourAfterFailure
 import batect.model.steps.BuildImageStep
@@ -81,7 +81,7 @@ abstract class PreTaskRunFailureEvent(private val displayCleanupFlagMessage: Boo
 
             val message = "$messageToDisplay\n" +
                 "\n" +
-                "As the task was run with --${RunTaskCommandDefinition.disableCleanupAfterFailureFlagName}, the created containers will not be cleaned up.\n" +
+                "As the task was run with --${CommandLineOptionsParser.disableCleanupAfterFailureFlagName}, the created containers will not be cleaned up.\n" +
                 "\n" +
                 logInstructions + "\n" +
                 "\n" +
@@ -89,7 +89,7 @@ abstract class PreTaskRunFailureEvent(private val displayCleanupFlagMessage: Boo
 
             context.queueStep(DisplayTaskFailureStep(message))
         } else if (displayCleanupFlagMessage) {
-            context.queueStep(DisplayTaskFailureStep(messageToDisplay + "\n\nYou can re-run the task with --${RunTaskCommandDefinition.disableCleanupAfterFailureFlagName} to leave the created containers running to diagnose the issue."))
+            context.queueStep(DisplayTaskFailureStep(messageToDisplay + "\n\nYou can re-run the task with --${CommandLineOptionsParser.disableCleanupAfterFailureFlagName} to leave the created containers running to diagnose the issue."))
         } else {
             context.queueStep(DisplayTaskFailureStep(messageToDisplay))
         }
@@ -108,7 +108,7 @@ abstract class PreTaskRunFailureEvent(private val displayCleanupFlagMessage: Boo
             }
         } else {
             logger.info {
-                message("Not cleaning up containers that have already been created because task was started with --${RunTaskCommandDefinition.disableCleanupAfterFailureFlagName}.")
+                message("Not cleaning up containers that have already been created because task was started with --${CommandLineOptionsParser.disableCleanupAfterFailureFlagName}.")
                 data("containers", containerCreationEvents.map { it.container.name })
                 data("event", this@PreTaskRunFailureEvent.toString())
             }

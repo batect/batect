@@ -30,7 +30,7 @@ object NoColorsJourneyTest : Spek({
         val runner = ApplicationRunner("simple-task")
 
         on("running a task") {
-            val result = runner.runApplication(listOf("--no-colors", "run", "the-task"))
+            val result = runner.runApplication(listOf("--no-color", "the-task"))
 
             it("prints the output from that task") {
                 assertThat(result.output, containsSubstring("This is some output from the task\r\n"))

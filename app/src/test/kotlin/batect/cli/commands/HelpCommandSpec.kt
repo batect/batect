@@ -16,11 +16,10 @@
 
 package batect.cli.commands
 
-import batect.cli.CommandLineParser
+import batect.cli.CommandLineOptionsParser
 import batect.cli.options.OptionDefinition
+import batect.cli.options.OptionParser
 import batect.cli.options.OptionParsingResult
-import batect.cli.testutils.NullCommand
-import com.github.salomonbrys.kodein.Kodein
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
@@ -34,14 +33,6 @@ import java.io.PrintStream
 
 object HelpCommandSpec : Spek({
     describe("a help command") {
-        val firstCommandDefinition = object : CommandDefinition("do-stuff", "Do the thing.") {
-            override fun createCommand(kodein: Kodein): Command = NullCommand()
-        }
-
-        val secondCommandDefinition = object : CommandDefinition("do-other-stuff", "Do the other thing.") {
-            override fun createCommand(kodein: Kodein): Command = NullCommand()
-        }
-
         fun createOption(longName: String, description: String, acceptsValue: Boolean, shortName: Char? = null): OptionDefinition =
             object : OptionDefinition(longName, description, acceptsValue, shortName) {
                 override fun parseValue(args: Iterable<String>): OptionParsingResult = throw NotImplementedError()
@@ -49,421 +40,43 @@ object HelpCommandSpec : Spek({
                     get() = description + " (extra help info)"
             }
 
-        given("no command name to show help for") {
-            given("and the root parser has no common options") {
-                val output = ByteArrayOutputStream()
-                val outputStream = PrintStream(output)
-                val parser = mock<CommandLineParser> {
-                    on { applicationName } doReturn "the-cool-app"
-                    on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
-                    on { getAllCommandDefinitions() } doReturn setOf(firstCommandDefinition, secondCommandDefinition)
-                    on { getCommonOptions() } doReturn emptySet()
-                }
+        given("and the root parser has some common options") {
+            val output = ByteArrayOutputStream()
+            val outputStream = PrintStream(output)
 
-                val command = HelpCommand(null, parser, outputStream)
-                val exitCode = command.run()
-
-                it("prints help information") {
-                    assertThat(output.toString(), equalTo("""
-                        |Usage: the-cool-app COMMAND [COMMAND OPTIONS]
-                        |
-                        |Commands:
-                        |  do-other-stuff    Do the other thing.
-                        |  do-stuff          Do the thing.
-                        |
-                        |For help on the options available for a command, run 'the-cool-app help <command>'.
-                        |
-                        |Visit www.thecoolapp.com for documentation and more help.
-                        |
-                        |""".trimMargin()))
-                }
-
-                it("returns a non-zero exit code") {
-                    assertThat(exitCode, !equalTo(0))
-                }
+            val options = mock<OptionParser> {
+                on { getOptions() } doReturn setOf(
+                    createOption("awesomeness-level", "Level of awesomeness to use.", true),
+                    createOption("booster-level", "Level of boosters to use.", true),
+                    createOption("file", "File name to use.", true, 'f'),
+                    createOption("enable-extra-stuff", "Something you can enable if you want.", false)
+                )
             }
 
-            given("and the root parser has some common options") {
-                val output = ByteArrayOutputStream()
-                val outputStream = PrintStream(output)
+            val parser = mock<CommandLineOptionsParser> {
+                on { optionParser } doReturn options
+            }
 
-                val parser = mock<CommandLineParser> {
-                    on { applicationName } doReturn "the-cool-app"
-                    on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
-                    on { getAllCommandDefinitions() } doReturn setOf(firstCommandDefinition, secondCommandDefinition)
-                    on { getCommonOptions() } doReturn setOf<OptionDefinition>(
-                        createOption("awesomeness-level", "Level of awesomeness to use.", true),
-                        createOption("booster-level", "Level of boosters to use.", true),
-                        createOption("file", "File name to use.", true, 'f'),
-                        createOption("enable-extra-stuff", "Something you can enable if you want.", false)
-                    )
-                }
+            val command = HelpCommand(parser, outputStream)
+            val exitCode = command.run()
 
-                val command = HelpCommand(null, parser, outputStream)
-                val exitCode = command.run()
-
-                it("prints help information") {
-                    assertThat(output.toString(), equalTo("""
-                        |Usage: the-cool-app [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]
+            it("prints help information") {
+                assertThat(output.toString(), equalTo("""
+                        |Usage: batect [options] task
                         |
-                        |Commands:
-                        |  do-other-stuff    Do the other thing.
-                        |  do-stuff          Do the thing.
-                        |
-                        |Common options:
+                        |Options:
                         |      --awesomeness-level=value    Level of awesomeness to use. (extra help info)
                         |      --booster-level=value        Level of boosters to use. (extra help info)
                         |      --enable-extra-stuff         Something you can enable if you want. (extra help info)
                         |  -f, --file=value                 File name to use. (extra help info)
                         |
-                        |For help on the options available for a command, run 'the-cool-app help <command>'.
-                        |
-                        |Visit www.thecoolapp.com for documentation and more help.
+                        |For documentation and further information on batect, visit https://github.com/charleskorn/batect.
                         |
                         |""".trimMargin()))
-                }
-
-                it("returns a non-zero exit code") {
-                    assertThat(exitCode, !equalTo(0))
-                }
-            }
-        }
-
-        given("a command name to show help for") {
-            given("and that command name is a valid command name") {
-                given("the root parser has some common options") {
-                    val commonOptions = setOf(createOption("some-option", "Some common option.", true))
-
-                    given("and that command has no options or positional parameters") {
-                        val output = ByteArrayOutputStream()
-                        val outputStream = PrintStream(output)
-                        val parser = mock<CommandLineParser> {
-                            on { applicationName } doReturn "the-cool-app"
-                            on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
-                            on { getCommandDefinitionByName("do-stuff") } doReturn firstCommandDefinition
-                            on { getCommonOptions() } doReturn commonOptions
-                        }
-
-                        val command = HelpCommand("do-stuff", parser, outputStream)
-                        val exitCode = command.run()
-
-                        it("prints help information") {
-                            assertThat(output.toString(), equalTo("""
-                            |Usage: the-cool-app [COMMON OPTIONS] do-stuff
-                            |
-                            |Do the thing.
-                            |
-                            |This command does not take any options.
-                            |
-                            |For help on the common options available for all commands, run 'the-cool-app help'.
-                            |
-                            |Visit www.thecoolapp.com for documentation and more help.
-                            |
-                            |""".trimMargin()))
-                        }
-
-                        it("returns a non-zero exit code") {
-                            assertThat(exitCode, !equalTo(0))
-                        }
-                    }
-
-                    given("and that command has a single optional positional parameter") {
-                        val output = ByteArrayOutputStream()
-                        val outputStream = PrintStream(output)
-
-                        val parser = mock<CommandLineParser> {
-                            on { applicationName } doReturn "the-cool-app"
-                            on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
-                            on { getCommonOptions() } doReturn commonOptions
-                            on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
-                                val thingToDo: String? by OptionalPositionalParameter("THING", "Thing to do.")
-
-                                override fun createCommand(kodein: Kodein): Command = NullCommand()
-                            }
-                        }
-
-                        val command = HelpCommand("do-stuff", parser, outputStream)
-                        val exitCode = command.run()
-
-                        it("prints help information") {
-                            assertThat(output.toString(), equalTo("""
-                            |Usage: the-cool-app [COMMON OPTIONS] do-stuff [THING]
-                            |
-                            |Do the thing.
-                            |
-                            |Parameters:
-                            |  THING    (optional) Thing to do.
-                            |
-                            |For help on the common options available for all commands, run 'the-cool-app help'.
-                            |
-                            |Visit www.thecoolapp.com for documentation and more help.
-                            |
-                            |""".trimMargin()))
-                        }
-
-                        it("returns a non-zero exit code") {
-                            assertThat(exitCode, !equalTo(0))
-                        }
-                    }
-
-                    given("and that command has a single required positional parameter") {
-                        val output = ByteArrayOutputStream()
-                        val outputStream = PrintStream(output)
-
-                        val parser = mock<CommandLineParser> {
-                            on { applicationName } doReturn "the-cool-app"
-                            on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
-                            on { getCommonOptions() } doReturn commonOptions
-                            on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
-                                val thingToDo: String by RequiredPositionalParameter("THING", "Thing to do.")
-
-                                override fun createCommand(kodein: Kodein): Command = NullCommand()
-                            }
-                        }
-
-                        val command = HelpCommand("do-stuff", parser, outputStream)
-                        val exitCode = command.run()
-
-                        it("prints help information") {
-                            assertThat(output.toString(), equalTo("""
-                            |Usage: the-cool-app [COMMON OPTIONS] do-stuff THING
-                            |
-                            |Do the thing.
-                            |
-                            |Parameters:
-                            |  THING    Thing to do.
-                            |
-                            |For help on the common options available for all commands, run 'the-cool-app help'.
-                            |
-                            |Visit www.thecoolapp.com for documentation and more help.
-                            |
-                            |""".trimMargin()))
-                        }
-
-                        it("returns a non-zero exit code") {
-                            assertThat(exitCode, !equalTo(0))
-                        }
-                    }
-
-                    given("and that command has two required positional parameters") {
-                        val output = ByteArrayOutputStream()
-                        val outputStream = PrintStream(output)
-
-                        val parser = mock<CommandLineParser> {
-                            on { applicationName } doReturn "the-cool-app"
-                            on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
-                            on { getCommonOptions() } doReturn commonOptions
-                            on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
-                                val thingToDo: String by RequiredPositionalParameter("THING", "Thing to do.")
-                                val otherThingToDo: String by RequiredPositionalParameter("OTHER-THING", "Other thing to do.")
-
-                                override fun createCommand(kodein: Kodein): Command = NullCommand()
-                            }
-                        }
-
-                        val command = HelpCommand("do-stuff", parser, outputStream)
-                        val exitCode = command.run()
-
-                        it("prints help information") {
-                            assertThat(output.toString(), equalTo("""
-                            |Usage: the-cool-app [COMMON OPTIONS] do-stuff THING OTHER-THING
-                            |
-                            |Do the thing.
-                            |
-                            |Parameters:
-                            |  THING          Thing to do.
-                            |  OTHER-THING    Other thing to do.
-                            |
-                            |For help on the common options available for all commands, run 'the-cool-app help'.
-                            |
-                            |Visit www.thecoolapp.com for documentation and more help.
-                            |
-                            |""".trimMargin()))
-                        }
-
-                        it("returns a non-zero exit code") {
-                            assertThat(exitCode, !equalTo(0))
-                        }
-                    }
-
-                    given("and that command has a required and an optional parameter") {
-                        val output = ByteArrayOutputStream()
-                        val outputStream = PrintStream(output)
-
-                        val parser = mock<CommandLineParser> {
-                            on { applicationName } doReturn "the-cool-app"
-                            on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
-                            on { getCommonOptions() } doReturn commonOptions
-                            on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
-                                val thingToDo: String by RequiredPositionalParameter("THING", "Thing to do.")
-                                val otherThingToDo: String? by OptionalPositionalParameter("OTHER-THING", "Other thing to do.")
-
-                                override fun createCommand(kodein: Kodein): Command = NullCommand()
-                            }
-                        }
-
-                        val command = HelpCommand("do-stuff", parser, outputStream)
-                        val exitCode = command.run()
-
-                        it("prints help information") {
-                            assertThat(output.toString(), equalTo("""
-                            |Usage: the-cool-app [COMMON OPTIONS] do-stuff THING [OTHER-THING]
-                            |
-                            |Do the thing.
-                            |
-                            |Parameters:
-                            |  THING          Thing to do.
-                            |  OTHER-THING    (optional) Other thing to do.
-                            |
-                            |For help on the common options available for all commands, run 'the-cool-app help'.
-                            |
-                            |Visit www.thecoolapp.com for documentation and more help.
-                            |
-                            |""".trimMargin()))
-                        }
-
-                        it("returns a non-zero exit code") {
-                            assertThat(exitCode, !equalTo(0))
-                        }
-                    }
-
-                    given("and that command has an option") {
-                        val output = ByteArrayOutputStream()
-                        val outputStream = PrintStream(output)
-
-                        val parser = mock<CommandLineParser> {
-                            on { applicationName } doReturn "the-cool-app"
-                            on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
-                            on { getCommonOptions() } doReturn commonOptions
-                            on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
-                                val someOption: String? by valueOption("some-option", "Some option that you can set.", 'o')
-                                val someFlag: Boolean by flagOption("some-flag", "Some flag that you can set.")
-
-                                override fun createCommand(kodein: Kodein): Command = NullCommand()
-                            }
-                        }
-
-                        val command = HelpCommand("do-stuff", parser, outputStream)
-                        val exitCode = command.run()
-
-                        it("prints help information") {
-                            assertThat(output.toString(), equalTo("""
-                            |Usage: the-cool-app [COMMON OPTIONS] do-stuff [OPTIONS]
-                            |
-                            |Do the thing.
-                            |
-                            |Options:
-                            |      --some-flag            Some flag that you can set.
-                            |  -o, --some-option=value    Some option that you can set.
-                            |
-                            |For help on the common options available for all commands, run 'the-cool-app help'.
-                            |
-                            |Visit www.thecoolapp.com for documentation and more help.
-                            |
-                            |""".trimMargin()))
-                        }
-
-                        it("returns a non-zero exit code") {
-                            assertThat(exitCode, !equalTo(0))
-                        }
-                    }
-
-                    given("and that command has some options and some parameters") {
-                        val output = ByteArrayOutputStream()
-                        val outputStream = PrintStream(output)
-
-                        val parser = mock<CommandLineParser> {
-                            on { applicationName } doReturn "the-cool-app"
-                            on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
-                            on { getCommonOptions() } doReturn commonOptions
-                            on { getCommandDefinitionByName("do-stuff") } doReturn object : CommandDefinition("do-stuff", "Do the thing.") {
-                                val someOption: String? by valueOption("some-option", "Some option that you can set.", 'o')
-                                val anotherOption: String? by valueOption("another-option", "Some other option that you can set.")
-                                val thingToDo: String by RequiredPositionalParameter("THING", "Thing to do.")
-                                val otherThingToDo: String? by OptionalPositionalParameter("OTHER-THING", "Other thing to do.")
-
-                                override fun createCommand(kodein: Kodein): Command = NullCommand()
-                            }
-                        }
-
-                        val command = HelpCommand("do-stuff", parser, outputStream)
-                        val exitCode = command.run()
-
-                        it("prints help information") {
-                            assertThat(output.toString(), equalTo("""
-                            |Usage: the-cool-app [COMMON OPTIONS] do-stuff [OPTIONS] THING [OTHER-THING]
-                            |
-                            |Do the thing.
-                            |
-                            |Options:
-                            |      --another-option=value    Some other option that you can set.
-                            |  -o, --some-option=value       Some option that you can set.
-                            |
-                            |Parameters:
-                            |  THING          Thing to do.
-                            |  OTHER-THING    (optional) Other thing to do.
-                            |
-                            |For help on the common options available for all commands, run 'the-cool-app help'.
-                            |
-                            |Visit www.thecoolapp.com for documentation and more help.
-                            |
-                            |""".trimMargin()))
-                        }
-
-                        it("returns a non-zero exit code") {
-                            assertThat(exitCode, !equalTo(0))
-                        }
-                    }
-                }
-
-                given("the root parser has no options") {
-                    val output = ByteArrayOutputStream()
-                    val outputStream = PrintStream(output)
-                    val parser = mock<CommandLineParser> {
-                        on { applicationName } doReturn "the-cool-app"
-                        on { helpBlurb } doReturn "Visit www.thecoolapp.com for documentation and more help."
-                        on { getCommandDefinitionByName("do-stuff") } doReturn firstCommandDefinition
-                    }
-
-                    val command = HelpCommand("do-stuff", parser, outputStream)
-                    val exitCode = command.run()
-
-                    it("does not include the placeholder for common options in the header or print a message about common options") {
-                        assertThat(output.toString(), equalTo("""
-                            |Usage: the-cool-app do-stuff
-                            |
-                            |Do the thing.
-                            |
-                            |This command does not take any options.
-                            |
-                            |Visit www.thecoolapp.com for documentation and more help.
-                            |
-                            |""".trimMargin()))
-                    }
-
-                    it("returns a non-zero exit code") {
-                        assertThat(exitCode, !equalTo(0))
-                    }
-                }
             }
 
-            given("and that command name is not a valid command name") {
-                val output = ByteArrayOutputStream()
-                val outputStream = PrintStream(output)
-                val parser = mock<CommandLineParser> {
-                    on { applicationName } doReturn "the-cool-app"
-                }
-
-                val command = HelpCommand("unknown-command", parser, outputStream)
-                val exitCode = command.run()
-
-                it("prints an error message") {
-                    assertThat(output.toString(), equalTo("Invalid command 'unknown-command'. Run 'the-cool-app help' for a list of valid commands.\n"))
-                }
-
-                it("returns a non-zero exit code") {
-                    assertThat(exitCode, !equalTo(0))
-                }
+            it("returns a non-zero exit code") {
+                assertThat(exitCode, !equalTo(0))
             }
         }
     }

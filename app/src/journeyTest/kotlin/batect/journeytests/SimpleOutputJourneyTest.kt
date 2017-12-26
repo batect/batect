@@ -30,7 +30,7 @@ object SimpleOutputJourneyTest : Spek({
         val runner = ApplicationRunner("simple-task")
 
         on("running a task") {
-            val result = runner.runApplication(listOf("--simple-output", "run", "the-task"))
+            val result = runner.runApplication(listOf("--simple-output", "the-task"))
 
             it("prints the output from that task") {
                 assertThat(result.output, containsSubstring("This is some output from the task\r\n"))

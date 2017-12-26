@@ -29,7 +29,7 @@ object NonStandardConfigurationFileNameTest : Spek({
     given("a configuration file with a non-standard name") {
         on("listing available tasks") {
             val runner = ApplicationRunner("non-standard-name")
-            val result = runner.runApplication(listOf("-f", "another-name.yml", "tasks"))
+            val result = runner.runApplication(listOf("-f", "another-name.yml", "--list-tasks"))
 
             it("prints a list of all available tasks") {
                 assertThat(result.output, containsSubstring("""
@@ -45,7 +45,7 @@ object NonStandardConfigurationFileNameTest : Spek({
 
         on("running a task") {
             val runner = ApplicationRunner("non-standard-name")
-            val result = runner.runApplication(listOf("-f", "another-name.yml", "run", "task-1"))
+            val result = runner.runApplication(listOf("-f", "another-name.yml", "task-1"))
 
             it("prints the output of the task ") {
                 assertThat(result.output, containsSubstring("This is some output from task 1\r\n"))

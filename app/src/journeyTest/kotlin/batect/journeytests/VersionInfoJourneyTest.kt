@@ -29,7 +29,7 @@ object VersionInfoJourneyTest : Spek({
         val runner = ApplicationRunner("")
 
         on("getting version info") {
-            val result = runner.runApplication(listOf("version"))
+            val result = runner.runApplication(listOf("--version"))
 
             it("prints some version info") {
                 assertThat(result.output, containsSubstring("batect version:"))

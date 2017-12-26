@@ -16,11 +16,7 @@
 
 package batect.cli.commands
 
-import batect.PrintStreamType
 import batect.TaskRunner
-import batect.cli.CommandLineParsingResult
-import batect.cli.CommonOptions
-import batect.cli.options.LevelOfParallelismDefaultValueProvider
 import batect.config.Configuration
 import batect.config.ContainerMap
 import batect.config.Task
@@ -28,7 +24,6 @@ import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.config.io.ConfigurationLoader
 import batect.logging.Logger
-import batect.logging.LoggerFactory
 import batect.logging.Severity
 import batect.model.BehaviourAfterFailure
 import batect.model.RunOptions
@@ -42,13 +37,9 @@ import batect.testutils.withSeverity
 import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.updates.UpdateNotifier
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.bind
-import com.github.salomonbrys.kodein.instance
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.isA
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.atLeastOnce
 import com.nhaarman.mockito_kotlin.doAnswer
@@ -66,91 +57,6 @@ import org.jetbrains.spek.api.dsl.on
 
 object RunTaskCommandSpec : Spek({
     describe("a 'run task' command") {
-        describe("command line interface") {
-            val commandLine by createForEachTest { RunTaskCommandDefinition() }
-            val configLoader = mock<ConfigurationLoader>()
-            val taskRunner = mock<TaskRunner>()
-            val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver>()
-            val updateNotifier = mock<UpdateNotifier>()
-            val console = mock<Console>()
-            val errorConsole = mock<Console>()
-            val logger = mock<Logger>()
-            val loggerFactory = mock<LoggerFactory> {
-                on { createLoggerForClass(RunTaskCommand::class) } doReturn logger
-            }
-
-            val kodein = Kodein {
-                bind<ConfigurationLoader>() with instance(configLoader)
-                bind<TaskRunner>() with instance(taskRunner)
-                bind<TaskExecutionOrderResolver>() with instance(taskExecutionOrderResolver)
-                bind<String>(CommonOptions.ConfigurationFileName) with instance("thefile.yml")
-                bind<UpdateNotifier>() with instance(updateNotifier)
-                bind<Console>(PrintStreamType.Output) with instance(console)
-                bind<Console>(PrintStreamType.Error) with instance(errorConsole)
-                bind<LoggerFactory>() with instance(loggerFactory)
-            }
-
-            on("when given one parameter") {
-                val result = commandLine.parse(listOf("the-task"), kodein)
-
-                it("indicates that parsing succeeded") {
-                    assertThat(result, isA<CommandLineParsingResult.Succeeded>())
-                }
-
-                it("returns a command instance ready for use") {
-                    val runOptions = RunOptions(LevelOfParallelismDefaultValueProvider.value, BehaviourAfterFailure.Cleanup, true)
-
-                    assertThat((result as CommandLineParsingResult.Succeeded).command, equalTo<Command>(
-                        RunTaskCommand("thefile.yml", "the-task", runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)))
-                }
-            }
-
-            on("when given one parameter and a level of parallelism") {
-                val result = commandLine.parse(listOf("--level-of-parallelism", "123", "the-task"), kodein)
-
-                it("indicates that parsing succeeded") {
-                    assertThat(result, isA<CommandLineParsingResult.Succeeded>())
-                }
-
-                it("returns a command instance ready for use with the desired level of parallelism") {
-                    val runOptions = RunOptions(123, BehaviourAfterFailure.Cleanup, true)
-
-                    assertThat((result as CommandLineParsingResult.Succeeded).command, equalTo<Command>(
-                        RunTaskCommand("thefile.yml", "the-task", runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)))
-                }
-            }
-
-            on("when given one parameter and a flag to disable removing containers after a failure") {
-                val result = commandLine.parse(listOf("--no-cleanup-after-failure", "the-task"), kodein)
-
-                it("indicates that parsing succeeded") {
-                    assertThat(result, isA<CommandLineParsingResult.Succeeded>())
-                }
-
-                it("returns a command instance ready for use with the desired cleanup mode") {
-                    val runOptions = RunOptions(LevelOfParallelismDefaultValueProvider.value, BehaviourAfterFailure.DontCleanup, true)
-
-                    assertThat((result as CommandLineParsingResult.Succeeded).command, equalTo<Command>(
-                        RunTaskCommand("thefile.yml", "the-task", runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)))
-                }
-            }
-
-            on("when given one parameter and a flag to disable propagating proxy-related environment variables") {
-                val result = commandLine.parse(listOf("--no-proxy-vars", "the-task"), kodein)
-
-                it("indicates that parsing succeeded") {
-                    assertThat(result, isA<CommandLineParsingResult.Succeeded>())
-                }
-
-                it("returns a command instance ready for use with propagating proxy-related environment variables disabled") {
-                    val runOptions = RunOptions(LevelOfParallelismDefaultValueProvider.value, BehaviourAfterFailure.Cleanup, false)
-
-                    assertThat((result as CommandLineParsingResult.Succeeded).command, equalTo<Command>(
-                        RunTaskCommand("thefile.yml", "the-task", runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)))
-                }
-            }
-        }
-
         describe("when invoked") {
             val configFile = "config.yml"
             val taskName = "the-task"

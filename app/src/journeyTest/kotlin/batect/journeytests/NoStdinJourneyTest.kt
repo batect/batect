@@ -30,7 +30,7 @@ object NoStdinJourneyTest : Spek({
         val runner = ApplicationRunner("simple-task")
 
         on("running that task") {
-            val commandLine = runner.commandLineForApplication(listOf("run", "the-task")).joinToString(" ")
+            val commandLine = runner.commandLineForApplication(listOf("the-task")).joinToString(" ")
             val result = runner.runCommandLine(listOf("sh", "-c", "cat /dev/null | $commandLine"))
 
             it("prints the output from that task") {

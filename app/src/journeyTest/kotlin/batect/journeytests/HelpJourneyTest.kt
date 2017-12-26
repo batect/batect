@@ -28,27 +28,10 @@ object HelpJourneyTest : Spek({
     given("the application") {
         on("requesting help for the application") {
             val runner = ApplicationRunner("")
-            val result = runner.runApplication(listOf("help"))
+            val result = runner.runApplication(listOf("--help"))
 
             it("prints the help header") {
-                assertThat(result.output, containsSubstring("Usage: batect [COMMON OPTIONS] COMMAND [COMMAND OPTIONS]"))
-            }
-
-            it("returns a non-zero exit code") {
-                assertThat(result.exitCode, !equalTo(0))
-            }
-        }
-
-        on("requesting help for a command") {
-            val runner = ApplicationRunner("")
-            val result = runner.runApplication(listOf("help", "run"))
-
-            it("prints the help header") {
-                assertThat(result.output, containsSubstring("Usage: batect [COMMON OPTIONS] run [OPTIONS] TASK"))
-            }
-
-            it("prints a description of the command") {
-                assertThat(result.output, containsSubstring("Run a task."))
+                assertThat(result.output, containsSubstring("Usage: batect [options] task"))
             }
 
             it("returns a non-zero exit code") {

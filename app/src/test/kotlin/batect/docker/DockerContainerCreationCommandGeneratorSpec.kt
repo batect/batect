@@ -20,13 +20,18 @@ import batect.config.Container
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
 import batect.config.VolumeMount
+import batect.os.CommandParser
+import batect.os.InvalidCommandLineException
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.doThrow
 import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -37,7 +42,13 @@ import org.jetbrains.spek.api.dsl.on
 object DockerContainerCreationCommandGeneratorSpec : Spek({
     describe("a Docker container creation command generator") {
         val hostEnvironmentVariables = mapOf("SOME_HOST_VARIABLE" to "some value from the host")
-        val generator = DockerContainerCreationCommandGenerator(hostEnvironmentVariables)
+
+        val commandParser = mock<CommandParser> {
+            on { parse(any()) } doAnswer { listOf("parsed-${it.arguments[0]}") }
+            on { parse("invalid") } doThrow InvalidCommandLineException("The command line is not valid")
+        }
+
+        val generator = DockerContainerCreationCommandGenerator(commandParser, hostEnvironmentVariables)
         val image = DockerImage("the-image")
         val network = DockerNetwork("the-network")
 
@@ -57,7 +68,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                         "--hostname", container.name,
                         "--network-alias", container.name,
                         image.id,
-                        command).asIterable()))
+                        "parsed-$command").asIterable()))
                 }
             }
         }
@@ -321,7 +332,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                         "--health-retries", "5",
                         "--health-start-period", "1.5s",
                         image.id,
-                        "some-command").asIterable()))
+                        "parsed-some-command").asIterable()))
                 }
             }
         }
@@ -348,7 +359,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                         "--network-alias", container.name,
                         "--health-interval", "2s",
                         image.id,
-                        command).asIterable()))
+                        "parsed-$command").asIterable()))
                 }
             }
         }
@@ -375,7 +386,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                         "--network-alias", container.name,
                         "--health-retries", "2",
                         image.id,
-                        command).asIterable()))
+                        "parsed-$command").asIterable()))
                 }
             }
         }
@@ -402,65 +413,19 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                         "--network-alias", container.name,
                         "--health-start-period", "3s",
                         image.id,
-                        command).asIterable()))
+                        "parsed-$command").asIterable()))
                 }
             }
         }
 
-        // FIXME This stuff is hard and there are lots of edge cases. Surely there's a better way...
-        // References:
-        // - https://www.gnu.org/software/bash/manual/html_node/Quoting.html
-        // - http://www.grymoire.com/Unix/Quote.html
-        mapOf(
-            "echo hello" to listOf("echo", "hello"),
-            "echo  hello" to listOf("echo", "hello"),
-            """echo "hello world"""" to listOf("echo", "hello world"),
-            """echo 'hello world'""" to listOf("echo", "hello world"),
-            """echo hello\ world""" to listOf("echo", "hello world"),
-            """echo 'hello "world"'""" to listOf("echo", """hello "world""""),
-            """echo "hello 'world'"""" to listOf("echo", "hello 'world'"),
-            """echo "hello \"world\""""" to listOf("echo", """hello "world""""),
-            """echo "hello 'world'"""" to listOf("echo", "hello 'world'"),
-            """echo 'hello "world"'""" to listOf("echo", """hello "world""""),
-            """echo can\'t""" to listOf("echo", "can't"),
-            // This next example comes from http://stackoverflow.com/a/28640859/1668119
-            """sh -c 'echo "\"un'\''kno\"wn\$\$\$'\'' with \$\"\$\$. \"zzz\""'""" to listOf("sh", "-c", """echo "\"un'kno\"wn\$\$\$' with \$\"\$\$. \"zzz\""""")
-        ).forEach { command, expectedSplit ->
-            given("a simple container definition, a built image and the command '$command'") {
-                val container = Container("the-container", imageSourceDoesNotMatter())
-                val consoleInfo = mock<ConsoleInfo>()
+        given("a container with an invalid command line") {
+            val container = Container("the-container", imageSourceDoesNotMatter())
+            val consoleInfo = mock<ConsoleInfo>()
 
-                on("generating the command") {
-                    val commandLine = generator.createCommandLine(container, command, emptyMap(), image, network, consoleInfo)
-                    val expectedCommandLine = listOf("docker", "create",
-                        "-it",
-                        "--network", network.id,
-                        "--hostname", container.name,
-                        "--network-alias", container.name,
-                        image.id) + expectedSplit
-
-                    it("generates the correct command line") {
-                        assertThat(commandLine, equalTo(expectedCommandLine.asIterable()))
-                    }
-                }
-            }
-        }
-
-        mapOf(
-            """echo "hello""" to "it contains an unbalanced double quote",
-            """echo 'hello""" to "it contains an unbalanced single quote",
-            """echo hello\""" to """it ends with a backslash (backslashes always escape the following character, for a literal backslash, use '\\')""",
-            """echo "hello\""" to """it ends with a backslash (backslashes always escape the following character, for a literal backslash, use '\\')"""
-        ).forEach { command, expectedErrorMessage ->
-            given("a simple container definition, a built image and the command '$command'") {
-                val container = Container("the-container", imageSourceDoesNotMatter())
-                val consoleInfo = mock<ConsoleInfo>()
-
-                on("generating the command") {
-                    it("throws an exception with the message '$expectedErrorMessage'") {
-                        assertThat({ generator.createCommandLine(container, command, emptyMap(), image, network, consoleInfo) },
-                            throws<ContainerCreationFailedException>(withMessage("Command line `$command` is invalid: $expectedErrorMessage")))
-                    }
+            on("generating the command") {
+                it("throws an appropriate exception") {
+                    assertThat({ generator.createCommandLine(container, "invalid", emptyMap(), image, network, consoleInfo) },
+                        throws<ContainerCreationFailedException>(withMessage("The command line is not valid")))
                 }
             }
         }

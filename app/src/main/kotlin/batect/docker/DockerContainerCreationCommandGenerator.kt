@@ -17,10 +17,12 @@
 package batect.docker
 
 import batect.config.Container
+import batect.os.CommandParser
+import batect.os.InvalidCommandLineException
 import batect.ui.ConsoleInfo
 
-class DockerContainerCreationCommandGenerator(private val hostEnvironmentVariables: Map<String, String>) {
-    constructor() : this(System.getenv())
+class DockerContainerCreationCommandGenerator(private val commandParser: CommandParser, private val hostEnvironmentVariables: Map<String, String>) {
+    constructor(commandParser: CommandParser) : this(commandParser, System.getenv())
 
     fun createCommandLine(
         container: Container,
@@ -50,7 +52,7 @@ class DockerContainerCreationCommandGenerator(private val hostEnvironmentVariabl
 
     private fun environmentVariablesFor(container: Container, consoleInfo: ConsoleInfo, additionalEnvironmentVariables: Map<String, String>): Map<String, String> {
         val termEnvironment = if (consoleInfo.terminalType == null) {
-            emptyMap<String, String>()
+            emptyMap()
         } else {
             mapOf("TERM" to consoleInfo.terminalType)
         }
@@ -105,82 +107,11 @@ class DockerContainerCreationCommandGenerator(private val hostEnvironmentVariabl
         else -> listOf("--health-start-period", container.healthCheckConfig.startPeriod)
     }
 
-    private val backslash: Char = '\\'
-    private val singleQuote: Char = '\''
-    private val doubleQuote: Char = '"'
-
     private fun commandArguments(command: String?): Iterable<String> {
-        if (command == null) {
-            return emptyList()
+        try {
+            return commandParser.parse(command)
+        } catch (e: InvalidCommandLineException) {
+            throw ContainerCreationFailedException(e.message, e)
         }
-
-        val arguments = arrayListOf<String>()
-        val currentArgument = StringBuilder()
-        var currentMode = CommandParsingState.Normal
-        var currentIndex = 0
-
-        fun handleBackslash() {
-            currentIndex++
-
-            if (currentIndex > command.length - 1) {
-                throw danglingBackslash(command)
-            }
-
-            currentArgument.append(command[currentIndex])
-        }
-
-        while (currentIndex < command.length) {
-            val char = command[currentIndex]
-
-            when (currentMode) {
-                CommandParsingState.Normal -> when {
-                    char == backslash -> handleBackslash()
-                    char.isWhitespace() -> {
-                        if (currentArgument.isNotBlank()) {
-                            arguments += currentArgument.toString()
-                        }
-
-                        currentArgument.setLength(0)
-                    }
-                    char == singleQuote -> currentMode = CommandParsingState.SingleQuote
-                    char == doubleQuote -> currentMode = CommandParsingState.DoubleQuote
-                    else -> currentArgument.append(char)
-                }
-                CommandParsingState.SingleQuote -> when (char) {
-                    singleQuote -> currentMode = CommandParsingState.Normal
-                    else -> currentArgument.append(char)
-                }
-                CommandParsingState.DoubleQuote -> when (char) {
-                    doubleQuote -> currentMode = CommandParsingState.Normal
-                    backslash -> handleBackslash()
-                    else -> currentArgument.append(char)
-                }
-            }
-
-            currentIndex++
-        }
-
-        when (currentMode) {
-            CommandParsingState.DoubleQuote -> throw unbalancedDoubleQuote(command)
-            CommandParsingState.SingleQuote -> throw unbalancedSingleQuote(command)
-            CommandParsingState.Normal -> {
-                if (currentArgument.isNotEmpty()) {
-                    arguments.add(currentArgument.toString())
-                }
-
-                return arguments
-            }
-        }
-    }
-
-    private fun invalidCommandLine(command: String, message: String): Throwable = ContainerCreationFailedException("Command line `$command` is invalid: $message")
-    private fun unbalancedDoubleQuote(command: String): Throwable = invalidCommandLine(command, "it contains an unbalanced double quote")
-    private fun unbalancedSingleQuote(command: String): Throwable = invalidCommandLine(command, "it contains an unbalanced single quote")
-    private fun danglingBackslash(command: String): Throwable = invalidCommandLine(command, """it ends with a backslash (backslashes always escape the following character, for a literal backslash, use '\\')""")
-
-    private enum class CommandParsingState {
-        Normal,
-        SingleQuote,
-        DoubleQuote
     }
 }

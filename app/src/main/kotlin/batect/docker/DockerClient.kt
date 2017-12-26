@@ -504,7 +504,11 @@ data class DockerImageBuildProgress(val currentStep: Int, val totalSteps: Int, v
 }
 
 class ImageBuildFailedException(val outputFromDocker: String) : RuntimeException("Image build failed. Output from Docker was: $outputFromDocker")
-class ContainerCreationFailedException(message: String) : RuntimeException(message)
+
+class ContainerCreationFailedException(message: String?, cause: Throwable?) : RuntimeException(message, cause) {
+    constructor(message: String?) : this(message, null)
+}
+
 class ContainerStartFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Starting container '$containerId' failed. Output from Docker was: $outputFromDocker")
 class ContainerStopFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Stopping container '$containerId' failed. Output from Docker was: $outputFromDocker")
 class ImagePullFailedException(message: String) : RuntimeException(message)

@@ -34,6 +34,7 @@ import batect.model.DependencyGraphProvider
 import batect.model.TaskExecutionOrderResolver
 import batect.model.TaskStateMachineProvider
 import batect.model.steps.TaskStepRunner
+import batect.os.CommandParser
 import batect.os.ProcessRunner
 import batect.os.ProxyEnvironmentVariablesProvider
 import batect.os.SystemInfo
@@ -107,7 +108,8 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), logger) }
     bind<DockerImageLabellingStrategy>() with singleton { DockerImageLabellingStrategy() }
     bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }
-    bind<DockerContainerCreationCommandGenerator>() with singleton { DockerContainerCreationCommandGenerator() }
+    bind<DockerContainerCreationCommandGenerator>() with singleton { DockerContainerCreationCommandGenerator(instance()) }
+    bind<CommandParser>() with singleton { CommandParser() }
 
     bind<EventLoggerProvider>() with singleton {
         EventLoggerProvider(

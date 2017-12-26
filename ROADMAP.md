@@ -24,6 +24,10 @@ If there's something you're really keen to see, pull requests are always welcome
 * start containers with `--user $(id -u):$(id -g)` so that any files created in any mounted directories have the current user as their owner
   * some applications won't like the fact that the user doesn't actually exist, so a configuration option on the container level to turn this off is necessary
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
+* support for Windows
+* pass-through additional command line arguments to a `run` (eg. `batect unitTest -- --parallel --watch` passes `--parallel --watch` through to task container)
+  * only allow this if the command is given in the configuration file - otherwise there would be a different meaning (add extra args vs. replace image command)
+    depending on configuration
 
 ### Other
 * logging (for batect internals)
@@ -39,6 +43,7 @@ If there's something you're really keen to see, pull requests are always welcome
       * backend
     * Android app
   * importance of idempotency
+  * improve the getting started guide (it's way too wordy)
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
 * easy way to update to new versions when notified (eg. `batect update` downloads new wrapper script and replaces it in place)
 * use batect to build batect (self-hosting)
@@ -81,11 +86,9 @@ If there's something you're really keen to see, pull requests are always welcome
 
 * support port ranges in mappings
 * support protocols other than TCP in port mappings
-* shell tab completion for built-in commands (eg. `batect r<tab>` completes to `batect run`)
-* shell tab completion for tasks (eg. `batect run b<tab>` completes to `batect run build`)
-* pass-through additional command line arguments to a `run` (eg. `batect run unitTest -- --parallel --watch` passes `--parallel --watch` through to task container)
+* shell tab completion for options (eg. `batect --h<tab>` completes to `batect --help`)
+* shell tab completion for tasks (eg. `batect b<tab>` completes to `batect build`)
 * requires / provides relationships (eg. 'app' requires 'service-a', and 'service-a-fake' and 'service-a-real' provide 'service-a')
-* support for Windows
 * don't do all path resolution up-front
   * if not all containers are used, doesn't make sense to try to resolve their paths
   * would save some time
@@ -97,4 +100,5 @@ If there's something you're really keen to see, pull requests are always welcome
 * fancy progress bar output for building images and starting dependencies
   * make sure accidental input on stdin doesn't mangle it
   * test with different console colour schemes (eg. white background, black background, OS X default, Ubuntu default, Ubuntu GUI terminal default)
-* some way to group tasks shown when running `batect tasks`
+* some way to group tasks shown when running `batect --list-tasks`
+* group display of options shown when running `batect --help`

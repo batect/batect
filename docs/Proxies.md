@@ -44,7 +44,7 @@ This last point is the most relevant to proxy settings - as `http_proxy`, `https
 pre-defined build arguments, we can pass the host's proxy settings into the build environment as build arguments.
 
 batect automatically propagates any proxy settings configured on the host as build arguments unless the `--no-proxy-vars`
-flag is passed to `batect run`.
+flag is passed to `batect`.
 
 Note that build arguments are not persisted in the image - they exist only as environment variables at build time. Furthermore,
 the pre-defined proxy-related build arguments (unlike normal build arguments) do not impact Docker's cache invalidation logic -
@@ -60,7 +60,7 @@ The set of run time environment variables is defined by:
 * any container-specific environment variables passed to `docker run` / `docker create`
 
 batect automatically propagates any proxy settings configured on the host as environment variables unless the `--no-proxy-vars`
-flag is passed to `batect run`.
+flag is passed to `batect`.
 
 ## Proxy settings recognised by batect
 

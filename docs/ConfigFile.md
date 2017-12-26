@@ -69,17 +69,21 @@ tasks:
       - exchange-rate-service
 
   journeyTest:
-    description: Run the journey tests. (Note that due to batect not yet supporting dependencies between tasks, you must run `batect run build` before running this task.)
+    description: Run the journey tests.
     run:
       container: build-env
       command: ./gradlew journeyTest
     start:
       - international-transfers-service
+    prerequisites:
+      - build
 
   app:
-    description: Run the application. (Note that due to batect not yet supporting dependencies between tasks, you must run `batect run build` before running this task.)
+    description: Run the application.
     run:
       container: international-transfers-service
+    prerequisites:
+      - build
 ```
 
 ## Reference
@@ -115,6 +119,7 @@ Each container definition is made up of:
   The `TERM` environment variable, if set on the host, is always automatically passed through to the container.
 
   Proxy-related environment variables, if set on the host, are passed through to the container at build and run time, but are not used for image pulls.
+  If a proxy-related environment variable is defined on the container's configuration, it takes precedence over the host-provided value.
   See [this page](Proxies.md) for more information on using Docker with proxies and how batect handles proxies.
 
 * `working_directory` Working directory to start the container in. If not provided, the default working directory for the image will be used.
@@ -144,7 +149,7 @@ Each container definition is made up of:
 
 Each task definition is made up of:
 
-* `description` Description shown when running `batect tasks`.
+* `description` Description shown when running `batect --list-tasks`.
 
 * `run`:
     * `container` [Container](#container-definitions) to run for this task. **Required.**

@@ -7,7 +7,7 @@ The samples shown below are all taken from the [sample project](https://github.c
 1. Download the latest version of `batect` from the [releases page](https://github.com/charleskorn/batect/releases),
    and copy it into your project.
 2. Make sure it's executable (run `chmod +x batect`).
-3. Run `./batect version` and if you see some version information, you're good to go!
+3. Run `./batect --version` and if you see some version information, you're good to go!
 
 The `batect` script is designed to be committed alongside your project, and not installed globally. It will
 automatically pull down the correct version of batect for your operating system.
@@ -73,7 +73,7 @@ tests. This example is for a Java project that uses Gradle, and assumes that you
 
    For more information on `batect.yml`, consult the [documentation](ConfigFile.md).
 
-2. Run `./batect tasks`, and you'll see the tasks that we just defined:
+2. Run `./batect --list-tasks`, and you'll see the tasks that we just defined:
 
     ```
     Available tasks:
@@ -81,10 +81,10 @@ tests. This example is for a Java project that uses Gradle, and assumes that you
     - unitTest: Run the unit tests.
     ```
 
-3. Run `./batect run build` and batect will pull the image used for your build environment, start it and run Gradle within it.
+3. Run `./batect build` and batect will pull the image used for your build environment, start it and run Gradle within it.
    (Note that this may take a while the first time as the Docker image must be downloaded first.)
 
-4. Similarly, if you run `./batect run unitTest`, batect will start a build environment, run your unit tests within it, and then
+4. Similarly, if you run `./batect unitTest`, batect will start a build environment, run your unit tests within it, and then
    clean up the build environment.
 
 That's it! Your builds and unit tests now run in an isolated and consistent build environment, and you can easily change the

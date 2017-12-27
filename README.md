@@ -13,7 +13,7 @@
 
 \* at the moment, a JVM is also required, but this requirement will be removed before v1.0
 
-[![asciicast](https://asciinema.org/a/vBV5iQz4jqyhKPEfkiJyM4kEt.png)](https://asciinema.org/a/vBV5iQz4jqyhKPEfkiJyM4kEt)
+[![asciicast](https://asciinema.org/a/IUh0F8WS0M0NTTKhpY1DdiRr0.png)](https://asciinema.org/a/IUh0F8WS0M0NTTKhpY1DdiRr0)
 
 ## Documentation
 

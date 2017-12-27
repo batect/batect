@@ -54,9 +54,9 @@ batect helps solve these problems by:
 * taking advantage of Docker's networking features to set up an isolated network for every command
 * enabling you to use existing Docker images as-is (or easily use custom Dockerfiles) to quickly get up and running
 
-# Why is batect better than...
+## Why is batect better than...
 
-## ...Vagrant?
+### ...Vagrant?
 
 Vagrant's use of virtual machines means that it is very heavyweight, making it difficult to run multiple projects'
 environments at once. This is especially problematic on CI servers where we'd like to run multiple builds in parallel.
@@ -65,7 +65,7 @@ Furthermore, the long-lived nature of virtual machines means that it's very easy
 with the desired configuration, and nothing automatically re-provisions the machine when the configuration is changed - a
 developer has to remember to re-run the provisioning step if the configuration changes.
 
-## ...Docker Compose?
+### ...Docker Compose?
 
 In the past, I've used Docker Compose to implement the same idea that is at the core of batect. However, using Docker Compose
 for this purpose has a number of drawbacks. In particular, Docker Compose is geared towards configuring an application and its

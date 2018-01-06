@@ -24,6 +24,7 @@ import batect.docker.ContainerStartFailedException
 import batect.docker.ContainerStopFailedException
 import batect.docker.DockerClient
 import batect.docker.DockerContainer
+import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerImageBuildProgress
 import batect.docker.HealthStatus
 import batect.docker.ImageBuildFailedException
@@ -54,9 +55,17 @@ import batect.model.events.TaskNetworkCreationFailedEvent
 import batect.model.events.TaskNetworkDeletedEvent
 import batect.model.events.TaskNetworkDeletionFailedEvent
 import batect.model.events.TaskStartedEvent
+import batect.os.CommandParser
+import batect.os.InvalidCommandLineException
 import batect.os.ProxyEnvironmentVariablesProvider
 
-class TaskStepRunner(private val dockerClient: DockerClient, private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider, private val logger: Logger) {
+class TaskStepRunner(
+    private val dockerClient: DockerClient,
+    private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
+    private val commandParser: CommandParser,
+    private val creationRequestFactory: DockerContainerCreationRequestFactory,
+    private val logger: Logger
+) {
     fun run(step: TaskStep, eventSink: TaskEventSink, runOptions: RunOptions) {
         logger.info {
             message("Running step.")
@@ -119,9 +128,12 @@ class TaskStepRunner(private val dockerClient: DockerClient, private val proxyEn
 
     private fun handleCreateContainerStep(step: CreateContainerStep, eventSink: TaskEventSink, runOptions: RunOptions) {
         try {
-            val additionalEnvironmentVariables = proxyEnvironmentVariablesForOptions(runOptions) + step.additionalEnvironmentVariables
-            val dockerContainer = dockerClient.create(step.container, step.command, additionalEnvironmentVariables, step.image, step.network)
+            val command = commandParser.parse(step.command)
+            val creationRequest = creationRequestFactory.create(step.container, step.image, step.network, command, step.additionalEnvironmentVariables, runOptions.propagateProxyEnvironmentVariables)
+            val dockerContainer = dockerClient.create(creationRequest)
             eventSink.postEvent(ContainerCreatedEvent(step.container, dockerContainer))
+        } catch (e: InvalidCommandLineException) {
+            eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))
         } catch (e: ContainerCreationFailedException) {
             eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))
         }

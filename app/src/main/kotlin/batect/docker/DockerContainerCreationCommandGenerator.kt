@@ -16,102 +16,51 @@
 
 package batect.docker
 
-import batect.config.Container
-import batect.os.CommandParser
-import batect.os.InvalidCommandLineException
-import batect.ui.ConsoleInfo
-
-class DockerContainerCreationCommandGenerator(private val commandParser: CommandParser, private val hostEnvironmentVariables: Map<String, String>) {
-    constructor(commandParser: CommandParser) : this(commandParser, System.getenv())
-
-    fun createCommandLine(
-        container: Container,
-        command: String?,
-        additionalEnvironmentVariables: Map<String, String>,
-        image: DockerImage,
-        network: DockerNetwork,
-        consoleInfo: ConsoleInfo
-    ): Iterable<String> {
+class DockerContainerCreationCommandGenerator() {
+    fun createCommandLine(request: DockerContainerCreationRequest): Iterable<String> {
         return listOf("docker", "create", "-it",
-            "--network", network.id,
-            "--hostname", container.name,
-            "--network-alias", container.name) +
-            environmentVariableArguments(container, consoleInfo, additionalEnvironmentVariables) +
-            workingDirectoryArguments(container) +
-            volumeMountArguments(container) +
-            portMappingArguments(container) +
-            healthCheckArguments(container) +
-            image.id +
-            commandArguments(command)
+            "--network", request.network.id,
+            "--hostname", request.hostname,
+            "--network-alias", request.networkAlias) +
+            environmentVariableArguments(request) +
+            workingDirectoryArguments(request) +
+            volumeMountArguments(request) +
+            portMappingArguments(request) +
+            healthCheckArguments(request) +
+            request.image.id +
+            request.command
     }
 
-    private fun environmentVariableArguments(container: Container, consoleInfo: ConsoleInfo, additionalEnvironmentVariables: Map<String, String>): Iterable<String> {
-        return environmentVariablesFor(container, consoleInfo, additionalEnvironmentVariables)
-            .flatMap { (key, value) -> listOf("--env", "$key=$value") }
+    private fun environmentVariableArguments(request: DockerContainerCreationRequest): Iterable<String> {
+        return request.environmentVariables.flatMap { (key, value) -> listOf("--env", "$key=$value") }
     }
 
-    private fun environmentVariablesFor(container: Container, consoleInfo: ConsoleInfo, additionalEnvironmentVariables: Map<String, String>): Map<String, String> {
-        val termEnvironment = if (consoleInfo.terminalType == null) {
-            emptyMap()
-        } else {
-            mapOf("TERM" to consoleInfo.terminalType)
-        }
+    private fun volumeMountArguments(request: DockerContainerCreationRequest): Iterable<String> = request.volumeMounts.flatMap { listOf("--volume", it.toString()) }
+    private fun portMappingArguments(request: DockerContainerCreationRequest): Iterable<String> = request.portMappings.flatMap { listOf("--publish", it.toString()) }
 
-        return termEnvironment + substituteEnvironmentVariables(container.environment + additionalEnvironmentVariables)
-    }
-
-    private fun substituteEnvironmentVariables(original: Map<String, String>): Map<String, String> =
-        original.mapValues { (name, value) -> substituteEnvironmentVariable(name, value) }
-
-    private fun substituteEnvironmentVariable(name: String, originalValue: String): String {
-        if (originalValue.startsWith('$')) {
-            val variableName = originalValue.drop(1)
-            val valueFromHost = hostEnvironmentVariables.get(variableName)
-
-            if (valueFromHost == null) {
-                throw ContainerCreationFailedException("The environment variable '$name' refers to host environment variable '$variableName', but it is not set.")
-            }
-
-            return valueFromHost
-        } else {
-            return originalValue
-        }
-    }
-
-    private fun volumeMountArguments(container: Container): Iterable<String> = container.volumeMounts.flatMap { listOf("--volume", it.toString()) }
-    private fun portMappingArguments(container: Container): Iterable<String> = container.portMappings.flatMap { listOf("--publish", it.toString()) }
-
-    private fun workingDirectoryArguments(container: Container): Iterable<String> = when (container.workingDirectory) {
+    private fun workingDirectoryArguments(request: DockerContainerCreationRequest): Iterable<String> = when (request.workingDirectory) {
         null -> emptyList()
-        else -> listOf("--workdir", container.workingDirectory)
+        else -> listOf("--workdir", request.workingDirectory)
     }
 
-    private fun healthCheckArguments(container: Container): Iterable<String> {
-        return healthCheckIntervalArguments(container) +
-            healthCheckRetriesArguments(container) +
-            healthCheckStartPeriodArguments(container)
+    private fun healthCheckArguments(request: DockerContainerCreationRequest): Iterable<String> {
+        return healthCheckIntervalArguments(request) +
+            healthCheckRetriesArguments(request) +
+            healthCheckStartPeriodArguments(request)
     }
 
-    private fun healthCheckIntervalArguments(container: Container): Iterable<String> = when (container.healthCheckConfig.interval) {
+    private fun healthCheckIntervalArguments(request: DockerContainerCreationRequest): Iterable<String> = when (request.healthCheckConfig.interval) {
         null -> emptyList()
-        else -> listOf("--health-interval", container.healthCheckConfig.interval)
+        else -> listOf("--health-interval", request.healthCheckConfig.interval)
     }
 
-    private fun healthCheckRetriesArguments(container: Container): Iterable<String> = when (container.healthCheckConfig.retries) {
+    private fun healthCheckRetriesArguments(request: DockerContainerCreationRequest): Iterable<String> = when (request.healthCheckConfig.retries) {
         null -> emptyList()
-        else -> listOf("--health-retries", container.healthCheckConfig.retries.toString())
+        else -> listOf("--health-retries", request.healthCheckConfig.retries.toString())
     }
 
-    private fun healthCheckStartPeriodArguments(container: Container): Iterable<String> = when (container.healthCheckConfig.startPeriod) {
+    private fun healthCheckStartPeriodArguments(request: DockerContainerCreationRequest): Iterable<String> = when (request.healthCheckConfig.startPeriod) {
         null -> emptyList()
-        else -> listOf("--health-start-period", container.healthCheckConfig.startPeriod)
-    }
-
-    private fun commandArguments(command: String?): Iterable<String> {
-        try {
-            return commandParser.parse(command)
-        } catch (e: InvalidCommandLineException) {
-            throw ContainerCreationFailedException(e.message, e)
-        }
+        else -> listOf("--health-start-period", request.healthCheckConfig.startPeriod)
     }
 }

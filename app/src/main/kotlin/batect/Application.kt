@@ -28,6 +28,7 @@ import batect.config.io.ConfigurationLoader
 import batect.config.io.PathResolverFactory
 import batect.docker.DockerClient
 import batect.docker.DockerContainerCreationCommandGenerator
+import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerImageLabellingStrategy
 import batect.logging.ApplicationInfoLogger
 import batect.logging.LogMessageWriter
@@ -120,7 +121,7 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), logger) }
     bind<DockerImageLabellingStrategy>() with singleton { DockerImageLabellingStrategy() }
     bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }
-    bind<DockerContainerCreationCommandGenerator>() with singleton { DockerContainerCreationCommandGenerator(instance()) }
+    bind<DockerContainerCreationCommandGenerator>() with singleton { DockerContainerCreationCommandGenerator() }
     bind<CommandParser>() with singleton { CommandParser() }
 
     bind<EventLoggerProvider>() with singleton {
@@ -140,7 +141,8 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<Console>(PrintStreamType.Error) with singleton { Console(instance(PrintStreamType.Error), enableComplexOutput = !commandLineOptions().disableColorOutput) }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
     bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
-    bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), instance(), logger) }
+    bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), instance(), instance(), instance(), logger) }
+    bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
     bind<DependencyGraphProvider>() with singletonWithLogger { logger -> DependencyGraphProvider(logger) }
     bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance()) }
     bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance(), instance()) }

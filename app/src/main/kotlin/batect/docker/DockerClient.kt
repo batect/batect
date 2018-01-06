@@ -83,17 +83,13 @@ class DockerClient(
         return DockerImage(imageId)
     }
 
-    fun create(container: Container, command: String?, additionalEnvironmentVariables: Map<String, String>, image: DockerImage, network: DockerNetwork): DockerContainer {
+    fun create(request: DockerContainerCreationRequest): DockerContainer {
         logger.info {
             message("Creating container.")
-            data("container", container)
-            data("command", command)
-            data("additionalEnvironmentVariables", additionalEnvironmentVariables)
-            data("image", image)
-            data("network", network)
+            data("request", request)
         }
 
-        val args = creationCommandGenerator.createCommandLine(container, command, additionalEnvironmentVariables, image, network, consoleInfo)
+        val args = creationCommandGenerator.createCommandLine(request)
         val result = processRunner.runAndCaptureOutput(args)
 
         if (failed(result)) {

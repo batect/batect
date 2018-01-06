@@ -18,6 +18,7 @@ package batect.docker
 
 import batect.config.BuildImage
 import batect.config.Container
+import batect.config.HealthCheckConfig
 import batect.logging.Logger
 import batect.os.Exited
 import batect.os.KillProcess
@@ -26,7 +27,6 @@ import batect.os.OutputProcessing
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.testutils.InMemoryLogSink
-import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
 import com.natpryce.hamkrest.Matcher
@@ -147,22 +147,21 @@ object DockerClientSpec : Spek({
 
         describe("creating a container") {
             given("a container configuration and a built image") {
-                val container = Container("the-container", imageSourceDoesNotMatter())
-                val command = "doStuff"
-                val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
                 val image = DockerImage("the-image")
                 val network = DockerNetwork("the-network")
+                val command = listOf("doStuff")
                 val commandLine = listOf("docker", "doStuff", "please")
+                val request = DockerContainerCreationRequest(image, network, command, "some-host", "some-host", emptyMap(), "/some-dir", emptySet(), emptySet(), HealthCheckConfig())
 
                 beforeEachTest {
-                    whenever(creationCommandGenerator.createCommandLine(container, command, additionalEnvironmentVariables, image, network, consoleInfo)).thenReturn(commandLine)
+                    whenever(creationCommandGenerator.createCommandLine(request)).thenReturn(commandLine)
                 }
 
                 on("a successful creation") {
                     val containerId = "abc123"
                     whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(0, containerId + "\n"))
 
-                    val result = client.create(container, command, additionalEnvironmentVariables, image, network)
+                    val result = client.create(request)
 
                     it("creates the container") {
                         verify(processRunner).runAndCaptureOutput(commandLine)
@@ -177,7 +176,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Something went wrong."))
 
                     it("raises an appropriate exception") {
-                        assertThat({ client.create(container, command, additionalEnvironmentVariables, image, network) }, throws<ContainerCreationFailedException>(withMessage("Output from Docker was: Something went wrong.")))
+                        assertThat({ client.create(request) }, throws<ContainerCreationFailedException>(withMessage("Output from Docker was: Something went wrong.")))
                     }
                 }
             }

@@ -19,11 +19,15 @@ package batect.model
 import batect.cli.CommandLineOptions
 
 data class RunOptions(
+    val taskName: String,
+    val additionalTaskCommandArguments: Iterable<String>,
     val levelOfParallelism: Int,
     val behaviourAfterFailure: BehaviourAfterFailure,
     val propagateProxyEnvironmentVariables: Boolean
 ) {
     constructor(options: CommandLineOptions) : this(
+        options.taskName!!,
+        options.additionalTaskCommandArguments,
         options.levelOfParallelism,
         if (options.disableCleanupAfterFailure) {
             BehaviourAfterFailure.DontCleanup

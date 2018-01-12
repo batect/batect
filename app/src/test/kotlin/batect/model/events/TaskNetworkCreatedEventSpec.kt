@@ -24,6 +24,7 @@ import batect.docker.DockerNetwork
 import batect.logging.Logger
 import batect.model.steps.CreateContainerStep
 import batect.model.steps.DeleteTaskNetworkStep
+import batect.os.Command
 import batect.testutils.InMemoryLogSink
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -62,6 +63,8 @@ object TaskNetworkCreatedEventSpec : Spek({
 
             on("when some images have been built or pulled already") {
                 val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
+                val command1 = Command.parse("command-1")
+                val command2 = Command.parse("command-2")
 
                 val context = mock<TaskEventContext> {
                     on { getPastEventsOfType<ImageBuiltEvent>() } doReturn setOf(
@@ -72,9 +75,10 @@ object TaskNetworkCreatedEventSpec : Spek({
                         ImagePulledEvent(image2)
                     )
 
-                    on { commandForContainer(containerWithImageToBuild) } doReturn "command-1"
+                    on { commandForContainer(containerWithImageToBuild) } doReturn command1
                     on { additionalEnvironmentVariablesForContainer(containerWithImageToBuild) } doReturn additionalEnvironmentVariables
-                    on { commandForContainer(containerWithImageToPull) } doReturn "command-2"
+
+                    on { commandForContainer(containerWithImageToPull) } doReturn command2
                     on { additionalEnvironmentVariablesForContainer(containerWithImageToPull) } doReturn emptyMap()
 
                     on { allTaskContainers } doReturn setOf(containerWithImageToBuild, containerWithImageToPull)
@@ -83,8 +87,8 @@ object TaskNetworkCreatedEventSpec : Spek({
                 event.apply(context, logger)
 
                 it("queues 'create container' steps for them") {
-                    verify(context).queueStep(CreateContainerStep(containerWithImageToBuild, "command-1", additionalEnvironmentVariables, image1, network))
-                    verify(context).queueStep(CreateContainerStep(containerWithImageToPull, "command-2", emptyMap(), image2, network))
+                    verify(context).queueStep(CreateContainerStep(containerWithImageToBuild, command1, additionalEnvironmentVariables, image1, network))
+                    verify(context).queueStep(CreateContainerStep(containerWithImageToPull, command2, emptyMap(), image2, network))
                 }
 
                 it("does not queue a 'delete task network' step") {

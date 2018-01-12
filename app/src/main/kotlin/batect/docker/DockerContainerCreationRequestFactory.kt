@@ -17,6 +17,7 @@
 package batect.docker
 
 import batect.config.Container
+import batect.os.Command
 import batect.os.ProxyEnvironmentVariablesProvider
 import batect.ui.ConsoleInfo
 
@@ -32,14 +33,14 @@ class DockerContainerCreationRequestFactory(
         container: Container,
         image: DockerImage,
         network: DockerNetwork,
-        command: Iterable<String>,
+        command: Command?,
         additionalEnvironmentVariables: Map<String, String>,
         propagateEnvironmentVariables: Boolean
     ): DockerContainerCreationRequest {
         return DockerContainerCreationRequest(
             image,
             network,
-            command,
+            if (command != null) command.parsedCommand else emptyList(),
             container.name,
             container.name,
             environmentVariablesFor(container, additionalEnvironmentVariables, propagateEnvironmentVariables),

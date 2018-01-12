@@ -62,7 +62,7 @@ object HelpCommandSpec : Spek({
 
             it("prints help information") {
                 assertThat(output.toString(), equalTo("""
-                        |Usage: batect [options] task
+                        |Usage: batect [options] task [-- additional arguments to pass to task]
                         |
                         |Options:
                         |      --awesomeness-level=value    Level of awesomeness to use. (extra help info)

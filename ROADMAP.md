@@ -25,9 +25,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * some applications won't like the fact that the user doesn't actually exist, so a configuration option on the container level to turn this off is necessary
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 * support for Windows
-* pass-through additional command line arguments to a `run` (eg. `batect unitTest -- --parallel --watch` passes `--parallel --watch` through to task container)
-  * only allow this if the command is given in the configuration file - otherwise there would be a different meaning (add extra args vs. replace image command)
-    depending on configuration
 
 ### Other
 * logging (for batect internals)

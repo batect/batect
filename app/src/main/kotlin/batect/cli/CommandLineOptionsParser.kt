@@ -63,19 +63,32 @@ class CommandLineOptionsParser(override val optionParser: OptionParser) : Option
 
     private fun parseTaskName(remainingArgs: Iterable<String>): CommandLineOptionsParsingResult {
         if (showHelp || showVersionInfo || listTasks) {
-            return CommandLineOptionsParsingResult.Succeeded(createOptionsObject(null))
+            return CommandLineOptionsParsingResult.Succeeded(createOptionsObject(null, emptyList()))
         }
 
         when (remainingArgs.count()) {
             0 -> return CommandLineOptionsParsingResult.Failed("No task name provided.")
             1 -> {
-                return CommandLineOptionsParsingResult.Succeeded(createOptionsObject(remainingArgs.first()))
+                return CommandLineOptionsParsingResult.Succeeded(createOptionsObject(remainingArgs.first(), emptyList()))
             }
-            else -> return CommandLineOptionsParsingResult.Failed("Too many arguments provided. The first extra argument is '${remainingArgs.drop(1).first()}'.")
+            else -> {
+                val taskName = remainingArgs.first()
+                val additionalArgs = remainingArgs.drop(1)
+
+                if (additionalArgs.first() != "--") {
+                    return CommandLineOptionsParsingResult.Failed(
+                        "Too many arguments provided. The first extra argument is '${additionalArgs.first()}'.\n" +
+                            "To pass additional arguments to the task command, prefix them with '--', for example, 'batect my-task -- --extra-option-1 --extra-option-2 value'."
+                    )
+                }
+
+                val additionalTaskCommandArguments = additionalArgs.drop(1)
+                return CommandLineOptionsParsingResult.Succeeded(createOptionsObject(taskName, additionalTaskCommandArguments))
+            }
         }
     }
 
-    private fun createOptionsObject(taskName: String?) = CommandLineOptions(
+    private fun createOptionsObject(taskName: String?, additionalTaskCommandArguments: Iterable<String>) = CommandLineOptions(
         showHelp = showHelp,
         showVersionInfo = showVersionInfo,
         listTasks = listTasks,
@@ -88,7 +101,8 @@ class CommandLineOptionsParser(override val optionParser: OptionParser) : Option
         levelOfParallelism = levelOfParallelism,
         disableCleanupAfterFailure = disableCleanupAfterFailure,
         dontPropagateProxyEnvironmentVariables = dontPropagateProxyEnvironmentVariables,
-        taskName = taskName
+        taskName = taskName,
+        additionalTaskCommandArguments = additionalTaskCommandArguments
     )
 }
 

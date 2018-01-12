@@ -23,6 +23,7 @@ import batect.model.events.TaskEvent
 import batect.model.events.TaskEventContext
 import batect.model.events.TaskEventSink
 import batect.model.steps.TaskStep
+import batect.os.Command
 import batect.utils.mapToSet
 import java.util.LinkedList
 import java.util.Queue
@@ -121,13 +122,7 @@ class TaskStateMachine(
         }
     }
 
-    override fun commandForContainer(container: Container): String? {
-        if (isTaskContainer(container) && graph.task.runConfiguration.command != null) {
-            return graph.task.runConfiguration.command
-        }
-
-        return container.command
-    }
+    override fun commandForContainer(container: Container): Command? = graph.nodeFor(container).command
 
     override fun additionalEnvironmentVariablesForContainer(container: Container): Map<String, String> {
         if (isTaskContainer(container)) {

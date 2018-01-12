@@ -1,0 +1,11 @@
+project_name: additional-arguments-test
+
+containers:
+  build-env:
+    image: alpine:3.6
+
+tasks:
+  the-task:
+    run:
+      container: build-env
+      command: echo "This is the output from the config file."

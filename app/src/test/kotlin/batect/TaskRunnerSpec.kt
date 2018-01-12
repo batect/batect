@@ -58,7 +58,7 @@ object TaskRunnerSpec : Spek({
 
         val stateMachine = mock<TaskStateMachine>()
         val executionManager = mock<ParallelExecutionManager>()
-        val runOptions = RunOptions(64, BehaviourAfterFailure.Cleanup, true)
+        val runOptions = RunOptions("some-task", emptyList(), 64, BehaviourAfterFailure.Cleanup, true)
 
         val stateMachineProvider = mock<TaskStateMachineProvider> {
             on { createStateMachine(graph, runOptions.behaviourAfterFailure) } doReturn stateMachine

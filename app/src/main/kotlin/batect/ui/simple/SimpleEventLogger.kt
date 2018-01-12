@@ -27,12 +27,13 @@ import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.model.steps.TaskStep
+import batect.os.Command
 import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.ui.EventLogger
 
 class SimpleEventLogger(val console: Console, val errorConsole: Console) : EventLogger() {
-    private val commands = mutableMapOf<Container, String?>()
+    private val commands = mutableMapOf<Container, Command?>()
     private var haveStartedCleanUp = false
     private val lock = Object()
 
@@ -69,12 +70,12 @@ class SimpleEventLogger(val console: Console, val errorConsole: Console) : Event
         }
     }
 
-    private fun logCommandStarting(container: Container, command: String?) {
+    private fun logCommandStarting(container: Container, command: Command?) {
         console.withColor(ConsoleColor.White) {
             print("Running ")
 
             if (command != null) {
-                printBold(command)
+                printBold(command.originalCommand)
                 print(" in ")
             }
 

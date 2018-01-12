@@ -39,7 +39,8 @@ data class CommandLineOptions(
     val levelOfParallelism: Int = LevelOfParallelismDefaultValueProvider.value,
     val disableCleanupAfterFailure: Boolean = false,
     val dontPropagateProxyEnvironmentVariables: Boolean = false,
-    val taskName: String? = null
+    val taskName: String? = null,
+    val additionalTaskCommandArguments: Iterable<String> = emptyList()
 ) {
     fun extend(originalKodein: Kodein): Kodein = Kodein {
         extend(originalKodein)

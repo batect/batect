@@ -29,6 +29,8 @@ object RunOptionsSpec : Spek({
     describe("a set of run options") {
         given("a set of command line options with cleanup after failure enabled") {
             val commandLineOptions = CommandLineOptions(
+                taskName = "some-task",
+                additionalTaskCommandArguments = listOf("extra-arg-1", "extra-arg-2"),
                 disableCleanupAfterFailure = false,
                 levelOfParallelism = 444,
                 dontPropagateProxyEnvironmentVariables = true
@@ -36,6 +38,14 @@ object RunOptionsSpec : Spek({
 
             on("creating a set of run options") {
                 val runOptions = RunOptions(commandLineOptions)
+
+                it("takes the task name from the command line options") {
+                    assertThat(runOptions.taskName, equalTo(commandLineOptions.taskName))
+                }
+
+                it("takes the additional task command arguments from the command line options") {
+                    assertThat(runOptions.additionalTaskCommandArguments, equalTo(commandLineOptions.additionalTaskCommandArguments))
+                }
 
                 it("takes the level of parallelism from the command line options") {
                     assertThat(runOptions.levelOfParallelism, equalTo(commandLineOptions.levelOfParallelism))
@@ -53,6 +63,8 @@ object RunOptionsSpec : Spek({
 
         given("a set of command line options with cleanup after failure disabled") {
             val commandLineOptions = CommandLineOptions(
+                taskName = "some-task",
+                additionalTaskCommandArguments = listOf("extra-arg-1", "extra-arg-2"),
                 disableCleanupAfterFailure = true,
                 levelOfParallelism = 444,
                 dontPropagateProxyEnvironmentVariables = false
@@ -60,6 +72,14 @@ object RunOptionsSpec : Spek({
 
             on("creating a set of run options") {
                 val runOptions = RunOptions(commandLineOptions)
+
+                it("takes the task name from the command line options") {
+                    assertThat(runOptions.taskName, equalTo(commandLineOptions.taskName))
+                }
+
+                it("takes the additional task command arguments from the command line options") {
+                    assertThat(runOptions.additionalTaskCommandArguments, equalTo(commandLineOptions.additionalTaskCommandArguments))
+                }
 
                 it("takes the level of parallelism from the command line options") {
                     assertThat(runOptions.levelOfParallelism, equalTo(commandLineOptions.levelOfParallelism))

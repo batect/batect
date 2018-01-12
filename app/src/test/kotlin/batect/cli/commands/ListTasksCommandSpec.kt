@@ -22,6 +22,7 @@ import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.config.io.ConfigurationLoader
+import batect.os.Command
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
@@ -36,7 +37,7 @@ object ListTasksCommandSpec : Spek({
     describe("a 'list tasks' command") {
         describe("when invoked") {
             val configFile = "config.yml"
-            val taskRunConfig = TaskRunConfiguration("some-container", "dont-care")
+            val taskRunConfig = TaskRunConfiguration("some-container", Command.parse("dont-care"))
             val task1 = Task("first-task", taskRunConfig)
             val task2 = Task("other-task", taskRunConfig)
             val task3 = Task("another-task-with-a-description", taskRunConfig, "do the thing")

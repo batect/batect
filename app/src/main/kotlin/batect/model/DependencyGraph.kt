@@ -19,8 +19,9 @@ package batect.model
 import batect.config.Configuration
 import batect.config.Container
 import batect.config.Task
+import batect.os.Command
 
-data class DependencyGraph(val config: Configuration, val task: Task) {
+data class DependencyGraph(val config: Configuration, val task: Task, val containerCommandResolver: ContainerCommandResolver) {
     private val nodesMap = createNodes()
 
     val taskContainerNode: DependencyGraphNode by lazy { nodeFor(config.containers[task.runConfiguration.container]!!) }
@@ -68,8 +69,9 @@ data class DependencyGraph(val config: Configuration, val task: Task) {
             }
 
             val dependencyNodes = resolveDependencies(dependencies, nodesAlreadyCreated, newPath)
+            val command = containerCommandResolver.resolveCommand(container, task)
 
-            DependencyGraphNode(container, isRootNode, dependencyNodes, this)
+            DependencyGraphNode(container, command, isRootNode, dependencyNodes, this)
         }
     }
 
@@ -127,6 +129,7 @@ data class DependencyGraph(val config: Configuration, val task: Task) {
 
 data class DependencyGraphNode(
         val container: Container,
+        val command: Command?,
         val isRootNode: Boolean,
         val dependsOn: Set<DependencyGraphNode>,
         val graph: DependencyGraph) {

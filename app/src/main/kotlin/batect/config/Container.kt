@@ -16,10 +16,12 @@
 
 package batect.config
 
+import batect.os.Command
+
 data class Container(
         val name: String,
         val imageSource: ImageSource,
-        val command: String? = null,
+        val command: Command? = null,
         val environment: Map<String, String> = emptyMap(),
         val workingDirectory: String? = null,
         val volumeMounts: Set<VolumeMount> = emptySet(),

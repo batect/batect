@@ -16,6 +16,8 @@
 
 package batect.config
 
+import batect.os.Command
+
 data class Task(val name: String,
                 val runConfiguration: TaskRunConfiguration,
                 val description: String = "",
@@ -24,6 +26,6 @@ data class Task(val name: String,
 
 data class TaskRunConfiguration(
     val container: String,
-    val command: String? = null,
+    val command: Command? = null,
     val additionalEnvironmentVariables: Map<String, String> = emptyMap()
 )

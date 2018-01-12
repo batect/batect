@@ -30,7 +30,6 @@ import batect.updates.UpdateNotifier
 
 class RunTaskCommand(
     val configFile: String,
-    val taskName: String,
     val runOptions: RunOptions,
     val configLoader: ConfigurationLoader,
     val taskExecutionOrderResolver: TaskExecutionOrderResolver,
@@ -44,7 +43,7 @@ class RunTaskCommand(
         val config = configLoader.loadConfig(configFile)
 
         try {
-            val tasks = taskExecutionOrderResolver.resolveExecutionOrder(config, taskName)
+            val tasks = taskExecutionOrderResolver.resolveExecutionOrder(config, runOptions.taskName)
 
             updateNotifier.run()
 

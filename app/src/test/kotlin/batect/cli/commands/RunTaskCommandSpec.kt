@@ -63,7 +63,7 @@ object RunTaskCommandSpec : Spek({
             val mainTask = Task(taskName, TaskRunConfiguration("the-container"))
             val config = Configuration("the_project", TaskMap(), ContainerMap())
             val expectedTaskExitCode = 123
-            val runOptions = RunOptions(64, BehaviourAfterFailure.Cleanup, true)
+            val runOptions = RunOptions(taskName, emptyList(), 64, BehaviourAfterFailure.Cleanup, true)
             val logSink = InMemoryLogSink()
             val logger = Logger("test.source", logSink)
 
@@ -93,7 +93,7 @@ object RunTaskCommandSpec : Spek({
                         on { run(config, mainTask, runOptions) } doReturn expectedTaskExitCode
                     }
 
-                    val command = RunTaskCommand(configFile, taskName, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
+                    val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
                     val exitCode = command.run()
 
                     it("runs the task") {
@@ -121,7 +121,7 @@ object RunTaskCommandSpec : Spek({
                         on { run(config, mainTask, runOptions) } doReturn 0
                     }
 
-                    val command = RunTaskCommand(configFile, taskName, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
+                    val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
                     val exitCode = command.run()
 
                     it("runs the task") {
@@ -158,7 +158,7 @@ object RunTaskCommandSpec : Spek({
                         on { run(config, mainTask, runOptions) } doReturn expectedTaskExitCode
                     }
 
-                    val command = RunTaskCommand(configFile, taskName, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
+                    val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
                     val exitCode = command.run()
 
                     it("runs the dependency task") {
@@ -194,7 +194,7 @@ object RunTaskCommandSpec : Spek({
                         on { run(config, otherTask, runOptions) } doReturn 1
                     }
 
-                    val command = RunTaskCommand(configFile, taskName, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
+                    val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
                     val exitCode = command.run()
 
                     it("runs the dependency task") {
@@ -226,7 +226,7 @@ object RunTaskCommandSpec : Spek({
 
                 val taskRunner = mock<TaskRunner>()
 
-                val command = RunTaskCommand(configFile, taskName, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
+                val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
                 val exitCode = command.run()
 
                 it("prints a message to the output") {

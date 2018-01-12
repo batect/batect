@@ -28,6 +28,8 @@ import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.config.VolumeMount
+import batect.os.Command
+import batect.os.InvalidCommandLineException
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
@@ -48,7 +50,7 @@ data class TaskFromFile(@JsonProperty("run") val runConfiguration: TaskRunConfig
                         @JsonProperty("prerequisites") @JsonDeserialize(using = StringSetDeserializer::class) val prerequisiteTasks: Set<String> = emptySet()
 ) {
 
-    fun toTask(name: String): Task = Task(name, runConfiguration.toRunConfiguration(), description, dependsOnContainers, prerequisiteTasks)
+    fun toTask(name: String): Task = Task(name, runConfiguration.toRunConfiguration(name), description, dependsOnContainers, prerequisiteTasks)
 }
 
 data class TaskRunConfigurationFromFile(
@@ -56,7 +58,15 @@ data class TaskRunConfigurationFromFile(
     val command: String? = null,
     @JsonDeserialize(using = EnvironmentDeserializer::class) @JsonProperty("environment") val additionalEnvironmentVariables: Map<String, String> = emptyMap()
 ) {
-    fun toRunConfiguration(): TaskRunConfiguration = TaskRunConfiguration(container, command, additionalEnvironmentVariables)
+    fun toRunConfiguration(taskName: String): TaskRunConfiguration {
+        try {
+            val parsedCommand = Command.parse(command)
+
+            return TaskRunConfiguration(container, parsedCommand, additionalEnvironmentVariables)
+        } catch (e: InvalidCommandLineException) {
+            throw ConfigurationException("Command for task '$taskName' is invalid: ${e.message}")
+        }
+    }
 }
 
 data class ContainerFromFile(
@@ -77,7 +87,13 @@ data class ContainerFromFile(
             resolveVolumeMount(it, name, pathResolver)
         }.toSet()
 
-        return Container(name, imageSource, command, environment, workingDirectory, resolvedVolumeMounts, portMappings, dependencies, healthCheckConfig)
+        try {
+            val parsedCommand = Command.parse(command)
+
+            return Container(name, imageSource, parsedCommand, environment, workingDirectory, resolvedVolumeMounts, portMappings, dependencies, healthCheckConfig)
+        } catch (e: InvalidCommandLineException) {
+            throw ConfigurationException("Command for container '$name' is invalid: ${e.message}")
+        }
     }
 
     private fun resolveImageSource(containerName: String, pathResolver: PathResolver): ImageSource {

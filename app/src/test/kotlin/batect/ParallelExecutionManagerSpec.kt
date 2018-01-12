@@ -52,7 +52,7 @@ object ParallelExecutionManagerSpec : Spek({
         val eventLogger = mock<EventLogger>()
         val taskStepRunner = mock<TaskStepRunner>()
         val stateMachine = mock<TaskStateMachine>()
-        val runOptions = RunOptions(2, BehaviourAfterFailure.Cleanup, true)
+        val runOptions = RunOptions("some-task", emptyList(), 2, BehaviourAfterFailure.Cleanup, true)
         val logger = Logger("some.source", InMemoryLogSink())
         val executionManager by createForEachTest {
             ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, "some-task", runOptions, logger)

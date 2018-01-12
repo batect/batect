@@ -33,6 +33,7 @@ import batect.model.steps.CreateTaskNetworkStep
 import batect.model.steps.DeleteTaskNetworkStep
 import batect.model.steps.DisplayTaskFailureStep
 import batect.model.steps.TaskStep
+import batect.os.Command
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
@@ -58,17 +59,21 @@ object TaskStateMachineSpec : Spek({
 
         val dependencyContainer2 = Container("dependency-container-2", imageSourceDoesNotMatter(),
             dependencies = setOf(dependencyContainer1.name),
-            command = "do-stuff-in-container-2")
+            command = Command.parse("do-stuff-in-container-2"))
 
         val taskContainer = Container("some-container", imageSourceDoesNotMatter(),
             dependencies = setOf(dependencyContainer2.name),
-            command = "do-stuff-in-task-container")
+            command = Command.parse("do-stuff-in-task-container"))
 
         val unrelatedContainer = Container("some-other-container", imageSourceDoesNotMatter())
-        val runConfig = TaskRunConfiguration(taskContainer.name, "some-command", mapOf("SOME_VAR" to "some value"))
+        val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"), mapOf("SOME_VAR" to "some value"))
         val task = Task("the-task", runConfig)
         val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, unrelatedContainer))
-        val graph = DependencyGraph(config, task)
+        val commandResolver = mock<ContainerCommandResolver> {
+            on { resolveCommand(any(), any()) } doReturn Command.parse("the-resolved-command")
+        }
+
+        val graph = DependencyGraph(config, task, commandResolver)
         val loggerCreatedByFactory = mock<Logger>()
         val loggerFactory = mock<LoggerFactory> {
             on { createLoggerForClass(any()) } doReturn loggerCreatedByFactory
@@ -406,39 +411,9 @@ object TaskStateMachineSpec : Spek({
             }
         }
 
-        describe("getting the command for a container") {
-            describe("and when the container is not the task container") {
-                on("and when the container does not specify an explicit command") {
-                    it("returns null") {
-                        assertThat(stateMachine.commandForContainer(dependencyContainer1), absent())
-                    }
-                }
-
-                on("and when the container specifies an explicit command") {
-                    it("returns that command") {
-                        assertThat(stateMachine.commandForContainer(dependencyContainer2), equalTo(dependencyContainer2.command))
-                    }
-                }
-            }
-
-            describe("and when the container is the task container") {
-                on("and when the task run configuration specifies a command") {
-                    it("returns that command") {
-                        assertThat(stateMachine.commandForContainer(taskContainer), equalTo(runConfig.command))
-                    }
-                }
-
-                on("and when the task run configuration does not specify a command") {
-                    val otherRunConfiguration = TaskRunConfiguration(taskContainer.name, null)
-                    val otherTask = Task("the-other-task", otherRunConfiguration)
-                    val otherConfig = Configuration("the-project", TaskMap(otherTask), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, unrelatedContainer))
-                    val otherGraph = DependencyGraph(otherConfig, otherTask)
-                    val otherStateMachine = TaskStateMachine(otherGraph, BehaviourAfterFailure.DontCleanup, Logger("other.logger", InMemoryLogSink()), loggerFactory)
-
-                    it("returns the command from the container configuration") {
-                        assertThat(otherStateMachine.commandForContainer(taskContainer), equalTo(taskContainer.command))
-                    }
-                }
+        on("getting the command for a container") {
+            it("returns the command from the container's dependency graph node") {
+                assertThat(stateMachine.commandForContainer(dependencyContainer1), equalTo(graph.nodeFor(dependencyContainer1).command))
             }
         }
 

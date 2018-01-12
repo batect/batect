@@ -20,6 +20,7 @@ import batect.config.Container
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
 import batect.config.VolumeMount
+import batect.os.Command
 import batect.os.ProxyEnvironmentVariablesProvider
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.isEmptyMap
@@ -40,7 +41,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
     describe("a Docker container creation request factory") {
         val image = DockerImage("some-image")
         val network = DockerNetwork("some-network")
-        val command = listOf("some-app", "some-arg")
+        val command = Command.parse("some-app some-arg")
 
         given("the console's type is not available") {
             val consoleInfo = mock<ConsoleInfo>()
@@ -55,7 +56,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 val container = Container(
                     "some-container",
                     imageSourceDoesNotMatter(),
-                    command = "some-command-that-wont-be-used",
+                    command = Command.parse("some-command-that-wont-be-used"),
                     workingDirectory = "/some-work-dir",
                     volumeMounts = setOf(VolumeMount("local", "remote", "mode")),
                     portMappings = setOf(PortMapping(123, 456)),
@@ -75,7 +76,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     }
 
                     it("populates the command on the request") {
-                        assertThat(request.command, equalTo<Iterable<String>>(command))
+                        assertThat(request.command, equalTo(command!!.parsedCommand))
                     }
 
                     it("populates the hostname and network alias on the request with the name of the container") {
@@ -101,6 +102,18 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
                     it("populates the health check configuration on the request with the health check configuration from the container") {
                         assertThat(request.healthCheckConfig, equalTo(container.healthCheckConfig))
+                    }
+                }
+            }
+
+            given("there is no explicit command to run") {
+                val container = Container("some-container", imageSourceDoesNotMatter(), command = null)
+
+                on("creating the request") {
+                    val request = factory.create(container, image, network, null, emptyMap(), propagateProxyEnvironmentVariables)
+
+                    it("does not populate the command on the request") {
+                        assertThat(request.command, equalTo(emptyList()))
                     }
                 }
             }

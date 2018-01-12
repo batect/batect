@@ -19,6 +19,7 @@ package batect.model.events
 import batect.model.steps.TaskStep
 import batect.config.Container
 import batect.model.BehaviourAfterFailure
+import batect.os.Command
 import kotlin.reflect.KClass
 
 // TODO: do we need to provide higher-level methods (eg. getDockerContainerForContainer())?
@@ -36,7 +37,7 @@ interface TaskEventContext {
     fun <T : TaskStep> getProcessedStepsOfType(clazz: KClass<T>): Set<T>
 
     fun isTaskContainer(container: Container): Boolean
-    fun commandForContainer(container: Container): String?
+    fun commandForContainer(container: Container): Command?
     fun additionalEnvironmentVariablesForContainer(container: Container): Map<String, String>
     fun dependenciesOf(container: Container): Set<Container>
     fun containersThatDependOn(container: Container): Set<Container>

@@ -28,6 +28,7 @@ import batect.config.Container
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.logging.Logger
+import batect.os.Command
 import batect.testutils.InMemoryLogSink
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -58,16 +59,18 @@ object ImageBuiltEventSpec : Spek({
             on("when the task network has already been created") {
                 val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
                 val network = DockerNetwork("the-network")
+                val command = Command.parse("do-stuff")
+
                 val context = mock<TaskEventContext> {
                     on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
-                    on { commandForContainer(container) } doReturn "do-stuff"
+                    on { commandForContainer(container) } doReturn command
                     on { additionalEnvironmentVariablesForContainer(container) } doReturn additionalEnvironmentVariables
                 }
 
                 event.apply(context, logger)
 
                 it("queues a 'create container' step") {
-                    verify(context).queueStep(CreateContainerStep(container, "do-stuff", additionalEnvironmentVariables, image, network))
+                    verify(context).queueStep(CreateContainerStep(container, command, additionalEnvironmentVariables, image, network))
                 }
             }
 

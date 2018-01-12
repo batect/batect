@@ -24,6 +24,7 @@ import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.config.VolumeMount
+import batect.os.Command
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -75,7 +76,7 @@ object ConfigurationFileSpec : Spek({
                     assertThat(resultingConfig.tasks, equalTo(TaskMap(
                         Task(
                             taskName,
-                            TaskRunConfiguration(runConfiguration.container, runConfiguration.command, runConfiguration.additionalEnvironmentVariables),
+                            TaskRunConfiguration(runConfiguration.container, Command.parse(runConfiguration.command), runConfiguration.additionalEnvironmentVariables),
                             "Some description",
                             task.dependsOnContainers,
                             task.prerequisiteTasks
@@ -127,7 +128,7 @@ object ConfigurationFileSpec : Spek({
                         Container(
                             containerName,
                             BuildImage(resolvedBuildDirectory),
-                            container.command,
+                            Command.parse(container.command),
                             container.environment,
                             container.workingDirectory,
                             setOf(VolumeMount(resolvedVolumeMountPath, volumeMountTargetPath, "some-options")),
@@ -185,6 +186,28 @@ object ConfigurationFileSpec : Spek({
                 it("fails with an appropriate error message") {
                     assertThat({ configFile.toConfiguration(pathResolver) },
                         throws(withMessage("Local path 'local_volume_path' for volume mount in container 'the_container_name' is not a valid path.")))
+                }
+            }
+
+            on("converting a configuration file with a container with an invalid command") {
+                val container = ContainerFromFile(imageName = "some-image", command = "'")
+                val configFile = ConfigurationFile("the_project_name", containers = mapOf("the_container_name" to container))
+
+                it("fails with an appropriate error message") {
+                    assertThat({ configFile.toConfiguration(mock()) },
+                        throws(withMessage("Command for container 'the_container_name' is invalid: Command `'` is invalid: it contains an unbalanced single quote")))
+                }
+            }
+
+            on("converting a configuration file with a task run configuration with an invalid command") {
+                val container = ContainerFromFile(imageName = "some-image")
+                val runConfig = TaskRunConfigurationFromFile("the_container_name", command = "'")
+                val task = TaskFromFile(runConfig)
+                val configFile = ConfigurationFile("the_project_name", containers = mapOf("the_container_name" to container), tasks = mapOf("the_task_name" to task))
+
+                it("fails with an appropriate error message") {
+                    assertThat({ configFile.toConfiguration(mock()) },
+                        throws(withMessage("Command for task 'the_task_name' is invalid: Command `'` is invalid: it contains an unbalanced single quote")))
                 }
             }
         }

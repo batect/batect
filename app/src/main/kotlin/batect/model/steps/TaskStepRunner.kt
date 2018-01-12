@@ -55,14 +55,11 @@ import batect.model.events.TaskNetworkCreationFailedEvent
 import batect.model.events.TaskNetworkDeletedEvent
 import batect.model.events.TaskNetworkDeletionFailedEvent
 import batect.model.events.TaskStartedEvent
-import batect.os.CommandParser
-import batect.os.InvalidCommandLineException
 import batect.os.ProxyEnvironmentVariablesProvider
 
 class TaskStepRunner(
     private val dockerClient: DockerClient,
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
-    private val commandParser: CommandParser,
     private val creationRequestFactory: DockerContainerCreationRequestFactory,
     private val logger: Logger
 ) {
@@ -128,12 +125,9 @@ class TaskStepRunner(
 
     private fun handleCreateContainerStep(step: CreateContainerStep, eventSink: TaskEventSink, runOptions: RunOptions) {
         try {
-            val command = commandParser.parse(step.command)
-            val creationRequest = creationRequestFactory.create(step.container, step.image, step.network, command, step.additionalEnvironmentVariables, runOptions.propagateProxyEnvironmentVariables)
+            val creationRequest = creationRequestFactory.create(step.container, step.image, step.network, step.command, step.additionalEnvironmentVariables, runOptions.propagateProxyEnvironmentVariables)
             val dockerContainer = dockerClient.create(creationRequest)
             eventSink.postEvent(ContainerCreatedEvent(step.container, dockerContainer))
-        } catch (e: InvalidCommandLineException) {
-            eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))
         } catch (e: ContainerCreationFailedException) {
             eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))
         }

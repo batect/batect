@@ -35,12 +35,12 @@ import batect.logging.LogMessageWriter
 import batect.logging.LoggerFactory
 import batect.logging.StandardAdditionalDataSource
 import batect.logging.singletonWithLogger
+import batect.model.ContainerCommandResolver
 import batect.model.DependencyGraphProvider
 import batect.model.RunOptions
 import batect.model.TaskExecutionOrderResolver
 import batect.model.TaskStateMachineProvider
 import batect.model.steps.TaskStepRunner
-import batect.os.CommandParser
 import batect.os.ProcessRunner
 import batect.os.ProxyEnvironmentVariablesProvider
 import batect.os.SystemInfo
@@ -122,7 +122,6 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<DockerImageLabellingStrategy>() with singleton { DockerImageLabellingStrategy() }
     bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }
     bind<DockerContainerCreationCommandGenerator>() with singleton { DockerContainerCreationCommandGenerator() }
-    bind<CommandParser>() with singleton { CommandParser() }
 
     bind<EventLoggerProvider>() with singleton {
         EventLoggerProvider(
@@ -141,9 +140,9 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<Console>(PrintStreamType.Error) with singleton { Console(instance(PrintStreamType.Error), enableComplexOutput = !commandLineOptions().disableColorOutput) }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
     bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
-    bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), instance(), instance(), instance(), logger) }
+    bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), instance(), instance(), logger) }
     bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
-    bind<DependencyGraphProvider>() with singletonWithLogger { logger -> DependencyGraphProvider(logger) }
+    bind<DependencyGraphProvider>() with singletonWithLogger { logger -> DependencyGraphProvider(instance(), logger) }
     bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance()) }
     bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance(), instance()) }
     bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider() }
@@ -162,11 +161,11 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     bind<OkHttpClient>() with singleton { OkHttpClient.Builder().build() }
     bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider() }
     bind<RunOptions>() with singleton { RunOptions(commandLineOptions()) }
+    bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance()) }
 
     bind<RunTaskCommand>() with singletonWithLogger { logger ->
         RunTaskCommand(
             commandLineOptions().configurationFileName,
-            commandLineOptions().taskName!!,
             instance(),
             instance(),
             instance(),

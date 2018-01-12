@@ -48,12 +48,28 @@ object CommandLineOptionsParserSpec : Spek({
             }
         }
 
-        given("multiple arguments") {
+        given("multiple arguments without a '--' prefix") {
             on("parsing the command line") {
                 val result = CommandLineOptionsParser().parse(listOf("some-task", "some-extra-arg"))
 
                 it("returns an error message") {
-                    assertThat(result, equalTo<CommandLineOptionsParsingResult>(CommandLineOptionsParsingResult.Failed("Too many arguments provided. The first extra argument is 'some-extra-arg'.")))
+                    assertThat(result, equalTo<CommandLineOptionsParsingResult>(CommandLineOptionsParsingResult.Failed(
+                        "Too many arguments provided. The first extra argument is 'some-extra-arg'.\n" +
+                            "To pass additional arguments to the task command, prefix them with '--', for example, 'batect my-task -- --extra-option-1 --extra-option-2 value'."
+                    )))
+                }
+            }
+        }
+
+        given("multiple arguments with a '--' prefix") {
+            on("parsing the command line") {
+                val result = CommandLineOptionsParser().parse(listOf("some-task", "--", "some-extra-arg"))
+
+                it("returns a set of options with the task name and additional arguments populated") {
+                    assertThat(result, equalTo<CommandLineOptionsParsingResult>(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
+                        taskName = "some-task",
+                        additionalTaskCommandArguments = listOf("some-extra-arg")
+                    ))))
                 }
             }
         }
@@ -76,7 +92,10 @@ object CommandLineOptionsParserSpec : Spek({
                 val result = CommandLineOptionsParser().parse(listOf("--quiet", "some-task", "some-extra-arg"))
 
                 it("returns an error message") {
-                    assertThat(result, equalTo<CommandLineOptionsParsingResult>(CommandLineOptionsParsingResult.Failed("Too many arguments provided. The first extra argument is 'some-extra-arg'.")))
+                    assertThat(result, equalTo<CommandLineOptionsParsingResult>(CommandLineOptionsParsingResult.Failed(
+                        "Too many arguments provided. The first extra argument is 'some-extra-arg'.\n" +
+                            "To pass additional arguments to the task command, prefix them with '--', for example, 'batect my-task -- --extra-option-1 --extra-option-2 value'."
+                    )))
                 }
             }
         }

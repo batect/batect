@@ -65,8 +65,7 @@ import batect.model.events.TaskNetworkCreationFailedEvent
 import batect.model.events.TaskNetworkDeletedEvent
 import batect.model.events.TaskNetworkDeletionFailedEvent
 import batect.model.events.TaskStartedEvent
-import batect.os.CommandParser
-import batect.os.InvalidCommandLineException
+import batect.os.Command
 import batect.os.ProxyEnvironmentVariablesProvider
 import batect.testutils.InMemoryLogSink
 import batect.testutils.hasMessage
@@ -87,7 +86,6 @@ import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 
@@ -95,7 +93,6 @@ object TaskStepRunnerSpec : Spek({
     describe("a task step runner") {
         val eventSink = mock<TaskEventSink>()
         val dockerClient = mock<DockerClient>()
-        val commandParser = mock<CommandParser>()
         val creationRequestFactory = mock<DockerContainerCreationRequestFactory>()
 
         val proxyVariables = mapOf("SOME_PROXY_CONFIG" to "some_proxy")
@@ -104,15 +101,14 @@ object TaskStepRunnerSpec : Spek({
         }
 
         val logSink = InMemoryLogSink()
-        val runOptions = RunOptions(123, BehaviourAfterFailure.Cleanup, true)
+        val runOptions = RunOptions("some-task", emptyList(), 123, BehaviourAfterFailure.Cleanup, true)
 
         val logger = Logger("some.source", logSink)
-        val runner = TaskStepRunner(dockerClient, proxyEnvironmentVariablesProvider, commandParser, creationRequestFactory, logger)
+        val runner = TaskStepRunner(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, logger)
 
         beforeEachTest {
             reset(eventSink)
             reset(dockerClient)
-            reset(commandParser)
             reset(creationRequestFactory)
         }
 
@@ -189,7 +185,7 @@ object TaskStepRunnerSpec : Spek({
                         val image = DockerImage("some-image")
                         whenever(dockerClient.build(eq("some-project-name"), eq(container), any(), any())).thenReturn(image)
 
-                        val runOptionsWithProxyEnvironmentVariablePropagationDisabled = RunOptions(123, BehaviourAfterFailure.Cleanup, false)
+                        val runOptionsWithProxyEnvironmentVariablePropagationDisabled = RunOptions("some-task", emptyList(), 123, BehaviourAfterFailure.Cleanup, false)
                         runner.run(step, eventSink, runOptionsWithProxyEnvironmentVariablePropagationDisabled)
 
                         it("does not pass the proxy-related environment variables as image build arguments") {
@@ -265,54 +261,40 @@ object TaskStepRunnerSpec : Spek({
 
             describe("running a 'create container' step") {
                 val container = Container("some-container", imageSourceDoesNotMatter())
-                val command = "do-stuff"
+                val command = Command.parse("do-stuff")
                 val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
                 val image = DockerImage("some-image")
                 val network = DockerNetwork("some-network")
+
                 val step = CreateContainerStep(container, command, additionalEnvironmentVariables, image, network)
+                val request = DockerContainerCreationRequest(image, network, command!!.parsedCommand, "some-container", "some-container", emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig())
 
-                given("parsing the command succeeds") {
-                    val parsedCommand = listOf("program", "argument")
-                    val request = DockerContainerCreationRequest(image, network, parsedCommand, "some-container", "some-container", emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig())
+                beforeEachTest {
+                    whenever(creationRequestFactory.create(container, image, network, command, additionalEnvironmentVariables, runOptions.propagateProxyEnvironmentVariables)).doReturn(request)
+                }
 
-                    beforeEachTest {
-                        whenever(commandParser.parse(command)).doReturn(parsedCommand)
-                        whenever(creationRequestFactory.create(container, image, network, parsedCommand, additionalEnvironmentVariables, runOptions.propagateProxyEnvironmentVariables)).doReturn(request)
+                on("when creating the container succeeds") {
+                    val dockerContainer = DockerContainer("some-id")
+                    whenever(dockerClient.create(request)).doReturn(dockerContainer)
+
+                    runner.run(step, eventSink, runOptions)
+
+                    it("creates the container with the provided configuration") {
+                        verify(dockerClient).create(request)
                     }
 
-                    on("when creating the container succeeds") {
-                        val dockerContainer = DockerContainer("some-id")
-                        whenever(dockerClient.create(request)).doReturn(dockerContainer)
-
-                        runner.run(step, eventSink, runOptions)
-
-                        it("creates the container with the provided configuration") {
-                            verify(dockerClient).create(request)
-                        }
-
-                        it("emits a 'container created' event") {
-                            verify(eventSink).postEvent(ContainerCreatedEvent(container, dockerContainer))
-                        }
-                    }
-
-                    on("when creating the container fails") {
-                        whenever(dockerClient.create(request)).doThrow(ContainerCreationFailedException("Something went wrong."))
-
-                        runner.run(step, eventSink, runOptions)
-
-                        it("emits a 'container creation failed' event") {
-                            verify(eventSink).postEvent(ContainerCreationFailedEvent(container, "Something went wrong."))
-                        }
+                    it("emits a 'container created' event") {
+                        verify(eventSink).postEvent(ContainerCreatedEvent(container, dockerContainer))
                     }
                 }
 
-                on("when parsing the command fails") {
-                    whenever(commandParser.parse(command)).doThrow(InvalidCommandLineException("That command line isn't valid."))
+                on("when creating the container fails") {
+                    whenever(dockerClient.create(request)).doThrow(ContainerCreationFailedException("Something went wrong."))
 
                     runner.run(step, eventSink, runOptions)
 
                     it("emits a 'container creation failed' event") {
-                        verify(eventSink).postEvent(ContainerCreationFailedEvent(container, "That command line isn't valid."))
+                        verify(eventSink).postEvent(ContainerCreationFailedEvent(container, "Something went wrong."))
                     }
                 }
             }

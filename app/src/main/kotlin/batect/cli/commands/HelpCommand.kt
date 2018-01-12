@@ -22,7 +22,7 @@ import java.io.PrintStream
 
 class HelpCommand(val optionsParser: CommandLineOptionsParser, val outputStream: PrintStream) : Command {
     override fun run(): Int {
-        outputStream.println("Usage: batect [options] task")
+        outputStream.println("Usage: batect [options] task [-- additional arguments to pass to task]")
         outputStream.println()
         outputStream.println("Options:")
 

@@ -34,6 +34,7 @@ import batect.model.steps.PullImageStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.model.steps.TaskStep
+import batect.os.Command
 import batect.ui.Console
 import batect.ui.ConsoleColor
 
@@ -49,7 +50,7 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
     private var hasStarted = false
     private var isHealthy = false
     private var isRunning = false
-    private var command: String? = null
+    private var command: Command? = null
 
     private var networkHasBeenCreated = false
 
@@ -128,7 +129,7 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
             console.print("running")
         } else {
             console.print("running ")
-            console.printBold(command!!)
+            console.printBold(command!!.originalCommand)
         }
     }
 

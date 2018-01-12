@@ -35,6 +35,7 @@ import batect.config.PortMapping
 import batect.config.PullImage
 import batect.config.VolumeMount
 import batect.logging.Logger
+import batect.os.Command
 import batect.testutils.InMemoryLogSink
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
@@ -116,7 +117,7 @@ object ConfigurationLoaderSpec : Spek({
                 val task = config.tasks["first_task"]!!
                 assertThat(task.name, equalTo("first_task"))
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
-                assertThat(task.runConfiguration.command, equalTo("./gradlew doStuff"))
+                assertThat(task.runConfiguration.command, equalTo(Command.parse("./gradlew doStuff")))
                 assertThat(task.runConfiguration.additionalEnvironmentVariables, equalTo(mapOf("SOME_VAR" to "value")))
                 assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.prerequisiteTasks, isEmpty)
@@ -215,7 +216,7 @@ object ConfigurationLoaderSpec : Spek({
                 val task = config.tasks["first_task"]!!
                 assertThat(task.name, equalTo("first_task"))
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
-                assertThat(task.runConfiguration.command, equalTo("./gradlew doStuff"))
+                assertThat(task.runConfiguration.command, equalTo(Command.parse("./gradlew doStuff")))
                 assertThat(task.dependsOnContainers, equalTo(setOf("dependency-1", "dependency-2")))
                 assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, isEmptyString)
@@ -268,7 +269,7 @@ object ConfigurationLoaderSpec : Spek({
                 val task = config.tasks["first_task"]!!
                 assertThat(task.name, equalTo("first_task"))
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
-                assertThat(task.runConfiguration.command, equalTo("./gradlew doStuff"))
+                assertThat(task.runConfiguration.command, equalTo(Command.parse("./gradlew doStuff")))
                 assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.prerequisiteTasks, equalTo(setOf("other-task", "another-task")))
                 assertThat(task.description, isEmptyString)
@@ -412,7 +413,7 @@ object ConfigurationLoaderSpec : Spek({
                 val container = config.containers["container-1"]!!
                 assertThat(container.name, equalTo("container-1"))
                 assertThat(container.imageSource, equalTo<ImageSource>(BuildImage("/resolved/container-1-build-dir")))
-                assertThat(container.command, equalTo("do-the-thing.sh some-param"))
+                assertThat(container.command, equalTo(Command.parse("do-the-thing.sh some-param")))
                 assertThat(container.environment, equalTo(mapOf("OPTS" to "-Dthing", "BOOL_VALUE" to "1")))
                 assertThat(container.workingDirectory, equalTo("/here"))
                 assertThat(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))

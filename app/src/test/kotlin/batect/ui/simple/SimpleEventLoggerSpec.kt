@@ -29,6 +29,7 @@ import batect.model.steps.PullImageStep
 import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
+import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console
@@ -143,13 +144,13 @@ object SimpleEventLoggerSpec : Spek({
                     }
 
                     on("and that step contained a command") {
-                        val createContainerStep = CreateContainerStep(container, "do-stuff.sh", emptyMap(), DockerImage("some-image"), DockerNetwork("some-network"))
+                        val createContainerStep = CreateContainerStep(container, Command.parse("do-stuff.sh"), emptyMap(), DockerImage("some-image"), DockerNetwork("some-network"))
                         val runContainerStep = RunContainerStep(container, DockerContainer("not-important"))
 
                         logger.onStartingTaskStep(createContainerStep)
                         logger.onStartingTaskStep(runContainerStep)
 
-                        it("prints a message to the output including the command") {
+                        it("prints a message to the output including the original command") {
                             inOrder(whiteConsole) {
                                 verify(whiteConsole).print("Running ")
                                 verify(whiteConsole).printBold("do-stuff.sh")

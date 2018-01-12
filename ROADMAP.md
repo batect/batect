@@ -22,9 +22,15 @@ If there's something you're really keen to see, pull requests are always welcome
 * check that Docker client and server are compatible versions
 * warn when using an image without a tag or with tag `latest`
 * start containers with `--user $(id -u):$(id -g)` so that any files created in any mounted directories have the current user as their owner
-  * some applications won't like the fact that the user doesn't actually exist, so a configuration option on the container level to turn this off is necessary
+  * ignore on OS X?
+  * some applications won't like the fact that the user doesn't actually exist, so this should be opt-in
+  * for better compatibility, should create `/etc/passwd` and `/etc/group` files inside the container with the user and group listed, but this creates other problems:
+    * if we just create a `/etc/passwd` with `root` and the other user, any other users that existed in the container would be lost (ditto for `/etc/groups`)
+    * if we pull the existing `/etc/passwd` out of the container and add the host user, there's the potential for conflicts
+    * what should the home directory of the user be? (default to `/root`?)
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 * support for Windows
+* infer project name from project directory name if not provided
 
 ### Other
 * logging (for batect internals)
@@ -42,6 +48,10 @@ If there's something you're really keen to see, pull requests are always welcome
   * importance of idempotency
   * improve the getting started guide (it's way too wordy)
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
+* make configuration-related error messages clearer and remove exception class names etc.
+* refactor Kodein configuration (is now over 60 lines long)
+* fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information
+  doesn't correctly overwrite previous updates
 * easy way to update to new versions when notified (eg. `batect update` downloads new wrapper script and replaces it in place)
 * use batect to build batect (self-hosting)
 * move to Kotlin/Native

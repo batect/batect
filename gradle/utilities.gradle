@@ -1,5 +1,5 @@
 /*
-   Copyright 2017 Charles Korn.
+   Copyright 2017-2018 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,6 +14,10 @@
    limitations under the License.
 */
 
+ext {
+    runProcess = this.&runProcess
+}
+
 String runProcess(String... args) {
     def process = new ProcessBuilder(args)
         .redirectErrorStream(true)
@@ -27,8 +31,4 @@ String runProcess(String... args) {
     }
 
     return output.trim()
-}
-
-ext {
-    runProcess = this.&runProcess
 }

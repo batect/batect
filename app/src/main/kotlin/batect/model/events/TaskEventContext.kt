@@ -48,8 +48,8 @@ interface TaskEventContext {
     val projectName: String
 }
 
-inline fun <reified T: TaskEvent> TaskEventContext.getPastEventsOfType(): Set<T> = this.getPastEventsOfType(T::class)
-inline fun <reified T: TaskEvent> TaskEventContext.getSinglePastEventOfType(): T? = this.getSinglePastEventOfType(T::class)
-inline fun <reified T: TaskStep> TaskEventContext.removePendingStepsOfType() = this.removePendingStepsOfType(T::class)
-inline fun <reified T: TaskStep> TaskEventContext.getPendingAndProcessedStepsOfType(): Set<T> = this.getPendingAndProcessedStepsOfType(T::class)
-inline fun <reified T: TaskStep> TaskEventContext.getProcessedStepsOfType(): Set<T> = this.getProcessedStepsOfType(T::class)
+inline fun <reified T : TaskEvent> TaskEventContext.getPastEventsOfType(): Set<T> = this.getPastEventsOfType(T::class)
+inline fun <reified T : TaskEvent> TaskEventContext.getSinglePastEventOfType(): T? = this.getSinglePastEventOfType(T::class)
+inline fun <reified T : TaskStep> TaskEventContext.removePendingStepsOfType() = this.removePendingStepsOfType(T::class)
+inline fun <reified T : TaskStep> TaskEventContext.getPendingAndProcessedStepsOfType(): Set<T> = this.getPendingAndProcessedStepsOfType(T::class)
+inline fun <reified T : TaskStep> TaskEventContext.getProcessedStepsOfType(): Set<T> = this.getProcessedStepsOfType(T::class)

@@ -60,7 +60,6 @@ object CommandLineOptionsSpec : Spek({
                 it("creates a null log sink to use") {
                     assertThat(extendedKodein.instance<LogSink>(), isA<NullLogSink>())
                 }
-
             }
         }
 

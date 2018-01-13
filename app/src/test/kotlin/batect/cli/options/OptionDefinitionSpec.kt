@@ -188,5 +188,5 @@ object OptionDefinitionSpec : Spek({
     }
 })
 
-fun <T> allPairs(vararg possibilities: T): Iterable<Pair<T, T>>
-    = possibilities.flatMap { first -> possibilities.map { second -> first to second } }
+fun <T> allPairs(vararg possibilities: T): Iterable<Pair<T, T>> =
+    possibilities.flatMap { first -> possibilities.map { second -> first to second } }

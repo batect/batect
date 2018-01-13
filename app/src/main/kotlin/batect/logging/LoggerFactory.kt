@@ -22,6 +22,6 @@ import kotlin.reflect.KClass
 class LoggerFactory(private val logSink: LogSink) {
     private val loggers = ConcurrentHashMap<KClass<*>, Logger>()
 
-    fun createLoggerForClass(clazz: KClass<*>): Logger
-        = loggers.getOrPut(clazz) { Logger(clazz.qualifiedName!!, logSink) }
+    fun createLoggerForClass(clazz: KClass<*>): Logger =
+        loggers.getOrPut(clazz) { Logger(clazz.qualifiedName!!, logSink) }
 }

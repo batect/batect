@@ -16,5 +16,5 @@
 
 package batect.utils
 
-fun <T, V> Iterable<T>.mapToSet(transform: (T) -> V): Set<V>
-    = this.mapTo(kotlin.collections.mutableSetOf(), transform)
+fun <T, V> Iterable<T>.mapToSet(transform: (T) -> V): Set<V> =
+    this.mapTo(kotlin.collections.mutableSetOf(), transform)

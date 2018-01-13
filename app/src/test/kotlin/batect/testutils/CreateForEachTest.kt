@@ -20,7 +20,7 @@ import org.jetbrains.spek.api.dsl.SpecBody
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-fun <T> SpecBody.createForEachTest(creator: () -> T) : ReadOnlyProperty<Any?, T> {
+fun <T> SpecBody.createForEachTest(creator: () -> T): ReadOnlyProperty<Any?, T> {
     val property = object : ReadOnlyProperty<Any?, T> {
         private var value: T? = null
 

@@ -79,6 +79,5 @@ object FileLogSinkSpec : Spek({
                 assertThat(content, equalTo("The value written by the writer"))
             }
         }
-
     }
 })

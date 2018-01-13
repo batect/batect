@@ -55,6 +55,5 @@ data class CommandLineOptions(
                 FileLogSink(fileSystem.getPath(logFileName), instance(), instance())
             }
         }
-
     }
 }

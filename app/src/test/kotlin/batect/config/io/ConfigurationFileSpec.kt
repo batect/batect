@@ -142,8 +142,8 @@ object ConfigurationFileSpec : Spek({
                 data("does not exist", PathResolutionResult.Resolved("/some_resolved_path", PathType.DoesNotExist) as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' does not exist."),
                 data("is a file", PathResolutionResult.Resolved("/some_resolved_path", PathType.File) as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."),
                 data("is neither a file or directory", PathResolutionResult.Resolved("/some_resolved_path", PathType.Other) as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."),
-                data("is an invalid path", PathResolutionResult.InvalidPath as PathResolutionResult, "Build directory 'build_dir' for container 'the_container_name' is not a valid path."))
-            { _, resolution, expectedMessage ->
+                data("is an invalid path", PathResolutionResult.InvalidPath as PathResolutionResult, "Build directory 'build_dir' for container 'the_container_name' is not a valid path.")
+            ) { _, resolution, expectedMessage ->
                 val originalBuildDirectory = "build_dir"
                 val container = ContainerFromFile(originalBuildDirectory)
                 val configFile = ConfigurationFile("the_project_name", containers = mapOf("the_container_name" to container))

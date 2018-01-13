@@ -87,8 +87,8 @@ class TaskExecutionOrderResolver(private val logger: Logger) {
         return firstPart + remainingPart
     }
 
-    private fun canBeScheduled(task: Task, tasksAlreadyScheduled: List<Task>): Boolean
-        = tasksAlreadyScheduled.map { it.name }.containsAll(task.prerequisiteTasks)
+    private fun canBeScheduled(task: Task, tasksAlreadyScheduled: List<Task>): Boolean =
+        tasksAlreadyScheduled.map { it.name }.containsAll(task.prerequisiteTasks)
 }
 
 class TaskExecutionOrderResolutionException(message: String) : RuntimeException(message)

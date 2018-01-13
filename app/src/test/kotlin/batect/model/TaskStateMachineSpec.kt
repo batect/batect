@@ -307,7 +307,6 @@ object TaskStateMachineSpec : Spek({
                         }
                     }
                 }
-
             }
         }
 

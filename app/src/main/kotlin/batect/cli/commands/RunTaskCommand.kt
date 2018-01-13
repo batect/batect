@@ -48,7 +48,6 @@ class RunTaskCommand(
             updateNotifier.run()
 
             return runTasks(config, tasks)
-
         } catch (e: TaskExecutionOrderResolutionException) {
             logger.error {
                 message("Could not resolve task execution order.")

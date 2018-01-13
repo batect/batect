@@ -124,6 +124,5 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                 }
             }
         }
-
     }
 })

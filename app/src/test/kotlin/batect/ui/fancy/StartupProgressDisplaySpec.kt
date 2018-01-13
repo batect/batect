@@ -23,6 +23,9 @@ import batect.model.steps.BuildImageStep
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console
+import batect.ui.ConsolePrintStatements
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.reset
@@ -60,38 +63,45 @@ object StartupProgressDisplaySpec : Spek({
         }
 
         describe("displaying the current progress") {
+            val restrictedWidthConsole by createForEachTest { mock<Console>(name = "restrictedWidthConsole") }
+            val console by createForEachTest {
+                mock<Console>(name = "console") {
+                    on { restrictToConsoleWidth(any()) } doAnswer {
+                        val printStatements = it.getArgument<ConsolePrintStatements>(0)
+                        printStatements(restrictedWidthConsole)
+                    }
+                }
+            }
+
             on("when the progress has never been displayed before") {
-                val console = mock<Console>()
                 display.print(console)
 
-                it("just prints each progress line") {
+                it("just prints each progress line in a restricted width console") {
                     inOrder(line1, line2, console) {
-                        verify(line1).print(console)
+                        verify(line1).print(restrictedWidthConsole)
                         verify(console).println()
-                        verify(line2).print(console)
+                        verify(line2).print(restrictedWidthConsole)
                         verify(console).println()
                     }
                 }
             }
 
             on("when the progress has been displayed before") {
-                val console = mock<Console>()
+                display.print(mock())
+                reset(line1, line2)
 
                 display.print(console)
-                reset(console, line1, line2)
 
-                display.print(console)
-
-                it("moves the cursor to the start of the progress block, and then clears each line and prints the corresponding progress line") {
+                it("moves the cursor to the start of the progress block, and then clears each line and prints the corresponding progress line in a restricted width console") {
                     inOrder(console, line1, line2) {
                         verify(console).moveCursorUp(2)
 
                         verify(console).clearCurrentLine()
-                        verify(line1).print(console)
+                        verify(line1).print(restrictedWidthConsole)
                         verify(console).println()
 
                         verify(console).clearCurrentLine()
-                        verify(line2).print(console)
+                        verify(line2).print(restrictedWidthConsole)
                         verify(console).println()
                     }
                 }

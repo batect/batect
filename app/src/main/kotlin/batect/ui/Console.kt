@@ -16,6 +16,7 @@
 
 package batect.ui
 
+import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 
 // Usage example:
@@ -30,14 +31,22 @@ import java.io.PrintStream
 // console.print("normal text")
 //
 // Reference: https://en.wikipedia.org/wiki/ANSI_escape_code
-class Console(private val outputStream: PrintStream, private val color: ConsoleColor?, private val isBold: Boolean, private val enableComplexOutput: Boolean) {
-    constructor(outputStream: PrintStream, enableComplexOutput: Boolean) : this(outputStream, color = null, isBold = false, enableComplexOutput = enableComplexOutput)
+class Console(
+    private val outputStream: PrintStream,
+    private val enableComplexOutput: Boolean,
+    private val consoleInfo: ConsoleInfo,
+    private val color: ConsoleColor?,
+    private val isBold: Boolean,
+    private val isRestrictedWidth: Boolean
+) {
+    constructor(outputStream: PrintStream, enableComplexOutput: Boolean, consoleInfo: ConsoleInfo) :
+        this(outputStream, enableComplexOutput, consoleInfo, color = null, isBold = false, isRestrictedWidth = false)
 
     fun print(text: String) = outputStream.print(text)
     fun println(text: String) = outputStream.println(text)
     fun println() = outputStream.println()
 
-    fun withColor(color: ConsoleColor, printStatements: Console.() -> Unit) {
+    fun withColor(color: ConsoleColor, printStatements: ConsolePrintStatements) {
         if (color == this.color || !enableComplexOutput) {
             printStatements()
             return
@@ -52,18 +61,18 @@ class Console(private val outputStream: PrintStream, private val color: ConsoleC
         }
 
         outputStream.print(colorEscapeSequence(color.code))
-        printStatements(Console(outputStream, color, isBold, enableComplexOutput))
+        printStatements(Console(outputStream, enableComplexOutput, consoleInfo, color, isBold, isRestrictedWidth))
         returnConsoleToCurrentState()
     }
 
-    fun inBold(printStatements: Console.() -> Unit) {
+    fun inBold(printStatements: ConsolePrintStatements) {
         if (this.isBold || !enableComplexOutput) {
             printStatements()
             return
         }
 
         outputStream.print(boldEscapeSequence)
-        printStatements(Console(outputStream, color, true, enableComplexOutput))
+        printStatements(Console(outputStream, enableComplexOutput, consoleInfo, color, true, isRestrictedWidth))
         returnConsoleToCurrentState()
     }
 
@@ -85,9 +94,71 @@ class Console(private val outputStream: PrintStream, private val color: ConsoleC
         }
     }
 
+    fun restrictToConsoleWidth(printStatements: ConsolePrintStatements) {
+        val consoleWidth = consoleInfo.dimensions?.width
+
+        if (consoleWidth == null) {
+            printStatements()
+            return
+        }
+
+        val innerOutputStream = ByteArrayOutputStream()
+        printStatements(Console(PrintStream(innerOutputStream), enableComplexOutput, consoleInfo, color, isBold, true))
+        printWithMaximumWidth(innerOutputStream.toString(), consoleWidth)
+    }
+
+    private fun printWithMaximumWidth(output: String, maxWidth: Int) {
+        if (output.contains('\n')) {
+            throw UnsupportedOperationException("Cannot restrict the width of output containing line breaks.")
+        }
+
+        var index = 0
+        var charactersPrinted = 0
+        val escapeSequenceRegex = """$ESC\[\d*[A-Za-z]""".toRegex()
+        val escapeSequences = escapeSequenceRegex.findAll(output)
+        val escapeSequenceCharacters = escapeSequences.sumBy { it.value.length }
+        val printableCharacters = output.length - escapeSequenceCharacters
+        val willNeedToPrintEllipsis = printableCharacters > maxWidth
+        val escapeSequenceMap = escapeSequences.associateBy { it.range.first }
+
+        while (index < output.length) {
+            val escapeSequenceAtThisIndex = escapeSequenceMap[index]
+
+            if (escapeSequenceAtThisIndex != null) {
+                val escapeSequence = escapeSequenceAtThisIndex.value
+
+                if (escapeSequence == resetEscapeSequence && charactersPrinted >= maxWidth) {
+                    returnConsoleToCurrentState()
+                    return
+                }
+
+                outputStream.print(escapeSequence)
+                index += escapeSequence.length
+            } else {
+                val nextCharacter = output[index]
+
+                if (charactersPrinted < maxWidth) {
+                    outputStream.print(nextCharacter)
+                    charactersPrinted++
+
+                    if (willNeedToPrintEllipsis && charactersPrinted == maxWidth - 3) {
+                        outputStream.print("...")
+                        charactersPrinted += 3
+                    }
+                }
+
+                index++
+            }
+        }
+    }
+
     fun moveCursorUp(lines: Int = 1) {
         if (!enableComplexOutput) {
             throw UnsupportedOperationException("Cannot move the cursor when complex output is disabled.")
+        }
+
+        if (isRestrictedWidth) {
+            throw UnsupportedOperationException("Cannot move the cursor while restricted to the width of the console.")
         }
 
         if (lines < 1) {
@@ -102,6 +173,10 @@ class Console(private val outputStream: PrintStream, private val color: ConsoleC
             throw UnsupportedOperationException("Cannot move the cursor when complex output is disabled.")
         }
 
+        if (isRestrictedWidth) {
+            throw UnsupportedOperationException("Cannot move the cursor while restricted to the width of the console.")
+        }
+
         if (lines < 1) {
             throw IllegalArgumentException("Number of lines must be positive.")
         }
@@ -114,6 +189,10 @@ class Console(private val outputStream: PrintStream, private val color: ConsoleC
             throw UnsupportedOperationException("Cannot move the cursor when complex output is disabled.")
         }
 
+        if (isRestrictedWidth) {
+            throw UnsupportedOperationException("Cannot move the cursor while restricted to the width of the console.")
+        }
+
         outputStream.print("\r")
     }
 
@@ -122,15 +201,21 @@ class Console(private val outputStream: PrintStream, private val color: ConsoleC
             throw UnsupportedOperationException("Cannot clear the current line when complex output is disabled.")
         }
 
+        if (isRestrictedWidth) {
+            throw UnsupportedOperationException("Cannot clear the current line while restricted to the width of the console.")
+        }
+
         moveCursorToStartOfLine()
         outputStream.print("$ESC[K")
     }
 
-    private val ESC = "\u001B"
+    private val ESC = '\u001B'
     private fun colorEscapeSequence(code: Int) = "$ESC[${code}m"
     private val resetEscapeSequence = colorEscapeSequence(0)
     private val boldEscapeSequence = colorEscapeSequence(1)
 }
+
+typealias ConsolePrintStatements = Console.() -> Unit
 
 enum class ConsoleColor(val code: Int) {
     Black(30),

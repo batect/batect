@@ -42,11 +42,15 @@ class CleanupProgressDisplay {
 
     fun print(console: Console) {
         console.withColor(ConsoleColor.White) {
-            when {
-                containersStillToCleanUp().isNotEmpty() -> printContainerCleanupStatus(this)
-                networkHasBeenCreated && !networkHasBeenDeleted -> println("Cleaning up: removing task network...")
-                else -> println("Clean up: done")
+            restrictToConsoleWidth {
+                when {
+                    containersStillToCleanUp().isNotEmpty() -> printContainerCleanupStatus(this)
+                    networkHasBeenCreated && !networkHasBeenDeleted -> print("Cleaning up: removing task network...")
+                    else -> print("Clean up: done")
+                }
             }
+
+            println()
         }
     }
 
@@ -71,7 +75,7 @@ class CleanupProgressDisplay {
             console.printBold(containers[containers.lastIndex])
         }
 
-        console.println(") left to remove...")
+        console.print(") left to remove...")
     }
 
     fun clear(console: Console) {

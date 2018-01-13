@@ -20,6 +20,7 @@ import batect.model.steps.DisplayTaskFailureStep
 import batect.testutils.createForEachTest
 import batect.ui.Console
 import batect.ui.ConsoleColor
+import batect.ui.ConsolePrintStatements
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.eq
@@ -37,7 +38,7 @@ object QuietEventLoggerSpec : Spek({
         val errorConsole by createForEachTest {
             mock<Console> {
                 on { withColor(eq(ConsoleColor.Red), any()) } doAnswer {
-                    val printStatements = it.getArgument<Console.() -> Unit>(1)
+                    val printStatements = it.getArgument<ConsolePrintStatements>(1)
                     printStatements(redErrorConsole)
                 }
             }

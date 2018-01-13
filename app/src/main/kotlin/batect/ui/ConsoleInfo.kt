@@ -50,4 +50,26 @@ class ConsoleInfo(
 
     val terminalType: String? = environment["TERM"]
     private val isTravis: Boolean = environment["TRAVIS"] == "true"
+
+    // FIXME: This isn't perfect - if the user resizes the terminal after we run `stty`, we'll have stale information
+    val dimensions: Dimensions? by lazy {
+        val result = processRunner.runAndCaptureOutput(listOf("stty", "size"))
+
+        logger.info {
+            message("Ran 'stty size' to determine terminal dimensions.")
+            data("result", result)
+        }
+
+        if (result.exitCode != 0) {
+            null
+        } else {
+            val parts = result.output.trim().split(' ')
+            val height = parts[0].toInt()
+            val width = parts[1].toInt()
+
+            Dimensions(height, width)
+        }
+    }
 }
+
+data class Dimensions(val height: Int, val width: Int)

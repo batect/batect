@@ -36,12 +36,15 @@ class StartupProgressDisplay(val containerLines: List<ContainerStartupProgressLi
             console.moveCursorUp(containerLines.size)
         }
 
-        containerLines.forEach {
+        containerLines.forEach { line ->
             if (havePrintedOnceBefore) {
                 console.clearCurrentLine()
             }
 
-            it.print(console)
+            console.restrictToConsoleWidth {
+                line.print(this)
+            }
+
             console.println()
         }
 

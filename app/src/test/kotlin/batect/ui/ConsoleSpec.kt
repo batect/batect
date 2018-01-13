@@ -20,8 +20,11 @@ import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
+import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import java.io.ByteArrayOutputStream
@@ -37,7 +40,7 @@ object ConsoleSpec : Spek({
     describe("a console") {
         describe("when complex output is enabled") {
             val output = ByteArrayOutputStream()
-            val console = Console(PrintStream(output), enableComplexOutput = true)
+            val console = Console(PrintStream(output), enableComplexOutput = true, consoleInfo = mock())
 
             beforeEachTest {
                 output.reset()
@@ -273,7 +276,7 @@ object ConsoleSpec : Spek({
 
         describe("when complex output is disabled") {
             val output = ByteArrayOutputStream()
-            val console = Console(PrintStream(output), enableComplexOutput = false)
+            val console = Console(PrintStream(output), enableComplexOutput = false, consoleInfo = mock())
 
             beforeEachTest {
                 output.reset()
@@ -380,6 +383,180 @@ object ConsoleSpec : Spek({
             on("moving to the start of the current line") {
                 it("throws an appropriate exception") {
                     assertThat({ console.moveCursorToStartOfLine() }, throws<UnsupportedOperationException>(withMessage("Cannot move the cursor when complex output is disabled.")))
+                }
+            }
+        }
+
+        describe("printing text restricted to the width of the console") {
+            given("the console dimensions are not available") {
+                val consoleInfo = mock<ConsoleInfo> {
+                    on { dimensions } doReturn null as Dimensions?
+                }
+
+                val output = ByteArrayOutputStream()
+                val console = Console(PrintStream(output), true, consoleInfo)
+
+                on("printing text") {
+                    console.restrictToConsoleWidth {
+                        print("This is some text")
+                    }
+
+                    it("prints all text") {
+                        assertThat(output.toString(), equalTo("This is some text"))
+                    }
+                }
+            }
+
+            given("the console dimensions are available") {
+                val consoleInfo = mock<ConsoleInfo> {
+                    on { dimensions } doReturn Dimensions(40, 10)
+                }
+
+                val output = ByteArrayOutputStream()
+                val console = Console(PrintStream(output), true, consoleInfo)
+
+                beforeEachTest {
+                    output.reset()
+                }
+
+                on("printing text that is shorter than the width of the console") {
+                    console.restrictToConsoleWidth {
+                        print("123456789")
+                    }
+
+                    it("prints all text") {
+                        assertThat(output.toString(), equalTo("123456789"))
+                    }
+                }
+
+                on("printing text that is equal to the width of the console") {
+                    console.restrictToConsoleWidth {
+                        print("1234567890")
+                    }
+
+                    it("prints all text") {
+                        assertThat(output.toString(), equalTo("1234567890"))
+                    }
+                }
+
+                on("printing text that is longer than the width of the console") {
+                    console.restrictToConsoleWidth {
+                        print("12345678901")
+                    }
+
+                    it("prints as much text as possible, replacing the last three characters with ellipsis") {
+                        assertThat(output.toString(), equalTo("1234567..."))
+                    }
+                }
+
+                on("printing text with multiple lines") {
+                    it("throws an appropriate exception") {
+                        assertThat({
+                            console.restrictToConsoleWidth {
+                                println("12345678901")
+                            }
+                        }, throws<UnsupportedOperationException>(withMessage("Cannot restrict the width of output containing line breaks.")))
+                    }
+                }
+
+                on("printing text that is shorter than the width of the console but contains more control characters than the width of the console") {
+                    console.restrictToConsoleWidth {
+                        withColor(ConsoleColor.Red) {
+                            print("abc123")
+                        }
+                    }
+
+                    it("prints all text, including the control characters") {
+                        assertThat(output.toString(), equalTo("${redText}abc123$reset"))
+                    }
+                }
+
+                on("printing coloured text that is longer than the width of the console") {
+                    console.restrictToConsoleWidth {
+                        withColor(ConsoleColor.Red) {
+                            print("12345678901")
+                        }
+                    }
+
+                    it("prints as much text as possible, replacing the last three characters with ellipsis") {
+                        assertThat(output.toString(), equalTo("${redText}1234567...$reset"))
+                    }
+                }
+
+                on("printing coloured text that is longer than the width of the console, with further coloured text afterwards") {
+                    console.restrictToConsoleWidth {
+                        withColor(ConsoleColor.Red) {
+                            print("12345678901")
+                        }
+                        withColor(ConsoleColor.White) {
+                            print("white")
+                        }
+                    }
+
+                    it("prints as much text as possible, replacing the last three characters with ellipsis, and does not include the redundant escape sequences") {
+                        assertThat(output.toString(), equalTo("${redText}1234567...$reset"))
+                    }
+                }
+
+                on("printing text where the colour would change for the first character of the ellipsis") {
+                    console.restrictToConsoleWidth {
+                        withColor(ConsoleColor.Red) {
+                            print("abc1234")
+                        }
+                        withColor(ConsoleColor.White) {
+                            print("wwww")
+                        }
+                    }
+
+                    it("prints the text, with the ellipsis taking the colour of the text it appears next to") {
+                        assertThat(output.toString(), equalTo("${redText}abc1234...$reset"))
+                    }
+                }
+
+                on("printing coloured text from within a console that is already coloured") {
+                    console.withColor(ConsoleColor.Red) {
+                        print("red")
+
+                        restrictToConsoleWidth {
+                            withColor(ConsoleColor.White) {
+                                print("white123456")
+                            }
+                        }
+
+                        print("red")
+                    }
+
+                    it("prints the text, resetting the output to the original colour afterwards") {
+                        assertThat(output.toString(), equalTo("${redText}red$reset${whiteText}white12...$reset${redText}red$reset"))
+                    }
+                }
+
+                on("attempting to move the cursor up while restricted to the width of the console") {
+                    it("throws an appropriate exception") {
+                        assertThat({ console.restrictToConsoleWidth { moveCursorUp(1) } },
+                            throws<UnsupportedOperationException>(withMessage("Cannot move the cursor while restricted to the width of the console.")))
+                    }
+                }
+
+                on("attempting to move the cursor down while restricted to the width of the console") {
+                    it("throws an appropriate exception") {
+                        assertThat({ console.restrictToConsoleWidth { moveCursorDown(1) } },
+                            throws<UnsupportedOperationException>(withMessage("Cannot move the cursor while restricted to the width of the console.")))
+                    }
+                }
+
+                on("attempting to move the cursor to the start of the line while restricted to the width of the console") {
+                    it("throws an appropriate exception") {
+                        assertThat({ console.restrictToConsoleWidth { moveCursorToStartOfLine() } },
+                            throws<UnsupportedOperationException>(withMessage("Cannot move the cursor while restricted to the width of the console.")))
+                    }
+                }
+
+                on("attempting to clear the current line while restricted to the width of the console") {
+                    it("throws an appropriate exception") {
+                        assertThat({ console.restrictToConsoleWidth { clearCurrentLine() } },
+                            throws<UnsupportedOperationException>(withMessage("Cannot clear the current line while restricted to the width of the console.")))
+                    }
                 }
             }
         }

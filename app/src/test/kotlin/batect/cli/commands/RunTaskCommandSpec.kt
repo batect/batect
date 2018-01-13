@@ -36,6 +36,7 @@ import batect.testutils.withException
 import batect.testutils.withSeverity
 import batect.ui.Console
 import batect.ui.ConsoleColor
+import batect.ui.ConsolePrintStatements
 import batect.updates.UpdateNotifier
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
@@ -77,7 +78,7 @@ object RunTaskCommandSpec : Spek({
             val errorConsole by createForEachTest {
                 mock<Console> {
                     on { withColor(eq(ConsoleColor.Red), any()) } doAnswer {
-                        val printStatements = it.getArgument<Console.() -> Unit>(1)
+                        val printStatements = it.getArgument<ConsolePrintStatements>(1)
                         printStatements(redErrorConsole)
                     }
                 }

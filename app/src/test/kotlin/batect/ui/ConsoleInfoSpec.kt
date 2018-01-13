@@ -131,5 +131,31 @@ object ConsoleInfoSpec : Spek({
                 }
             }
         }
+
+        describe("getting the dimensions of the terminal") {
+            on("getting the dimensions succeeding") {
+                val processRunner = mock<ProcessRunner>() {
+                    on { runAndCaptureOutput(listOf("stty", "size")) } doReturn ProcessOutput(0, "51 204\n")
+                }
+
+                val consoleInfo = ConsoleInfo(processRunner, emptyMap(), logger)
+
+                it("returns a parsed set of dimensions") {
+                    assertThat(consoleInfo.dimensions, equalTo(Dimensions(height = 51, width = 204)))
+                }
+            }
+
+            on("getting the dimensions failing") {
+                val processRunner = mock<ProcessRunner>() {
+                    on { runAndCaptureOutput(listOf("stty", "size")) } doReturn ProcessOutput(1, "something went wrong")
+                }
+
+                val consoleInfo = ConsoleInfo(processRunner, emptyMap(), logger)
+
+                it("returns a null set of dimensions") {
+                    assertThat(consoleInfo.dimensions, absent())
+                }
+            }
+        }
     }
 })

@@ -27,6 +27,7 @@ import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console
 import batect.ui.ConsoleColor
+import batect.ui.ConsolePrintStatements
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.eq
@@ -39,11 +40,21 @@ import org.jetbrains.spek.api.dsl.on
 
 object CleanupProgressDisplaySpec : Spek({
     describe("a cleanup progress display") {
-        val whiteConsole by createForEachTest { mock<Console>() }
+        val restrictedWidthConsole by createForEachTest { mock<Console>() }
+
+        val whiteConsole by createForEachTest {
+            mock<Console> {
+                on { restrictToConsoleWidth(any()) } doAnswer {
+                    val printStatements = it.getArgument<ConsolePrintStatements>(0)
+                    printStatements(restrictedWidthConsole)
+                }
+            }
+        }
+
         val console by createForEachTest {
             mock<Console> {
                 on { withColor(eq(ConsoleColor.White), any()) } doAnswer {
-                    val printStatements = it.getArgument<Console.() -> Unit>(1)
+                    val printStatements = it.getArgument<ConsolePrintStatements>(1)
                     printStatements(whiteConsole)
                 }
             }
@@ -56,8 +67,9 @@ object CleanupProgressDisplaySpec : Spek({
                 cleanupDisplay.print(console)
 
                 it("prints that clean up is complete") {
-                    inOrder(whiteConsole) {
-                        verify(whiteConsole).println("Clean up: done")
+                    inOrder(whiteConsole, restrictedWidthConsole) {
+                        verify(restrictedWidthConsole).print("Clean up: done")
+                        verify(whiteConsole).println()
                     }
                 }
             }
@@ -71,8 +83,9 @@ object CleanupProgressDisplaySpec : Spek({
                     cleanupDisplay.print(console)
 
                     it("prints that the network still needs to be cleaned up") {
-                        inOrder(whiteConsole) {
-                            verify(whiteConsole).println("Cleaning up: removing task network...")
+                        inOrder(whiteConsole, restrictedWidthConsole) {
+                            verify(restrictedWidthConsole).print("Cleaning up: removing task network...")
+                            verify(whiteConsole).println()
                         }
                     }
                 }
@@ -82,8 +95,9 @@ object CleanupProgressDisplaySpec : Spek({
                     cleanupDisplay.print(console)
 
                     it("prints that clean up is complete") {
-                        inOrder(whiteConsole) {
-                            verify(whiteConsole).println("Clean up: done")
+                        inOrder(whiteConsole, restrictedWidthConsole) {
+                            verify(restrictedWidthConsole).print("Clean up: done")
+                            verify(whiteConsole).println()
                         }
                     }
                 }
@@ -101,10 +115,11 @@ object CleanupProgressDisplaySpec : Spek({
                     cleanupDisplay.print(console)
 
                     it("prints that the container still needs to be cleaned up") {
-                        inOrder(whiteConsole) {
-                            verify(whiteConsole).print("Cleaning up: 1 container (")
-                            verify(whiteConsole).printBold("some-container")
-                            verify(whiteConsole).println(") left to remove...")
+                        inOrder(whiteConsole, restrictedWidthConsole) {
+                            verify(restrictedWidthConsole).print("Cleaning up: 1 container (")
+                            verify(restrictedWidthConsole).printBold("some-container")
+                            verify(restrictedWidthConsole).print(") left to remove...")
+                            verify(whiteConsole).println()
                         }
                     }
                 }
@@ -114,8 +129,9 @@ object CleanupProgressDisplaySpec : Spek({
                     cleanupDisplay.print(console)
 
                     it("prints that the network still needs to be cleaned up") {
-                        inOrder(whiteConsole) {
-                            verify(whiteConsole).println("Cleaning up: removing task network...")
+                        inOrder(whiteConsole, restrictedWidthConsole) {
+                            verify(restrictedWidthConsole).print("Cleaning up: removing task network...")
+                            verify(whiteConsole).println()
                         }
                     }
                 }
@@ -126,8 +142,9 @@ object CleanupProgressDisplaySpec : Spek({
                     cleanupDisplay.print(console)
 
                     it("prints that clean up is complete") {
-                        inOrder(whiteConsole) {
-                            verify(whiteConsole).println("Clean up: done")
+                        inOrder(whiteConsole, restrictedWidthConsole) {
+                            verify(restrictedWidthConsole).print("Clean up: done")
+                            verify(whiteConsole).println()
                         }
                     }
                 }
@@ -147,12 +164,13 @@ object CleanupProgressDisplaySpec : Spek({
                     cleanupDisplay.print(console)
 
                     it("prints that both of the containers still need to be cleaned up") {
-                        inOrder(whiteConsole) {
-                            verify(whiteConsole).print("Cleaning up: 2 containers (")
-                            verify(whiteConsole).printBold("container-1")
-                            verify(whiteConsole).print(" and ")
-                            verify(whiteConsole).printBold("container-2")
-                            verify(whiteConsole).println(") left to remove...")
+                        inOrder(whiteConsole, restrictedWidthConsole) {
+                            verify(restrictedWidthConsole).print("Cleaning up: 2 containers (")
+                            verify(restrictedWidthConsole).printBold("container-1")
+                            verify(restrictedWidthConsole).print(" and ")
+                            verify(restrictedWidthConsole).printBold("container-2")
+                            verify(restrictedWidthConsole).print(") left to remove...")
+                            verify(whiteConsole).println()
                         }
                     }
                 }
@@ -162,10 +180,11 @@ object CleanupProgressDisplaySpec : Spek({
                     cleanupDisplay.print(console)
 
                     it("prints that the other container still needs to be cleaned up") {
-                        inOrder(whiteConsole) {
-                            verify(whiteConsole).print("Cleaning up: 1 container (")
-                            verify(whiteConsole).printBold("container-2")
-                            verify(whiteConsole).println(") left to remove...")
+                        inOrder(whiteConsole, restrictedWidthConsole) {
+                            verify(restrictedWidthConsole).print("Cleaning up: 1 container (")
+                            verify(restrictedWidthConsole).printBold("container-2")
+                            verify(restrictedWidthConsole).print(") left to remove...")
+                            verify(whiteConsole).println()
                         }
                     }
                 }
@@ -177,8 +196,9 @@ object CleanupProgressDisplaySpec : Spek({
                     cleanupDisplay.print(console)
 
                     it("prints that clean up is complete") {
-                        inOrder(whiteConsole) {
-                            verify(whiteConsole).println("Clean up: done")
+                        inOrder(whiteConsole, restrictedWidthConsole) {
+                            verify(restrictedWidthConsole).print("Clean up: done")
+                            verify(whiteConsole).println()
                         }
                     }
                 }
@@ -200,14 +220,15 @@ object CleanupProgressDisplaySpec : Spek({
                     cleanupDisplay.print(console)
 
                     it("prints that all of the containers still need to be cleaned up") {
-                        inOrder(whiteConsole) {
-                            verify(whiteConsole).print("Cleaning up: 3 containers (")
-                            verify(whiteConsole).printBold("container-1")
-                            verify(whiteConsole).print(", ")
-                            verify(whiteConsole).printBold("container-2")
-                            verify(whiteConsole).print(" and ")
-                            verify(whiteConsole).printBold("container-3")
-                            verify(whiteConsole).println(") left to remove...")
+                        inOrder(whiteConsole, restrictedWidthConsole) {
+                            verify(restrictedWidthConsole).print("Cleaning up: 3 containers (")
+                            verify(restrictedWidthConsole).printBold("container-1")
+                            verify(restrictedWidthConsole).print(", ")
+                            verify(restrictedWidthConsole).printBold("container-2")
+                            verify(restrictedWidthConsole).print(" and ")
+                            verify(restrictedWidthConsole).printBold("container-3")
+                            verify(restrictedWidthConsole).print(") left to remove...")
+                            verify(whiteConsole).println()
                         }
                     }
                 }
@@ -231,16 +252,17 @@ object CleanupProgressDisplaySpec : Spek({
                     cleanupDisplay.print(console)
 
                     it("prints that all of the containers still need to be cleaned up") {
-                        inOrder(whiteConsole) {
-                            verify(whiteConsole).print("Cleaning up: 4 containers (")
-                            verify(whiteConsole).printBold("container-1")
-                            verify(whiteConsole).print(", ")
-                            verify(whiteConsole).printBold("container-2")
-                            verify(whiteConsole).print(", ")
-                            verify(whiteConsole).printBold("container-3")
-                            verify(whiteConsole).print(" and ")
-                            verify(whiteConsole).printBold("container-4")
-                            verify(whiteConsole).println(") left to remove...")
+                        inOrder(whiteConsole, restrictedWidthConsole) {
+                            verify(restrictedWidthConsole).print("Cleaning up: 4 containers (")
+                            verify(restrictedWidthConsole).printBold("container-1")
+                            verify(restrictedWidthConsole).print(", ")
+                            verify(restrictedWidthConsole).printBold("container-2")
+                            verify(restrictedWidthConsole).print(", ")
+                            verify(restrictedWidthConsole).printBold("container-3")
+                            verify(restrictedWidthConsole).print(" and ")
+                            verify(restrictedWidthConsole).printBold("container-4")
+                            verify(restrictedWidthConsole).print(") left to remove...")
+                            verify(whiteConsole).println()
                         }
                     }
                 }

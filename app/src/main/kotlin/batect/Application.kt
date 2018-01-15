@@ -113,55 +113,9 @@ enum class PrintStreamType {
     Error
 }
 
-private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStream): Kodein = Kodein {
-    bind<ConfigurationLoader>() with singletonWithLogger { logger -> ConfigurationLoader(instance(), instance(), logger) }
-    bind<PathResolverFactory>() with singleton { PathResolverFactory() }
-    bind<FileSystem>() with singleton { FileSystems.getDefault() }
-    bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(), instance(), logger) }
-    bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), logger) }
-    bind<DockerImageLabellingStrategy>() with singleton { DockerImageLabellingStrategy() }
-    bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }
-    bind<DockerContainerCreationCommandGenerator>() with singleton { DockerContainerCreationCommandGenerator() }
-
-    bind<EventLoggerProvider>() with singleton {
-        EventLoggerProvider(
-            instance(PrintStreamType.Output),
-            instance(PrintStreamType.Error),
-            instance(),
-            instance(),
-            commandLineOptions().forceSimpleOutputMode,
-            commandLineOptions().forceQuietOutputMode
-        )
-    }
-
-    bind<CommandLineOptionsParser>() with singleton { CommandLineOptionsParser() }
+private val cliModule = Kodein.Module {
     bind<CommandFactory>() with singleton { CommandFactory() }
-    bind<Console>(PrintStreamType.Output) with singleton { Console(instance(PrintStreamType.Output), enableComplexOutput = !commandLineOptions().disableColorOutput, consoleInfo = instance()) }
-    bind<Console>(PrintStreamType.Error) with singleton { Console(instance(PrintStreamType.Error), enableComplexOutput = !commandLineOptions().disableColorOutput, consoleInfo = instance()) }
-    bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
-    bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
-    bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), instance(), instance(), logger) }
-    bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
-    bind<DependencyGraphProvider>() with singletonWithLogger { logger -> DependencyGraphProvider(instance(), logger) }
-    bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance()) }
-    bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance(), instance()) }
-    bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider() }
-    bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(logger) }
-    bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), logger) }
-    bind<VersionInfo>() with singleton { VersionInfo() }
-    bind<SystemInfo>() with singleton { SystemInfo() }
-    bind<LoggerFactory>() with singleton { LoggerFactory(instance()) }
-    bind<LogMessageWriter>() with singleton { LogMessageWriter() }
-    bind<StandardAdditionalDataSource>() with singleton { StandardAdditionalDataSource() }
-    bind<ApplicationInfoLogger>() with singletonWithLogger { logger -> ApplicationInfoLogger(logger, instance(), instance(), instance()) }
-    bind<UpdateNotifier>() with singletonWithLogger { logger -> UpdateNotifier(commandLineOptions().disableUpdateNotification, instance(), instance(), instance(), instance(PrintStreamType.Output), logger) }
-    bind<UpdateInfoStorage>() with singleton { UpdateInfoStorage(instance(), instance()) }
-    bind<UpdateInfoDownloader>() with singleton { UpdateInfoDownloader(instance()) }
-    bind<UpdateInfoUpdater>() with singletonWithLogger { logger -> UpdateInfoUpdater(instance(), instance(), logger) }
-    bind<OkHttpClient>() with singleton { OkHttpClient.Builder().build() }
-    bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider() }
-    bind<RunOptions>() with singleton { RunOptions(commandLineOptions()) }
-    bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance()) }
+    bind<CommandLineOptionsParser>() with singleton { CommandLineOptionsParser() }
 
     bind<RunTaskCommand>() with singletonWithLogger { logger ->
         RunTaskCommand(
@@ -177,9 +131,91 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
         )
     }
 
+    bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(PrintStreamType.Output)) }
     bind<ListTasksCommand>() with singleton { ListTasksCommand(commandLineOptions().configurationFileName, instance(), instance(PrintStreamType.Output)) }
     bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(PrintStreamType.Output), instance(), instance(), instance()) }
-    bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(PrintStreamType.Output)) }
+}
+
+private val configModule = Kodein.Module {
+    bind<ConfigurationLoader>() with singletonWithLogger { logger -> ConfigurationLoader(instance(), instance(), logger) }
+    bind<PathResolverFactory>() with singleton { PathResolverFactory() }
+}
+
+private val dockerModule = Kodein.Module {
+    bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), logger) }
+    bind<DockerContainerCreationCommandGenerator>() with singleton { DockerContainerCreationCommandGenerator() }
+    bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
+    bind<DockerImageLabellingStrategy>() with singleton { DockerImageLabellingStrategy() }
+}
+
+private val loggingModule = Kodein.Module {
+    bind<ApplicationInfoLogger>() with singletonWithLogger { logger -> ApplicationInfoLogger(logger, instance(), instance(), instance()) }
+    bind<LoggerFactory>() with singleton { LoggerFactory(instance()) }
+    bind<LogMessageWriter>() with singleton { LogMessageWriter() }
+    bind<StandardAdditionalDataSource>() with singleton { StandardAdditionalDataSource() }
+}
+
+private val modelModule = Kodein.Module {
+    bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance()) }
+    bind<DependencyGraphProvider>() with singletonWithLogger { logger -> DependencyGraphProvider(instance(), logger) }
+    bind<RunOptions>() with singleton { RunOptions(commandLineOptions()) }
+    bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(logger) }
+    bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance()) }
+    bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), instance(), instance(), logger) }
+}
+
+private val osModule = Kodein.Module {
+    bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }
+    bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider() }
+    bind<SystemInfo>() with singleton { SystemInfo() }
+}
+
+private val uiModule = Kodein.Module {
+    bind<EventLoggerProvider>() with singleton {
+        EventLoggerProvider(
+            instance(PrintStreamType.Output),
+            instance(PrintStreamType.Error),
+            instance(),
+            instance(),
+            commandLineOptions().forceSimpleOutputMode,
+            commandLineOptions().forceQuietOutputMode
+        )
+    }
+
+    bind<Console>(PrintStreamType.Output) with singleton { Console(instance(PrintStreamType.Output), enableComplexOutput = !commandLineOptions().disableColorOutput, consoleInfo = instance()) }
+    bind<Console>(PrintStreamType.Error) with singleton { Console(instance(PrintStreamType.Error), enableComplexOutput = !commandLineOptions().disableColorOutput, consoleInfo = instance()) }
+    bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), logger) }
+    bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider() }
+}
+
+private val updatesModule = Kodein.Module {
+    bind<UpdateInfoDownloader>() with singleton { UpdateInfoDownloader(instance()) }
+    bind<UpdateInfoStorage>() with singleton { UpdateInfoStorage(instance(), instance()) }
+    bind<UpdateInfoUpdater>() with singletonWithLogger { logger -> UpdateInfoUpdater(instance(), instance(), logger) }
+    bind<UpdateNotifier>() with singletonWithLogger { logger -> UpdateNotifier(commandLineOptions().disableUpdateNotification, instance(), instance(), instance(), instance(PrintStreamType.Output), logger) }
+}
+
+private val coreModule = Kodein.Module {
+    bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance(), instance()) }
+    bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(), instance(), logger) }
+    bind<VersionInfo>() with singleton { VersionInfo() }
+}
+
+private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStream): Kodein = Kodein {
+    bind<FileSystem>() with singleton { FileSystems.getDefault() }
+    bind<OkHttpClient>() with singleton { OkHttpClient.Builder().build() }
+    bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
+    bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
+
+    import(cliModule)
+    import(configModule)
+    import(dockerModule)
+    import(loggingModule)
+    import(modelModule)
+    import(osModule)
+    import(uiModule)
+    import(updatesModule)
+    import(coreModule)
 }
 
 private fun Kodein.commandLineOptions(): CommandLineOptions = this.instance()

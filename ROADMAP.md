@@ -49,7 +49,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * improve the getting started guide (it's way too wordy)
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
 * make configuration-related error messages clearer and remove exception class names etc.
-* refactor Kodein configuration (is now over 60 lines long)
 * fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information
   doesn't correctly overwrite previous updates
   * handle the case where the console is resized while batect is running

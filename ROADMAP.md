@@ -21,8 +21,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * check that Docker client is available before trying to use it
 * check that Docker client and server are compatible versions
 * warn when using an image without a tag or with tag `latest`
-* start containers with `--user $(id -u):$(id -g)` so that any files created in any mounted directories have the current user as their owner
-  * update documentation
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 * support for Windows
 * infer project name from project directory name if not provided

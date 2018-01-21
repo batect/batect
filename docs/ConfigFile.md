@@ -145,6 +145,29 @@ Each container definition is made up of:
     * `start_period` The time to wait before failing health checks count against the retry count. The health check is still run during this period,
       and if the check succeeds, the container is immediately considered healthy.
 
+* `run_as_current_user` Run the container with the same UID and GID as the user running batect (rather than the user the Docker daemon runs as, which is root
+  on Linux). This means that any files created by the container will be owned by the user running batect, rather than root.
+
+  This is really only useful on Linux, as on OS X, the Docker daemon runs as the currently logged-in user and so any files created in the container are owned
+  by that user. However, for consistency, the same configuration changes are made on both Linux and OS X.
+
+  * `enabled` Defaults to `false`, set to `true` to enable 'run as current user' mode. When enabled, the following configuration changes are made:
+
+    * The container is run with the current user's UID and GID (equivalent to passing `--user $(id -u):$(id -g)` to `docker run`)
+
+    * A new `/etc/passwd` file is mounted into the container with two users: root and the current user. The current user's home directory is set to the
+      value of `home_directory`. (If batect is running as root, then just root is listed and it takes the home directory provided in `home_directory`.)
+
+      This means that any other users defined in the container's image are effectively lost. Under most circumstances, this is not an issue.
+
+    * Similarly, a new `/etc/group` file is mounted into the container with two groups: root and the current user's primary group (usually `staff` on
+      OS X, and the user's name on Linux). If batect is running as root, then just root is listed.
+
+      Again, this means that any other groups defined in the container's image are effectively lost.
+
+  * `home_directory` Directory to use as home directory for user inside container. Required if `enabled` is `true`, not allowed if `enabled` is not provided
+    or set to `false`.
+
 ### Task definitions
 
 Each task definition is made up of:

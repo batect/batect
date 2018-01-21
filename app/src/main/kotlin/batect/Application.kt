@@ -159,7 +159,7 @@ private val loggingModule = Kodein.Module {
 private val modelModule = Kodein.Module {
     bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance()) }
     bind<DependencyGraphProvider>() with singletonWithLogger { logger -> DependencyGraphProvider(instance(), logger) }
-    bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance()) }
+    bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance()) }
     bind<RunOptions>() with singleton { RunOptions(commandLineOptions()) }
     bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(logger) }
     bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance()) }

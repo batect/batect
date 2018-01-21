@@ -25,6 +25,8 @@ import batect.model.events.TemporaryFileCreatedEvent
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
+import com.google.common.jimfs.Configuration
+import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.anyElement
@@ -42,24 +44,40 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
-import java.io.File
+import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 
 object RunAsCurrentUserConfigurationProviderSpec : Spek({
     describe("a 'run as current user' configuration provider") {
         val eventSink by createForEachTest { mock<TaskEventSink>() }
+        val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
+
+        val directoryThatExists = "/existing/directory"
+        val fileThatExists = "/existing/file"
+        val directoryThatDoesNotExist = "/new/directory"
+        val containerMounts = setOf(
+            VolumeMount(directoryThatExists, "/container/existing-directory", null),
+            VolumeMount(fileThatExists, "/container/existing-file", null),
+            VolumeMount(directoryThatDoesNotExist, "/container/new-directory", null)
+        )
+
+        beforeEachTest {
+            Files.createDirectories(fileSystem.getPath("/tmp"))
+            Files.createDirectories(fileSystem.getPath(directoryThatExists))
+            Files.createFile(fileSystem.getPath(fileThatExists))
+        }
 
         given("the container has 'run as current user' disabled") {
             val container = Container(
                 "some-container",
                 imageSourceDoesNotMatter(),
+                volumeMounts = containerMounts,
                 runAsCurrentUserConfig = RunAsCurrentUserConfig(enabled = false)
             )
 
             val systemInfo = mock<SystemInfo>()
-            val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo) }
+            val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, fileSystem) }
 
             on("generating the configuration") {
                 val configuration = provider.generateConfiguration(container, eventSink)
@@ -75,6 +93,10 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 it("returns an empty user and group configuration") {
                     assertThat(configuration.userAndGroup, absent())
                 }
+
+                it("does not create any new directories") {
+                    assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(false))
+                }
             }
         }
 
@@ -82,6 +104,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
             val container = Container(
                 "some-container",
                 imageSourceDoesNotMatter(),
+                volumeMounts = containerMounts,
                 runAsCurrentUserConfig = RunAsCurrentUserConfig(enabled = true, homeDirectory = "/home/some-user")
             )
 
@@ -93,14 +116,10 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     on { groupName } doReturn "the-user's-group"
                 }
 
-                val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo) }
+                val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, fileSystem) }
 
                 on("generating the configuration") {
                     val configuration = provider.generateConfiguration(container, eventSink)
-
-                    configuration.volumeMounts.forEach {
-                        File(it.localPath).deleteOnExit()
-                    }
 
                     it("returns a set of volume mounts for the passwd and group file") {
                         assertThat(configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(setOf(
@@ -118,7 +137,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     it("creates a passwd file with both root and the current user") {
-                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts)
+                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
                         val content = Files.readAllLines(passwdFilePath).joinToString("\n")
                         assertThat(content, equalTo("""
                             |root:x:0:0:root:/root:/bin/sh
@@ -127,7 +146,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     it("creates a group file with group for both root and the current user") {
-                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts)
+                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
                         val content = Files.readAllLines(groupFilePath).joinToString("\n")
                         assertThat(content, equalTo("""
                             |root:x:0:root
@@ -136,17 +155,21 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     it("emits a 'temporary file created' event for the passwd file") {
-                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts)
+                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
                         verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, passwdFilePath))
                     }
 
                     it("emits a 'temporary file created' event for the group file") {
-                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts)
+                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
                         verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, groupFilePath))
                     }
 
                     it("returns a user and group configuration with the current user's user and group IDs") {
                         assertThat(configuration.userAndGroup, equalTo(UserAndGroup(123, 456)))
+                    }
+
+                    it("creates a directory for the volume mount path that does not exist") {
+                        assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
                     }
                 }
             }
@@ -157,14 +180,10 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     on { groupId } doReturn 0
                 }
 
-                val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo) }
+                val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, fileSystem) }
 
                 on("generating the configuration") {
                     val configuration = provider.generateConfiguration(container, eventSink)
-
-                    configuration.volumeMounts.forEach {
-                        File(it.localPath).deleteOnExit()
-                    }
 
                     it("returns a set of volume mounts for the passwd and group file") {
                         assertThat(configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(setOf(
@@ -182,7 +201,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     it("creates a passwd file with just root listed") {
-                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts)
+                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
                         val content = Files.readAllLines(passwdFilePath).joinToString("\n")
                         assertThat(content, equalTo("""
                             |root:x:0:0:root:/home/some-user:/bin/sh
@@ -190,7 +209,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     it("creates a group file with a group for root") {
-                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts)
+                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
                         val content = Files.readAllLines(groupFilePath).joinToString("\n")
                         assertThat(content, equalTo("""
                             |root:x:0:root
@@ -198,17 +217,21 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     it("emits a 'temporary file created' event for the passwd file") {
-                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts)
+                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
                         verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, passwdFilePath))
                     }
 
                     it("emits a 'temporary file created' event for the group file") {
-                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts)
+                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
                         verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, groupFilePath))
                     }
 
                     it("returns a user and group configuration with the current user's user and group IDs") {
                         assertThat(configuration.userAndGroup, equalTo(UserAndGroup(0, 0)))
+                    }
+
+                    it("creates a directory for the volume mount path that does not exist") {
+                        assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
                     }
                 }
             }
@@ -219,5 +242,5 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 private fun hasReadOnlyVolumeMount(path: String) =
     anyElement(has(VolumeMount::containerPath, equalTo(path)) and has(VolumeMount::options, equalTo("ro")))
 
-private fun localPathToPasswdFile(mounts: Set<VolumeMount>): Path = Paths.get(mounts.single { it.containerPath == "/etc/passwd" }.localPath)
-private fun localPathToGroupFile(mounts: Set<VolumeMount>): Path = Paths.get(mounts.single { it.containerPath == "/etc/group" }.localPath)
+private fun localPathToPasswdFile(mounts: Set<VolumeMount>, fileSystem: FileSystem): Path = fileSystem.getPath(mounts.single { it.containerPath == "/etc/passwd" }.localPath)
+private fun localPathToGroupFile(mounts: Set<VolumeMount>, fileSystem: FileSystem): Path = fileSystem.getPath(mounts.single { it.containerPath == "/etc/group" }.localPath)

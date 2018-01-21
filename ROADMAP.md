@@ -23,7 +23,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * warn when using an image without a tag or with tag `latest`
 * start containers with `--user $(id -u):$(id -g)` so that any files created in any mounted directories have the current user as their owner
   * update documentation
-  * create any missing directories that will be mounted into the container (otherwise they're created by Docker as root automatically)
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 * support for Windows
 * infer project name from project directory name if not provided

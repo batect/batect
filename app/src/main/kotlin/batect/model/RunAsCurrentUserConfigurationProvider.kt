@@ -22,16 +22,18 @@ import batect.docker.UserAndGroup
 import batect.model.events.TaskEventSink
 import batect.model.events.TemporaryFileCreatedEvent
 import batect.os.SystemInfo
+import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 
 class RunAsCurrentUserConfigurationProvider(
-    private val systemInfo: SystemInfo
+    private val systemInfo: SystemInfo,
+    private val fileSystem: FileSystem
 ) {
     fun generateConfiguration(container: Container, eventSink: TaskEventSink): RunAsCurrentUserConfiguration {
         if (container.runAsCurrentUserConfig.enabled) {
             val volumeMounts = createFiles(container, eventSink)
+            createMissingVolumeMountDirectories(container)
 
             return RunAsCurrentUserConfiguration(volumeMounts, UserAndGroup(systemInfo.userId, systemInfo.groupId))
         } else {
@@ -88,5 +90,15 @@ class RunAsCurrentUserConfigurationProvider(
         return path
     }
 
-    private fun createTempFile(name: String): Path = Files.createTempFile(Paths.get("/tmp"), "batect-", "-$name")
+    private fun createTempFile(name: String): Path = Files.createTempFile(fileSystem.getPath("/tmp"), "batect-", "-$name")
+
+    private fun createMissingVolumeMountDirectories(container: Container) {
+        container.volumeMounts.forEach { volumeMount ->
+            val path = fileSystem.getPath(volumeMount.localPath)
+
+            if (!Files.exists(path)) {
+                Files.createDirectories(path)
+            }
+        }
+    }
 }

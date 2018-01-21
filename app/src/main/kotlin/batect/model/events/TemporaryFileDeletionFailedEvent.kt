@@ -14,19 +14,19 @@
    limitations under the License.
 */
 
-package batect.config
+package batect.model.events
 
-import batect.os.Command
+import batect.logging.Logger
+import java.nio.file.Path
 
-data class Container(
-    val name: String,
-    val imageSource: ImageSource,
-    val command: Command? = null,
-    val environment: Map<String, String> = emptyMap(),
-    val workingDirectory: String? = null,
-    val volumeMounts: Set<VolumeMount> = emptySet(),
-    val portMappings: Set<PortMapping> = emptySet(),
-    val dependencies: Set<String> = emptySet(),
-    val healthCheckConfig: HealthCheckConfig = HealthCheckConfig(),
-    val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig()
-)
+data class TemporaryFileDeletionFailedEvent(val filePath: Path, val message: String) : TaskEvent() {
+    override fun apply(context: TaskEventContext, logger: Logger) {
+        logger.warn {
+            message("Could not delete temporary file. Ignoring.")
+            data("filePath", filePath)
+            data("message", message)
+        }
+    }
+
+    override fun toString() = "${this::class.simpleName}(file path: '$filePath', message: '$message')"
+}

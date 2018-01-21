@@ -14,19 +14,12 @@
    limitations under the License.
 */
 
-package batect.config
+package batect.model
 
-import batect.os.Command
+import batect.config.VolumeMount
+import batect.docker.UserAndGroup
 
-data class Container(
-    val name: String,
-    val imageSource: ImageSource,
-    val command: Command? = null,
-    val environment: Map<String, String> = emptyMap(),
-    val workingDirectory: String? = null,
-    val volumeMounts: Set<VolumeMount> = emptySet(),
-    val portMappings: Set<PortMapping> = emptySet(),
-    val dependencies: Set<String> = emptySet(),
-    val healthCheckConfig: HealthCheckConfig = HealthCheckConfig(),
-    val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig()
+data class RunAsCurrentUserConfiguration(
+    val volumeMounts: Set<VolumeMount>,
+    val userAndGroup: UserAndGroup?
 )

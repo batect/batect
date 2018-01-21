@@ -1,0 +1,16 @@
+project_name: run-as-current-user-test
+
+containers:
+  build-env:
+    image: alpine:3.6
+    volumes:
+      - ../../../../build/test-results/journey-tests/run-as-current-user:/output
+    run_as_current_user:
+      enabled: true
+      home_directory: /home/special-place
+
+tasks:
+  the-task:
+    run:
+      container: build-env
+      command: sh -c "whoami && echo $HOME && touch /output/created-file && ls -la /output"

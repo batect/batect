@@ -27,6 +27,7 @@ class DockerContainerCreationCommandGenerator() {
             volumeMountArguments(request) +
             portMappingArguments(request) +
             healthCheckArguments(request) +
+            userArguments(request) +
             request.image.id +
             request.command
     }
@@ -62,5 +63,10 @@ class DockerContainerCreationCommandGenerator() {
     private fun healthCheckStartPeriodArguments(request: DockerContainerCreationRequest): Iterable<String> = when (request.healthCheckConfig.startPeriod) {
         null -> emptyList()
         else -> listOf("--health-start-period", request.healthCheckConfig.startPeriod)
+    }
+
+    private fun userArguments(request: DockerContainerCreationRequest): Iterable<String> = when (request.userAndGroup) {
+        null -> emptyList()
+        else -> listOf("--user", "${request.userAndGroup.userId}:${request.userAndGroup.groupId}")
     }
 }

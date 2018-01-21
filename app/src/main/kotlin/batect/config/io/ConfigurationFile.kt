@@ -24,6 +24,7 @@ import batect.config.HealthCheckConfig
 import batect.config.ImageSource
 import batect.config.PortMapping
 import batect.config.PullImage
+import batect.config.RunAsCurrentUserConfig
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
@@ -78,7 +79,9 @@ data class ContainerFromFile(
     @JsonProperty("volumes") val volumeMounts: Set<VolumeMount> = emptySet(),
     @JsonProperty("ports") val portMappings: Set<PortMapping> = emptySet(),
     @JsonDeserialize(using = StringSetDeserializer::class) val dependencies: Set<String> = emptySet(),
-    @JsonProperty("health_check") val healthCheckConfig: HealthCheckConfig = HealthCheckConfig()) {
+    @JsonProperty("health_check") val healthCheckConfig: HealthCheckConfig = HealthCheckConfig(),
+    @JsonProperty("run_as_current_user") val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig()
+) {
 
     fun toContainer(name: String, pathResolver: PathResolver): Container {
         val imageSource = resolveImageSource(name, pathResolver)
@@ -87,10 +90,18 @@ data class ContainerFromFile(
             resolveVolumeMount(it, name, pathResolver)
         }.toSet()
 
+        if (!runAsCurrentUserConfig.enabled && runAsCurrentUserConfig.homeDirectory != null) {
+            throw ConfigurationException("Container '$name' is invalid: running as the current user has not been enabled, but a home directory for that user has been provided.")
+        }
+
+        if (runAsCurrentUserConfig.enabled && runAsCurrentUserConfig.homeDirectory == null) {
+            throw ConfigurationException("Container '$name' is invalid: running as the current user has been enabled, but a home directory for that user has not been provided.")
+        }
+
         try {
             val parsedCommand = Command.parse(command)
 
-            return Container(name, imageSource, parsedCommand, environment, workingDirectory, resolvedVolumeMounts, portMappings, dependencies, healthCheckConfig)
+            return Container(name, imageSource, parsedCommand, environment, workingDirectory, resolvedVolumeMounts, portMappings, dependencies, healthCheckConfig, runAsCurrentUserConfig)
         } catch (e: InvalidCommandLineException) {
             throw ConfigurationException("Command for container '$name' is invalid: ${e.message}")
         }

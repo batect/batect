@@ -19,6 +19,7 @@ package batect.model.steps
 import batect.config.BuildImage
 import batect.config.Container
 import batect.config.HealthCheckConfig
+import batect.config.VolumeMount
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerDoesNotExistException
 import batect.docker.ContainerHealthCheckException
@@ -39,9 +40,12 @@ import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.NetworkCreationFailedException
 import batect.docker.NetworkDeletionFailedException
+import batect.docker.UserAndGroup
 import batect.logging.Logger
 import batect.logging.Severity
 import batect.model.BehaviourAfterFailure
+import batect.model.RunAsCurrentUserConfiguration
+import batect.model.RunAsCurrentUserConfigurationProvider
 import batect.model.RunOptions
 import batect.model.events.ContainerBecameHealthyEvent
 import batect.model.events.ContainerCreatedEvent
@@ -65,14 +69,19 @@ import batect.model.events.TaskNetworkCreationFailedEvent
 import batect.model.events.TaskNetworkDeletedEvent
 import batect.model.events.TaskNetworkDeletionFailedEvent
 import batect.model.events.TaskStartedEvent
+import batect.model.events.TemporaryFileDeletedEvent
+import batect.model.events.TemporaryFileDeletionFailedEvent
 import batect.os.Command
 import batect.os.ProxyEnvironmentVariablesProvider
 import batect.testutils.InMemoryLogSink
+import batect.testutils.createForEachTest
 import batect.testutils.hasMessage
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withAdditionalData
 import batect.testutils.withLogMessage
 import batect.testutils.withSeverity
+import com.google.common.jimfs.Configuration
+import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockito_kotlin.any
@@ -88,6 +97,7 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import java.nio.file.Files
 
 object TaskStepRunnerSpec : Spek({
     describe("a task step runner") {
@@ -100,11 +110,20 @@ object TaskStepRunnerSpec : Spek({
             on { proxyEnvironmentVariables } doReturn proxyVariables
         }
 
+        val runAsCurrentUserConfiguration = RunAsCurrentUserConfiguration(
+            setOf(VolumeMount("/tmp/local-path", "/tmp/remote-path", "rw")),
+            UserAndGroup(456, 789)
+        )
+
+        val runAsCurrentUserConfigurationProvider = mock<RunAsCurrentUserConfigurationProvider> {
+            on { generateConfiguration(any(), any()) } doReturn runAsCurrentUserConfiguration
+        }
+
         val logSink = InMemoryLogSink()
         val runOptions = RunOptions("some-task", emptyList(), 123, BehaviourAfterFailure.Cleanup, true)
 
         val logger = Logger("some.source", logSink)
-        val runner = TaskStepRunner(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, logger)
+        val runner = TaskStepRunner(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, logger)
 
         beforeEachTest {
             reset(eventSink)
@@ -267,10 +286,19 @@ object TaskStepRunnerSpec : Spek({
                 val network = DockerNetwork("some-network")
 
                 val step = CreateContainerStep(container, command, additionalEnvironmentVariables, image, network)
-                val request = DockerContainerCreationRequest(image, network, command!!.parsedCommand, "some-container", "some-container", emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig())
+                val request = DockerContainerCreationRequest(image, network, command!!.parsedCommand, "some-container", "some-container", emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig(), null)
 
                 beforeEachTest {
-                    whenever(creationRequestFactory.create(container, image, network, command, additionalEnvironmentVariables, runOptions.propagateProxyEnvironmentVariables)).doReturn(request)
+                    whenever(creationRequestFactory.create(
+                        container,
+                        image,
+                        network,
+                        command,
+                        additionalEnvironmentVariables,
+                        runAsCurrentUserConfiguration.volumeMounts,
+                        runOptions.propagateProxyEnvironmentVariables,
+                        runAsCurrentUserConfiguration.userAndGroup
+                    )).doReturn(request)
                 }
 
                 on("when creating the container succeeds") {
@@ -441,6 +469,31 @@ object TaskStepRunnerSpec : Spek({
 
                     it("emits a 'container removed' event") {
                         verify(eventSink).postEvent(ContainerRemovedEvent(container))
+                    }
+                }
+            }
+
+            describe("running a 'delete temporary file' step") {
+                val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
+                val filePath by createForEachTest { fileSystem.getPath("/temp-file") }
+
+                val step by createForEachTest { DeleteTemporaryFileStep(filePath) }
+
+                on("when deleting the file succeeds") {
+                    Files.write(filePath, listOf("test file contents"))
+
+                    runner.run(step, eventSink, runOptions)
+
+                    it("emits a 'temporary file deleted' event") {
+                        verify(eventSink).postEvent(TemporaryFileDeletedEvent(filePath))
+                    }
+                }
+
+                on("when deleting the file fails") {
+                    runner.run(step, eventSink, runOptions)
+
+                    it("emits a 'temporary file deletion failed' event") {
+                        verify(eventSink).postEvent(TemporaryFileDeletionFailedEvent(filePath, "java.nio.file.NoSuchFileException: /temp-file"))
                     }
                 }
             }

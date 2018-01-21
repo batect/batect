@@ -18,6 +18,8 @@ package batect.os
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -26,6 +28,13 @@ import java.util.Properties
 
 object SystemInfoSpec : Spek({
     describe("a system info provider") {
+        val processRunner = mock<ProcessRunner> {
+            on { runAndCaptureOutput(listOf("id", "-u")) } doReturn ProcessOutput(0, "123\n")
+            on { runAndCaptureOutput(listOf("id", "-un")) } doReturn ProcessOutput(0, "awesome-user\n")
+            on { runAndCaptureOutput(listOf("id", "-g")) } doReturn ProcessOutput(0, "777\n")
+            on { runAndCaptureOutput(listOf("id", "-gn")) } doReturn ProcessOutput(0, "awesome-group\n")
+        }
+
         val systemProperties = Properties()
         systemProperties.setProperty("java.vm.vendor", "Awesome JVMs, Inc.")
         systemProperties.setProperty("java.vm.name", "Best JVM Ever")
@@ -35,7 +44,7 @@ object SystemInfoSpec : Spek({
         systemProperties.setProperty("os.version", "4.5.6")
         systemProperties.setProperty("user.home", "/some/home/dir")
 
-        val systemInfo = SystemInfo(systemProperties)
+        val systemInfo = SystemInfo(processRunner, systemProperties)
 
         on("getting the JVM version") {
             val jvmVersion = systemInfo.jvmVersion
@@ -58,6 +67,38 @@ object SystemInfoSpec : Spek({
 
             it("returns the user's home directory") {
                 assertThat(homeDir, equalTo("/some/home/dir"))
+            }
+        }
+
+        on("getting the current user ID") {
+            val userID = systemInfo.userId
+
+            it("returns the ID given by the `id -u` command") {
+                assertThat(userID, equalTo(123))
+            }
+        }
+
+        on("getting the current user name") {
+            val userName = systemInfo.userName
+
+            it("returns the ID given by the `id -un` command") {
+                assertThat(userName, equalTo("awesome-user"))
+            }
+        }
+
+        on("getting the current group ID") {
+            val groupID = systemInfo.groupId
+
+            it("returns the ID given by the `id -g` command") {
+                assertThat(groupID, equalTo(777))
+            }
+        }
+
+        on("getting the current group name") {
+            val groupName = systemInfo.groupName
+
+            it("returns the ID given by the `id -gn` command") {
+                assertThat(groupName, equalTo("awesome-group"))
             }
         }
     }

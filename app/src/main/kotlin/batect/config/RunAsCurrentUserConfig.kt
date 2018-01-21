@@ -16,17 +16,7 @@
 
 package batect.config
 
-import batect.os.Command
-
-data class Container(
-    val name: String,
-    val imageSource: ImageSource,
-    val command: Command? = null,
-    val environment: Map<String, String> = emptyMap(),
-    val workingDirectory: String? = null,
-    val volumeMounts: Set<VolumeMount> = emptySet(),
-    val portMappings: Set<PortMapping> = emptySet(),
-    val dependencies: Set<String> = emptySet(),
-    val healthCheckConfig: HealthCheckConfig = HealthCheckConfig(),
-    val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig()
+data class RunAsCurrentUserConfig(
+    val enabled: Boolean = false,
+    val homeDirectory: String? = null
 )

@@ -37,6 +37,7 @@ import batect.logging.StandardAdditionalDataSource
 import batect.logging.singletonWithLogger
 import batect.model.ContainerCommandResolver
 import batect.model.DependencyGraphProvider
+import batect.model.RunAsCurrentUserConfigurationProvider
 import batect.model.RunOptions
 import batect.model.TaskExecutionOrderResolver
 import batect.model.TaskStateMachineProvider
@@ -158,16 +159,17 @@ private val loggingModule = Kodein.Module {
 private val modelModule = Kodein.Module {
     bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance()) }
     bind<DependencyGraphProvider>() with singletonWithLogger { logger -> DependencyGraphProvider(instance(), logger) }
+    bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance()) }
     bind<RunOptions>() with singleton { RunOptions(commandLineOptions()) }
     bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(logger) }
     bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance()) }
-    bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), instance(), instance(), logger) }
+    bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), instance(), instance(), instance(), logger) }
 }
 
 private val osModule = Kodein.Module {
     bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }
     bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider() }
-    bind<SystemInfo>() with singleton { SystemInfo() }
+    bind<SystemInfo>() with singleton { SystemInfo(instance()) }
 }
 
 private val uiModule = Kodein.Module {

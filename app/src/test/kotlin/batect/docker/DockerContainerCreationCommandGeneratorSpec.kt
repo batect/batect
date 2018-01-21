@@ -34,7 +34,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
         val network = DockerNetwork("the-network")
 
         given("a creation request with the minimal set of information") {
-            val request = DockerContainerCreationRequest(image, network, emptyList(), "the-hostname", "the-alias", emptyMap(), null, emptySet(), emptySet(), HealthCheckConfig())
+            val request = DockerContainerCreationRequest(image, network, emptyList(), "the-hostname", "the-alias", emptyMap(), null, emptySet(), emptySet(), HealthCheckConfig(), null)
 
             on("generating the command") {
                 val commandLine = generator.createCommandLine(request)
@@ -52,7 +52,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
         }
 
         given("a creation request with an explicit command") {
-            val request = DockerContainerCreationRequest(image, network, listOf("doStuff"), "the-hostname", "the-alias", emptyMap(), null, emptySet(), emptySet(), HealthCheckConfig())
+            val request = DockerContainerCreationRequest(image, network, listOf("doStuff"), "the-hostname", "the-alias", emptyMap(), null, emptySet(), emptySet(), HealthCheckConfig(), null)
 
             on("generating the command") {
                 val commandLine = generator.createCommandLine(request)
@@ -81,7 +81,8 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                 "/workingdir",
                 setOf(VolumeMount("/local1", "/container1", null), VolumeMount("/local2", "/container2", "ro")),
                 setOf(PortMapping(1000, 2000), PortMapping(3000, 4000)),
-                HealthCheckConfig("3s", 5, "1.5s")
+                HealthCheckConfig("3s", 5, "1.5s"),
+                UserAndGroup(123, 456)
             )
 
             on("generating the command") {
@@ -104,6 +105,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
                         "--health-interval", "3s",
                         "--health-retries", "5",
                         "--health-start-period", "1.5s",
+                        "--user", "123:456",
                         image.id,
                         "doStuff").asIterable()))
                 }
@@ -111,7 +113,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
         }
 
         given("a creation request with an override for just the health check interval") {
-            val request = DockerContainerCreationRequest(image, network, emptyList(), "the-hostname", "the-alias", emptyMap(), null, emptySet(), emptySet(), HealthCheckConfig(interval = "2s"))
+            val request = DockerContainerCreationRequest(image, network, emptyList(), "the-hostname", "the-alias", emptyMap(), null, emptySet(), emptySet(), HealthCheckConfig(interval = "2s"), null)
 
             on("generating the command") {
                 val commandLine = generator.createCommandLine(request)
@@ -130,7 +132,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
         }
 
         given("a creation request with an override for just the number of health check retries") {
-            val request = DockerContainerCreationRequest(image, network, emptyList(), "the-hostname", "the-alias", emptyMap(), null, emptySet(), emptySet(), HealthCheckConfig(retries = 2))
+            val request = DockerContainerCreationRequest(image, network, emptyList(), "the-hostname", "the-alias", emptyMap(), null, emptySet(), emptySet(), HealthCheckConfig(retries = 2), null)
 
             on("generating the command") {
                 val commandLine = generator.createCommandLine(request)
@@ -149,7 +151,7 @@ object DockerContainerCreationCommandGeneratorSpec : Spek({
         }
 
         given("a creation request with an override for just the health check start period") {
-            val request = DockerContainerCreationRequest(image, network, emptyList(), "the-hostname", "the-alias", emptyMap(), null, emptySet(), emptySet(), HealthCheckConfig(startPeriod = "3s"))
+            val request = DockerContainerCreationRequest(image, network, emptyList(), "the-hostname", "the-alias", emptyMap(), null, emptySet(), emptySet(), HealthCheckConfig(startPeriod = "3s"), null)
 
             on("generating the command") {
                 val commandLine = generator.createCommandLine(request)

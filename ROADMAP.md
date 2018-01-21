@@ -22,12 +22,8 @@ If there's something you're really keen to see, pull requests are always welcome
 * check that Docker client and server are compatible versions
 * warn when using an image without a tag or with tag `latest`
 * start containers with `--user $(id -u):$(id -g)` so that any files created in any mounted directories have the current user as their owner
-  * ignore on OS X?
-  * some applications won't like the fact that the user doesn't actually exist, so this should be opt-in
-  * for better compatibility, should create `/etc/passwd` and `/etc/group` files inside the container with the user and group listed, but this creates other problems:
-    * if we just create a `/etc/passwd` with `root` and the other user, any other users that existed in the container would be lost (ditto for `/etc/groups`)
-    * if we pull the existing `/etc/passwd` out of the container and add the host user, there's the potential for conflicts
-    * what should the home directory of the user be? (default to `/root`?)
+  * update documentation
+  * create any missing directories that will be mounted into the container (otherwise they're created by Docker as root automatically)
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 * support for Windows
 * infer project name from project directory name if not provided

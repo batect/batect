@@ -30,5 +30,8 @@ data class DockerContainerCreationRequest(
     val workingDirectory: String?,
     val volumeMounts: Set<VolumeMount>,
     val portMappings: Set<PortMapping>,
-    val healthCheckConfig: HealthCheckConfig
+    val healthCheckConfig: HealthCheckConfig,
+    val userAndGroup: UserAndGroup?
 )
+
+data class UserAndGroup(val userId: Int, val groupId: Int)

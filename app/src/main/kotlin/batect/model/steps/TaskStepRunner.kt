@@ -32,6 +32,7 @@ import batect.docker.ImagePullFailedException
 import batect.docker.NetworkCreationFailedException
 import batect.docker.NetworkDeletionFailedException
 import batect.logging.Logger
+import batect.model.RunAsCurrentUserConfigurationProvider
 import batect.model.RunOptions
 import batect.model.events.ContainerBecameHealthyEvent
 import batect.model.events.ContainerCreatedEvent
@@ -55,12 +56,17 @@ import batect.model.events.TaskNetworkCreationFailedEvent
 import batect.model.events.TaskNetworkDeletedEvent
 import batect.model.events.TaskNetworkDeletionFailedEvent
 import batect.model.events.TaskStartedEvent
+import batect.model.events.TemporaryFileDeletedEvent
+import batect.model.events.TemporaryFileDeletionFailedEvent
 import batect.os.ProxyEnvironmentVariablesProvider
+import java.io.IOException
+import java.nio.file.Files
 
 class TaskStepRunner(
     private val dockerClient: DockerClient,
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
     private val creationRequestFactory: DockerContainerCreationRequestFactory,
+    private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
     private val logger: Logger
 ) {
     fun run(step: TaskStep, eventSink: TaskEventSink, runOptions: RunOptions) {
@@ -81,6 +87,7 @@ class TaskStepRunner(
             is StopContainerStep -> handleStopContainerStep(step, eventSink)
             is CleanUpContainerStep -> handleCleanUpContainerStep(step, eventSink)
             is RemoveContainerStep -> handleRemoveContainerStep(step, eventSink)
+            is DeleteTemporaryFileStep -> handleDeleteTemporaryFileStep(step, eventSink)
             is DeleteTaskNetworkStep -> handleDeleteTaskNetworkStep(step, eventSink)
             is DisplayTaskFailureStep -> ignore()
             is FinishTaskStep -> ignore()
@@ -125,7 +132,19 @@ class TaskStepRunner(
 
     private fun handleCreateContainerStep(step: CreateContainerStep, eventSink: TaskEventSink, runOptions: RunOptions) {
         try {
-            val creationRequest = creationRequestFactory.create(step.container, step.image, step.network, step.command, step.additionalEnvironmentVariables, runOptions.propagateProxyEnvironmentVariables)
+            val runAsCurrentUserConfiguration = runAsCurrentUserConfigurationProvider.generateConfiguration(step.container, eventSink)
+
+            val creationRequest = creationRequestFactory.create(
+                step.container,
+                step.image,
+                step.network,
+                step.command,
+                step.additionalEnvironmentVariables,
+                runAsCurrentUserConfiguration.volumeMounts,
+                runOptions.propagateProxyEnvironmentVariables,
+                runAsCurrentUserConfiguration.userAndGroup
+            )
+
             val dockerContainer = dockerClient.create(creationRequest)
             eventSink.postEvent(ContainerCreatedEvent(step.container, dockerContainer))
         } catch (e: ContainerCreationFailedException) {
@@ -204,6 +223,15 @@ class TaskStepRunner(
             eventSink.postEvent(ContainerRemovalFailedEvent(step.container, e.outputFromDocker))
         } catch (_: ContainerDoesNotExistException) {
             eventSink.postEvent(ContainerRemovedEvent(step.container))
+        }
+    }
+
+    private fun handleDeleteTemporaryFileStep(step: DeleteTemporaryFileStep, eventSink: TaskEventSink) {
+        try {
+            Files.delete(step.filePath)
+            eventSink.postEvent(TemporaryFileDeletedEvent(step.filePath))
+        } catch (e: IOException) {
+            eventSink.postEvent(TemporaryFileDeletionFailedEvent(step.filePath, e.toString()))
         }
     }
 

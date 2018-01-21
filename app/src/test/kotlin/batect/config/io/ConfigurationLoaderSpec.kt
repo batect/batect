@@ -33,6 +33,7 @@ import batect.config.HealthCheckConfig
 import batect.config.ImageSource
 import batect.config.PortMapping
 import batect.config.PullImage
+import batect.config.RunAsCurrentUserConfig
 import batect.config.VolumeMount
 import batect.logging.Logger
 import batect.os.Command
@@ -397,6 +398,9 @@ object ConfigurationLoaderSpec : Spek({
                     |      interval: 2s
                     |      retries: 10
                     |      start_period: 1s
+                    |    run_as_current_user:
+                    |      enabled: true
+                    |      home_directory: /home/something
                     """.trimMargin()
 
             val config = loadConfiguration(configString)
@@ -418,6 +422,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.workingDirectory, equalTo("/here"))
                 assertThat(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
                 assertThat(container.healthCheckConfig, equalTo(HealthCheckConfig("2s", 10, "1s")))
+                assertThat(container.runAsCurrentUserConfig, equalTo(RunAsCurrentUserConfig(true, "/home/something")))
                 assertThat(container.volumeMounts, equalTo(setOf(
                         VolumeMount("/resolved/../", "/here", null),
                         VolumeMount("/resolved//somewhere", "/else", "ro")
@@ -574,6 +579,55 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should fail with an error message") {
                 assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate environment variable 'THING'") and withLineNumber(8)))
+            }
+        }
+
+        on("loading a configuration file with a container with 'run as current user' explicitly disabled but a home directory provided") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |containers:
+                |  container-1:
+                |    build_directory: container-1
+                |    run_as_current_user:
+                |      enabled: false
+                |      home_directory: /home/something
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Could not load configuration file: Container 'container-1' is invalid: running as the current user has not been enabled, but a home directory for that user has been provided.")))
+            }
+        }
+
+        on("loading a configuration file with a container with 'run as current user' enabled but no home directory provided") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |containers:
+                |  container-1:
+                |    build_directory: container-1
+                |    run_as_current_user:
+                |      enabled: true
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Could not load configuration file: Container 'container-1' is invalid: running as the current user has been enabled, but a home directory for that user has not been provided.")))
+            }
+        }
+
+        on("loading a configuration file with a container with 'run as current user' not enabled but a home directory provided") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |containers:
+                |  container-1:
+                |    build_directory: container-1
+                |    run_as_current_user:
+                |      home_directory: /home/something
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Could not load configuration file: Container 'container-1' is invalid: running as the current user has not been enabled, but a home directory for that user has been provided.")))
             }
         }
 

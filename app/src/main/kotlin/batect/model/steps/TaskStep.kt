@@ -22,6 +22,7 @@ import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.model.events.TaskEventContext
 import batect.os.Command
+import java.nio.file.Path
 
 sealed class TaskStep {
     override fun toString() = this.javaClass.canonicalName
@@ -75,6 +76,10 @@ data class CleanUpContainerStep(val container: Container, val dockerContainer: D
 
 data class RemoveContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
     override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
+}
+
+data class DeleteTemporaryFileStep(val filePath: Path) : TaskStep() {
+    override fun toString() = super.toString() + "(file path: '$filePath')"
 }
 
 data class WaitForContainerToBecomeHealthyStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {

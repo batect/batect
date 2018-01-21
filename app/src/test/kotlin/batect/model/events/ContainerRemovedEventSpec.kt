@@ -22,6 +22,7 @@ import batect.docker.DockerNetwork
 import batect.logging.Logger
 import batect.model.steps.CreateContainerStep
 import batect.model.steps.DeleteTaskNetworkStep
+import batect.model.steps.DeleteTemporaryFileStep
 import batect.os.Command
 import batect.testutils.InMemoryLogSink
 import batect.testutils.imageSourceDoesNotMatter
@@ -36,6 +37,7 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import java.nio.file.Paths
 
 object ContainerRemovedEventSpec : Spek({
     describe("a 'container removed' event") {
@@ -61,13 +63,13 @@ object ContainerRemovedEventSpec : Spek({
                     )
 
                     on { getPastEventsOfType<ContainerRemovedEvent>() } doReturn setOf(
-                            event,
-                            ContainerRemovedEvent(otherContainer1),
-                            ContainerRemovedEvent(otherContainer2)
+                        event,
+                        ContainerRemovedEvent(otherContainer1),
+                        ContainerRemovedEvent(otherContainer2)
                     )
 
                     on { getPastEventsOfType<ContainerCreationFailedEvent>() } doReturn setOf(
-                            ContainerCreationFailedEvent(containerThatFailedToCreate, "Some message")
+                        ContainerCreationFailedEvent(containerThatFailedToCreate, "Some message")
                     )
 
                     on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
@@ -90,12 +92,12 @@ object ContainerRemovedEventSpec : Spek({
                     )
 
                     on { getPastEventsOfType<ContainerRemovedEvent>() } doReturn setOf(
-                            event,
-                            ContainerRemovedEvent(otherContainer1)
+                        event,
+                        ContainerRemovedEvent(otherContainer1)
                     )
 
                     on { getPastEventsOfType<ContainerCreationFailedEvent>() } doReturn setOf(
-                            ContainerCreationFailedEvent(containerThatFailedToCreate, "Some message")
+                        ContainerCreationFailedEvent(containerThatFailedToCreate, "Some message")
                     )
                 }
 
@@ -103,6 +105,31 @@ object ContainerRemovedEventSpec : Spek({
 
                 it("does not queue any further work") {
                     verify(context, never()).queueStep(any())
+                }
+            }
+
+            on("when temporary files were created for the container") {
+                val context = mock<TaskEventContext> {
+                    on { getPastEventsOfType<TemporaryFileCreatedEvent>() } doReturn setOf(
+                        TemporaryFileCreatedEvent(container, Paths.get("/container-path-1")),
+                        TemporaryFileCreatedEvent(container, Paths.get("/container-path-2")),
+                        TemporaryFileCreatedEvent(otherContainer1, Paths.get("/container-path-3")),
+                        TemporaryFileCreatedEvent(otherContainer2, Paths.get("/container-path-4"))
+                    )
+
+                    on { getPendingAndProcessedStepsOfType<CreateContainerStep>() } doReturn setOf(
+                        CreateContainerStep(container, command, emptyMap(), image, network)
+                    )
+
+                    on { getPastEventsOfType<ContainerRemovedEvent>() } doReturn emptySet()
+                    on { getPastEventsOfType<ContainerCreationFailedEvent>() } doReturn emptySet()
+                }
+
+                event.apply(context, logger)
+
+                it("queues 'delete temporary file' steps for those files") {
+                    verify(context).queueStep(DeleteTemporaryFileStep(Paths.get("/container-path-1")))
+                    verify(context).queueStep(DeleteTemporaryFileStep(Paths.get("/container-path-2")))
                 }
             }
         }

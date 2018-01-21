@@ -151,7 +151,7 @@ object DockerClientSpec : Spek({
                 val network = DockerNetwork("the-network")
                 val command = listOf("doStuff")
                 val commandLine = listOf("docker", "doStuff", "please")
-                val request = DockerContainerCreationRequest(image, network, command, "some-host", "some-host", emptyMap(), "/some-dir", emptySet(), emptySet(), HealthCheckConfig())
+                val request = DockerContainerCreationRequest(image, network, command, "some-host", "some-host", emptyMap(), "/some-dir", emptySet(), emptySet(), HealthCheckConfig(), null)
 
                 beforeEachTest {
                     whenever(creationCommandGenerator.createCommandLine(request)).thenReturn(commandLine)

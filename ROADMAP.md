@@ -28,6 +28,13 @@ If there's something you're really keen to see, pull requests are always welcome
 * support for Windows
 * infer project name from project directory name if not provided
 
+### Bugs
+* use proxy settings when checking for updates
+* wrapper script fails with an error if the JAR is being downloaded and the script is invoked a second time
+* fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information
+  doesn't correctly overwrite previous updates
+  * handle the case where the console is resized while batect is running
+
 ### Other
 * logging (for batect internals)
   * include process ID with each message (this is non-trivial in versions prior to Java 9: https://stackoverflow.com/questions/35842/how-can-a-java-program-get-its-own-process-id)
@@ -45,9 +52,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * improve the getting started guide (it's way too wordy)
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
 * make configuration-related error messages clearer and remove exception class names etc.
-* fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information
-  doesn't correctly overwrite previous updates
-  * handle the case where the console is resized while batect is running
 * easy way to update to new versions when notified (eg. `batect update` downloads new wrapper script and replaces it in place)
 * use batect to build batect (self-hosting)
 * move to Kotlin/Native

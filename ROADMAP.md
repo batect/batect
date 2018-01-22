@@ -27,7 +27,6 @@ If there's something you're really keen to see, pull requests are always welcome
 
 ### Bugs
 * use proxy settings when checking for updates
-* wrapper script fails with an error if the JAR is being downloaded and the script is invoked a second time
 * fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information
   doesn't correctly overwrite previous updates
   * handle the case where the console is resized while batect is running

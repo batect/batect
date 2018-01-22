@@ -30,7 +30,9 @@ function download() {
     fi
 
     mkdir -p "$CACHE_DIR"
-    curl -# --fail --show-error --location --output "$JAR_PATH" "$DOWNLOAD_URL"
+    temp_file=$(mktemp)
+    curl -# --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
+    mv "$temp_file" "$JAR_PATH"
 }
 
 function runApplication() {

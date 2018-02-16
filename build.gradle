@@ -76,3 +76,7 @@ task validateRelease {
     dependsOn validateIsReleaseBuild
     dependsOn validateVersionMatchesTag
 }
+
+wrapper {
+    distributionType = Wrapper.DistributionType.ALL
+}

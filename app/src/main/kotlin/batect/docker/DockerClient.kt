@@ -25,9 +25,9 @@ import batect.os.KilledDuringProcessing
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.ui.ConsoleInfo
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JSON
 import java.util.UUID
 
 class DockerClient(
@@ -245,11 +245,11 @@ class DockerClient(
             throw ContainerHealthCheckException("Could not get the last health check result for container '${container.id}'. Output from Docker was: ${result.output.trim()}")
         }
 
-        val parsed = jsonMapper.readValue(result.output, DockerHealthCheckStatus::class.java)
-
-        if (parsed == null) {
+        if (result.output.trim() == "null") {
             throw ContainerHealthCheckException("Could not get the last health check result for container '${container.id}'. The container does not have a health check.")
         }
+
+        val parsed = JSON.nonstrict.parse<DockerHealthCheckStatus>(result.output)
 
         return parsed.log.last()
     }
@@ -466,22 +466,17 @@ class DockerClient(
 
     private fun failed(result: ProcessOutput): Boolean = result.exitCode != 0
 
-    private val jsonMapper by lazy {
-        val mapper = jacksonObjectMapper()
-        mapper.propertyNamingStrategy = PropertyNamingStrategy.UPPER_CAMEL_CASE
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-
-        mapper
-    }
-
-    private data class DockerHealthCheckStatus(val log: List<DockerHealthCheckResult>)
+    @Serializable
+    data class DockerHealthCheckStatus(@SerialName("Log") val log: List<DockerHealthCheckResult>)
 }
 
 data class DockerImage(val id: String)
 data class DockerContainer(val id: String)
 data class DockerContainerRunResult(val exitCode: Int)
 data class DockerNetwork(val id: String)
-data class DockerHealthCheckResult(val exitCode: Int, val output: String)
+
+@Serializable
+data class DockerHealthCheckResult(@SerialName("ExitCode") val exitCode: Int, @SerialName("Output") val output: String)
 
 data class DockerImageBuildProgress(val currentStep: Int, val totalSteps: Int, val message: String) {
     companion object {

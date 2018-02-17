@@ -17,9 +17,15 @@
 buildscript {
     ext.junit_version = '1.1.0-RC1'
     ext.spek_version = '1.1.5'
+    ext.serialization_version = '0.4.1'
+
+    repositories {
+        maven { url "https://kotlin.bintray.com/kotlinx" }
+    }
 
     dependencies {
         classpath "org.junit.platform:junit-platform-gradle-plugin:$junit_version"
+        classpath "org.jetbrains.kotlinx:kotlinx-gradle-serialization-plugin:$serialization_version"
     }
 }
 
@@ -31,10 +37,15 @@ plugins {
 
 apply plugin: 'application'
 apply plugin: 'org.junit.platform.gradle.plugin'
+apply plugin: 'kotlinx-serialization'
 
 applicationName = 'batect'
 archivesBaseName = 'batect'
 mainClassName = 'batect.ApplicationKt'
+
+repositories {
+    maven { url "https://kotlin.bintray.com/kotlinx" }
+}
 
 dependencies {
     compile 'org.jetbrains.kotlin:kotlin-stdlib-jre8'
@@ -43,6 +54,7 @@ dependencies {
     // but if we don't reference it here, the version that jackson-module-kotlin refers to
     // is used.
     compile 'org.jetbrains.kotlin:kotlin-reflect'
+    compile "org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serialization_version"
 
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.1'
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.1'

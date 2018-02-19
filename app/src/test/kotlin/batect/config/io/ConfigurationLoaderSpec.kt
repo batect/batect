@@ -430,6 +430,42 @@ object ConfigurationLoaderSpec : Spek({
             }
         }
 
+        on("loading a valid configuration file with a container with a volume specified in expanded format") {
+            val configString = """
+                    |project_name: the_cool_project
+                    |
+                    |containers:
+                    |  container-1:
+                    |    build_directory: container-1-build-dir
+                    |    volumes:
+                    |      - local: ../
+                    |        container: /here
+                    |      - local: /somewhere
+                    |        container: /else
+                    |        options: ro
+                    """.trimMargin()
+
+            val config = loadConfiguration(configString)
+
+            it("should load the project name") {
+                assertThat(config.projectName, equalTo("the_cool_project"))
+            }
+
+            it("should load the single container specified") {
+                assertThat(config.containers.keys, equalTo(setOf("container-1")))
+            }
+
+            it("should load all of the configuration specified for the container") {
+                val container = config.containers["container-1"]!!
+                assertThat(container.name, equalTo("container-1"))
+                assertThat(container.imageSource, equalTo<ImageSource>(BuildImage("/resolved/container-1-build-dir")))
+                assertThat(container.volumeMounts, equalTo(setOf(
+                    VolumeMount("/resolved/../", "/here", null),
+                    VolumeMount("/resolved//somewhere", "/else", "ro")
+                )))
+            }
+        }
+
         on("loading a valid configuration file with a container with a dependency") {
             val configString = """
                     |project_name: the_cool_project

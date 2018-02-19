@@ -17,8 +17,13 @@
 package batect.config
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
 
-data class VolumeMount(val localPath: String, val containerPath: String, val options: String?) {
+data class VolumeMount(
+    @JsonProperty("local") val localPath: String,
+    @JsonProperty("container") val containerPath: String,
+    val options: String?
+) {
     override fun toString(): String {
         if (options == null) {
             return "$localPath:$containerPath"

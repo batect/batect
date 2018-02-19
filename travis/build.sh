@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
 
-set -euxo pipefail
+set -euo pipefail
 
+echo "Linting..."
 ./gradlew spotlessCheck
 echo
 
+echo "Running unit tests..."
 ./gradlew check
 echo
 
+echo "Running journey tests..."
 ./gradlew journeyTest
 echo
 
+echo "Assembling release..."
 ./gradlew assembleRelease
-echo

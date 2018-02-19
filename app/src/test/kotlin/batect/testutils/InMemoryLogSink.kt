@@ -18,18 +18,23 @@ package batect.testutils
 
 import batect.logging.LogMessage
 import batect.logging.LogMessageBuilder
+import batect.logging.LogMessageWriter
 import batect.logging.LogSink
 import batect.logging.Severity
 import batect.logging.StandardAdditionalDataSource
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
+import java.io.ByteArrayOutputStream
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
 class InMemoryLogSink : LogSink {
     val loggedMessages = mutableListOf<LogMessage>()
+    val output = ByteArrayOutputStream()
 
     private val lock = Object()
+    private val writer = LogMessageWriter()
+
     private val additionalDataSource = mock<StandardAdditionalDataSource> {
         on { getAdditionalData() } doReturn emptyMap<String, Any>()
     }
@@ -42,6 +47,7 @@ class InMemoryLogSink : LogSink {
 
         synchronized(lock) {
             loggedMessages += message
+            writer.writeTo(message, output)
         }
     }
 }

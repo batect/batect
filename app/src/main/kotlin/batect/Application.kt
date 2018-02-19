@@ -191,8 +191,8 @@ private val uiModule = Kodein.Module {
 }
 
 private val updatesModule = Kodein.Module {
-    bind<UpdateInfoDownloader>() with singleton { UpdateInfoDownloader(instance()) }
-    bind<UpdateInfoStorage>() with singleton { UpdateInfoStorage(instance(), instance()) }
+    bind<UpdateInfoDownloader>() with singletonWithLogger { logger -> UpdateInfoDownloader(instance(), logger) }
+    bind<UpdateInfoStorage>() with singletonWithLogger { logger -> UpdateInfoStorage(instance(), instance(), logger) }
     bind<UpdateInfoUpdater>() with singletonWithLogger { logger -> UpdateInfoUpdater(instance(), instance(), logger) }
     bind<UpdateNotifier>() with singletonWithLogger { logger -> UpdateNotifier(commandLineOptions().disableUpdateNotification, instance(), instance(), instance(), instance(PrintStreamType.Output), logger) }
 }

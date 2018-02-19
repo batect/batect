@@ -16,6 +16,7 @@
 
 package batect.updates
 
+import batect.logging.Logger
 import batect.utils.Version
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
@@ -25,8 +26,8 @@ import okhttp3.Request
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
-class UpdateInfoDownloader(private val client: OkHttpClient, private val dateTimeProvider: () -> ZonedDateTime) {
-    constructor(client: OkHttpClient) : this(client, { ZonedDateTime.now(ZoneOffset.UTC) })
+class UpdateInfoDownloader(private val client: OkHttpClient, private val logger: Logger, private val dateTimeProvider: () -> ZonedDateTime) {
+    constructor(client: OkHttpClient, logger: Logger) : this(client, logger, { ZonedDateTime.now(ZoneOffset.UTC) })
 
     fun getLatestVersionInfo(): UpdateInfo {
         val url = "https://api.github.com/repos/charleskorn/batect/releases/latest"
@@ -35,7 +36,19 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val dateTim
             .build()
 
         try {
+            logger.info {
+                message("Downloading latest version information.")
+                data("url", request.url().toString())
+            }
+
             client.newCall(request).execute().use { response ->
+                logger.info {
+                    message("Finished downloading latest version information.")
+                    data("successful", response.isSuccessful)
+                    data("httpResponseCode", response.code())
+                    data("httpResponseMessage", response.message())
+                }
+
                 if (!response.isSuccessful) {
                     throw UpdateInfoDownloadException("The server returned HTTP ${response.code()}.")
                 }
@@ -45,10 +58,22 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val dateTim
                 mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 
                 val releaseInfo = mapper.readValue(response.body()!!.byteStream(), GitHubReleaseInfo::class.java)
+                val updateInfo = UpdateInfo(Version.parse(releaseInfo.tagName), releaseInfo.htmlUrl, dateTimeProvider())
 
-                return UpdateInfo(Version.parse(releaseInfo.tagName), releaseInfo.htmlUrl, dateTimeProvider())
+                logger.info {
+                    message("Parsed latest version information.")
+                    data("updateInfo", updateInfo)
+                }
+
+                return updateInfo
             }
         } catch (e: Throwable) {
+            logger.info {
+                message("Downloading latest version information failed with an exception.")
+                data("url", request.url().toString())
+                exception(e)
+            }
+
             throw UpdateInfoDownloadException("Could not download latest release information from $url: ${e.message}", e)
         }
     }

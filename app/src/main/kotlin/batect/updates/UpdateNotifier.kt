@@ -36,6 +36,10 @@ class UpdateNotifier(
 
     fun run() {
         if (disableUpdateNotification) {
+            logger.info {
+                message("Update notification disabled, not checking or displaying update status.")
+            }
+
             return
         }
 
@@ -63,17 +67,36 @@ class UpdateNotifier(
 
     private fun printUpdateNotificationIfRequired(updateInfo: UpdateInfo?) {
         if (updateInfo == null) {
+            logger.info {
+                message("No cached update information found, not displaying update notification.")
+            }
+
             return
         }
 
         if (updateInfo.version > versionInfo.version) {
+            logger.info {
+                message("Current version of batect is older than cached latest available version.")
+                data("currentVersion", versionInfo.version)
+                data("availableVersion", versionInfo.version)
+            }
+
             console.println("Version ${updateInfo.version} of batect is now available (you have ${versionInfo.version}). For more information, visit ${updateInfo.url}.")
             console.println()
+        } else {
+            logger.info {
+                message("Current version of batect matches cached latest available version.")
+                data("currentVersion", versionInfo.version)
+            }
         }
     }
 
     private fun shouldUpdateCachedInfo(cachedInfo: UpdateInfo?): Boolean {
         if (cachedInfo == null) {
+            logger.info {
+                message("No cached update information found, will attempt to update.")
+            }
+
             return true
         }
 
@@ -81,7 +104,21 @@ class UpdateNotifier(
         val nextUpdateDue = cachedInfo.lastUpdated.plusHours(36)
 
         if (nextUpdateDue < now) {
+            logger.info {
+                message("Cached update information has not been updated recently, will attempt to update.")
+                data("lastUpdated", cachedInfo.lastUpdated)
+                data("now", now)
+                data("updateDue", nextUpdateDue)
+            }
+
             return true
+        }
+
+        logger.info {
+            message("Cached update information has been updated recently, will not attempt to update.")
+            data("lastUpdated", cachedInfo.lastUpdated)
+            data("now", now)
+            data("updateDue", nextUpdateDue)
         }
 
         return false

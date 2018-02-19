@@ -16,7 +16,9 @@
 
 package batect.updates
 
+import batect.logging.Logger
 import batect.os.SystemInfo
+import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.utils.Version
 import com.google.common.jimfs.Configuration
@@ -47,7 +49,9 @@ object UpdateInfoStorageSpec : Spek({
             on { homeDirectory } doReturn homeDir
         }
 
-        val storage by createForEachTest { UpdateInfoStorage(fileSystem, systemInfo) }
+        val logger by createForEachTest { Logger("UpdateInfoStorage", InMemoryLogSink()) }
+
+        val storage by createForEachTest { UpdateInfoStorage(fileSystem, systemInfo, logger) }
 
         describe("reading update information from disk") {
             on("when no update information has been written to disk") {

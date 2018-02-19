@@ -16,6 +16,8 @@
 
 package batect.updates
 
+import batect.logging.Logger
+import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.withCause
 import batect.testutils.withMessage
@@ -58,9 +60,10 @@ object UpdateInfoDownloaderSpec : Spek({
             }
         }
 
+        val logger by createForEachTest { Logger("UpdateInfoDownloader", InMemoryLogSink()) }
         val dateTime = ZonedDateTime.of(2017, 10, 3, 11, 2, 0, 0, ZoneOffset.UTC)
         val dateTimeProvider = { dateTime }
-        val downloader by createForEachTest { UpdateInfoDownloader(client, dateTimeProvider) }
+        val downloader by createForEachTest { UpdateInfoDownloader(client, logger, dateTimeProvider) }
 
         on("when the latest release information can be retrieved successfully") {
             val responseBody = """{

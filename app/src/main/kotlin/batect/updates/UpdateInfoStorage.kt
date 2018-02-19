@@ -16,6 +16,7 @@
 
 package batect.updates
 
+import batect.logging.Logger
 import batect.os.SystemInfo
 import batect.utils.Version
 import java.nio.file.FileSystem
@@ -23,11 +24,21 @@ import java.nio.file.Files
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-class UpdateInfoStorage(fileSystem: FileSystem, systemInfo: SystemInfo) {
+class UpdateInfoStorage(private val fileSystem: FileSystem, private val systemInfo: SystemInfo, private val logger: Logger) {
     private val updateInfoPath = fileSystem.getPath(systemInfo.homeDirectory, ".batect", "updates", "latestVersion")
 
     fun read(): UpdateInfo? {
+        logger.info {
+            message("Loading cached update information from disk.")
+            data("source", updateInfoPath.toString())
+        }
+
         if (!Files.exists(updateInfoPath)) {
+            logger.info {
+                message("No cached update information found on disk.")
+                data("source", updateInfoPath.toString())
+            }
+
             return null
         }
 
@@ -37,11 +48,24 @@ class UpdateInfoStorage(fileSystem: FileSystem, systemInfo: SystemInfo) {
         val version = Version.parse(values.getValue("version"))
         val url = values.getValue("url")
         val lastUpdated = parseDate(values.getValue("lastUpdated"))
+        val updateInfo = UpdateInfo(version, url, lastUpdated)
 
-        return UpdateInfo(version, url, lastUpdated)
+        logger.info {
+            message("Loaded cached update information from disk.")
+            data("source", updateInfoPath.toString())
+            data("updateInfo", updateInfo)
+        }
+
+        return updateInfo
     }
 
     fun write(updateInfo: UpdateInfo) {
+        logger.info {
+            message("Writing update information cache to disk.")
+            data("destination", updateInfoPath.toString())
+            data("updateInfo", updateInfo)
+        }
+
         ensureUpdateInfoDirectoryExists()
 
         val values = mapOf(
@@ -52,6 +76,12 @@ class UpdateInfoStorage(fileSystem: FileSystem, systemInfo: SystemInfo) {
 
         val lines = values.map { (key, value) -> "$key=$value" }
         Files.write(updateInfoPath, lines)
+
+        logger.info {
+            message("Wrote update information cache to disk.")
+            data("destination", updateInfoPath.toString())
+            data("updateInfo", updateInfo)
+        }
     }
 
     private fun ensureUpdateInfoDirectoryExists() {

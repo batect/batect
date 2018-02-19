@@ -27,7 +27,7 @@ import org.jetbrains.spek.api.dsl.on
 
 object SimpleOutputJourneyTest : Spek({
     describe("when simple output mode is enabled") {
-        val runner = ApplicationRunner("simple-task")
+        val runner = ApplicationRunner("simple-task-using-image")
 
         on("running a task") {
             val result = runner.runApplication(listOf("--simple-output", "the-task"))

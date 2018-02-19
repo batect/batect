@@ -2,7 +2,7 @@ project_name: container-with-health-check-overrides-test
 
 containers:
   build-env:
-    build_directory: build-env
+    image: alpine:3.5
     dependencies:
       - dependency
 

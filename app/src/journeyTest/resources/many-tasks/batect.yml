@@ -2,7 +2,7 @@ project_name: many-tasks-test
 
 containers:
   build-env:
-    build_directory: build-env
+    image: alpine:3.5
 
 tasks:
   task-1:

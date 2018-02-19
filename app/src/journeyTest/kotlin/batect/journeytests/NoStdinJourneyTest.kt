@@ -27,7 +27,7 @@ import org.jetbrains.spek.api.dsl.on
 
 object NoStdinJourneyTest : Spek({
     describe("when STDIN is not a TTY") {
-        val runner = ApplicationRunner("simple-task")
+        val runner = ApplicationRunner("simple-task-using-image")
 
         on("running that task") {
             val commandLine = runner.commandLineForApplication(listOf("the-task")).joinToString(" ")

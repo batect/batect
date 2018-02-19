@@ -17,8 +17,12 @@
 package batect.config
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
 
-data class PortMapping(val localPort: Int, val containerPort: Int) {
+data class PortMapping(
+    @JsonProperty("local") val localPort: Int,
+    @JsonProperty("container") val containerPort: Int
+) {
     init {
         if (localPort <= 0) {
             throw InvalidPortMappingException("Local port must be positive.")

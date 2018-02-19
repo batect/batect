@@ -74,7 +74,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * return code options (any non-zero, particular container, first to exit)
 * allow configuration includes (ie. allow splitting the configuration over multiple files)
 * wildcard includes (eg. `include: containers/*.yaml`)
-* handle expanded form of mappings, for example:
+* handle expanded form of mappings for environment variables, for example:
 
   ```yaml
   containers:

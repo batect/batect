@@ -24,6 +24,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 * support for Windows
 * infer project name from project directory name if not provided
+* allow port mappings to be specified at the task level
 
 ### Bugs
 * fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information
@@ -45,6 +46,7 @@ If there's something you're really keen to see, pull requests are always welcome
     * Android app
   * importance of idempotency
   * improve the getting started guide (it's way too wordy)
+  * switch to something like Sebastian's [termbook](https://github.com/Byron/termbook) for nicer documentation
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
 * make configuration-related error messages clearer and remove exception class names etc.
 * easy way to update to new versions when notified (eg. `batect update` downloads new wrapper script and replaces it in place)

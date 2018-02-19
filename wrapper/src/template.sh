@@ -41,7 +41,7 @@ function runApplication() {
         exit -1
     fi
 
-    java -jar "$JAR_PATH" "$@"
+    java -Djava.net.useSystemProxies=true -jar "$JAR_PATH" "$@"
 }
 
 main "$@"

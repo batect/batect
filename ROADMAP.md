@@ -26,7 +26,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * infer project name from project directory name if not provided
 
 ### Bugs
-* use proxy settings when checking for updates
 * fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information
   doesn't correctly overwrite previous updates
   * handle the case where the console is resized while batect is running

@@ -133,6 +133,46 @@ object DockerClientSpec : Spek({
                     }
                 }
 
+                on("a successful build with multiple messages that appear to contain the image ID") {
+                    val output = """
+                        |Sending build context to Docker daemon  2.048kB
+                        |Step 1/3 : FROM ucalgary/python-librdkafka
+                        |---> 18f2baa09b5a
+                        |Step 2/3 : RUN apk add --no-cache gcc linux-headers libc-dev
+                        |---> Using cache
+                        |---> aba46ffd34d1
+                        |Step 3/3 : RUN pip install confluent-kafka
+                        |---> Running in 881227951a4a
+                        |Collecting confluent-kafka
+                        |  Downloading confluent-kafka-0.11.0.tar.gz (42kB)
+                        |Building wheels for collected packages: confluent-kafka
+                        |  Running setup.py bdist_wheel for confluent-kafka: started
+                        |  Running setup.py bdist_wheel for confluent-kafka: finished with status 'done'
+                        |  Stored in directory: /root/.cache/pip/wheels/16/01/47/3c47cdadbcfb415df612631e5168db2123594c3903523716df
+                        |Successfully built confluent-kafka
+                        |Installing collected packages: confluent-kafka
+                        |Successfully installed confluent-kafka-0.11.0
+                        |Removing intermediate container 881227951a4a
+                        |---> 95bc4e66a4f9
+                        |Successfully built 95bc4e66a4f9
+                        |""".trimMargin()
+
+                    whenever(processRunner.runAndStreamOutput(any(), any()))
+                        .then { invocation ->
+                            @Suppress("UNCHECKED_CAST")
+                            val outputProcessor: (String) -> OutputProcessing<Unit> = invocation.arguments[1] as (String) -> OutputProcessing<Unit>
+                            output.lines().forEach { outputProcessor(it) }
+
+                            ProcessOutput(0, output)
+                        }
+
+                    val result = client.build("the-project", container, buildArgs) {}
+
+                    it("returns the ID of the created image") {
+                        assertThat(result.id, equalTo("95bc4e66a4f9"))
+                    }
+                }
+
                 on("a failed build") {
                     val onStatusUpdate = { _: DockerImageBuildProgress -> }
 

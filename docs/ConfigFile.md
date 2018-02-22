@@ -16,8 +16,11 @@ containers:
   build-env:
     image: openjdk:8u141-jdk
     volumes:
-      - .:/code
-      - .gradle-cache:/root/.gradle
+      - local: .
+        container: /code
+        options: cached
+      - local: .gradle-cache
+        container: /root/.gradle
     working_directory: /code
     environment:
       - GRADLE_OPTS=-Dorg.gradle.daemon=false
@@ -35,7 +38,8 @@ containers:
   international-transfers-service:
     build_directory: dev-infrastructure/international-transfers-service
     ports:
-      - 6001:6001
+      - local: 6001
+        container: 6001
     dependencies:
       - database
       - exchange-rate-service
@@ -61,29 +65,29 @@ tasks:
 
   integrationTest:
     description: Run the integration tests.
-    run:
-      container: build-env
-      command: ./gradlew integrationTest
     start:
       - database
       - exchange-rate-service
+    run:
+      container: build-env
+      command: ./gradlew integrationTest
 
   journeyTest:
     description: Run the journey tests.
+    prerequisites:
+      - build
+    start:
+      - international-transfers-service
     run:
       container: build-env
       command: ./gradlew journeyTest
-    start:
-      - international-transfers-service
-    prerequisites:
-      - build
 
   app:
     description: Run the application.
-    run:
-      container: international-transfers-service
     prerequisites:
       - build
+    run:
+      container: international-transfers-service
 ```
 
 ## Reference
@@ -124,17 +128,41 @@ Each container definition is made up of:
 
 * `working_directory` Working directory to start the container in. If not provided, the default working directory for the image will be used.
 
-* `volumes` List of volume mounts (in standard Docker `local:container` or `local:container:mode` format) to create for the container). Relative local
-  paths will be resolved relative to the configuration file's directory.
+* `volumes` List of volume mounts to create for the container. Relative local paths will be resolved relative to the configuration file's directory.
+  Two formats are supported:
+    * Standard Docker `local:container` or `local:container:mode` format
+    * An expanded format:
+      ```yaml
+      containers:
+        my-container:
+          ...
+          volumes:
+            # This is equivalent to .:/code:cached
+            - local: .
+              container: /code
+              options: cached
+      ```
 
-* `ports` List of ports (in standard Docker `local:container` format) to make available to the host machine. For example, `123:456` will make port 456
-  inside the container available on the host machine at port 123.
+* `ports` List of ports to make available to the host machine.
 
   Only TCP ports are supported at present.
 
   This does not affect the visibility of ports within the network created for all containers in a task - any container started as part of a task will be
   able to access any port on any other container at the address `container_name:container_port`. For example, if a process running in the `http-server`
   container listens on port 2000, any other container in the task can access that at `http-server:2000` without port 2000 being listed in `ports`.
+
+  Two formats are supported:
+    * Standard Docker `local:container` format. For example, `123:456` will make port 456 inside the container available on the host machine at port 123.
+    * An expanded format:
+      ```yaml
+      containers:
+        my-container:
+          ...
+          ports:
+            # This is equivalent to 1234:5678
+            - local: 1234
+              container: 5678
+      ```
 
 * `dependencies` List of other containers that should be started and healthy before starting this container. If a dependency's image does not contain a
   [health check](https://docs.docker.com/engine/reference/builder/#healthcheck), then as soon as it has started, it is considered to be healthy.

@@ -61,7 +61,7 @@ dependencies {
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.4.1'
     compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.4'
     compile 'com.github.salomonbrys.kodein:kodein:4.1.0'
-    compile 'com.squareup.okhttp3:okhttp:3.9.1'
+    compile 'com.squareup.okhttp3:okhttp:3.10.0'
 
     testCompile 'com.natpryce:hamkrest:1.4.2.2'
     testCompile 'com.nhaarman:mockito-kotlin-kt1.1:1.5.0'

@@ -24,6 +24,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 * support for Windows
 * allow port mappings to be specified at the task level
+* switch sample projects to use single Travis job for speed
 * don't allow both `start` and `dependencies` to be specified (Jackson doesn't support this natively)
 * remove `start` on tasks (has been replaced by `dependencies`)
 

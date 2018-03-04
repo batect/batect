@@ -15,7 +15,7 @@
 */
 
 buildscript {
-    ext.junit_version = '1.1.0-RC1'
+    ext.junit_version = '1.1.0'
     ext.spek_version = '1.1.5'
     ext.serialization_version = '0.4.1'
 

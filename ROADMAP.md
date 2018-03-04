@@ -25,6 +25,8 @@ If there's something you're really keen to see, pull requests are always welcome
 * support for Windows
 * infer project name from project directory name if not provided
 * allow port mappings to be specified at the task level
+* don't allow both `start` and `dependencies` to be specified (Jackson doesn't support this natively)
+* remove `start` on tasks (has been replaced by `dependencies`)
 
 ### Bugs
 * fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information

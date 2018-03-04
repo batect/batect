@@ -209,8 +209,10 @@ Each task definition is made up of:
       itself, the value given here will override the value defined on the container. Just like when specifying a variable directly on the container,
       you can pass variables from the host to the container in the `CONTAINER_VARIABLE=$HOST_VARIABLE` format.
 
-* `start` List of other containers that should be started and healthy before starting the task container given in `run`. The behaviour is the same as the
+* `dependencies` List of other containers that should be started and healthy before starting the task container given in `run`. The behaviour is the same as the
   `dependencies` property on a container definition.
+
+* `start` Alias for `dependencies`. If both `dependencies` and `start` are given, the behaviour is undefined. **Deprecated**: use `dependencies` instead.
 
 * `prerequisites` List of other tasks that should be run before running this task. If a prerequisite task finishes with a non-zero exit code, then neither
   this task nor any other prerequisites will be run.

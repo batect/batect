@@ -41,7 +41,7 @@ import java.time.ZonedDateTime
 
 object UpdateInfoUpdaterSpec : Spek({
     describe("an update info updater") {
-        val updateInfo = UpdateInfo(Version(0, 1, 2), "https://something.com/batect/0.1.2", ZonedDateTime.now(ZoneOffset.UTC))
+        val updateInfo = UpdateInfo(Version(0, 1, 2), "https://something.com/batect/0.1.2", ZonedDateTime.now(ZoneOffset.UTC), "https://something.com/batect/0.1.2/wrapper")
         val updateInfoDownloader by createForEachTest { mock<UpdateInfoDownloader>() }
         val updateInfoStorage by createForEachTest { mock<UpdateInfoStorage>() }
         val logSink by createForEachTest { InMemoryLogSink() }

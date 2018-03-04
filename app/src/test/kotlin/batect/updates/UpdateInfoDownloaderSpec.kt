@@ -19,28 +19,21 @@ package batect.updates
 import batect.logging.Logger
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
+import batect.testutils.mockGet
 import batect.testutils.withCause
 import batect.testutils.withMessage
 import batect.utils.Version
+import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.argThat
-import com.nhaarman.mockito_kotlin.doAnswer
-import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.doThrow
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
 import okhttp3.Call
-import okhttp3.HttpUrl
-import okhttp3.MediaType
 import okhttp3.OkHttpClient
-import okhttp3.Protocol
-import okhttp3.Request
-import okhttp3.Response
-import okhttp3.ResponseBody
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -51,14 +44,8 @@ import java.time.ZonedDateTime
 
 object UpdateInfoDownloaderSpec : Spek({
     describe("an update information downloader") {
-        val expectedUrl = "https://api.github.com/repos/charleskorn/batect/releases/latest"
-        val call by createForEachTest { mock<Call>() }
-
-        val client by createForEachTest {
-            mock<OkHttpClient> {
-                on { newCall(argThat { method() == "GET" && url().equals(expectedUrl) }) } doReturn call
-            }
-        }
+        val downloadUrl = "https://api.github.com/repos/charleskorn/batect/releases/latest"
+        val client by createForEachTest { mock<OkHttpClient>() }
 
         val logger by createForEachTest { Logger("UpdateInfoDownloader", InMemoryLogSink()) }
         val dateTime = ZonedDateTime.of(2017, 10, 3, 11, 2, 0, 0, ZoneOffset.UTC)
@@ -70,10 +57,17 @@ object UpdateInfoDownloaderSpec : Spek({
                       "url": "https://api.github.com/repos/charleskorn/batect/releases/7936494",
                       "html_url": "https://github.com/charleskorn/batect/releases/tag/0.3",
                       "id": 7936494,
-                      "tag_name": "0.3"
+                      "tag_name": "0.3",
+                      "assets": [
+                        {
+                          "name": "batect",
+                          "content_type": "application/octet-stream",
+                          "browser_download_url": "https://github.com/charleskorn/batect/releases/download/0.3/batect"
+                        }
+                      ]
                   }""".trimIndent()
 
-            client.mockGet(expectedUrl, responseBody)
+            client.mockGet(downloadUrl, responseBody)
 
             val updateInfo = downloader.getLatestVersionInfo()
 
@@ -88,10 +82,80 @@ object UpdateInfoDownloaderSpec : Spek({
             it("returns the current date and time as the 'last updated' time") {
                 assertThat(updateInfo.lastUpdated, equalTo(dateTime))
             }
+
+            it("returns the download URL of the script") {
+                assertThat(updateInfo.scriptDownloadUrl, equalTo("https://github.com/charleskorn/batect/releases/download/0.3/batect"))
+            }
+        }
+
+        on("when the latest release information does not include any assets") {
+            val responseBody = """{
+                      "url": "https://api.github.com/repos/charleskorn/batect/releases/7936494",
+                      "html_url": "https://github.com/charleskorn/batect/releases/tag/0.3",
+                      "id": 7936494,
+                      "tag_name": "0.3",
+                      "assets": []
+                  }""".trimIndent()
+
+            client.mockGet(downloadUrl, responseBody)
+
+            val updateInfo = downloader.getLatestVersionInfo()
+
+            it("returns no script download URL") {
+                assertThat(updateInfo.scriptDownloadUrl, absent())
+            }
+        }
+
+        on("when the latest release information does not an asset with the script name") {
+            val responseBody = """{
+                      "url": "https://api.github.com/repos/charleskorn/batect/releases/7936494",
+                      "html_url": "https://github.com/charleskorn/batect/releases/tag/0.3",
+                      "id": 7936494,
+                      "tag_name": "0.3",
+                      "assets": [
+                        {
+                          "name": "batect.jar",
+                          "content_type": "application/octet-stream",
+                          "browser_download_url": "https://github.com/charleskorn/batect/releases/download/0.3/batect.jar"
+                        }
+                      ]
+                  }""".trimIndent()
+
+            client.mockGet(downloadUrl, responseBody)
+
+            val updateInfo = downloader.getLatestVersionInfo()
+
+            it("returns no script download URL") {
+                assertThat(updateInfo.scriptDownloadUrl, absent())
+            }
+        }
+
+        on("when the latest release information does not an asset with the expected script content type") {
+            val responseBody = """{
+                      "url": "https://api.github.com/repos/charleskorn/batect/releases/7936494",
+                      "html_url": "https://github.com/charleskorn/batect/releases/tag/0.3",
+                      "id": 7936494,
+                      "tag_name": "0.3",
+                      "assets": [
+                        {
+                          "name": "batect",
+                          "content_type": "application/java-archive",
+                          "browser_download_url": "https://github.com/charleskorn/batect/releases/download/0.3/batect"
+                        }
+                      ]
+                  }""".trimIndent()
+
+            client.mockGet(downloadUrl, responseBody)
+
+            val updateInfo = downloader.getLatestVersionInfo()
+
+            it("returns no script download URL") {
+                assertThat(updateInfo.scriptDownloadUrl, absent())
+            }
         }
 
         on("when the latest release information endpoint returns a HTTP error") {
-            client.mockGet(expectedUrl, "", 404)
+            client.mockGet(downloadUrl, "", 404)
 
             it("throws an appropriate exception") {
                 assertThat({ downloader.getLatestVersionInfo() },
@@ -116,24 +180,3 @@ object UpdateInfoDownloaderSpec : Spek({
         }
     }
 })
-
-fun OkHttpClient.mockGet(url: String, body: String, statusCode: Int = 200) {
-    val parsedUrl = HttpUrl.parse(url)
-    val responseBody = ResponseBody.create(MediaType.parse("application/json; charset=utf-8"), body)
-
-    whenever(this.newCall(argThat { method() == "GET" && url().equals(parsedUrl) })).then { invocation ->
-        val request = invocation.getArgument<Request>(0)
-
-        mock<Call> {
-            on { execute() } doAnswer {
-                Response.Builder()
-                    .request(request)
-                    .body(responseBody)
-                    .protocol(Protocol.HTTP_1_1)
-                    .code(statusCode)
-                    .message("Something happened")
-                    .build()
-            }
-        }
-    }
-}

@@ -36,6 +36,7 @@ object CommandFactorySpec : Spek({
             bind<HelpCommand>() with instance(mock())
             bind<VersionInfoCommand>() with instance(mock())
             bind<ListTasksCommand>() with instance(mock())
+            bind<UpgradeCommand>() with instance(mock())
             bind<RunTaskCommand>() with instance(mock())
         }
 
@@ -68,6 +69,17 @@ object CommandFactorySpec : Spek({
             on("creating the command") {
                 it("returns a list tasks command") {
                     assertThat(command, isA<ListTasksCommand>())
+                }
+            }
+        }
+
+        given("a set of options with the 'upgrade' flag set") {
+            val options = CommandLineOptions(runUpgrade = true)
+            val command = factory.createCommand(options, kodein)
+
+            on("creating the command") {
+                it("returns a upgrade command") {
+                    assertThat(command, isA<UpgradeCommand>())
                 }
             }
         }

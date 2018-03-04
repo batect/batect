@@ -58,7 +58,7 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
                 mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 
                 val releaseInfo = mapper.readValue(response.body()!!.byteStream(), GitHubReleaseInfo::class.java)
-                val updateInfo = UpdateInfo(Version.parse(releaseInfo.tagName), releaseInfo.htmlUrl, dateTimeProvider())
+                val updateInfo = UpdateInfo(Version.parse(releaseInfo.tagName), releaseInfo.htmlUrl, dateTimeProvider(), releaseInfo.scriptDownloadUrl)
 
                 logger.info {
                     message("Parsed latest version information.")
@@ -78,7 +78,13 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
         }
     }
 
-    private data class GitHubReleaseInfo(val tagName: String, val htmlUrl: String)
+    private data class GitHubReleaseInfo(val tagName: String, val htmlUrl: String, val assets: List<GitHubReleaseAsset>) {
+        val scriptDownloadUrl: String? = assets
+            .singleOrNull { it.name == "batect" && it.contentType == "application/octet-stream" }
+            ?.browserDownloadUrl
+    }
+
+    private data class GitHubReleaseAsset(val name: String, val contentType: String, val browserDownloadUrl: String)
 }
 
 class UpdateInfoDownloadException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

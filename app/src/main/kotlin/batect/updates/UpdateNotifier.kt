@@ -17,6 +17,7 @@
 package batect.updates
 
 import batect.VersionInfo
+import batect.cli.CommandLineOptionsParser
 import batect.logging.Logger
 import batect.ui.Console
 import java.time.ZoneOffset
@@ -81,7 +82,9 @@ class UpdateNotifier(
                 data("availableVersion", versionInfo.version)
             }
 
-            console.println("Version ${updateInfo.version} of batect is now available (you have ${versionInfo.version}). For more information, visit ${updateInfo.url}.")
+            console.println("Version ${updateInfo.version} of batect is now available (you have ${versionInfo.version}).")
+            console.println("To upgrade to the latest version, run 'batect --${CommandLineOptionsParser.upgradeFlagName}'.")
+            console.println("For more information, visit ${updateInfo.url}.")
             console.println()
         } else {
             logger.info {

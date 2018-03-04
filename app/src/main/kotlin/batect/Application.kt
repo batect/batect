@@ -23,6 +23,7 @@ import batect.cli.commands.CommandFactory
 import batect.cli.commands.HelpCommand
 import batect.cli.commands.ListTasksCommand
 import batect.cli.commands.RunTaskCommand
+import batect.cli.commands.UpgradeCommand
 import batect.cli.commands.VersionInfoCommand
 import batect.config.io.ConfigurationLoader
 import batect.config.io.PathResolverFactory
@@ -135,6 +136,7 @@ private val cliModule = Kodein.Module {
     bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(PrintStreamType.Output)) }
     bind<ListTasksCommand>() with singleton { ListTasksCommand(commandLineOptions().configurationFileName, instance(), instance(PrintStreamType.Output)) }
     bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(PrintStreamType.Output), instance(), instance(), instance()) }
+    bind<UpgradeCommand>() with singletonWithLogger { logger -> UpgradeCommand(instance(), instance(), instance(), instance(), instance(PrintStreamType.Output), instance(PrintStreamType.Error), logger) }
 }
 
 private val configModule = Kodein.Module {

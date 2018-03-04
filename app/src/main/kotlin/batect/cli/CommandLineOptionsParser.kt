@@ -27,11 +27,13 @@ class CommandLineOptionsParser(override val optionParser: OptionParser) : Option
 
     companion object {
         val disableCleanupAfterFailureFlagName = "no-cleanup-after-failure"
+        val upgradeFlagName = "upgrade"
         val helpBlurb = "For documentation and further information on batect, visit https://github.com/charleskorn/batect."
     }
 
     private val showHelp: Boolean by flagOption("help", "Show this help information and exit.")
     private val showVersionInfo: Boolean by flagOption("version", "Show batect version information and exit.")
+    private val runUpgrade: Boolean by flagOption(upgradeFlagName, "Upgrade batect to the latest available version.")
     private val listTasks: Boolean by flagOption("list-tasks", "List available tasks and exit.")
 
     private val configurationFileName: String by valueOption("config-file", "The configuration file to use.", "batect.yml", 'f')
@@ -62,7 +64,7 @@ class CommandLineOptionsParser(override val optionParser: OptionParser) : Option
     }
 
     private fun parseTaskName(remainingArgs: Iterable<String>): CommandLineOptionsParsingResult {
-        if (showHelp || showVersionInfo || listTasks) {
+        if (showHelp || showVersionInfo || listTasks || runUpgrade) {
             return CommandLineOptionsParsingResult.Succeeded(createOptionsObject(null, emptyList()))
         }
 
@@ -91,6 +93,7 @@ class CommandLineOptionsParser(override val optionParser: OptionParser) : Option
     private fun createOptionsObject(taskName: String?, additionalTaskCommandArguments: Iterable<String>) = CommandLineOptions(
         showHelp = showHelp,
         showVersionInfo = showVersionInfo,
+        runUpgrade = runUpgrade,
         listTasks = listTasks,
         configurationFileName = configurationFileName,
         logFileName = logFileName,

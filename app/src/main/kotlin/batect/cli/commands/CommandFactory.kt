@@ -26,6 +26,7 @@ class CommandFactory {
             options.showHelp -> return kodein.instance<HelpCommand>()
             options.showVersionInfo -> return kodein.instance<VersionInfoCommand>()
             options.listTasks -> return kodein.instance<ListTasksCommand>()
+            options.runUpgrade -> return kodein.instance<UpgradeCommand>()
             else -> return kodein.instance<RunTaskCommand>()
         }
     }

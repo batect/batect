@@ -50,7 +50,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * switch to something like Sebastian's [termbook](https://github.com/Byron/termbook) for nicer documentation
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
 * make configuration-related error messages clearer and remove exception class names etc.
-* easy way to update to new versions when notified (eg. `batect update` downloads new wrapper script and replaces it in place)
 * use batect to build batect (self-hosting)
 * move to Kotlin/Native
   * Why? Don't want to require users to install a JVM to use batect, also want to remove as much overhead as possible

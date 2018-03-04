@@ -23,20 +23,26 @@ class WrapperScriptTests(unittest.TestCase):
 
     def test_first_run(self):
         result = self.run_script(["arg 1", "arg 2"])
+        output = result.stdout.decode()
 
-        self.assertIn("Downloading batect", result.stdout.decode())
-        self.assertIn("I received 2 arguments.\narg 1\narg 2\n", result.stdout.decode())
+        self.assertIn("Downloading batect", output)
+        self.assertIn("BATECT_WRAPPER_SCRIPT_PATH is: {}\n".format(self.get_script_path()), output)
+        self.assertIn("I received 2 arguments.\narg 1\narg 2\n", output)
         self.assertEqual(result.returncode, 0)
 
     def test_second_run(self):
         first_result = self.run_script(["arg 1", "arg 2"])
-        self.assertIn("Downloading batect", first_result.stdout.decode())
-        self.assertIn("I received 2 arguments.\narg 1\narg 2\n", first_result.stdout.decode())
+        first_output = first_result.stdout.decode()
+        self.assertIn("Downloading batect", first_output)
+        self.assertIn("BATECT_WRAPPER_SCRIPT_PATH is: {}\n".format(self.get_script_path()), first_output)
+        self.assertIn("I received 2 arguments.\narg 1\narg 2\n", first_output)
         self.assertEqual(first_result.returncode, 0)
 
         second_result = self.run_script(["arg 3", "arg 4"])
-        self.assertNotIn("Downloading batect", second_result.stdout.decode())
-        self.assertIn("I received 2 arguments.\narg 3\narg 4\n", second_result.stdout.decode())
+        second_output = second_result.stdout.decode()
+        self.assertNotIn("Downloading batect", second_output)
+        self.assertIn("BATECT_WRAPPER_SCRIPT_PATH is: {}\n".format(self.get_script_path()), second_output)
+        self.assertIn("I received 2 arguments.\narg 3\narg 4\n", second_output)
         self.assertEqual(first_result.returncode, 0)
 
     def test_download_fails(self):
@@ -47,7 +53,12 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
 
     def test_no_curl(self):
-        result = self.run_script([], path="/bin")
+        path_dir = tempfile.mkdtemp()
+        self.addCleanup(lambda: shutil.rmtree(path_dir))
+        os.symlink("/usr/bin/basename", os.path.join(path_dir, "basename"))
+        os.symlink("/usr/bin/dirname", os.path.join(path_dir, "dirname"))
+
+        result = self.run_script([], path=path_dir + ":/bin")
 
         self.assertIn("curl is not installed or not on your PATH. Please install it and try again.", result.stdout.decode())
         self.assertNotEqual(result.returncode, 0)
@@ -55,7 +66,9 @@ class WrapperScriptTests(unittest.TestCase):
     def test_no_java(self):
         path_dir = tempfile.mkdtemp()
         self.addCleanup(lambda: shutil.rmtree(path_dir))
+        os.symlink("/usr/bin/basename", os.path.join(path_dir, "basename"))
         os.symlink("/usr/bin/curl", os.path.join(path_dir, "curl"))
+        os.symlink("/usr/bin/dirname", os.path.join(path_dir, "dirname"))
 
         result = self.run_script([], path=path_dir + ":/bin")
 
@@ -69,10 +82,13 @@ class WrapperScriptTests(unittest.TestCase):
             "PATH": path
         }
 
-        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "src", "template.sh")
+        path = self.get_script_path()
         command = [path] + args
 
         return subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
+
+    def get_script_path(self):
+        return os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "src", "template.sh"))
 
     def start_server(self):
         self.server = http.server.HTTPServer(("", self.http_port), QuietHTTPHandler)

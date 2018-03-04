@@ -98,7 +98,7 @@ object UpdateNotifierSpec : Spek({
 
             describe("when the cached update information can be read") {
                 val lastUpdated = ZonedDateTime.of(2017, 10, 3, 1, 10, 0, 0, ZoneOffset.UTC)
-                val updateInfo = UpdateInfo(Version(0, 3, 0), "https://something.com/batect/0.3", lastUpdated)
+                val updateInfo = UpdateInfo(Version(0, 3, 0), "https://something.com/batect/0.3", lastUpdated, "https://something.com/batect/0.3/wrapper")
 
                 beforeEachTest {
                     whenever(updateInfoStorage.read()).thenReturn(updateInfo)
@@ -141,7 +141,9 @@ object UpdateNotifierSpec : Spek({
 
                         it("prints a message to the console") {
                             inOrder(console) {
-                                verify(console).println("Version 0.3 of batect is now available (you have 0.2). For more information, visit https://something.com/batect/0.3.")
+                                verify(console).println("Version 0.3 of batect is now available (you have 0.2).")
+                                verify(console).println("To upgrade to the latest version, run 'batect --upgrade'.")
+                                verify(console).println("For more information, visit https://something.com/batect/0.3.")
                                 verify(console).println()
                             }
                         }
@@ -189,7 +191,9 @@ object UpdateNotifierSpec : Spek({
 
                         it("prints a message to the console") {
                             inOrder(console) {
-                                verify(console).println("Version 0.3 of batect is now available (you have 0.2). For more information, visit https://something.com/batect/0.3.")
+                                verify(console).println("Version 0.3 of batect is now available (you have 0.2).")
+                                verify(console).println("To upgrade to the latest version, run 'batect --upgrade'.")
+                                verify(console).println("For more information, visit https://something.com/batect/0.3.")
                                 verify(console).println()
                             }
                         }

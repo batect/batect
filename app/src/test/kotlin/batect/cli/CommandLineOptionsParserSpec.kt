@@ -107,6 +107,8 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--version", "some-task") to CommandLineOptions(showVersionInfo = true),
             listOf("--list-tasks") to CommandLineOptions(listTasks = true),
             listOf("--list-tasks", "some-task") to CommandLineOptions(listTasks = true),
+            listOf("--upgrade") to CommandLineOptions(runUpgrade = true),
+            listOf("--upgrade", "some-task") to CommandLineOptions(runUpgrade = true),
             listOf("-f=somefile.yml", "some-task") to CommandLineOptions(configurationFileName = "somefile.yml", taskName = "some-task"),
             listOf("--config-file=somefile.yml", "some-task") to CommandLineOptions(configurationFileName = "somefile.yml", taskName = "some-task"),
             listOf("--log-file=somefile.log", "some-task") to CommandLineOptions(logFileName = "somefile.log", taskName = "some-task"),

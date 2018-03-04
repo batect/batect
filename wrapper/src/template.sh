@@ -9,6 +9,8 @@ ROOT_CACHE_DIR=${BATECT_CACHE_DIR:-"$HOME/.batect/cache"}
 CACHE_DIR="$ROOT_CACHE_DIR/$VERSION"
 JAR_PATH="$CACHE_DIR/batect-$VERSION.jar"
 
+SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+
 function main() {
     if ! haveVersionCachedLocally; then
         download
@@ -41,7 +43,7 @@ function runApplication() {
         exit -1
     fi
 
-    java -Djava.net.useSystemProxies=true -jar "$JAR_PATH" "$@"
+    BATECT_WRAPPER_SCRIPT_PATH="$SCRIPT_PATH" java -Djava.net.useSystemProxies=true -jar "$JAR_PATH" "$@"
 }
 
 main "$@"

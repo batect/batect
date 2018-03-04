@@ -29,6 +29,7 @@ import java.nio.file.FileSystem
 data class CommandLineOptions(
     val showHelp: Boolean = false,
     val showVersionInfo: Boolean = false,
+    val runUpgrade: Boolean = false,
     val listTasks: Boolean = false,
     val configurationFileName: String = "batect.yml",
     val logFileName: String? = null,

@@ -48,7 +48,8 @@ class UpdateInfoStorage(private val fileSystem: FileSystem, private val systemIn
         val version = Version.parse(values.getValue("version"))
         val url = values.getValue("url")
         val lastUpdated = parseDate(values.getValue("lastUpdated"))
-        val updateInfo = UpdateInfo(version, url, lastUpdated)
+        val scriptDownloadUrl = values.getOrDefault("scriptDownloadUrl", null)
+        val updateInfo = UpdateInfo(version, url, lastUpdated, scriptDownloadUrl)
 
         logger.info {
             message("Loaded cached update information from disk.")
@@ -71,7 +72,8 @@ class UpdateInfoStorage(private val fileSystem: FileSystem, private val systemIn
         val values = mapOf(
             "version" to updateInfo.version,
             "url" to updateInfo.url,
-            "lastUpdated" to formatDate(updateInfo.lastUpdated)
+            "lastUpdated" to formatDate(updateInfo.lastUpdated),
+            "scriptDownloadUrl" to updateInfo.scriptDownloadUrl
         )
 
         val lines = values.map { (key, value) -> "$key=$value" }

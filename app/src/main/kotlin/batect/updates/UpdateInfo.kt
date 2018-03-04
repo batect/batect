@@ -19,4 +19,9 @@ package batect.updates
 import batect.utils.Version
 import java.time.ZonedDateTime
 
-data class UpdateInfo(val version: Version, val url: String, val lastUpdated: ZonedDateTime)
+data class UpdateInfo(
+    val version: Version,
+    val url: String,
+    val lastUpdated: ZonedDateTime,
+    val scriptDownloadUrl: String?
+)

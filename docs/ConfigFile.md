@@ -212,7 +212,7 @@ Each task definition is made up of:
 * `dependencies` List of other containers that should be started and healthy before starting the task container given in `run`. The behaviour is the same as the
   `dependencies` property on a container definition.
 
-* `start` Alias for `dependencies`. If both `dependencies` and `start` are given, the behaviour is undefined. **Deprecated**: use `dependencies` instead.
+* `start` Alias for `dependencies`. If both `dependencies` and `start` are given, the behaviour is undefined. **Deprecated** (since v0.12): use `dependencies` instead.
 
 * `prerequisites` List of other tasks that should be run before running this task. If a prerequisite task finishes with a non-zero exit code, then neither
   this task nor any other prerequisites will be run.

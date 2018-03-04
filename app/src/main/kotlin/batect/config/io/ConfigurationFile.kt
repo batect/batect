@@ -21,12 +21,24 @@ import batect.config.ContainerMap
 import batect.config.TaskMap
 
 data class ConfigurationFile(
-    val projectName: String,
+    val projectName: String?,
     val tasks: Map<String, TaskFromFile> = emptyMap(),
     val containers: Map<String, ContainerFromFile> = emptyMap()) {
 
     fun toConfiguration(pathResolver: PathResolver): Configuration = Configuration(
-        projectName,
+        resolveProjectName(pathResolver),
         TaskMap(tasks.map { (name, task) -> task.toTask(name) }),
         ContainerMap(containers.map { (name, container) -> container.toContainer(name, pathResolver) }))
+
+    private fun resolveProjectName(pathResolver: PathResolver): String {
+        if (projectName != null) {
+            return projectName
+        }
+
+        if (pathResolver.relativeTo.root == pathResolver.relativeTo) {
+            throw ConfigurationException("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.")
+        }
+
+        return pathResolver.relativeTo.fileName.toString()
+    }
 }

@@ -23,7 +23,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * warn when using an image without a tag or with tag `latest`
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 * support for Windows
-* infer project name from project directory name if not provided
 * allow port mappings to be specified at the task level
 * don't allow both `start` and `dependencies` to be specified (Jackson doesn't support this natively)
 * remove `start` on tasks (has been replaced by `dependencies`)

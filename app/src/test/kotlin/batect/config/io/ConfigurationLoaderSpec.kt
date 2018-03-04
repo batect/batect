@@ -17,17 +17,6 @@
 package batect.config.io
 
 import batect.config.BuildImage
-import com.google.common.jimfs.Jimfs
-import com.natpryce.hamkrest.absent
-import com.natpryce.hamkrest.and
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.isEmpty
-import com.natpryce.hamkrest.isEmptyString
-import com.natpryce.hamkrest.throws
-import com.nhaarman.mockito_kotlin.doAnswer
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
 import batect.config.Configuration
 import batect.config.HealthCheckConfig
 import batect.config.ImageSource
@@ -40,38 +29,62 @@ import batect.os.Command
 import batect.testutils.InMemoryLogSink
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
+import com.google.common.jimfs.Jimfs
+import com.natpryce.hamkrest.absent
+import com.natpryce.hamkrest.and
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.isEmpty
+import com.natpryce.hamkrest.isEmptyString
+import com.natpryce.hamkrest.throws
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doAnswer
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
+import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import org.mockito.ArgumentMatchers.anyString
 import java.nio.file.Files
+import java.nio.file.Path
 
 object ConfigurationLoaderSpec : Spek({
     describe("a configuration loader") {
         val fileSystem = Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix())
 
-        val pathResolver = mock<PathResolver> {
-            on { resolve(anyString()) } doAnswer { invocation ->
-                val path = invocation.arguments[0] as String
-                PathResolutionResult.Resolved("/resolved/$path", PathType.Directory)
-            }
-        }
-
         val pathResolverFactory = mock<PathResolverFactory> {
-            on { createResolver(fileSystem.getPath("/")) } doReturn pathResolver
+            on { createResolver(any()) } doAnswer { invocation ->
+                val rootPath = invocation.arguments[0] as Path
+
+                mock {
+                    on { resolve(anyString()) } doAnswer { invocation ->
+                        val path = invocation.arguments[0] as String
+                        PathResolutionResult.Resolved("/resolved/$path", PathType.Directory)
+                    }
+
+                    on { relativeTo } doReturn rootPath
+                }
+            }
         }
 
         val logger = Logger("some.source", InMemoryLogSink())
         val testFileName = "/theTestFile.yml"
         val loader = ConfigurationLoader(pathResolverFactory, fileSystem, logger)
 
-        fun loadConfiguration(config: String): Configuration {
-            val filePath = fileSystem.getPath(testFileName)
+        fun loadConfiguration(config: String, path: String = testFileName): Configuration {
+            val filePath = fileSystem.getPath(path)
+            val directory = filePath.parent
+
+            if (directory != null) {
+                Files.createDirectories(directory)
+            }
+
             Files.write(filePath, config.toByteArray())
 
             try {
-                return loader.loadConfig(testFileName)
+                return loader.loadConfig(path)
             } finally {
                 Files.delete(filePath)
             }
@@ -80,6 +93,41 @@ object ConfigurationLoaderSpec : Spek({
         on("loading an empty configuration file") {
             it("should fail with an error message") {
                 assertThat({ loadConfiguration("") }, throws(withMessage("File '$testFileName' is empty")))
+            }
+        }
+
+        given("a valid configuration file with no explicit project name") {
+            val configString = """
+                |tasks:
+                |  the-task:
+                |    run:
+                |      container: build-env
+                """.trimMargin()
+
+            on("loading that file from the root directory") {
+                val path = "/config.yml"
+
+                it("should fail with an error message") {
+                    assertThat({ loadConfiguration(configString, path) }, throws(withMessage("Could not load configuration file: No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.")))
+                }
+            }
+
+            on("loading that file from a directory in the root directory") {
+                val path = "/project/config.yml"
+                val config = loadConfiguration(configString, path)
+
+                it("should use the parent directory's name as the project name") {
+                    assertThat(config.projectName, equalTo("project"))
+                }
+            }
+
+            on("loading that file from a subdirectory") {
+                val path = "/code/project/config.yml"
+                val config = loadConfiguration(configString, path)
+
+                it("should use the parent directory's name as the project name") {
+                    assertThat(config.projectName, equalTo("project"))
+                }
             }
         }
 
@@ -459,8 +507,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.healthCheckConfig, equalTo(HealthCheckConfig("2s", 10, "1s")))
                 assertThat(container.runAsCurrentUserConfig, equalTo(RunAsCurrentUserConfig(true, "/home/something")))
                 assertThat(container.volumeMounts, equalTo(setOf(
-                        VolumeMount("/resolved/../", "/here", null),
-                        VolumeMount("/resolved//somewhere", "/else", "ro")
+                    VolumeMount("/resolved/../", "/here", null),
+                    VolumeMount("/resolved//somewhere", "/else", "ro")
                 )))
             }
         }
@@ -617,20 +665,6 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should ignore the comment") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
-            }
-        }
-
-        on("loading a configuration file with no project name given") {
-            val config = """
-                |tasks:
-                |  first_task:
-                |    run:
-                |      container: build-env
-                |      command: ./gradlew doStuff
-                """.trimMargin()
-
-            it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Missing required field 'project_name'")))
             }
         }
 

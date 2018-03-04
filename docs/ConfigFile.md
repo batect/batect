@@ -94,7 +94,10 @@ tasks:
 
 The root of the configuration file is made up of:
 
-* `project_name` The name of your project. Used to label any images built. **Required.**
+* `project_name` The name of your project. Used to label any images built.
+
+  If a project name is not provided, the project name is taken from the directory containing the configuration file. For example, if your configuration
+  file is `/home/alex/projects/my-cool-app/batect.yml` and you do not provide a project name, `my-cool-app` will be used automatically.
 
 * `containers` Definitions for each of the containers that make up your various environments. [See details below.](#container-definitions)
 

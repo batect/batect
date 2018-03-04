@@ -25,7 +25,7 @@ class PathResolverFactory {
     fun createResolver(relativeTo: Path): PathResolver = PathResolver(relativeTo)
 }
 
-data class PathResolver(private val relativeTo: Path, private val systemProperties: Properties = System.getProperties()) {
+data class PathResolver(val relativeTo: Path, private val systemProperties: Properties = System.getProperties()) {
     private val homeDir = getPath(systemProperties.getProperty("user.home"))
 
     fun resolve(path: String): PathResolutionResult {

@@ -42,7 +42,7 @@ combination of:
 * any build arguments defined in the Dockerfile with `ARG` instructions
 * any environment variables defined in the Dockerfile with `ENV` instructions
 * any of the [pre-defined build arguments](https://docs.docker.com/engine/reference/builder/#predefined-args), if a value is
-  provided for them 
+  provided for them
 
 This last point is the most relevant to proxy settings - as `http_proxy`, `https_proxy`, `no_proxy` etc. are defined as
 pre-defined build arguments, we can pass the host's proxy settings into the build environment as build arguments.

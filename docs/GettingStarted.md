@@ -223,6 +223,5 @@ we start the most recent version of it.
 
 ## Where next?
 
-There's a comprehensive [reference page for the configuration file](config/Overview.md), and a number of [sample applications](SampleProjects.md) 
+There's a comprehensive [reference page for the configuration file](config/Overview.md), and a number of [sample applications](SampleProjects.md)
 you can take a look at.
-

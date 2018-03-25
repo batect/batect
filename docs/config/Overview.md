@@ -7,7 +7,7 @@ You can, however, use a different name or location, and tell `batect` where to f
 
 The root of the configuration file is made up of:
 
-## `project_name` 
+## `project_name`
 
 The name of your project. Used to label any images built.
 
@@ -16,7 +16,7 @@ file is `/home/alex/projects/my-cool-app/batect.yml` and you do not provide a pr
 
 ## `containers`
 
-Definitions for each of the containers that make up your various environments. 
+Definitions for each of the containers that make up your various environments.
 
 [Detailed reference for `containers`](Containers.md)
 

@@ -2,17 +2,17 @@
 
 {% hint style='tip' %}
 **tl;dr**: if a container produces build artifacts in a mounted volume, enable `run_as_current_user`, otherwise they'll be owned by the `root`
-Unix user 
+Unix user
 {% endhint %}
 
-On Linux, by default, the Docker daemon runs as root, and so all containers run as root. This means that when a container writes a file to a mounted volume, 
-it is owned by the `root` Unix user, making it difficult for other users to modify or delete the files. This most often comes up when a build task produces 
+On Linux, by default, the Docker daemon runs as root, and so all containers run as root. This means that when a container writes a file to a mounted volume,
+it is owned by the `root` Unix user, making it difficult for other users to modify or delete the files. This most often comes up when a build task produces
 an artifact and writes that artifact to a mounted volume.
 
 (On OS X, the Docker daemon runs as the currently logged-in user and so any files created in mounted volumes are owned by that user, so this is not an issue.)
 
 To fix this issue, batect can run containers in 'run as current user' mode, ensuring that all files written to a mounted volume are created by the current
-user, not root. This mode can be enabled on a per-container basis with the [`run_as_current_user` option](../config/Containers.md#runascurrentuser). 
+user, not root. This mode can be enabled on a per-container basis with the [`run_as_current_user` option](../config/Containers.md#runascurrentuser).
 
 When enabled, the following configuration changes are made:
 

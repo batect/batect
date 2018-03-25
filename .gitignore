@@ -31,3 +31,4 @@ wrapper/test/testapp.jar
 
 docs/node_modules/
 docs/_book/
+docs/yarn-error.log

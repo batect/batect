@@ -12,16 +12,16 @@ This section only applies to OS X-based hosts, and is only supported by Docker v
 
 Docker requires features only found in the Linux kernel, and so on OS X, Docker for Mac runs a lightweight virtual machine
 to host Docker. However, while this works perfectly fine for most situations, there is some overhead involved in operations
-that need to work across the host / virtual machine boundary. 
+that need to work across the host / virtual machine boundary.
 
-Usually this overhead is so small that it's not noticeable, but for operations involving mounted volumes, this overhead can 
+Usually this overhead is so small that it's not noticeable, but for operations involving mounted volumes, this overhead can
 be significant. In particular, this can impact compilation operations involving reading and writing many files.
 
 There is a way to reduce this overhead significantly: use the
-[volume mount options introduced in Docker 17.04](https://docs.docker.com/docker-for-mac/osxfs-caching/). 
+[volume mount options introduced in Docker 17.04](https://docs.docker.com/docker-for-mac/osxfs-caching/).
 
-In particular, for the typical scenario where you are editing code files on your host's disk and mounting that into a container 
-for compilation, using the `cached` volume mount mode can result in a significant performance improvement - we saw an improvement 
+In particular, for the typical scenario where you are editing code files on your host's disk and mounting that into a container
+for compilation, using the `cached` volume mount mode can result in a significant performance improvement - we saw an improvement
 in compilation times of ~60% on one Golang project once we started using this.
 
 (Before you use these options in another context, you should consult the
@@ -63,14 +63,14 @@ OS X and others use Linux.
 
 A significant amount of time during integration or journey testing with a database can be taken up by preparing the database for
 use - setting up the schema (usually with some kind of migrations system) and adding the initial test data can take quite some time,
-especially as the application evolves over time. 
+especially as the application evolves over time.
 
-One way to address this is to bake the schema and test data into the Docker image used for the database, so that this setup cost only 
-has to be paid when building the image or when the setup changes, rather than on every test run. The exact method for doing this will 
+One way to address this is to bake the schema and test data into the Docker image used for the database, so that this setup cost only
+has to be paid when building the image or when the setup changes, rather than on every test run. The exact method for doing this will
 vary depending on the database system you're using, but the general steps that would go in your Dockerfile are:
 
 1. Copy schema and test data scripts into container
-2. Temporarily start database daemon 
+2. Temporarily start database daemon
 3. Run schema and data scripts against database instance
 4. Shut down database daemon
 

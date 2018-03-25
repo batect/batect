@@ -2,7 +2,7 @@
 
 ## What is batect?
 
-batect is a tool that makes setting up, sharing and maintaining Docker-based development and testing environments much, much easier. 
+batect is a tool that makes setting up, sharing and maintaining Docker-based development and testing environments much, much easier.
 
 The main benefits of batect are:
 

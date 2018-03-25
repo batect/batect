@@ -44,7 +44,11 @@ ext.licenseText = """
 
 spotless {
     format 'misc', {
-        target '**/*.gradle', '**/*.md', '**/.gitignore', '**/*.yaml', '**/*.yml', '**/*.sh', '**/Dockerfile', '**/*.py'
+        target fileTree(
+            dir: '.',
+            include: ['**/*.gradle', '**/*.md', '**/.gitignore', '**/*.yaml', '**/*.yml', '**/*.sh', '**/Dockerfile', '**/*.py'],
+            excludes: ['**/node_modules/*']
+        )
 
         trimTrailingWhitespace()
         indentWithSpaces()
@@ -54,7 +58,7 @@ spotless {
     format 'gradle', {
         target '**/*.gradle'
 
-        licenseHeader "/*$licenseText*/\n\n", "(buildscript|import|apply|ext|allprojects|//)"
+        licenseHeader "/*$licenseText*/\n\n", "(buildscript|import|apply|ext|allprojects|task|//)"
     }
 }
 

@@ -1,7 +1,7 @@
 # CI setup
 
 {% hint style='tip' %}
-**tl;dr**: set up a Cron job to run `docker image prune -f` regularly on CI agents 
+**tl;dr**: set up a Cron job to run `docker image prune -f` regularly on CI agents
 {% endhint %}
 
 If you are using Dockerfiles to define your containers (as opposed to taking a pre-existing image), this can generate a

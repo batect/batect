@@ -13,9 +13,9 @@ Path (relative to the configuration file's directory) to a directory containing 
 **One of `image` or `build_directory` is required.**
 
 ## `command`
-Command to run when the container starts. 
+Command to run when the container starts.
 
-If not provided, the default command for the image will be run. 
+If not provided, the default command for the image will be run.
 
 Both of these can be overridden for an individual task by specifying a [`command` at the task level](Tasks.md#run).
 
@@ -27,7 +27,7 @@ You can pass environment variables from the host (ie. where you run batect) to t
 `SUPER_SECRET_PASSWORD` in the container to the value of the `MY_PASSWORD` variable on the host, use
 `SUPER_SECRET_PASSWORD=$MY_PASSWORD`. Substitutions in the middle of values is not supported (eg. `SUPER_SECRET_PASSWORD=My password is $MY_PASSWORD`
 will not work). Be careful when using this - by relying on the host's environment variables, you are introducing inconsistency to how the container
-runs between hosts, which is something you generally want to avoid. If the referenced host variable is not present, batect will show an error 
+runs between hosts, which is something you generally want to avoid. If the referenced host variable is not present, batect will show an error
 message and not start the task.
 
 ### `TERM`
@@ -41,12 +41,12 @@ If a proxy-related environment variable is defined on the container's configurat
 See [this page](../tips/Proxies.md) for more information on using batect with proxies.
 
 ## `working_directory`
-Working directory to start the container in. 
+Working directory to start the container in.
 
 If not provided, the default working directory for the image will be used.
 
 ## `volumes`
-List of volume mounts to create for the container. 
+List of volume mounts to create for the container.
 
 Relative local paths will be resolved relative to the configuration file's directory.
 
@@ -65,7 +65,7 @@ Two formats are supported:
           container: /code
           options: cached
   ```
-  
+
 See [this page](../tips/Performance.md#io-performance) for more information on why using `cached` volume mounts may be worthwhile.
 
 ## `ports`
@@ -73,7 +73,7 @@ List of ports to make available to the host machine.
 
 Only TCP ports are supported at present.
 
-Note that this does not affect how containers launched by batect as part of the same task access ports used by each other. Any container started as part of a 
+Note that this does not affect how containers launched by batect as part of the same task access ports used by each other. Any container started as part of a
 task will be able to access any port on any other container at the address `container_name:container_port`. For example, if a process running in the `http-server`
 container listens on port 2000, any other container in the task can access that at `http-server:2000` without port 2000 being listed in `ports` (or an `EXPOSE`
 Dockerfile instruction).
@@ -94,9 +94,9 @@ Two formats are supported:
   ```
 
 ## `dependencies`
-List of other containers that should be started and healthy before starting this container. 
+List of other containers that should be started and healthy before starting this container.
 
-If a dependency's image does not contain a [health check](https://docs.docker.com/engine/reference/builder/#healthcheck), then as soon as it has started, 
+If a dependency's image does not contain a [health check](https://docs.docker.com/engine/reference/builder/#healthcheck), then as soon as it has started,
 it is considered to be healthy.
 
 See [this page](../tips/WaitingForDependenciesToBeReady.md) for more information on how to ensure dependencies are ready before starting containers that
@@ -118,7 +118,7 @@ on Linux). This means that any files created by the container will be owned by t
 
 This is really only useful on Linux. On OS X, the Docker daemon runs as the currently logged-in user and so any files created in the container are owned
 by that user, so this is less of an issue. However, for consistency, the same configuration changes are made on both Linux and OS X.
-    
+
 `run_as_current_user` has the following options:
 
 * `enabled` Defaults to `false`, set to `true` to enable 'run as current user' mode.
@@ -141,7 +141,7 @@ containers:
 
 Running the container `build-env` will launch a container that uses the `openjdk:8u141-jdk` image.
 
-If the image has not already been pulled, batect will pull it before starting the container. 
+If the image has not already been pulled, batect will pull it before starting the container.
 
 ### Minimal configuration with Dockerfile
 ```yaml
@@ -180,7 +180,7 @@ containers:
 Running the container `build-env` will launch a container that uses the `ruby:2.4.3` image with the following environment variables:
 
 * The environment variable `ENABLE_COOL_NEW_FEATURE` will have value `true`.
-* The environment variable `SUPER_SECRET_VALUE` will have the value of the `SECRET_PASSWORD` environment variable on the host. (So, for example, if 
+* The environment variable `SUPER_SECRET_VALUE` will have the value of the `SECRET_PASSWORD` environment variable on the host. (So, for example, if
   `SECRET_PASSWORD` is `abc123` on the host, then `SUPER_SECRET_VALUE` will have the value `abc123` in the container.)
 
 If `SECRET_PASSWORD` is not set on the host, batect will show an error message and not start the task.
@@ -192,7 +192,7 @@ These environment variables could be overridden (and added to) with [`environmen
 containers:
   build-env:
     image: ruby:2.4.3
-    working_directory: /somewhere 
+    working_directory: /somewhere
 ```
 
 Running the container `build-env` will launch a container that uses the `ruby:2.4.3` image with the working directory set to `/somewhere`.
@@ -211,7 +211,7 @@ containers:
 Running the container `build-env` will launch a container that uses the `ruby:2.4.3` image, with the directory containing the batect configuration file
 mounted into the container at `/code`.
 
-For example, if the batect configuration file is on the host at `/home/alice/code/my-project/batect.yml`, then `/home/alice/code/my-project` will be 
+For example, if the batect configuration file is on the host at `/home/alice/code/my-project/batect.yml`, then `/home/alice/code/my-project` will be
 available inside the container at `/code`.
 
 See [this page](../tips/Performance.md#io-performance) for more information on why using `cached` volume mounts may be worthwhile.
@@ -226,12 +226,12 @@ containers:
         container: 456
 ```
 
-Running the container `build-env` will launch a container that uses the `ruby:2.4.3` image, with the port 123 on the host mapped to port 456 inside the 
+Running the container `build-env` will launch a container that uses the `ruby:2.4.3` image, with the port 123 on the host mapped to port 456 inside the
 container. For example, this means that if a web server is listening on port 456 within the container, it can be accessed from the host at `http://localhost:123`.
 
 The Dockerfile for the `ruby:2.4.3` does not need to contain an `EXPOSE` instruction for port 456.
 
-Note that this does not affect how containers launched by batect as part of the same task access ports used by each other, just how they're exposed to the host. 
+Note that this does not affect how containers launched by batect as part of the same task access ports used by each other, just how they're exposed to the host.
 Any container started as part of a task will be able to access any port on any other container at the address `container_name:container_port`. For example,
 if a process running in another container wants to access the application running on port 456 in the `build-env` container, it would access it at `build-env:456`,
 not `build-env:123`.
@@ -243,7 +243,7 @@ containers:
     build_directory: dev-infrastructure/application
     dependencies:
       - database
-    
+
   database:
     build_directory: dev-infrastructure/database
 ```

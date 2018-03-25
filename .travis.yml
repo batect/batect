@@ -19,8 +19,6 @@ install: true
 
 script: ./travis/build.sh
 
-before_deploy: ./gradlew validateRelease
-
 deploy:
   - provider: releases
     api_key:

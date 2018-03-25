@@ -47,7 +47,7 @@ spotless {
         target fileTree(
             dir: '.',
             include: ['**/*.gradle', '**/*.md', '**/.gitignore', '**/*.yaml', '**/*.yml', '**/*.sh', '**/Dockerfile', '**/*.py'],
-            excludes: ['**/node_modules/*']
+            excludes: ['**/node_modules/*', 'docs/gradle/deploy.sh']
         )
 
         trimTrailingWhitespace()

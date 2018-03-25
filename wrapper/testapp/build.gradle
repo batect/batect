@@ -17,10 +17,12 @@
 apply plugin: 'java'
 apply plugin: 'application'
 
+mainClassName = 'testapp.Application'
+
 jar {
     manifest {
         attributes(
-            'Main-Class': 'testapp.Application'
+            'Main-Class': mainClassName
         )
     }
 

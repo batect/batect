@@ -19,6 +19,7 @@
 
 All documentation is available on [the documentation site](https://batect.charleskorn.com). Highlights include:
 
+* [Introduction](https://batect.charleskorn.com)
 * [Getting started guide](https://batect.charleskorn.com/GettingStarted.html)
 * [Configuration file reference](https://batect.charleskorn.com/config/Overview.html)
 * [Sample projects](https://batect.charleskorn.com/SampleProjects.html)

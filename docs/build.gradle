@@ -43,13 +43,3 @@ task serve(type: Exec) {
 
     commandLine 'yarn', 'exec', 'gitbook', 'serve', '.', outputDir
 }
-
-task publish(type: Exec) {
-    description 'Publish the documentation.'
-    group 'Distribution'
-
-    dependsOn build
-
-    commandLine 'gradle/deploy.sh'
-    environment GIT_DEPLOY_DIR: outputDir
-}

@@ -6,6 +6,10 @@ echo "Linting..."
 ./gradlew spotlessCheck
 echo
 
+echo "Building..."
+./gradlew build
+echo
+
 echo "Running unit tests..."
 ./gradlew check
 echo

@@ -18,9 +18,9 @@ While it's certainly possible, it quickly gets unwieldy and is difficult to effe
 ## ...Docker Compose?
 
 In the past, I've used Docker Compose to implement the same idea that is at the core of batect. However, using Docker Compose
-for this purpose has a number of drawbacks. 
+for this purpose has a number of drawbacks.
 
-In particular, Docker Compose is geared towards configuring an application and its dependencies and deploying this whole stack 
+In particular, Docker Compose is geared towards configuring an application and its dependencies and deploying this whole stack
 to something like Docker Swarm. Its CLI is designed with this purpose in mind, making it frustrating to use day-to-day as a development
 tool and necessitating the use of a higher-level script to automate its usage.
 

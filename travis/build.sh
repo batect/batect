@@ -20,3 +20,6 @@ echo
 
 echo "Assembling release..."
 ./gradlew assembleRelease
+
+echo "Publishing documentation..."
+./gradlew docs:publish

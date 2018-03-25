@@ -28,3 +28,6 @@ app/src/main/kotlin/batect/VersionInfo.kt
 
 # Don't include the test app JAR.
 wrapper/test/testapp.jar
+
+docs/node_modules/
+docs/_book/

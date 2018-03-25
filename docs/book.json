@@ -1,0 +1,23 @@
+{
+  "title": "batect documentation",
+  "description": "Documentation for batect, the build and testing environments as code tool",
+  "author": "Charles Korn",
+  "language": "en",
+  "structure": {
+    "readme": "Introduction.md",
+    "summary": "Contents.md"
+  },
+  "plugins": [
+    "ga",
+    "github",
+    "hints"
+  ],
+  "pluginsConfig": {
+    "ga": {
+      "token": "UA-63947227-2"
+    },
+    "github": {
+      "url": "https://github.com/charleskorn/batect"
+    }
+  }
+}

@@ -1,5 +1,9 @@
 # Proxies, Docker and batect
 
+{% hint style='tip' %}
+**tl;dr**: batect will do its best to make things just work with proxies, with the exception of pulling images
+{% endhint %}
+
 Most applications expect to find proxy configuration in a number of environment variables. The most common are:
 
 * `http_proxy`: proxy to use for HTTP requests
@@ -38,7 +42,7 @@ combination of:
 * any build arguments defined in the Dockerfile with `ARG` instructions
 * any environment variables defined in the Dockerfile with `ENV` instructions
 * any of the [pre-defined build arguments](https://docs.docker.com/engine/reference/builder/#predefined-args), if a value is
-  provided for them as part of the `docker build` invocation
+  provided for them 
 
 This last point is the most relevant to proxy settings - as `http_proxy`, `https_proxy`, `no_proxy` etc. are defined as
 pre-defined build arguments, we can pass the host's proxy settings into the build environment as build arguments.
@@ -57,7 +61,7 @@ proxy should have no impact.)
 The set of run time environment variables is defined by:
 
 * any environment variables defined in the image (including any base images) with `ENV` instructions
-* any container-specific environment variables passed to `docker run` / `docker create`
+* any container-specific environment variables specified in the container or task in `batect.yml`
 
 batect automatically propagates any proxy settings configured on the host as environment variables unless the `--no-proxy-vars`
 flag is passed to `batect`.

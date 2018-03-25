@@ -1,35 +1,29 @@
-# Getting started guide
+# Getting started tutorial
 
-The samples shown below are all taken from the [sample project](https://github.com/charleskorn/batect-sample-java).
+The samples shown below are taken from the [Java sample project](https://github.com/charleskorn/batect-sample-java).
 
 ## Installation
 
-1. Download the latest version of `batect` from the [releases page](https://github.com/charleskorn/batect/releases),
-   and copy it into your project.
-2. Make sure it's executable (run `chmod +x batect`).
-3. Run `./batect --version` and if you see some version information, you're good to go!
-
-The `batect` script is designed to be committed alongside your project, and not installed globally. It will
-automatically pull down the correct version of batect for your operating system.
-
-Note that a JVM must be installed to use batect. This requirement will be removed in a future release.
+Before you begin, follow the [installation steps](Installation.md) to setup batect.
 
 ## First steps: build environment
 
 To start, we're going to configure a simple build environment, where you can build your application and run unit
-tests. This example is for a Java project that uses Gradle, and assumes that you already have this set up.
+tests. This example is for a Java project that uses Gradle, and assumes that you already have Gradle set up for your project.
 
 1. Create a `batect.yml` configuration file in the root of your project. For example:
 
     ```yaml
-    project_name: your-really-cool-app
-
     containers:
       build-env:
         image: openjdk:8u141-jdk
         volumes:
-          - .:/code:cached
-          - .gradle-cache:/root/.gradle:cached
+          - local: .
+            container: /code
+            options: cached
+          - local: .gradle-cache
+            container: /root/.gradle
+            options: cached
         working_directory: /code
         environment:
           - GRADLE_OPTS=-Dorg.gradle.daemon=false
@@ -60,8 +54,7 @@ tests. This example is for a Java project that uses Gradle, and assumes that you
           dependencies between builds, rather than downloading them on every single run. (You probably want to
           add this directory to your `.gitignore`.)
         * We use `:cached` mode for the mounts to improve performance on OS X (see
-          [this Docker documentation page](https://docs.docker.com/docker-for-mac/osxfs-caching/) for more
-          information). This has no effect on other operating systems.
+          [this page](tips/Performance.md#io-performance) for more information). This has no effect on other operating systems.
         * We disable the [Gradle daemon](https://docs.gradle.org/current/userguide/gradle_daemon.html), as running
           it is pointless given that we create a new container for every run.
    * `tasks`: we define our two tasks, one for building the application, and another for running the unit tests.
@@ -71,7 +64,7 @@ tests. This example is for a Java project that uses Gradle, and assumes that you
      shell in the build environment (eg. one with `command: bash`) and another that automatically runs the unit
      tests whenever the code is changed (eg. `command: ./gradlew --continuous test`).
 
-   For more information on `batect.yml`, consult the [documentation](ConfigFile.md).
+   For more information on `batect.yml`, consult the [documentation](config/Overview.md).
 
 2. Run `./batect --list-tasks`, and you'll see the tasks that we just defined:
 
@@ -136,7 +129,6 @@ FROM postgres:9.6.2
 
 RUN mkdir -p /tools
 COPY health-check.sh /tools/
-
 HEALTHCHECK --interval=2s CMD /tools/health-check.sh
 
 COPY create-structure.sql /docker-entrypoint-initdb.d/
@@ -180,7 +172,7 @@ tasks:
 
 ```
 
-This is just like the build and unit test tasks we defined before, but we now also specify our database container in `start`. Batect will start
+This is just like the build and unit test tasks we defined before, but we now also specify our database container in `start`. batect will start
 any containers listed in `start` and wait for them to become healthy before starting the container given in `run`.
 
 Under the covers, batect will also create an isolated network for all of the task's containers, so that they can communicate with one another
@@ -191,7 +183,8 @@ were running directly on your machine though.) This means that the integration t
 And, after your tests have finished, batect will then remove all the containers it started, leaving your machine in the same state it was before
 you started.
 
-Similarly, if we want to run some journey tests against our application, we just need to create a Dockerfile for it, then define it in `batect.yml`:
+Similarly, if we want to run some journey tests that test our application end-to-end, we just need to create a Dockerfile for our application,
+then define it in `batect.yml`:
 
 ```yaml
 containers:
@@ -228,9 +221,8 @@ start the database container and wait for it to become healthy, then start the a
 journey tests. We also specify that the build task should run before starting the journey tests - this is so that when we start the application,
 we start the most recent version of it.
 
-## Where to get help
+## Where next?
 
-There's a comprehensive [reference page for the configuration file](ConfigFile.md), and sample applications for
-[Java](https://github.com/charleskorn/batect-sample-java) and [Ruby](https://github.com/charleskorn/batect-sample-ruby) you can take a look at.
+There's a comprehensive [reference page for the configuration file](config/Overview.md), and a number of [sample applications](SampleProjects.md) 
+you can take a look at.
 
-If you have any questions, feedback or suggestions, please file a [GitHub issue](https://github.com/charleskorn/batect/issues).

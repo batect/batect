@@ -17,13 +17,9 @@
 
 ## Documentation
 
-* [Getting started guide](docs/GettingStarted.md)
-* [Configuration file reference](docs/ConfigFile.md)
-* [Dealing with proxies](docs/Proxies.md)
-* [Tips and tricks](docs/TipsAndTricks.md)
-
-There are also [Java](https://github.com/charleskorn/batect-sample-java) and [Ruby](https://github.com/charleskorn/batect-sample-ruby)
-sample projects you can use as a basis for your application.
+* [Getting started guide](https://batect.charleskorn.com/GettingStarted.html)
+* [Configuration file reference](https://batect.charleskorn.com/config/Overview.html)
+* [Sample projects](https://batect.charleskorn.com/SampleProjects.html)
 
 ## Motivation - why would I use this?
 

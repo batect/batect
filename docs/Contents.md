@@ -1,6 +1,7 @@
 # Contents
 
 * [Introduction](Introduction.md)
+* [Comparison with other tools](Comparison.md)
 * [Installation](Installation.md)
 * [Getting started tutorial](GettingStarted.md)
 

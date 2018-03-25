@@ -35,3 +35,4 @@
 
 * [Sample projects](SampleProjects.md)
 * [Release notes](https://github.com/charleskorn/batect/releases)
+* [Roadmap](https://github.com/charleskorn/batect/blob/master/ROADMAP.md)

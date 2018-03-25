@@ -9,7 +9,7 @@ If there's something you're really keen to see, pull requests are always welcome
 
 ### Config file handling
 * better error message when a key (eg. a task name) is used twice (at the moment it's `Duplicate field 'duplicated_task_name'`)
-* better error message when a dependency is given twice (at the moment it's `Duplicate value 'dependency-name''`)
+* better error message when a dependency is given twice (at the moment it's `Duplicate value 'dependency-name'`)
 
 ### Features
 * automatically enable `--no-color` or `--simple-output` if console doesn't support it (use terminfo database rather than current detection system)
@@ -40,6 +40,10 @@ If there's something you're really keen to see, pull requests are always welcome
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use Docker API directly rather than using Docker CLI (would allow for more detailed progress and error reporting)
 * documentation
+  * add check for broken internal or external links
+  * update readme to point to correct locations
+  * build and publish as part of build
+  * spell check
   * examples for common languages and scenarios
     * Golang
     * NodeJS
@@ -48,7 +52,7 @@ If there's something you're really keen to see, pull requests are always welcome
     * Android app
   * importance of idempotency
   * improve the getting started guide (it's way too wordy)
-  * switch to something like Sebastian's [termbook](https://github.com/Byron/termbook) for nicer documentation
+  * explain the task lifecycle (read config, construct graph, pull images / build images, start containers, wait for healthy etc.)
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
 * make configuration-related error messages clearer and remove exception class names etc.
 * use batect to build batect (self-hosting)

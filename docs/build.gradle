@@ -19,6 +19,8 @@ task installYarnDependencies(type: Exec) {
 }
 
 task installGitBookPlugins(type: Exec) {
+    dependsOn installYarnDependencies
+
     commandLine 'yarn', 'exec', 'gitbook', 'install'
 }
 

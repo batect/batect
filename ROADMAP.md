@@ -47,6 +47,9 @@ If there's something you're really keen to see, pull requests are always welcome
       * frontend
       * backend
     * Android app
+  * add FAQs
+    * when to mount files / directories as a volume, and when to copy them into the image
+    * how to run something when the container starts, regardless of the task's command line (eg. `ENTRYPOINT` with shell script and `exec`, similar to the example in [the docs](https://docs.docker.com/engine/reference/builder/#entrypoint))
   * importance of idempotency
   * improve the getting started guide (it's way too wordy)
   * explain the task lifecycle (read config, construct graph, pull images / build images, start containers, wait for healthy etc.)

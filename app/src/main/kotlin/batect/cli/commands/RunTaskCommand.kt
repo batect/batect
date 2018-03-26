@@ -20,6 +20,7 @@ import batect.TaskRunner
 import batect.config.Configuration
 import batect.config.Task
 import batect.config.io.ConfigurationLoader
+import batect.docker.DockerClient
 import batect.logging.Logger
 import batect.model.RunOptions
 import batect.model.TaskExecutionOrderResolutionException
@@ -35,6 +36,7 @@ class RunTaskCommand(
     val taskExecutionOrderResolver: TaskExecutionOrderResolver,
     val taskRunner: TaskRunner,
     val updateNotifier: UpdateNotifier,
+    val dockerClient: DockerClient,
     val console: Console,
     val errorConsole: Console,
     val logger: Logger) : Command {
@@ -42,6 +44,18 @@ class RunTaskCommand(
     override fun run(): Int {
         val config = configLoader.loadConfig(configFile)
 
+        if (dockerClient.checkIfDockerIsAvailable() == false) {
+            errorConsole.withColor(ConsoleColor.Red) {
+                println("Docker is not installed, or the Docker executable is not on your PATH.")
+            }
+
+            return -1
+        }
+
+        return runFromConfig(config)
+    }
+
+    private fun runFromConfig(config: Configuration): Int {
         try {
             val tasks = taskExecutionOrderResolver.resolveExecutionOrder(config, runOptions.taskName)
 

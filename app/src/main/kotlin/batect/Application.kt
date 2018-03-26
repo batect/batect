@@ -127,6 +127,7 @@ private val cliModule = Kodein.Module {
             instance(),
             instance(),
             instance(),
+            instance(),
             instance(PrintStreamType.Output),
             instance(PrintStreamType.Error),
             logger

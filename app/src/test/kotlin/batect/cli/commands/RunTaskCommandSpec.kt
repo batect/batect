@@ -23,6 +23,7 @@ import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.config.io.ConfigurationLoader
+import batect.docker.DockerClient
 import batect.logging.Logger
 import batect.logging.Severity
 import batect.model.BehaviourAfterFailure
@@ -51,6 +52,7 @@ import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
+import com.nhaarman.mockito_kotlin.verifyZeroInteractions
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -84,9 +86,13 @@ object RunTaskCommandSpec : Spek({
                 }
             }
 
-            describe("when the configuration file can be loaded and the task has no dependencies") {
+            describe("when the configuration file can be loaded, Docker is available and the task has no dependencies") {
                 val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {
                     on { resolveExecutionOrder(config, taskName) } doReturn listOf(mainTask)
+                }
+
+                val dockerClient = mock<DockerClient> {
+                    on { checkIfDockerIsAvailable() } doReturn true
                 }
 
                 on("and that task returns a non-zero exit code") {
@@ -94,7 +100,7 @@ object RunTaskCommandSpec : Spek({
                         on { run(config, mainTask, runOptions) } doReturn expectedTaskExitCode
                     }
 
-                    val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
+                    val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger)
                     val exitCode = command.run()
 
                     it("runs the task") {
@@ -115,6 +121,10 @@ object RunTaskCommandSpec : Spek({
                             verify(taskRunner).run(any(), any(), any())
                         }
                     }
+
+                    it("does not print anything to the error console") {
+                        verifyZeroInteractions(errorConsole)
+                    }
                 }
 
                 on("and that task returns a zero exit code") {
@@ -122,7 +132,7 @@ object RunTaskCommandSpec : Spek({
                         on { run(config, mainTask, runOptions) } doReturn 0
                     }
 
-                    val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
+                    val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger)
                     val exitCode = command.run()
 
                     it("runs the task") {
@@ -143,14 +153,22 @@ object RunTaskCommandSpec : Spek({
                             verify(taskRunner).run(any(), any(), any())
                         }
                     }
+
+                    it("does not print anything to the error console") {
+                        verifyZeroInteractions(errorConsole)
+                    }
                 }
             }
 
-            describe("when the configuration file can be loaded and the task has a dependency") {
+            describe("when the configuration file can be loaded, Docker is available and the task has a dependency") {
                 val otherTask = Task("other-task", TaskRunConfiguration("the-other-container"))
 
                 val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {
                     on { resolveExecutionOrder(config, taskName) } doReturn listOf(otherTask, mainTask)
+                }
+
+                val dockerClient = mock<DockerClient> {
+                    on { checkIfDockerIsAvailable() } doReturn true
                 }
 
                 on("and the dependency finishes with an exit code of 0") {
@@ -159,7 +177,7 @@ object RunTaskCommandSpec : Spek({
                         on { run(config, mainTask, runOptions) } doReturn expectedTaskExitCode
                     }
 
-                    val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
+                    val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger)
                     val exitCode = command.run()
 
                     it("runs the dependency task") {
@@ -188,6 +206,10 @@ object RunTaskCommandSpec : Spek({
                             verify(taskRunner, atLeastOnce()).run(any(), any(), any())
                         }
                     }
+
+                    it("does not print anything to the error console") {
+                        verifyZeroInteractions(errorConsole)
+                    }
                 }
 
                 on("and the dependency finishes with a non-zero exit code") {
@@ -195,7 +217,7 @@ object RunTaskCommandSpec : Spek({
                         on { run(config, otherTask, runOptions) } doReturn 1
                     }
 
-                    val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
+                    val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger)
                     val exitCode = command.run()
 
                     it("runs the dependency task") {
@@ -216,6 +238,10 @@ object RunTaskCommandSpec : Spek({
                             verify(taskRunner).run(any(), any(), any())
                         }
                     }
+
+                    it("does not print anything to the error console") {
+                        verifyZeroInteractions(errorConsole)
+                    }
                 }
             }
 
@@ -226,8 +252,11 @@ object RunTaskCommandSpec : Spek({
                 }
 
                 val taskRunner = mock<TaskRunner>()
+                val dockerClient = mock<DockerClient> {
+                    on { checkIfDockerIsAvailable() } doReturn true
+                }
 
-                val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, console, errorConsole, logger)
+                val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger)
                 val exitCode = command.run()
 
                 it("prints a message to the output") {
@@ -240,6 +269,25 @@ object RunTaskCommandSpec : Spek({
 
                 it("logs a message with the exception") {
                     assertThat(logSink, hasMessage(withSeverity(Severity.Error) and withException(exception)))
+                }
+            }
+
+            on("when Docker is not available") {
+                val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver>()
+                val taskRunner = mock<TaskRunner>()
+                val dockerClient = mock<DockerClient> {
+                    on { checkIfDockerIsAvailable() } doReturn false
+                }
+
+                val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger)
+                val exitCode = command.run()
+
+                it("prints a message to the output") {
+                    verify(redErrorConsole).println("Docker is not installed, or the Docker executable is not on your PATH.")
+                }
+
+                it("returns a non-zero exit code") {
+                    assertThat(exitCode, !equalTo(0))
                 }
             }
         }

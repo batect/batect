@@ -18,20 +18,24 @@ package batect.os
 
 import batect.logging.Logger
 import batect.logging.Severity
-import batect.testutils.createForEachTest
 import batect.testutils.InMemoryLogSink
+import batect.testutils.createForEachTest
 import batect.testutils.hasMessage
 import batect.testutils.withAdditionalData
 import batect.testutils.withLogMessage
+import batect.testutils.withMessage
 import batect.testutils.withSeverity
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.throws
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
+import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import java.io.File
+import java.io.IOException
 
 object ProcessRunnerSpec : Spek({
     describe("a process runner") {
@@ -71,32 +75,56 @@ object ProcessRunnerSpec : Spek({
             }
         }
 
-        on("running a process and capturing the output") {
-            val command = listOf("sh", "-c", "echo hello world && echo hello error world 1>&2 && echo more non-error output && exit 201")
-            val result = runner.runAndCaptureOutput(command)
+        describe("running a process and capturing the output") {
+            given("the executable exists") {
+                on("running it") {
+                    val command = listOf("sh", "-c", "echo hello world && echo hello error world 1>&2 && echo more non-error output && exit 201")
+                    val result = runner.runAndCaptureOutput(command)
 
-            it("returns the exit code of the command") {
-                assertThat(result.exitCode, equalTo(201))
+                    it("returns the exit code of the command") {
+                        assertThat(result.exitCode, equalTo(201))
+                    }
+
+                    it("returns the combined standard output and standard error of the command") {
+                        assertThat(result.output, equalTo("hello world\nhello error world\nmore non-error output\n"))
+                    }
+
+                    it("logs before running the command") {
+                        assertThat(logSink, hasMessage(
+                            withSeverity(Severity.Debug) and
+                                withLogMessage("Starting process.") and
+                                withAdditionalData("command", command)))
+                    }
+
+                    it("logs the result of running the command") {
+                        assertThat(logSink, hasMessage(
+                            withSeverity(Severity.Debug) and
+                                withLogMessage("Process exited.") and
+                                withAdditionalData("command", command) and
+                                withAdditionalData("exitCode", 201)
+                        ))
+                    }
+                }
             }
 
-            it("returns the combined standard output and standard error of the command") {
-                assertThat(result.output, equalTo("hello world\nhello error world\nmore non-error output\n"))
+            given("the executable does not exist") {
+                on("attempting to run it") {
+                    val command = listOf("some-non-existent-app", "--some-arg")
+
+                    it("throws an appropriate exception") {
+                        assertThat({ runner.runAndCaptureOutput(command) }, throws<ExecutableDoesNotExistException>(withMessage("The executable 'some-non-existent-app' could not be found.")))
+                    }
+                }
             }
 
-            it("logs before running the command") {
-                assertThat(logSink, hasMessage(
-                    withSeverity(Severity.Debug) and
-                        withLogMessage("Starting process.") and
-                        withAdditionalData("command", command)))
-            }
+            given("the executable path is not executable") {
+                on("attempting to run it") {
+                    val command = listOf("/home")
 
-            it("logs the result of running the command") {
-                assertThat(logSink, hasMessage(
-                    withSeverity(Severity.Debug) and
-                        withLogMessage("Process exited.") and
-                        withAdditionalData("command", command) and
-                        withAdditionalData("exitCode", 201)
-                ))
+                    it("throws an appropriate exception") {
+                        assertThat({ runner.runAndCaptureOutput(command) }, throws<IOException>())
+                    }
+                }
             }
         }
 

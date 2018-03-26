@@ -19,6 +19,7 @@ package batect.docker
 import batect.config.BuildImage
 import batect.config.Container
 import batect.logging.Logger
+import batect.os.ExecutableDoesNotExistException
 import batect.os.Exited
 import batect.os.KillProcess
 import batect.os.KilledDuringProcessing
@@ -434,6 +435,39 @@ class DockerClient(
         }
 
         return DockerImage(imageName)
+    }
+
+    fun checkIfDockerIsAvailable(): Boolean {
+        logger.info {
+            message("Checking if Docker is available.")
+        }
+
+        try {
+            val result = processRunner.runAndCaptureOutput(listOf("docker", "--version"))
+
+            if (failed(result)) {
+                logger.error {
+                    message("'docker --version' returned unexpected exit code.")
+                    data("result", result)
+                }
+
+                return false
+            }
+
+            logger.info {
+                message("Docker is available.")
+                data("result", result)
+            }
+
+            return true
+        } catch (e: ExecutableDoesNotExistException) {
+            logger.warn {
+                message("The Docker executable is not available.")
+                exception(e)
+            }
+
+            return false
+        }
     }
 
     private fun haveImageLocally(imageName: String): Boolean {

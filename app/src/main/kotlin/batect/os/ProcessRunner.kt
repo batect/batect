@@ -17,6 +17,7 @@
 package batect.os
 
 import batect.logging.Logger
+import java.io.IOException
 import java.io.InputStreamReader
 
 class ProcessRunner(private val logger: Logger) {
@@ -58,22 +59,31 @@ class ProcessRunner(private val logger: Logger) {
             data("command", command)
         }
 
-        val process = ProcessBuilder(command.toList())
+        try {
+            val process = ProcessBuilder(command.toList())
                 .redirectErrorStream(true)
                 .redirectInput(ProcessBuilder.Redirect.INHERIT)
                 .start()
 
-        val exitCode = process.waitFor()
-        val output = InputStreamReader(process.inputStream).readText()
+            val exitCode = process.waitFor()
+            val output = InputStreamReader(process.inputStream).readText()
 
-        logger.debug {
-            message("Process exited.")
-            data("command", command)
-            data("exitCode", exitCode)
-            data("output", output)
+            logger.debug {
+                message("Process exited.")
+                data("command", command)
+                data("exitCode", exitCode)
+                data("output", output)
+            }
+
+            return ProcessOutput(exitCode, output)
+        } catch (e: IOException) {
+            if (e.cause?.message == "error=2, No such file or directory") {
+                val executableName = command.first()
+                throw ExecutableDoesNotExistException(executableName, e)
+            }
+
+            throw e
         }
-
-        return ProcessOutput(exitCode, output)
     }
 
     fun <T> runAndProcessOutput(command: Iterable<String>, outputProcessor: (String) -> OutputProcessing<T>): RunAndProcessOutputResult<T> {
@@ -83,8 +93,8 @@ class ProcessRunner(private val logger: Logger) {
         }
 
         val process = ProcessBuilder(command.toList())
-                .redirectErrorStream(true)
-                .start()
+            .redirectErrorStream(true)
+            .start()
 
         try {
             val reader = InputStreamReader(process.inputStream)
@@ -165,3 +175,5 @@ class KillProcess<T>(val result: T) : OutputProcessing<T>()
 sealed class RunAndProcessOutputResult<T>
 data class Exited<T>(val exitCode: Int) : RunAndProcessOutputResult<T>()
 data class KilledDuringProcessing<T>(val result: T) : RunAndProcessOutputResult<T>()
+
+class ExecutableDoesNotExistException(val executableName: String, cause: Throwable?) : RuntimeException("The executable '$executableName' could not be found.", cause)

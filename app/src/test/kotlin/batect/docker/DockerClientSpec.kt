@@ -20,6 +20,7 @@ import batect.config.BuildImage
 import batect.config.Container
 import batect.config.HealthCheckConfig
 import batect.logging.Logger
+import batect.os.ExecutableDoesNotExistException
 import batect.os.Exited
 import batect.os.KillProcess
 import batect.os.KilledDuringProcessing
@@ -37,6 +38,7 @@ import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.check
 import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.doThrow
 import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
@@ -693,6 +695,38 @@ object DockerClientSpec : Spek({
 
                 it("throws an appropriate exception") {
                     assertThat({ client.pullImage("some-image") }, throws<ImagePullFailedException>(withMessage("Checking if image 'some-image' has already been pulled failed. Output from Docker was: Something went wrong.")))
+                }
+            }
+        }
+
+        describe("checking if Docker is available") {
+            given("running 'docker --version' succeeds") {
+                beforeEachTest {
+                    whenever(processRunner.runAndCaptureOutput(listOf("docker", "--version"))).doReturn(ProcessOutput(0, "Some output"))
+                }
+
+                it("returns true") {
+                    assertThat(client.checkIfDockerIsAvailable(), equalTo(true))
+                }
+            }
+
+            given("running 'docker --version' fails") {
+                beforeEachTest {
+                    whenever(processRunner.runAndCaptureOutput(listOf("docker", "--version"))).doReturn(ProcessOutput(1, "Some output"))
+                }
+
+                it("returns false") {
+                    assertThat(client.checkIfDockerIsAvailable(), equalTo(false))
+                }
+            }
+
+            given("the Docker executable cannot be found") {
+                beforeEachTest {
+                    whenever(processRunner.runAndCaptureOutput(listOf("docker", "--version"))).doThrow(ExecutableDoesNotExistException("docker", null))
+                }
+
+                it("returns false") {
+                    assertThat(client.checkIfDockerIsAvailable(), equalTo(false))
                 }
             }
         }

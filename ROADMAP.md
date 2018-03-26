@@ -41,7 +41,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * use Docker API directly rather than using Docker CLI (would allow for more detailed progress and error reporting)
 * documentation
   * add check for broken internal or external links
-  * spell check
   * examples for common languages and scenarios
     * Golang
     * NodeJS

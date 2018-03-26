@@ -1,0 +1,43 @@
+# markdown-spellcheck spelling configuration file
+# Format - lines beginning # are comments
+# global dictionary is at the start, file overrides afterwards
+# one word per line, to define a file override use ' - filename'
+# where filename is relative to this configuration file
+10
+123
+1234
+17.04
+2000
+456
+5678
+60
+8
+artifact
+artifacts
+batect
+cleanup
+CMake
+cruft
+Dockerfile
+Dockerfiles
+dr
+eg
+GID
+Golang
+ie
+IntelliJ
+JetBrains
+kubectl
+lifecycle
+Postgres
+PyCharm
+RubyMine
+runtimes
+SIGKILL
+SIGTERM
+systemd
+tl
+UID
+v0.12
+v1.0
+YAML-based

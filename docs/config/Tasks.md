@@ -15,12 +15,19 @@ Specifies what to do when this task starts:
   Overrides any command specified on the container definition and the default image command. If no command is provided here, the command
   specified on the container definition is used if there is one, otherwise the image's default command is used.
 
-* `environment` List of environment variables (in `name=value` format) for the container.
+* `environment` List of environment variables (in `name=value` format) to pass to the container, in addition to those defined on the
+  container itself.
 
   If a variable is specified both here and on the container itself, the value given here will override the value defined on the container.
   Just like when [specifying a variable directly on the container](Containers.md#environment), you can pass variables from the host to the
   container in the `CONTAINER_VARIABLE=$HOST_VARIABLE` format. If the referenced host variable is not present, batect will show an error
   message and not start the task.
+
+* `ports` List of port mappings to create for the container, in addition to those defined on the container itself.
+
+  Behaves identically to [specifying a port mapping directly on the container](Containers.md#ports), and supports the same syntax.
+
+  Available since v0.13.
 
 ## `dependencies`
 List of other containers that should be started and healthy before starting the task container given in `run`.
@@ -110,3 +117,29 @@ Running the task `start-app` will start the `app` container with the following e
   `SECRET_PASSWORD` is `abc123` on the host, then `SUPER_SECRET_VALUE` will have the value `abc123` in the container.)
 
 If `SECRET_PASSWORD` is not set on the host, batect will show an error message and not start the task.
+
+### Task with port mappings
+```yaml
+tasks:
+  start-app:
+    run:
+      container: app
+      ports:
+        - 123:456
+        - local: 1000
+          container: 2000
+```
+
+Running the task `start-app` will start the `app` container with the following port mappings defined:
+
+* Port 123 on the host will be mapped to port 456 inside the container
+* Port 1000 on the host will be mapped to port 2000 inside the container
+
+For example, this means that if a web server is listening on port 456 within the container, it can be accessed from the host at `http://localhost:123`.
+
+The Dockerfile for the image used by the app container does not need to contain an `EXPOSE` instruction for ports 456 or 2000.
+
+Note that this does not affect how containers launched by batect as part of the same task access ports used by each other, just how they're exposed to the host.
+Any container started as part of a task will be able to access any port on any other container at the address `container_name:container_port`. For example,
+if a process running in another container wants to access the application running on port 456 in the `app` container, it would access it at `app:456`,
+not `app:123`.

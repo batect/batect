@@ -25,6 +25,7 @@ import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
 import batect.model.steps.CreateContainerStep
 import batect.config.Container
+import batect.config.PortMapping
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.logging.Logger
@@ -58,6 +59,7 @@ object ImageBuiltEventSpec : Spek({
 
             on("when the task network has already been created") {
                 val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
+                val additionalPortMappings = setOf(PortMapping(123, 456))
                 val network = DockerNetwork("the-network")
                 val command = Command.parse("do-stuff")
 
@@ -65,12 +67,13 @@ object ImageBuiltEventSpec : Spek({
                     on { getSinglePastEventOfType<TaskNetworkCreatedEvent>() } doReturn TaskNetworkCreatedEvent(network)
                     on { commandForContainer(container) } doReturn command
                     on { additionalEnvironmentVariablesForContainer(container) } doReturn additionalEnvironmentVariables
+                    on { additionalPortMappingsForContainer(container) } doReturn additionalPortMappings
                 }
 
                 event.apply(context, logger)
 
                 it("queues a 'create container' step") {
-                    verify(context).queueStep(CreateContainerStep(container, command, additionalEnvironmentVariables, image, network))
+                    verify(context).queueStep(CreateContainerStep(container, command, additionalEnvironmentVariables, additionalPortMappings, image, network))
                 }
             }
 

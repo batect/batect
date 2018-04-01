@@ -19,6 +19,7 @@ package batect.model
 import batect.config.Configuration
 import batect.config.Container
 import batect.config.ContainerMap
+import batect.config.PortMapping
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
@@ -66,7 +67,7 @@ object TaskStateMachineSpec : Spek({
             command = Command.parse("do-stuff-in-task-container"))
 
         val unrelatedContainer = Container("some-other-container", imageSourceDoesNotMatter())
-        val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"), mapOf("SOME_VAR" to "some value"))
+        val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"), mapOf("SOME_VAR" to "some value"), setOf(PortMapping(123, 456)))
         val task = Task("the-task", runConfig)
         val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, unrelatedContainer))
         val commandResolver = mock<ContainerCommandResolver> {
@@ -426,6 +427,20 @@ object TaskStateMachineSpec : Spek({
             on("when the container is the task container") {
                 it("returns the set of additional environment variables from the task run configuration") {
                     assertThat(stateMachine.additionalEnvironmentVariablesForContainer(taskContainer), equalTo(runConfig.additionalEnvironmentVariables))
+                }
+            }
+        }
+
+        describe("getting additional port mappings for a container") {
+            on("when the container is not the task container") {
+                it("returns an empty set of additional port mappings") {
+                    assertThat(stateMachine.additionalPortMappingsForContainer(dependencyContainer1), equalTo(emptySet()))
+                }
+            }
+
+            on("when the container is the task container") {
+                it("returns the set of additional port mappings from the task run configuration") {
+                    assertThat(stateMachine.additionalPortMappingsForContainer(taskContainer), equalTo(runConfig.additionalPortMappings))
                 }
             }
         }

@@ -27,5 +27,6 @@ data class Task(val name: String,
 data class TaskRunConfiguration(
     val container: String,
     val command: Command? = null,
-    val additionalEnvironmentVariables: Map<String, String> = emptyMap()
+    val additionalEnvironmentVariables: Map<String, String> = emptyMap(),
+    val additionalPortMappings: Set<PortMapping> = emptySet()
 )

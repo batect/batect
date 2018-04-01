@@ -19,6 +19,7 @@ package batect.model.steps
 import batect.config.BuildImage
 import batect.config.Container
 import batect.config.HealthCheckConfig
+import batect.config.PortMapping
 import batect.config.VolumeMount
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerDoesNotExistException
@@ -282,10 +283,11 @@ object TaskStepRunnerSpec : Spek({
                 val container = Container("some-container", imageSourceDoesNotMatter())
                 val command = Command.parse("do-stuff")
                 val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
+                val additionalPortMappings = setOf(PortMapping(123, 456))
                 val image = DockerImage("some-image")
                 val network = DockerNetwork("some-network")
 
-                val step = CreateContainerStep(container, command, additionalEnvironmentVariables, image, network)
+                val step = CreateContainerStep(container, command, additionalEnvironmentVariables, additionalPortMappings, image, network)
                 val request = DockerContainerCreationRequest(image, network, command!!.parsedCommand, "some-container", "some-container", emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig(), null)
 
                 beforeEachTest {
@@ -296,6 +298,7 @@ object TaskStepRunnerSpec : Spek({
                         command,
                         additionalEnvironmentVariables,
                         runAsCurrentUserConfiguration.volumeMounts,
+                        additionalPortMappings,
                         runOptions.propagateProxyEnvironmentVariables,
                         runAsCurrentUserConfiguration.userAndGroup
                     )).doReturn(request)

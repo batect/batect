@@ -17,6 +17,7 @@
 package batect.model
 
 import batect.config.Container
+import batect.config.PortMapping
 import batect.logging.Logger
 import batect.logging.LoggerFactory
 import batect.model.events.TaskEvent
@@ -130,6 +131,14 @@ class TaskStateMachine(
         }
 
         return emptyMap()
+    }
+
+    override fun additionalPortMappingsForContainer(container: Container): Set<PortMapping> {
+        if (isTaskContainer(container)) {
+            return graph.task.runConfiguration.additionalPortMappings
+        }
+
+        return emptySet()
     }
 
     override fun isTaskContainer(container: Container) = container == graph.taskContainerNode.container

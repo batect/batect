@@ -227,7 +227,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving a 'creating container' notification") {
                 on("that notification being for this line's container") {
-                    val step = CreateContainerStep(container, Command.parse("some-command"), emptyMap(), DockerImage("some-image"), DockerNetwork("some-network"))
+                    val step = CreateContainerStep(container, Command.parse("some-command"), emptyMap(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
                     line.onStepStarting(step)
                     line.print(console)
 
@@ -237,7 +237,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val step = CreateContainerStep(otherContainer, Command.parse("some-command"), emptyMap(), DockerImage("some-image"), DockerNetwork("some-network"))
+                    val step = CreateContainerStep(otherContainer, Command.parse("some-command"), emptyMap(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
                     line.onStepStarting(step)
                     line.print(console)
 
@@ -400,7 +400,7 @@ object ContainerStartupProgressLineSpec : Spek({
                     val step = RunContainerStep(container, DockerContainer("some-id"))
 
                     on("and the container does not have a command specified in the configuration file") {
-                        line.onStepStarting(CreateContainerStep(container, null, emptyMap(), DockerImage("some-image"), DockerNetwork("some-network")))
+                        line.onStepStarting(CreateContainerStep(container, null, emptyMap(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network")))
                         line.onStepStarting(step)
                         line.print(console)
 
@@ -410,7 +410,7 @@ object ContainerStartupProgressLineSpec : Spek({
                     }
 
                     on("and the container has a command specified in the configuration file") {
-                        line.onStepStarting(CreateContainerStep(container, Command.parse("some-command"), emptyMap(), DockerImage("some-image"), DockerNetwork("some-network")))
+                        line.onStepStarting(CreateContainerStep(container, Command.parse("some-command"), emptyMap(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network")))
                         line.onStepStarting(step)
                         line.print(console)
 
@@ -425,7 +425,7 @@ object ContainerStartupProgressLineSpec : Spek({
                     }
 
                     on("and another container has a command specified in the configuration file") {
-                        line.onStepStarting(CreateContainerStep(otherContainer, Command.parse("some-command"), emptyMap(), DockerImage("some-image"), DockerNetwork("some-network")))
+                        line.onStepStarting(CreateContainerStep(otherContainer, Command.parse("some-command"), emptyMap(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network")))
                         line.onStepStarting(step)
                         line.print(console)
 

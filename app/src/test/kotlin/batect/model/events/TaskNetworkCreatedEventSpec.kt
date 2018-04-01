@@ -18,6 +18,7 @@ package batect.model.events
 
 import batect.config.BuildImage
 import batect.config.Container
+import batect.config.PortMapping
 import batect.config.PullImage
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
@@ -63,6 +64,7 @@ object TaskNetworkCreatedEventSpec : Spek({
 
             on("when some images have been built or pulled already") {
                 val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
+                val additionalPortMappings = setOf(PortMapping(123, 456))
                 val command1 = Command.parse("command-1")
                 val command2 = Command.parse("command-2")
 
@@ -77,9 +79,11 @@ object TaskNetworkCreatedEventSpec : Spek({
 
                     on { commandForContainer(containerWithImageToBuild) } doReturn command1
                     on { additionalEnvironmentVariablesForContainer(containerWithImageToBuild) } doReturn additionalEnvironmentVariables
+                    on { additionalPortMappingsForContainer(containerWithImageToBuild) } doReturn additionalPortMappings
 
                     on { commandForContainer(containerWithImageToPull) } doReturn command2
                     on { additionalEnvironmentVariablesForContainer(containerWithImageToPull) } doReturn emptyMap()
+                    on { additionalPortMappingsForContainer(containerWithImageToPull) } doReturn emptySet()
 
                     on { allTaskContainers } doReturn setOf(containerWithImageToBuild, containerWithImageToPull)
                 }
@@ -87,8 +91,8 @@ object TaskNetworkCreatedEventSpec : Spek({
                 event.apply(context, logger)
 
                 it("queues 'create container' steps for them") {
-                    verify(context).queueStep(CreateContainerStep(containerWithImageToBuild, command1, additionalEnvironmentVariables, image1, network))
-                    verify(context).queueStep(CreateContainerStep(containerWithImageToPull, command2, emptyMap(), image2, network))
+                    verify(context).queueStep(CreateContainerStep(containerWithImageToBuild, command1, additionalEnvironmentVariables, additionalPortMappings, image1, network))
+                    verify(context).queueStep(CreateContainerStep(containerWithImageToPull, command2, emptyMap(), emptySet(), image2, network))
                 }
 
                 it("does not queue a 'delete task network' step") {

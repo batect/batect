@@ -150,6 +150,10 @@ object ConfigurationLoaderSpec : Spek({
                 |      command: ./gradlew doStuff
                 |      environment:
                 |        - SOME_VAR=value
+                |      ports:
+                |        - 123:456
+                |        - local: 1000
+                |          container: 2000
                 """.trimMargin()
 
             val config = loadConfiguration(configString)
@@ -168,6 +172,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, equalTo(Command.parse("./gradlew doStuff")))
                 assertThat(task.runConfiguration.additionalEnvironmentVariables, equalTo(mapOf("SOME_VAR" to "value")))
+                assertThat(task.runConfiguration.additionalPortMappings, equalTo(setOf(PortMapping(123, 456), PortMapping(1000, 2000))))
                 assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, isEmptyString)

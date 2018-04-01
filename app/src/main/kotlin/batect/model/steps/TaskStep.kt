@@ -17,6 +17,7 @@
 package batect.model.steps
 
 import batect.config.Container
+import batect.config.PortMapping
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
@@ -44,15 +45,17 @@ data class CreateContainerStep(
     val container: Container,
     val command: Command?,
     val additionalEnvironmentVariables: Map<String, String>,
+    val additionalPortMappings: Set<PortMapping>,
     val image: DockerImage,
     val network: DockerNetwork
 ) : TaskStep() {
-    override fun toString() = super.toString() + "(container: '${container.name}', command: '${(command ?: "")}', additional environment variables: $additionalEnvironmentVariables, image '${image.id}', network: '${network.id}')"
+    override fun toString() = super.toString() + "(container: '${container.name}', command: '${(command ?: "")}', additional environment variables: $additionalEnvironmentVariables, additional port mappings: $additionalPortMappings, image '${image.id}', network: '${network.id}')"
 
     constructor(container: Container, image: DockerImage, network: DockerNetwork, context: TaskEventContext) : this(
         container,
         context.commandForContainer(container),
         context.additionalEnvironmentVariablesForContainer(container),
+        context.additionalPortMappingsForContainer(container),
         image,
         network
     )

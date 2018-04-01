@@ -18,6 +18,7 @@ package batect.model.events
 
 import batect.model.steps.TaskStep
 import batect.config.Container
+import batect.config.PortMapping
 import batect.model.BehaviourAfterFailure
 import batect.os.Command
 import kotlin.reflect.KClass
@@ -39,6 +40,7 @@ interface TaskEventContext {
     fun isTaskContainer(container: Container): Boolean
     fun commandForContainer(container: Container): Command?
     fun additionalEnvironmentVariablesForContainer(container: Container): Map<String, String>
+    fun additionalPortMappingsForContainer(container: Container): Set<PortMapping>
     fun dependenciesOf(container: Container): Set<Container>
     fun containersThatDependOn(container: Container): Set<Container>
 

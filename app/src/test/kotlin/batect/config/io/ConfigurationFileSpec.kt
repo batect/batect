@@ -61,7 +61,7 @@ object ConfigurationFileSpec : Spek({
             }
 
             on("converting a configuration file with a task") {
-                val runConfiguration = TaskRunConfigurationFromFile("some_container", "some_command", mapOf("SOME_VAR" to "some value"))
+                val runConfiguration = TaskRunConfigurationFromFile("some_container", "some_command", mapOf("SOME_VAR" to "some value"), setOf(PortMapping(123, 456)))
                 val task = TaskFromFile(runConfiguration, "Some description", setOf("dependency-1"), setOf("other-task"))
                 val taskName = "the_task_name"
                 val configFile = ConfigurationFile("the_project_name", mapOf(taskName to task))
@@ -76,7 +76,7 @@ object ConfigurationFileSpec : Spek({
                     assertThat(resultingConfig.tasks, equalTo(TaskMap(
                         Task(
                             taskName,
-                            TaskRunConfiguration(runConfiguration.container, Command.parse(runConfiguration.command), runConfiguration.additionalEnvironmentVariables),
+                            TaskRunConfiguration(runConfiguration.container, Command.parse(runConfiguration.command), runConfiguration.additionalEnvironmentVariables, runConfiguration.additionalPortMappings),
                             "Some description",
                             task.dependsOnContainers,
                             task.prerequisiteTasks

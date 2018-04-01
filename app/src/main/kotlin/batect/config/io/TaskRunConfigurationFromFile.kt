@@ -16,6 +16,7 @@
 
 package batect.config.io
 
+import batect.config.PortMapping
 import batect.config.TaskRunConfiguration
 import batect.os.Command
 import batect.os.InvalidCommandLineException
@@ -25,13 +26,14 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 data class TaskRunConfigurationFromFile(
     val container: String,
     val command: String? = null,
-    @JsonDeserialize(using = EnvironmentDeserializer::class) @JsonProperty("environment") val additionalEnvironmentVariables: Map<String, String> = emptyMap()
+    @JsonDeserialize(using = EnvironmentDeserializer::class) @JsonProperty("environment") val additionalEnvironmentVariables: Map<String, String> = emptyMap(),
+    @JsonProperty("ports") val additionalPortMappings: Set<PortMapping> = emptySet()
 ) {
     fun toRunConfiguration(taskName: String): TaskRunConfiguration {
         try {
             val parsedCommand = Command.parse(command)
 
-            return TaskRunConfiguration(container, parsedCommand, additionalEnvironmentVariables)
+            return TaskRunConfiguration(container, parsedCommand, additionalEnvironmentVariables, additionalPortMappings)
         } catch (e: InvalidCommandLineException) {
             throw ConfigurationException("Command for task '$taskName' is invalid: ${e.message}")
         }

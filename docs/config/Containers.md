@@ -229,7 +229,7 @@ containers:
 Running the container `build-env` will launch a container that uses the `ruby:2.4.3` image, with the port 123 on the host mapped to port 456 inside the
 container. For example, this means that if a web server is listening on port 456 within the container, it can be accessed from the host at `http://localhost:123`.
 
-The Dockerfile for the `ruby:2.4.3` does not need to contain an `EXPOSE` instruction for port 456.
+The Dockerfile for the `ruby:2.4.3` image does not need to contain an `EXPOSE` instruction for port 456.
 
 Note that this does not affect how containers launched by batect as part of the same task access ports used by each other, just how they're exposed to the host.
 Any container started as part of a task will be able to access any port on any other container at the address `container_name:container_port`. For example,

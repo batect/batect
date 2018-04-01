@@ -53,6 +53,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * explain the task lifecycle (read config, construct graph, pull images / build images, start containers, wait for healthy etc.)
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
 * make configuration-related error messages clearer and remove exception class names etc.
+* test against a variety of Docker versions (eg. earliest supported version and latest)
 * use batect to build batect (self-hosting)
 * move to Kotlin/Native
   * Why? Don't want to require users to install a JVM to use batect, also want to remove as much overhead as possible
@@ -109,3 +110,5 @@ If there's something you're really keen to see, pull requests are always welcome
   * test with different console colour schemes (eg. white background, black background, OS X default, Ubuntu default, Ubuntu GUI terminal default)
 * some way to group tasks shown when running `batect --list-tasks`
 * group display of options shown when running `batect --help`
+* add dependency relationship between containers and tasks (eg. running the app container requires running the build first - removes the need to specify
+  build task as a prerequisite on every task that starts the app)

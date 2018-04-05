@@ -56,10 +56,10 @@ dependencies {
     compile 'org.jetbrains.kotlin:kotlin-reflect'
     compile "org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serialization_version"
 
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.4'
-    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.4'
-    compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.4.1'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.4'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.5'
+    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.5'
+    compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.5'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.5'
     compile 'com.github.salomonbrys.kodein:kodein:4.1.0'
     compile 'com.squareup.okhttp3:okhttp:3.10.0'
 

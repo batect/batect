@@ -16,6 +16,7 @@
 
 package batect.cli.options
 
+import batect.cli.options.defaultvalues.StaticDefaultValueProvider
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo

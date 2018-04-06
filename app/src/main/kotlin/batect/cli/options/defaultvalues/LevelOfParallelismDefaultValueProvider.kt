@@ -21,5 +21,5 @@ object LevelOfParallelismDefaultValueProvider : DefaultValueProvider<Int> {
         get() = Runtime.getRuntime().availableProcessors() * 2
 
     override val description: String
-        get() = "defaults to ${value}, which is two times the number of CPU cores available"
+        get() = "defaults to $value, which is two times the number of CPU cores available"
 }

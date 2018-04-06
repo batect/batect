@@ -16,6 +16,7 @@
 
 package batect.cli.options
 
+import batect.cli.options.defaultvalues.DefaultValueProvider
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 

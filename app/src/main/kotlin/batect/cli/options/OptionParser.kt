@@ -16,6 +16,9 @@
 
 package batect.cli.options
 
+import batect.cli.options.defaultvalues.DefaultValueProvider
+import batect.cli.options.defaultvalues.StaticDefaultValueProvider
+
 class OptionParser {
     private val options = mutableSetOf<OptionDefinition>()
     private val optionNames = mutableMapOf<String, OptionDefinition>()

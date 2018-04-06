@@ -16,7 +16,7 @@
 
 package batect.cli
 
-import batect.cli.options.LevelOfParallelismDefaultValueProvider
+import batect.cli.options.defaultvalues.LevelOfParallelismDefaultValueProvider
 import batect.logging.FileLogSink
 import batect.logging.LogSink
 import batect.logging.NullLogSink

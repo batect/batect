@@ -16,7 +16,7 @@
 
 package batect.cli
 
-import batect.cli.options.LevelOfParallelismDefaultValueProvider
+import batect.cli.options.defaultvalues.LevelOfParallelismDefaultValueProvider
 import batect.cli.options.OptionParser
 import batect.cli.options.OptionParserContainer
 import batect.cli.options.OptionsParsingResult

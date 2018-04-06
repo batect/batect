@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.cli.options
+package batect.cli.options.defaultvalues
 
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat

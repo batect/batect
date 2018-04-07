@@ -124,22 +124,8 @@ class TaskStateMachine(
     }
 
     override fun commandForContainer(container: Container): Command? = graph.nodeFor(container).command
-
-    override fun additionalEnvironmentVariablesForContainer(container: Container): Map<String, String> {
-        if (isTaskContainer(container)) {
-            return graph.task.runConfiguration.additionalEnvironmentVariables
-        }
-
-        return emptyMap()
-    }
-
-    override fun additionalPortMappingsForContainer(container: Container): Set<PortMapping> {
-        if (isTaskContainer(container)) {
-            return graph.task.runConfiguration.additionalPortMappings
-        }
-
-        return emptySet()
-    }
+    override fun additionalEnvironmentVariablesForContainer(container: Container): Map<String, String> = graph.nodeFor(container).additionalEnvironmentVariables
+    override fun additionalPortMappingsForContainer(container: Container): Set<PortMapping> = graph.nodeFor(container).additionalPortMappings
 
     override fun isTaskContainer(container: Container) = container == graph.taskContainerNode.container
     override fun dependenciesOf(container: Container) = graph.nodeFor(container).dependsOnContainers

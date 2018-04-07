@@ -19,11 +19,13 @@ package batect.model
 import batect.config.Configuration
 import batect.config.Container
 import batect.config.ContainerMap
+import batect.config.PortMapping
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.os.Command
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.isEmptyMap
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -50,7 +52,7 @@ object DependencyGraphSpec : Spek({
 
         given("a task with no dependencies") {
             val container = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("some-container-command"))
-            val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"))
+            val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to "the value"), setOf(PortMapping(123, 456)))
             val task = Task("the-task", runConfig, dependsOnContainers = emptySet())
             val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
             val graph = DependencyGraph(config, task, commandResolver)
@@ -68,6 +70,14 @@ object DependencyGraphSpec : Spek({
 
                 it("takes its command from the command resolver") {
                     assertThat(node.command, equalTo(commandResolver.resolveCommand(container, task)))
+                }
+
+                it("takes the additional environment variables from the task") {
+                    assertThat(node.additionalEnvironmentVariables, equalTo(runConfig.additionalEnvironmentVariables))
+                }
+
+                it("takes the additional port mappings from the task") {
+                    assertThat(node.additionalPortMappings, equalTo(runConfig.additionalPortMappings))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -103,7 +113,7 @@ object DependencyGraphSpec : Spek({
         given("a task with a dependency") {
             val taskContainer = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("task-command-that-wont-be-used"))
             val dependencyContainer = Container("dependency-container", imageSourceDoesNotMatter(), command = Command.parse("dependency-command"))
-            val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
+            val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to "the value"), setOf(PortMapping(123, 456)))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(dependencyContainer.name))
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
             val graph = DependencyGraph(config, task, commandResolver)
@@ -121,6 +131,14 @@ object DependencyGraphSpec : Spek({
 
                 it("takes its command from the command resolver") {
                     assertThat(node.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                }
+
+                it("takes the additional environment variables from the task") {
+                    assertThat(node.additionalEnvironmentVariables, equalTo(runConfig.additionalEnvironmentVariables))
+                }
+
+                it("takes the additional port mappings from the task") {
+                    assertThat(node.additionalPortMappings, equalTo(runConfig.additionalPortMappings))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -145,6 +163,14 @@ object DependencyGraphSpec : Spek({
 
                 it("takes its command from the command resolver") {
                     assertThat(node.command, equalTo(commandResolver.resolveCommand(dependencyContainer, task)))
+                }
+
+                it("does not take the additional environment variables from the task") {
+                    assertThat(node.additionalEnvironmentVariables, isEmptyMap())
+                }
+
+                it("does not take the additional port mappings from the task") {
+                    assertThat(node.additionalPortMappings, isEmpty)
                 }
 
                 it("indicates that it is not the root node of the graph") {

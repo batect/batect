@@ -18,6 +18,7 @@ package batect.model
 
 import batect.config.Configuration
 import batect.config.Container
+import batect.config.PortMapping
 import batect.config.Task
 import batect.os.Command
 
@@ -70,15 +71,17 @@ data class DependencyGraph(val config: Configuration, val task: Task, val contai
 
             val dependencyNodes = resolveDependencies(dependencies, nodesAlreadyCreated, newPath)
             val command = containerCommandResolver.resolveCommand(container, task)
+            val additionalEnvironmentVariables = additionalEnvironmentVariables(isRootNode)
+            val additionalPortMappings = additionalPortMappings(isRootNode)
 
-            DependencyGraphNode(container, command, isRootNode, dependencyNodes, this)
+            DependencyGraphNode(container, command, additionalEnvironmentVariables, additionalPortMappings, isRootNode, dependencyNodes, this)
         }
     }
 
     private fun resolveDependencies(dependencies: Set<Container>, nodesAlreadyCreated: MutableMap<Container, DependencyGraphNode>, path: List<Container>): Set<DependencyGraphNode> {
         return dependencies
-                .map { getOrCreateNode(it, nodesAlreadyCreated, path) }
-                .toSet()
+            .map { getOrCreateNode(it, nodesAlreadyCreated, path) }
+            .toSet()
     }
 
     private fun findContainers(names: Set<String>, parentDescription: String): Set<Container> {
@@ -115,8 +118,8 @@ data class DependencyGraph(val config: Configuration, val task: Task, val contai
         val containersWithIncomingDependencies = names.drop(1).dropLast(1) + descriptionOfLast
 
         return containersWithOutgoingDependencies
-                .zip(containersWithIncomingDependencies) { outgoing, incoming -> "$outgoing depends on $incoming" }
-                .joinToString(", and ") + "."
+            .zip(containersWithIncomingDependencies) { outgoing, incoming -> "$outgoing depends on $incoming" }
+            .joinToString(", and ") + "."
     }
 
     private fun descriptionForContainerDependencyCycle(path: List<Container>): String {
@@ -125,14 +128,30 @@ data class DependencyGraph(val config: Configuration, val task: Task, val contai
         val otherContainers = names.drop(1)
         return "Container $firstContainer depends on " + otherContainers.joinToString(", which depends on ") + "."
     }
+
+    private fun additionalEnvironmentVariables(isRootNode: Boolean): Map<String, String> =
+        if (isRootNode) {
+            task.runConfiguration.additionalEnvironmentVariables
+        } else {
+            emptyMap()
+        }
+
+    private fun additionalPortMappings(isRootNode: Boolean): Set<PortMapping> =
+        if (isRootNode) {
+            task.runConfiguration.additionalPortMappings
+        } else {
+            emptySet()
+        }
 }
 
 data class DependencyGraphNode(
-        val container: Container,
-        val command: Command?,
-        val isRootNode: Boolean,
-        val dependsOn: Set<DependencyGraphNode>,
-        val graph: DependencyGraph) {
+    val container: Container,
+    val command: Command?,
+    val additionalEnvironmentVariables: Map<String, String>,
+    val additionalPortMappings: Set<PortMapping>,
+    val isRootNode: Boolean,
+    val dependsOn: Set<DependencyGraphNode>,
+    val graph: DependencyGraph) {
     val dependedOnBy: Set<DependencyGraphNode> by lazy { graph.allNodes.filter { it.dependsOn.contains(this) }.toSet() }
 
     val dependsOnContainers: Set<Container> by lazy { dependsOn.map { it.container }.toSet() }

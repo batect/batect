@@ -26,6 +26,18 @@ import com.natpryce.hamkrest.describe
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 
+fun <T, R : T> equalTo(expected: T?): Matcher<R?> =
+    object : Matcher<R?> {
+        override fun invoke(actual: R?): MatchResult = if (actual == expected) {
+            MatchResult.Match
+        } else {
+            MatchResult.Mismatch("was: ${describe(actual)}")
+        }
+
+        override val description: String get() = "is equal to ${describe(expected)}"
+        override val negatedDescription: String get() = "is not equal to ${describe(expected)}"
+    }
+
 fun withMessage(message: String): Matcher<Throwable> {
     return has(Throwable::message, equalTo(message))
 }

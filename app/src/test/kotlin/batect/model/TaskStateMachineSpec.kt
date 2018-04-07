@@ -37,11 +37,11 @@ import batect.model.steps.TaskStep
 import batect.os.Command
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
+import batect.testutils.equalTo
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.any
@@ -112,7 +112,7 @@ object TaskStateMachineSpec : Spek({
                     val secondStep = stateMachine.popNextStep()
 
                     it("returns the queued step on the first pop") {
-                        assertThat(firstStep, equalTo<TaskStep>(BeginTaskStep))
+                        assertThat(firstStep, equalTo(BeginTaskStep))
                     }
 
                     it("does not return a step on subsequent pops") {
@@ -186,9 +186,9 @@ object TaskStateMachineSpec : Spek({
                     val thirdStepPopped = stateMachine.popNextStep()
 
                     it("returns them in the order they were queued") {
-                        assertThat(firstStepPopped, equalTo<TaskStep>(step1))
-                        assertThat(secondStepPopped, equalTo<TaskStep>(step2))
-                        assertThat(thirdStepPopped, equalTo<TaskStep>(step3))
+                        assertThat(firstStepPopped, equalTo(step1))
+                        assertThat(secondStepPopped, equalTo(step2))
+                        assertThat(thirdStepPopped, equalTo(step3))
                     }
                 }
             }

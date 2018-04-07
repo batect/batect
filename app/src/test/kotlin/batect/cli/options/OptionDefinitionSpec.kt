@@ -17,10 +17,10 @@
 package batect.cli.options
 
 import batect.testutils.createForEachTest
+import batect.testutils.equalTo
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -117,7 +117,7 @@ object OptionDefinitionSpec : Spek({
                 setOf("--value", "-v").forEach { format ->
                     on("parsing a list of arguments that has the correct option name in the format $format") {
                         it("returns the parsing result from the concrete implementation") {
-                            assertThat(option.parse(listOf(format, "something")), equalTo<OptionParsingResult>(OptionParsingResult.ReadOption(1234)))
+                            assertThat(option.parse(listOf(format, "something")), equalTo(OptionParsingResult.ReadOption(1234)))
                         }
                     }
                 }
@@ -135,7 +135,7 @@ object OptionDefinitionSpec : Spek({
                         val result = option.parse(second + "do-stuff")
 
                         it("indicates that parsing failed") {
-                            assertThat(result, equalTo<OptionParsingResult>(OptionParsingResult.InvalidOption("Option '--value' (or '-v') cannot be specified multiple times.")))
+                            assertThat(result, equalTo(OptionParsingResult.InvalidOption("Option '--value' (or '-v') cannot be specified multiple times.")))
                         }
                     }
                 }
@@ -153,7 +153,7 @@ object OptionDefinitionSpec : Spek({
                         val result = option.parse(listOf("--value=other-thing", "do-stuff"))
 
                         it("indicates that parsing failed") {
-                            assertThat(result, equalTo<OptionParsingResult>(OptionParsingResult.InvalidOption("Option '--value' cannot be specified multiple times.")))
+                            assertThat(result, equalTo(OptionParsingResult.InvalidOption("Option '--value' cannot be specified multiple times.")))
                         }
                     }
                 }

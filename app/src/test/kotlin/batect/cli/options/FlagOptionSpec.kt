@@ -17,8 +17,8 @@
 package batect.cli.options
 
 import batect.testutils.createForEachTest
+import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -43,7 +43,7 @@ object FlagOptionSpec : Spek({
                 }
 
                 it("returns that one argument was consumed") {
-                    assertThat(result, equalTo<OptionParsingResult>(OptionParsingResult.ReadOption(1)))
+                    assertThat(result, equalTo(OptionParsingResult.ReadOption(1)))
                 }
             }
 
@@ -51,7 +51,7 @@ object FlagOptionSpec : Spek({
                 val result = option.parseValue(listOf("$format=something"))
 
                 it("returns that the argument is invalid") {
-                    assertThat(result, equalTo<OptionParsingResult>(OptionParsingResult.InvalidOption("The option '$format' does not take a value.")))
+                    assertThat(result, equalTo(OptionParsingResult.InvalidOption("The option '$format' does not take a value.")))
                 }
             }
         }

@@ -19,8 +19,8 @@ package batect.cli.options
 import batect.cli.options.defaultvalues.DefaultValueProvider
 import batect.cli.options.defaultvalues.StaticDefaultValueProvider
 import batect.testutils.createForEachTest
+import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
@@ -54,7 +54,7 @@ object ValueOptionSpec : Spek({
                         val result = option.parse(listOf(format, "thing", "do-stuff"))
 
                         it("indicates that parsing succeeded and that two arguments were consumed") {
-                            assertThat(result, equalTo<OptionParsingResult>(OptionParsingResult.ReadOption(2)))
+                            assertThat(result, equalTo(OptionParsingResult.ReadOption(2)))
                         }
 
                         it("sets the option's value") {
@@ -66,7 +66,7 @@ object ValueOptionSpec : Spek({
                         val result = option.parse(listOf("$format=thing", "do-stuff"))
 
                         it("indicates that parsing succeeded and that one argument was consumed") {
-                            assertThat(result, equalTo<OptionParsingResult>(OptionParsingResult.ReadOption(1)))
+                            assertThat(result, equalTo(OptionParsingResult.ReadOption(1)))
                         }
 
                         it("sets the option's value") {
@@ -78,7 +78,7 @@ object ValueOptionSpec : Spek({
                         val result = option.parse(listOf(format, "invalid-thing", "do-stuff"))
 
                         it("indicates that parsing failed") {
-                            assertThat(result, equalTo<OptionParsingResult>(OptionParsingResult.InvalidOption("The value 'invalid-thing' for option '$format' is invalid: that's not allowed")))
+                            assertThat(result, equalTo(OptionParsingResult.InvalidOption("The value 'invalid-thing' for option '$format' is invalid: that's not allowed")))
                         }
                     }
 
@@ -86,7 +86,7 @@ object ValueOptionSpec : Spek({
                         val result = option.parse(listOf("$format=", "do-stuff"))
 
                         it("indicates that parsing failed") {
-                            assertThat(result, equalTo<OptionParsingResult>(OptionParsingResult.InvalidOption("Option '$format=' is in an invalid format, you must provide a value after '='.")))
+                            assertThat(result, equalTo(OptionParsingResult.InvalidOption("Option '$format=' is in an invalid format, you must provide a value after '='.")))
                         }
                     }
 
@@ -94,7 +94,7 @@ object ValueOptionSpec : Spek({
                         val result = option.parse(listOf(format))
 
                         it("indicates that parsing failed") {
-                            assertThat(result, equalTo<OptionParsingResult>(OptionParsingResult.InvalidOption("Option '$format' requires a value to be provided, either in the form '$format=<value>' or '$format <value>'.")))
+                            assertThat(result, equalTo(OptionParsingResult.InvalidOption("Option '$format' requires a value to be provided, either in the form '$format=<value>' or '$format <value>'.")))
                         }
                     }
                 }

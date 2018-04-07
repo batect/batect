@@ -18,13 +18,12 @@ package batect.model
 
 import batect.logging.Logger
 import batect.logging.LoggerFactory
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.nhaarman.mockito_kotlin.mock
 import batect.model.steps.BeginTaskStep
-import batect.model.steps.TaskStep
 import batect.testutils.InMemoryLogSink
+import batect.testutils.equalTo
+import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -54,7 +53,7 @@ object TaskStateMachineProviderSpec : Spek({
             }
 
             it("queues a 'begin task' step") {
-                assertThat(firstStep, equalTo<TaskStep>(BeginTaskStep))
+                assertThat(firstStep, equalTo(BeginTaskStep))
             }
         }
     }

@@ -17,9 +17,9 @@
 package batect.cli.options
 
 import batect.cli.options.defaultvalues.StaticDefaultValueProvider
+import batect.testutils.equalTo
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doReturn
@@ -44,7 +44,7 @@ object OptionParserSpec : Spek({
                     val result = parser.parseOptions(emptyList())
 
                     it("indicates that parsing succeeded and that no arguments were consumed") {
-                        assertThat(result, equalTo<OptionsParsingResult>(OptionsParsingResult.ReadOptions(0)))
+                        assertThat(result, equalTo(OptionsParsingResult.ReadOptions(0)))
                     }
                 }
 
@@ -52,7 +52,7 @@ object OptionParserSpec : Spek({
                     val result = parser.parseOptions(listOf("some-argument"))
 
                     it("indicates that parsing succeeded and that no arguments were consumed") {
-                        assertThat(result, equalTo<OptionsParsingResult>(OptionsParsingResult.ReadOptions(0)))
+                        assertThat(result, equalTo(OptionsParsingResult.ReadOptions(0)))
                     }
                 }
             }
@@ -76,7 +76,7 @@ object OptionParserSpec : Spek({
                     val result = parser.parseOptions(emptyList())
 
                     it("indicates that parsing succeeded and that no arguments were consumed") {
-                        assertThat(result, equalTo<OptionsParsingResult>(OptionsParsingResult.ReadOptions(0)))
+                        assertThat(result, equalTo(OptionsParsingResult.ReadOptions(0)))
                     }
 
                     it("does not ask the option to parse a value") {
@@ -88,7 +88,7 @@ object OptionParserSpec : Spek({
                     val result = parser.parseOptions(listOf("do-stuff"))
 
                     it("indicates that parsing succeeded and that no arguments were consumed") {
-                        assertThat(result, equalTo<OptionsParsingResult>(OptionsParsingResult.ReadOptions(0)))
+                        assertThat(result, equalTo(OptionsParsingResult.ReadOptions(0)))
                     }
 
                     it("does not ask the option to parse a value") {
@@ -100,7 +100,7 @@ object OptionParserSpec : Spek({
                     val result = parser.parseOptions(listOf("--something-else"))
 
                     it("indicates that parsing succeeded and that no arguments were consumed") {
-                        assertThat(result, equalTo<OptionsParsingResult>(OptionsParsingResult.InvalidOptions("Invalid option '--something-else'. Run 'batect --help' for a list of valid options.")))
+                        assertThat(result, equalTo(OptionsParsingResult.InvalidOptions("Invalid option '--something-else'. Run 'batect --help' for a list of valid options.")))
                     }
 
                     it("does not ask the option to parse a value") {
@@ -115,7 +115,7 @@ object OptionParserSpec : Spek({
                             val result = parser.parseOptions(listOf(format))
 
                             it("indicates that parsing succeeded and that one argument was consumed") {
-                                assertThat(result, equalTo<OptionsParsingResult>(OptionsParsingResult.ReadOptions(1)))
+                                assertThat(result, equalTo(OptionsParsingResult.ReadOptions(1)))
                             }
 
                             it("asks the option to parse a value from the correct list of arguments") {
@@ -128,7 +128,7 @@ object OptionParserSpec : Spek({
                             val result = parser.parseOptions(listOf(format, "some-other-arg"))
 
                             it("indicates that parsing succeeded and that two arguments were consumed") {
-                                assertThat(result, equalTo<OptionsParsingResult>(OptionsParsingResult.ReadOptions(2)))
+                                assertThat(result, equalTo(OptionsParsingResult.ReadOptions(2)))
                             }
 
                             it("asks the option to parse a value from the correct list of arguments") {
@@ -141,7 +141,7 @@ object OptionParserSpec : Spek({
                             val result = parser.parseOptions(listOf(format))
 
                             it("indicates that parsing failed") {
-                                assertThat(result, equalTo<OptionsParsingResult>(OptionsParsingResult.InvalidOptions("That's not allowed")))
+                                assertThat(result, equalTo(OptionsParsingResult.InvalidOptions("That's not allowed")))
                             }
 
                             it("asks the option to parse a value from the correct list of arguments") {
@@ -157,7 +157,7 @@ object OptionParserSpec : Spek({
                             val result = parser.parseOptions(listOf(format, "something", format, format, "some-other-arg"))
 
                             it("indicates that parsing succeeded and that four arguments were consumed") {
-                                assertThat(result, equalTo<OptionsParsingResult>(OptionsParsingResult.ReadOptions(4)))
+                                assertThat(result, equalTo(OptionsParsingResult.ReadOptions(4)))
                             }
 
                             it("asks the option to parse values from the correct list of arguments each time") {

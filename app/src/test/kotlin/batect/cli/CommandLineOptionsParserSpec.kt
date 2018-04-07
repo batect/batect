@@ -16,8 +16,8 @@
 
 package batect.cli
 
+import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -31,7 +31,7 @@ object CommandLineOptionsParserSpec : Spek({
                 val result = CommandLineOptionsParser().parse(emptyList())
 
                 it("returns an error message") {
-                    assertThat(result, equalTo<CommandLineOptionsParsingResult>(CommandLineOptionsParsingResult.Failed("No task name provided.")))
+                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("No task name provided.")))
                 }
             }
         }
@@ -41,7 +41,7 @@ object CommandLineOptionsParserSpec : Spek({
                 val result = CommandLineOptionsParser().parse(listOf("some-task"))
 
                 it("returns a set of options with just the task name populated") {
-                    assertThat(result, equalTo<CommandLineOptionsParsingResult>(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
+                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
                         taskName = "some-task"
                     ))))
                 }
@@ -53,7 +53,7 @@ object CommandLineOptionsParserSpec : Spek({
                 val result = CommandLineOptionsParser().parse(listOf("some-task", "some-extra-arg"))
 
                 it("returns an error message") {
-                    assertThat(result, equalTo<CommandLineOptionsParsingResult>(CommandLineOptionsParsingResult.Failed(
+                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed(
                         "Too many arguments provided. The first extra argument is 'some-extra-arg'.\n" +
                             "To pass additional arguments to the task command, prefix them with '--', for example, 'batect my-task -- --extra-option-1 --extra-option-2 value'."
                     )))
@@ -66,7 +66,7 @@ object CommandLineOptionsParserSpec : Spek({
                 val result = CommandLineOptionsParser().parse(listOf("some-task", "--", "some-extra-arg"))
 
                 it("returns a set of options with the task name and additional arguments populated") {
-                    assertThat(result, equalTo<CommandLineOptionsParsingResult>(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
+                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
                         taskName = "some-task",
                         additionalTaskCommandArguments = listOf("some-extra-arg")
                     ))))
@@ -79,7 +79,7 @@ object CommandLineOptionsParserSpec : Spek({
                 val result = CommandLineOptionsParser().parse(listOf("--quiet", "some-task"))
 
                 it("returns a set of options with the task name populated and the flag set") {
-                    assertThat(result, equalTo<CommandLineOptionsParsingResult>(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
+                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
                         forceQuietOutputMode = true,
                         taskName = "some-task"
                     ))))
@@ -92,7 +92,7 @@ object CommandLineOptionsParserSpec : Spek({
                 val result = CommandLineOptionsParser().parse(listOf("--quiet", "some-task", "some-extra-arg"))
 
                 it("returns an error message") {
-                    assertThat(result, equalTo<CommandLineOptionsParsingResult>(CommandLineOptionsParsingResult.Failed(
+                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed(
                         "Too many arguments provided. The first extra argument is 'some-extra-arg'.\n" +
                             "To pass additional arguments to the task command, prefix them with '--', for example, 'batect my-task -- --extra-option-1 --extra-option-2 value'."
                     )))
@@ -126,7 +126,7 @@ object CommandLineOptionsParserSpec : Spek({
                     val result = CommandLineOptionsParser().parse(args)
 
                     it("returns a set of options with the expected options populated") {
-                        assertThat(result, equalTo<CommandLineOptionsParsingResult>(CommandLineOptionsParsingResult.Succeeded(expectedResult)))
+                        assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(expectedResult)))
                     }
                 }
             }

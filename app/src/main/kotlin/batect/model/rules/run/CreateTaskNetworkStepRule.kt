@@ -14,18 +14,15 @@
    limitations under the License.
 */
 
-package batect.utils
+package batect.model.rules.run
 
-inline fun <T, V> Iterable<T>.mapToSet(transform: (T) -> V): Set<V> =
-    this.mapTo(mutableSetOf(), transform)
+import batect.model.events.TaskEvent
+import batect.model.rules.TaskStepRule
+import batect.model.rules.TaskStepRuleEvaluationResult
+import batect.model.steps.CreateTaskNetworkStep
 
-inline fun <K, V, R> Map<K, V>.mapToSet(transform: (Map.Entry<K, V>) -> R): Set<R> =
-    this.mapTo(mutableSetOf(), transform)
-
-inline fun <T, R> Iterable<T>.flatMapToSet(transform: (T) -> Set<R>): Set<R> =
-    this.fold(emptySet()) { accumulated, item ->
-        accumulated + transform(item)
+object CreateTaskNetworkStepRule : TaskStepRule() {
+    override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
+        return TaskStepRuleEvaluationResult.Ready(CreateTaskNetworkStep)
     }
-
-inline fun <T> Iterable<T>.filterToSet(predicate: (T) -> Boolean): Set<T> =
-    this.filterTo(mutableSetOf(), predicate)
+}

@@ -24,19 +24,19 @@ import batect.docker.DockerNetwork
 import batect.os.Command
 import java.nio.file.Path
 
-sealed class TaskStep {
-    override fun toString(): String = this.javaClass.canonicalName
-}
+sealed class TaskStep
 
 data class BuildImageStep(val projectName: String, val container: Container) : TaskStep() {
-    override fun toString() = super.toString() + "(project name: '$projectName', container: '${container.name}')"
+    override fun toString() = "${this.javaClass.simpleName}(project name: '$projectName', container: '${container.name}')"
 }
 
 data class PullImageStep(val imageName: String) : TaskStep() {
-    override fun toString() = super.toString() + "(image name: '$imageName')"
+    override fun toString() = "${this.javaClass.simpleName}(image name: '$imageName')"
 }
 
-object CreateTaskNetworkStep : TaskStep()
+object CreateTaskNetworkStep : TaskStep() {
+    override fun toString(): String = this.javaClass.simpleName
+}
 
 data class CreateContainerStep(
     val container: Container,
@@ -46,35 +46,39 @@ data class CreateContainerStep(
     val image: DockerImage,
     val network: DockerNetwork
 ) : TaskStep() {
-    override fun toString() = super.toString() + "(container: '${container.name}', command: '${(command ?: "")}', additional environment variables: $additionalEnvironmentVariables, additional port mappings: $additionalPortMappings, image '${image.id}', network: '${network.id}')"
+    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', command: ${command?.parsedCommand
+        ?: "null"}, " +
+        "additional environment variables: [${additionalEnvironmentVariables.map { "${it.key}='${it.value}'" }.joinToString(", ")}], " +
+        "additional port mappings: $additionalPortMappings, " +
+        "image: '${image.id}', network: '${network.id}')"
 }
 
 data class RunContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
-    override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
+    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 
 data class StartContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
-    override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
+    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 
 data class WaitForContainerToBecomeHealthyStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
-    override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
+    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 
 sealed class CleanupStep : TaskStep()
 
 data class StopContainerStep(val container: Container, val dockerContainer: DockerContainer) : CleanupStep() {
-    override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
+    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 
 data class RemoveContainerStep(val container: Container, val dockerContainer: DockerContainer) : CleanupStep() {
-    override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
+    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 
 data class DeleteTemporaryFileStep(val filePath: Path) : CleanupStep() {
-    override fun toString() = super.toString() + "(file path: '$filePath')"
+    override fun toString() = "${this.javaClass.simpleName}(file path: '$filePath')"
 }
 
 data class DeleteTaskNetworkStep(val network: DockerNetwork) : CleanupStep() {
-    override fun toString() = super.toString() + "(network: '${network.id}')"
+    override fun toString() = "${this.javaClass.simpleName}(network: '${network.id}')"
 }

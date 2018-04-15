@@ -370,6 +370,10 @@ object TaskStateMachineSpec : Spek({
                                     it("sets the cleanup instruction to that provided by the error message formatter") {
                                         assertThat(stateMachine.manualCleanupInstructions, equalTo("Do this to clean up"))
                                     }
+
+                                    it("indicates that the task has failed") {
+                                        assertThat(stateMachine.taskHasFailed, equalTo(true))
+                                    }
                                 }
                             }
                         }
@@ -458,6 +462,10 @@ object TaskStateMachineSpec : Spek({
                                     it("does not provide any cleanup instructions") {
                                         assertThat(stateMachine.manualCleanupInstructions, equalTo(""))
                                     }
+
+                                    it("indicates that the task has failed") {
+                                        assertThat(stateMachine.taskHasFailed, equalTo(true))
+                                    }
                                 }
                             }
 
@@ -473,6 +481,10 @@ object TaskStateMachineSpec : Spek({
 
                                     it("does not provide any cleanup instructions") {
                                         assertThat(stateMachine.manualCleanupInstructions, equalTo(""))
+                                    }
+
+                                    it("indicates that the task has succeeded") {
+                                        assertThat(stateMachine.taskHasFailed, equalTo(false))
                                     }
                                 }
                             }
@@ -579,6 +591,10 @@ object TaskStateMachineSpec : Spek({
                                     it("sets the cleanup instruction to that provided by the error message formatter") {
                                         assertThat(stateMachine.manualCleanupInstructions, equalTo("Do this to clean up"))
                                     }
+
+                                    it("indicates that the task has failed") {
+                                        assertThat(stateMachine.taskHasFailed, equalTo(true))
+                                    }
                                 }
                             }
                         }
@@ -616,6 +632,10 @@ object TaskStateMachineSpec : Spek({
                                     it("does not provide any cleanup instructions") {
                                         assertThat(stateMachine.manualCleanupInstructions, equalTo(""))
                                     }
+
+                                    it("indicates that the task has failed") {
+                                        assertThat(stateMachine.taskHasFailed, equalTo(true))
+                                    }
                                 }
                             }
                         }
@@ -648,6 +668,10 @@ object TaskStateMachineSpec : Spek({
 
                                     it("sets the cleanup instruction to that provided by the error message formatter") {
                                         assertThat(stateMachine.manualCleanupInstructions, equalTo("Do this to clean up"))
+                                    }
+
+                                    it("indicates that the task has failed") {
+                                        assertThat(stateMachine.taskHasFailed, equalTo(true))
                                     }
                                 }
                             }

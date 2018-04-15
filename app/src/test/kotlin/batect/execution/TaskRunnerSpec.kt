@@ -22,9 +22,8 @@ import batect.config.ContainerMap
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
-import batect.logging.Logger
 import batect.execution.model.events.RunningContainerExitedEvent
-import batect.execution.model.events.TaskFailedEvent
+import batect.logging.Logger
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
@@ -86,6 +85,7 @@ object TaskRunnerSpec : Spek({
         describe("running a task") {
             given("the task succeeds") {
                 beforeEachTest {
+                    whenever(stateMachine.taskHasFailed).thenReturn(false)
                     whenever(stateMachine.getAllEvents()).thenReturn(setOf(
                         RunningContainerExitedEvent(container, 100)
                     ))
@@ -116,10 +116,8 @@ object TaskRunnerSpec : Spek({
             }
 
             given("the task fails") {
-                val failureEvent = mock<TaskFailedEvent>()
-
                 beforeEachTest {
-                    whenever(stateMachine.getAllEvents()).thenReturn(setOf(failureEvent))
+                    whenever(stateMachine.taskHasFailed).thenReturn(true)
                     whenever(stateMachine.manualCleanupInstructions).thenReturn("Do this to clean up")
                 }
 
@@ -154,6 +152,7 @@ object TaskRunnerSpec : Spek({
 
             given("the task neither succeeds or fails") {
                 beforeEachTest {
+                    whenever(stateMachine.taskHasFailed).thenReturn(false)
                     whenever(stateMachine.getAllEvents()).thenReturn(emptySet())
                 }
 

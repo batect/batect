@@ -16,7 +16,6 @@
 
 package batect.execution
 
-import batect.logging.Logger
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
@@ -30,6 +29,7 @@ import batect.execution.model.stages.RunStagePlanner
 import batect.execution.model.stages.Stage
 import batect.execution.model.stages.StepReady
 import batect.execution.model.steps.TaskStep
+import batect.logging.Logger
 import batect.ui.FailureErrorMessageFormatter
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -42,14 +42,16 @@ class TaskStateMachine(
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
     val logger: Logger
 ) : TaskEventSink {
-    private val events: MutableSet<TaskEvent> = mutableSetOf()
-    private val lock = ReentrantLock()
-    private var currentStage: Stage = runStagePlanner.createStage(graph)
-    private var taskHasFailed: Boolean = false
-    private var taskFailedDuringCleanup: Boolean = false
+    var taskHasFailed: Boolean = false
+        private set
 
     var manualCleanupInstructions: String = ""
         private set
+
+    private val events: MutableSet<TaskEvent> = mutableSetOf()
+    private val lock = ReentrantLock()
+    private var currentStage: Stage = runStagePlanner.createStage(graph)
+    private var taskFailedDuringCleanup: Boolean = false
 
     fun popNextStep(stepsStillRunning: Boolean): TaskStep? {
         lock.withLock {
@@ -101,6 +103,7 @@ class TaskStateMachine(
     private fun handleNoStepsReady(stepsStillRunning: Boolean): Nothing? {
         if (!stepsStillRunning) {
             if (!taskFailedDuringCleanup) {
+                taskHasFailed = true
                 throw IllegalStateException("None of the remaining steps are ready to execute, but there are no steps currently running.")
             }
         }

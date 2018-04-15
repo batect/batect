@@ -18,9 +18,8 @@ package batect.execution
 
 import batect.config.Configuration
 import batect.config.Task
-import batect.logging.Logger
 import batect.execution.model.events.RunningContainerExitedEvent
-import batect.execution.model.events.TaskFailedEvent
+import batect.logging.Logger
 import batect.ui.EventLogger
 import batect.ui.EventLoggerProvider
 
@@ -56,7 +55,7 @@ data class TaskRunner(
             data("task", task.name)
         }
 
-        if (taskFailed(stateMachine)) {
+        if (stateMachine.taskHasFailed) {
             return onTaskFailed(eventLogger, task, stateMachine)
         }
 
@@ -91,6 +90,4 @@ data class TaskRunner(
 
         return containerExitedEvent.exitCode
     }
-
-    private fun taskFailed(stateMachine: TaskStateMachine): Boolean = stateMachine.getAllEvents().any { it is TaskFailedEvent }
 }

@@ -14,23 +14,33 @@ If there's something you're really keen to see, pull requests are always welcome
 ### Features
 * automatically enable `--no-color` or `--simple-output` if console doesn't support it (use terminfo database rather than current detection system)
 * show more detailed image pull progress (eg. `build-env: Pulling some-image:1.2.3: 25%`) - requires using Docker API to get this level of detail
+  * this also applies when building an image and the first step is to pull a base image
 * performance improvements
   * prioritise running steps that lie on the critical path (eg. favour pulling image for leaf of dependency graph over creating container for task container)
   * print updates to the console asynchronously (they currently block whatever thread posts the event or is starting the step)
   * batch up printing updates to the console when using fancy output mode, rather than reprinting progress information on every event
+  * only submit one `docker build` request for each build directory, rather than once per container that references that directory
 * check that Docker client and server are compatible versions
 * warn when using an image without a tag or with tag `latest`
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 * support for Windows
 * don't allow both `start` and `dependencies` to be specified (Jackson doesn't support this natively)
 * remove `start` on tasks (has been replaced by `dependencies`)
+* show progress information when cleaning up temporary files in fancy output mode
 
 ### Bugs
 * fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information
   doesn't correctly overwrite previous updates
   * handle the case where the console is resized while batect is running
+* remove volumes when removing containers
+* include container hostnames in `no_proxy` environment variable, if set
+* automatically create home directory specified with `run_as_current_user` with correct permissions
+  * can't just `docker exec mkdir <home dir>` because the `mkdir` will run as the user, which might not have permission to create the directory
+  * mount a volume in `/tmp` from the host? Need to check if this will still allow nested mounts (eg. create `/home/the-user` but then mount `/home/the-user/.sometoolcache`) and if order of mounts matters
+* log full stack trace whenever an exception is thrown to the user (not done in `Application` at the moment)
 
 ### Other
+* replace factories with references to constructors
 * logging (for batect internals)
   * include process ID with each message (this is non-trivial in versions prior to Java 9: https://stackoverflow.com/questions/35842/how-can-a-java-program-get-its-own-process-id)
 * option to print full stack trace on non-fatal exceptions
@@ -44,6 +54,7 @@ If there's something you're really keen to see, pull requests are always welcome
       * frontend
       * backend
     * Android app
+    * pushing app to Kubernetes
   * add FAQs
     * when to mount files / directories as a volume, and when to copy them into the image
     * how to run something when the container starts, regardless of the task's command line (eg. `ENTRYPOINT` with shell script and `exec`, similar to the example in [the docs](https://docs.docker.com/engine/reference/builder/#entrypoint))
@@ -54,16 +65,18 @@ If there's something you're really keen to see, pull requests are always welcome
 * make configuration-related error messages clearer and remove exception class names etc.
 * test against a variety of Docker versions (eg. earliest supported version and latest)
 * use batect to build batect (self-hosting)
+* only deploy docs on release, not on every build
+* switch to [MockK](https://github.com/oleksiyp/mockk) - Kotlin specific library with clearer upgrade path to Kotlin/Native
 * move to Kotlin/Native
   * Why? Don't want to require users to install a JVM to use batect, also want to remove as much overhead as possible
 
-### Things that would have to be changed when moving to Kotlin/Native
+#### Things that would have to be changed when moving to Kotlin/Native
 * would most likely need to replace YAML parsing code (although this would be a good opportunity to simplify it a
   bit and do more things while parsing the document rather than afterwards)
 * file I/O and path resolution logic
 * process creation / monitoring
 
-### Things blocking move to Kotlin/Native
+#### Things blocking move to Kotlin/Native
 * unit testing support and associated library
 * file I/O support
 * process creation / monitoring support

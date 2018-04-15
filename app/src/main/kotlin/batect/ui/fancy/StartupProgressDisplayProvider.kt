@@ -16,10 +16,10 @@
 
 package batect.ui.fancy
 
-import batect.execution.DependencyGraph
+import batect.execution.ContainerDependencyGraph
 
 class StartupProgressDisplayProvider {
-    fun createForDependencyGraph(graph: DependencyGraph): StartupProgressDisplay {
+    fun createForDependencyGraph(graph: ContainerDependencyGraph): StartupProgressDisplay {
         val lines = graph.allNodes.map { ContainerStartupProgressLine(it.container, it.dependsOnContainers) }
 
         return StartupProgressDisplay(lines)

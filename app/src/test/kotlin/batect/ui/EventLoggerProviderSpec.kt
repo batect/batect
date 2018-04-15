@@ -16,7 +16,7 @@
 
 package batect.ui
 
-import batect.execution.DependencyGraph
+import batect.execution.ContainerDependencyGraph
 import batect.execution.RunOptions
 import batect.ui.fancy.FancyEventLogger
 import batect.ui.fancy.StartupProgressDisplay
@@ -39,7 +39,7 @@ object EventLoggerProviderSpec : Spek({
         val failureErrorMessageFormatter = mock<FailureErrorMessageFormatter>()
         val console = mock<Console>()
         val errorConsole = mock<Console>()
-        val graph = mock<DependencyGraph>()
+        val graph = mock<ContainerDependencyGraph>()
         val runOptions = mock<RunOptions>()
 
         given("quiet output mode has not been forced on") {

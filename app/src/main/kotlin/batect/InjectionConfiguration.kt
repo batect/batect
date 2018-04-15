@@ -31,7 +31,7 @@ import batect.docker.DockerContainerCreationCommandGenerator
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerImageLabellingStrategy
 import batect.execution.ContainerCommandResolver
-import batect.execution.DependencyGraphProvider
+import batect.execution.ContainerDependencyGraphProvider
 import batect.execution.ParallelExecutionManagerProvider
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
@@ -129,7 +129,7 @@ private val dockerModule = Kodein.Module {
 private val executionModule = Kodein.Module {
     bind<CleanupStagePlanner>() with singletonWithLogger { logger -> CleanupStagePlanner(logger) }
     bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance()) }
-    bind<DependencyGraphProvider>() with singletonWithLogger { logger -> DependencyGraphProvider(instance(), logger) }
+    bind<ContainerDependencyGraphProvider>() with singletonWithLogger { logger -> ContainerDependencyGraphProvider(instance(), logger) }
     bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance(), instance()) }
     bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance()) }
     bind<RunOptions>() with singleton { RunOptions(commandLineOptions()) }

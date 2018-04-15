@@ -40,8 +40,8 @@ import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 
-object DependencyGraphSpec : Spek({
-    describe("a dependency graph") {
+object ContainerDependencyGraphSpec : Spek({
+    describe("a container dependency graph") {
         val commandResolver = mock<ContainerCommandResolver> {
             on { resolveCommand(any(), any()) } doAnswer {
                 val container = it.getArgument<Container>(0)
@@ -55,7 +55,7 @@ object DependencyGraphSpec : Spek({
             val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to "the value"), setOf(PortMapping(123, 456)))
             val task = Task("the-task", runConfig, dependsOnContainers = emptySet())
             val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
-            val graph = DependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -105,7 +105,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ DependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'some-non-existent-container' referenced by task 'the-task' does not exist.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'some-non-existent-container' referenced by task 'the-task' does not exist.")))
                 }
             }
         }
@@ -116,7 +116,7 @@ object DependencyGraphSpec : Spek({
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to "the value"), setOf(PortMapping(123, 456)))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(dependencyContainer.name))
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
-            val graph = DependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -187,7 +187,7 @@ object DependencyGraphSpec : Spek({
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(dependencyContainer1.name, dependencyContainer2.name, dependencyContainer3.name))
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, dependencyContainer3))
-            val graph = DependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -244,7 +244,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ DependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-dependency' referenced by task 'the-task' does not exist.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-dependency' referenced by task 'the-task' does not exist.")))
                 }
             }
         }
@@ -257,7 +257,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ DependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The task 'the-task' cannot start the container 'some-container' and also run it.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The task 'the-task' cannot start the container 'some-container' and also run it.")))
                 }
             }
         }
@@ -270,7 +270,7 @@ object DependencyGraphSpec : Spek({
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, dependencyContainer3))
-            val graph = DependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -326,7 +326,7 @@ object DependencyGraphSpec : Spek({
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2))
-            val graph = DependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -401,7 +401,7 @@ object DependencyGraphSpec : Spek({
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, containerWithNoDependencies))
-            val graph = DependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -477,7 +477,7 @@ object DependencyGraphSpec : Spek({
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, containerB, containerA))
-            val graph = DependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -551,7 +551,7 @@ object DependencyGraphSpec : Spek({
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(taskDependencyContainer.name))
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, taskDependencyContainer, otherDependencyContainer))
-            val graph = DependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -624,7 +624,7 @@ object DependencyGraphSpec : Spek({
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(dependencyContainer.name))
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
-            val graph = DependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -679,7 +679,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ DependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-container' referenced by container 'some-container' does not exist.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-container' referenced by container 'some-container' does not exist.")))
                 }
             }
         }
@@ -693,7 +693,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ DependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-container' referenced by container 'dependency-container' does not exist.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-container' referenced by container 'dependency-container' does not exist.")))
                 }
             }
         }
@@ -706,7 +706,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ DependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'some-container' cannot depend on itself.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'some-container' cannot depend on itself.")))
                 }
             }
         }
@@ -720,7 +720,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ DependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'dependency-container' cannot depend on itself.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'dependency-container' cannot depend on itself.")))
                 }
             }
         }
@@ -734,7 +734,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ DependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-a' depends on 'container-b', which depends on 'container-a'.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-a' depends on 'container-b', which depends on 'container-a'.")))
                 }
             }
         }
@@ -749,7 +749,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ DependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-a' depends on 'container-b', which depends on 'container-c', which depends on 'container-a'.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-a' depends on 'container-b', which depends on 'container-c', which depends on 'container-a'.")))
                 }
             }
         }
@@ -763,7 +763,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ DependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on the task container 'container-a'.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on the task container 'container-a'.")))
                 }
             }
         }
@@ -778,7 +778,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ DependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on the task container 'container-a'.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on the task container 'container-a'.")))
                 }
             }
         }
@@ -794,7 +794,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ DependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on 'container-d', and 'container-d' depends on the task container 'container-a'.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on 'container-d', and 'container-d' depends on the task container 'container-a'.")))
                 }
             }
         }
@@ -809,7 +809,7 @@ object DependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ DependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on 'container-b'.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on 'container-b'.")))
                 }
             }
         }

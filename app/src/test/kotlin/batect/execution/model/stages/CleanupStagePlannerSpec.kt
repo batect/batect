@@ -28,7 +28,7 @@ import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
 import batect.logging.Logger
 import batect.execution.ContainerCommandResolver
-import batect.execution.DependencyGraph
+import batect.execution.ContainerDependencyGraph
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.TaskEvent
@@ -69,7 +69,7 @@ object CleanupStagePlannerSpec : Spek({
         val container2 = Container("container-2", PullImage("image-2"), dependencies = setOf(container1.name))
         val taskContainer = Container(task.runConfiguration.container, BuildImage("./task-container"), dependencies = setOf(container1.name, container2.name))
         val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2))
-        val graph = DependencyGraph(config, task, commandResolver)
+        val graph = ContainerDependencyGraph(config, task, commandResolver)
         val events by createForEachTest { mutableSetOf<TaskEvent>() }
         val logger = Logger("cleanup-stage-test", InMemoryLogSink())
         val planner = CleanupStagePlanner(logger)

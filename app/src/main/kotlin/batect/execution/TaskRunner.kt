@@ -25,7 +25,7 @@ import batect.ui.EventLoggerProvider
 
 data class TaskRunner(
     private val eventLoggerProvider: EventLoggerProvider,
-    private val graphProvider: DependencyGraphProvider,
+    private val graphProvider: ContainerDependencyGraphProvider,
     private val stateMachineProvider: TaskStateMachineProvider,
     private val executionManagerProvider: ParallelExecutionManagerProvider,
     private val logger: Logger

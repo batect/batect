@@ -27,7 +27,7 @@ class TaskStateMachineProvider(
     private val failureErrorMessageFormatter: FailureErrorMessageFormatter,
     private val loggerFactory: LoggerFactory
 ) {
-    fun createStateMachine(graph: DependencyGraph, runOptions: RunOptions): TaskStateMachine =
+    fun createStateMachine(graph: ContainerDependencyGraph, runOptions: RunOptions): TaskStateMachine =
         TaskStateMachine(
             graph,
             runOptions,

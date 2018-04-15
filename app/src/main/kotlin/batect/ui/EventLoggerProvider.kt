@@ -16,7 +16,7 @@
 
 package batect.ui
 
-import batect.execution.DependencyGraph
+import batect.execution.ContainerDependencyGraph
 import batect.execution.RunOptions
 import batect.ui.fancy.CleanupProgressDisplay
 import batect.ui.fancy.FancyEventLogger
@@ -33,7 +33,7 @@ class EventLoggerProvider(
     private val forceSimpleOutputMode: Boolean,
     private val forceQuietOutputMode: Boolean
 ) {
-    fun getEventLogger(graph: DependencyGraph, runOptions: RunOptions): EventLogger {
+    fun getEventLogger(graph: ContainerDependencyGraph, runOptions: RunOptions): EventLogger {
         if (forceQuietOutputMode) {
             return QuietEventLogger(failureErrorMessageFormatter, runOptions, errorConsole)
         }

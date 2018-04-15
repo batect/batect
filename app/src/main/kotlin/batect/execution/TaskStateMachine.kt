@@ -35,7 +35,7 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 class TaskStateMachine(
-    val graph: DependencyGraph,
+    val graph: ContainerDependencyGraph,
     val runOptions: RunOptions,
     val runStagePlanner: RunStagePlanner,
     val cleanupStagePlanner: CleanupStagePlanner,

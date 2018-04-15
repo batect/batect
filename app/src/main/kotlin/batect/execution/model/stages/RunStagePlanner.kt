@@ -20,8 +20,8 @@ import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
 import batect.logging.Logger
-import batect.execution.DependencyGraph
-import batect.execution.DependencyGraphNode
+import batect.execution.ContainerDependencyGraph
+import batect.execution.ContainerDependencyGraphNode
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.run.BuildImageStepRule
 import batect.execution.model.rules.run.CreateContainerStepRule
@@ -33,7 +33,7 @@ import batect.execution.model.rules.run.WaitForContainerToBecomeHealthyStepRule
 import batect.utils.flatMapToSet
 
 class RunStagePlanner(private val logger: Logger) {
-    fun createStage(graph: DependencyGraph): RunStage {
+    fun createStage(graph: ContainerDependencyGraph): RunStage {
         val rules = graph.allNodes.flatMapToSet { stepsFor(it, graph.config.projectName) } +
             CreateTaskNetworkStepRule
 
@@ -45,7 +45,7 @@ class RunStagePlanner(private val logger: Logger) {
         return RunStage(rules)
     }
 
-    private fun stepsFor(node: DependencyGraphNode, projectName: String): Set<TaskStepRule> {
+    private fun stepsFor(node: ContainerDependencyGraphNode, projectName: String): Set<TaskStepRule> {
         return startupRulesFor(node) +
             imageCreationRuleFor(node.container, projectName) +
             CreateContainerStepRule(node.container, node.command, node.additionalEnvironmentVariables, node.additionalPortMappings)
@@ -58,7 +58,7 @@ class RunStagePlanner(private val logger: Logger) {
         }
     }
 
-    private fun startupRulesFor(node: DependencyGraphNode): Set<TaskStepRule> {
+    private fun startupRulesFor(node: ContainerDependencyGraphNode): Set<TaskStepRule> {
         if (node == node.graph.taskContainerNode) {
             return setOf(RunContainerStepRule(node.container, node.dependsOnContainers))
         } else {

@@ -19,7 +19,7 @@ package batect.execution.model.stages
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.logging.Logger
-import batect.execution.DependencyGraph
+import batect.execution.ContainerDependencyGraph
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.TaskEvent
@@ -33,7 +33,7 @@ import batect.utils.filterToSet
 import batect.utils.mapToSet
 
 class CleanupStagePlanner(private val logger: Logger) {
-    fun createStage(graph: DependencyGraph, pastEvents: Set<TaskEvent>): CleanupStage {
+    fun createStage(graph: ContainerDependencyGraph, pastEvents: Set<TaskEvent>): CleanupStage {
         val containersCreated = pastEvents
             .filterIsInstance<ContainerCreatedEvent>()
             .associate { it.container to it.dockerContainer }
@@ -65,7 +65,7 @@ class CleanupStagePlanner(private val logger: Logger) {
                 DeleteTaskNetworkStepRule(it.network, containersThatMustBeRemovedFirst)
             }
 
-    private fun stopContainerRules(graph: DependencyGraph, containersCreated: Map<Container, DockerContainer>, containersStarted: Set<Container>): Set<StopContainerStepRule> =
+    private fun stopContainerRules(graph: ContainerDependencyGraph, containersCreated: Map<Container, DockerContainer>, containersStarted: Set<Container>): Set<StopContainerStepRule> =
         containersStarted
             .mapToSet { container ->
                 val dockerContainer = containersCreated.getValue(container)

@@ -31,7 +31,7 @@ import org.jetbrains.spek.api.dsl.on
 object TaskStateMachineProviderSpec : Spek({
     describe("a task state machine provider") {
         on("providing a task state machine") {
-            val graph = mock<DependencyGraph>()
+            val graph = mock<ContainerDependencyGraph>()
             val logger = Logger("TaskStateMachine", InMemoryLogSink())
 
             val loggerFactory = mock<LoggerFactory> {

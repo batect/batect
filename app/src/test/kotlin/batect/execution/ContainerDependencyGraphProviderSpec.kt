@@ -38,12 +38,12 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 
-object DependencyGraphProviderSpec : Spek({
-    describe("a dependency graph provider") {
+object ContainerDependencyGraphProviderSpec : Spek({
+    describe("a container dependency graph provider") {
         val logSink = InMemoryLogSink()
         val logger = Logger("some.source", logSink)
         val commandResolver = mock<ContainerCommandResolver>()
-        val provider = DependencyGraphProvider(commandResolver, logger)
+        val provider = ContainerDependencyGraphProvider(commandResolver, logger)
 
         on("creating a dependency graph") {
             val dependencyForContainer = Container("dependencyForContainer", imageSourceDoesNotMatter())

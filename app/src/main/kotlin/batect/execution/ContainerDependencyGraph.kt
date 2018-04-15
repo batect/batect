@@ -22,13 +22,13 @@ import batect.config.PortMapping
 import batect.config.Task
 import batect.os.Command
 
-data class DependencyGraph(val config: Configuration, val task: Task, val containerCommandResolver: ContainerCommandResolver) {
+data class ContainerDependencyGraph(val config: Configuration, val task: Task, val containerCommandResolver: ContainerCommandResolver) {
     private val nodesMap = createNodes()
 
-    val taskContainerNode: DependencyGraphNode by lazy { nodeFor(config.containers[task.runConfiguration.container]!!) }
+    val taskContainerNode: ContainerDependencyGraphNode by lazy { nodeFor(config.containers[task.runConfiguration.container]!!) }
     val allNodes = nodesMap.values
 
-    fun nodeFor(container: Container): DependencyGraphNode {
+    fun nodeFor(container: Container): ContainerDependencyGraphNode {
         val node = nodesMap[container]
 
         if (node == null) {
@@ -38,26 +38,26 @@ data class DependencyGraph(val config: Configuration, val task: Task, val contai
         return node
     }
 
-    private fun createNodes(): Map<Container, DependencyGraphNode> {
+    private fun createNodes(): Map<Container, ContainerDependencyGraphNode> {
         if (task.dependsOnContainers.contains(task.runConfiguration.container)) {
             throw DependencyResolutionFailedException("The task '${task.name}' cannot start the container '${task.runConfiguration.container}' and also run it.")
         }
 
         val taskContainer = findContainer(task.runConfiguration.container, "task '${task.name}'")
-        val nodesCreated = mutableMapOf<Container, DependencyGraphNode>()
+        val nodesCreated = mutableMapOf<Container, ContainerDependencyGraphNode>()
         val taskDependencies = findContainers(task.dependsOnContainers, "task '${task.name}'") + findContainers(taskContainer.dependencies, "container '${taskContainer.name}'")
         getOrCreateNode(taskContainer, taskDependencies, true, nodesCreated, emptyList())
 
         return nodesCreated
     }
 
-    private fun getOrCreateNode(container: Container, nodesAlreadyCreated: MutableMap<Container, DependencyGraphNode>, path: List<Container>): DependencyGraphNode {
+    private fun getOrCreateNode(container: Container, nodesAlreadyCreated: MutableMap<Container, ContainerDependencyGraphNode>, path: List<Container>): ContainerDependencyGraphNode {
         val dependencies = findContainers(container.dependencies, "container '${container.name}'")
 
         return getOrCreateNode(container, dependencies, false, nodesAlreadyCreated, path)
     }
 
-    private fun getOrCreateNode(container: Container, dependencies: Set<Container>, isRootNode: Boolean, nodesAlreadyCreated: MutableMap<Container, DependencyGraphNode>, path: List<Container>): DependencyGraphNode {
+    private fun getOrCreateNode(container: Container, dependencies: Set<Container>, isRootNode: Boolean, nodesAlreadyCreated: MutableMap<Container, ContainerDependencyGraphNode>, path: List<Container>): ContainerDependencyGraphNode {
         return nodesAlreadyCreated.getOrPut(container) {
             if (dependencies.contains(container)) {
                 throw DependencyResolutionFailedException("The container '${container.name}' cannot depend on itself.")
@@ -74,11 +74,11 @@ data class DependencyGraph(val config: Configuration, val task: Task, val contai
             val additionalEnvironmentVariables = additionalEnvironmentVariables(isRootNode)
             val additionalPortMappings = additionalPortMappings(isRootNode)
 
-            DependencyGraphNode(container, command, additionalEnvironmentVariables, additionalPortMappings, isRootNode, dependencyNodes, this)
+            ContainerDependencyGraphNode(container, command, additionalEnvironmentVariables, additionalPortMappings, isRootNode, dependencyNodes, this)
         }
     }
 
-    private fun resolveDependencies(dependencies: Set<Container>, nodesAlreadyCreated: MutableMap<Container, DependencyGraphNode>, path: List<Container>): Set<DependencyGraphNode> {
+    private fun resolveDependencies(dependencies: Set<Container>, nodesAlreadyCreated: MutableMap<Container, ContainerDependencyGraphNode>, path: List<Container>): Set<ContainerDependencyGraphNode> {
         return dependencies
             .map { getOrCreateNode(it, nodesAlreadyCreated, path) }
             .toSet()
@@ -144,15 +144,15 @@ data class DependencyGraph(val config: Configuration, val task: Task, val contai
         }
 }
 
-data class DependencyGraphNode(
+data class ContainerDependencyGraphNode(
     val container: Container,
     val command: Command?,
     val additionalEnvironmentVariables: Map<String, String>,
     val additionalPortMappings: Set<PortMapping>,
     val isRootNode: Boolean,
-    val dependsOn: Set<DependencyGraphNode>,
-    val graph: DependencyGraph) {
-    val dependedOnBy: Set<DependencyGraphNode> by lazy { graph.allNodes.filter { it.dependsOn.contains(this) }.toSet() }
+    val dependsOn: Set<ContainerDependencyGraphNode>,
+    val graph: ContainerDependencyGraph) {
+    val dependedOnBy: Set<ContainerDependencyGraphNode> by lazy { graph.allNodes.filter { it.dependsOn.contains(this) }.toSet() }
 
     val dependsOnContainers: Set<Container> by lazy { dependsOn.map { it.container }.toSet() }
     val dependedOnByContainers: Set<Container> by lazy { dependedOnBy.map { it.container }.toSet() }

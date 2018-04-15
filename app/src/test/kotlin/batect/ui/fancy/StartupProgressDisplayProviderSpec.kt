@@ -17,8 +17,8 @@
 package batect.ui.fancy
 
 import batect.config.Container
-import batect.execution.DependencyGraph
-import batect.execution.DependencyGraphNode
+import batect.execution.ContainerDependencyGraph
+import batect.execution.ContainerDependencyGraphNode
 import batect.testutils.imageSourceDoesNotMatter
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -33,8 +33,8 @@ object StartupProgressDisplayProviderSpec : Spek({
     describe("a startup progress display provider") {
         val provider = StartupProgressDisplayProvider()
 
-        fun createNodeFor(container: Container, dependencies: Set<Container>): DependencyGraphNode {
-            return mock<DependencyGraphNode> {
+        fun createNodeFor(container: Container, dependencies: Set<Container>): ContainerDependencyGraphNode {
+            return mock<ContainerDependencyGraphNode> {
                 on { this.container } doReturn container
                 on { dependsOnContainers } doReturn dependencies
             }
@@ -50,7 +50,7 @@ object StartupProgressDisplayProviderSpec : Spek({
             val node1 = createNodeFor(container1, container1Dependencies)
             val node2 = createNodeFor(container2, container2Dependencies)
 
-            val graph = mock<DependencyGraph> {
+            val graph = mock<ContainerDependencyGraph> {
                 on { allNodes } doReturn setOf(node1, node2)
             }
 

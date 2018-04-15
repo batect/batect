@@ -21,9 +21,9 @@ import batect.config.Task
 import batect.logging.Logger
 import batect.utils.mapToSet
 
-class DependencyGraphProvider(private val containerCommandResolver: ContainerCommandResolver, private val logger: Logger) {
-    fun createGraph(config: Configuration, task: Task): DependencyGraph {
-        val graph = DependencyGraph(config, task, containerCommandResolver)
+class ContainerDependencyGraphProvider(private val containerCommandResolver: ContainerCommandResolver, private val logger: Logger) {
+    fun createGraph(config: Configuration, task: Task): ContainerDependencyGraph {
+        val graph = ContainerDependencyGraph(config, task, containerCommandResolver)
 
         logger.info {
             val dependenciesList = graph.allNodes
@@ -37,5 +37,5 @@ class DependencyGraphProvider(private val containerCommandResolver: ContainerCom
         return graph
     }
 
-    private fun dependencyNames(node: DependencyGraphNode): Set<String> = node.dependsOnContainers.mapToSet { it.name }
+    private fun dependencyNames(node: ContainerDependencyGraphNode): Set<String> = node.dependsOnContainers.mapToSet { it.name }
 }

@@ -83,7 +83,6 @@ class TaskStepRunner(
             is StartContainerStep -> handleStartContainerStep(step, eventSink)
             is WaitForContainerToBecomeHealthyStep -> handleWaitForContainerToBecomeHealthyStep(step, eventSink)
             is StopContainerStep -> handleStopContainerStep(step, eventSink)
-            is CleanUpContainerStep -> handleCleanUpContainerStep(step, eventSink)
             is RemoveContainerStep -> handleRemoveContainerStep(step, eventSink)
             is DeleteTemporaryFileStep -> handleDeleteTemporaryFileStep(step, eventSink)
             is DeleteTaskNetworkStep -> handleDeleteTaskNetworkStep(step, eventSink)
@@ -198,17 +197,6 @@ class TaskStepRunner(
             eventSink.postEvent(ContainerStoppedEvent(step.container))
         } catch (e: ContainerStopFailedException) {
             eventSink.postEvent(ContainerStopFailedEvent(step.container, e.outputFromDocker))
-        }
-    }
-
-    private fun handleCleanUpContainerStep(step: CleanUpContainerStep, eventSink: TaskEventSink) {
-        try {
-            dockerClient.forciblyRemove(step.dockerContainer)
-            eventSink.postEvent(ContainerRemovedEvent(step.container))
-        } catch (e: ContainerRemovalFailedException) {
-            eventSink.postEvent(ContainerRemovalFailedEvent(step.container, e.outputFromDocker))
-        } catch (_: ContainerDoesNotExistException) {
-            eventSink.postEvent(ContainerRemovedEvent(step.container))
         }
     }
 

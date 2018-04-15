@@ -355,33 +355,6 @@ class DockerClient(
         }
     }
 
-    fun forciblyRemove(container: DockerContainer) {
-        logger.info {
-            message("Forcibly removing container.")
-            data("container", container)
-        }
-
-        val command = listOf("docker", "rm", "--force", container.id)
-        val result = processRunner.runAndCaptureOutput(command)
-
-        if (failed(result)) {
-            logger.error {
-                message("Could not forcibly remove container.")
-                data("result", result)
-            }
-
-            if (result.output.startsWith("Error response from daemon: No such container: ")) {
-                throw ContainerDoesNotExistException("Removing container '${container.id}' failed because it does not exist.")
-            } else {
-                throw ContainerRemovalFailedException(container.id, result.output.trim())
-            }
-        }
-
-        logger.info {
-            message("Container forcibly removed.")
-        }
-    }
-
     fun getDockerVersionInfo(): String {
         val command = listOf("docker", "version", "--format", "Client: {{.Client.Version}} (API: {{.Client.APIVersion}}, commit: {{.Client.GitCommit}}), Server: {{.Server.Version}} (API: {{.Server.APIVersion}}, minimum supported API: {{.Server.MinAPIVersion}}, commit: {{.Server.GitCommit}})")
 

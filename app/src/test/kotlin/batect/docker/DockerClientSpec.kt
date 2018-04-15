@@ -585,37 +585,6 @@ object DockerClientSpec : Spek({
             }
         }
 
-        describe("forcibly removing a container") {
-            val container = DockerContainer("some-id")
-            val expectedCommand = listOf("docker", "rm", "--force", "some-id")
-
-            on("a successful removal") {
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "Done!"))
-
-                client.forciblyRemove(container)
-
-                it("calls the Docker CLI to remove the container") {
-                    verify(processRunner).runAndCaptureOutput(expectedCommand)
-                }
-            }
-
-            on("an unsuccessful deletion") {
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
-
-                it("throws an appropriate exception") {
-                    assertThat({ client.forciblyRemove(container) }, throws<ContainerRemovalFailedException>(withMessage("Removal of container 'some-id' failed. Output from Docker was: Something went wrong.")))
-                }
-            }
-
-            on("that container not existing") {
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Error response from daemon: No such container: ${container.id}"))
-
-                it("throws an appropriate exception") {
-                    assertThat({ client.forciblyRemove(container) }, throws<ContainerDoesNotExistException>(withMessage("Removing container 'some-id' failed because it does not exist.")))
-                }
-            }
-        }
-
         describe("getting Docker version information") {
             val expectedCommand = listOf("docker", "version", "--format", "Client: {{.Client.Version}} (API: {{.Client.APIVersion}}, commit: {{.Client.GitCommit}}), Server: {{.Server.Version}} (API: {{.Server.APIVersion}}, minimum supported API: {{.Server.MinAPIVersion}}, commit: {{.Server.GitCommit}})")
 

@@ -21,7 +21,6 @@ import batect.model.RunOptions
 import batect.model.events.TaskEvent
 import batect.model.events.TaskFailedEvent
 import batect.model.steps.BuildImageStep
-import batect.model.steps.CleanUpContainerStep
 import batect.model.steps.CreateContainerStep
 import batect.model.steps.PullImageStep
 import batect.model.steps.RemoveContainerStep
@@ -68,7 +67,6 @@ class SimpleEventLogger(
                 is RunContainerStep -> logCommandStarting(step.container, commands[step.container])
                 is CreateContainerStep -> commands[step.container] = step.command
                 is RemoveContainerStep -> logCleanUpStarting()
-                is CleanUpContainerStep -> logCleanUpStarting()
             }
         }
     }

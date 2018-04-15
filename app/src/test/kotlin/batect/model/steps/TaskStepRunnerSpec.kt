@@ -389,44 +389,6 @@ object TaskStepRunnerSpec : Spek({
                 }
             }
 
-            describe("running a 'clean up container' step") {
-                val container = Container("some-container", imageSourceDoesNotMatter())
-                val dockerContainer = DockerContainer("some-id")
-                val step = CleanUpContainerStep(container, dockerContainer)
-
-                on("when cleaning up the container succeeds") {
-                    runner.run(step, eventSink, runOptions)
-
-                    it("removes the container") {
-                        verify(dockerClient).forciblyRemove(dockerContainer)
-                    }
-
-                    it("emits a 'container removed' event") {
-                        verify(eventSink).postEvent(ContainerRemovedEvent(container))
-                    }
-                }
-
-                on("when cleaning up the container fails") {
-                    whenever(dockerClient.forciblyRemove(dockerContainer)).thenThrow(ContainerRemovalFailedException("some-id", "Something went wrong"))
-
-                    runner.run(step, eventSink, runOptions)
-
-                    it("emits a 'container removal failed' event") {
-                        verify(eventSink).postEvent(ContainerRemovalFailedEvent(container, "Something went wrong"))
-                    }
-                }
-
-                on("when the container does not exist") {
-                    whenever(dockerClient.forciblyRemove(dockerContainer)).thenThrow(ContainerDoesNotExistException("Some message"))
-
-                    runner.run(step, eventSink, runOptions)
-
-                    it("emits a 'container removed' event") {
-                        verify(eventSink).postEvent(ContainerRemovedEvent(container))
-                    }
-                }
-            }
-
             describe("running a 'remove container' step") {
                 val container = Container("some-container", imageSourceDoesNotMatter())
                 val dockerContainer = DockerContainer("some-id")

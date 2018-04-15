@@ -23,7 +23,6 @@ import batect.docker.DockerNetwork
 import batect.model.RunOptions
 import batect.model.events.TaskFailedEvent
 import batect.model.steps.BuildImageStep
-import batect.model.steps.CleanUpContainerStep
 import batect.model.steps.CreateContainerStep
 import batect.model.steps.CreateTaskNetworkStep
 import batect.model.steps.PullImageStep
@@ -173,8 +172,7 @@ object SimpleEventLoggerSpec : Spek({
             }
 
             mapOf(
-                "remove container" to RemoveContainerStep(container, DockerContainer("some-id")),
-                "clean up container" to CleanUpContainerStep(container, DockerContainer("some-id"))
+                "remove container" to RemoveContainerStep(container, DockerContainer("some-id"))
             ).forEach { description, step ->
                 describe("when a '$description' step is starting") {
                     on("and no 'remove container' or 'clean up container' steps have run before") {
@@ -190,17 +188,6 @@ object SimpleEventLoggerSpec : Spek({
 
                     on("and a 'remove container' step has already been run") {
                         val previousStep = RemoveContainerStep(Container("other-container", imageSourceDoesNotMatter()), DockerContainer("some-other-id"))
-                        logger.onStartingTaskStep(previousStep)
-
-                        logger.onStartingTaskStep(step)
-
-                        it("only prints one message to the output") {
-                            verify(whiteConsole, times(1)).println("Cleaning up...")
-                        }
-                    }
-
-                    on("and a 'clean up container' step has already been run") {
-                        val previousStep = CleanUpContainerStep(Container("other-container", imageSourceDoesNotMatter()), DockerContainer("some-other-id"))
                         logger.onStartingTaskStep(previousStep)
 
                         logger.onStartingTaskStep(step)

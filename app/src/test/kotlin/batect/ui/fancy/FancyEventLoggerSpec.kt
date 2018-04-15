@@ -24,7 +24,6 @@ import batect.model.events.ContainerBecameHealthyEvent
 import batect.model.events.ContainerRemovedEvent
 import batect.model.events.RunningContainerExitedEvent
 import batect.model.events.TaskFailedEvent
-import batect.model.steps.CleanUpContainerStep
 import batect.model.steps.CreateTaskNetworkStep
 import batect.model.steps.DeleteTaskNetworkStep
 import batect.model.steps.RemoveContainerStep
@@ -122,7 +121,6 @@ object FancyEventLoggerSpec : Spek({
 
             mapOf(
                 "remove container" to RemoveContainerStep(Container("some-container", imageSourceDoesNotMatter()), DockerContainer("some-id")),
-                "clean up container" to CleanUpContainerStep(Container("some-container", imageSourceDoesNotMatter()), DockerContainer("some-id")),
                 "remove network" to DeleteTaskNetworkStep(DockerNetwork("some-network-id"))
             ).forEach { (description, step) ->
                 describe("and that step is a '$description' step") {
@@ -260,7 +258,6 @@ object FancyEventLoggerSpec : Spek({
 
             mapOf(
                 "remove container" to RemoveContainerStep(Container("some-container", imageSourceDoesNotMatter()), DockerContainer("some-id")),
-                "clean up container" to CleanUpContainerStep(Container("some-container", imageSourceDoesNotMatter()), DockerContainer("some-id")),
                 "remove network" to DeleteTaskNetworkStep(DockerNetwork("some-network-id"))
             ).forEach { (description, step) ->
                 on("after a '$description' step has been run") {

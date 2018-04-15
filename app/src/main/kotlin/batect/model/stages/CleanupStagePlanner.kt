@@ -16,13 +16,15 @@
 
 package batect.model.stages
 
+import batect.config.Container
+import batect.docker.DockerContainer
+import batect.logging.Logger
 import batect.model.DependencyGraph
 import batect.model.events.ContainerCreatedEvent
 import batect.model.events.ContainerStartedEvent
 import batect.model.events.TaskEvent
 import batect.model.events.TaskNetworkCreatedEvent
 import batect.model.events.TemporaryFileCreatedEvent
-import batect.model.rules.cleanup.CleanupTaskStepRule
 import batect.model.rules.cleanup.DeleteTaskNetworkStepRule
 import batect.model.rules.cleanup.DeleteTemporaryFileStepRule
 import batect.model.rules.cleanup.RemoveContainerStepRule
@@ -30,25 +32,31 @@ import batect.model.rules.cleanup.StopContainerStepRule
 import batect.utils.filterToSet
 import batect.utils.mapToSet
 
-class CleanupStage(private val graph: DependencyGraph, private val pastEvents: Set<TaskEvent>) {
-    private val containersCreated = pastEvents
-        .filterIsInstance<ContainerCreatedEvent>()
-        .associate { it.container to it.dockerContainer }
+class CleanupStagePlanner(private val logger: Logger) {
+    fun createStage(graph: DependencyGraph, pastEvents: Set<TaskEvent>): CleanupStage {
+        val containersCreated = pastEvents
+            .filterIsInstance<ContainerCreatedEvent>()
+            .associate { it.container to it.dockerContainer }
 
-    private val containersStarted = pastEvents
-        .filterIsInstance<ContainerStartedEvent>()
-        .mapToSet { it.container }
+        val containersStarted = pastEvents
+            .filterIsInstance<ContainerStartedEvent>()
+            .mapToSet { it.container }
 
-    val rules: Set<CleanupTaskStepRule> = generateRules()
+        val rules = networkCleanupRules(pastEvents, containersCreated) +
+            stopContainerRules(graph, containersCreated, containersStarted) +
+            removeContainerRules(containersCreated, containersStarted) +
+            fileDeletionRules(pastEvents, containersCreated)
 
-    private fun generateRules(): Set<CleanupTaskStepRule> {
-        return networkCleanupRules() +
-            stopContainerRules() +
-            removeContainerRules() +
-            fileDeletionRules()
+        logger.info {
+            message("Created cleanup plan.")
+            data("rules", rules.map { it.toString() })
+            data("pastEvents", pastEvents.map { it.toString() })
+        }
+
+        return CleanupStage(rules)
     }
 
-    private fun networkCleanupRules(): Set<DeleteTaskNetworkStepRule> =
+    private fun networkCleanupRules(pastEvents: Set<TaskEvent>, containersCreated: Map<Container, DockerContainer>): Set<DeleteTaskNetworkStepRule> =
         pastEvents
             .filterIsInstance<TaskNetworkCreatedEvent>()
             .mapToSet {
@@ -57,7 +65,7 @@ class CleanupStage(private val graph: DependencyGraph, private val pastEvents: S
                 DeleteTaskNetworkStepRule(it.network, containersThatMustBeRemovedFirst)
             }
 
-    private fun stopContainerRules(): Set<StopContainerStepRule> =
+    private fun stopContainerRules(graph: DependencyGraph, containersCreated: Map<Container, DockerContainer>, containersStarted: Set<Container>): Set<StopContainerStepRule> =
         containersStarted
             .mapToSet { container ->
                 val dockerContainer = containersCreated.getValue(container)
@@ -67,7 +75,7 @@ class CleanupStage(private val graph: DependencyGraph, private val pastEvents: S
                 StopContainerStepRule(container, dockerContainer, containersThatMustBeStoppedFirst)
             }
 
-    private fun removeContainerRules(): Set<RemoveContainerStepRule> =
+    private fun removeContainerRules(containersCreated: Map<Container, DockerContainer>, containersStarted: Set<Container>): Set<RemoveContainerStepRule> =
         containersCreated
             .mapToSet { (container, dockerContainer) ->
                 val containerWasStarted = containersStarted.contains(container)
@@ -75,7 +83,7 @@ class CleanupStage(private val graph: DependencyGraph, private val pastEvents: S
                 RemoveContainerStepRule(container, dockerContainer, containerWasStarted)
             }
 
-    private fun fileDeletionRules(): Set<DeleteTemporaryFileStepRule> =
+    private fun fileDeletionRules(pastEvents: Set<TaskEvent>, containersCreated: Map<Container, DockerContainer>): Set<DeleteTemporaryFileStepRule> =
         pastEvents
             .filterIsInstance<TemporaryFileCreatedEvent>()
             .mapToSet {

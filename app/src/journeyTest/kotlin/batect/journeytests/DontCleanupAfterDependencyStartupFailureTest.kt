@@ -61,11 +61,11 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
         on("running that task with the '--no-cleanup-on-failure' option") {
             val result = runner.runApplication(listOf("--no-cleanup-after-failure", "the-task"))
             val commandsRegex = """For container 'http-server': view its output by running '(?<logsCommand>docker logs (?<id>.*))', or run a command in the container with 'docker exec -it \2 <command>'\.""".toRegex()
-            val cleanupRegex = """To clean up the containers and task network once you have finished investigating the issue, run '(?<command>docker rm --force ([a-z0-9]+\s)+&& docker network rm [a-z0-9]+)'\.""".toRegex()
+            val cleanupRegex = """Once you have finished investigating the issue, you can clean up all temporary resources created by batect by running:\n(?<command>(.|\n)+)\n\n""".toRegex()
             val cleanupCommand = cleanupRegex.find(result.output)?.groups?.get("command")?.value
 
             if (cleanupCommand != null) {
-                cleanupCommands.add(cleanupCommand)
+                cleanupCommands.addAll(cleanupCommand.split("\n"))
             }
 
             it("does not execute the task") {
@@ -73,7 +73,7 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
             }
 
             it("prints a message explaining what happened and what to do about it") {
-                assertThat(result.output, containsSubstring("Dependency 'http-server' did not become healthy: The configured health check did not indicate that the container was healthy within the timeout period."))
+                assertThat(result.output, containsSubstring("Container 'http-server' did not become healthy: The configured health check did not indicate that the container was healthy within the timeout period."))
             }
 
             it("prints a message explaining how to see the logs of that dependency and how to run a command in the container") {

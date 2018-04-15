@@ -30,12 +30,6 @@ object ImageBuildFailedEventSpec : Spek({
         val container = Container("container-1", imageSourceDoesNotMatter())
         val event = ImageBuildFailedEvent(container, "Something went wrong")
 
-        on("getting the message to display to the user") {
-            it("returns an appropriate message") {
-                assertThat(event.messageToDisplay, equalTo("Could not build image for container 'container-1': Something went wrong"))
-            }
-        }
-
         on("toString()") {
             it("returns a human-readable representation of itself") {
                 assertThat(event.toString(), equalTo("ImageBuildFailedEvent(container: 'container-1', message: 'Something went wrong')"))

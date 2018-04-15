@@ -16,19 +16,10 @@
 
 package batect.model.events
 
+import batect.config.Container
+import batect.testutils.imageSourceDoesNotMatter
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.never
-import com.nhaarman.mockito_kotlin.verify
-import batect.model.steps.WaitForContainerToBecomeHealthyStep
-import batect.config.Container
-import batect.docker.DockerContainer
-import batect.logging.Logger
-import batect.testutils.InMemoryLogSink
-import batect.testutils.imageSourceDoesNotMatter
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -38,40 +29,6 @@ object ContainerStartedEventSpec : Spek({
     describe("a 'container started' event") {
         val container = Container("container-1", imageSourceDoesNotMatter())
         val event = ContainerStartedEvent(container)
-
-        describe("being applied") {
-            val logger = Logger("test.source", InMemoryLogSink())
-
-            on("when the task is not aborting") {
-                val dockerContainer = DockerContainer("container-1-dc")
-                val otherContainer = Container("container-2", imageSourceDoesNotMatter())
-                val otherDockerContainer = DockerContainer("container-2-dc")
-
-                val context = mock<TaskEventContext> {
-                    on { getPastEventsOfType<ContainerCreatedEvent>() } doReturn setOf(
-                            ContainerCreatedEvent(container, dockerContainer),
-                            ContainerCreatedEvent(otherContainer, otherDockerContainer)
-                    )
-                }
-
-                event.apply(context, logger)
-
-                it("queues a 'wait for container to become healthy step'") {
-                    verify(context).queueStep(WaitForContainerToBecomeHealthyStep(container, dockerContainer))
-                }
-            }
-
-            on("when the task is aborting") {
-                val context = mock<TaskEventContext> {
-                    on { isAborting } doReturn true
-                }
-                event.apply(context, logger)
-
-                it("does not queue any further work") {
-                    verify(context, never()).queueStep(any())
-                }
-            }
-        }
 
         on("toString()") {
             it("returns a human-readable representation of itself") {

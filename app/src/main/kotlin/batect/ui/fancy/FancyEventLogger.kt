@@ -16,19 +16,23 @@
 
 package batect.ui.fancy
 
+import batect.model.RunOptions
 import batect.model.events.RunningContainerExitedEvent
 import batect.model.events.TaskEvent
+import batect.model.events.TaskFailedEvent
 import batect.model.steps.CleanUpContainerStep
 import batect.model.steps.DeleteTaskNetworkStep
-import batect.model.steps.DisplayTaskFailureStep
 import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.TaskStep
 import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.ui.EventLogger
+import batect.ui.FailureErrorMessageFormatter
 
 class FancyEventLogger(
+    val failureErrorMessageFormatter: FailureErrorMessageFormatter,
+    val runOptions: RunOptions,
     val console: Console,
     val errorConsole: Console,
     val startupProgressDisplay: StartupProgressDisplay,
@@ -40,12 +44,6 @@ class FancyEventLogger(
 
     override fun onStartingTaskStep(step: TaskStep) {
         synchronized(lock) {
-            if (step is DisplayTaskFailureStep) {
-                keepUpdatingStartupProgress = false
-                displayTaskFailure(step)
-                return
-            }
-
             if (step is CleanUpContainerStep || step is RemoveContainerStep || step is DeleteTaskNetworkStep) {
                 displayCleanupStatus()
                 keepUpdatingStartupProgress = false
@@ -64,23 +62,6 @@ class FancyEventLogger(
         }
     }
 
-    private fun displayTaskFailure(step: DisplayTaskFailureStep) {
-        if (haveStartedCleanup) {
-            cleanupProgressDisplay.clear(console)
-        } else {
-            console.println()
-        }
-
-        errorConsole.withColor(ConsoleColor.Red) {
-            println(step.message)
-            println()
-        }
-
-        if (haveStartedCleanup) {
-            cleanupProgressDisplay.print(console)
-        }
-    }
-
     private fun displayCleanupStatus() {
         if (haveStartedCleanup) {
             cleanupProgressDisplay.clear(console)
@@ -94,6 +75,12 @@ class FancyEventLogger(
 
     override fun postEvent(event: TaskEvent) {
         synchronized(lock) {
+            if (event is TaskFailedEvent) {
+                keepUpdatingStartupProgress = false
+                displayTaskFailure(event)
+                return
+            }
+
             if (keepUpdatingStartupProgress) {
                 startupProgressDisplay.onEventPosted(event)
                 startupProgressDisplay.print(console)
@@ -107,8 +94,30 @@ class FancyEventLogger(
         }
     }
 
-    override fun onTaskFailed(taskName: String) {
+    private fun displayTaskFailure(event: TaskFailedEvent) {
+        if (haveStartedCleanup) {
+            cleanupProgressDisplay.clear(console)
+        } else {
+            console.println()
+        }
+
         errorConsole.withColor(ConsoleColor.Red) {
+            println(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
+        }
+
+        if (haveStartedCleanup) {
+            console.println()
+            cleanupProgressDisplay.print(console)
+        }
+    }
+
+    override fun onTaskFailed(taskName: String, manualCleanupInstructions: String) {
+        errorConsole.withColor(ConsoleColor.Red) {
+            if (manualCleanupInstructions != "") {
+                println()
+                println(manualCleanupInstructions)
+            }
+
             println()
             print("The task ")
             printBold(taskName)

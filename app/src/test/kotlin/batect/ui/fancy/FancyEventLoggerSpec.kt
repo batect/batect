@@ -19,13 +19,14 @@ package batect.ui.fancy
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
+import batect.model.RunOptions
 import batect.model.events.ContainerBecameHealthyEvent
 import batect.model.events.ContainerRemovedEvent
 import batect.model.events.RunningContainerExitedEvent
+import batect.model.events.TaskFailedEvent
 import batect.model.steps.CleanUpContainerStep
 import batect.model.steps.CreateTaskNetworkStep
 import batect.model.steps.DeleteTaskNetworkStep
-import batect.model.steps.DisplayTaskFailureStep
 import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.testutils.createForEachTest
@@ -33,21 +34,28 @@ import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.ui.ConsolePrintStatements
+import batect.ui.FailureErrorMessageFormatter
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
+import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.reset
 import com.nhaarman.mockito_kotlin.verify
+import com.nhaarman.mockito_kotlin.whenever
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
+import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 
 object FancyEventLoggerSpec : Spek({
     describe("a fancy event logger") {
+        val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
+        val runOptions by createForEachTest { mock<RunOptions>() }
+
         val whiteConsole by createForEachTest { mock<Console>() }
         val console by createForEachTest {
             mock<Console> {
@@ -72,7 +80,7 @@ object FancyEventLoggerSpec : Spek({
         val cleanupProgressDisplay by createForEachTest { mock<CleanupProgressDisplay>() }
 
         val logger by createForEachTest {
-            FancyEventLogger(console, errorConsole, startupProgressDisplay, cleanupProgressDisplay)
+            FancyEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole, startupProgressDisplay, cleanupProgressDisplay)
         }
 
         describe("when logging that a step is starting") {
@@ -160,60 +168,6 @@ object FancyEventLoggerSpec : Spek({
 
                         it("does not reprint the startup progress display") {
                             verify(startupProgressDisplay, never()).print(console)
-                        }
-                    }
-                }
-            }
-
-            describe("and that step is to display an error message") {
-                on("and clean up has not started yet") {
-                    val step = DisplayTaskFailureStep("Something went wrong.")
-                    logger.onStartingTaskStep(step)
-
-                    it("prints the message to the output") {
-                        inOrder(console, redErrorConsole) {
-                            verify(console).println()
-                            verify(redErrorConsole).println(step.message)
-                            verify(redErrorConsole).println()
-                        }
-                    }
-
-                    it("does not print the cleanup progress to the console") {
-                        verify(cleanupProgressDisplay, never()).print(console)
-                    }
-
-                    it("does not notify the startup progress display") {
-                        verify(startupProgressDisplay, never()).onStepStarting(step)
-                    }
-
-                    it("does not reprint the startup progress display") {
-                        verify(startupProgressDisplay, never()).print(console)
-                    }
-                }
-
-                on("and clean up has already started") {
-                    logger.onStartingTaskStep(DeleteTaskNetworkStep(DockerNetwork("some-network-id")))
-                    reset(redErrorConsole)
-                    reset(console)
-                    reset(cleanupProgressDisplay)
-
-                    val step = DisplayTaskFailureStep("Something went wrong for a second time.")
-                    logger.onStartingTaskStep(step)
-
-                    it("prints the message to the output") {
-                        verify(redErrorConsole).println(step.message)
-                    }
-
-                    it("prints the cleanup progress to the console") {
-                        verify(cleanupProgressDisplay).print(console)
-                    }
-
-                    it("clears the existing cleanup progress before printing the error message and reprinting the cleanup progress") {
-                        inOrder(console, redErrorConsole, cleanupProgressDisplay) {
-                            verify(cleanupProgressDisplay).clear(console)
-                            verify(redErrorConsole).println(step.message)
-                            verify(redErrorConsole).println()
-                            verify(cleanupProgressDisplay).print(console)
                         }
                     }
                 }
@@ -340,6 +294,69 @@ object FancyEventLoggerSpec : Spek({
                     }
                 }
             }
+
+            given("a 'task failed' event is posted") {
+                val event by createForEachTest { mock<TaskFailedEvent>() }
+
+                given("clean up has not started yet") {
+                    beforeEachTest { whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn("Something went wrong.") }
+
+                    on("posting the event") {
+                        logger.postEvent(event)
+
+                        it("prints the message to the output") {
+                            inOrder(console, redErrorConsole) {
+                                verify(console).println()
+                                verify(redErrorConsole).println("Something went wrong.")
+                            }
+                        }
+
+                        it("does not print the cleanup progress to the console") {
+                            verify(cleanupProgressDisplay, never()).print(console)
+                        }
+
+                        it("does not notify the startup progress display") {
+                            verify(startupProgressDisplay, never()).onEventPosted(event)
+                        }
+
+                        it("does not reprint the startup progress display") {
+                            verify(startupProgressDisplay, never()).print(console)
+                        }
+                    }
+                }
+
+                given("clean up has already started") {
+                    beforeEachTest {
+                        logger.onStartingTaskStep(DeleteTaskNetworkStep(DockerNetwork("some-network-id")))
+                        reset(redErrorConsole)
+                        reset(console)
+                        reset(cleanupProgressDisplay)
+
+                        whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn("Something went wrong for a second time.")
+                    }
+
+                    on("posting the event") {
+                        logger.postEvent(event)
+
+                        it("prints the message to the output") {
+                            verify(redErrorConsole).println("Something went wrong for a second time.")
+                        }
+
+                        it("prints the cleanup progress to the console") {
+                            verify(cleanupProgressDisplay).print(console)
+                        }
+
+                        it("clears the existing cleanup progress before printing the error message and reprinting the cleanup progress") {
+                            inOrder(console, redErrorConsole, cleanupProgressDisplay) {
+                                verify(cleanupProgressDisplay).clear(console)
+                                verify(redErrorConsole).println("Something went wrong for a second time.")
+                                verify(console).println()
+                                verify(cleanupProgressDisplay).print(console)
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         on("when the task starts") {
@@ -354,15 +371,40 @@ object FancyEventLoggerSpec : Spek({
             }
         }
 
-        on("when the task fails") {
-            logger.onTaskFailed("some-task")
+        describe("when the task fails") {
+            given("there are no cleanup instructions") {
+                val cleanupInstructions = ""
 
-            it("prints a message to the output") {
-                inOrder(redErrorConsole) {
-                    verify(redErrorConsole).println()
-                    verify(redErrorConsole).print("The task ")
-                    verify(redErrorConsole).printBold("some-task")
-                    verify(redErrorConsole).println(" failed. See above for details.")
+                on("when logging that the task has failed") {
+                    logger.onTaskFailed("some-task", cleanupInstructions)
+
+                    it("prints a message to the output") {
+                        inOrder(redErrorConsole) {
+                            verify(redErrorConsole).println()
+                            verify(redErrorConsole).print("The task ")
+                            verify(redErrorConsole).printBold("some-task")
+                            verify(redErrorConsole).println(" failed. See above for details.")
+                        }
+                    }
+                }
+            }
+
+            given("there are some cleanup instructions") {
+                val cleanupInstructions = "Do this to clean up."
+
+                on("when logging that the task has failed") {
+                    logger.onTaskFailed("some-task", cleanupInstructions)
+
+                    it("prints a message to the output, including the instructions") {
+                        inOrder(redErrorConsole) {
+                            verify(redErrorConsole).println()
+                            verify(redErrorConsole).println(cleanupInstructions)
+                            verify(redErrorConsole).println()
+                            verify(redErrorConsole).print("The task ")
+                            verify(redErrorConsole).printBold("some-task")
+                            verify(redErrorConsole).println(" failed. See above for details.")
+                        }
+                    }
                 }
             }
         }

@@ -16,84 +16,144 @@
 
 package batect.model
 
-import batect.config.Container
-import batect.config.PortMapping
 import batect.logging.Logger
-import batect.logging.LoggerFactory
+import batect.model.events.ContainerCreatedEvent
 import batect.model.events.TaskEvent
-import batect.model.events.TaskEventContext
 import batect.model.events.TaskEventSink
+import batect.model.events.TaskFailedEvent
+import batect.model.stages.CleanupStage
+import batect.model.stages.CleanupStagePlanner
+import batect.model.stages.NoStepsReady
+import batect.model.stages.NoStepsRemaining
+import batect.model.stages.RunStage
+import batect.model.stages.RunStagePlanner
+import batect.model.stages.Stage
+import batect.model.stages.StepReady
 import batect.model.steps.TaskStep
-import batect.os.Command
-import batect.utils.mapToSet
-import java.util.LinkedList
-import java.util.Queue
+import batect.ui.FailureErrorMessageFormatter
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.reflect.KClass
 
-// FIXME: this is really two things: the state machine and a collection of utility functions
-// for events
 class TaskStateMachine(
     val graph: DependencyGraph,
-    override val behaviourAfterFailure: BehaviourAfterFailure,
-    val logger: Logger,
-    val loggerFactory: LoggerFactory
-) : TaskEventContext, TaskEventSink {
-    private val stepQueue: Queue<TaskStep> = LinkedList<TaskStep>()
-    private val processedSteps = mutableSetOf<TaskStep>()
-    private val processedEvents = mutableSetOf<TaskEvent>()
-
-    // TODO: how to ensure that methods like queueStep() are only called from within
-    // TaskEvent.apply() methods (which should be executed under the lock)?
+    val runOptions: RunOptions,
+    val runStagePlanner: RunStagePlanner,
+    val cleanupStagePlanner: CleanupStagePlanner,
+    val failureErrorMessageFormatter: FailureErrorMessageFormatter,
+    val logger: Logger
+) : TaskEventSink {
+    private val events: MutableSet<TaskEvent> = mutableSetOf()
     private val lock = ReentrantLock()
+    private var currentStage: Stage = runStagePlanner.createStage(graph)
+    private var taskHasFailed: Boolean = false
+    private var taskFailedDuringCleanup: Boolean = false
 
-    override fun queueStep(step: TaskStep) {
-        logger.info {
-            message("Queuing step.")
-            data("step", step.toString())
-        }
+    var manualCleanupInstructions: String = ""
+        private set
 
-        stepQueue.add(step)
-    }
-
-    fun popNextStep(): TaskStep? {
+    fun popNextStep(stepsStillRunning: Boolean): TaskStep? {
         lock.withLock {
-            val step = stepQueue.poll()
-
-            if (step != null) {
-                processedSteps.add(step)
+            logger.info {
+                message("Trying to get next step to execute.")
+                data("stepsStillRunning", stepsStillRunning)
+                data("currentStage", currentStage.toString())
             }
 
-            return step
+            if (taskHasFailed && inRunStage()) {
+                return handleDrainingWorkAfterRunFailure(stepsStillRunning)
+            }
+
+            val result = currentStage.popNextStep(events)
+
+            return when (result) {
+                is StepReady -> handleNextStepReady(result)
+                is NoStepsReady -> handleNoStepsReady(stepsStillRunning)
+                is NoStepsRemaining -> handleNoStepsRemaining(stepsStillRunning)
+            }
         }
     }
 
-    override fun <T : TaskStep> getPendingAndProcessedStepsOfType(clazz: KClass<T>): Set<T> {
-        val pendingSteps = stepQueue.filterIsInstanceTo(mutableSetOf(), clazz.java)
-        val processedSteps = getProcessedStepsOfType(clazz)
-        return pendingSteps + processedSteps
-    }
+    private fun handleDrainingWorkAfterRunFailure(stepsStillRunning: Boolean): TaskStep? {
+        if (stepsStillRunning) {
+            logger.info {
+                message("Task has failed, not returning any further work while existing work completes.")
+            }
 
-    override fun <T : TaskStep> getProcessedStepsOfType(clazz: KClass<T>): Set<T> {
-        return processedSteps.filterIsInstanceTo(mutableSetOf(), clazz.java)
-    }
+            return null
+        }
 
-    override fun <T : TaskStep> removePendingStepsOfType(clazz: KClass<T>) {
         logger.info {
-            message("Removing pending steps of a particular type.")
-            data("type", clazz.qualifiedName)
+            message("Task has failed and existing work has finished. Beginning cleanup.")
         }
 
-        stepQueue.removeIf { clazz.isInstance(it) }
+        return startCleanupStage()
     }
 
-    override fun abort() {
+    private fun handleNextStepReady(result: StepReady): TaskStep {
         logger.info {
-            message("Marking the task as aborted.")
+            message("Step is ready to execute.")
+            data("step", result.step.toString())
         }
 
-        isAborting = true
+        return result.step
+    }
+
+    private fun handleNoStepsReady(stepsStillRunning: Boolean): Nothing? {
+        if (!stepsStillRunning) {
+            if (!taskFailedDuringCleanup) {
+                throw IllegalStateException("None of the remaining steps are ready to execute, but there are no steps currently running.")
+            }
+        }
+
+        logger.info {
+            message("No steps ready to execute.")
+        }
+
+        return null
+    }
+
+    private fun handleNoStepsRemaining(stepsStillRunning: Boolean): TaskStep? {
+        if (stepsStillRunning) {
+            logger.info {
+                message("No steps remaining, but some steps are still running.")
+            }
+
+            return null
+        }
+
+        when (currentStage) {
+            is RunStage -> {
+                logger.info {
+                    message("No steps remaining in run stage, switching to cleanup stage.")
+                }
+
+                return startCleanupStage()
+            }
+            is CleanupStage -> {
+                logger.info {
+                    message("No steps remaining in cleanup stage. No work left to do.")
+                }
+
+                return null
+            }
+        }
+    }
+
+    private fun startCleanupStage(): TaskStep? {
+        val cleanupStage = cleanupStagePlanner.createStage(graph, events)
+
+        if (taskHasFailed && shouldLeaveCreatedContainersRunningAfterFailure()) {
+            manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events, cleanupStage.manualCleanupCommands)
+            return null
+        }
+
+        currentStage = cleanupStage
+
+        logger.info {
+            message("Returning first step from cleanup stage.")
+        }
+
+        return popNextStep(false)
     }
 
     override fun postEvent(event: TaskEvent) {
@@ -103,38 +163,29 @@ class TaskStateMachine(
                 data("event", event.toString())
             }
 
-            processedEvents.add(event)
-            event.apply(this, loggerFactory.createLoggerForClass(event::class))
+            events.add(event)
+
+            if (event is TaskFailedEvent) {
+                handleTaskFailedEvent()
+            }
         }
     }
 
-    override fun <T : TaskEvent> getPastEventsOfType(clazz: KClass<T>): Set<T> {
-        return processedEvents
-                .filterIsInstanceTo(mutableSetOf(), clazz.java)
-    }
+    private fun handleTaskFailedEvent() {
+        taskHasFailed = true
 
-    override fun <T : TaskEvent> getSinglePastEventOfType(clazz: KClass<T>): T? {
-        val events = getPastEventsOfType(clazz)
+        if (inCleanupStage()) {
+            taskFailedDuringCleanup = true
 
-        return when (events.size) {
-            0 -> null
-            1 -> events.first()
-            else -> throw IllegalStateException("Multiple events of type ${clazz.simpleName} found.")
+            val manualCleanupCommands = (currentStage as CleanupStage).manualCleanupCommands
+            manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessageAfterCleanupFailure(manualCleanupCommands)
         }
     }
 
-    override fun commandForContainer(container: Container): Command? = graph.nodeFor(container).command
-    override fun additionalEnvironmentVariablesForContainer(container: Container): Map<String, String> = graph.nodeFor(container).additionalEnvironmentVariables
-    override fun additionalPortMappingsForContainer(container: Container): Set<PortMapping> = graph.nodeFor(container).additionalPortMappings
+    private fun shouldLeaveCreatedContainersRunningAfterFailure(): Boolean = runOptions.behaviourAfterFailure == BehaviourAfterFailure.DontCleanup && events.any { it is ContainerCreatedEvent }
+    private fun inRunStage(): Boolean = currentStage is RunStage
+    private fun inCleanupStage(): Boolean = currentStage is CleanupStage
 
-    override fun isTaskContainer(container: Container) = container == graph.taskContainerNode.container
-    override fun dependenciesOf(container: Container) = graph.nodeFor(container).dependsOnContainers
-    override fun containersThatDependOn(container: Container) = graph.nodeFor(container).dependedOnByContainers
-    override val allTaskContainers: Set<Container> by lazy { graph.allNodes.mapToSet() { it.container } }
-
-    override var isAborting: Boolean = false
-        private set
-
-    override val projectName: String
-        get() = graph.config.projectName
+    // This method is not thread safe, and is designed to be used only after task execution has completed.
+    fun getAllEvents(): Set<TaskEvent> = events
 }

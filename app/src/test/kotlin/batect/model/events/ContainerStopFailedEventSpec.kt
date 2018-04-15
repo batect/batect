@@ -30,12 +30,6 @@ object ContainerStopFailedEventSpec : Spek({
         val container = Container("some-container", imageSourceDoesNotMatter())
         val event = ContainerStopFailedEvent(container, "Something went wrong")
 
-        on("getting the message to display") {
-            it("returns a description of the failure") {
-                assertThat(event.messageToDisplay, equalTo("the container 'some-container' couldn't be stopped: Something went wrong"))
-            }
-        }
-
         on("toString()") {
             it("returns a human-readable representation of itself") {
                 assertThat(event.toString(), equalTo("ContainerStopFailedEvent(container: 'some-container', message: 'Something went wrong')"))

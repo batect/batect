@@ -17,6 +17,7 @@
 package batect.ui
 
 import batect.model.DependencyGraph
+import batect.model.RunOptions
 import batect.ui.fancy.CleanupProgressDisplay
 import batect.ui.fancy.FancyEventLogger
 import batect.ui.fancy.StartupProgressDisplayProvider
@@ -24,6 +25,7 @@ import batect.ui.quiet.QuietEventLogger
 import batect.ui.simple.SimpleEventLogger
 
 class EventLoggerProvider(
+    private val failureErrorMessageFormatter: FailureErrorMessageFormatter,
     private val console: Console,
     private val errorConsole: Console,
     private val startupProgressDisplayProvider: StartupProgressDisplayProvider,
@@ -31,15 +33,15 @@ class EventLoggerProvider(
     private val forceSimpleOutputMode: Boolean,
     private val forceQuietOutputMode: Boolean
 ) {
-    fun getEventLogger(graph: DependencyGraph): EventLogger {
+    fun getEventLogger(graph: DependencyGraph, runOptions: RunOptions): EventLogger {
         if (forceQuietOutputMode) {
-            return QuietEventLogger(errorConsole)
+            return QuietEventLogger(failureErrorMessageFormatter, runOptions, errorConsole)
         }
 
         if (consoleInfo.supportsInteractivity && !forceSimpleOutputMode) {
-            return FancyEventLogger(console, errorConsole, startupProgressDisplayProvider.createForDependencyGraph(graph), CleanupProgressDisplay())
+            return FancyEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole, startupProgressDisplayProvider.createForDependencyGraph(graph), CleanupProgressDisplay())
         } else {
-            return SimpleEventLogger(console, errorConsole)
+            return SimpleEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole)
         }
     }
 }

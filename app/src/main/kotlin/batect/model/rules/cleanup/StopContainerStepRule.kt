@@ -38,5 +38,7 @@ data class StopContainerStepRule(val container: Container, val dockerContainer: 
     }
 
     override val manualCleanupInstruction: String? = null
+    override val manualCleanupSortOrder: ManualCleanupSortOrder
+        get() = throw UnsupportedOperationException("This rule has no manual cleanup instruction.")
     override fun toString() = "${this::class.simpleName}(container=${container.name}, dockerContainer=$dockerContainer, containersThatMustBeStoppedFirst=${containersThatMustBeStoppedFirst.map(Container::name)})"
 }

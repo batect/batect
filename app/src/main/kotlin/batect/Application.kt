@@ -38,10 +38,13 @@ import batect.logging.StandardAdditionalDataSource
 import batect.logging.singletonWithLogger
 import batect.model.ContainerCommandResolver
 import batect.model.DependencyGraphProvider
+import batect.ui.FailureErrorMessageFormatter
 import batect.model.RunAsCurrentUserConfigurationProvider
 import batect.model.RunOptions
 import batect.model.TaskExecutionOrderResolver
 import batect.model.TaskStateMachineProvider
+import batect.model.stages.CleanupStagePlanner
+import batect.model.stages.RunStagePlanner
 import batect.model.steps.TaskStepRunner
 import batect.os.ProcessRunner
 import batect.os.ProxyEnvironmentVariablesProvider
@@ -160,12 +163,14 @@ private val loggingModule = Kodein.Module {
 }
 
 private val modelModule = Kodein.Module {
+    bind<CleanupStagePlanner>() with singletonWithLogger { logger -> CleanupStagePlanner(logger) }
     bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance()) }
     bind<DependencyGraphProvider>() with singletonWithLogger { logger -> DependencyGraphProvider(instance(), logger) }
     bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance()) }
     bind<RunOptions>() with singleton { RunOptions(commandLineOptions()) }
+    bind<RunStagePlanner>() with singletonWithLogger { logger -> RunStagePlanner(logger) }
     bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(logger) }
-    bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance()) }
+    bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance(), instance(), instance(), instance()) }
     bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), instance(), instance(), instance(), logger) }
 }
 
@@ -178,6 +183,7 @@ private val osModule = Kodein.Module {
 private val uiModule = Kodein.Module {
     bind<EventLoggerProvider>() with singleton {
         EventLoggerProvider(
+            instance(),
             instance(PrintStreamType.Output),
             instance(PrintStreamType.Error),
             instance(),
@@ -190,6 +196,7 @@ private val uiModule = Kodein.Module {
     bind<Console>(PrintStreamType.Output) with singleton { Console(instance(PrintStreamType.Output), enableComplexOutput = !commandLineOptions().disableColorOutput, consoleInfo = instance()) }
     bind<Console>(PrintStreamType.Error) with singleton { Console(instance(PrintStreamType.Error), enableComplexOutput = !commandLineOptions().disableColorOutput, consoleInfo = instance()) }
     bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), logger) }
+    bind<FailureErrorMessageFormatter>() with singleton { FailureErrorMessageFormatter() }
     bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider() }
 }
 

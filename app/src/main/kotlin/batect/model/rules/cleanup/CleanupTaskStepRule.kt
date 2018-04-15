@@ -20,4 +20,11 @@ import batect.model.rules.TaskStepRule
 
 abstract class CleanupTaskStepRule : TaskStepRule() {
     abstract val manualCleanupInstruction: String?
+    abstract val manualCleanupSortOrder: ManualCleanupSortOrder
+}
+
+enum class ManualCleanupSortOrder(val order: Int) {
+    RemoveContainers(1),
+    DeleteTemporaryFiles(RemoveContainers.order + 1),
+    DeleteTaskNetwork(DeleteTemporaryFiles.order + 1)
 }

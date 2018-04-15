@@ -16,17 +16,21 @@
 
 package batect.ui.quiet
 
-import batect.model.steps.DisplayTaskFailureStep
+import batect.model.RunOptions
+import batect.model.events.TaskFailedEvent
 import batect.testutils.createForEachTest
 import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.ui.ConsolePrintStatements
+import batect.ui.FailureErrorMessageFormatter
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
+import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verifyZeroInteractions
+import com.nhaarman.mockito_kotlin.whenever
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -34,6 +38,9 @@ import org.jetbrains.spek.api.dsl.on
 
 object QuietEventLoggerSpec : Spek({
     describe("a quiet event logger") {
+        val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
+        val runOptions by createForEachTest { mock<RunOptions>() }
+
         val redErrorConsole by createForEachTest { mock<Console>() }
         val errorConsole by createForEachTest {
             mock<Console> {
@@ -44,22 +51,24 @@ object QuietEventLoggerSpec : Spek({
             }
         }
 
-        val logger by createForEachTest { QuietEventLogger(errorConsole) }
+        val logger by createForEachTest { QuietEventLogger(failureErrorMessageFormatter, runOptions, errorConsole) }
 
-        on("when a 'display task failure' step is starting") {
-            val step = DisplayTaskFailureStep("Something went wrong.")
-            logger.onStartingTaskStep(step)
+        on("when a 'task failed' event is posted") {
+            val event = mock<TaskFailedEvent>()
+            whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn("Something went wrong.")
+
+            logger.postEvent(event)
 
             it("prints the message to the console") {
                 inOrder(redErrorConsole) {
                     verify(redErrorConsole).println()
-                    verify(redErrorConsole).println(step.message)
+                    verify(redErrorConsole).println("Something went wrong.")
                 }
             }
         }
 
         on("when a task fails") {
-            logger.onTaskFailed("some-task")
+            logger.onTaskFailed("some-task", "Some cleanup instructions")
 
             it("does not print anything to the console") {
                 verifyZeroInteractions(errorConsole)

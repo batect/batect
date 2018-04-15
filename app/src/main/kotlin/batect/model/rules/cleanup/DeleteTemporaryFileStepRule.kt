@@ -36,5 +36,6 @@ data class DeleteTemporaryFileStepRule(val path: Path, val containerThatMustBeRe
         pastEvents.contains(ContainerRemovedEvent(container))
 
     override val manualCleanupInstruction: String? = "rm $path"
+    override val manualCleanupSortOrder: ManualCleanupSortOrder = ManualCleanupSortOrder.DeleteTemporaryFiles
     override fun toString() = "${this::class.simpleName}(path=$path, containerThatMustBeRemovedFirst=${containerThatMustBeRemovedFirst?.name ?: "null"})"
 }

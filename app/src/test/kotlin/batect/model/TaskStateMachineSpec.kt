@@ -16,492 +16,644 @@
 
 package batect.model
 
-import batect.config.Configuration
 import batect.config.Container
-import batect.config.ContainerMap
-import batect.config.PortMapping
-import batect.config.Task
-import batect.config.TaskMap
-import batect.config.TaskRunConfiguration
+import batect.docker.DockerContainer
+import batect.docker.DockerNetwork
 import batect.logging.Logger
-import batect.logging.LoggerFactory
-import batect.model.events.ContainerBecameHealthyEvent
-import batect.model.events.TaskEvent
-import batect.model.events.TaskEventContext
-import batect.model.events.TaskStartedEvent
-import batect.model.steps.BeginTaskStep
-import batect.model.steps.CreateTaskNetworkStep
-import batect.model.steps.DeleteTaskNetworkStep
-import batect.model.steps.DisplayTaskFailureStep
+import batect.model.events.ContainerCreatedEvent
+import batect.model.events.TaskFailedEvent
+import batect.model.events.TaskNetworkCreatedEvent
+import batect.model.events.TaskNetworkDeletedEvent
+import batect.model.stages.CleanupStage
+import batect.model.stages.CleanupStagePlanner
+import batect.model.stages.NoStepsReady
+import batect.model.stages.NoStepsRemaining
+import batect.model.stages.RunStage
+import batect.model.stages.RunStagePlanner
+import batect.model.stages.StepReady
 import batect.model.steps.TaskStep
-import batect.os.Command
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
+import batect.ui.FailureErrorMessageFormatter
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.never
+import com.nhaarman.mockito_kotlin.times
 import com.nhaarman.mockito_kotlin.verify
+import com.nhaarman.mockito_kotlin.whenever
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
+import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 
 object TaskStateMachineSpec : Spek({
     describe("a task state machine") {
-        val dependencyContainer1 = Container("dependency-container-1", imageSourceDoesNotMatter())
-
-        val dependencyContainer2 = Container("dependency-container-2", imageSourceDoesNotMatter(),
-            dependencies = setOf(dependencyContainer1.name),
-            command = Command.parse("do-stuff-in-container-2"))
-
-        val taskContainer = Container("some-container", imageSourceDoesNotMatter(),
-            dependencies = setOf(dependencyContainer2.name),
-            command = Command.parse("do-stuff-in-task-container"))
-
-        val unrelatedContainer = Container("some-other-container", imageSourceDoesNotMatter())
-        val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"), mapOf("SOME_VAR" to "some value"), setOf(PortMapping(123, 456)))
-        val task = Task("the-task", runConfig)
-        val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, unrelatedContainer))
-        val commandResolver = mock<ContainerCommandResolver> {
-            on { resolveCommand(any(), any()) } doReturn Command.parse("the-resolved-command")
+        val graph by createForEachTest { mock<DependencyGraph>() }
+        val runOptions by createForEachTest { mock<RunOptions>() }
+        val logger by createForEachTest { Logger("the-source", InMemoryLogSink()) }
+        val runStage by createForEachTest { mock<RunStage>() }
+        val runStagePlanner by createForEachTest {
+            mock<RunStagePlanner> {
+                on { createStage(graph) } doReturn runStage
+            }
         }
 
-        val graph = DependencyGraph(config, task, commandResolver)
-        val loggerCreatedByFactory = mock<Logger>()
-        val loggerFactory = mock<LoggerFactory> {
-            on { createLoggerForClass(any()) } doReturn loggerCreatedByFactory
+        val cleanupCommands = listOf("rm /tmp/the-file", "rm /tmp/some-other-file")
+        val cleanupStage by createForEachTest {
+            mock<CleanupStage> {
+                on { manualCleanupCommands } doReturn cleanupCommands
+            }
         }
 
-        val stateMachine by createForEachTest {
-            val logger = Logger("stateMachine", InMemoryLogSink())
-            TaskStateMachine(graph, BehaviourAfterFailure.DontCleanup, logger, loggerFactory)
+        val cleanupStagePlanner by createForEachTest {
+            mock<CleanupStagePlanner> {
+                on { createStage(eq(graph), any()) } doReturn cleanupStage
+            }
         }
 
-        describe("queuing, popping and querying steps") {
-            on("when no steps have been queued") {
-                val step = stateMachine.popNextStep()
+        val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
 
-                it("does not return a step when popping the next step") {
-                    assertThat(step, absent())
-                }
+        val stateMachine by createForEachTest { TaskStateMachine(graph, runOptions, runStagePlanner, cleanupStagePlanner, failureErrorMessageFormatter, logger) }
 
-                it("returns an empty list of pending and processed steps") {
-                    assertThat(stateMachine.getPendingAndProcessedStepsOfType(TaskStep::class), isEmpty)
-                }
-
-                it("returns an empty list of processed steps") {
-                    assertThat(stateMachine.getProcessedStepsOfType(TaskStep::class), isEmpty)
+        describe("posting and retrieving events") {
+            given("no events have been posted") {
+                it("does not return any events") {
+                    assertThat(stateMachine.getAllEvents(), isEmpty)
                 }
             }
 
-            describe("when one step has been queued") {
-                beforeEachTest {
-                    stateMachine.queueStep(BeginTaskStep)
-                }
+            given("an event has been posted") {
+                val event = TaskNetworkDeletedEvent
+                beforeEachTest { stateMachine.postEvent(event) }
 
-                on("popping next steps") {
-                    val firstStep = stateMachine.popNextStep()
-                    val secondStep = stateMachine.popNextStep()
-
-                    it("returns the queued step on the first pop") {
-                        assertThat(firstStep, equalTo(BeginTaskStep))
-                    }
-
-                    it("does not return a step on subsequent pops") {
-                        assertThat(secondStep, absent())
-                    }
-                }
-
-                describe("querying for pending and processed steps") {
-                    on("when the step has not been popped yet") {
-                        it("returns the step when asked for a list of pending and processed steps using the base class name") {
-                            assertThat(stateMachine.getPendingAndProcessedStepsOfType(TaskStep::class), equalTo(setOf<TaskStep>(BeginTaskStep)))
-                        }
-
-                        it("returns the step when asked for a list of pending and processed steps using the derived class name") {
-                            assertThat(stateMachine.getPendingAndProcessedStepsOfType(BeginTaskStep::class), equalTo(setOf(BeginTaskStep)))
-                        }
-
-                        it("returns an empty list when asked for a list of pending and processed steps of a different step type") {
-                            assertThat(stateMachine.getPendingAndProcessedStepsOfType(DeleteTaskNetworkStep::class), isEmpty)
-                        }
-
-                        it("returns an empty list of processed steps") {
-                            assertThat(stateMachine.getProcessedStepsOfType(TaskStep::class), isEmpty)
-                        }
-                    }
-
-                    on("when the step has been popped") {
-                        stateMachine.popNextStep()
-
-                        it("returns the step when asked for a list of pending and processed steps using the base class name") {
-                            assertThat(stateMachine.getPendingAndProcessedStepsOfType(TaskStep::class), equalTo(setOf<TaskStep>(BeginTaskStep)))
-                        }
-
-                        it("returns the step when asked for a list of pending and processed steps using the derived class name") {
-                            assertThat(stateMachine.getPendingAndProcessedStepsOfType(BeginTaskStep::class), equalTo(setOf(BeginTaskStep)))
-                        }
-
-                        it("returns an empty list when asked for a list of pending and processed steps of a different step type") {
-                            assertThat(stateMachine.getPendingAndProcessedStepsOfType(DeleteTaskNetworkStep::class), isEmpty)
-                        }
-
-                        it("returns the step when asked for a list of processed steps using the base class name") {
-                            assertThat(stateMachine.getProcessedStepsOfType(TaskStep::class), equalTo(setOf<TaskStep>(BeginTaskStep)))
-                        }
-
-                        it("returns the step when asked for a list of processed steps using the derived class name") {
-                            assertThat(stateMachine.getProcessedStepsOfType(BeginTaskStep::class), equalTo(setOf(BeginTaskStep)))
-                        }
-
-                        it("returns an empty list when asked for a list of processed steps of a different step type") {
-                            assertThat(stateMachine.getProcessedStepsOfType(DeleteTaskNetworkStep::class), isEmpty)
-                        }
-                    }
+                it("returns that event in the list of all events") {
+                    assertThat(stateMachine.getAllEvents(), equalTo(setOf(event)))
                 }
             }
 
-            describe("when multiple steps have been queued") {
-                val step1 = DisplayTaskFailureStep("Something went wrong")
-                val step2 = DisplayTaskFailureStep("Something else went wrong")
-                val step3 = DisplayTaskFailureStep("A third thing went wrong")
+            given("multiple events have been posted") {
+                val events = setOf(
+                    TaskNetworkDeletedEvent,
+                    TaskNetworkCreatedEvent(DockerNetwork("some-network"))
+                )
 
-                beforeEachTest {
-                    stateMachine.queueStep(step1)
-                    stateMachine.queueStep(step2)
-                    stateMachine.queueStep(step3)
-                }
+                beforeEachTest { events.forEach { stateMachine.postEvent(it) } }
 
-                on("popping each of them") {
-                    val firstStepPopped = stateMachine.popNextStep()
-                    val secondStepPopped = stateMachine.popNextStep()
-                    val thirdStepPopped = stateMachine.popNextStep()
-
-                    it("returns them in the order they were queued") {
-                        assertThat(firstStepPopped, equalTo(step1))
-                        assertThat(secondStepPopped, equalTo(step2))
-                        assertThat(thirdStepPopped, equalTo(step3))
-                    }
+                it("returns all posted events in the list of all events") {
+                    assertThat(stateMachine.getAllEvents(), equalTo(events))
                 }
             }
         }
 
-        describe("removing pending steps") {
-            on("when there are no steps queued") {
-                stateMachine.removePendingStepsOfType(CreateTaskNetworkStep::class)
+        describe("getting the next step to execute") {
+            given("the run stage is active") {
+                given("the task has not failed") {
+                    given("there are steps still running") {
+                        val stepsStillRunning = true
 
-                it("still returns no pending or processed steps of that type") {
-                    assertThat(stateMachine.getPendingAndProcessedStepsOfType(CreateTaskNetworkStep::class), isEmpty)
+                        given("there is a step ready") {
+                            val step by createForEachTest { mock<TaskStep>() }
+                            beforeEachTest { whenever(runStage.popNextStep(any())).doReturn(StepReady(step)) }
+
+                            on("getting the next step to execute") {
+                                val events = setOf(TaskNetworkCreatedEvent(DockerNetwork("some-network")), TaskNetworkDeletedEvent)
+                                events.forEach { stateMachine.postEvent(it) }
+
+                                val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                it("returns that step") {
+                                    assertThat(result, equalTo(step))
+                                }
+
+                                it("sends all previous events to the run stage during evaluation") {
+                                    verify(runStage).popNextStep(events)
+                                }
+
+                                it("does not create the cleanup stage") {
+                                    verify(cleanupStagePlanner, never()).createStage(any(), any())
+                                }
+                            }
+                        }
+
+                        given("there are no steps ready") {
+                            beforeEachTest { whenever(runStage.popNextStep(any())).doReturn(NoStepsReady) }
+
+                            on("getting the next step to execute") {
+                                val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                it("returns null") {
+                                    assertThat(result, absent())
+                                }
+
+                                it("does not create the cleanup stage") {
+                                    verify(cleanupStagePlanner, never()).createStage(any(), any())
+                                }
+                            }
+                        }
+
+                        given("there are no steps remaining") {
+                            beforeEachTest { whenever(runStage.popNextStep(any())).doReturn(NoStepsRemaining) }
+
+                            on("getting the next step to execute") {
+                                val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                it("returns null") {
+                                    assertThat(result, absent())
+                                }
+
+                                it("does not create the cleanup stage") {
+                                    verify(cleanupStagePlanner, never()).createStage(any(), any())
+                                }
+                            }
+                        }
+                    }
+
+                    given("there are no steps still running") {
+                        val stepsStillRunning = false
+
+                        given("there is a step ready") {
+                            val step by createForEachTest { mock<TaskStep>() }
+                            beforeEachTest { whenever(runStage.popNextStep(any())).doReturn(StepReady(step)) }
+
+                            on("getting the next step to execute") {
+                                val events = setOf(TaskNetworkCreatedEvent(DockerNetwork("some-network")), TaskNetworkDeletedEvent)
+                                events.forEach { stateMachine.postEvent(it) }
+
+                                val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                it("returns that step") {
+                                    assertThat(result, equalTo(step))
+                                }
+
+                                it("sends all previous events to the run stage during evaluation") {
+                                    verify(runStage).popNextStep(events)
+                                }
+
+                                it("does not create the cleanup stage") {
+                                    verify(cleanupStagePlanner, never()).createStage(any(), any())
+                                }
+                            }
+                        }
+
+                        given("there are no steps ready") {
+                            beforeEachTest { whenever(runStage.popNextStep(any())).doReturn(NoStepsReady) }
+
+                            on("getting the next step to execute") {
+                                it("throws an appropriate exception") {
+                                    assertThat({ stateMachine.popNextStep(stepsStillRunning) }, throws<IllegalStateException>(withMessage("None of the remaining steps are ready to execute, but there are no steps currently running.")))
+                                }
+                            }
+                        }
+
+                        given("there are no steps remaining") {
+                            val event = TaskNetworkCreatedEvent(DockerNetwork("some-network"))
+
+                            beforeEachTest {
+                                val step = mock<TaskStep>()
+
+                                whenever(runStage.popNextStep(emptySet())).doReturn(StepReady(step))
+                                whenever(runStage.popNextStep(setOf(event))).doReturn(NoStepsRemaining)
+
+                                val firstStep = stateMachine.popNextStep(stepsStillRunning)
+                                assertThat(firstStep, equalTo(step))
+                                stateMachine.postEvent(event)
+                            }
+
+                            on("getting the next step to execute") {
+                                val cleanupStep = mock<TaskStep>()
+                                whenever(cleanupStage.popNextStep(setOf(event))).doReturn(StepReady(cleanupStep))
+
+                                val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                it("returns the first step from the cleanup stage") {
+                                    assertThat(result, equalTo(cleanupStep))
+                                }
+
+                                it("sends all previous events to the cleanup stage planner") {
+                                    verify(cleanupStagePlanner).createStage(graph, setOf(event))
+                                }
+                            }
+                        }
+                    }
+                }
+
+                given("the task has failed") {
+                    val failureEvent = mock<TaskFailedEvent>()
+                    beforeEachTest { stateMachine.postEvent(failureEvent) }
+
+                    given("there are steps still running") {
+                        val stepsStillRunning = true
+
+                        on("getting the next step to execute") {
+                            val result = stateMachine.popNextStep(stepsStillRunning)
+
+                            it("returns null") {
+                                assertThat(result, absent())
+                            }
+
+                            it("does not pop any steps from the run stage") {
+                                verify(runStage, never()).popNextStep(any())
+                            }
+
+                            it("does not create the cleanup stage") {
+                                verify(cleanupStagePlanner, never()).createStage(any(), any())
+                            }
+                        }
+                    }
+
+                    given("there are no steps still running") {
+                        val stepsStillRunning = false
+
+                        given("cleanup after failure is enabled") {
+                            beforeEachTest { whenever(runOptions.behaviourAfterFailure) doReturn BehaviourAfterFailure.Cleanup }
+
+                            on("getting the next steps to execute") {
+                                val firstCleanupStep = mock<TaskStep>()
+                                val secondCleanupStep = mock<TaskStep>()
+                                whenever(cleanupStage.popNextStep(setOf(failureEvent))).doReturn(StepReady(firstCleanupStep), StepReady(secondCleanupStep))
+
+                                val firstResult = stateMachine.popNextStep(stepsStillRunning)
+                                val secondResult = stateMachine.popNextStep(stepsStillRunning)
+
+                                it("returns the first step from the cleanup stage on the first call") {
+                                    assertThat(firstResult, equalTo(firstCleanupStep))
+                                }
+
+                                it("returns the second step from the cleanup stage on the second call") {
+                                    assertThat(secondResult, equalTo(secondCleanupStep))
+                                }
+
+                                it("does not pop any steps from the run stage") {
+                                    verify(runStage, never()).popNextStep(any())
+                                }
+
+                                it("sends all previous events to the cleanup stage planner, and only creates the cleanup stage once") {
+                                    verify(cleanupStagePlanner, times(1)).createStage(graph, setOf(failureEvent))
+                                }
+                            }
+                        }
+
+                        given("cleanup after failure is disabled") {
+                            beforeEachTest { whenever(runOptions.behaviourAfterFailure) doReturn BehaviourAfterFailure.DontCleanup }
+
+                            given("no containers have been created") {
+                                on("getting the next steps to execute") {
+                                    val firstCleanupStep = mock<TaskStep>()
+                                    val secondCleanupStep = mock<TaskStep>()
+                                    whenever(cleanupStage.popNextStep(setOf(failureEvent))).doReturn(StepReady(firstCleanupStep), StepReady(secondCleanupStep))
+
+                                    val firstResult = stateMachine.popNextStep(stepsStillRunning)
+                                    val secondResult = stateMachine.popNextStep(stepsStillRunning)
+
+                                    it("returns the first step from the cleanup stage on the first call") {
+                                        assertThat(firstResult, equalTo(firstCleanupStep))
+                                    }
+
+                                    it("returns the second step from the cleanup stage on the second call") {
+                                        assertThat(secondResult, equalTo(secondCleanupStep))
+                                    }
+
+                                    it("does not pop any steps from the run stage") {
+                                        verify(runStage, never()).popNextStep(any())
+                                    }
+
+                                    it("sends all previous events to the cleanup stage planner, and only creates the cleanup stage once") {
+                                        verify(cleanupStagePlanner, times(1)).createStage(graph, setOf(failureEvent))
+                                    }
+                                }
+                            }
+
+                            given("at least one container has been created") {
+                                val container1 = Container("container-1", imageSourceDoesNotMatter())
+                                val container2 = Container("container-2", imageSourceDoesNotMatter())
+                                val dockerContainer1 = DockerContainer("docker-container-1")
+                                val dockerContainer2 = DockerContainer("docker-container-2")
+                                val event1 = ContainerCreatedEvent(container1, dockerContainer1)
+                                val event2 = ContainerCreatedEvent(container2, dockerContainer2)
+                                val events = setOf(failureEvent, event1, event2)
+
+                                beforeEachTest {
+                                    stateMachine.postEvent(event1)
+                                    stateMachine.postEvent(event2)
+
+                                    whenever(failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events, cleanupCommands)).doReturn("Do this to clean up")
+                                }
+
+                                on("getting the next steps to execute") {
+                                    val cleanupStepThatShouldNeverBeRun = mock<TaskStep>()
+                                    whenever(cleanupStage.popNextStep(events)).doReturn(StepReady(cleanupStepThatShouldNeverBeRun))
+
+                                    val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                    it("returns null") {
+                                        assertThat(result, absent())
+                                    }
+
+                                    it("does not pop any steps from the run stage") {
+                                        verify(runStage, never()).popNextStep(any())
+                                    }
+
+                                    it("sends all previous events to the cleanup stage planner") {
+                                        verify(cleanupStagePlanner).createStage(graph, events)
+                                    }
+
+                                    it("sets the cleanup instruction to that provided by the error message formatter") {
+                                        assertThat(stateMachine.manualCleanupInstructions, equalTo("Do this to clean up"))
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
-            describe("when there is a single step queued") {
-                beforeEachTest {
-                    stateMachine.queueStep(CreateTaskNetworkStep)
-                }
+            given("the cleanup stage is active") {
+                given("the task did not fail") {
+                    val previousEvents = setOf(TaskNetworkCreatedEvent(DockerNetwork("some-network")), TaskNetworkDeletedEvent)
 
-                on("removing pending steps of that step's type") {
-                    stateMachine.removePendingStepsOfType(CreateTaskNetworkStep::class)
-
-                    it("returns no pending or processed steps of that type") {
-                        assertThat(stateMachine.getPendingAndProcessedStepsOfType(CreateTaskNetworkStep::class), isEmpty)
-                    }
-                }
-
-                on("removing pending steps of another type") {
-                    stateMachine.removePendingStepsOfType(DeleteTaskNetworkStep::class)
-
-                    it("returns that step in the list of pending and processed steps") {
-                        assertThat(stateMachine.getPendingAndProcessedStepsOfType(CreateTaskNetworkStep::class),
-                            equalTo(setOf(CreateTaskNetworkStep)))
-                    }
-                }
-
-                describe("when the step has been processed") {
                     beforeEachTest {
-                        stateMachine.popNextStep()
+                        whenever(runStage.popNextStep(emptySet())).doReturn(NoStepsRemaining)
+                        whenever(cleanupStage.popNextStep(emptySet())).doReturn(StepReady(mock()))
+                        stateMachine.popNextStep(false)
+
+                        previousEvents.forEach { stateMachine.postEvent(it) }
                     }
 
-                    on("removing pending steps of that step's type") {
-                        stateMachine.removePendingStepsOfType(CreateTaskNetworkStep::class)
+                    given("cleanup has not failed") {
+                        given("there are steps still running") {
+                            val stepsStillRunning = true
 
-                        it("returns that step in the list of pending and processed steps") {
-                            assertThat(stateMachine.getPendingAndProcessedStepsOfType(CreateTaskNetworkStep::class),
-                                equalTo(setOf(CreateTaskNetworkStep)))
+                            given("there is a step ready") {
+                                val step by createForEachTest { mock<TaskStep>() }
+                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEvents)).doReturn(StepReady(step)) }
+
+                                on("getting the next step to execute") {
+                                    val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                    it("returns that step") {
+                                        assertThat(result, equalTo(step))
+                                    }
+                                }
+                            }
+
+                            given("there are no steps ready") {
+                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEvents)).doReturn(NoStepsReady) }
+
+                                on("getting the next step to execute") {
+                                    val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                    it("returns null") {
+                                        assertThat(result, absent())
+                                    }
+                                }
+                            }
+
+                            given("there are no steps remaining") {
+                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEvents)).doReturn(NoStepsRemaining) }
+
+                                on("getting the next step to execute") {
+                                    val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                    it("returns null") {
+                                        assertThat(result, absent())
+                                    }
+                                }
+                            }
                         }
 
-                        it("returns that step in the list of processed steps") {
-                            assertThat(stateMachine.getProcessedStepsOfType(CreateTaskNetworkStep::class),
-                                equalTo(setOf(CreateTaskNetworkStep)))
+                        given("there are no steps still running") {
+                            val stepsStillRunning = false
+
+                            given("there is a step ready") {
+                                val step by createForEachTest { mock<TaskStep>() }
+                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEvents)).doReturn(StepReady(step)) }
+
+                                on("getting the next step to execute") {
+                                    val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                    it("returns that step") {
+                                        assertThat(result, equalTo(step))
+                                    }
+                                }
+                            }
+
+                            given("there are no steps ready") {
+                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEvents)).doReturn(NoStepsReady) }
+
+                                on("getting the next step to execute") {
+                                    it("throws an appropriate exception") {
+                                        assertThat({ stateMachine.popNextStep(stepsStillRunning) }, throws<IllegalStateException>(withMessage("None of the remaining steps are ready to execute, but there are no steps currently running.")))
+                                    }
+
+                                    it("does not provide any cleanup instructions") {
+                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(""))
+                                    }
+                                }
+                            }
+
+                            given("there are no steps remaining") {
+                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEvents)).doReturn(NoStepsRemaining) }
+
+                                on("getting the next step to execute") {
+                                    val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                    it("returns null") {
+                                        assertThat(result, absent())
+                                    }
+
+                                    it("does not provide any cleanup instructions") {
+                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(""))
+                                    }
+                                }
+                            }
                         }
                     }
 
-                    on("removing pending steps of another type") {
-                        stateMachine.removePendingStepsOfType(DeleteTaskNetworkStep::class)
+                    given("cleanup has failed") {
+                        val event = mock<TaskFailedEvent>()
+                        val previousEventsWithFailureEvent = previousEvents + event
 
-                        it("returns that step in the list of pending and processed steps") {
-                            assertThat(stateMachine.getPendingAndProcessedStepsOfType(CreateTaskNetworkStep::class),
-                                equalTo(setOf(CreateTaskNetworkStep)))
+                        beforeEachTest {
+                            whenever(failureErrorMessageFormatter.formatManualCleanupMessageAfterCleanupFailure(cleanupCommands)).doReturn("Do this to clean up")
+
+                            stateMachine.postEvent(event)
+                        }
+
+                        given("there are steps still running") {
+                            val stepsStillRunning = true
+
+                            given("there is a step ready") {
+                                val step by createForEachTest { mock<TaskStep>() }
+                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEventsWithFailureEvent)).doReturn(StepReady(step)) }
+
+                                on("getting the next step to execute") {
+                                    val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                    it("returns that step") {
+                                        assertThat(result, equalTo(step))
+                                    }
+                                }
+                            }
+
+                            given("there are no steps ready") {
+                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEventsWithFailureEvent)).doReturn(NoStepsReady) }
+
+                                on("getting the next step to execute") {
+                                    val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                    it("returns null") {
+                                        assertThat(result, absent())
+                                    }
+                                }
+                            }
+
+                            given("there are no steps remaining") {
+                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEventsWithFailureEvent)).doReturn(NoStepsRemaining) }
+
+                                on("getting the next step to execute") {
+                                    val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                    it("returns null") {
+                                        assertThat(result, absent())
+                                    }
+                                }
+                            }
+                        }
+
+                        given("there are no steps still running") {
+                            val stepsStillRunning = false
+
+                            given("there is a step ready") {
+                                val step by createForEachTest { mock<TaskStep>() }
+                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEventsWithFailureEvent)).doReturn(StepReady(step)) }
+
+                                on("getting the next step to execute") {
+                                    val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                    it("returns that step") {
+                                        assertThat(result, equalTo(step))
+                                    }
+                                }
+                            }
+
+                            given("there are no steps ready") {
+                                beforeEachTest {
+                                    whenever(cleanupStage.popNextStep(previousEventsWithFailureEvent)).doReturn(NoStepsReady)
+                                }
+
+                                on("getting the next step to execute") {
+                                    val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                    it("returns null") {
+                                        assertThat(result, absent())
+                                    }
+
+                                    it("sets the cleanup instruction to that provided by the error message formatter") {
+                                        assertThat(stateMachine.manualCleanupInstructions, equalTo("Do this to clean up"))
+                                    }
+                                }
+                            }
+
+                            given("there are no steps remaining") {
+                                beforeEachTest {
+                                    whenever(cleanupStage.popNextStep(previousEventsWithFailureEvent)).doReturn(NoStepsRemaining)
+                                }
+
+                                on("getting the next step to execute") {
+                                    val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                    it("returns null") {
+                                        assertThat(result, absent())
+                                    }
+
+                                    it("sets the cleanup instruction to that provided by the error message formatter") {
+                                        assertThat(stateMachine.manualCleanupInstructions, equalTo("Do this to clean up"))
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-            }
 
-            describe("when there are multiple steps of the same type queued") {
-                val step1 = DisplayTaskFailureStep("Something went wrong")
-                val step2 = DisplayTaskFailureStep("Something else went wrong")
-                val step3 = DisplayTaskFailureStep("A third thing went wrong")
+                given("the task failed") {
+                    val failureEvent = mock<TaskFailedEvent>()
+                    val previousEvents = setOf(failureEvent)
 
-                beforeEachTest {
-                    stateMachine.queueStep(step1)
-                    stateMachine.queueStep(step2)
-                    stateMachine.queueStep(step3)
-                    stateMachine.queueStep(CreateTaskNetworkStep)
-                }
-
-                on("removing pending steps of that step's type") {
-                    stateMachine.removePendingStepsOfType(DisplayTaskFailureStep::class)
-
-                    it("returns no pending or processed steps of that type") {
-                        assertThat(stateMachine.getPendingAndProcessedStepsOfType(DisplayTaskFailureStep::class), isEmpty)
-                    }
-
-                    it("returns pending or processed steps of other types") {
-                        assertThat(stateMachine.getPendingAndProcessedStepsOfType(CreateTaskNetworkStep::class),
-                            equalTo(setOf(CreateTaskNetworkStep)))
-                    }
-                }
-
-                on("removing pending steps of another type") {
-                    stateMachine.removePendingStepsOfType(DeleteTaskNetworkStep::class)
-
-                    it("returns the steps in the list of pending and processed steps") {
-                        assertThat(stateMachine.getPendingAndProcessedStepsOfType(DisplayTaskFailureStep::class),
-                            equalTo(setOf(step1, step2, step3)))
-                    }
-                }
-
-                describe("after one of the steps has been processed") {
                     beforeEachTest {
-                        stateMachine.popNextStep()
+                        stateMachine.postEvent(failureEvent)
+                        whenever(runStage.popNextStep(previousEvents)).doReturn(NoStepsRemaining)
+                        whenever(cleanupStage.popNextStep(previousEvents)).doReturn(StepReady(mock()))
+                        stateMachine.popNextStep(false)
                     }
 
-                    on("removing pending steps of that step's type") {
-                        stateMachine.removePendingStepsOfType(DisplayTaskFailureStep::class)
+                    given("cleanup has not failed") {
+                        val otherEvent = TaskNetworkDeletedEvent
+                        val events = previousEvents + otherEvent
 
-                        it("returns only the processed step when asked for pending or processed steps of that type") {
-                            assertThat(stateMachine.getPendingAndProcessedStepsOfType(DisplayTaskFailureStep::class),
-                                equalTo(setOf(step1)))
+                        beforeEachTest { stateMachine.postEvent(otherEvent) }
+
+                        given("there are no steps still running") {
+                            val stepsStillRunning = false
+
+                            given("there are no steps ready") {
+                                beforeEachTest { whenever(cleanupStage.popNextStep(events)).doReturn(NoStepsReady) }
+
+                                on("getting the next step to execute") {
+                                    it("throws an appropriate exception") {
+                                        assertThat({ stateMachine.popNextStep(stepsStillRunning) }, throws<IllegalStateException>(withMessage("None of the remaining steps are ready to execute, but there are no steps currently running.")))
+                                    }
+
+                                    it("does not provide any cleanup instructions") {
+                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(""))
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    given("cleanup has failed") {
+                        val otherEvent = mock<TaskFailedEvent>()
+                        val events = previousEvents + otherEvent
+
+                        beforeEachTest {
+                            whenever(failureErrorMessageFormatter.formatManualCleanupMessageAfterCleanupFailure(cleanupCommands)).doReturn("Do this to clean up")
+
+                            stateMachine.postEvent(otherEvent)
                         }
 
-                        it("returns only the processed step when asked for processed steps of that type") {
-                            assertThat(stateMachine.getProcessedStepsOfType(DisplayTaskFailureStep::class),
-                                equalTo(setOf(step1)))
+                        given("there are no steps still running") {
+                            val stepsStillRunning = false
+
+                            given("there are no steps ready") {
+                                beforeEachTest {
+                                    whenever(cleanupStage.popNextStep(events)).doReturn(NoStepsReady)
+                                }
+
+                                on("getting the next step to execute") {
+                                    val result = stateMachine.popNextStep(stepsStillRunning)
+
+                                    it("returns null") {
+                                        assertThat(result, absent())
+                                    }
+
+                                    it("sets the cleanup instruction to that provided by the error message formatter") {
+                                        assertThat(stateMachine.manualCleanupInstructions, equalTo("Do this to clean up"))
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-            }
-        }
-
-        describe("aborting the task") {
-            on("when the task has not been aborted") {
-                it("indicates that the task is not aborting") {
-                    assertThat(stateMachine.isAborting, equalTo(false))
-                }
-            }
-
-            on("when the task has been aborted") {
-                stateMachine.abort()
-
-                it("indicates that the task is aborting") {
-                    assertThat(stateMachine.isAborting, equalTo(true))
-                }
-            }
-        }
-
-        describe("posting events") {
-            on("receiving an event") {
-                var sawSelfInEventList = false
-                val event = mock<TaskEvent> {
-                    on { apply(any(), any()) } doAnswer { invocation ->
-                        val appliedToStateMachine = invocation.getArgument<TaskStateMachine>(0)
-                        sawSelfInEventList = appliedToStateMachine.getPastEventsOfType(TaskEvent::class).contains(invocation.mock)
-
-                        null
-                    }
-                }
-
-                stateMachine.postEvent(event)
-
-                it("applies the event") {
-                    verify(event).apply(stateMachine, loggerCreatedByFactory)
-                }
-
-                it("adds the event to the list of past events before applying it") {
-                    assertThat(sawSelfInEventList, equalTo(true))
-                }
-            }
-        }
-
-        describe("getting past events") {
-            data class HarmlessTestEvent(val someAttribute: String) : TaskEvent() {
-                override fun apply(context: TaskEventContext, logger: Logger) {
-                    // Do nothing.
-                }
-            }
-
-            val testEvent1 = HarmlessTestEvent("some value")
-            val testEvent2 = HarmlessTestEvent("some other value")
-            val taskStartedEvent = TaskStartedEvent
-
-            beforeEachTest {
-                stateMachine.postEvent(testEvent1)
-                stateMachine.postEvent(testEvent2)
-                stateMachine.postEvent(taskStartedEvent)
-            }
-
-            describe("getting all past events for an event type") {
-                on("when that event type has no past events") {
-                    it("returns an empty list") {
-                        assertThat(stateMachine.getPastEventsOfType(ContainerBecameHealthyEvent::class), isEmpty)
-                    }
-                }
-
-                on("when that event type has one past event") {
-                    it("returns just that event") {
-                        assertThat(stateMachine.getPastEventsOfType(TaskStartedEvent::class), equalTo(setOf(taskStartedEvent)))
-                    }
-                }
-
-                on("when that event type has multiple past events") {
-                    it("returns all past events of that type") {
-                        assertThat(stateMachine.getPastEventsOfType(HarmlessTestEvent::class),
-                            equalTo(setOf(testEvent1, testEvent2)))
-                    }
-                }
-            }
-
-            describe("getting the single past event for an event type") {
-                on("when that event type has no past events") {
-                    it("returns null") {
-                        assertThat(stateMachine.getSinglePastEventOfType(ContainerBecameHealthyEvent::class), absent())
-                    }
-                }
-
-                on("when that event type has one past event") {
-                    it("returns just that event") {
-                        assertThat(stateMachine.getSinglePastEventOfType(TaskStartedEvent::class), equalTo(taskStartedEvent))
-                    }
-                }
-
-                on("when that event type has multiple past events") {
-                    it("throws an exception") {
-                        assertThat({ stateMachine.getSinglePastEventOfType(HarmlessTestEvent::class) },
-                            throws<IllegalStateException>(withMessage("Multiple events of type HarmlessTestEvent found.")))
-                    }
-                }
-            }
-        }
-
-        on("getting the command for a container") {
-            it("returns the command from the container's dependency graph node") {
-                assertThat(stateMachine.commandForContainer(dependencyContainer1), equalTo(graph.nodeFor(dependencyContainer1).command))
-            }
-        }
-
-        describe("getting additional environment variables for a container") {
-            on("when the container is not the task container") {
-                it("returns an empty set of additional environment variables") {
-                    assertThat(stateMachine.additionalEnvironmentVariablesForContainer(dependencyContainer1), equalTo(emptyMap()))
-                }
-            }
-
-            on("when the container is the task container") {
-                it("returns the set of additional environment variables from the task run configuration") {
-                    assertThat(stateMachine.additionalEnvironmentVariablesForContainer(taskContainer), equalTo(runConfig.additionalEnvironmentVariables))
-                }
-            }
-        }
-
-        describe("getting additional port mappings for a container") {
-            on("when the container is not the task container") {
-                it("returns an empty set of additional port mappings") {
-                    assertThat(stateMachine.additionalPortMappingsForContainer(dependencyContainer1), equalTo(emptySet()))
-                }
-            }
-
-            on("when the container is the task container") {
-                it("returns the set of additional port mappings from the task run configuration") {
-                    assertThat(stateMachine.additionalPortMappingsForContainer(taskContainer), equalTo(runConfig.additionalPortMappings))
-                }
-            }
-        }
-
-        describe("determining if a container is the task container") {
-            on("querying with the task container") {
-                it("returns true") {
-                    assertThat(stateMachine.isTaskContainer(taskContainer), equalTo(true))
-                }
-            }
-
-            on("querying with a dependency container") {
-                it("returns false") {
-                    assertThat(stateMachine.isTaskContainer(dependencyContainer1), equalTo(false))
-                }
-            }
-        }
-
-        describe("getting dependencies of a container") {
-            on("querying for the task container") {
-                it("returns all direct dependencies of the task container") {
-                    assertThat(stateMachine.dependenciesOf(taskContainer), equalTo(setOf(dependencyContainer2)))
-                }
-            }
-
-            on("querying for another container with dependencies") {
-                it("returns all direct dependencies of that container") {
-                    assertThat(stateMachine.dependenciesOf(dependencyContainer2), equalTo(setOf(dependencyContainer1)))
-                }
-            }
-
-            on("querying for another container with no dependencies") {
-                it("returns an empty set") {
-                    assertThat(stateMachine.dependenciesOf(dependencyContainer1), isEmpty)
-                }
-            }
-        }
-
-        describe("getting containers that depend on a container") {
-            on("querying for the task container") {
-                it("returns an empty list") {
-                    assertThat(stateMachine.containersThatDependOn(taskContainer), isEmpty)
-                }
-            }
-
-            on("querying for any other container") {
-                it("returns all containers that directly depend on that container") {
-                    assertThat(stateMachine.containersThatDependOn(dependencyContainer2), equalTo(setOf(taskContainer)))
-                }
-            }
-        }
-
-        on("getting all containers for the task") {
-            it("returns a set of all containers related to the task") {
-                assertThat(stateMachine.allTaskContainers, equalTo(setOf(dependencyContainer1, dependencyContainer2, taskContainer)))
-            }
-        }
-
-        on("getting the project name") {
-            it("returns the project name") {
-                assertThat(stateMachine.projectName, equalTo("the-project"))
             }
         }
     }

@@ -18,10 +18,7 @@ package batect.model.events
 
 import batect.config.Container
 import batect.docker.DockerImageBuildProgress
-import batect.logging.Logger
 
 data class ImageBuildProgressEvent(val container: Container, val progress: DockerImageBuildProgress) : TaskEvent() {
-    override fun apply(context: TaskEventContext, logger: Logger) {}
-
     override fun toString() = "${this::class.simpleName}(container: '${container.name}', current step: ${progress.currentStep}, total steps: ${progress.totalSteps}, message: '${progress.message}')"
 }

@@ -69,7 +69,6 @@ import batect.model.events.TaskNetworkCreatedEvent
 import batect.model.events.TaskNetworkCreationFailedEvent
 import batect.model.events.TaskNetworkDeletedEvent
 import batect.model.events.TaskNetworkDeletionFailedEvent
-import batect.model.events.TaskStartedEvent
 import batect.model.events.TemporaryFileDeletedEvent
 import batect.model.events.TemporaryFileDeletionFailedEvent
 import batect.os.Command
@@ -90,7 +89,6 @@ import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.doThrow
 import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.reset
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
@@ -152,15 +150,6 @@ object TaskStepRunnerSpec : Spek({
                         withSeverity(Severity.Info) and
                             withLogMessage("Step completed.") and
                             withAdditionalData("step", "The step description")))
-                }
-            }
-
-            on("running a 'begin task' step") {
-                val step = BeginTaskStep
-                runner.run(step, eventSink, runOptions)
-
-                it("emits a 'task started' event") {
-                    verify(eventSink).postEvent(TaskStartedEvent)
                 }
             }
 
@@ -623,24 +612,6 @@ object TaskStepRunnerSpec : Spek({
                     it("emits a 'network deletion failed' event") {
                         verify(eventSink).postEvent(TaskNetworkDeletionFailedEvent("Something went wrong"))
                     }
-                }
-            }
-
-            on("running a 'display task failure' step") {
-                val step = DisplayTaskFailureStep("Something went wrong.")
-                runner.run(step, eventSink, runOptions)
-
-                it("does not emit any events") {
-                    verify(eventSink, never()).postEvent(any())
-                }
-            }
-
-            on("running a 'finish task' step") {
-                val step = FinishTaskStep(123)
-                runner.run(step, eventSink, runOptions)
-
-                it("does not emit any events") {
-                    verify(eventSink, never()).postEvent(any())
                 }
             }
         }

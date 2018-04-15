@@ -29,81 +29,145 @@ import batect.model.DependencyGraphProvider
 import batect.model.RunOptions
 import batect.model.TaskStateMachine
 import batect.model.TaskStateMachineProvider
+import batect.model.events.RunningContainerExitedEvent
+import batect.model.events.TaskFailedEvent
 import batect.testutils.InMemoryLogSink
+import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.withMessage
 import batect.ui.EventLogger
 import batect.ui.EventLoggerProvider
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.reset
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
+import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 
 object TaskRunnerSpec : Spek({
     describe("a task runner") {
-        val graph = mock<DependencyGraph>()
-        val graphProvider = mock<DependencyGraphProvider>()
-
-        val eventLogger = mock<EventLogger>()
-        val eventLoggerProvider = mock<EventLoggerProvider> {
-            on { getEventLogger(graph) } doReturn eventLogger
-        }
-
-        val stateMachine = mock<TaskStateMachine>()
-        val executionManager = mock<ParallelExecutionManager>()
+        val container = Container("some-container", imageSourceDoesNotMatter())
+        val runConfiguration = TaskRunConfiguration(container.name)
+        val task = Task("some-task", runConfiguration)
+        val config = Configuration("some-project", TaskMap(task), ContainerMap(container))
         val runOptions = RunOptions("some-task", emptyList(), 64, BehaviourAfterFailure.Cleanup, true)
 
-        val stateMachineProvider = mock<TaskStateMachineProvider> {
-            on { createStateMachine(graph, runOptions.behaviourAfterFailure) } doReturn stateMachine
+        val graph = mock<DependencyGraph>()
+        val graphProvider = mock<DependencyGraphProvider> {
+            on { createGraph(config, task) } doReturn graph
         }
 
-        val executionManagerProvider = mock<ParallelExecutionManagerProvider> {
-            on { createParallelExecutionManager(eventLogger, stateMachine, "some-task", runOptions) } doReturn executionManager
-        }
-
-        val logger = Logger("some.source", InMemoryLogSink())
-        val taskRunner = TaskRunner(eventLoggerProvider, graphProvider, stateMachineProvider, executionManagerProvider, logger)
-
-        beforeEachTest {
-            reset(eventLogger)
-            reset(stateMachine)
-        }
-
-        on("running a task") {
-            val container = Container("some-container", imageSourceDoesNotMatter())
-            val runConfiguration = TaskRunConfiguration(container.name)
-            val task = Task("some-task", runConfiguration)
-            val config = Configuration("some-project", TaskMap(task), ContainerMap(container))
-
-            whenever(graphProvider.createGraph(config, task)).thenReturn(graph)
-            whenever(executionManager.run()).doReturn(100)
-
-            val exitCode = taskRunner.run(config, task, runOptions)
-
-            it("logs that the task is starting") {
-                verify(eventLogger).onTaskStarting("some-task")
+        val eventLogger by createForEachTest { mock<EventLogger>() }
+        val eventLoggerProvider by createForEachTest {
+            mock<EventLoggerProvider> {
+                on { getEventLogger(graph, runOptions) } doReturn eventLogger
             }
+        }
 
-            it("runs the task") {
-                verify(executionManager).run()
+        val stateMachine by createForEachTest { mock<TaskStateMachine>() }
+        val executionManager by createForEachTest { mock<ParallelExecutionManager>() }
+
+        val stateMachineProvider by createForEachTest {
+            mock<TaskStateMachineProvider> {
+                on { createStateMachine(graph, runOptions) } doReturn stateMachine
             }
+        }
 
-            it("logs that the task is starting before running the task") {
-                inOrder(eventLogger, executionManager) {
-                    verify(eventLogger).onTaskStarting("some-task")
-                    verify(executionManager).run()
+        val executionManagerProvider by createForEachTest {
+            mock<ParallelExecutionManagerProvider> {
+                on { createParallelExecutionManager(eventLogger, stateMachine, runOptions) } doReturn executionManager
+            }
+        }
+
+        val logger by createForEachTest { Logger("some.source", InMemoryLogSink()) }
+        val taskRunner by createForEachTest { TaskRunner(eventLoggerProvider, graphProvider, stateMachineProvider, executionManagerProvider, logger) }
+
+        describe("running a task") {
+            given("the task succeeds") {
+                beforeEachTest {
+                    whenever(stateMachine.getAllEvents()).thenReturn(setOf(
+                        RunningContainerExitedEvent(container, 100)
+                    ))
+                }
+
+                on("running the task") {
+                    val exitCode = taskRunner.run(config, task, runOptions)
+
+                    it("logs that the task is starting") {
+                        verify(eventLogger).onTaskStarting("some-task")
+                    }
+
+                    it("runs the task") {
+                        verify(executionManager).run()
+                    }
+
+                    it("logs that the task is starting before running the task") {
+                        inOrder(eventLogger, executionManager) {
+                            verify(eventLogger).onTaskStarting("some-task")
+                            verify(executionManager).run()
+                        }
+                    }
+
+                    it("returns the exit code from the task") {
+                        assertThat(exitCode, equalTo(100))
+                    }
                 }
             }
 
-            it("returns the exit code from the execution manager") {
-                assertThat(exitCode, equalTo(100))
+            given("the task fails") {
+                val failureEvent = mock<TaskFailedEvent>()
+
+                beforeEachTest {
+                    whenever(stateMachine.getAllEvents()).thenReturn(setOf(failureEvent))
+                    whenever(stateMachine.manualCleanupInstructions).thenReturn("Do this to clean up")
+                }
+
+                on("running the task") {
+                    val exitCode = taskRunner.run(config, task, runOptions)
+
+                    it("logs that the task is starting") {
+                        verify(eventLogger).onTaskStarting("some-task")
+                    }
+
+                    it("runs the task") {
+                        verify(executionManager).run()
+                    }
+
+                    it("logs that the task failed") {
+                        verify(eventLogger).onTaskFailed("some-task", "Do this to clean up")
+                    }
+
+                    it("logs that the task is starting before running the task and then logs that the task failed") {
+                        inOrder(eventLogger, executionManager) {
+                            verify(eventLogger).onTaskStarting("some-task")
+                            verify(executionManager).run()
+                            verify(eventLogger).onTaskFailed("some-task", "Do this to clean up")
+                        }
+                    }
+
+                    it("returns a non-zero exit code") {
+                        assertThat(exitCode, !equalTo(0))
+                    }
+                }
+            }
+
+            given("the task neither succeeds or fails") {
+                beforeEachTest {
+                    whenever(stateMachine.getAllEvents()).thenReturn(emptySet())
+                }
+
+                on("running the task") {
+                    it("throws an appropriate exception") {
+                        assertThat({ taskRunner.run(config, task, runOptions) }, throws<IllegalStateException>(withMessage("The task neither failed nor succeeded.")))
+                    }
+                }
             }
         }
     }

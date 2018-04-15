@@ -21,15 +21,12 @@ import batect.config.PortMapping
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
-import batect.model.events.TaskEventContext
 import batect.os.Command
 import java.nio.file.Path
 
 sealed class TaskStep {
     override fun toString() = this.javaClass.canonicalName
 }
-
-object BeginTaskStep : TaskStep()
 
 data class BuildImageStep(val projectName: String, val container: Container) : TaskStep() {
     override fun toString() = super.toString() + "(project name: '$projectName', container: '${container.name}')"
@@ -50,15 +47,6 @@ data class CreateContainerStep(
     val network: DockerNetwork
 ) : TaskStep() {
     override fun toString() = super.toString() + "(container: '${container.name}', command: '${(command ?: "")}', additional environment variables: $additionalEnvironmentVariables, additional port mappings: $additionalPortMappings, image '${image.id}', network: '${network.id}')"
-
-    constructor(container: Container, image: DockerImage, network: DockerNetwork, context: TaskEventContext) : this(
-        container,
-        context.commandForContainer(container),
-        context.additionalEnvironmentVariablesForContainer(container),
-        context.additionalPortMappingsForContainer(container),
-        image,
-        network
-    )
 }
 
 data class RunContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
@@ -89,14 +77,6 @@ data class WaitForContainerToBecomeHealthyStep(val container: Container, val doc
     override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 
-data class FinishTaskStep(val exitCode: Int) : TaskStep() {
-    override fun toString() = super.toString() + "(exit code: $exitCode)"
-}
-
 data class DeleteTaskNetworkStep(val network: DockerNetwork) : TaskStep() {
     override fun toString() = super.toString() + "(network: '${network.id}')"
-}
-
-data class DisplayTaskFailureStep(val message: String) : TaskStep() {
-    override fun toString() = super.toString() + "(message: '$message')"
 }

@@ -16,18 +16,6 @@
 
 package batect.model.events
 
-import batect.logging.Logger
-import batect.model.steps.FinishTaskStep
-
 object TaskNetworkDeletedEvent : TaskEvent() {
-    override fun apply(context: TaskEventContext, logger: Logger) {
-        if (context.isAborting) {
-            return
-        }
-
-        val exitEvent = context.getSinglePastEventOfType<RunningContainerExitedEvent>()!!
-        context.queueStep(FinishTaskStep(exitEvent.exitCode))
-    }
-
     override fun toString() = this::class.simpleName!!
 }

@@ -55,7 +55,6 @@ import batect.model.events.TaskNetworkCreatedEvent
 import batect.model.events.TaskNetworkCreationFailedEvent
 import batect.model.events.TaskNetworkDeletedEvent
 import batect.model.events.TaskNetworkDeletionFailedEvent
-import batect.model.events.TaskStartedEvent
 import batect.model.events.TemporaryFileDeletedEvent
 import batect.model.events.TemporaryFileDeletionFailedEvent
 import batect.os.ProxyEnvironmentVariablesProvider
@@ -76,7 +75,6 @@ class TaskStepRunner(
         }
 
         when (step) {
-            is BeginTaskStep -> eventSink.postEvent(TaskStartedEvent)
             is BuildImageStep -> handleBuildImageStep(step, eventSink, runOptions)
             is PullImageStep -> handlePullImageStep(step, eventSink)
             is CreateTaskNetworkStep -> handleCreateTaskNetworkStep(eventSink)
@@ -89,8 +87,6 @@ class TaskStepRunner(
             is RemoveContainerStep -> handleRemoveContainerStep(step, eventSink)
             is DeleteTemporaryFileStep -> handleDeleteTemporaryFileStep(step, eventSink)
             is DeleteTaskNetworkStep -> handleDeleteTaskNetworkStep(step, eventSink)
-            is DisplayTaskFailureStep -> ignore()
-            is FinishTaskStep -> ignore()
         }
 
         logger.info {
@@ -243,10 +239,6 @@ class TaskStepRunner(
         } catch (e: NetworkDeletionFailedException) {
             eventSink.postEvent(TaskNetworkDeletionFailedEvent(e.outputFromDocker))
         }
-    }
-
-    private fun ignore() {
-        // Do nothing.
     }
 
     private fun proxyEnvironmentVariablesForOptions(runOptions: RunOptions): Map<String, String> = if (runOptions.propagateProxyEnvironmentVariables) {

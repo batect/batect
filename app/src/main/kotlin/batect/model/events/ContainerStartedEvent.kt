@@ -16,26 +16,8 @@
 
 package batect.model.events
 
-import batect.model.steps.WaitForContainerToBecomeHealthyStep
 import batect.config.Container
-import batect.logging.Logger
 
 data class ContainerStartedEvent(val container: Container) : TaskEvent() {
-    override fun apply(context: TaskEventContext, logger: Logger) {
-        if (context.isAborting) {
-            logger.info {
-                message("Task is aborting, not queuing any further work.")
-                data("event", this@ContainerStartedEvent.toString())
-            }
-
-            return
-        }
-
-        val creationEvent = context.getPastEventsOfType<ContainerCreatedEvent>()
-                .single { it.container == container }
-
-        context.queueStep(WaitForContainerToBecomeHealthyStep(container, creationEvent.dockerContainer))
-    }
-
     override fun toString() = "${this::class.simpleName}(container: '${container.name}')"
 }

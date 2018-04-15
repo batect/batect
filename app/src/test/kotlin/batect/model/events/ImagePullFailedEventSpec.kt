@@ -27,12 +27,6 @@ object ImagePullFailedEventSpec : Spek({
     describe("a 'image pull failed' event") {
         val event = ImagePullFailedEvent("some-image", "Could not pull image 'some-image': Something went wrong")
 
-        on("getting the message to display to the user") {
-            it("returns an appropriate message") {
-                assertThat(event.messageToDisplay, equalTo("Could not pull image 'some-image': Something went wrong"))
-            }
-        }
-
         on("toString()") {
             it("returns a human-readable representation of itself") {
                 assertThat(event.toString(), equalTo("ImagePullFailedEvent(message: 'Could not pull image 'some-image': Something went wrong')"))

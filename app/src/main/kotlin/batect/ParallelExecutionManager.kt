@@ -21,7 +21,6 @@ import batect.model.RunOptions
 import batect.model.TaskStateMachine
 import batect.model.events.TaskEvent
 import batect.model.events.TaskEventSink
-import batect.model.steps.FinishTaskStep
 import batect.model.steps.TaskStep
 import batect.model.steps.TaskStepRunner
 import batect.ui.EventLogger
@@ -40,33 +39,22 @@ class ParallelExecutionManager(
     private val eventLogger: EventLogger,
     private val taskStepRunner: TaskStepRunner,
     private val stateMachine: TaskStateMachine,
-    private val taskName: String,
     private val runOptions: RunOptions,
     private val logger: Logger
 ) {
     private val eventSink = createEventSink()
     private val threadPool = createThreadPool()
 
-    private var exitCode: Int? = null
     private val startNewWorkLockObject = Object()
     private val finishedSignal = CountDownLatch(1)
     private var runningSteps = 0
 
-    fun run(): Int {
-        exitCode = null
-
+    fun run() {
         startNewWorkIfPossible()
 
         finishedSignal.await()
         threadPool.shutdown()
         threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)
-
-        if (exitCode != null) {
-            return exitCode!!
-        } else {
-            eventLogger.onTaskFailed(taskName)
-            return -1
-        }
     }
 
     private fun createThreadPool() =
@@ -99,31 +87,42 @@ class ParallelExecutionManager(
                 runningSteps--
             }
 
-            while (runningSteps < runOptions.levelOfParallelism) {
-                val step = stateMachine.popNextStep()
+            try {
+                while (runningSteps < runOptions.levelOfParallelism) {
+                    val stepsStillRunning = runningSteps > 0
+                    val step = stateMachine.popNextStep(stepsStillRunning)
 
-                if (step == null) {
-                    break
+                    if (step == null) {
+                        break
+                    }
+
+                    runningSteps++
+                    runStep(step, threadPool, eventSink)
+                }
+            } catch (e: Throwable) {
+                logger.error {
+                    message("Could not schedule new work.")
+                    exception(e)
                 }
 
-                runningSteps++
-                runStep(step, threadPool, eventSink)
-            }
-
-            if (runningSteps == 0) {
-                finishedSignal.countDown()
+                throw e
+            } finally {
+                if (runningSteps == 0) {
+                    finishedSignal.countDown()
+                }
             }
         }
     }
 
     private fun runStep(step: TaskStep, threadPool: ThreadPoolExecutor, eventSink: TaskEventSink) {
         threadPool.execute {
+            logger.info {
+                message("Running step.")
+                data("step", step.toString())
+            }
+
             eventLogger.onStartingTaskStep(step)
             taskStepRunner.run(step, eventSink, runOptions)
-
-            if (step is FinishTaskStep) {
-                exitCode = step.exitCode
-            }
         }
     }
 

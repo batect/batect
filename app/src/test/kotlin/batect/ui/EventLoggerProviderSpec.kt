@@ -17,6 +17,7 @@
 package batect.ui
 
 import batect.model.DependencyGraph
+import batect.model.RunOptions
 import batect.ui.fancy.FancyEventLogger
 import batect.ui.fancy.StartupProgressDisplay
 import batect.ui.fancy.StartupProgressDisplayProvider
@@ -35,9 +36,11 @@ import org.jetbrains.spek.api.dsl.on
 
 object EventLoggerProviderSpec : Spek({
     describe("an event logger provider") {
+        val failureErrorMessageFormatter = mock<FailureErrorMessageFormatter>()
         val console = mock<Console>()
         val errorConsole = mock<Console>()
         val graph = mock<DependencyGraph>()
+        val runOptions = mock<RunOptions>()
 
         given("quiet output mode has not been forced on") {
             val forceQuietOutputMode = false
@@ -50,11 +53,19 @@ object EventLoggerProviderSpec : Spek({
                     on { supportsInteractivity } doReturn true
                 }
 
-                val provider = EventLoggerProvider(console, errorConsole, startupProgressDisplayProvider, consoleInfo, forceSimpleOutputMode, forceQuietOutputMode)
-                val logger = provider.getEventLogger(graph)
+                val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, startupProgressDisplayProvider, consoleInfo, forceSimpleOutputMode, forceQuietOutputMode)
+                val logger = provider.getEventLogger(graph, runOptions)
 
                 it("returns a simple event logger") {
                     assertThat(logger, isA<SimpleEventLogger>())
+                }
+
+                it("passes the failure error message formatter to the event logger") {
+                    assertThat((logger as SimpleEventLogger).failureErrorMessageFormatter, equalTo(failureErrorMessageFormatter))
+                }
+
+                it("passes the run options to the event logger") {
+                    assertThat((logger as SimpleEventLogger).runOptions, equalTo(runOptions))
                 }
 
                 it("passes the console to the event logger") {
@@ -79,11 +90,19 @@ object EventLoggerProviderSpec : Spek({
                         on { supportsInteractivity } doReturn true
                     }
 
-                    val provider = EventLoggerProvider(console, errorConsole, startupProgressDisplayProvider, consoleInfo, forceSimpleOutputMode, forceQuietOutputMode)
-                    val logger = provider.getEventLogger(graph)
+                    val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, startupProgressDisplayProvider, consoleInfo, forceSimpleOutputMode, forceQuietOutputMode)
+                    val logger = provider.getEventLogger(graph, runOptions)
 
                     it("returns a fancy event logger") {
                         assertThat(logger, isA<FancyEventLogger>())
+                    }
+
+                    it("passes the failure error message formatter to the event logger") {
+                        assertThat((logger as FancyEventLogger).failureErrorMessageFormatter, equalTo(failureErrorMessageFormatter))
+                    }
+
+                    it("passes the run options to the event logger") {
+                        assertThat((logger as FancyEventLogger).runOptions, equalTo(runOptions))
                     }
 
                     it("passes the console to the event logger") {
@@ -106,11 +125,19 @@ object EventLoggerProviderSpec : Spek({
                         on { supportsInteractivity } doReturn false
                     }
 
-                    val provider = EventLoggerProvider(console, errorConsole, startupProgressDisplayProvider, consoleInfo, forceSimpleOutputMode, forceQuietOutputMode)
-                    val logger = provider.getEventLogger(graph)
+                    val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, startupProgressDisplayProvider, consoleInfo, forceSimpleOutputMode, forceQuietOutputMode)
+                    val logger = provider.getEventLogger(graph, runOptions)
 
                     it("returns a simple event logger") {
                         assertThat(logger, isA<SimpleEventLogger>())
+                    }
+
+                    it("passes the failure error message formatter to the event logger") {
+                        assertThat((logger as SimpleEventLogger).failureErrorMessageFormatter, equalTo(failureErrorMessageFormatter))
+                    }
+
+                    it("passes the run options to the event logger") {
+                        assertThat((logger as SimpleEventLogger).runOptions, equalTo(runOptions))
                     }
 
                     it("passes the console to the event logger") {
@@ -138,11 +165,19 @@ object EventLoggerProviderSpec : Spek({
                         on { supportsInteractivity } doReturn true
                     }
 
-                    val provider = EventLoggerProvider(console, errorConsole, startupProgressDisplayProvider, consoleInfo, forceSimpleOutputMode, forceQuietOutputMode)
-                    val logger = provider.getEventLogger(graph)
+                    val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, startupProgressDisplayProvider, consoleInfo, forceSimpleOutputMode, forceQuietOutputMode)
+                    val logger = provider.getEventLogger(graph, runOptions)
 
                     it("returns a quiet event logger") {
                         assertThat(logger, isA<QuietEventLogger>())
+                    }
+
+                    it("passes the failure error message formatter to the event logger") {
+                        assertThat((logger as QuietEventLogger).failureErrorMessageFormatter, equalTo(failureErrorMessageFormatter))
+                    }
+
+                    it("passes the run options to the event logger") {
+                        assertThat((logger as QuietEventLogger).runOptions, equalTo(runOptions))
                     }
 
                     it("passes the error console to the event logger") {

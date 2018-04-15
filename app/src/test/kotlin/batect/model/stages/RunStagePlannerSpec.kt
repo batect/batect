@@ -25,6 +25,7 @@ import batect.config.PullImage
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
+import batect.logging.Logger
 import batect.model.ContainerCommandResolver
 import batect.model.DependencyGraph
 import batect.model.rules.run.BuildImageStepRule
@@ -36,6 +37,7 @@ import batect.model.rules.run.StartContainerStepRule
 import batect.model.rules.TaskStepRule
 import batect.model.rules.run.WaitForContainerToBecomeHealthyStepRule
 import batect.os.Command
+import batect.testutils.InMemoryLogSink
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.hasElement
@@ -49,11 +51,14 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 
-object RunStageSpec : Spek({
-    describe("a run stage") {
+object RunStagePlannerSpec : Spek({
+    describe("a run stage planner") {
         val commandResolver = mock<ContainerCommandResolver> {
             on { resolveCommand(any(), any()) } doReturn Command.parse("do-stuff")
         }
+
+        val logger = Logger("run-stage-test", InMemoryLogSink())
+        val planner = RunStagePlanner(logger)
 
         given("the task has a single container") {
             given("the task has no additional environment variables or port mappings") {
@@ -63,7 +68,7 @@ object RunStageSpec : Spek({
                     val container = Container(task.runConfiguration.container, PullImage("some-image"))
                     val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                     val graph = DependencyGraph(config, task, commandResolver)
-                    val stage = RunStage(graph)
+                    val stage = planner.createStage(graph)
 
                     itHasExactlyTheRules(stage, mapOf(
                         "create the task network" to CreateTaskNetworkStepRule,
@@ -77,7 +82,7 @@ object RunStageSpec : Spek({
                     val container = Container(task.runConfiguration.container, BuildImage("./my-image"))
                     val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                     val graph = DependencyGraph(config, task, commandResolver)
-                    val stage = RunStage(graph)
+                    val stage = planner.createStage(graph)
 
                     itHasExactlyTheRules(stage, mapOf(
                         "create the task network" to CreateTaskNetworkStepRule,
@@ -93,7 +98,7 @@ object RunStageSpec : Spek({
                 val container = Container(task.runConfiguration.container, PullImage("some-image"))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                 val graph = DependencyGraph(config, task, commandResolver)
-                val stage = RunStage(graph)
+                val stage = planner.createStage(graph)
 
                 itHasExactlyTheRules(stage, mapOf(
                     "create the task network" to CreateTaskNetworkStepRule,
@@ -108,7 +113,7 @@ object RunStageSpec : Spek({
                 val container = Container(task.runConfiguration.container, PullImage("some-image"))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                 val graph = DependencyGraph(config, task, commandResolver)
-                val stage = RunStage(graph)
+                val stage = planner.createStage(graph)
 
                 itHasExactlyTheRules(stage, mapOf(
                     "create the task network" to CreateTaskNetworkStepRule,
@@ -129,7 +134,7 @@ object RunStageSpec : Spek({
                 val taskContainer = Container(task.runConfiguration.container, BuildImage("./task-container"), dependencies = setOf(container1.name, container2.name, container3.name))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2, container3))
                 val graph = DependencyGraph(config, task, commandResolver)
-                val stage = RunStage(graph)
+                val stage = planner.createStage(graph)
 
                 itHasExactlyTheRules(stage, mapOf(
                     "create the task network" to CreateTaskNetworkStepRule,
@@ -157,7 +162,7 @@ object RunStageSpec : Spek({
                 val taskContainer = Container(task.runConfiguration.container, PullImage("task-image"), dependencies = setOf(container1.name, container2.name))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2))
                 val graph = DependencyGraph(config, task, commandResolver)
-                val stage = RunStage(graph)
+                val stage = planner.createStage(graph)
 
                 itHasExactlyTheRules(stage, mapOf(
                     "create the task network" to CreateTaskNetworkStepRule,

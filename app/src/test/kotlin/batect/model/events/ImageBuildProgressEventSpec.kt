@@ -19,11 +19,7 @@ package batect.model.events
 import batect.config.BuildImage
 import batect.config.Container
 import batect.docker.DockerImageBuildProgress
-import batect.logging.Logger
-import batect.testutils.InMemoryLogSink
 import com.natpryce.hamkrest.equalTo
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.verifyZeroInteractions
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -33,17 +29,6 @@ object ImageBuildProgressEventSpec : Spek({
     describe("an 'image build progress' event") {
         val container = Container("container-1", BuildImage("/container-1-build-dir"))
         val event = ImageBuildProgressEvent(container, DockerImageBuildProgress(1, 10, "Something is happening"))
-
-        on("being applied") {
-            val context = mock<TaskEventContext>()
-            val logger = Logger("test.source", InMemoryLogSink())
-
-            event.apply(context, logger)
-
-            it("does not do anything") {
-                verifyZeroInteractions(context)
-            }
-        }
 
         on("toString()") {
             it("returns a human-readable representation of itself") {

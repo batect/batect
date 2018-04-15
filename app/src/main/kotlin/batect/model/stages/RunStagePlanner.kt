@@ -19,41 +19,47 @@ package batect.model.stages
 import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
+import batect.logging.Logger
 import batect.model.DependencyGraph
 import batect.model.DependencyGraphNode
+import batect.model.rules.TaskStepRule
 import batect.model.rules.run.BuildImageStepRule
 import batect.model.rules.run.CreateContainerStepRule
 import batect.model.rules.run.CreateTaskNetworkStepRule
 import batect.model.rules.run.PullImageStepRule
 import batect.model.rules.run.RunContainerStepRule
 import batect.model.rules.run.StartContainerStepRule
-import batect.model.rules.TaskStepRule
 import batect.model.rules.run.WaitForContainerToBecomeHealthyStepRule
 import batect.utils.flatMapToSet
 
-class RunStage(private val graph: DependencyGraph) {
-    val rules: Set<TaskStepRule> = generateRules()
-
-    private fun generateRules(): Set<TaskStepRule> {
-        return graph.allNodes.flatMapToSet { stepsFor(it) } +
+class RunStagePlanner(private val logger: Logger) {
+    fun createStage(graph: DependencyGraph): RunStage {
+        val rules = graph.allNodes.flatMapToSet { stepsFor(it, graph.config.projectName) } +
             CreateTaskNetworkStepRule
+
+        logger.info {
+            message("Created run plan.")
+            data("rules", rules.map { it.toString() })
+        }
+
+        return RunStage(rules)
     }
 
-    private fun stepsFor(node: DependencyGraphNode): Set<TaskStepRule> {
+    private fun stepsFor(node: DependencyGraphNode, projectName: String): Set<TaskStepRule> {
         return startupRulesFor(node) +
-            imageCreationRuleFor(node.container) +
+            imageCreationRuleFor(node.container, projectName) +
             CreateContainerStepRule(node.container, node.command, node.additionalEnvironmentVariables, node.additionalPortMappings)
     }
 
-    private fun imageCreationRuleFor(container: Container): TaskStepRule {
+    private fun imageCreationRuleFor(container: Container, projectName: String): TaskStepRule {
         return when (container.imageSource) {
             is PullImage -> PullImageStepRule(container.imageSource.imageName)
-            is BuildImage -> BuildImageStepRule(graph.config.projectName, container)
+            is BuildImage -> BuildImageStepRule(projectName, container)
         }
     }
 
     private fun startupRulesFor(node: DependencyGraphNode): Set<TaskStepRule> {
-        if (node == graph.taskContainerNode) {
+        if (node == node.graph.taskContainerNode) {
             return setOf(RunContainerStepRule(node.container, node.dependsOnContainers))
         } else {
             return setOf(

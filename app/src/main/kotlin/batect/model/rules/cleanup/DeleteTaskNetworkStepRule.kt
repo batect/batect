@@ -38,5 +38,6 @@ data class DeleteTaskNetworkStepRule(val network: DockerNetwork, val containersT
     }
 
     override val manualCleanupInstruction: String? = "docker network rm ${network.id}"
+    override val manualCleanupSortOrder: ManualCleanupSortOrder = ManualCleanupSortOrder.DeleteTaskNetwork
     override fun toString() = "${this::class.simpleName}(network=$network, containersThatMustBeRemovedFirst=${containersThatMustBeRemovedFirst.map(Container::name)})"
 }

@@ -17,18 +17,23 @@
 package batect.model
 
 import batect.logging.LoggerFactory
-import batect.model.steps.BeginTaskStep
+import batect.model.stages.CleanupStagePlanner
+import batect.model.stages.RunStagePlanner
+import batect.ui.FailureErrorMessageFormatter
 
-class TaskStateMachineProvider(private val loggerFactory: LoggerFactory) {
-    fun createStateMachine(graph: DependencyGraph, behaviourAfterFailure: BehaviourAfterFailure): TaskStateMachine {
-        val stateMachine = TaskStateMachine(
+class TaskStateMachineProvider(
+    private val runStagePlanner: RunStagePlanner,
+    private val cleanupStagePlanner: CleanupStagePlanner,
+    private val failureErrorMessageFormatter: FailureErrorMessageFormatter,
+    private val loggerFactory: LoggerFactory
+) {
+    fun createStateMachine(graph: DependencyGraph, runOptions: RunOptions): TaskStateMachine =
+        TaskStateMachine(
             graph,
-            behaviourAfterFailure,
-            loggerFactory.createLoggerForClass(TaskStateMachine::class),
-            loggerFactory)
-
-        stateMachine.queueStep(BeginTaskStep)
-
-        return stateMachine
-    }
+            runOptions,
+            runStagePlanner,
+            cleanupStagePlanner,
+            failureErrorMessageFormatter,
+            loggerFactory.createLoggerForClass(TaskStateMachine::class)
+        )
 }

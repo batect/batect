@@ -18,7 +18,6 @@ package batect.model
 
 import batect.logging.Logger
 import batect.logging.LoggerFactory
-import batect.model.steps.BeginTaskStep
 import batect.testutils.InMemoryLogSink
 import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
@@ -39,21 +38,12 @@ object TaskStateMachineProviderSpec : Spek({
                 on { createLoggerForClass(TaskStateMachine::class) } doReturn logger
             }
 
-            val behaviourAfterFailure = BehaviourAfterFailure.Cleanup
-            val provider = TaskStateMachineProvider(loggerFactory)
-            val stateMachine = provider.createStateMachine(graph, behaviourAfterFailure)
-            val firstStep = stateMachine.popNextStep()
+            val runOptions = RunOptions("some-task", emptyList(), 1, BehaviourAfterFailure.Cleanup, true)
+            val provider = TaskStateMachineProvider(mock(), mock(), mock(), loggerFactory)
+            val stateMachine = provider.createStateMachine(graph, runOptions)
 
             it("creates a state machine with the correct logger") {
                 assertThat(stateMachine.logger, equalTo(logger))
-            }
-
-            it("creates a state machine with the provided behaviour after failure") {
-                assertThat(stateMachine.behaviourAfterFailure, equalTo(behaviourAfterFailure))
-            }
-
-            it("queues a 'begin task' step") {
-                assertThat(firstStep, equalTo(BeginTaskStep))
             }
         }
     }

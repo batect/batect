@@ -21,6 +21,6 @@ import batect.model.steps.TaskStep
 
 abstract class EventLogger : TaskEventSink {
     abstract fun onStartingTaskStep(step: TaskStep)
-    abstract fun onTaskFailed(taskName: String)
+    abstract fun onTaskFailed(taskName: String, manualCleanupInstructions: String)
     abstract fun onTaskStarting(taskName: String)
 }

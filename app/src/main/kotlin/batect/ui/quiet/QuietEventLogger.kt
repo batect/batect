@@ -16,24 +16,30 @@
 
 package batect.ui.quiet
 
+import batect.model.RunOptions
 import batect.model.events.TaskEvent
-import batect.model.steps.DisplayTaskFailureStep
+import batect.model.events.TaskFailedEvent
 import batect.model.steps.TaskStep
 import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.ui.EventLogger
+import batect.ui.FailureErrorMessageFormatter
 
-class QuietEventLogger(val errorConsole: Console) : EventLogger() {
-    override fun onStartingTaskStep(step: TaskStep) {
-        if (step is DisplayTaskFailureStep) {
+class QuietEventLogger(
+    val failureErrorMessageFormatter: FailureErrorMessageFormatter,
+    val runOptions: RunOptions,
+    val errorConsole: Console
+) : EventLogger() {
+    override fun postEvent(event: TaskEvent) {
+        if (event is TaskFailedEvent) {
             errorConsole.withColor(ConsoleColor.Red) {
                 println()
-                println(step.message)
+                println(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
             }
         }
     }
 
-    override fun postEvent(event: TaskEvent) {}
-    override fun onTaskFailed(taskName: String) {}
+    override fun onStartingTaskStep(step: TaskStep) {}
+    override fun onTaskFailed(taskName: String, manualCleanupInstructions: String) {}
     override fun onTaskStarting(taskName: String) {}
 }

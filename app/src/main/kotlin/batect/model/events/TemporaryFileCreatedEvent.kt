@@ -17,13 +17,8 @@
 package batect.model.events
 
 import batect.config.Container
-import batect.logging.Logger
 import java.nio.file.Path
 
 data class TemporaryFileCreatedEvent(val container: Container, val filePath: Path) : TaskEvent() {
-    override fun apply(context: TaskEventContext, logger: Logger) {
-        // Nothing to do.
-    }
-
     override fun toString() = "${this::class.simpleName}(container: '${container.name}', file path: '$filePath')"
 }

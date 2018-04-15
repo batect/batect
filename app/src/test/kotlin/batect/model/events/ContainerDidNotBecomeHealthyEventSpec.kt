@@ -30,12 +30,6 @@ object ContainerDidNotBecomeHealthyEventSpec : Spek({
         val container = Container("container-1", imageSourceDoesNotMatter())
         val event = ContainerDidNotBecomeHealthyEvent(container, "Something went wrong")
 
-        on("getting the message to display to the user") {
-            it("returns an appropriate message") {
-                assertThat(event.messageToDisplay, equalTo("Dependency 'container-1' did not become healthy: Something went wrong"))
-            }
-        }
-
         on("toString()") {
             it("returns a human-readable representation of itself") {
                 assertThat(event.toString(), equalTo("ContainerDidNotBecomeHealthyEvent(container: 'container-1', message: 'Something went wrong')"))

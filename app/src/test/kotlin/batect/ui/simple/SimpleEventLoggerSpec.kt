@@ -20,11 +20,12 @@ import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.model.RunOptions
+import batect.model.events.TaskFailedEvent
 import batect.model.steps.BuildImageStep
 import batect.model.steps.CleanUpContainerStep
 import batect.model.steps.CreateContainerStep
 import batect.model.steps.CreateTaskNetworkStep
-import batect.model.steps.DisplayTaskFailureStep
 import batect.model.steps.PullImageStep
 import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
@@ -35,21 +36,28 @@ import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.ui.ConsolePrintStatements
+import batect.ui.FailureErrorMessageFormatter
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doAnswer
+import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.times
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.verifyZeroInteractions
+import com.nhaarman.mockito_kotlin.whenever
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
+import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 
 object SimpleEventLoggerSpec : Spek({
     describe("a simple event logger") {
+        val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
+        val runOptions by createForEachTest { mock<RunOptions>() }
+
         val whiteConsole by createForEachTest { mock<Console>() }
         val console by createForEachTest {
             mock<Console> {
@@ -70,7 +78,7 @@ object SimpleEventLoggerSpec : Spek({
             }
         }
 
-        val logger by createForEachTest { SimpleEventLogger(console, errorConsole) }
+        val logger by createForEachTest { SimpleEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole) }
         val container = Container("the-cool-container", imageSourceDoesNotMatter())
 
         describe("handling when steps start") {
@@ -164,28 +172,19 @@ object SimpleEventLoggerSpec : Spek({
                 }
             }
 
-            on("when a 'display task failure' step is starting") {
-                val step = DisplayTaskFailureStep("Something went wrong.")
-                logger.onStartingTaskStep(step)
-
-                it("prints the message to the output") {
-                    inOrder(redErrorConsole) {
-                        verify(redErrorConsole).println()
-                        verify(redErrorConsole).println(step.message)
-                    }
-                }
-            }
-
             mapOf(
-                    "remove container" to RemoveContainerStep(container, DockerContainer("some-id")),
-                    "clean up container" to CleanUpContainerStep(container, DockerContainer("some-id"))
+                "remove container" to RemoveContainerStep(container, DockerContainer("some-id")),
+                "clean up container" to CleanUpContainerStep(container, DockerContainer("some-id"))
             ).forEach { description, step ->
                 describe("when a '$description' step is starting") {
                     on("and no 'remove container' or 'clean up container' steps have run before") {
                         logger.onStartingTaskStep(step)
 
-                        it("prints a message to the output") {
-                            verify(whiteConsole).println("Cleaning up...")
+                        it("prints a blank line before then printing that clean up has started") {
+                            inOrder(whiteConsole) {
+                                verify(whiteConsole).println()
+                                verify(whiteConsole).println("Cleaning up...")
+                            }
                         }
                     }
 
@@ -223,6 +222,22 @@ object SimpleEventLoggerSpec : Spek({
             }
         }
 
+        describe("handling when events are posted") {
+            on("when a 'task failed' event is posted") {
+                val event = mock<TaskFailedEvent>()
+                whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn("Something went wrong.")
+
+                logger.postEvent(event)
+
+                it("prints the message to the console") {
+                    inOrder(redErrorConsole) {
+                        verify(redErrorConsole).println()
+                        verify(redErrorConsole).println("Something went wrong.")
+                    }
+                }
+            }
+        }
+
         on("when the task starts") {
             logger.onTaskStarting("some-task")
 
@@ -235,15 +250,40 @@ object SimpleEventLoggerSpec : Spek({
             }
         }
 
-        on("when the task fails") {
-            logger.onTaskFailed("some-task")
+        describe("when the task fails") {
+            given("there are no cleanup instructions") {
+                val cleanupInstructions = ""
 
-            it("prints a message to the output") {
-                inOrder(redErrorConsole) {
-                    verify(redErrorConsole).println()
-                    verify(redErrorConsole).print("The task ")
-                    verify(redErrorConsole).printBold("some-task")
-                    verify(redErrorConsole).println(" failed. See above for details.")
+                on("when logging that the task has failed") {
+                    logger.onTaskFailed("some-task", cleanupInstructions)
+
+                    it("prints a message to the output") {
+                        inOrder(redErrorConsole) {
+                            verify(redErrorConsole).println()
+                            verify(redErrorConsole).print("The task ")
+                            verify(redErrorConsole).printBold("some-task")
+                            verify(redErrorConsole).println(" failed. See above for details.")
+                        }
+                    }
+                }
+            }
+
+            given("there are some cleanup instructions") {
+                val cleanupInstructions = "Do this to clean up."
+
+                on("when logging that the task has failed") {
+                    logger.onTaskFailed("some-task", cleanupInstructions)
+
+                    it("prints a message to the output, including the instructions") {
+                        inOrder(redErrorConsole) {
+                            verify(redErrorConsole).println()
+                            verify(redErrorConsole).println(cleanupInstructions)
+                            verify(redErrorConsole).println()
+                            verify(redErrorConsole).print("The task ")
+                            verify(redErrorConsole).printBold("some-task")
+                            verify(redErrorConsole).println(" failed. See above for details.")
+                        }
+                    }
                 }
             }
         }

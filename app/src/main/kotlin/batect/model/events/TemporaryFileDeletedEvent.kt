@@ -16,13 +16,8 @@
 
 package batect.model.events
 
-import batect.logging.Logger
 import java.nio.file.Path
 
 data class TemporaryFileDeletedEvent(val filePath: Path) : TaskEvent() {
-    override fun apply(context: TaskEventContext, logger: Logger) {
-        // Nothing to do.
-    }
-
     override fun toString() = "${this::class.simpleName}(file path: '$filePath')"
 }

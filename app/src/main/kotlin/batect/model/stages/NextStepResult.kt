@@ -14,19 +14,11 @@
    limitations under the License.
 */
 
-package batect.model.events
+package batect.model.stages
 
-import batect.logging.Logger
-import java.nio.file.Path
+import batect.model.steps.TaskStep
 
-data class TemporaryFileDeletionFailedEvent(val filePath: Path, val message: String) : TaskEvent() {
-    override fun apply(context: TaskEventContext, logger: Logger) {
-        logger.warn {
-            message("Could not delete temporary file. Ignoring.")
-            data("filePath", filePath)
-            data("message", message)
-        }
-    }
-
-    override fun toString() = "${this::class.simpleName}(file path: '$filePath', message: '$message')"
-}
+sealed class NextStepResult
+object NoStepsRemaining : NextStepResult()
+object NoStepsReady : NextStepResult()
+data class StepReady(val step: TaskStep) : NextStepResult()

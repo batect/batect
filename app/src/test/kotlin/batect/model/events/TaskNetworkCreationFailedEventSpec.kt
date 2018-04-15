@@ -27,12 +27,6 @@ object TaskNetworkCreationFailedEventSpec : Spek({
     describe("a 'task network creation failed' event") {
         val event = TaskNetworkCreationFailedEvent("Something went wrong")
 
-        on("getting the message to display to the user") {
-            it("returns an appropriate message") {
-                assertThat(event.messageToDisplay, equalTo("Could not create network for task: Something went wrong"))
-            }
-        }
-
         on("toString()") {
             it("returns a human-readable representation of itself") {
                 assertThat(event.toString(), equalTo("TaskNetworkCreationFailedEvent(message: 'Something went wrong')"))

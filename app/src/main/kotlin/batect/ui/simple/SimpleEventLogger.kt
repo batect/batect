@@ -17,11 +17,12 @@
 package batect.ui.simple
 
 import batect.config.Container
+import batect.model.RunOptions
 import batect.model.events.TaskEvent
+import batect.model.events.TaskFailedEvent
 import batect.model.steps.BuildImageStep
 import batect.model.steps.CleanUpContainerStep
 import batect.model.steps.CreateContainerStep
-import batect.model.steps.DisplayTaskFailureStep
 import batect.model.steps.PullImageStep
 import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
@@ -31,13 +32,32 @@ import batect.os.Command
 import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.ui.EventLogger
+import batect.ui.FailureErrorMessageFormatter
 
-class SimpleEventLogger(val console: Console, val errorConsole: Console) : EventLogger() {
+class SimpleEventLogger(
+    val failureErrorMessageFormatter: FailureErrorMessageFormatter,
+    val runOptions: RunOptions,
+    val console: Console,
+    val errorConsole: Console
+) : EventLogger() {
     private val commands = mutableMapOf<Container, Command?>()
     private var haveStartedCleanUp = false
     private val lock = Object()
 
-    override fun postEvent(event: TaskEvent) {}
+    override fun postEvent(event: TaskEvent) {
+        synchronized(lock) {
+            if (event is TaskFailedEvent) {
+                logTaskFailure(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
+            }
+        }
+    }
+
+    private fun logTaskFailure(message: String) {
+        errorConsole.withColor(ConsoleColor.Red) {
+            println()
+            println(message)
+        }
+    }
 
     override fun onStartingTaskStep(step: TaskStep) {
         synchronized(lock) {
@@ -46,7 +66,6 @@ class SimpleEventLogger(val console: Console, val errorConsole: Console) : Event
                 is PullImageStep -> logImagePullStarting(step.imageName)
                 is StartContainerStep -> logDependencyContainerStarting(step.container)
                 is RunContainerStep -> logCommandStarting(step.container, commands[step.container])
-                is DisplayTaskFailureStep -> logTaskFailure(step.message)
                 is CreateContainerStep -> commands[step.container] = step.command
                 is RemoveContainerStep -> logCleanUpStarting()
                 is CleanUpContainerStep -> logCleanUpStarting()
@@ -98,21 +117,20 @@ class SimpleEventLogger(val console: Console, val errorConsole: Console) : Event
         }
 
         console.withColor(ConsoleColor.White) {
+            println()
             println("Cleaning up...")
         }
 
         haveStartedCleanUp = true
     }
 
-    private fun logTaskFailure(message: String) {
+    override fun onTaskFailed(taskName: String, manualCleanupInstructions: String) {
         errorConsole.withColor(ConsoleColor.Red) {
-            println()
-            println(message)
-        }
-    }
+            if (manualCleanupInstructions != "") {
+                println()
+                println(manualCleanupInstructions)
+            }
 
-    override fun onTaskFailed(taskName: String) {
-        errorConsole.withColor(ConsoleColor.Red) {
             println()
             print("The task ")
             printBold(taskName)

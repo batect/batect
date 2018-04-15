@@ -16,20 +16,10 @@
 
 package batect.model.events
 
+import batect.config.Container
+import batect.testutils.imageSourceDoesNotMatter
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.throws
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.verify
-import batect.config.Container
-import batect.docker.DockerContainer
-import batect.logging.Logger
-import batect.model.steps.RemoveContainerStep
-import batect.model.steps.StopContainerStep
-import batect.testutils.InMemoryLogSink
-import batect.testutils.imageSourceDoesNotMatter
-import batect.testutils.withMessage
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -37,52 +27,8 @@ import org.jetbrains.spek.api.dsl.on
 
 object RunningContainerExitedEventSpec : Spek({
     describe("a 'running container exited' event") {
-        val dependency1 = Container("dependency-container-1", imageSourceDoesNotMatter())
-        val dependency2 = Container("dependency-container-2", imageSourceDoesNotMatter())
-
-        val container = Container("container-1", imageSourceDoesNotMatter(), dependencies = setOf(dependency1.name, dependency2.name))
+        val container = Container("container-1", imageSourceDoesNotMatter())
         val event = RunningContainerExitedEvent(container, 123)
-
-        describe("being applied") {
-            val logger = Logger("test.source", InMemoryLogSink())
-
-            on("when the container that exited was the task container") {
-                val dockerContainer = DockerContainer("container-1-container")
-                val dependency1DockerContainer = DockerContainer("dependency-container-1-container")
-                val dependency2DockerContainer = DockerContainer("dependency-container-2-container")
-
-                val context = mock<TaskEventContext> {
-                    on { isTaskContainer(container) } doReturn true
-                    on { getPastEventsOfType<ContainerCreatedEvent>() } doReturn setOf(
-                            ContainerCreatedEvent(container, dockerContainer),
-                            ContainerCreatedEvent(dependency1, dependency1DockerContainer),
-                            ContainerCreatedEvent(dependency2, dependency2DockerContainer)
-                    )
-                    on { dependenciesOf(container) } doReturn setOf(dependency1, dependency2)
-                }
-
-                event.apply(context, logger)
-
-                it("queues a 'remove container' step for the container that exited") {
-                    verify(context).queueStep(RemoveContainerStep(container, dockerContainer))
-                }
-
-                it("queues a 'stop container' step for all dependencies of the container that exited") {
-                    verify(context).queueStep(StopContainerStep(dependency1, dependency1DockerContainer))
-                    verify(context).queueStep(StopContainerStep(dependency2, dependency2DockerContainer))
-                }
-            }
-
-            on("when the container that exited was not the task container") {
-                val context = mock<TaskEventContext> {
-                    on { isTaskContainer(container) } doReturn false
-                }
-
-                it("throws an exception") {
-                    assertThat({ event.apply(context, logger) }, throws<IllegalArgumentException>(withMessage("The container 'container-1' is not the task container.")))
-                }
-            }
-        }
 
         on("toString()") {
             it("returns a human-readable representation of itself") {

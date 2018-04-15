@@ -175,15 +175,27 @@ object CreateContainerStepRuleSpec : Spek({
             }
         }
 
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                val container = Container("the-container", imageSourceDoesNotMatter())
+        describe("toString()") {
+            val container = Container("the-container", imageSourceDoesNotMatter())
+            val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
+            val additionalPortMappings = setOf(PortMapping(123, 456))
+
+            given("an explicit command is provided") {
                 val command = Command.parse("the-command some-arg")
-                val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
-                val additionalPortMappings = setOf(PortMapping(123, 456))
                 val rule = CreateContainerStepRule(container, command, additionalEnvironmentVariables, additionalPortMappings)
 
-                assertThat(rule.toString(), equalTo("CreateContainerStepRule(container: 'the-container', command: [the-command, some-arg], additional environment variables: [SOME_VAR='some value'], additional port mappings: [123:456])"))
+                it("returns a human-readable representation of itself") {
+                    assertThat(rule.toString(), equalTo("CreateContainerStepRule(container: 'the-container', command: [the-command, some-arg], additional environment variables: [SOME_VAR='some value'], additional port mappings: [123:456])"))
+                }
+            }
+
+            given("an explicit command is not provided") {
+                val command = null
+                val rule = CreateContainerStepRule(container, command, additionalEnvironmentVariables, additionalPortMappings)
+
+                it("returns a human-readable representation of itself") {
+                    assertThat(rule.toString(), equalTo("CreateContainerStepRule(container: 'the-container', command: null, additional environment variables: [SOME_VAR='some value'], additional port mappings: [123:456])"))
+                }
             }
         }
     }

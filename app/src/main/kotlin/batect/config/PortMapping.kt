@@ -70,7 +70,7 @@ data class PortMapping(
             }
         }
 
-        fun invalidMappingDefinitionException(value: String, cause: Throwable? = null): Throwable = InvalidPortMappingException("Port mapping definition '$value' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.", cause)
+        private fun invalidMappingDefinitionException(value: String, cause: Throwable? = null): Throwable = InvalidPortMappingException("Port mapping definition '$value' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.", cause)
     }
 }
 

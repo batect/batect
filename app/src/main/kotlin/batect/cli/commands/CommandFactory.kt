@@ -22,12 +22,12 @@ import com.github.salomonbrys.kodein.instance
 
 class CommandFactory {
     fun createCommand(options: CommandLineOptions, kodein: Kodein): Command {
-        when {
-            options.showHelp -> return kodein.instance<HelpCommand>()
-            options.showVersionInfo -> return kodein.instance<VersionInfoCommand>()
-            options.listTasks -> return kodein.instance<ListTasksCommand>()
-            options.runUpgrade -> return kodein.instance<UpgradeCommand>()
-            else -> return kodein.instance<RunTaskCommand>()
+        return when {
+            options.showHelp -> kodein.instance<HelpCommand>()
+            options.showVersionInfo -> kodein.instance<VersionInfoCommand>()
+            options.listTasks -> kodein.instance<ListTasksCommand>()
+            options.runUpgrade -> kodein.instance<UpgradeCommand>()
+            else -> kodein.instance<RunTaskCommand>()
         }
     }
 }

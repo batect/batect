@@ -19,6 +19,8 @@ package batect.execution
 import batect.config.Configuration
 import batect.config.Task
 import batect.logging.Logger
+import batect.utils.flatMapToSet
+import batect.utils.mapToSet
 
 class TaskExecutionOrderResolver(private val logger: Logger) {
     fun resolveExecutionOrder(config: Configuration, taskName: String): List<Task> {
@@ -54,10 +56,10 @@ class TaskExecutionOrderResolver(private val logger: Logger) {
 
     private fun resolvePrerequisitesForTask(config: Configuration, parentTask: Task, path: List<Task>): Set<Task> {
         val prerequisites = parentTask.prerequisiteTasks
-            .mapTo(mutableSetOf<Task>()) { prerequisiteTaskName -> resolvePrerequisiteForTask(config, parentTask, prerequisiteTaskName, path) }
+            .mapToSet { prerequisiteTaskName -> resolvePrerequisiteForTask(config, parentTask, prerequisiteTaskName, path) }
 
         val childPrerequisites = prerequisites
-            .flatMapTo(mutableSetOf<Task>()) { prerequisite -> resolvePrerequisitesForTask(config, prerequisite, path + prerequisite) }
+            .flatMapToSet { prerequisite -> resolvePrerequisitesForTask(config, prerequisite, path + prerequisite) }
 
         return prerequisites + childPrerequisites
     }

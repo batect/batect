@@ -25,7 +25,7 @@ import batect.os.Command
 import java.nio.file.Path
 
 sealed class TaskStep {
-    override fun toString() = this.javaClass.canonicalName
+    override fun toString(): String = this.javaClass.canonicalName
 }
 
 data class BuildImageStep(val projectName: String, val container: Container) : TaskStep() {

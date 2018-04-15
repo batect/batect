@@ -30,10 +30,10 @@ data class ConfigurationException(
         val causeDescription = if (cause != null) "\nCaused by: $cause" else ""
         val description = message + causeDescription
 
-        if (location != "") {
-            return "$location: $description"
+        return if (location != "") {
+            "$location: $description"
         } else {
-            return description
+            description
         }
     }
 

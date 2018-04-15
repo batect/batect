@@ -26,9 +26,9 @@ class CommandLineOptionsParser(override val optionParser: OptionParser) : Option
     constructor() : this(OptionParser())
 
     companion object {
-        val disableCleanupAfterFailureFlagName = "no-cleanup-after-failure"
-        val upgradeFlagName = "upgrade"
-        val helpBlurb = "For documentation and further information on batect, visit https://github.com/charleskorn/batect."
+        const val disableCleanupAfterFailureFlagName = "no-cleanup-after-failure"
+        const val upgradeFlagName = "upgrade"
+        const val helpBlurb = "For documentation and further information on batect, visit https://github.com/charleskorn/batect."
     }
 
     private val showHelp: Boolean by flagOption("help", "Show this help information and exit.")

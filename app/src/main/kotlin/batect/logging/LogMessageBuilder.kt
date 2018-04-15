@@ -35,7 +35,7 @@ class LogMessageBuilder(val severity: Severity, val loggerAdditionalData: Map<St
             throw IllegalArgumentException("Cannot add additional data with the key '$key': keys may not start with '@'.")
         }
 
-        data.put(key, value)
+        data[key] = value
         return this
     }
 

@@ -16,7 +16,7 @@
 
 package batect.docker
 
-class DockerContainerCreationCommandGenerator() {
+class DockerContainerCreationCommandGenerator {
     fun createCommandLine(request: DockerContainerCreationRequest): Iterable<String> {
         return listOf("docker", "create", "-it",
             "--network", request.network.id,

@@ -40,8 +40,8 @@ class EventLoggerProvider(
 
         if (consoleInfo.supportsInteractivity && !forceSimpleOutputMode) {
             return FancyEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole, startupProgressDisplayProvider.createForDependencyGraph(graph), CleanupProgressDisplay())
-        } else {
-            return SimpleEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole)
         }
+
+        return SimpleEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole)
     }
 }

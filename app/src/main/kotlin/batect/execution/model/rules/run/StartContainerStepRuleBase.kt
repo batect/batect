@@ -38,12 +38,12 @@ abstract class StartContainerStepRuleBase(open val container: Container, open va
 
     protected abstract fun createStep(dockerContainer: DockerContainer): TaskStep
 
-    protected fun findDockerContainer(pastEvents: Set<TaskEvent>) =
+    private fun findDockerContainer(pastEvents: Set<TaskEvent>) =
         pastEvents
             .singleInstanceOrNull<ContainerCreatedEvent> { it.container == container }
             ?.dockerContainer
 
-    protected fun allDependenciesAreReady(pastEvents: Set<TaskEvent>): Boolean {
+    private fun allDependenciesAreReady(pastEvents: Set<TaskEvent>): Boolean {
         val readyContainers = pastEvents
             .filterIsInstance<ContainerBecameHealthyEvent>()
             .map { it.container }

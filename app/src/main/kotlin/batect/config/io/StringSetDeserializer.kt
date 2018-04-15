@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 
 internal class StringSetDeserializer : StdDeserializer<Set<String>>(Set::class.java) {
     override fun deserialize(p: JsonParser?, context: DeserializationContext?): Set<String> {
-        return deserializeCollection(p, context, setOf<String>()) { value, result ->
+        return deserializeCollection(p, context, setOf()) { value, result ->
             if (result.contains(value)) {
                 throw JsonMappingException.from(p, "Duplicate value '$value'")
             }

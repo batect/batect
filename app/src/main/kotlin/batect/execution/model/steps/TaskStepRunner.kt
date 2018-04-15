@@ -188,7 +188,7 @@ class TaskStepRunner(
             else -> "The last health check exited with code ${lastHealthCheckResult.exitCode} and output: ${lastHealthCheckResult.output.trim()}"
         }
 
-        return "The configured health check did not indicate that the container was healthy within the timeout period. " + message
+        return "The configured health check did not indicate that the container was healthy within the timeout period. $message"
     }
 
     private fun handleStopContainerStep(step: StopContainerStep, eventSink: TaskEventSink) {

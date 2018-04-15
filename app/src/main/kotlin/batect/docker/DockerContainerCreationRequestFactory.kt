@@ -78,17 +78,17 @@ class DockerContainerCreationRequestFactory(
         original.mapValues { (name, value) -> substituteEnvironmentVariable(name, value) }
 
     private fun substituteEnvironmentVariable(name: String, originalValue: String): String {
-        if (originalValue.startsWith('$')) {
-            val variableName = originalValue.drop(1)
-            val valueFromHost = hostEnvironmentVariables.get(variableName)
-
-            if (valueFromHost == null) {
-                throw ContainerCreationFailedException("The environment variable '$name' refers to host environment variable '$variableName', but it is not set.")
-            }
-
-            return valueFromHost
-        } else {
+        if (!originalValue.startsWith('$')) {
             return originalValue
         }
+
+        val variableName = originalValue.drop(1)
+        val valueFromHost = hostEnvironmentVariables[variableName]
+
+        if (valueFromHost == null) {
+            throw ContainerCreationFailedException("The environment variable '$name' refers to host environment variable '$variableName', but it is not set.")
+        }
+
+        return valueFromHost
     }
 }

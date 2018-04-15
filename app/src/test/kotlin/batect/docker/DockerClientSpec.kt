@@ -556,7 +556,7 @@ object DockerClientSpec : Spek({
 
         describe("removing a container") {
             val container = DockerContainer("some-id")
-            val expectedCommand = listOf("docker", "rm", "some-id")
+            val expectedCommand = listOf("docker", "rm", "--volumes", "some-id")
 
             on("a successful removal") {
                 whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "Done!"))

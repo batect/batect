@@ -334,7 +334,7 @@ class DockerClient(
             data("container", container)
         }
 
-        val command = listOf("docker", "rm", container.id)
+        val command = listOf("docker", "rm", "--volumes", container.id)
         val result = processRunner.runAndCaptureOutput(command)
 
         if (failed(result)) {

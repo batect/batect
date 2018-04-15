@@ -16,8 +16,8 @@
 
 package batect.ui
 
-import batect.model.DependencyGraph
-import batect.model.RunOptions
+import batect.execution.DependencyGraph
+import batect.execution.RunOptions
 import batect.ui.fancy.CleanupProgressDisplay
 import batect.ui.fancy.FancyEventLogger
 import batect.ui.fancy.StartupProgressDisplayProvider

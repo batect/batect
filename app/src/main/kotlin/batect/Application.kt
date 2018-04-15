@@ -31,27 +31,29 @@ import batect.docker.DockerClient
 import batect.docker.DockerContainerCreationCommandGenerator
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerImageLabellingStrategy
+import batect.execution.ParallelExecutionManagerProvider
+import batect.execution.TaskRunner
 import batect.logging.ApplicationInfoLogger
 import batect.logging.LogMessageWriter
 import batect.logging.LoggerFactory
 import batect.logging.StandardAdditionalDataSource
 import batect.logging.singletonWithLogger
-import batect.model.ContainerCommandResolver
-import batect.model.DependencyGraphProvider
-import batect.ui.FailureErrorMessageFormatter
-import batect.model.RunAsCurrentUserConfigurationProvider
-import batect.model.RunOptions
-import batect.model.TaskExecutionOrderResolver
-import batect.model.TaskStateMachineProvider
-import batect.model.stages.CleanupStagePlanner
-import batect.model.stages.RunStagePlanner
-import batect.model.steps.TaskStepRunner
+import batect.execution.ContainerCommandResolver
+import batect.execution.DependencyGraphProvider
+import batect.execution.RunAsCurrentUserConfigurationProvider
+import batect.execution.RunOptions
+import batect.execution.TaskExecutionOrderResolver
+import batect.execution.TaskStateMachineProvider
+import batect.execution.model.stages.CleanupStagePlanner
+import batect.execution.model.stages.RunStagePlanner
+import batect.execution.model.steps.TaskStepRunner
 import batect.os.ProcessRunner
 import batect.os.ProxyEnvironmentVariablesProvider
 import batect.os.SystemInfo
 import batect.ui.Console
 import batect.ui.ConsoleInfo
 import batect.ui.EventLoggerProvider
+import batect.ui.FailureErrorMessageFormatter
 import batect.ui.fancy.StartupProgressDisplayProvider
 import batect.updates.UpdateInfoDownloader
 import batect.updates.UpdateInfoStorage
@@ -155,6 +157,20 @@ private val dockerModule = Kodein.Module {
     bind<DockerImageLabellingStrategy>() with singleton { DockerImageLabellingStrategy() }
 }
 
+private val executionModule = Kodein.Module {
+    bind<CleanupStagePlanner>() with singletonWithLogger { logger -> CleanupStagePlanner(logger) }
+    bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance()) }
+    bind<DependencyGraphProvider>() with singletonWithLogger { logger -> DependencyGraphProvider(instance(), logger) }
+    bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance(), instance()) }
+    bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance()) }
+    bind<RunOptions>() with singleton { RunOptions(commandLineOptions()) }
+    bind<RunStagePlanner>() with singletonWithLogger { logger -> RunStagePlanner(logger) }
+    bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(), instance(), logger) }
+    bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(logger) }
+    bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance(), instance(), instance(), instance()) }
+    bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), instance(), instance(), instance(), logger) }
+}
+
 private val loggingModule = Kodein.Module {
     bind<ApplicationInfoLogger>() with singletonWithLogger { logger -> ApplicationInfoLogger(logger, instance(), instance(), instance()) }
     bind<LoggerFactory>() with singleton { LoggerFactory(instance()) }
@@ -163,15 +179,6 @@ private val loggingModule = Kodein.Module {
 }
 
 private val modelModule = Kodein.Module {
-    bind<CleanupStagePlanner>() with singletonWithLogger { logger -> CleanupStagePlanner(logger) }
-    bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance()) }
-    bind<DependencyGraphProvider>() with singletonWithLogger { logger -> DependencyGraphProvider(instance(), logger) }
-    bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance()) }
-    bind<RunOptions>() with singleton { RunOptions(commandLineOptions()) }
-    bind<RunStagePlanner>() with singletonWithLogger { logger -> RunStagePlanner(logger) }
-    bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(logger) }
-    bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance(), instance(), instance(), instance()) }
-    bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), instance(), instance(), instance(), logger) }
 }
 
 private val osModule = Kodein.Module {
@@ -208,8 +215,6 @@ private val updatesModule = Kodein.Module {
 }
 
 private val coreModule = Kodein.Module {
-    bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance(), instance()) }
-    bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(), instance(), logger) }
     bind<VersionInfo>() with singleton { VersionInfo() }
 }
 
@@ -222,6 +227,7 @@ private fun createDefaultKodeinConfiguration(outputStream: PrintStream, errorStr
     import(cliModule)
     import(configModule)
     import(dockerModule)
+    import(executionModule)
     import(loggingModule)
     import(modelModule)
     import(osModule)

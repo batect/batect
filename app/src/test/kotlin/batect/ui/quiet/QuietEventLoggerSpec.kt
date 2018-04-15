@@ -16,8 +16,8 @@
 
 package batect.ui.quiet
 
-import batect.model.RunOptions
-import batect.model.events.TaskFailedEvent
+import batect.execution.RunOptions
+import batect.execution.model.events.TaskFailedEvent
 import batect.testutils.createForEachTest
 import batect.ui.Console
 import batect.ui.ConsoleColor

@@ -17,16 +17,16 @@
 package batect.ui.simple
 
 import batect.config.Container
-import batect.model.RunOptions
-import batect.model.events.TaskEvent
-import batect.model.events.TaskFailedEvent
-import batect.model.steps.BuildImageStep
-import batect.model.steps.CleanupStep
-import batect.model.steps.CreateContainerStep
-import batect.model.steps.PullImageStep
-import batect.model.steps.RunContainerStep
-import batect.model.steps.StartContainerStep
-import batect.model.steps.TaskStep
+import batect.execution.RunOptions
+import batect.execution.model.events.TaskEvent
+import batect.execution.model.events.TaskFailedEvent
+import batect.execution.model.steps.BuildImageStep
+import batect.execution.model.steps.CleanupStep
+import batect.execution.model.steps.CreateContainerStep
+import batect.execution.model.steps.PullImageStep
+import batect.execution.model.steps.RunContainerStep
+import batect.execution.model.steps.StartContainerStep
+import batect.execution.model.steps.TaskStep
 import batect.os.Command
 import batect.ui.Console
 import batect.ui.ConsoleColor

@@ -16,8 +16,8 @@
 
 package batect.ui
 
-import batect.model.events.TaskEventSink
-import batect.model.steps.TaskStep
+import batect.execution.model.events.TaskEventSink
+import batect.execution.model.steps.TaskStep
 
 abstract class EventLogger : TaskEventSink {
     abstract fun onStartingTaskStep(step: TaskStep)

@@ -16,10 +16,10 @@
 
 package batect.ui.quiet
 
-import batect.model.RunOptions
-import batect.model.events.TaskEvent
-import batect.model.events.TaskFailedEvent
-import batect.model.steps.TaskStep
+import batect.execution.RunOptions
+import batect.execution.model.events.TaskEvent
+import batect.execution.model.events.TaskFailedEvent
+import batect.execution.model.steps.TaskStep
 import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.ui.EventLogger

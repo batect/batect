@@ -16,15 +16,15 @@
 
 package batect.cli.commands
 
-import batect.TaskRunner
+import batect.execution.TaskRunner
 import batect.config.Configuration
 import batect.config.Task
 import batect.config.io.ConfigurationLoader
 import batect.docker.DockerClient
 import batect.logging.Logger
-import batect.model.RunOptions
-import batect.model.TaskExecutionOrderResolutionException
-import batect.model.TaskExecutionOrderResolver
+import batect.execution.RunOptions
+import batect.execution.TaskExecutionOrderResolutionException
+import batect.execution.TaskExecutionOrderResolver
 import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.updates.UpdateNotifier

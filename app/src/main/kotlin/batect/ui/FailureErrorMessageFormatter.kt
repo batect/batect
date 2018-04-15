@@ -16,22 +16,22 @@
 
 package batect.ui
 
-import batect.model.BehaviourAfterFailure
-import batect.model.RunOptions
-import batect.model.events.ContainerCreatedEvent
-import batect.model.events.ContainerCreationFailedEvent
-import batect.model.events.ContainerDidNotBecomeHealthyEvent
-import batect.model.events.ContainerRemovalFailedEvent
-import batect.model.events.ContainerRunFailedEvent
-import batect.model.events.ContainerStartFailedEvent
-import batect.model.events.ContainerStopFailedEvent
-import batect.model.events.ImageBuildFailedEvent
-import batect.model.events.ImagePullFailedEvent
-import batect.model.events.TaskEvent
-import batect.model.events.TaskFailedEvent
-import batect.model.events.TaskNetworkCreationFailedEvent
-import batect.model.events.TaskNetworkDeletionFailedEvent
-import batect.model.events.TemporaryFileDeletionFailedEvent
+import batect.execution.BehaviourAfterFailure
+import batect.execution.RunOptions
+import batect.execution.model.events.ContainerCreatedEvent
+import batect.execution.model.events.ContainerCreationFailedEvent
+import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
+import batect.execution.model.events.ContainerRemovalFailedEvent
+import batect.execution.model.events.ContainerRunFailedEvent
+import batect.execution.model.events.ContainerStartFailedEvent
+import batect.execution.model.events.ContainerStopFailedEvent
+import batect.execution.model.events.ImageBuildFailedEvent
+import batect.execution.model.events.ImagePullFailedEvent
+import batect.execution.model.events.TaskEvent
+import batect.execution.model.events.TaskFailedEvent
+import batect.execution.model.events.TaskNetworkCreationFailedEvent
+import batect.execution.model.events.TaskNetworkDeletionFailedEvent
+import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 
 class FailureErrorMessageFormatter {
     fun formatErrorMessage(event: TaskFailedEvent, runOptions: RunOptions): String = when (event) {

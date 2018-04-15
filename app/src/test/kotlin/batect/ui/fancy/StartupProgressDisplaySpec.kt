@@ -18,8 +18,8 @@ package batect.ui.fancy
 
 import batect.config.Container
 import batect.docker.DockerNetwork
-import batect.model.events.TaskNetworkCreatedEvent
-import batect.model.steps.BuildImageStep
+import batect.execution.model.events.TaskNetworkCreatedEvent
+import batect.execution.model.steps.BuildImageStep
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console

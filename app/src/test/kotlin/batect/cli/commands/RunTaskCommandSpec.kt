@@ -16,7 +16,7 @@
 
 package batect.cli.commands
 
-import batect.TaskRunner
+import batect.execution.TaskRunner
 import batect.config.Configuration
 import batect.config.ContainerMap
 import batect.config.Task
@@ -26,10 +26,10 @@ import batect.config.io.ConfigurationLoader
 import batect.docker.DockerClient
 import batect.logging.Logger
 import batect.logging.Severity
-import batect.model.BehaviourAfterFailure
-import batect.model.RunOptions
-import batect.model.TaskExecutionOrderResolutionException
-import batect.model.TaskExecutionOrderResolver
+import batect.execution.BehaviourAfterFailure
+import batect.execution.RunOptions
+import batect.execution.TaskExecutionOrderResolutionException
+import batect.execution.TaskExecutionOrderResolver
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.hasMessage

@@ -19,10 +19,10 @@ package batect.ui.fancy
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
-import batect.model.events.ContainerCreatedEvent
-import batect.model.events.ContainerRemovedEvent
-import batect.model.events.TaskNetworkCreatedEvent
-import batect.model.events.TaskNetworkDeletedEvent
+import batect.execution.model.events.ContainerCreatedEvent
+import batect.execution.model.events.ContainerRemovedEvent
+import batect.execution.model.events.TaskNetworkCreatedEvent
+import batect.execution.model.events.TaskNetworkDeletedEvent
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console

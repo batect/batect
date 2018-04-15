@@ -16,7 +16,7 @@
 
 package batect.ui.fancy
 
-import batect.model.DependencyGraph
+import batect.execution.DependencyGraph
 
 class StartupProgressDisplayProvider {
     fun createForDependencyGraph(graph: DependencyGraph): StartupProgressDisplay {

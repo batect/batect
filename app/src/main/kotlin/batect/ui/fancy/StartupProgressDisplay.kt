@@ -16,8 +16,8 @@
 
 package batect.ui.fancy
 
-import batect.model.events.TaskEvent
-import batect.model.steps.TaskStep
+import batect.execution.model.events.TaskEvent
+import batect.execution.model.steps.TaskStep
 import batect.ui.Console
 
 class StartupProgressDisplay(val containerLines: List<ContainerStartupProgressLine>) {

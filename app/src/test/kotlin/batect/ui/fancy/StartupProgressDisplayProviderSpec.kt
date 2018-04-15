@@ -17,8 +17,8 @@
 package batect.ui.fancy
 
 import batect.config.Container
-import batect.model.DependencyGraph
-import batect.model.DependencyGraphNode
+import batect.execution.DependencyGraph
+import batect.execution.DependencyGraphNode
 import batect.testutils.imageSourceDoesNotMatter
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo

@@ -17,11 +17,11 @@
 package batect.ui.fancy
 
 import batect.config.Container
-import batect.model.events.ContainerCreatedEvent
-import batect.model.events.ContainerRemovedEvent
-import batect.model.events.TaskEvent
-import batect.model.events.TaskNetworkCreatedEvent
-import batect.model.events.TaskNetworkDeletedEvent
+import batect.execution.model.events.ContainerCreatedEvent
+import batect.execution.model.events.ContainerRemovedEvent
+import batect.execution.model.events.TaskEvent
+import batect.execution.model.events.TaskNetworkCreatedEvent
+import batect.execution.model.events.TaskNetworkDeletedEvent
 import batect.ui.Console
 import batect.ui.ConsoleColor
 

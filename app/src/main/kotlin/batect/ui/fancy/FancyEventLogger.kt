@@ -20,8 +20,7 @@ import batect.model.RunOptions
 import batect.model.events.RunningContainerExitedEvent
 import batect.model.events.TaskEvent
 import batect.model.events.TaskFailedEvent
-import batect.model.steps.DeleteTaskNetworkStep
-import batect.model.steps.RemoveContainerStep
+import batect.model.steps.CleanupStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.TaskStep
 import batect.ui.Console
@@ -43,7 +42,7 @@ class FancyEventLogger(
 
     override fun onStartingTaskStep(step: TaskStep) {
         synchronized(lock) {
-            if (step is RemoveContainerStep || step is DeleteTaskNetworkStep) {
+            if (step is CleanupStep) {
                 displayCleanupStatus()
                 keepUpdatingStartupProgress = false
                 return

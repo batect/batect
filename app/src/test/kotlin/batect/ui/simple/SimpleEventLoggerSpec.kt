@@ -23,10 +23,10 @@ import batect.docker.DockerNetwork
 import batect.model.RunOptions
 import batect.model.events.TaskFailedEvent
 import batect.model.steps.BuildImageStep
+import batect.model.steps.CleanupStep
 import batect.model.steps.CreateContainerStep
 import batect.model.steps.CreateTaskNetworkStep
 import batect.model.steps.PullImageStep
-import batect.model.steps.RemoveContainerStep
 import batect.model.steps.RunContainerStep
 import batect.model.steps.StartContainerStep
 import batect.os.Command
@@ -171,12 +171,12 @@ object SimpleEventLoggerSpec : Spek({
                 }
             }
 
-            mapOf(
-                "remove container" to RemoveContainerStep(container, DockerContainer("some-id"))
-            ).forEach { description, step ->
-                describe("when a '$description' step is starting") {
-                    on("and no 'remove container' or 'clean up container' steps have run before") {
-                        logger.onStartingTaskStep(step)
+            describe("when a cleanup step is starting") {
+                val cleanupStep = mock<CleanupStep>()
+
+                given("no cleanup steps have run before") {
+                    on("that step starting") {
+                        logger.onStartingTaskStep(cleanupStep)
 
                         it("prints a blank line before then printing that clean up has started") {
                             inOrder(whiteConsole) {
@@ -185,12 +185,16 @@ object SimpleEventLoggerSpec : Spek({
                             }
                         }
                     }
+                }
 
-                    on("and a 'remove container' step has already been run") {
-                        val previousStep = RemoveContainerStep(Container("other-container", imageSourceDoesNotMatter()), DockerContainer("some-other-id"))
+                given("and a cleanup step has already been run") {
+                    beforeEachTest {
+                        val previousStep = mock<CleanupStep>()
                         logger.onStartingTaskStep(previousStep)
+                    }
 
-                        logger.onStartingTaskStep(step)
+                    on("that step starting") {
+                        logger.onStartingTaskStep(cleanupStep)
 
                         it("only prints one message to the output") {
                             verify(whiteConsole, times(1)).println("Cleaning up...")

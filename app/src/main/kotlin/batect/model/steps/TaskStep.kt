@@ -57,22 +57,24 @@ data class StartContainerStep(val container: Container, val dockerContainer: Doc
     override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 
-data class StopContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
-    override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
-}
-
-data class RemoveContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
-    override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
-}
-
-data class DeleteTemporaryFileStep(val filePath: Path) : TaskStep() {
-    override fun toString() = super.toString() + "(file path: '$filePath')"
-}
-
 data class WaitForContainerToBecomeHealthyStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
     override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 
-data class DeleteTaskNetworkStep(val network: DockerNetwork) : TaskStep() {
+sealed class CleanupStep : TaskStep()
+
+data class StopContainerStep(val container: Container, val dockerContainer: DockerContainer) : CleanupStep() {
+    override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
+}
+
+data class RemoveContainerStep(val container: Container, val dockerContainer: DockerContainer) : CleanupStep() {
+    override fun toString() = super.toString() + "(container: '${container.name}', Docker container: '${dockerContainer.id}')"
+}
+
+data class DeleteTemporaryFileStep(val filePath: Path) : CleanupStep() {
+    override fun toString() = super.toString() + "(file path: '$filePath')"
+}
+
+data class DeleteTaskNetworkStep(val network: DockerNetwork) : CleanupStep() {
     override fun toString() = super.toString() + "(network: '${network.id}')"
 }

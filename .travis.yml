@@ -19,6 +19,8 @@ install: true
 
 script: ./travis/build.sh
 
+before_deploy: ./gradlew validateRelease
+
 deploy:
   - provider: releases
     api_key:
@@ -38,7 +40,8 @@ deploy:
     target-branch: gh-pages
     keep-history: true
     on:
-      branch: master
+      tags: true
+      repo: charleskorn/batect
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock

@@ -65,7 +65,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * make configuration-related error messages clearer and remove exception class names etc.
 * test against a variety of Docker versions (eg. earliest supported version and latest)
 * use batect to build batect (self-hosting)
-* only deploy docs on release, not on every build
 * switch to [MockK](https://github.com/oleksiyp/mockk) - Kotlin specific library with clearer upgrade path to Kotlin/Native
 * move to Kotlin/Native
   * Why? Don't want to require users to install a JVM to use batect, also want to remove as much overhead as possible

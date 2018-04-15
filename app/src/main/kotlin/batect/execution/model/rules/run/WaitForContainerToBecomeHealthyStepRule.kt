@@ -43,5 +43,5 @@ data class WaitForContainerToBecomeHealthyStepRule(val container: Container) : T
     private fun containerHasStarted(pastEvents: Set<TaskEvent>) =
         pastEvents.any { it is ContainerStartedEvent && it.container == container }
 
-    override fun toString() = "${this::class.simpleName}(container=${container.name})"
+    override fun toString() = "${this::class.simpleName}(container: '${container.name}')"
 }

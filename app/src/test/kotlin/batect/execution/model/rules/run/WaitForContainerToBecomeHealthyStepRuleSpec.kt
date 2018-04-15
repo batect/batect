@@ -77,5 +77,11 @@ object WaitForContainerToBecomeHealthyStepRuleSpec : Spek({
                 }
             }
         }
+
+        on("toString()") {
+            it("returns a human-readable representation of itself") {
+                assertThat(rule.toString(), equalTo("WaitForContainerToBecomeHealthyStepRule(container: 'the-container')"))
+            }
+        }
     }
 })

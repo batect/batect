@@ -24,5 +24,5 @@ import batect.execution.model.steps.TaskStep
 data class StartContainerStepRule(override val container: Container, override val dependencies: Set<Container>) : StartContainerStepRuleBase(container, dependencies) {
     override fun createStep(dockerContainer: DockerContainer): TaskStep = StartContainerStep(container, dockerContainer)
 
-    override fun toString() = "${this::class.simpleName}(container=${container.name}, dependencies=${dependencies.map(Container::name)})"
+    override fun toString(): String = super.toString()
 }

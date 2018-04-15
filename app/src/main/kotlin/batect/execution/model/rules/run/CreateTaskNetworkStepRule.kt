@@ -25,4 +25,6 @@ object CreateTaskNetworkStepRule : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         return TaskStepRuleEvaluationResult.Ready(CreateTaskNetworkStep)
     }
+
+    override fun toString(): String = this::class.simpleName!!
 }

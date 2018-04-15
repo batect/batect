@@ -27,5 +27,5 @@ data class BuildImageStepRule(val projectName: String, val container: Container)
         return TaskStepRuleEvaluationResult.Ready(BuildImageStep(projectName, container))
     }
 
-    override fun toString() = "${this::class.simpleName}(projectName=$projectName, container=${container.name})"
+    override fun toString() = "${this::class.simpleName}(project name: '$projectName', container: '${container.name}')"
 }

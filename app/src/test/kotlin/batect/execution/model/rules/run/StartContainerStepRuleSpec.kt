@@ -144,5 +144,17 @@ object StartContainerStepRuleSpec : Spek({
                 }
             }
         }
+
+        on("toString()") {
+            val container = Container("the-container", imageSourceDoesNotMatter())
+            val dependency1 = Container("dependency-1", imageSourceDoesNotMatter())
+            val dependency2 = Container("dependency-2", imageSourceDoesNotMatter())
+            val dependencies = setOf(dependency1, dependency2)
+            val rule = StartContainerStepRule(container, dependencies)
+
+            it("returns a human-readable representation of itself") {
+                assertThat(rule.toString(), equalTo("StartContainerStepRule(container: 'the-container', dependencies: ['dependency-1', 'dependency-2'])"))
+            }
+        }
     }
 })

@@ -70,5 +70,7 @@ data class CreateContainerStepRule(
         }
     }
 
-    override fun toString() = "${this::class.simpleName}(container=${container.name}, command=$command, additionalEnvironmentVariables=$additionalEnvironmentVariables, additionalPortMappings=$additionalPortMappings)"
+    override fun toString() = "${this::class.simpleName}(container: '${container.name}', command: ${command?.parsedCommand ?: "null"}, " +
+        "additional environment variables: [${ additionalEnvironmentVariables.map { "${it.key}='${it.value}'" }.joinToString(", ") }], " +
+        "additional port mappings: $additionalPortMappings)"
 }

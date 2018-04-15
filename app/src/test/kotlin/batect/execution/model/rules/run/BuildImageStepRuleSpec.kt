@@ -39,5 +39,11 @@ object BuildImageStepRuleSpec : Spek({
                 assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(BuildImageStep("the-project", container))))
             }
         }
+
+        on("toString()") {
+            it("returns a human-readable representation of itself") {
+                assertThat(rule.toString(), equalTo("BuildImageStepRule(project name: 'the-project', container: 'the-container')"))
+            }
+        }
     }
 })

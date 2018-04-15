@@ -50,4 +50,6 @@ abstract class StartContainerStepRuleBase(open val container: Container, open va
 
         return readyContainers.containsAll(dependencies)
     }
+
+    override fun toString() = "${this::class.simpleName}(container: '${container.name}', dependencies: ${dependencies.map { "'${it.name}'" }})"
 }

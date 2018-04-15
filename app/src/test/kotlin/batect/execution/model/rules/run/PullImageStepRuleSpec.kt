@@ -36,5 +36,11 @@ object PullImageStepRuleSpec : Spek({
                 assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(PullImageStep("the-image"))))
             }
         }
+
+        on("toString()") {
+            it("returns a human-readable representation of itself") {
+                assertThat(rule.toString(), equalTo("PullImageStepRule(image name: 'the-image')"))
+            }
+        }
     }
 })

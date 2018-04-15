@@ -31,6 +31,7 @@ import batect.execution.model.steps.CreateContainerStep
 import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.imageSourceDoesNotMatter
 import com.natpryce.hamkrest.assertion.assertThat
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -171,6 +172,18 @@ object CreateContainerStepRuleSpec : Spek({
                         assertThat(result, equalTo(TaskStepRuleEvaluationResult.NotReady))
                     }
                 }
+            }
+        }
+
+        on("toString()") {
+            it("returns a human-readable representation of itself") {
+                val container = Container("the-container", imageSourceDoesNotMatter())
+                val command = Command.parse("the-command some-arg")
+                val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
+                val additionalPortMappings = setOf(PortMapping(123, 456))
+                val rule = CreateContainerStepRule(container, command, additionalEnvironmentVariables, additionalPortMappings)
+
+                assertThat(rule.toString(), equalTo("CreateContainerStepRule(container: 'the-container', command: [the-command, some-arg], additional environment variables: [SOME_VAR='some value'], additional port mappings: [123:456])"))
             }
         }
     }

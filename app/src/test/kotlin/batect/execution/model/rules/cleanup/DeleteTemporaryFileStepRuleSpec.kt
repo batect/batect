@@ -75,6 +75,12 @@ object DeleteTemporaryFileStepRuleSpec : Spek({
                     }
                 }
             }
+
+            on("toString()") {
+                it("returns a human-readable representation of itself") {
+                    assertThat(rule.toString(), equalTo("DeleteTemporaryFileStepRule(path: '/some-file', container that must be removed first: 'the-container')"))
+                }
+            }
         }
 
         given("there is no container that must be removed first") {
@@ -85,6 +91,12 @@ object DeleteTemporaryFileStepRuleSpec : Spek({
 
                 it("returns a 'delete temporary file' step") {
                     assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(DeleteTemporaryFileStep(path))))
+                }
+            }
+
+            on("toString()") {
+                it("returns a human-readable representation of itself") {
+                    assertThat(rule.toString(), equalTo("DeleteTemporaryFileStepRule(path: '/some-file', container that must be removed first: null)"))
                 }
             }
         }

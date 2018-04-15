@@ -25,4 +25,6 @@ data class PullImageStepRule(val imageName: String) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         return TaskStepRuleEvaluationResult.Ready(PullImageStep(imageName))
     }
+
+    override fun toString(): String = "${this::class.simpleName}(image name: '$imageName')"
 }

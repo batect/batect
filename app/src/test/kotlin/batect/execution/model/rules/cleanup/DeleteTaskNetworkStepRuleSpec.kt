@@ -85,5 +85,15 @@ object DeleteTaskNetworkStepRuleSpec : Spek({
                 assertThat(instruction, equalTo("docker network rm the-network"))
             }
         }
+
+        on("toString()") {
+            val container1 = Container("container-1", imageSourceDoesNotMatter())
+            val container2 = Container("container-2", imageSourceDoesNotMatter())
+            val rule = DeleteTaskNetworkStepRule(network, setOf(container1, container2))
+
+            it("returns a human-readable representation of itself") {
+                assertThat(rule.toString(), equalTo("DeleteTaskNetworkStepRule(network: 'the-network', containers that must be removed first: ['container-1', 'container-2'])"))
+            }
+        }
     }
 })

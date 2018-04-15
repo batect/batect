@@ -36,5 +36,11 @@ object CreateTaskNetworkStepRuleSpec : Spek({
                 assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateTaskNetworkStep)))
             }
         }
+
+        on("toString()") {
+            it("returns a human-readable representation of itself") {
+                assertThat(rule.toString(), equalTo("CreateTaskNetworkStepRule"))
+            }
+        }
     }
 })

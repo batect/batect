@@ -97,5 +97,13 @@ object RemoveContainerStepRuleSpec : Spek({
                 assertThat(instruction, equalTo("docker rm --force --volumes some-container-id"))
             }
         }
+
+        on("toString()") {
+            val rule = RemoveContainerStepRule(containerToRemove, dockerContainerToRemove, true)
+
+            it("returns a human-readable representation of itself") {
+                assertThat(rule.toString(), equalTo("RemoveContainerStepRule(container: 'the-container', Docker container: 'some-container-id', container was started: true)"))
+            }
+        }
     }
 })

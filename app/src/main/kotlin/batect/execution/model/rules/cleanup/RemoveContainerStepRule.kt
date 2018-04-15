@@ -37,5 +37,5 @@ data class RemoveContainerStepRule(val container: Container, val dockerContainer
 
     override val manualCleanupInstruction: String? = "docker rm --force --volumes ${dockerContainer.id}"
     override val manualCleanupSortOrder: ManualCleanupSortOrder = ManualCleanupSortOrder.RemoveContainers
-    override fun toString() = "${this::class.simpleName}(container=${container.name}, dockerContainer=$dockerContainer, containerWasStarted=$containerWasStarted)"
+    override fun toString() = "${this::class.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}', container was started: $containerWasStarted)"
 }

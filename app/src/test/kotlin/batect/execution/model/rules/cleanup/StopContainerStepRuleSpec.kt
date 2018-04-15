@@ -45,6 +45,12 @@ object StopContainerStepRuleSpec : Spek({
                     assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(StopContainerStep(containerToStop, dockerContainerToStop))))
                 }
             }
+
+            on("toString()") {
+                it("returns a human-readable representation of itself") {
+                    assertThat(rule.toString(), equalTo("StopContainerStepRule(container: 'the-container', Docker container: 'some-container-id', containers that must be stopped first: [])"))
+                }
+            }
         }
 
         given("there are some containers that must be stopped first") {
@@ -74,6 +80,12 @@ object StopContainerStepRuleSpec : Spek({
                     it("indicates that the step is not yet ready") {
                         assertThat(result, equalTo(TaskStepRuleEvaluationResult.NotReady))
                     }
+                }
+            }
+
+            on("toString()") {
+                it("returns a human-readable representation of itself") {
+                    assertThat(rule.toString(), equalTo("StopContainerStepRule(container: 'the-container', Docker container: 'some-container-id', containers that must be stopped first: ['container-1', 'container-2'])"))
                 }
             }
         }

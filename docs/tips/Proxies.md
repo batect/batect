@@ -45,9 +45,9 @@ combination of:
   provided for them
 
 This last point is the most relevant to proxy settings - as `http_proxy`, `https_proxy`, `no_proxy` etc. are defined as
-pre-defined build arguments, we can pass the host's proxy settings into the build environment as build arguments.
+pre-defined build arguments, we can pass the host's proxy environment variables into the build environment as build arguments.
 
-batect automatically propagates any proxy settings configured on the host as build arguments unless the `--no-proxy-vars`
+batect automatically propagates any proxy environment variables configured on the host as build arguments unless the `--no-proxy-vars`
 flag is passed to `batect`.
 
 Note that build arguments are not persisted in the image - they exist only as environment variables at build time. Furthermore,
@@ -63,10 +63,15 @@ The set of run time environment variables is defined by:
 * any environment variables defined in the image (including any base images) with `ENV` instructions
 * any container-specific environment variables specified in the container or task in `batect.yml`
 
-batect automatically propagates any proxy settings configured on the host as environment variables unless the `--no-proxy-vars`
-flag is passed to `batect`.
+batect automatically propagates any proxy environment variables configured on the host as environment variables unless the
+`--no-proxy-vars` flag is passed to `batect`.
 
-## Proxy settings recognised by batect
+Starting with v0.14, if propagating proxy environment variables is enabled, and
+[any proxy environment variable recognised by batect](#proxy-environment-variables-recognised-by-batect) is set, batect will also add the names
+of all containers started as part of the task to `no_proxy` and `NO_PROXY` (or create those environment variables if they're not set).
+This ensures that inter-container communication is not proxied.
+
+## Proxy environment variables recognised by batect
 
 batect will propagate the following proxy-related environment variables:
 

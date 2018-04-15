@@ -54,7 +54,7 @@ object ProxyVariablesJourneyTest : Spek({
                     http_proxy: $httpProxy
                     https_proxy: $httpsProxy
                     ftp_proxy: $ftpProxy
-                    no_proxy: $noProxy
+                    no_proxy: $noProxy,build-env
                 """.trimIndent().replace("\n", "\r\n")))
             }
 

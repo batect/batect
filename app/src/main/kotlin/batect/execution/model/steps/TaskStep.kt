@@ -43,6 +43,7 @@ data class CreateContainerStep(
     val command: Command?,
     val additionalEnvironmentVariables: Map<String, String>,
     val additionalPortMappings: Set<PortMapping>,
+    val allContainersInNetwork: Set<Container>,
     val image: DockerImage,
     val network: DockerNetwork
 ) : TaskStep() {
@@ -50,6 +51,7 @@ data class CreateContainerStep(
         ?: "null"}, " +
         "additional environment variables: [${additionalEnvironmentVariables.map { "${it.key}='${it.value}'" }.joinToString(", ")}], " +
         "additional port mappings: $additionalPortMappings, " +
+        "all containers in network: ${allContainersInNetwork.map { "'${it.name}'" }}, " +
         "image: '${image.id}', network: '${network.id}')"
 }
 

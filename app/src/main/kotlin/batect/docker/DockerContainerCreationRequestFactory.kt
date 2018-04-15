@@ -22,6 +22,7 @@ import batect.config.VolumeMount
 import batect.os.Command
 import batect.os.ProxyEnvironmentVariablesProvider
 import batect.ui.ConsoleInfo
+import batect.utils.mapToSet
 
 class DockerContainerCreationRequestFactory(
     private val consoleInfo: ConsoleInfo,
@@ -39,8 +40,9 @@ class DockerContainerCreationRequestFactory(
         additionalEnvironmentVariables: Map<String, String>,
         additionalVolumeMounts: Set<VolumeMount>,
         additionalPortMappings: Set<PortMapping>,
-        propagateEnvironmentVariables: Boolean,
-        userAndGroup: UserAndGroup?
+        propagateProxyEnvironmentVariables: Boolean,
+        userAndGroup: UserAndGroup?,
+        allContainersInNetwork: Set<Container>
     ): DockerContainerCreationRequest {
         return DockerContainerCreationRequest(
             image,
@@ -48,7 +50,7 @@ class DockerContainerCreationRequestFactory(
             if (command != null) command.parsedCommand else emptyList(),
             container.name,
             container.name,
-            environmentVariablesFor(container, additionalEnvironmentVariables, propagateEnvironmentVariables),
+            environmentVariablesFor(container, additionalEnvironmentVariables, propagateProxyEnvironmentVariables, allContainersInNetwork),
             container.workingDirectory,
             container.volumeMounts + additionalVolumeMounts,
             container.portMappings + additionalPortMappings,
@@ -57,9 +59,9 @@ class DockerContainerCreationRequestFactory(
         )
     }
 
-    private fun environmentVariablesFor(container: Container, additionalEnvironmentVariables: Map<String, String>, propagateEnvironmentVariables: Boolean): Map<String, String> =
+    private fun environmentVariablesFor(container: Container, additionalEnvironmentVariables: Map<String, String>, propagateProxyEnvironmentVariables: Boolean, allContainersInNetwork: Set<Container>): Map<String, String> =
         terminalEnvironmentVariablesFor(consoleInfo) +
-            proxyEnvironmentVariables(propagateEnvironmentVariables) +
+            proxyEnvironmentVariables(propagateProxyEnvironmentVariables, allContainersInNetwork) +
             substituteEnvironmentVariables(container.environment + additionalEnvironmentVariables)
 
     private fun terminalEnvironmentVariablesFor(consoleInfo: ConsoleInfo): Map<String, String> = if (consoleInfo.terminalType == null) {
@@ -68,8 +70,8 @@ class DockerContainerCreationRequestFactory(
         mapOf("TERM" to consoleInfo.terminalType)
     }
 
-    private fun proxyEnvironmentVariables(propagateEnvironmentVariables: Boolean): Map<String, String> = if (propagateEnvironmentVariables) {
-        proxyEnvironmentVariablesProvider.proxyEnvironmentVariables
+    private fun proxyEnvironmentVariables(propagateProxyEnvironmentVariables: Boolean, allContainersInNetwork: Set<Container>): Map<String, String> = if (propagateProxyEnvironmentVariables) {
+        proxyEnvironmentVariablesProvider.getProxyEnvironmentVariables(allContainersInNetwork.mapToSet { it.name })
     } else {
         emptyMap()
     }

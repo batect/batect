@@ -42,177 +42,187 @@ object DockerContainerCreationRequestFactorySpec : Spek({
         val image = DockerImage("some-image")
         val network = DockerNetwork("some-network")
         val command = Command.parse("some-app some-arg")
+        val allContainersInNetwork = setOf(
+            Container("container-1", imageSourceDoesNotMatter()),
+            Container("container-2", imageSourceDoesNotMatter())
+        )
 
         given("the console's type is not available") {
             val consoleInfo = mock<ConsoleInfo>()
-            val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider>()
             val hostEnvironmentVariables = emptyMap<String, String>()
-            val factory = DockerContainerCreationRequestFactory(consoleInfo, proxyEnvironmentVariablesProvider, hostEnvironmentVariables)
-            val propagateProxyEnvironmentVariables = false
 
-            given("there are no additional environment variables") {
-                val additionalEnvironmentVariables = emptyMap<String, String>()
+            given("propagating proxy environment variables is disabled") {
+                val propagateProxyEnvironmentVariables = false
+                val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider> {
+                    on { getProxyEnvironmentVariables(setOf("container-1", "container-2")) } doReturn mapOf("SOME_PROXY_VAR" to "this should not be used")
+                }
 
-                given("there are no additional volume mounts") {
-                    val additionalVolumeMounts = emptySet<VolumeMount>()
+                val factory = DockerContainerCreationRequestFactory(consoleInfo, proxyEnvironmentVariablesProvider, hostEnvironmentVariables)
 
-                    given("there are no additional port mappings") {
-                        val additionalPortMappings = emptySet<PortMapping>()
+                given("there are no additional environment variables") {
+                    val additionalEnvironmentVariables = emptyMap<String, String>()
 
-                        on("creating the request") {
-                            val container = Container(
-                                "some-container",
-                                imageSourceDoesNotMatter(),
-                                command = Command.parse("some-command-that-wont-be-used"),
-                                workingDirectory = "/some-work-dir",
-                                volumeMounts = setOf(VolumeMount("local", "remote", "mode")),
-                                portMappings = setOf(PortMapping(123, 456)),
-                                environment = mapOf("SOME_VAR" to "SOME_VALUE"),
-                                healthCheckConfig = HealthCheckConfig("2s", 10, "5s")
+                    given("there are no additional volume mounts") {
+                        val additionalVolumeMounts = emptySet<VolumeMount>()
+
+                        given("there are no additional port mappings") {
+                            val additionalPortMappings = emptySet<PortMapping>()
+
+                            on("creating the request") {
+                                val container = Container(
+                                    "some-container",
+                                    imageSourceDoesNotMatter(),
+                                    command = Command.parse("some-command-that-wont-be-used"),
+                                    workingDirectory = "/some-work-dir",
+                                    volumeMounts = setOf(VolumeMount("local", "remote", "mode")),
+                                    portMappings = setOf(PortMapping(123, 456)),
+                                    environment = mapOf("SOME_VAR" to "SOME_VALUE"),
+                                    healthCheckConfig = HealthCheckConfig("2s", 10, "5s")
+                                )
+
+                                val userAndGroup = UserAndGroup(123, 456)
+                                val request = factory.create(container, image, network, command, additionalEnvironmentVariables, additionalVolumeMounts, additionalPortMappings, propagateProxyEnvironmentVariables, userAndGroup, allContainersInNetwork)
+
+                                it("populates the image on the request") {
+                                    assertThat(request.image, equalTo(image))
+                                }
+
+                                it("populates the network on the request") {
+                                    assertThat(request.network, equalTo(network))
+                                }
+
+                                it("populates the command on the request") {
+                                    assertThat(request.command, equalTo(command!!.parsedCommand))
+                                }
+
+                                it("populates the hostname and network alias on the request with the name of the container") {
+                                    assertThat(request.hostname, equalTo(container.name))
+                                    assertThat(request.networkAlias, equalTo(container.name))
+                                }
+
+                                it("populates the environment variables on the request with the environment variables from the container") {
+                                    assertThat(request.environmentVariables, equalTo(container.environment))
+                                }
+
+                                it("populates the working directory on the request with the working directory from the container") {
+                                    assertThat(request.workingDirectory, equalTo(container.workingDirectory))
+                                }
+
+                                it("populates the volume mounts on the request with the volume mounts from the container") {
+                                    assertThat(request.volumeMounts, equalTo(container.volumeMounts))
+                                }
+
+                                it("populates the port mappings on the request with the port mappings from the container") {
+                                    assertThat(request.portMappings, equalTo(container.portMappings))
+                                }
+
+                                it("populates the health check configuration on the request with the health check configuration from the container") {
+                                    assertThat(request.healthCheckConfig, equalTo(container.healthCheckConfig))
+                                }
+
+                                it("populates the user and group configuration on the request with the provided values") {
+                                    assertThat(request.userAndGroup, equalTo(userAndGroup))
+                                }
+                            }
+                        }
+
+                        given("there are additional port mappings") {
+                            val additionalPortMappings = setOf(
+                                PortMapping(1000, 2000)
                             )
 
-                            val userAndGroup = UserAndGroup(123, 456)
-                            val request = factory.create(container, image, network, command, additionalEnvironmentVariables, additionalVolumeMounts, additionalPortMappings, propagateProxyEnvironmentVariables, userAndGroup)
+                            on("creating the request") {
+                                val container = Container(
+                                    "some-container",
+                                    imageSourceDoesNotMatter(),
+                                    portMappings = setOf(PortMapping(123, 456))
+                                )
 
-                            it("populates the image on the request") {
-                                assertThat(request.image, equalTo(image))
-                            }
+                                val request = factory.create(container, image, network, command, additionalEnvironmentVariables, additionalVolumeMounts, additionalPortMappings, propagateProxyEnvironmentVariables, null, allContainersInNetwork)
 
-                            it("populates the network on the request") {
-                                assertThat(request.network, equalTo(network))
-                            }
-
-                            it("populates the command on the request") {
-                                assertThat(request.command, equalTo(command!!.parsedCommand))
-                            }
-
-                            it("populates the hostname and network alias on the request with the name of the container") {
-                                assertThat(request.hostname, equalTo(container.name))
-                                assertThat(request.networkAlias, equalTo(container.name))
-                            }
-
-                            it("populates the environment variables on the request with the environment variables from the container") {
-                                assertThat(request.environmentVariables, equalTo(container.environment))
-                            }
-
-                            it("populates the working directory on the request with the working directory from the container") {
-                                assertThat(request.workingDirectory, equalTo(container.workingDirectory))
-                            }
-
-                            it("populates the volume mounts on the request with the volume mounts from the container") {
-                                assertThat(request.volumeMounts, equalTo(container.volumeMounts))
-                            }
-
-                            it("populates the port mappings on the request with the port mappings from the container") {
-                                assertThat(request.portMappings, equalTo(container.portMappings))
-                            }
-
-                            it("populates the health check configuration on the request with the health check configuration from the container") {
-                                assertThat(request.healthCheckConfig, equalTo(container.healthCheckConfig))
-                            }
-
-                            it("populates the user and group configuration on the request with the provided values") {
-                                assertThat(request.userAndGroup, equalTo(userAndGroup))
+                                it("populates the port mappings on the request with the combined set of port mappings from the container and the additional port mappings") {
+                                    assertThat(request.portMappings, equalTo(setOf(
+                                        PortMapping(123, 456),
+                                        PortMapping(1000, 2000)
+                                    )))
+                                }
                             }
                         }
                     }
 
-                    given("there are additional port mappings") {
-                        val additionalPortMappings = setOf(
-                            PortMapping(1000, 2000)
-                        )
+                    given("there are additional volume mounts") {
+                        val additionalVolumeMounts = setOf(VolumeMount("extra-local", "extra-remote", "extra-mode"))
 
                         on("creating the request") {
                             val container = Container(
                                 "some-container",
                                 imageSourceDoesNotMatter(),
-                                portMappings = setOf(PortMapping(123, 456))
+                                volumeMounts = setOf(VolumeMount("local", "remote", "mode"))
                             )
 
-                            val request = factory.create(container, image, network, command, additionalEnvironmentVariables, additionalVolumeMounts, additionalPortMappings, propagateProxyEnvironmentVariables, null)
+                            val request = factory.create(container, image, network, command, additionalEnvironmentVariables, additionalVolumeMounts, emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
 
-                            it("populates the port mappings on the request with the combined set of port mappings from the container and the additional port mappings") {
-                                assertThat(request.portMappings, equalTo(setOf(
-                                    PortMapping(123, 456),
-                                    PortMapping(1000, 2000)
+                            it("populates the volume mounts on the request with the combined set of volume mounts from the container and the additional volume mounts") {
+                                assertThat(request.volumeMounts, equalTo(setOf(
+                                    VolumeMount("local", "remote", "mode"),
+                                    VolumeMount("extra-local", "extra-remote", "extra-mode")
                                 )))
                             }
                         }
                     }
                 }
 
-                given("there are additional volume mounts") {
-                    val additionalVolumeMounts = setOf(VolumeMount("extra-local", "extra-remote", "extra-mode"))
+                given("there is no explicit command to run") {
+                    val container = Container("some-container", imageSourceDoesNotMatter(), command = null)
 
                     on("creating the request") {
+                        val request = factory.create(container, image, network, null, emptyMap(), emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
+
+                        it("does not populate the command on the request") {
+                            assertThat(request.command, equalTo(emptyList()))
+                        }
+                    }
+                }
+
+                given("there are additional environment variables") {
+                    val additionalEnvironmentVariables = mapOf(
+                        "SOME_HOST_VAR" to "SOME_HOST_VALUE"
+                    )
+
+                    given("none of them conflict with environment variables on the container") {
                         val container = Container(
                             "some-container",
                             imageSourceDoesNotMatter(),
-                            volumeMounts = setOf(VolumeMount("local", "remote", "mode"))
+                            environment = mapOf("SOME_VAR" to "SOME_VALUE")
                         )
 
-                        val request = factory.create(container, image, network, command, additionalEnvironmentVariables, additionalVolumeMounts, emptySet(), propagateProxyEnvironmentVariables, null)
+                        on("creating the request") {
+                            val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
 
-                        it("populates the volume mounts on the request with the combined set of volume mounts from the container and the additional volume mounts") {
-                            assertThat(request.volumeMounts, equalTo(setOf(
-                                VolumeMount("local", "remote", "mode"),
-                                VolumeMount("extra-local", "extra-remote", "extra-mode")
-                            )))
+                            it("populates the environment variables on the request with the environment variables from the container and from the additional environment variables") {
+                                assertThat(request.environmentVariables, equalTo(mapOf(
+                                    "SOME_VAR" to "SOME_VALUE",
+                                    "SOME_HOST_VAR" to "SOME_HOST_VALUE"
+                                )))
+                            }
                         }
                     }
-                }
-            }
 
-            given("there is no explicit command to run") {
-                val container = Container("some-container", imageSourceDoesNotMatter(), command = null)
+                    given("one of them conflicts with environment variables on the container") {
+                        val container = Container(
+                            "some-container",
+                            imageSourceDoesNotMatter(),
+                            environment = mapOf("SOME_HOST_VAR" to "SOME_CONTAINER_VALUE")
+                        )
 
-                on("creating the request") {
-                    val request = factory.create(container, image, network, null, emptyMap(), emptySet(), emptySet(), propagateProxyEnvironmentVariables, null)
+                        on("creating the request") {
+                            val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
 
-                    it("does not populate the command on the request") {
-                        assertThat(request.command, equalTo(emptyList()))
-                    }
-                }
-            }
-
-            given("there are additional environment variables") {
-                val additionalEnvironmentVariables = mapOf(
-                    "SOME_HOST_VAR" to "SOME_HOST_VALUE"
-                )
-
-                given("none of them conflict with environment variables on the container") {
-                    val container = Container(
-                        "some-container",
-                        imageSourceDoesNotMatter(),
-                        environment = mapOf("SOME_VAR" to "SOME_VALUE")
-                    )
-
-                    on("creating the request") {
-                        val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null)
-
-                        it("populates the environment variables on the request with the environment variables from the container and from the additional environment variables") {
-                            assertThat(request.environmentVariables, equalTo(mapOf(
-                                "SOME_VAR" to "SOME_VALUE",
-                                "SOME_HOST_VAR" to "SOME_HOST_VALUE"
-                            )))
-                        }
-                    }
-                }
-
-                given("one of them conflicts with environment variables on the container") {
-                    val container = Container(
-                        "some-container",
-                        imageSourceDoesNotMatter(),
-                        environment = mapOf("SOME_HOST_VAR" to "SOME_CONTAINER_VALUE")
-                    )
-
-                    on("creating the request") {
-                        val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null)
-
-                        it("populates the environment variables on the request with the environment variables from the container and from the additional environment variables, with the additional environment variables taking precedence") {
-                            assertThat(request.environmentVariables, equalTo(mapOf(
-                                "SOME_HOST_VAR" to "SOME_HOST_VALUE"
-                            )))
+                            it("populates the environment variables on the request with the environment variables from the container and from the additional environment variables, with the additional environment variables taking precedence") {
+                                assertThat(request.environmentVariables, equalTo(mapOf(
+                                    "SOME_HOST_VAR" to "SOME_HOST_VALUE"
+                                )))
+                            }
                         }
                     }
                 }
@@ -237,7 +247,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     )
 
                     on("creating the request") {
-                        val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null)
+                        val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
 
                         it("populates the environment variables on the request with the environment variables' values from the host") {
                             assertThat(request.environmentVariables, equalTo(mapOf(
@@ -256,7 +266,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
                     on("creating the request") {
                         it("throws an appropriate exception") {
-                            assertThat({ factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null) },
+                            assertThat({ factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork) },
                                 throws<ContainerCreationFailedException>(withMessage("The environment variable 'SOME_VAR' refers to host environment variable 'SOME_HOST_VARIABLE_THAT_ISNT_DEFINED', but it is not set.")))
                         }
                     }
@@ -273,7 +283,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     val additionalEnvironmentVariables = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE")
 
                     on("creating the request") {
-                        val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null)
+                        val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
 
                         it("populates the environment variables on the request with the environment variables' values from the host") {
                             assertThat(request.environmentVariables, equalTo(mapOf(
@@ -293,7 +303,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
                     on("creating the request") {
                         it("throws an appropriate exception") {
-                            assertThat({ factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null) },
+                            assertThat({ factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork) },
                                 throws<ContainerCreationFailedException>(withMessage("The environment variable 'SOME_VAR' refers to host environment variable 'SOME_HOST_VARIABLE_THAT_ISNT_DEFINED', but it is not set.")))
                         }
                     }
@@ -309,7 +319,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     val additionalEnvironmentVariables = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE")
 
                     on("creating the request") {
-                        val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null)
+                        val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
 
                         it("populates the environment variables on the request with the environment variables' values from the host and does not throw an exception") {
                             assertThat(request.environmentVariables, equalTo(mapOf(
@@ -325,7 +335,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
             val consoleInfo = mock<ConsoleInfo>()
             val hostEnvironmentVariables = emptyMap<String, String>()
             val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider> {
-                on { proxyEnvironmentVariables } doReturn mapOf(
+                on { getProxyEnvironmentVariables(setOf("container-1", "container-2")) } doReturn mapOf(
                     "HTTP_PROXY" to "http://some-proxy",
                     "NO_PROXY" to "dont-proxy-this"
                 )
@@ -345,7 +355,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     val additionalEnvironmentVariables = emptyMap<String, String>()
 
                     on("creating the request") {
-                        val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null)
+                        val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
 
                         it("populates the environment variables on the request with the proxy environment variables from the host") {
                             assertThat(request.environmentVariables, equalTo(mapOf(
@@ -368,7 +378,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     val additionalEnvironmentVariables = emptyMap<String, String>()
 
                     on("creating the request") {
-                        val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null)
+                        val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
 
                         it("populates the environment variables on the request with the proxy environment variables from the host, with overrides from the container") {
                             assertThat(request.environmentVariables, equalTo(mapOf(
@@ -393,7 +403,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     )
 
                     on("creating the request") {
-                        val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null)
+                        val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
 
                         it("populates the environment variables on the request with the proxy environment variables from the host, with overrides from the container and additional environment variables") {
                             assertThat(request.environmentVariables, equalTo(mapOf(
@@ -415,7 +425,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     )
 
                     val additionalEnvironmentVariables = emptyMap<String, String>()
-                    val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null)
+                    val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
 
                     it("does not propagate the proxy environment variables") {
                         assertThat(request.environmentVariables, isEmptyMap())
@@ -444,7 +454,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 val additionalEnvironmentVariables = emptyMap<String, String>()
 
                 on("creating the request") {
-                    val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null)
+                    val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
 
                     it("populates the environment variables on the request with the environment variables from the container and the TERM environment variable from the host") {
                         assertThat(request.environmentVariables, equalTo(mapOf(
@@ -468,7 +478,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 val additionalEnvironmentVariables = emptyMap<String, String>()
 
                 on("creating the request") {
-                    val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null)
+                    val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
 
                     it("populates the environment variables on the request with the environment variables from the container and the TERM environment variable from the container") {
                         assertThat(request.environmentVariables, equalTo(mapOf(
@@ -491,7 +501,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 val additionalEnvironmentVariables = mapOf("TERM" to "some-additional-term")
 
                 on("creating the request") {
-                    val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null)
+                    val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
 
                     it("populates the environment variables on the request with the environment variables from the container and the TERM environment variable from the additional environment variables") {
                         assertThat(request.environmentVariables, equalTo(mapOf(
@@ -515,7 +525,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 val additionalEnvironmentVariables = mapOf("TERM" to "some-additional-term")
 
                 on("creating the request") {
-                    val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null)
+                    val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
 
                     it("populates the environment variables on the request with the environment variables from the container and the TERM environment variable from the additional environment variables") {
                         assertThat(request.environmentVariables, equalTo(mapOf(

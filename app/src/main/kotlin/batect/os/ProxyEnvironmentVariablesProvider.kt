@@ -24,7 +24,28 @@ class ProxyEnvironmentVariablesProvider(private val hostEnvironmentVariables: Ma
     private val proxyEnvironmentVariableNames: Set<String> = setOf("http_proxy", "https_proxy", "ftp_proxy", "no_proxy")
         .toCollection(TreeSet(String.CASE_INSENSITIVE_ORDER))
 
-    val proxyEnvironmentVariables: Map<String, String> by lazy {
-        hostEnvironmentVariables.filterKeys { name -> proxyEnvironmentVariableNames.contains(name) }
+    fun getProxyEnvironmentVariables(extraNoProxyEntries: Set<String>): Map<String, String> {
+        val variables = hostEnvironmentVariables.filterKeys { name -> proxyEnvironmentVariableNames.contains(name) }
+
+        if (variables.isEmpty() || extraNoProxyEntries.isEmpty()) {
+            return variables
+        }
+
+        val noProxyVariables = mapOf(
+            "no_proxy" to addExtraNoProxyEntries(variables["no_proxy"], extraNoProxyEntries),
+            "NO_PROXY" to addExtraNoProxyEntries(variables["NO_PROXY"], extraNoProxyEntries)
+        )
+
+        return variables + noProxyVariables
+    }
+
+    private fun addExtraNoProxyEntries(existingValue: String?, extraNoProxyEntries: Set<String>): String {
+        val extraEntries = extraNoProxyEntries.joinToString(",")
+
+        if (existingValue == null || existingValue == "") {
+            return extraEntries
+        }
+
+        return existingValue + "," + extraEntries
     }
 }

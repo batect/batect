@@ -106,7 +106,7 @@ object TaskStepRunnerSpec : Spek({
 
         val proxyVariables = mapOf("SOME_PROXY_CONFIG" to "some_proxy")
         val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider> {
-            on { proxyEnvironmentVariables } doReturn proxyVariables
+            on { getProxyEnvironmentVariables(emptySet()) } doReturn proxyVariables
         }
 
         val runAsCurrentUserConfiguration = RunAsCurrentUserConfiguration(
@@ -270,13 +270,14 @@ object TaskStepRunnerSpec : Spek({
 
             describe("running a 'create container' step") {
                 val container = Container("some-container", imageSourceDoesNotMatter())
+                val otherContainer = Container("some-other-container", imageSourceDoesNotMatter())
                 val command = Command.parse("do-stuff")
                 val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
                 val additionalPortMappings = setOf(PortMapping(123, 456))
                 val image = DockerImage("some-image")
                 val network = DockerNetwork("some-network")
 
-                val step = CreateContainerStep(container, command, additionalEnvironmentVariables, additionalPortMappings, image, network)
+                val step = CreateContainerStep(container, command, additionalEnvironmentVariables, additionalPortMappings, setOf(container, otherContainer), image, network)
                 val request = DockerContainerCreationRequest(image, network, command!!.parsedCommand, "some-container", "some-container", emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig(), null)
 
                 beforeEachTest {
@@ -289,7 +290,8 @@ object TaskStepRunnerSpec : Spek({
                         runAsCurrentUserConfiguration.volumeMounts,
                         additionalPortMappings,
                         runOptions.propagateProxyEnvironmentVariables,
-                        runAsCurrentUserConfiguration.userAndGroup
+                        runAsCurrentUserConfiguration.userAndGroup,
+                        step.allContainersInNetwork
                     )).doReturn(request)
                 }
 

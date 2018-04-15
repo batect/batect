@@ -33,31 +33,33 @@ import org.jetbrains.spek.api.dsl.on
 object CreateContainerStepSpec : Spek({
     describe("a 'create container' step") {
         val container = Container("the-container", imageSourceDoesNotMatter())
+        val otherContainer = Container("the-other-container", imageSourceDoesNotMatter())
         val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
         val additionalPortMappings = setOf(PortMapping(123, 456))
         val image = DockerImage("the-image")
         val network = DockerNetwork("the-network")
+        val allContainersInNetwork = setOf(container, otherContainer)
 
         given("there is an explicit command") {
             val command = Command.parse("the-command some-arg")
-            val step = CreateContainerStep(container, command, additionalEnvironmentVariables, additionalPortMappings, image, network)
+            val step = CreateContainerStep(container, command, additionalEnvironmentVariables, additionalPortMappings, allContainersInNetwork, image, network)
 
             on("toString()") {
                 it("returns a human-readable representation of itself") {
                     assertThat(step.toString(),
-                        equalTo("CreateContainerStep(container: 'the-container', command: [the-command, some-arg], additional environment variables: [SOME_VAR='some value'], additional port mappings: [123:456], image: 'the-image', network: 'the-network')"))
+                        equalTo("CreateContainerStep(container: 'the-container', command: [the-command, some-arg], additional environment variables: [SOME_VAR='some value'], additional port mappings: [123:456], all containers in network: ['the-container', 'the-other-container'], image: 'the-image', network: 'the-network')"))
                 }
             }
         }
 
         given("there is no explicit command") {
             val command = null
-            val step = CreateContainerStep(container, command, additionalEnvironmentVariables, additionalPortMappings, image, network)
+            val step = CreateContainerStep(container, command, additionalEnvironmentVariables, additionalPortMappings, allContainersInNetwork, image, network)
 
             on("toString()") {
                 it("returns a human-readable representation of itself") {
                     assertThat(step.toString(),
-                        equalTo("CreateContainerStep(container: 'the-container', command: null, additional environment variables: [SOME_VAR='some value'], additional port mappings: [123:456], image: 'the-image', network: 'the-network')"))
+                        equalTo("CreateContainerStep(container: 'the-container', command: null, additional environment variables: [SOME_VAR='some value'], additional port mappings: [123:456], all containers in network: ['the-container', 'the-other-container'], image: 'the-image', network: 'the-network')"))
                 }
             }
         }

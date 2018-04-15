@@ -35,7 +35,8 @@ data class CreateContainerStepRule(
     val container: Container,
     val command: Command?,
     val additionalEnvironmentVariables: Map<String, String>,
-    val additionalPortMappings: Set<PortMapping>
+    val additionalPortMappings: Set<PortMapping>,
+    val allContainersInNetwork: Set<Container>
 ) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         val network = findNetwork(pastEvents)
@@ -50,6 +51,7 @@ data class CreateContainerStepRule(
             command,
             additionalEnvironmentVariables,
             additionalPortMappings,
+            allContainersInNetwork,
             image,
             network
         ))
@@ -72,5 +74,6 @@ data class CreateContainerStepRule(
 
     override fun toString() = "${this::class.simpleName}(container: '${container.name}', command: ${command?.parsedCommand ?: "null"}, " +
         "additional environment variables: [${ additionalEnvironmentVariables.map { "${it.key}='${it.value}'" }.joinToString(", ") }], " +
-        "additional port mappings: $additionalPortMappings)"
+        "additional port mappings: $additionalPortMappings, " +
+        "all containers in network: ${allContainersInNetwork.map { "'${it.name}'" }})"
 }

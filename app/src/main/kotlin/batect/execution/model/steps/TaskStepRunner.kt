@@ -100,7 +100,7 @@ class TaskStepRunner(
                 eventSink.postEvent(ImageBuildProgressEvent(step.container, p))
             }
 
-            val image = dockerClient.build(step.projectName, step.container, proxyEnvironmentVariablesForOptions(runOptions), onStatusUpdate)
+            val image = dockerClient.build(step.projectName, step.container, buildTimeProxyEnvironmentVariablesForOptions(runOptions), onStatusUpdate)
             eventSink.postEvent(ImageBuiltEvent(step.container, image))
         } catch (e: ImageBuildFailedException) {
             eventSink.postEvent(ImageBuildFailedEvent(step.container, e.message ?: ""))
@@ -138,7 +138,8 @@ class TaskStepRunner(
                 runAsCurrentUserConfiguration.volumeMounts,
                 step.additionalPortMappings,
                 runOptions.propagateProxyEnvironmentVariables,
-                runAsCurrentUserConfiguration.userAndGroup
+                runAsCurrentUserConfiguration.userAndGroup,
+                step.allContainersInNetwork
             )
 
             val dockerContainer = dockerClient.create(creationRequest)
@@ -229,8 +230,8 @@ class TaskStepRunner(
         }
     }
 
-    private fun proxyEnvironmentVariablesForOptions(runOptions: RunOptions): Map<String, String> = if (runOptions.propagateProxyEnvironmentVariables) {
-        proxyEnvironmentVariablesProvider.proxyEnvironmentVariables
+    private fun buildTimeProxyEnvironmentVariablesForOptions(runOptions: RunOptions): Map<String, String> = if (runOptions.propagateProxyEnvironmentVariables) {
+        proxyEnvironmentVariablesProvider.getProxyEnvironmentVariables(emptySet())
     } else {
         emptyMap()
     }

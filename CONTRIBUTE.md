@@ -1,19 +1,25 @@
 # Contribution Guidelines
 
+Welcome and thanks for your help.
 
-## What's required
+These guidelines are work in progress. In the meantime here are some
+instructions to setup the project so you can start contributing to it.
+
+## Project Setup
+
+### What's required
 
 * JDK (Version 8 or higher)
 * Yarn (Version 1.5.1 or higher)
 * Git (Version 2.17.0)
 
-## Usage
+### Usage
 
-### Building the application
+#### Building the application
 
 `./gradlew build`
 
-### Running the tests
+#### Running the tests
 
 `./gradlew check`
 

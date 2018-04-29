@@ -30,7 +30,7 @@ buildscript {
 }
 
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.2.31'
+    id 'org.jetbrains.kotlin.jvm' version '1.2.41'
     id 'com.github.ben-manes.versions' version '0.17.0'
     id 'com.github.johnrengelman.shadow' version '2.0.3'
 }
@@ -48,7 +48,7 @@ repositories {
 }
 
 dependencies {
-    compile 'org.jetbrains.kotlin:kotlin-stdlib-jre8'
+    compile 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     // Override the version of kotlin-reflect used by jackson-module-kotlin.
     // We don't have to specify a version ourselves (the Kotlin plugin will do that for us),
     // but if we don't reference it here, the version that jackson-module-kotlin refers to

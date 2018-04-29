@@ -59,10 +59,13 @@ If there's something you're really keen to see, pull requests are always welcome
   * importance of idempotency
   * improve the getting started guide (it's way too wordy)
   * explain the task lifecycle (read config, construct graph, pull images / build images, start containers, wait for healthy etc.)
+  * add note about increasing default CPU and memory limits when using Docker on OS X
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
 * make configuration-related error messages clearer and remove exception class names etc.
 * test against a variety of Docker versions (eg. earliest supported version and latest)
 * use batect to build batect (self-hosting)
+* tool to browse logs nicely (dump into Elasticsearch?)
+* tool to visualise execution on a timeline
 * switch to [MockK](https://github.com/oleksiyp/mockk) - Kotlin specific library with clearer upgrade path to Kotlin/Native
 * move to Kotlin/Native
   * Why? Don't want to require users to install a JVM to use batect, also want to remove as much overhead as possible

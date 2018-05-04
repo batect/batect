@@ -16,10 +16,12 @@
 
 package batect
 
+import batect.cli.CommandLineOptions
 import batect.cli.CommandLineOptionsParser
 import batect.cli.CommandLineOptionsParsingResult
 import batect.cli.commands.CommandFactory
 import batect.logging.ApplicationInfoLogger
+import batect.logging.logger
 import org.kodein.di.DKodein
 import org.kodein.di.DKodeinAware
 import org.kodein.di.generic.instance
@@ -46,27 +48,38 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
     private val commandFactory: CommandFactory = instance()
 
     fun run(args: Iterable<String>): Int {
+        val result = commandLineOptionsParser.parse(args)
+
+        return when (result) {
+            is CommandLineOptionsParsingResult.Succeeded -> runCommand(result.options, args)
+            is CommandLineOptionsParsingResult.Failed -> handleOptionsParsingFailed(result)
+        }
+    }
+
+    private fun runCommand(options: CommandLineOptions, args: Iterable<String>): Int {
+        val extendedKodein = options.extend(dkodein)
+        val logger = extendedKodein.logger<Application>()
+
         try {
-            val result = commandLineOptionsParser.parse(args)
+            val applicationInfoLogger = extendedKodein.instance<ApplicationInfoLogger>()
+            applicationInfoLogger.logApplicationInfo(args)
 
-            when (result) {
-                is CommandLineOptionsParsingResult.Failed -> {
-                    errorStream.println(result.message)
-                    return -1
-                }
-                is CommandLineOptionsParsingResult.Succeeded -> {
-                    val extendedKodein = result.options.extend(dkodein)
-
-                    val applicationInfoLogger = extendedKodein.instance<ApplicationInfoLogger>()
-                    applicationInfoLogger.logApplicationInfo(args)
-
-                    val command = commandFactory.createCommand(result.options, extendedKodein)
-                    return command.run()
-                }
-            }
+            val command = commandFactory.createCommand(options, extendedKodein)
+            return command.run()
         } catch (e: Throwable) {
             errorStream.println(e)
+
+            logger.error {
+                message("Exception thrown during execution.")
+                exception(e)
+            }
+
             return -1
         }
+    }
+
+    private fun handleOptionsParsingFailed(result: CommandLineOptionsParsingResult.Failed): Int {
+        errorStream.println(result.message)
+        return -1
     }
 }

@@ -35,13 +35,11 @@ If there's something you're really keen to see, pull requests are always welcome
 * automatically create home directory specified with `run_as_current_user` with correct permissions
   * can't just `docker exec mkdir <home dir>` because the `mkdir` will run as the user, which might not have permission to create the directory
   * mount a volume in `/tmp` from the host? Need to check if this will still allow nested mounts (eg. create `/home/the-user` but then mount `/home/the-user/.sometoolcache`) and if order of mounts matters
-* log full stack trace whenever an exception is thrown to the user (not done in `Application` at the moment)
 
 ### Other
 * replace factories with references to constructors
 * logging (for batect internals)
   * include process ID with each message (this is non-trivial in versions prior to Java 9: https://stackoverflow.com/questions/35842/how-can-a-java-program-get-its-own-process-id)
-* option to print full stack trace on non-fatal exceptions
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use Docker API directly rather than using Docker CLI (would allow for more detailed progress and error reporting)
 * documentation

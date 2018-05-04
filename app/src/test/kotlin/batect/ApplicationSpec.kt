@@ -22,6 +22,15 @@ import batect.cli.CommandLineOptionsParsingResult
 import batect.cli.commands.Command
 import batect.cli.commands.CommandFactory
 import batect.logging.ApplicationInfoLogger
+import batect.logging.Logger
+import batect.logging.LoggerFactory
+import batect.logging.Severity
+import batect.testutils.InMemoryLogSink
+import batect.testutils.createForEachTest
+import batect.testutils.hasMessage
+import batect.testutils.withException
+import batect.testutils.withSeverity
+import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
@@ -29,7 +38,6 @@ import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.doThrow
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.reset
 import com.nhaarman.mockito_kotlin.whenever
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -44,34 +52,42 @@ import java.io.PrintStream
 
 object ApplicationSpec : Spek({
     describe("an application") {
-        val errorStream = ByteArrayOutputStream()
-        val commandLineOptionsParser = mock<CommandLineOptionsParser>()
-        val commandFactory = mock<CommandFactory>()
+        val errorStream by createForEachTest { ByteArrayOutputStream() }
+        val commandLineOptionsParser by createForEachTest { mock<CommandLineOptionsParser>() }
+        val commandFactory by createForEachTest { mock<CommandFactory>() }
 
-        val dependencies = Kodein.direct {
-            bind<PrintStream>(PrintStreamType.Error) with instance(PrintStream(errorStream))
-            bind<CommandLineOptionsParser>() with instance(commandLineOptionsParser)
-            bind<CommandFactory>() with instance(commandFactory)
+        val dependencies by createForEachTest {
+            Kodein.direct {
+                bind<PrintStream>(PrintStreamType.Error) with instance(PrintStream(errorStream))
+                bind<CommandLineOptionsParser>() with instance(commandLineOptionsParser)
+                bind<CommandFactory>() with instance(commandFactory)
+            }
         }
 
-        val application = Application(dependencies)
+        val application by createForEachTest { Application(dependencies) }
         val args = listOf("some-command", "some-param")
 
-        beforeEachTest {
-            errorStream.reset()
-            reset(commandLineOptionsParser)
-            reset(commandFactory)
-        }
-
         given("parsing the command line arguments succeeds") {
-            val applicationInfoLogger = mock<ApplicationInfoLogger>()
+            val applicationInfoLogger by createForEachTest { mock<ApplicationInfoLogger>() }
+            val logSink by createForEachTest { InMemoryLogSink() }
 
-            val extendedDependencies = Kodein.direct {
-                bind<ApplicationInfoLogger>() with instance(applicationInfoLogger)
+            val loggerFactory by createForEachTest {
+                mock<LoggerFactory> {
+                    on { createLoggerForClass(Application::class) } doReturn Logger("application", logSink)
+                }
             }
 
-            val options = mock<CommandLineOptions> {
-                on { extend(dependencies) } doReturn extendedDependencies
+            val extendedDependencies by createForEachTest {
+                Kodein.direct {
+                    bind<ApplicationInfoLogger>() with instance(applicationInfoLogger)
+                    bind<LoggerFactory>() with instance(loggerFactory)
+                }
+            }
+
+            val options by createForEachTest {
+                mock<CommandLineOptions> {
+                    on { extend(dependencies) } doReturn extendedDependencies
+                }
             }
 
             beforeEachTest {
@@ -108,8 +124,9 @@ object ApplicationSpec : Spek({
             }
 
             given("the command throws an exception") {
+                val exception = RuntimeException("Everything is broken")
                 val command = mock<Command> {
-                    on { run() } doThrow RuntimeException("Everything is broken")
+                    on { run() } doThrow exception
                 }
 
                 beforeEachTest {
@@ -121,6 +138,10 @@ object ApplicationSpec : Spek({
 
                     it("prints the exception message to the error stream") {
                         assertThat(errorStream.toString(), containsSubstring("Everything is broken"))
+                    }
+
+                    it("logs the exception to the log") {
+                        assertThat(logSink, hasMessage(withSeverity(Severity.Error) and withException(exception)))
                     }
 
                     it("returns a non-zero exit code") {
@@ -138,7 +159,7 @@ object ApplicationSpec : Spek({
             on("running the application") {
                 val exitCode = application.run(args)
 
-                it("prints the exception message to the error stream") {
+                it("prints the error message to the error stream") {
                     assertThat(errorStream.toString(), equalTo("Everything is broken\n"))
                 }
 

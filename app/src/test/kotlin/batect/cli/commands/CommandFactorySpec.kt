@@ -17,9 +17,7 @@
 package batect.cli.commands
 
 import batect.cli.CommandLineOptions
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.bind
-import com.github.salomonbrys.kodein.instance
+import org.kodein.di.Kodein
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockito_kotlin.mock
@@ -28,11 +26,13 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import org.kodein.di.generic.bind
+import org.kodein.di.generic.instance
 
 object CommandFactorySpec : Spek({
     describe("a command factory") {
         val factory = CommandFactory()
-        val kodein = Kodein {
+        val kodein = Kodein.direct {
             bind<HelpCommand>() with instance(mock())
             bind<VersionInfoCommand>() with instance(mock())
             bind<ListTasksCommand>() with instance(mock())

@@ -22,9 +22,6 @@ import batect.cli.CommandLineOptionsParsingResult
 import batect.cli.commands.Command
 import batect.cli.commands.CommandFactory
 import batect.logging.ApplicationInfoLogger
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.bind
-import com.github.salomonbrys.kodein.instance
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
@@ -39,6 +36,9 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import org.kodein.di.Kodein
+import org.kodein.di.generic.bind
+import org.kodein.di.generic.instance
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 
@@ -48,7 +48,7 @@ object ApplicationSpec : Spek({
         val commandLineOptionsParser = mock<CommandLineOptionsParser>()
         val commandFactory = mock<CommandFactory>()
 
-        val dependencies = Kodein {
+        val dependencies = Kodein.direct {
             bind<PrintStream>(PrintStreamType.Error) with instance(PrintStream(errorStream))
             bind<CommandLineOptionsParser>() with instance(commandLineOptionsParser)
             bind<CommandFactory>() with instance(commandFactory)
@@ -66,7 +66,7 @@ object ApplicationSpec : Spek({
         given("parsing the command line arguments succeeds") {
             val applicationInfoLogger = mock<ApplicationInfoLogger>()
 
-            val extendedDependencies = Kodein {
+            val extendedDependencies = Kodein.direct {
                 bind<ApplicationInfoLogger>() with instance(applicationInfoLogger)
             }
 

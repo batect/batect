@@ -17,11 +17,11 @@
 package batect.cli.commands
 
 import batect.cli.CommandLineOptions
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.instance
+import org.kodein.di.DKodein
+import org.kodein.di.generic.instance
 
 class CommandFactory {
-    fun createCommand(options: CommandLineOptions, kodein: Kodein): Command {
+    fun createCommand(options: CommandLineOptions, kodein: DKodein): Command {
         return when {
             options.showHelp -> kodein.instance<HelpCommand>()
             options.showVersionInfo -> kodein.instance<VersionInfoCommand>()

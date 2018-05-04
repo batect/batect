@@ -20,9 +20,9 @@ import batect.cli.CommandLineOptionsParser
 import batect.cli.CommandLineOptionsParsingResult
 import batect.cli.commands.CommandFactory
 import batect.logging.ApplicationInfoLogger
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.KodeinAware
-import com.github.salomonbrys.kodein.instance
+import org.kodein.di.DKodein
+import org.kodein.di.DKodeinAware
+import org.kodein.di.generic.instance
 import java.io.PrintStream
 import kotlin.system.exitProcess
 
@@ -37,7 +37,7 @@ fun main(args: Array<String>) {
     }
 }
 
-class Application(override val kodein: Kodein) : KodeinAware {
+class Application(override val dkodein: DKodein) : DKodeinAware {
     constructor(outputStream: PrintStream, errorStream: PrintStream) :
         this(createKodeinConfiguration(outputStream, errorStream))
 
@@ -55,7 +55,7 @@ class Application(override val kodein: Kodein) : KodeinAware {
                     return -1
                 }
                 is CommandLineOptionsParsingResult.Succeeded -> {
-                    val extendedKodein = result.options.extend(kodein)
+                    val extendedKodein = result.options.extend(dkodein)
 
                     val applicationInfoLogger = extendedKodein.instance<ApplicationInfoLogger>()
                     applicationInfoLogger.logApplicationInfo(args)

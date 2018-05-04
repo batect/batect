@@ -44,6 +44,7 @@ archivesBaseName = 'batect'
 mainClassName = 'batect.ApplicationKt'
 
 repositories {
+    jcenter()
     maven { url "https://kotlin.bintray.com/kotlinx" }
 }
 
@@ -60,7 +61,7 @@ dependencies {
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.5'
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.5'
     compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.5'
-    compile 'com.github.salomonbrys.kodein:kodein:4.1.0'
+    compile 'org.kodein.di:kodein-di-generic-jvm:5.0.0'
     compile 'com.squareup.okhttp3:okhttp:3.10.0'
 
     testCompile 'com.natpryce:hamkrest:1.4.2.2'

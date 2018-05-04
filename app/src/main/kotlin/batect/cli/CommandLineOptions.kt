@@ -20,10 +20,12 @@ import batect.cli.options.defaultvalues.LevelOfParallelismDefaultValueProvider
 import batect.logging.FileLogSink
 import batect.logging.LogSink
 import batect.logging.NullLogSink
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.bind
-import com.github.salomonbrys.kodein.instance
-import com.github.salomonbrys.kodein.singleton
+import org.kodein.di.Copy
+import org.kodein.di.DKodein
+import org.kodein.di.Kodein
+import org.kodein.di.generic.bind
+import org.kodein.di.generic.instance
+import org.kodein.di.generic.singleton
 import java.nio.file.FileSystem
 
 data class CommandLineOptions(
@@ -43,8 +45,8 @@ data class CommandLineOptions(
     val taskName: String? = null,
     val additionalTaskCommandArguments: Iterable<String> = emptyList()
 ) {
-    fun extend(originalKodein: Kodein): Kodein = Kodein {
-        extend(originalKodein)
+    fun extend(originalKodein: DKodein): DKodein = Kodein.direct {
+        extend(originalKodein, copy = Copy.All)
         bind<CommandLineOptions>() with instance(this@CommandLineOptions)
 
         bind<LogSink>() with singleton {

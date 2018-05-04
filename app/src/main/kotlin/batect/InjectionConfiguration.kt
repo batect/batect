@@ -58,16 +58,17 @@ import batect.updates.UpdateInfoDownloader
 import batect.updates.UpdateInfoStorage
 import batect.updates.UpdateInfoUpdater
 import batect.updates.UpdateNotifier
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.bind
-import com.github.salomonbrys.kodein.instance
-import com.github.salomonbrys.kodein.singleton
 import okhttp3.OkHttpClient
+import org.kodein.di.DKodein
+import org.kodein.di.Kodein
+import org.kodein.di.generic.bind
+import org.kodein.di.generic.instance
+import org.kodein.di.generic.singleton
 import java.io.PrintStream
 import java.nio.file.FileSystem
 import java.nio.file.FileSystems
 
-fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStream): Kodein = Kodein {
+fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStream): DKodein = Kodein.direct {
     bind<FileSystem>() with singleton { FileSystems.getDefault() }
     bind<OkHttpClient>() with singleton { OkHttpClient.Builder().build() }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
@@ -184,4 +185,4 @@ private val coreModule = Kodein.Module {
     bind<VersionInfo>() with singleton { VersionInfo() }
 }
 
-private fun Kodein.commandLineOptions(): CommandLineOptions = this.instance()
+private fun DKodein.commandLineOptions(): CommandLineOptions = this.instance()

@@ -21,9 +21,6 @@ import batect.logging.LogMessageWriter
 import batect.logging.LogSink
 import batect.logging.NullLogSink
 import batect.logging.StandardAdditionalDataSource
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.bind
-import com.github.salomonbrys.kodein.instance
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
@@ -35,6 +32,9 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import org.kodein.di.Kodein
+import org.kodein.di.generic.bind
+import org.kodein.di.generic.instance
 import java.nio.file.FileSystem
 
 object CommandLineOptionsSpec : Spek({
@@ -43,7 +43,7 @@ object CommandLineOptionsSpec : Spek({
             val options = CommandLineOptions(taskName = "some-task")
 
             on("extending an existing Kodein configuration") {
-                val originalKodein = Kodein {
+                val originalKodein = Kodein.direct {
                     bind<String>("some string") with instance("The string value")
                 }
 
@@ -69,7 +69,7 @@ object CommandLineOptionsSpec : Spek({
             on("extending an existing Kodein configuration") {
                 val fileSystem = Jimfs.newFileSystem(Configuration.unix())
 
-                val originalKodein = Kodein {
+                val originalKodein = Kodein.direct {
                     bind<String>("some string") with instance("The string value")
                     bind<FileSystem>() with instance(fileSystem)
                     bind<LogMessageWriter>() with instance(mock())

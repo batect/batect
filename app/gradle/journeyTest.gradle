@@ -14,18 +14,6 @@
    limitations under the License.
 */
 
-import org.junit.platform.console.ConsoleLauncher
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath "org.junit.platform:junit-platform-gradle-plugin:$junit_version"
-    }
-}
-
 sourceSets {
     journeyTest
 }
@@ -35,32 +23,14 @@ configurations {
     journeyTestRuntime.extendsFrom testRuntime
 }
 
-// Gross hack because the JUnit 5 Gradle plugin doesn't provide a task class that we can extend from,
-// and the built-in Gradle Test task doesn't support JUnit 5.
-// Based on https://github.com/junit-team/junit5/blob/master/junit-platform-gradle-plugin/src/main/groovy/org/junit/platform/gradle/plugin/JUnitPlatformPlugin.groovy
-task journeyTest(type: JavaExec) {
+task journeyTest(type: Test) {
     description 'Runs the journey tests.'
     group 'Verification'
+    testClassesDirs = sourceSets.journeyTest.output.classesDirs
+    classpath = sourceSets.journeyTest.runtimeClasspath
 
     dependsOn journeyTestClasses
     dependsOn installShadowDist
 
     inputs.files installShadowDist
-
-    def reportDir = "$buildDir/test-results/journey-tests"
-    outputs.dir reportDir
-
-    classpath = sourceSets.journeyTest.runtimeClasspath + configurations.junitPlatform
-
-    def scanDirs = [sourceSets.journeyTest.output.resourcesDir] +
-            sourceSets.journeyTest.output.classesDirs +
-            sourceSets.journeyTest.output.dirs.files
-
-    main = ConsoleLauncher.class.getName()
-    args = [
-            '--scan-class-path', scanDirs.join(File.pathSeparator),
-            '--reports-dir', reportDir,
-            '--include-engine', 'spek',
-            '--details', 'none'
-    ]
 }

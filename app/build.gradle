@@ -15,7 +15,6 @@
 */
 
 buildscript {
-    ext.junit_version = '1.1.0'
     ext.spek_version = '1.1.5'
     ext.serialization_version = '0.5.0'
 
@@ -24,7 +23,6 @@ buildscript {
     }
 
     dependencies {
-        classpath "org.junit.platform:junit-platform-gradle-plugin:$junit_version"
         classpath "org.jetbrains.kotlinx:kotlinx-gradle-serialization-plugin:$serialization_version"
     }
 }
@@ -36,7 +34,6 @@ plugins {
 }
 
 apply plugin: 'application'
-apply plugin: 'org.junit.platform.gradle.plugin'
 apply plugin: 'kotlinx-serialization'
 
 applicationName = 'batect'
@@ -74,14 +71,24 @@ dependencies {
     }
 
     testRuntime "org.jetbrains.spek:spek-junit-platform-engine:$spek_version"
-    testRuntime "org.junit.platform:junit-platform-runner:$junit_version"
+    testRuntime 'org.junit.platform:junit-platform-engine:1.1.0'
 }
 
-junitPlatform {
-    filters {
-        engines {
-            include 'spek'
-        }
+tasks.withType(Test) {
+    useJUnitPlatform {
+        includeEngines 'spek'
+    }
+
+    testLogging {
+        events "failed"
+        events "skipped"
+        events "standard_out"
+        events "standard_error"
+
+        showExceptions true
+        showStackTraces true
+        showCauses true
+        exceptionFormat "full"
     }
 }
 

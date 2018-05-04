@@ -58,7 +58,7 @@ spotless {
     format 'gradle', {
         target '**/*.gradle'
 
-        licenseHeader "/*$licenseText*/\n\n", "(buildscript|import|apply|ext|allprojects|task|//)"
+        licenseHeader "/*$licenseText*/\n\n", "(buildscript|import|apply|ext|allprojects|task|sourceSets|//)"
     }
 }
 

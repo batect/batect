@@ -79,7 +79,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * file I/O support
 * process creation / monitoring support
 * YAML parsing library
-* [Kodein support](https://github.com/SalomonBrys/Kodein/tree/master/kodein-native)
 
 ## Future improvements
 * warn if dependency exits before task finishes (include exit code)

@@ -71,7 +71,7 @@ dependencies {
     }
 
     testRuntime "org.jetbrains.spek:spek-junit-platform-engine:$spek_version"
-    testRuntime 'org.junit.platform:junit-platform-engine:1.1.0'
+    testRuntime 'org.junit.platform:junit-platform-engine:1.2.0'
 }
 
 tasks.withType(Test) {

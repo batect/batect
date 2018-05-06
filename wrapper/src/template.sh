@@ -43,7 +43,9 @@ function runApplication() {
         exit -1
     fi
 
-    BATECT_WRAPPER_SCRIPT_PATH="$SCRIPT_PATH" java -Djava.net.useSystemProxies=true -jar "$JAR_PATH" "$@"
+    BATECT_WRAPPER_SCRIPT_PATH="$SCRIPT_PATH" \
+    HOSTNAME="$HOSTNAME" \
+    java -Djava.net.useSystemProxies=true -jar "$JAR_PATH" "$@"
 }
 
 main "$@"

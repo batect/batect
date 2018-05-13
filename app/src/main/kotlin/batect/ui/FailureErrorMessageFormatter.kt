@@ -31,6 +31,7 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
 import batect.execution.model.events.TaskNetworkDeletionFailedEvent
+import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 
 class FailureErrorMessageFormatter {
@@ -46,6 +47,7 @@ class FailureErrorMessageFormatter {
         is ContainerRemovalFailedEvent -> "Could not remove container '${event.container.name}': ${event.message}"
         is TaskNetworkDeletionFailedEvent -> "Could not delete the task network: ${event.message}"
         is TemporaryFileDeletionFailedEvent -> "Could not delete temporary file '${event.filePath}': ${event.message}"
+        is TemporaryDirectoryDeletionFailedEvent -> "Could not delete temporary directory '${event.directoryPath}': ${event.message}"
     }
 
     private fun hintToReRunWithCleanupDisabled(runOptions: RunOptions): String = when (runOptions.behaviourAfterFailure) {

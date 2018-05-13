@@ -51,6 +51,7 @@ import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import org.mockito.ArgumentMatchers.anyString
+import java.nio.file.Paths
 import java.util.UUID
 
 object DockerClientSpec : Spek({
@@ -696,6 +697,31 @@ object DockerClientSpec : Spek({
 
                 it("returns false") {
                     assertThat(client.checkIfDockerIsAvailable(), equalTo(false))
+                }
+            }
+        }
+
+        describe("copying a file or directory into a container") {
+            val container = DockerContainer("some-id")
+            val source = Paths.get("/some-source")
+            val destination = "/some-destination"
+            val expectedCommand = listOf("docker", "cp", "/some-source", "some-id:/some-destination")
+
+            on("a successful copy") {
+                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "Done!"))
+
+                client.copyToContainer(container, source, destination)
+
+                it("calls the Docker CLI to copy the file or directory") {
+                    verify(processRunner).runAndCaptureOutput(expectedCommand)
+                }
+            }
+
+            on("an unsuccessful copy") {
+                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
+
+                it("throws an appropriate exception") {
+                    assertThat({ client.copyToContainer(container, source, destination) }, throws<CopyToContainerFailedException>(withMessage("Copying file '/some-source' to '/some-destination' in container 'some-id' failed. Output from Docker was: Something went wrong.")))
                 }
             }
         }

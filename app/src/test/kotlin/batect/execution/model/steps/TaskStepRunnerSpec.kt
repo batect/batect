@@ -27,6 +27,7 @@ import batect.docker.ContainerHealthCheckException
 import batect.docker.ContainerRemovalFailedException
 import batect.docker.ContainerStartFailedException
 import batect.docker.ContainerStopFailedException
+import batect.docker.CopyToContainerFailedException
 import batect.docker.DockerClient
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequest
@@ -69,12 +70,15 @@ import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
 import batect.execution.model.events.TaskNetworkDeletedEvent
 import batect.execution.model.events.TaskNetworkDeletionFailedEvent
+import batect.execution.model.events.TemporaryDirectoryDeletedEvent
+import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 import batect.os.Command
 import batect.os.ProxyEnvironmentVariablesProvider
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
+import batect.testutils.equalTo
 import batect.testutils.hasMessage
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withAdditionalData
@@ -97,6 +101,7 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import java.nio.file.Files
+import java.nio.file.Paths
 
 object TaskStepRunnerSpec : Spek({
     describe("a task step runner") {
@@ -111,7 +116,10 @@ object TaskStepRunnerSpec : Spek({
 
         val runAsCurrentUserConfiguration = RunAsCurrentUserConfiguration(
             setOf(VolumeMount("/tmp/local-path", "/tmp/remote-path", "rw")),
-            UserAndGroup(456, 789)
+            UserAndGroup(456, 789),
+            mapOf(
+                Paths.get("/some-file") to "/some-container-file"
+            )
         )
 
         val runAsCurrentUserConfigurationProvider = mock<RunAsCurrentUserConfigurationProvider> {
@@ -305,6 +313,10 @@ object TaskStepRunnerSpec : Spek({
                         verify(dockerClient).create(request)
                     }
 
+                    it("copies any local files from the 'run as current user' configuration into the container") {
+                        verify(dockerClient).copyToContainer(dockerContainer, Paths.get("/some-file"), "/some-container-file")
+                    }
+
                     it("emits a 'container created' event") {
                         verify(eventSink).postEvent(ContainerCreatedEvent(container, dockerContainer))
                     }
@@ -317,6 +329,18 @@ object TaskStepRunnerSpec : Spek({
 
                     it("emits a 'container creation failed' event") {
                         verify(eventSink).postEvent(ContainerCreationFailedEvent(container, "Something went wrong."))
+                    }
+                }
+
+                on("when copying files fails") {
+                    val dockerContainer = DockerContainer("some-id")
+                    whenever(dockerClient.create(request)).doReturn(dockerContainer)
+                    whenever(dockerClient.copyToContainer(any(), any(), any())).doThrow(CopyToContainerFailedException(Paths.get("/some-file"), "/some-container-file", "some-id", "File copy failed."))
+
+                    runner.run(step, eventSink, runOptions)
+
+                    it("emits a 'container creation failed' event") {
+                        verify(eventSink).postEvent(ContainerCreationFailedEvent(container, "Copying file '/some-file' to '/some-container-file' in container 'some-id' failed. Output from Docker was: File copy failed."))
                     }
                 }
             }
@@ -443,6 +467,10 @@ object TaskStepRunnerSpec : Spek({
                     it("emits a 'temporary file deleted' event") {
                         verify(eventSink).postEvent(TemporaryFileDeletedEvent(filePath))
                     }
+
+                    it("deletes the file") {
+                        assertThat(Files.exists(filePath), equalTo(false))
+                    }
                 }
 
                 on("when deleting the file fails") {
@@ -450,6 +478,36 @@ object TaskStepRunnerSpec : Spek({
 
                     it("emits a 'temporary file deletion failed' event") {
                         verify(eventSink).postEvent(TemporaryFileDeletionFailedEvent(filePath, "java.nio.file.NoSuchFileException: /temp-file"))
+                    }
+                }
+            }
+
+            describe("running a 'delete temporary directory' step") {
+                val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
+                val directoryPath by createForEachTest { fileSystem.getPath("/temp-directory") }
+
+                val step by createForEachTest { DeleteTemporaryDirectoryStep(directoryPath) }
+
+                on("when deleting the directory succeeds") {
+                    Files.createDirectories(directoryPath)
+                    Files.write(directoryPath.resolve("some-file"), listOf("some file content"))
+
+                    runner.run(step, eventSink, runOptions)
+
+                    it("emits a 'temporary directory deleted' event") {
+                        verify(eventSink).postEvent(TemporaryDirectoryDeletedEvent(directoryPath))
+                    }
+
+                    it("deletes the directory") {
+                        assertThat(Files.exists(directoryPath), equalTo(false))
+                    }
+                }
+
+                on("when deleting the directory fails") {
+                    runner.run(step, eventSink, runOptions)
+
+                    it("emits a 'temporary directory deletion failed' event") {
+                        verify(eventSink).postEvent(TemporaryDirectoryDeletionFailedEvent(directoryPath, "java.nio.file.NoSuchFileException: /temp-directory"))
                     }
                 }
             }

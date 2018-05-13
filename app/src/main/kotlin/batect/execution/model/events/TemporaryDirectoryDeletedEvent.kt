@@ -14,14 +14,10 @@
    limitations under the License.
 */
 
-package batect.execution
+package batect.execution.model.events
 
-import batect.config.VolumeMount
-import batect.docker.UserAndGroup
 import java.nio.file.Path
 
-data class RunAsCurrentUserConfiguration(
-    val volumeMounts: Set<VolumeMount>,
-    val userAndGroup: UserAndGroup?,
-    val pathsToCopyToContainer: Map<Path, String>
-)
+data class TemporaryDirectoryDeletedEvent(val directoryPath: Path) : TaskEvent() {
+    override fun toString() = "${this::class.simpleName}(directory path: '$directoryPath')"
+}

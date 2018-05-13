@@ -33,9 +33,11 @@ import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
+import batect.execution.model.events.TemporaryDirectoryCreatedEvent
 import batect.execution.model.events.TemporaryFileCreatedEvent
 import batect.execution.model.rules.cleanup.CleanupTaskStepRule
 import batect.execution.model.rules.cleanup.DeleteTaskNetworkStepRule
+import batect.execution.model.rules.cleanup.DeleteTemporaryDirectoryStepRule
 import batect.execution.model.rules.cleanup.DeleteTemporaryFileStepRule
 import batect.execution.model.rules.cleanup.RemoveContainerStepRule
 import batect.execution.model.rules.cleanup.StopContainerStepRule
@@ -90,7 +92,7 @@ object CleanupStagePlannerSpec : Spek({
             beforeEachTest { events.add(TaskNetworkCreatedEvent(network)) }
 
             given("no containers were created") {
-                given("no temporary files were created") {
+                given("no temporary files or directories were created") {
                     on("creating the stage") {
                         val stage = planner.createStage(graph, events)
 
@@ -100,13 +102,15 @@ object CleanupStagePlannerSpec : Spek({
                     }
                 }
 
-                given("some temporary files were created") {
+                given("some temporary files and directories were created") {
                     val file1 = Paths.get("/tmp/somefile")
                     val file2 = Paths.get("/tmp/someotherfile")
+                    val directory = Paths.get("/tmp/somedirectory")
 
                     beforeEachTest {
                         events.add(TemporaryFileCreatedEvent(taskContainer, file1))
                         events.add(TemporaryFileCreatedEvent(container1, file2))
+                        events.add(TemporaryDirectoryCreatedEvent(container1, directory))
                     }
 
                     on("creating the stage") {
@@ -115,7 +119,8 @@ object CleanupStagePlannerSpec : Spek({
                         itHasExactlyTheRules(stage, mapOf(
                             "delete the task network" to DeleteTaskNetworkStepRule(network, emptySet()),
                             "delete the first file" to DeleteTemporaryFileStepRule(file1, null),
-                            "delete the second file" to DeleteTemporaryFileStepRule(file2, null)
+                            "delete the second file" to DeleteTemporaryFileStepRule(file2, null),
+                            "delete the directory" to DeleteTemporaryDirectoryStepRule(directory, null)
                         ))
                     }
                 }
@@ -127,7 +132,7 @@ object CleanupStagePlannerSpec : Spek({
                 beforeEachTest { events.add(ContainerCreatedEvent(taskContainer, dockerContainer)) }
 
                 given("the container was not started") {
-                    given("no temporary files were created") {
+                    given("no temporary files or directories were created") {
                         on("creating the stage") {
                             val stage = planner.createStage(graph, events)
 
@@ -138,13 +143,17 @@ object CleanupStagePlannerSpec : Spek({
                         }
                     }
 
-                    given("some temporary files were created") {
+                    given("some temporary files and directories were created") {
                         val file1 = Paths.get("/tmp/somefile")
                         val file2 = Paths.get("/tmp/someotherfile")
+                        val directory1 = Paths.get("/tmp/somedirectory")
+                        val directory2 = Paths.get("/tmp/someotherdirectory")
 
                         beforeEachTest {
                             events.add(TemporaryFileCreatedEvent(taskContainer, file1))
                             events.add(TemporaryFileCreatedEvent(container1, file2))
+                            events.add(TemporaryDirectoryCreatedEvent(taskContainer, directory1))
+                            events.add(TemporaryDirectoryCreatedEvent(container1, directory2))
                         }
 
                         on("creating the stage") {
@@ -154,7 +163,9 @@ object CleanupStagePlannerSpec : Spek({
                                 "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
                                 "remove the container" to RemoveContainerStepRule(taskContainer, dockerContainer, false),
                                 "delete the first file after the container is removed" to DeleteTemporaryFileStepRule(file1, taskContainer),
-                                "delete the second file" to DeleteTemporaryFileStepRule(file2, null)
+                                "delete the second file" to DeleteTemporaryFileStepRule(file2, null),
+                                "delete the first directory after the container is removed" to DeleteTemporaryDirectoryStepRule(directory1, taskContainer),
+                                "delete the second directory" to DeleteTemporaryDirectoryStepRule(directory2, null)
                             ))
                         }
                     }
@@ -163,7 +174,7 @@ object CleanupStagePlannerSpec : Spek({
                 given("the container was started") {
                     beforeEachTest { events.add(ContainerStartedEvent(taskContainer)) }
 
-                    given("no temporary files were created") {
+                    given("no temporary files or directories were created") {
                         on("creating the stage") {
                             val stage = planner.createStage(graph, events)
 
@@ -175,13 +186,17 @@ object CleanupStagePlannerSpec : Spek({
                         }
                     }
 
-                    given("some temporary files were created") {
+                    given("some temporary files and directories were created") {
                         val file1 = Paths.get("/tmp/somefile")
                         val file2 = Paths.get("/tmp/someotherfile")
+                        val directory1 = Paths.get("/tmp/somedirectory")
+                        val directory2 = Paths.get("/tmp/someotherdirectory")
 
                         beforeEachTest {
                             events.add(TemporaryFileCreatedEvent(taskContainer, file1))
                             events.add(TemporaryFileCreatedEvent(container1, file2))
+                            events.add(TemporaryDirectoryCreatedEvent(taskContainer, directory1))
+                            events.add(TemporaryDirectoryCreatedEvent(container1, directory2))
                         }
 
                         on("creating the stage") {
@@ -192,7 +207,9 @@ object CleanupStagePlannerSpec : Spek({
                                 "stop the container" to StopContainerStepRule(taskContainer, dockerContainer, emptySet()),
                                 "remove the container after it is stopped" to RemoveContainerStepRule(taskContainer, dockerContainer, true),
                                 "delete the first file after the container is removed" to DeleteTemporaryFileStepRule(file1, taskContainer),
-                                "delete the second file" to DeleteTemporaryFileStepRule(file2, null)
+                                "delete the second file" to DeleteTemporaryFileStepRule(file2, null),
+                                "delete the first directory after the container is removed" to DeleteTemporaryDirectoryStepRule(directory1, taskContainer),
+                                "delete the second directory" to DeleteTemporaryDirectoryStepRule(directory2, null)
                             ))
                         }
                     }
@@ -211,7 +228,7 @@ object CleanupStagePlannerSpec : Spek({
                 }
 
                 given("none of the containers were started") {
-                    given("no temporary files were created") {
+                    given("no temporary files or directories were created") {
                         on("creating the stage") {
                             val stage = planner.createStage(graph, events)
 
@@ -224,13 +241,17 @@ object CleanupStagePlannerSpec : Spek({
                         }
                     }
 
-                    given("some temporary files were created") {
+                    given("some temporary files and directories were created") {
                         val file1 = Paths.get("/tmp/somefile")
                         val file2 = Paths.get("/tmp/someotherfile")
+                        val directory1 = Paths.get("/tmp/somedirectory")
+                        val directory2 = Paths.get("/tmp/someotherdirectory")
 
                         beforeEachTest {
                             events.add(TemporaryFileCreatedEvent(taskContainer, file1))
                             events.add(TemporaryFileCreatedEvent(container1, file2))
+                            events.add(TemporaryDirectoryCreatedEvent(taskContainer, directory1))
+                            events.add(TemporaryDirectoryCreatedEvent(container1, directory2))
                         }
 
                         on("creating the stage") {
@@ -242,7 +263,9 @@ object CleanupStagePlannerSpec : Spek({
                                 "remove the first dependency container" to RemoveContainerStepRule(container1, container1DockerContainer, false),
                                 "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false),
                                 "delete the first file after the task container is removed" to DeleteTemporaryFileStepRule(file1, taskContainer),
-                                "delete the second file after the associated container is removed" to DeleteTemporaryFileStepRule(file2, container1)
+                                "delete the second file after the associated container is removed" to DeleteTemporaryFileStepRule(file2, container1),
+                                "delete the first directory after the container is removed" to DeleteTemporaryDirectoryStepRule(directory1, taskContainer),
+                                "delete the second directory after the associated container is removed" to DeleteTemporaryDirectoryStepRule(directory2, container1)
                             ))
                         }
                     }
@@ -253,7 +276,7 @@ object CleanupStagePlannerSpec : Spek({
                         events.add(ContainerStartedEvent(container1))
                     }
 
-                    given("no temporary files were created") {
+                    given("no temporary files or directories were created") {
                         on("creating the stage") {
                             val stage = planner.createStage(graph, events)
 
@@ -267,13 +290,17 @@ object CleanupStagePlannerSpec : Spek({
                         }
                     }
 
-                    given("some temporary files were created") {
+                    given("some temporary files and directories were created") {
                         val file1 = Paths.get("/tmp/somefile")
                         val file2 = Paths.get("/tmp/someotherfile")
+                        val directory1 = Paths.get("/tmp/somedirectory")
+                        val directory2 = Paths.get("/tmp/someotherdirectory")
 
                         beforeEachTest {
                             events.add(TemporaryFileCreatedEvent(taskContainer, file1))
                             events.add(TemporaryFileCreatedEvent(container1, file2))
+                            events.add(TemporaryDirectoryCreatedEvent(taskContainer, directory1))
+                            events.add(TemporaryDirectoryCreatedEvent(container1, directory2))
                         }
 
                         on("creating the stage") {
@@ -286,7 +313,9 @@ object CleanupStagePlannerSpec : Spek({
                                 "remove the first dependency container after it is stopped" to RemoveContainerStepRule(container1, container1DockerContainer, true),
                                 "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false),
                                 "delete the first file after the task container is removed" to DeleteTemporaryFileStepRule(file1, taskContainer),
-                                "delete the second file after the associated container is removed" to DeleteTemporaryFileStepRule(file2, container1)
+                                "delete the second file after the associated container is removed" to DeleteTemporaryFileStepRule(file2, container1),
+                                "delete the first directory after the container is removed" to DeleteTemporaryDirectoryStepRule(directory1, taskContainer),
+                                "delete the second directory after the associated container is removed" to DeleteTemporaryDirectoryStepRule(directory2, container1)
                             ))
                         }
                     }
@@ -299,7 +328,7 @@ object CleanupStagePlannerSpec : Spek({
                         events.add(ContainerStartedEvent(container2))
                     }
 
-                    given("no temporary files were created") {
+                    given("no temporary files or directories were created") {
                         on("creating the stage") {
                             val stage = planner.createStage(graph, events)
 
@@ -315,13 +344,17 @@ object CleanupStagePlannerSpec : Spek({
                         }
                     }
 
-                    given("some temporary files were created") {
+                    given("some temporary files and directories were created") {
                         val file1 = Paths.get("/tmp/somefile")
                         val file2 = Paths.get("/tmp/someotherfile")
+                        val directory1 = Paths.get("/tmp/somedirectory")
+                        val directory2 = Paths.get("/tmp/someotherdirectory")
 
                         beforeEachTest {
                             events.add(TemporaryFileCreatedEvent(taskContainer, file1))
                             events.add(TemporaryFileCreatedEvent(container1, file2))
+                            events.add(TemporaryDirectoryCreatedEvent(taskContainer, directory1))
+                            events.add(TemporaryDirectoryCreatedEvent(container1, directory2))
                         }
 
                         on("creating the stage") {
@@ -336,7 +369,9 @@ object CleanupStagePlannerSpec : Spek({
                                 "remove the first dependency container after it is stopped" to RemoveContainerStepRule(container1, container1DockerContainer, true),
                                 "remove the second dependency container after it is stopped" to RemoveContainerStepRule(container2, container2DockerContainer, true),
                                 "delete the first file after the task container is removed" to DeleteTemporaryFileStepRule(file1, taskContainer),
-                                "delete the second file after the associated container is removed" to DeleteTemporaryFileStepRule(file2, container1)
+                                "delete the second file after the associated container is removed" to DeleteTemporaryFileStepRule(file2, container1),
+                                "delete the first directory after the container is removed" to DeleteTemporaryDirectoryStepRule(directory1, taskContainer),
+                                "delete the second directory after the associated container is removed" to DeleteTemporaryDirectoryStepRule(directory2, container1)
                             ))
                         }
                     }

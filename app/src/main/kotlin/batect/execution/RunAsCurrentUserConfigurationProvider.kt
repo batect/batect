@@ -20,28 +20,40 @@ import batect.config.Container
 import batect.config.VolumeMount
 import batect.docker.UserAndGroup
 import batect.execution.model.events.TaskEventSink
+import batect.execution.model.events.TemporaryDirectoryCreatedEvent
 import batect.execution.model.events.TemporaryFileCreatedEvent
 import batect.os.SystemInfo
 import java.nio.file.FileSystem
 import java.nio.file.Files
+import java.nio.file.LinkOption
 import java.nio.file.Path
+import java.nio.file.attribute.PosixFileAttributeView
 
 class RunAsCurrentUserConfigurationProvider(
     private val systemInfo: SystemInfo,
     private val fileSystem: FileSystem
 ) {
+    private val temporaryDirectory = fileSystem.getPath("/tmp")
+
     fun generateConfiguration(container: Container, eventSink: TaskEventSink): RunAsCurrentUserConfiguration {
         if (container.runAsCurrentUserConfig.enabled) {
-            val volumeMounts = createFiles(container, eventSink)
+            val volumeMounts = createMounts(container, eventSink)
             createMissingVolumeMountDirectories(container)
 
-            return RunAsCurrentUserConfiguration(volumeMounts, UserAndGroup(systemInfo.userId, systemInfo.groupId))
+            val homeDirectory = createHomeDirectory()
+            eventSink.postEvent(TemporaryDirectoryCreatedEvent(container, homeDirectory))
+
+            val pathsToCopyToContainer = mapOf(
+                homeDirectory to container.runAsCurrentUserConfig.homeDirectory!!
+            )
+
+            return RunAsCurrentUserConfiguration(volumeMounts, UserAndGroup(systemInfo.userId, systemInfo.groupId), pathsToCopyToContainer)
         } else {
-            return RunAsCurrentUserConfiguration(emptySet(), null)
+            return RunAsCurrentUserConfiguration(emptySet(), null, emptyMap())
         }
     }
 
-    private fun createFiles(container: Container, eventSink: TaskEventSink): Set<VolumeMount> {
+    private fun createMounts(container: Container, eventSink: TaskEventSink): Set<VolumeMount> {
         val passwdFile = createPasswdFile(container)
         eventSink.postEvent(TemporaryFileCreatedEvent(container, passwdFile))
 
@@ -90,7 +102,19 @@ class RunAsCurrentUserConfigurationProvider(
         return path
     }
 
-    private fun createTempFile(name: String): Path = Files.createTempFile(fileSystem.getPath("/tmp"), "batect-", "-$name")
+    private fun createHomeDirectory(): Path {
+        val path = Files.createTempDirectory(temporaryDirectory, "batect-home-")
+
+        val attributeView = Files.getFileAttributeView(path, PosixFileAttributeView::class.java, LinkOption.NOFOLLOW_LINKS)
+        val lookupService = fileSystem.userPrincipalLookupService
+
+        attributeView.setOwner(lookupService.lookupPrincipalByName(systemInfo.userName))
+        attributeView.setGroup(lookupService.lookupPrincipalByGroupName(systemInfo.groupName))
+
+        return path
+    }
+
+    private fun createTempFile(name: String): Path = Files.createTempFile(temporaryDirectory, "batect-$name-", "")
 
     private fun createMissingVolumeMountDirectories(container: Container) {
         container.volumeMounts.forEach { volumeMount ->

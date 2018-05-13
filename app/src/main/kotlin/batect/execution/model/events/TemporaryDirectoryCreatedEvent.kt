@@ -14,14 +14,11 @@
    limitations under the License.
 */
 
-package batect.execution
+package batect.execution.model.events
 
-import batect.config.VolumeMount
-import batect.docker.UserAndGroup
+import batect.config.Container
 import java.nio.file.Path
 
-data class RunAsCurrentUserConfiguration(
-    val volumeMounts: Set<VolumeMount>,
-    val userAndGroup: UserAndGroup?,
-    val pathsToCopyToContainer: Map<Path, String>
-)
+data class TemporaryDirectoryCreatedEvent(val container: Container, val directoryPath: Path) : TaskEvent() {
+    override fun toString() = "${this::class.simpleName}(container: '${container.name}', directory path: '$directoryPath')"
+}

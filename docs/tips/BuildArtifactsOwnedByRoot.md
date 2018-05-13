@@ -18,6 +18,12 @@ When enabled, the following configuration changes are made:
 
   * The container is run with the current user's UID and GID (equivalent to passing `--user $(id -u):$(id -g)` to `docker run`)
 
+  * An empty directory is created in the container at `home_directory` for the user's home directory.
+
+    {% hint style='danger' %}
+**Warning**: if the directory given by `home_directory` already exists inside the image for this container, it is overwritten.
+    {% endhint %}
+
   * A new `/etc/passwd` file is mounted into the container with two users: root and the current user. The current user's home directory is set to the
     value of `home_directory`. (If batect is running as root, then just root is listed and it takes the home directory provided in `home_directory`.)
 

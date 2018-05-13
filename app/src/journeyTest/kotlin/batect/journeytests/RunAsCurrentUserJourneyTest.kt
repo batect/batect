@@ -24,6 +24,7 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -39,9 +40,19 @@ object RunAsCurrentUserJourneyTest : Spek({
 
             val result = runner.runApplication(listOf("the-task"))
             val userName = System.getProperty("user.name")
+            val groupName = getGroupName()
 
             it("prints the output from that task") {
-                assertThat(result.output, containsSubstring("$userName\r\n/home/special-place\r\n"))
+                val expectedOutput = listOf(
+                    "User: $userName",
+                    "Group: $groupName",
+                    "Home directory: /home/special-place",
+                    "Home directory exists",
+                    "Home directory owned by user: $userName",
+                    "Home directory owned by group: $groupName"
+                ).joinToString("\r\n")
+
+                assertThat(result.output, containsSubstring(expectedOutput))
             }
 
             it("creates files as the current user, not root") {
@@ -71,4 +82,20 @@ private fun deleteDirectoryContents(directory: Path) {
             Files.delete(path)
         }
     }
+}
+
+private fun getGroupName(): String {
+    val commandLine = listOf("id", "-gn")
+    val process = ProcessBuilder(commandLine)
+        .redirectErrorStream(true)
+        .start()
+
+    val exitCode = process.waitFor()
+    val output = InputStreamReader(process.inputStream).readText()
+
+    if (exitCode != 0) {
+        throw Exception("Retrieving user's primary group name failed with exit code $exitCode. Output from command was: $output")
+    }
+
+    return output.trim()
 }

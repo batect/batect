@@ -22,6 +22,7 @@ import batect.docker.ContainerHealthCheckException
 import batect.docker.ContainerRemovalFailedException
 import batect.docker.ContainerStartFailedException
 import batect.docker.ContainerStopFailedException
+import batect.docker.CopyToContainerFailedException
 import batect.docker.DockerClient
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequestFactory
@@ -55,6 +56,8 @@ import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
 import batect.execution.model.events.TaskNetworkDeletedEvent
 import batect.execution.model.events.TaskNetworkDeletionFailedEvent
+import batect.execution.model.events.TemporaryDirectoryDeletedEvent
+import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 import batect.os.ProxyEnvironmentVariablesProvider
@@ -85,6 +88,7 @@ class TaskStepRunner(
             is StopContainerStep -> handleStopContainerStep(step, eventSink)
             is RemoveContainerStep -> handleRemoveContainerStep(step, eventSink)
             is DeleteTemporaryFileStep -> handleDeleteTemporaryFileStep(step, eventSink)
+            is DeleteTemporaryDirectoryStep -> handleDeleteTemporaryDirectoryStep(step, eventSink)
             is DeleteTaskNetworkStep -> handleDeleteTaskNetworkStep(step, eventSink)
         }
 
@@ -143,8 +147,15 @@ class TaskStepRunner(
             )
 
             val dockerContainer = dockerClient.create(creationRequest)
+
+            runAsCurrentUserConfiguration.pathsToCopyToContainer.forEach { localSource, containerDestination ->
+                dockerClient.copyToContainer(dockerContainer, localSource, containerDestination)
+            }
+
             eventSink.postEvent(ContainerCreatedEvent(step.container, dockerContainer))
         } catch (e: ContainerCreationFailedException) {
+            eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))
+        } catch (e: CopyToContainerFailedException) {
             eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))
         }
     }
@@ -218,6 +229,18 @@ class TaskStepRunner(
             eventSink.postEvent(TemporaryFileDeletedEvent(step.filePath))
         } catch (e: IOException) {
             eventSink.postEvent(TemporaryFileDeletionFailedEvent(step.filePath, e.toString()))
+        }
+    }
+
+    private fun handleDeleteTemporaryDirectoryStep(step: DeleteTemporaryDirectoryStep, eventSink: TaskEventSink) {
+        try {
+            Files.walk(step.directoryPath)
+                .sorted { p1, p2 -> -p1.nameCount.compareTo(p2.nameCount) }
+                .forEach { Files.delete(it) }
+
+            eventSink.postEvent(TemporaryDirectoryDeletedEvent(step.directoryPath))
+        } catch (e: IOException) {
+            eventSink.postEvent(TemporaryDirectoryDeletionFailedEvent(step.directoryPath, e.toString()))
         }
     }
 

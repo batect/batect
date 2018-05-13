@@ -29,6 +29,7 @@ import batect.ui.ConsoleInfo
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
+import java.nio.file.Path
 import java.util.UUID
 
 class DockerClient(
@@ -443,6 +444,30 @@ class DockerClient(
         }
     }
 
+    fun copyToContainer(container: DockerContainer, source: Path, destination: String) {
+        logger.info {
+            message("Copying file or directory into container.")
+            data("container", container)
+            data("source", source.toString())
+            data("destination", destination)
+        }
+
+        val result = processRunner.runAndCaptureOutput(listOf("docker", "cp", source.toString(), "${container.id}:$destination"))
+
+        if (failed(result)) {
+            logger.error {
+                message("Could not copy file or directory into container.")
+                data("result", result)
+            }
+
+            throw CopyToContainerFailedException(source, destination, container.id, result.output.trim())
+        }
+
+        logger.info {
+            message("File or directory copied into container.")
+        }
+    }
+
     private fun haveImageLocally(imageName: String): Boolean {
         logger.info {
             message("Checking if image exists locally.")
@@ -502,6 +527,7 @@ data class DockerImageBuildProgress(val currentStep: Int, val totalSteps: Int, v
 }
 
 class ImageBuildFailedException(val outputFromDocker: String) : RuntimeException("Image build failed. Output from Docker was: $outputFromDocker")
+class CopyToContainerFailedException(val source: Path, val destination: String, val containerId: String, val outputFromDocker: String) : RuntimeException("Copying file '$source' to '$destination' in container '$containerId' failed. Output from Docker was: $outputFromDocker")
 
 class ContainerCreationFailedException(message: String?, cause: Throwable?) : RuntimeException(message, cause) {
     constructor(message: String?) : this(message, null)

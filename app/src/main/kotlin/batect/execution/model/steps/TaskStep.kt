@@ -81,6 +81,10 @@ data class DeleteTemporaryFileStep(val filePath: Path) : CleanupStep() {
     override fun toString() = "${this.javaClass.simpleName}(file path: '$filePath')"
 }
 
+data class DeleteTemporaryDirectoryStep(val directoryPath: Path) : CleanupStep() {
+    override fun toString() = "${this.javaClass.simpleName}(directory path: '$directoryPath')"
+}
+
 data class DeleteTaskNetworkStep(val network: DockerNetwork) : CleanupStep() {
     override fun toString() = "${this.javaClass.simpleName}(network: '${network.id}')"
 }

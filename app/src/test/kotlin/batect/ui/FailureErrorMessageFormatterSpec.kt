@@ -34,6 +34,7 @@ import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
 import batect.execution.model.events.TaskNetworkDeletedEvent
 import batect.execution.model.events.TaskNetworkDeletionFailedEvent
+import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
@@ -65,6 +66,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                 Scenario("container creation failed", ContainerCreationFailedEvent(container, "Something went wrong."), "Could not create container 'the-container': Something went wrong."),
                 Scenario("task network deletion failed", TaskNetworkDeletionFailedEvent("Something went wrong."), "Could not delete the task network: Something went wrong."),
                 Scenario("temporary file deletion failed", TemporaryFileDeletionFailedEvent(Paths.get("/tmp/some-file"), "Something went wrong."), "Could not delete temporary file '/tmp/some-file': Something went wrong."),
+                Scenario("temporary directory deletion failed", TemporaryDirectoryDeletionFailedEvent(Paths.get("/tmp/some-directory"), "Something went wrong."), "Could not delete temporary directory '/tmp/some-directory': Something went wrong."),
                 Scenario("container stop failed", ContainerStopFailedEvent(container, "Something went wrong."), "Could not stop container 'the-container': Something went wrong."),
                 Scenario("container removal failed", ContainerRemovalFailedEvent(container, "Something went wrong."), "Could not remove container 'the-container': Something went wrong.")
             ).forEach { (description, event, expectedMessage) ->

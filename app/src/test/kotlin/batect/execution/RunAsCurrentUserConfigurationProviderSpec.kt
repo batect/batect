@@ -21,17 +21,19 @@ import batect.config.RunAsCurrentUserConfig
 import batect.config.VolumeMount
 import batect.docker.UserAndGroup
 import batect.execution.model.events.TaskEventSink
+import batect.execution.model.events.TemporaryDirectoryCreatedEvent
 import batect.execution.model.events.TemporaryFileCreatedEvent
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
+import batect.testutils.equalTo
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.isEmptyMap
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.anyElement
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isEmpty
 import com.nhaarman.mockito_kotlin.any
@@ -46,12 +48,14 @@ import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import java.nio.file.FileSystem
 import java.nio.file.Files
+import java.nio.file.LinkOption
 import java.nio.file.Path
+import java.nio.file.attribute.PosixFileAttributes
 
 object RunAsCurrentUserConfigurationProviderSpec : Spek({
     describe("a 'run as current user' configuration provider") {
         val eventSink by createForEachTest { mock<TaskEventSink>() }
-        val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
+        val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix().toBuilder().setAttributeViews("posix").build()) }
 
         val directoryThatExists = "/existing/directory"
         val fileThatExists = "/existing/file"
@@ -94,6 +98,10 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     assertThat(configuration.userAndGroup, absent())
                 }
 
+                it("returns an empty set of paths to copy to the container") {
+                    assertThat(configuration.pathsToCopyToContainer, isEmptyMap())
+                }
+
                 it("does not create any new directories") {
                     assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(false))
                 }
@@ -121,10 +129,16 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 on("generating the configuration") {
                     val configuration = provider.generateConfiguration(container, eventSink)
 
-                    it("returns a set of volume mounts for the passwd and group file") {
+                    it("returns a set of volume mounts for the passwd and group file and home directory") {
                         assertThat(configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(setOf(
                             "/etc/passwd",
                             "/etc/group"
+                        )))
+                    }
+
+                    it("returns a set of paths to copy for just the home directory") {
+                        assertThat(configuration.pathsToCopyToContainer.values, equalTo(setOf(
+                            container.runAsCurrentUserConfig.homeDirectory!!
                         )))
                     }
 
@@ -164,6 +178,11 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, groupFilePath))
                     }
 
+                    it("emits a 'temporary directory created' event for the home directory") {
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.pathsToCopyToContainer, container.runAsCurrentUserConfig.homeDirectory!!)
+                        verify(eventSink).postEvent(TemporaryDirectoryCreatedEvent(container, homeDirectoryPath))
+                    }
+
                     it("returns a user and group configuration with the current user's user and group IDs") {
                         assertThat(configuration.userAndGroup, equalTo(UserAndGroup(123, 456)))
                     }
@@ -171,13 +190,32 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     it("creates a directory for the volume mount path that does not exist") {
                         assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
                     }
+
+                    it("creates a directory for the home directory") {
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.pathsToCopyToContainer, container.runAsCurrentUserConfig.homeDirectory!!)
+                        assertThat(Files.exists(homeDirectoryPath), equalTo(true))
+                    }
+
+                    it("sets the user for the created home directory to the current user") {
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.pathsToCopyToContainer, container.runAsCurrentUserConfig.homeDirectory!!)
+                        val owner = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).owner()
+                        assertThat(owner.name, equalTo("the-user"))
+                    }
+
+                    it("sets the group for the created home directory to the current user's primary group") {
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.pathsToCopyToContainer, container.runAsCurrentUserConfig.homeDirectory!!)
+                        val group = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).group()
+                        assertThat(group.name, equalTo("the-user's-group"))
+                    }
                 }
             }
 
             given("the current user is root") {
                 val systemInfo = mock<SystemInfo> {
                     on { userId } doReturn 0
+                    on { userName } doReturn "root"
                     on { groupId } doReturn 0
+                    on { groupName } doReturn "root"
                 }
 
                 val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, fileSystem) }
@@ -198,6 +236,12 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                     it("returns a set of volume mounts with the group file mounted read-only") {
                         assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/group"))
+                    }
+
+                    it("returns a set of paths to copy for just the home directory") {
+                        assertThat(configuration.pathsToCopyToContainer.values, equalTo(setOf(
+                            container.runAsCurrentUserConfig.homeDirectory!!
+                        )))
                     }
 
                     it("creates a passwd file with just root listed") {
@@ -226,12 +270,34 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, groupFilePath))
                     }
 
+                    it("emits a 'temporary directory created' event for the home directory") {
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.pathsToCopyToContainer, container.runAsCurrentUserConfig.homeDirectory!!)
+                        verify(eventSink).postEvent(TemporaryDirectoryCreatedEvent(container, homeDirectoryPath))
+                    }
+
                     it("returns a user and group configuration with the current user's user and group IDs") {
                         assertThat(configuration.userAndGroup, equalTo(UserAndGroup(0, 0)))
                     }
 
                     it("creates a directory for the volume mount path that does not exist") {
                         assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
+                    }
+
+                    it("creates a directory for the home directory") {
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.pathsToCopyToContainer, container.runAsCurrentUserConfig.homeDirectory!!)
+                        assertThat(Files.exists(homeDirectoryPath), equalTo(true))
+                    }
+
+                    it("sets the user for the created home directory to the current user") {
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.pathsToCopyToContainer, container.runAsCurrentUserConfig.homeDirectory!!)
+                        val owner = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).owner()
+                        assertThat(owner.name, equalTo("root"))
+                    }
+
+                    it("sets the group for the created home directory to the current user's primary group") {
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.pathsToCopyToContainer, container.runAsCurrentUserConfig.homeDirectory!!)
+                        val group = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).group()
+                        assertThat(group.name, equalTo("root"))
                     }
                 }
             }
@@ -244,3 +310,4 @@ private fun hasReadOnlyVolumeMount(path: String) =
 
 private fun localPathToPasswdFile(mounts: Set<VolumeMount>, fileSystem: FileSystem): Path = fileSystem.getPath(mounts.single { it.containerPath == "/etc/passwd" }.localPath)
 private fun localPathToGroupFile(mounts: Set<VolumeMount>, fileSystem: FileSystem): Path = fileSystem.getPath(mounts.single { it.containerPath == "/etc/group" }.localPath)
+private fun localPathToHomeDirectory(pathsToCopy: Map<Path, String>, homeDirectory: String): Path = pathsToCopy.asIterable().single { it.value == homeDirectory }.key

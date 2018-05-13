@@ -126,6 +126,12 @@ by that user, so this is less of an issue. However, for consistency, the same co
 * `home_directory` Directory to use as home directory for user inside container. Required if `enabled` is `true`, not allowed if `enabled` is not provided
   or set to `false`.
 
+  This directory is automatically created by batect with the correct owner and group.
+
+  {% hint style='danger' %}
+**Warning**: if the directory given by `home_directory` already exists inside the image for this container, it is overwritten.
+  {% endhint %}
+
 See [this page](../tips/BuildArtifactsOwnedByRoot.md) for more information on the effects of this option and why it is necessary.
 
 ## Examples

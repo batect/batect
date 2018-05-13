@@ -139,7 +139,6 @@ class TaskStepRunner(
                 step.network,
                 step.command,
                 step.additionalEnvironmentVariables,
-                runAsCurrentUserConfiguration.volumeMounts,
                 step.additionalPortMappings,
                 runOptions.propagateProxyEnvironmentVariables,
                 runAsCurrentUserConfiguration.userAndGroup,

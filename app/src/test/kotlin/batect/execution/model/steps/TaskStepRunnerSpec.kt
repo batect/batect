@@ -20,7 +20,6 @@ import batect.config.BuildImage
 import batect.config.Container
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
-import batect.config.VolumeMount
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerDoesNotExistException
 import batect.docker.ContainerHealthCheckException
@@ -43,8 +42,6 @@ import batect.docker.ImagePullFailedException
 import batect.docker.NetworkCreationFailedException
 import batect.docker.NetworkDeletionFailedException
 import batect.docker.UserAndGroup
-import batect.logging.Logger
-import batect.logging.Severity
 import batect.execution.BehaviourAfterFailure
 import batect.execution.RunAsCurrentUserConfiguration
 import batect.execution.RunAsCurrentUserConfigurationProvider
@@ -74,6 +71,8 @@ import batect.execution.model.events.TemporaryDirectoryDeletedEvent
 import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
+import batect.logging.Logger
+import batect.logging.Severity
 import batect.os.Command
 import batect.os.ProxyEnvironmentVariablesProvider
 import batect.testutils.InMemoryLogSink
@@ -115,7 +114,6 @@ object TaskStepRunnerSpec : Spek({
         }
 
         val runAsCurrentUserConfiguration = RunAsCurrentUserConfiguration(
-            setOf(VolumeMount("/tmp/local-path", "/tmp/remote-path", "rw")),
             UserAndGroup(456, 789),
             mapOf(
                 Paths.get("/some-file") to "/some-container-file"
@@ -295,7 +293,6 @@ object TaskStepRunnerSpec : Spek({
                         network,
                         command,
                         additionalEnvironmentVariables,
-                        runAsCurrentUserConfiguration.volumeMounts,
                         additionalPortMappings,
                         runOptions.propagateProxyEnvironmentVariables,
                         runAsCurrentUserConfiguration.userAndGroup,

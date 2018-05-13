@@ -17,7 +17,6 @@
 package batect.execution
 
 import batect.config.Container
-import batect.config.VolumeMount
 import batect.docker.UserAndGroup
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TemporaryDirectoryCreatedEvent
@@ -37,37 +36,32 @@ class RunAsCurrentUserConfigurationProvider(
 
     fun generateConfiguration(container: Container, eventSink: TaskEventSink): RunAsCurrentUserConfiguration {
         if (container.runAsCurrentUserConfig.enabled) {
-            val volumeMounts = createMounts(container, eventSink)
             createMissingVolumeMountDirectories(container)
 
-            val homeDirectory = createHomeDirectory()
-            eventSink.postEvent(TemporaryDirectoryCreatedEvent(container, homeDirectory))
+            val pathsToCopyToContainer = createFilesToCopyToContiner(container, eventSink)
 
-            val pathsToCopyToContainer = mapOf(
-                homeDirectory to container.runAsCurrentUserConfig.homeDirectory!!
-            )
-
-            return RunAsCurrentUserConfiguration(volumeMounts, UserAndGroup(systemInfo.userId, systemInfo.groupId), pathsToCopyToContainer)
+            return RunAsCurrentUserConfiguration(UserAndGroup(systemInfo.userId, systemInfo.groupId), pathsToCopyToContainer)
         } else {
-            return RunAsCurrentUserConfiguration(emptySet(), null, emptyMap())
+            return RunAsCurrentUserConfiguration(null, emptyMap())
         }
     }
 
-    private fun createMounts(container: Container, eventSink: TaskEventSink): Set<VolumeMount> {
-        val passwdFile = createPasswdFile(container)
-        eventSink.postEvent(TemporaryFileCreatedEvent(container, passwdFile))
+    private fun createFilesToCopyToContiner(container: Container, eventSink: TaskEventSink): Map<Path, String> {
+        val passwdFile = createPasswdFile(container, eventSink)
+        val groupFile = createGroupFile(container, eventSink)
+        val homeDirectory = createHomeDirectory(container, eventSink)
 
-        val groupFile = createGroupFile()
-        eventSink.postEvent(TemporaryFileCreatedEvent(container, groupFile))
-
-        return setOf(
-            VolumeMount(passwdFile.toString(), "/etc/passwd", "ro"),
-            VolumeMount(groupFile.toString(), "/etc/group", "ro")
+        return mapOf(
+            passwdFile to "/etc/passwd",
+            groupFile to "/etc/group",
+            homeDirectory to container.runAsCurrentUserConfig.homeDirectory!!
         )
     }
 
-    private fun createPasswdFile(container: Container): Path {
+    private fun createPasswdFile(container: Container, eventSink: TaskEventSink): Path {
         val path = createTempFile("passwd")
+        eventSink.postEvent(TemporaryFileCreatedEvent(container, path))
+
         val homeDirectory = container.runAsCurrentUserConfig.homeDirectory!!
 
         val lines = if (systemInfo.userId == 0) {
@@ -84,8 +78,10 @@ class RunAsCurrentUserConfigurationProvider(
         return path
     }
 
-    private fun createGroupFile(): Path {
+    private fun createGroupFile(container: Container, eventSink: TaskEventSink): Path {
         val path = createTempFile("group")
+        eventSink.postEvent(TemporaryFileCreatedEvent(container, path))
+
         val rootGroup = "root:x:0:root"
 
         val lines = if (systemInfo.groupId == 0) {
@@ -102,8 +98,9 @@ class RunAsCurrentUserConfigurationProvider(
         return path
     }
 
-    private fun createHomeDirectory(): Path {
+    private fun createHomeDirectory(container: Container, eventSink: TaskEventSink): Path {
         val path = Files.createTempDirectory(temporaryDirectory, "batect-home-")
+        eventSink.postEvent(TemporaryDirectoryCreatedEvent(container, path))
 
         val attributeView = Files.getFileAttributeView(path, PosixFileAttributeView::class.java, LinkOption.NOFOLLOW_LINKS)
         val lookupService = fileSystem.userPrincipalLookupService

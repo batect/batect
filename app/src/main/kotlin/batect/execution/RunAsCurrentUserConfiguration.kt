@@ -16,12 +16,10 @@
 
 package batect.execution
 
-import batect.config.VolumeMount
 import batect.docker.UserAndGroup
 import java.nio.file.Path
 
 data class RunAsCurrentUserConfiguration(
-    val volumeMounts: Set<VolumeMount>,
     val userAndGroup: UserAndGroup?,
     val pathsToCopyToContainer: Map<Path, String>
 )

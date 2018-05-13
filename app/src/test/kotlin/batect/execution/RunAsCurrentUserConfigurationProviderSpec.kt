@@ -31,11 +31,7 @@ import batect.testutils.isEmptyMap
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.absent
-import com.natpryce.hamkrest.and
-import com.natpryce.hamkrest.anyElement
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.has
-import com.natpryce.hamkrest.isEmpty
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
@@ -46,7 +42,6 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
-import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.Path
@@ -90,10 +85,6 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     verify(eventSink, never()).postEvent(any())
                 }
 
-                it("returns an empty set of volume mounts") {
-                    assertThat(configuration.volumeMounts, isEmpty)
-                }
-
                 it("returns an empty user and group configuration") {
                     assertThat(configuration.userAndGroup, absent())
                 }
@@ -129,29 +120,16 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 on("generating the configuration") {
                     val configuration = provider.generateConfiguration(container, eventSink)
 
-                    it("returns a set of volume mounts for the passwd and group file and home directory") {
-                        assertThat(configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(setOf(
+                    it("returns a set of paths to copy for just the passwd and group files and home directory") {
+                        assertThat(configuration.pathsToCopyToContainer.values.toSet(), equalTo(setOf(
                             "/etc/passwd",
-                            "/etc/group"
-                        )))
-                    }
-
-                    it("returns a set of paths to copy for just the home directory") {
-                        assertThat(configuration.pathsToCopyToContainer.values, equalTo(setOf(
+                            "/etc/group",
                             container.runAsCurrentUserConfig.homeDirectory!!
                         )))
                     }
 
-                    it("returns a set of volume mounts with the passwd file mounted read-only") {
-                        assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/passwd"))
-                    }
-
-                    it("returns a set of volume mounts with the group file mounted read-only") {
-                        assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/group"))
-                    }
-
                     it("creates a passwd file with both root and the current user") {
-                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
+                        val passwdFilePath = localPathToPasswdFile(configuration.pathsToCopyToContainer)
                         val content = Files.readAllLines(passwdFilePath).joinToString("\n")
                         assertThat(content, equalTo("""
                             |root:x:0:0:root:/root:/bin/sh
@@ -160,7 +138,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     it("creates a group file with group for both root and the current user") {
-                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
+                        val groupFilePath = localPathToGroupFile(configuration.pathsToCopyToContainer)
                         val content = Files.readAllLines(groupFilePath).joinToString("\n")
                         assertThat(content, equalTo("""
                             |root:x:0:root
@@ -169,12 +147,12 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     it("emits a 'temporary file created' event for the passwd file") {
-                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
+                        val passwdFilePath = localPathToPasswdFile(configuration.pathsToCopyToContainer)
                         verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, passwdFilePath))
                     }
 
                     it("emits a 'temporary file created' event for the group file") {
-                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
+                        val groupFilePath = localPathToGroupFile(configuration.pathsToCopyToContainer)
                         verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, groupFilePath))
                     }
 
@@ -223,29 +201,16 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 on("generating the configuration") {
                     val configuration = provider.generateConfiguration(container, eventSink)
 
-                    it("returns a set of volume mounts for the passwd and group file") {
-                        assertThat(configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(setOf(
+                    it("returns a set of paths to copy for just the passwd and group files and home directory") {
+                        assertThat(configuration.pathsToCopyToContainer.values.toSet(), equalTo(setOf(
                             "/etc/passwd",
-                            "/etc/group"
-                        )))
-                    }
-
-                    it("returns a set of volume mounts with the passwd file mounted read-only") {
-                        assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/passwd"))
-                    }
-
-                    it("returns a set of volume mounts with the group file mounted read-only") {
-                        assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/group"))
-                    }
-
-                    it("returns a set of paths to copy for just the home directory") {
-                        assertThat(configuration.pathsToCopyToContainer.values, equalTo(setOf(
+                            "/etc/group",
                             container.runAsCurrentUserConfig.homeDirectory!!
                         )))
                     }
 
                     it("creates a passwd file with just root listed") {
-                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
+                        val passwdFilePath = localPathToPasswdFile(configuration.pathsToCopyToContainer)
                         val content = Files.readAllLines(passwdFilePath).joinToString("\n")
                         assertThat(content, equalTo("""
                             |root:x:0:0:root:/home/some-user:/bin/sh
@@ -253,7 +218,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     it("creates a group file with a group for root") {
-                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
+                        val groupFilePath = localPathToGroupFile(configuration.pathsToCopyToContainer)
                         val content = Files.readAllLines(groupFilePath).joinToString("\n")
                         assertThat(content, equalTo("""
                             |root:x:0:root
@@ -261,12 +226,12 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     it("emits a 'temporary file created' event for the passwd file") {
-                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
+                        val passwdFilePath = localPathToPasswdFile(configuration.pathsToCopyToContainer)
                         verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, passwdFilePath))
                     }
 
                     it("emits a 'temporary file created' event for the group file") {
-                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
+                        val groupFilePath = localPathToGroupFile(configuration.pathsToCopyToContainer)
                         verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, groupFilePath))
                     }
 
@@ -305,9 +270,6 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
     }
 })
 
-private fun hasReadOnlyVolumeMount(path: String) =
-    anyElement(has(VolumeMount::containerPath, equalTo(path)) and has(VolumeMount::options, equalTo("ro")))
-
-private fun localPathToPasswdFile(mounts: Set<VolumeMount>, fileSystem: FileSystem): Path = fileSystem.getPath(mounts.single { it.containerPath == "/etc/passwd" }.localPath)
-private fun localPathToGroupFile(mounts: Set<VolumeMount>, fileSystem: FileSystem): Path = fileSystem.getPath(mounts.single { it.containerPath == "/etc/group" }.localPath)
+private fun localPathToPasswdFile(pathsToCopy: Map<Path, String>): Path = pathsToCopy.asIterable().single { it.value == "/etc/passwd" }.key
+private fun localPathToGroupFile(pathsToCopy: Map<Path, String>): Path = pathsToCopy.asIterable().single { it.value == "/etc/group" }.key
 private fun localPathToHomeDirectory(pathsToCopy: Map<Path, String>, homeDirectory: String): Path = pathsToCopy.asIterable().single { it.value == homeDirectory }.key

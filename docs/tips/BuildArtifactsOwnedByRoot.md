@@ -24,12 +24,12 @@ When enabled, the following configuration changes are made:
 **Warning**: if the directory given by `home_directory` already exists inside the image for this container, it is overwritten.
     {% endhint %}
 
-  * A new `/etc/passwd` file is mounted into the container with two users: root and the current user. The current user's home directory is set to the
+  * A new `/etc/passwd` file is created in the container with two users: root and the current user. The current user's home directory is set to the
     value of `home_directory`. (If batect is running as root, then just root is listed and it takes the home directory provided in `home_directory`.)
 
     This means that any other users defined in the container's image are effectively lost. Under most circumstances, this is not an issue.
 
-  * Similarly, a new `/etc/group` file is mounted into the container with two groups: root and the current user's primary group (usually `staff` on
+  * Similarly, a new `/etc/group` file is created in the container with two groups: root and the current user's primary group (usually `staff` on
     OS X, and the user's name on Linux). If batect is running as root, then just root is listed.
 
     Again, this means that any other groups defined in the container's image are effectively lost. Under most circumstances, this is not an issue.

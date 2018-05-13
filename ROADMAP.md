@@ -32,6 +32,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information
   doesn't correctly overwrite previous updates
   * this is fixed if the console is not resized while batect is running, still need to handle the case where the console is resized while batect is running
+* if an unhandled exception occurs during step execution, it's silently logged to the log file (`afterExecute()` in `ParallelExecutionManager.createThreadPool()`)
 
 ### Other
 * replace factories with references to constructors
@@ -62,6 +63,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * tool to browse logs nicely (dump into Elasticsearch?)
 * tool to visualise execution on a timeline
 * switch to [MockK](https://github.com/oleksiyp/mockk) - Kotlin specific library with clearer upgrade path to Kotlin/Native
+  * remove MockMaker resource file
 * move to Kotlin/Native
   * Why? Don't want to require users to install a JVM to use batect, also want to remove as much overhead as possible
 

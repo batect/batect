@@ -27,6 +27,7 @@ import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRunFailedEvent
 import batect.execution.model.events.ContainerStartFailedEvent
 import batect.execution.model.events.ContainerStopFailedEvent
+import batect.execution.model.events.ExecutionFailedEvent
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImagePullFailedEvent
 import batect.execution.model.events.TaskEvent
@@ -68,7 +69,8 @@ object FailureErrorMessageFormatterSpec : Spek({
                 Scenario("temporary file deletion failed", TemporaryFileDeletionFailedEvent(Paths.get("/tmp/some-file"), "Something went wrong."), "Could not delete temporary file '/tmp/some-file': Something went wrong."),
                 Scenario("temporary directory deletion failed", TemporaryDirectoryDeletionFailedEvent(Paths.get("/tmp/some-directory"), "Something went wrong."), "Could not delete temporary directory '/tmp/some-directory': Something went wrong."),
                 Scenario("container stop failed", ContainerStopFailedEvent(container, "Something went wrong."), "Could not stop container 'the-container': Something went wrong."),
-                Scenario("container removal failed", ContainerRemovalFailedEvent(container, "Something went wrong."), "Could not remove container 'the-container': Something went wrong.")
+                Scenario("container removal failed", ContainerRemovalFailedEvent(container, "Something went wrong."), "Could not remove container 'the-container': Something went wrong."),
+                Scenario("execution failed", ExecutionFailedEvent("Something went wrong."), "An unexpected exception occurred during execution: Something went wrong.")
             ).forEach { (description, event, expectedMessage) ->
                 given("a '$description' event") {
                     on("getting the message for that event") {

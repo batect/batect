@@ -16,11 +16,12 @@
 
 package batect.execution
 
-import batect.logging.Logger
+import batect.execution.model.events.ExecutionFailedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.TaskStep
 import batect.execution.model.steps.TaskStepRunner
+import batect.logging.Logger
 import batect.ui.EventLogger
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.LinkedBlockingQueue
@@ -62,9 +63,11 @@ class ParallelExecutionManager(
 
                 if (t != null) {
                     logger.error {
-                        message("Unhandled exception during task step execution.")
+                        message("Unhandled exception during task step execution that was not caught by runStep().")
                         exception(t)
                     }
+
+                    postEvent(ExecutionFailedEvent(t.toString()))
                 }
 
                 afterStepFinished()
@@ -73,10 +76,14 @@ class ParallelExecutionManager(
 
     private fun createEventSink() = object : TaskEventSink {
         override fun postEvent(event: TaskEvent) {
-            eventLogger.postEvent(event)
-            stateMachine.postEvent(event)
+            this@ParallelExecutionManager.postEvent(event)
             startNewWorkIfPossible()
         }
+    }
+
+    private fun postEvent(event: TaskEvent) {
+        eventLogger.postEvent(event)
+        stateMachine.postEvent(event)
     }
 
     private fun startNewWorkIfPossible(justCompletedStep: Boolean = false) {
@@ -114,13 +121,22 @@ class ParallelExecutionManager(
 
     private fun runStep(step: TaskStep, threadPool: ThreadPoolExecutor, eventSink: TaskEventSink) {
         threadPool.execute {
-            logger.info {
-                message("Running step.")
-                data("step", step.toString())
-            }
+            try {
+                logger.info {
+                    message("Running step.")
+                    data("step", step.toString())
+                }
 
-            eventLogger.onStartingTaskStep(step)
-            taskStepRunner.run(step, eventSink, runOptions)
+                eventLogger.onStartingTaskStep(step)
+                taskStepRunner.run(step, eventSink, runOptions)
+            } catch (t: Throwable) {
+                logger.error {
+                    message("Unhandled exception during task step execution.")
+                    exception(t)
+                }
+
+                postEvent(ExecutionFailedEvent(t.toString()))
+            }
         }
     }
 

@@ -16,11 +16,12 @@
 
 package batect.execution
 
-import batect.logging.Logger
+import batect.execution.model.events.ExecutionFailedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.TaskStep
 import batect.execution.model.steps.TaskStepRunner
+import batect.logging.Logger
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.ui.EventLogger
@@ -37,6 +38,7 @@ import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
+import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import java.util.concurrent.ConcurrentHashMap
@@ -45,9 +47,9 @@ import java.util.concurrent.TimeUnit
 
 object ParallelExecutionManagerSpec : Spek({
     describe("a parallel execution manager") {
-        val eventLogger = mock<EventLogger>()
-        val taskStepRunner = mock<TaskStepRunner>()
-        val stateMachine = mock<TaskStateMachine>()
+        val eventLogger by createForEachTest { mock<EventLogger>() }
+        val taskStepRunner by createForEachTest { mock<TaskStepRunner>() }
+        val stateMachine by createForEachTest { mock<TaskStateMachine>() }
         val runOptions = RunOptions("some-task", emptyList(), 2, BehaviourAfterFailure.Cleanup, true)
         val logger = Logger("some.source", InMemoryLogSink())
         val executionManager by createForEachTest {
@@ -60,47 +62,72 @@ object ParallelExecutionManagerSpec : Spek({
             reset(stateMachine)
         }
 
-        on("a single step being provided by the state machine") {
-            val step = mock<TaskStep>()
-            val eventToPost = mock<TaskEvent>()
+        given("a single step is provided by the state machine") {
+            val step by createForEachTest { mock<TaskStep>() }
+            beforeEachTest { whenever(stateMachine.popNextStep(false)).doReturn(step, null) }
 
-            whenever(stateMachine.popNextStep(false)).doReturn(step, null)
-            whenever(taskStepRunner.run(eq(step), any(), eq(runOptions))).then { invocation ->
-                val eventSink = invocation.arguments[1] as TaskEventSink
-                eventSink.postEvent(eventToPost)
+            given("that step runs successfully") {
+                val eventToPost by createForEachTest { mock<TaskEvent>() }
 
-                null
-            }
+                beforeEachTest {
+                    whenever(taskStepRunner.run(eq(step), any(), eq(runOptions))).then { invocation ->
+                        val eventSink = invocation.arguments[1] as TaskEventSink
+                        eventSink.postEvent(eventToPost)
 
-            executionManager.run()
+                        null
+                    }
+                }
 
-            it("logs the step to the event logger") {
-                verify(eventLogger).onStartingTaskStep(step)
-            }
+                on("running the task") {
+                    executionManager.run()
 
-            it("runs the step") {
-                verify(taskStepRunner).run(eq(step), any(), eq(runOptions))
-            }
+                    it("logs the step to the event logger") {
+                        verify(eventLogger).onStartingTaskStep(step)
+                    }
 
-            it("logs the step to the event logger and then runs it") {
-                inOrder(eventLogger, taskStepRunner) {
-                    verify(eventLogger).onStartingTaskStep(step)
-                    verify(taskStepRunner).run(eq(step), any(), eq(runOptions))
+                    it("runs the step") {
+                        verify(taskStepRunner).run(eq(step), any(), eq(runOptions))
+                    }
+
+                    it("logs the step to the event logger and then runs it") {
+                        inOrder(eventLogger, taskStepRunner) {
+                            verify(eventLogger).onStartingTaskStep(step)
+                            verify(taskStepRunner).run(eq(step), any(), eq(runOptions))
+                        }
+                    }
+
+                    it("logs the posted event to the event logger") {
+                        verify(eventLogger).postEvent(eventToPost)
+                    }
+
+                    it("forwards the posted event to the state machine") {
+                        verify(stateMachine).postEvent(eventToPost)
+                    }
+
+                    it("logs the posted event to the event logger before forwarding it to the state machine") {
+                        inOrder(eventLogger, stateMachine) {
+                            verify(eventLogger).postEvent(eventToPost)
+                            verify(stateMachine).postEvent(eventToPost)
+                        }
+                    }
                 }
             }
 
-            it("logs the posted event to the event logger") {
-                verify(eventLogger).postEvent(eventToPost)
-            }
+            given("that step throws an exception during execution") {
+                beforeEachTest {
+                    whenever(taskStepRunner.run(eq(step), any(), eq(runOptions))).thenThrow(RuntimeException("Something went wrong."))
+                }
 
-            it("forwards the posted event to the state machine") {
-                verify(stateMachine).postEvent(eventToPost)
-            }
+                on("running the task") {
+                    executionManager.run()
 
-            it("logs the posted event to the event logger before forwarding it to the state machine") {
-                inOrder(eventLogger, stateMachine) {
-                    verify(eventLogger).postEvent(eventToPost)
-                    verify(stateMachine).postEvent(eventToPost)
+                    it("logs a task failure event to the event logger") {
+                        verify(eventLogger).postEvent(ExecutionFailedEvent("java.lang.RuntimeException: Something went wrong."))
+                    }
+
+                    it("logs a task failure event to the state machine") {
+                        verify(stateMachine).postEvent(ExecutionFailedEvent("java.lang.RuntimeException: Something went wrong."))
+                    }
                 }
             }
         }

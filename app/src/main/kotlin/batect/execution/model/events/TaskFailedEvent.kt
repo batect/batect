@@ -21,6 +21,10 @@ import java.nio.file.Path
 
 sealed class TaskFailedEvent : TaskEvent()
 
+data class ExecutionFailedEvent(val message: String) : TaskFailedEvent() {
+    override fun toString() = "${this::class.simpleName}(message: '$message')"
+}
+
 data class TaskNetworkCreationFailedEvent(val message: String) : TaskFailedEvent() {
     override fun toString() = "${this::class.simpleName}(message: '$message')"
 }

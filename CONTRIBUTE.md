@@ -26,4 +26,3 @@ instructions to setup the project so you can start contributing to it.
 Or, to run the tests once and then automatically re-run them when the code changes:
 
 `./gradlew --continuous check`
-

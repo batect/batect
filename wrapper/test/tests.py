@@ -57,27 +57,30 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
 
     def test_no_curl(self):
-        path_dir = tempfile.mkdtemp()
-        self.addCleanup(lambda: shutil.rmtree(path_dir))
-        os.symlink("/usr/bin/basename", os.path.join(path_dir, "basename"))
-        os.symlink("/usr/bin/dirname", os.path.join(path_dir, "dirname"))
+        path_dir = self.create_limited_path(["/usr/bin/basename", "/usr/bin/dirname"])
 
-        result = self.run_script([], path=path_dir + ":/bin")
+        result = self.run_script([], path=path_dir)
 
         self.assertIn("curl is not installed or not on your PATH. Please install it and try again.", result.stdout.decode())
         self.assertNotEqual(result.returncode, 0)
 
     def test_no_java(self):
-        path_dir = tempfile.mkdtemp()
-        self.addCleanup(lambda: shutil.rmtree(path_dir))
-        os.symlink("/usr/bin/basename", os.path.join(path_dir, "basename"))
-        os.symlink("/usr/bin/curl", os.path.join(path_dir, "curl"))
-        os.symlink("/usr/bin/dirname", os.path.join(path_dir, "dirname"))
+        path_dir = path_dir = self.create_limited_path(["/usr/bin/basename", "/usr/bin/dirname", "/usr/bin/curl"])
 
-        result = self.run_script([], path=path_dir + ":/bin")
+        result = self.run_script([], path=path_dir)
 
         self.assertIn("Java is not installed or not on your PATH. Please install it and try again.", result.stdout.decode())
         self.assertNotEqual(result.returncode, 0)
+
+    def create_limited_path(self, executables):
+        path_dir = tempfile.mkdtemp()
+        self.addCleanup(lambda: shutil.rmtree(path_dir))
+
+        for executable in executables:
+            base_name = os.path.basename(executable)
+            os.symlink(executable, os.path.join(path_dir, base_name))
+
+        return path_dir + ":/bin"
 
     def run_script(self, args, download_url=default_download_url, path=os.environ["PATH"]):
         env = {

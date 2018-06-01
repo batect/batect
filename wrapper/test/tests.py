@@ -72,6 +72,16 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertIn("Java is not installed or not on your PATH. Please install it and try again.", result.stdout.decode())
         self.assertNotEqual(result.returncode, 0)
 
+    def test_old_java(self):
+        path_dir = path_dir = self.create_limited_path(["/usr/bin/basename", "/usr/bin/dirname", "/usr/bin/curl", "/usr/lib/jvm/java-1.7-openjdk/jre/bin/java", "/usr/bin/head"])
+
+        result = self.run_script([], path=path_dir)
+
+        self.assertIn("The version of Java that is available on your PATH is version 1.7, but version 1.8 or greater is required.\n" +
+                      "If you have a newer version of Java installed, please make sure your PATH is set correctly.", result.stdout.decode())
+
+        self.assertNotEqual(result.returncode, 0)
+
     def create_limited_path(self, executables):
         path_dir = tempfile.mkdtemp()
         self.addCleanup(lambda: shutil.rmtree(path_dir))

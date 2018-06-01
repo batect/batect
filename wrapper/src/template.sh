@@ -25,13 +25,9 @@
     }
 
     function download() {
+        checkForCurl
+
         echo "Downloading batect version $VERSION from $DOWNLOAD_URL..."
-
-        if ! hash curl 2>/dev/null; then
-            echo "curl is not installed or not on your PATH. Please install it and try again." >&2
-            exit -1
-        fi
-
         mkdir -p "$CACHE_DIR"
         temp_file=$(mktemp)
         curl -# --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
@@ -39,14 +35,35 @@
     }
 
     function runApplication() {
+        checkForJava
+
+        BATECT_WRAPPER_SCRIPT_PATH="$SCRIPT_PATH" \
+        HOSTNAME="$HOSTNAME" \
+        java -Djava.net.useSystemProxies=true -jar "$JAR_PATH" "$@"
+    }
+
+    function checkForCurl() {
+        if ! hash curl 2>/dev/null; then
+            echo "curl is not installed or not on your PATH. Please install it and try again." >&2
+            exit -1
+        fi
+    }
+
+    function checkForJava() {
         if ! hash java 2>/dev/null; then
             echo "Java is not installed or not on your PATH. Please install it and try again." >&2
             exit -1
         fi
 
-        BATECT_WRAPPER_SCRIPT_PATH="$SCRIPT_PATH" \
-        HOSTNAME="$HOSTNAME" \
-        java -Djava.net.useSystemProxies=true -jar "$JAR_PATH" "$@"
+        java_version=$(java -version 2>&1 | head -n1 | sed -n ';s/.* version "\(.*\)\.\(.*\)\..*"/\1.\2/p;')
+        java_version_major="${java_version%.*}"
+        java_version_minor="${java_version#*.}"
+
+        if (( java_version_major < 1 || ( java_version_major == 1 && java_version_minor <= 7 ) )); then
+            echo "The version of Java that is available on your PATH is version $java_version, but version 1.8 or greater is required."
+            echo "If you have a newer version of Java installed, please make sure your PATH is set correctly."
+            exit -1
+        fi
     }
 
     main "$@"

@@ -83,7 +83,7 @@ class UpdateNotifier(
             }
 
             console.println("Version ${updateInfo.version} of batect is now available (you have ${versionInfo.version}).")
-            console.println("To upgrade to the latest version, run 'batect --${CommandLineOptionsParser.upgradeFlagName}'.")
+            console.println("To upgrade to the latest version, run './batect --${CommandLineOptionsParser.upgradeFlagName}'.")
             console.println("For more information, visit ${updateInfo.url}.")
             console.println()
         } else {

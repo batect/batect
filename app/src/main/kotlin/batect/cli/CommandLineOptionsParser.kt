@@ -80,7 +80,7 @@ class CommandLineOptionsParser(override val optionParser: OptionParser) : Option
                 if (additionalArgs.first() != "--") {
                     return CommandLineOptionsParsingResult.Failed(
                         "Too many arguments provided. The first extra argument is '${additionalArgs.first()}'.\n" +
-                            "To pass additional arguments to the task command, prefix them with '--', for example, 'batect my-task -- --extra-option-1 --extra-option-2 value'."
+                            "To pass additional arguments to the task command, prefix them with '--', for example, './batect my-task -- --extra-option-1 --extra-option-2 value'."
                     )
                 }
 

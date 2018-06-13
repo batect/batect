@@ -46,7 +46,7 @@ class OptionParser {
 
         if (option == null) {
             if (argName.startsWith("-")) {
-                return OptionParsingResult.InvalidOption("Invalid option '$argName'. Run 'batect --help' for a list of valid options.")
+                return OptionParsingResult.InvalidOption("Invalid option '$argName'. Run './batect --help' for a list of valid options.")
             } else {
                 return OptionParsingResult.NoOption
             }

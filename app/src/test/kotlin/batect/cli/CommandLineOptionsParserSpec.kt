@@ -55,7 +55,7 @@ object CommandLineOptionsParserSpec : Spek({
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed(
                         "Too many arguments provided. The first extra argument is 'some-extra-arg'.\n" +
-                            "To pass additional arguments to the task command, prefix them with '--', for example, 'batect my-task -- --extra-option-1 --extra-option-2 value'."
+                            "To pass additional arguments to the task command, prefix them with '--', for example, './batect my-task -- --extra-option-1 --extra-option-2 value'."
                     )))
                 }
             }
@@ -94,7 +94,7 @@ object CommandLineOptionsParserSpec : Spek({
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed(
                         "Too many arguments provided. The first extra argument is 'some-extra-arg'.\n" +
-                            "To pass additional arguments to the task command, prefix them with '--', for example, 'batect my-task -- --extra-option-1 --extra-option-2 value'."
+                            "To pass additional arguments to the task command, prefix them with '--', for example, './batect my-task -- --extra-option-1 --extra-option-2 value'."
                     )))
                 }
             }

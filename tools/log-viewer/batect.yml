@@ -24,5 +24,6 @@ containers:
 
 tasks:
   start:
+    description: Start the log viewer.
     run:
       container: controller

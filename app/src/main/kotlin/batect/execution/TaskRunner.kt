@@ -33,7 +33,7 @@ data class TaskRunner(
     fun run(config: Configuration, task: Task, runOptions: RunOptions): Int {
         logger.info {
             message("Preparing task.")
-            data("task", task.name)
+            data("taskName", task.name)
         }
 
         val graph = graphProvider.createGraph(config, task)
@@ -45,14 +45,14 @@ data class TaskRunner(
 
         logger.info {
             message("Preparation complete, starting task.")
-            data("task", task.name)
+            data("taskName", task.name)
         }
 
         executionManager.run()
 
         logger.info {
             message("Task execution completed.")
-            data("task", task.name)
+            data("taskName", task.name)
         }
 
         if (stateMachine.taskHasFailed) {
@@ -67,7 +67,7 @@ data class TaskRunner(
 
         logger.warn {
             message("Task execution failed.")
-            data("task", task.name)
+            data("taskName", task.name)
         }
 
         return -1
@@ -84,7 +84,7 @@ data class TaskRunner(
 
         logger.info {
             message("Task execution completed normally.")
-            data("task", task.name)
+            data("taskName", task.name)
             data("exitCode", containerExitedEvent.exitCode)
         }
 

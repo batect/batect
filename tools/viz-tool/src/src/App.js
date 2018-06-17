@@ -1,19 +1,28 @@
-import React, { Component } from 'react';
-import './App.css';
+import React from 'react';
+import PropTypes from 'prop-types';
+import {withStyles} from '@material-ui/core/styles';
+import CssBaseline from '@material-ui/core/CssBaseline';
+import TabBar from './TabBar';
 
-class App extends Component {
-  render() {
+const styles = theme => ({
+    root: {
+        flexGrow: 1,
+        backgroundColor: theme.palette.background.paper,
+    }
+});
+
+const App = ({ classes }) => {
     return (
-      <div className="App">
-        <header className="App-header">
-          <h1 className="App-title">Welcome to React</h1>
-        </header>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
-      </div>
+        <div className={classes.root}>
+            <CssBaseline/>
+            <TabBar/>
+        </div>
     );
-  }
-}
+};
 
-export default App;
+
+App.propTypes = {
+    classes: PropTypes.object.isRequired,
+};
+
+export default withStyles(styles)(App);

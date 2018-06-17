@@ -1,0 +1,17 @@
+{
+  "name": "viz-tool",
+  "description": "Visualise batect log files.",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@material-ui/core": "^1.2.1",
+    "react": "^16.4.1",
+    "react-dom": "^16.4.1",
+    "react-scripts": "1.1.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}

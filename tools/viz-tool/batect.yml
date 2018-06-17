@@ -1,0 +1,35 @@
+project_name: batect-log-viewer
+
+containers:
+  build-env:
+    image: node:10.4.1-alpine
+    volumes:
+      - local: ./src
+        container: /code
+        options: cached
+      - local: ./log.json
+        container: /code/log.json
+        options: ro
+    working_directory: /code
+
+tasks:
+  install:
+    description: Install all dependencies.
+    run:
+      container: build-env
+      command: yarn install
+
+  start:
+    description: Start the application.
+    run:
+      container: build-env
+      command: yarn start
+      ports:
+        - local: 3000
+          container: 3000
+
+  shell:
+    description: Start a shell in the build environment.
+    run:
+      container: build-env
+      command: sh

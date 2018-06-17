@@ -17,9 +17,18 @@ gradle-app.setting
 
 classes/
 
+
 ### IntelliJ
 /.idea/
 out
+
+
+### NodeJS
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
 
 ### batect-specific
 
@@ -34,3 +43,4 @@ docs/_book/
 docs/yarn-error.log
 
 tools/log-viewer/log.json
+tools/viz-tool/log.json

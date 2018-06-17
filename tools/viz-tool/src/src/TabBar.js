@@ -12,27 +12,22 @@ class TabBar extends React.Component {
         this.setState({value});
     };
 
-    render() {
-        const {classes} = this.props;
-
-        return (
-            <AppBar position="static" color="default">
-                <Tabs
-                    value={this.state.value}
-                    onChange={this.handleChange}
-                    indicatorColor="primary"
-                    textColor="primary"
-                    fullWidth
-                >
-                    <Tab label="Summary"/>
-                    <Tab label="Task Graph"/>
-                    <Tab label="Container Graph"/>
-                    <Tab label="Timeline"/>
-                </Tabs>
-            </AppBar>
-        );
-    }
+    render = () => (
+        <AppBar position="static" color="default">
+            <Tabs
+                value={this.state.value}
+                onChange={this.handleChange}
+                indicatorColor="primary"
+                textColor="primary"
+                fullWidth
+            >
+                <Tab label="Summary"/>
+                <Tab label="Task Graph"/>
+                <Tab label="Container Graph"/>
+                <Tab label="Timeline"/>
+            </Tabs>
+        </AppBar>
+    );
 }
-
 
 export default TabBar;

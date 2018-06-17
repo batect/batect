@@ -30,7 +30,7 @@ import java.time.ZonedDateTime
 object LogMessageWriterSpec : Spek({
     describe("a log message writer") {
         val writer = LogMessageWriter()
-        val messageTime = ZonedDateTime.of(2017, 9, 25, 11, 55, 13, 1 * 1000 * 1000, ZoneOffset.UTC)
+        val messageTime = ZonedDateTime.of(2017, 9, 25, 11, 55, 13, 1234 * 1000, ZoneOffset.UTC)
 
         on("writing a message with no extra data") {
             val message = LogMessage(Severity.Info, "This is the message", messageTime, emptyMap())
@@ -40,7 +40,7 @@ object LogMessageWriterSpec : Spek({
             val parsed = jacksonObjectMapper().readTree(output.toString())
 
             it("includes the timestamp") {
-                assertThat(parsed["@timestamp"].textValue(), equalTo("2017-09-25T11:55:13.001Z"))
+                assertThat(parsed["@timestamp"].textValue(), equalTo("2017-09-25T11:55:13.001234Z"))
             }
 
             it("includes the message") {
@@ -80,7 +80,7 @@ object LogMessageWriterSpec : Spek({
             val parsed = jacksonObjectMapper().readTree(output.toString())
 
             it("includes the timestamp") {
-                assertThat(parsed["@timestamp"].textValue(), equalTo("2017-09-25T11:55:13.001Z"))
+                assertThat(parsed["@timestamp"].textValue(), equalTo("2017-09-25T11:55:13.001234Z"))
             }
 
             it("includes the message") {

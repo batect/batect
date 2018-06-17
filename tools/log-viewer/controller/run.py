@@ -36,11 +36,15 @@ def loadLogData():
             })
 
             requestBody += "\n"
-            requestBody += line + "\n"
+
+            parsedLine = json.loads(line)
+            parsedLine["logLineNumber"] = id
+
+            requestBody += json.dumps(parsedLine) + "\n"
 
             id += 1
 
-            timestamps.append(json.loads(line)["@timestamp"])
+            timestamps.append(parsedLine["@timestamp"])
 
     response = requests.post(
         getElasticsearchUrl("/_bulk?refresh=true"),
@@ -141,7 +145,7 @@ def generateViewerUrl(logDetails, kibanaDetails):
             startTime=startTime,
             endTime=endTime
         ),
-        "_a": "(columns:!({columns}),filters:!(),index:'{indexId}',interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',asc))".format(
+        "_a": "(columns:!({columns}),filters:!(),index:'{indexId}',interval:auto,query:(language:lucene,query:''),sort:!('logLineNumber',asc))".format(
             indexId=kibanaIndexId,
             columns=formattedColumns
         )

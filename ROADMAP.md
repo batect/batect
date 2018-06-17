@@ -59,7 +59,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * make configuration-related error messages clearer and remove exception class names etc.
 * test against a variety of Docker versions (eg. earliest supported version and latest)
 * use batect to build batect (self-hosting)
-* tool to browse logs nicely (dump into Elasticsearch?)
 * tool to visualise execution on a timeline
 * switch to [MockK](https://github.com/oleksiyp/mockk) - Kotlin specific library with clearer upgrade path to Kotlin/Native
   * remove MockMaker resource file

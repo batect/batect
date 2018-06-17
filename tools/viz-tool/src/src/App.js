@@ -1,22 +1,36 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {withStyles} from '@material-ui/core/styles';
+import {createMuiTheme, MuiThemeProvider, withStyles} from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
+import {BrowserRouter as Router} from "react-router-dom";
 import TabBar from './TabBar';
+import Content from './Content';
 
-const styles = theme => ({
+const styles = () => ({
     root: {
         flexGrow: 1,
-        backgroundColor: theme.palette.background.paper,
     }
 });
 
-const App = ({ classes }) => {
+const theme = createMuiTheme({
+    palette: {
+        background: {
+            default: '#fff'
+        }
+    }
+});
+
+const App = ({classes}) => {
     return (
-        <div className={classes.root}>
-            <CssBaseline/>
-            <TabBar/>
-        </div>
+        <Router>
+            <MuiThemeProvider theme={theme}>
+                <div className={classes.root}>
+                    <CssBaseline/>
+                    <TabBar/>
+                    <Content/>
+                </div>
+            </MuiThemeProvider>
+        </Router>
     );
 };
 

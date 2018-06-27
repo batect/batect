@@ -73,7 +73,7 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
 
     def test_old_java(self):
-        path_dir = path_dir = self.create_limited_path(["/usr/bin/basename", "/usr/bin/dirname", "/usr/bin/curl", "/usr/lib/jvm/java-1.7-openjdk/jre/bin/java", "/usr/bin/head"])
+        path_dir = path_dir = self.create_limited_path(["/usr/bin/basename", "/usr/bin/dirname", "/usr/bin/curl", "/usr/lib/jvm/java-1.7-openjdk-amd64/jre/bin/java", "/usr/bin/head"])
 
         result = self.run_script([], path=path_dir)
 

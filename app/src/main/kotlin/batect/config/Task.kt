@@ -18,11 +18,13 @@ package batect.config
 
 import batect.os.Command
 
-data class Task(val name: String,
-                val runConfiguration: TaskRunConfiguration,
-                val description: String = "",
-                val dependsOnContainers: Set<String> = emptySet(),
-                val prerequisiteTasks: Set<String> = emptySet())
+data class Task(
+    val name: String,
+    val runConfiguration: TaskRunConfiguration,
+    val description: String = "",
+    val dependsOnContainers: Set<String> = emptySet(),
+    val prerequisiteTasks: Set<String> = emptySet()
+)
 
 data class TaskRunConfiguration(
     val container: String,

@@ -23,7 +23,8 @@ import batect.config.TaskMap
 data class ConfigurationFile(
     val projectName: String?,
     val tasks: Map<String, TaskFromFile> = emptyMap(),
-    val containers: Map<String, ContainerFromFile> = emptyMap()) {
+    val containers: Map<String, ContainerFromFile> = emptyMap()
+) {
 
     fun toConfiguration(pathResolver: PathResolver): Configuration = Configuration(
         resolveProjectName(pathResolver),

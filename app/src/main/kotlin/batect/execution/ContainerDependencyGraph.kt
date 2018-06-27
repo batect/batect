@@ -151,7 +151,8 @@ data class ContainerDependencyGraphNode(
     val additionalPortMappings: Set<PortMapping>,
     val isRootNode: Boolean,
     val dependsOn: Set<ContainerDependencyGraphNode>,
-    val graph: ContainerDependencyGraph) {
+    val graph: ContainerDependencyGraph
+) {
     val dependedOnBy: Set<ContainerDependencyGraphNode> by lazy { graph.allNodes.filter { it.dependsOn.contains(this) }.toSet() }
 
     val dependsOnContainers: Set<Container> by lazy { dependsOn.map { it.container }.toSet() }

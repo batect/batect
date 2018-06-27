@@ -93,9 +93,11 @@ object OptionDefinitionSpec : Spek({
         }
 
         describe("parsing") {
-            class TestOptionDefinition(name: String,
-                                       description: String,
-                                       shortName: Char? = null) : OptionDefinition(name, description, false, shortName) {
+            class TestOptionDefinition(
+                name: String,
+                description: String,
+                shortName: Char? = null
+            ) : OptionDefinition(name, description, false, shortName) {
                 override fun parseValue(args: Iterable<String>): OptionParsingResult = OptionParsingResult.ReadOption(1234)
             }
 

@@ -24,11 +24,12 @@ import kotlin.reflect.KProperty
 // StorageType defines how the value is stored - for example, for a String value with a null default, StorageType would be String?.
 // ValueType defines what type user-provided values should be converted to - for example, String.
 // This allows us to provide type safety but also differentiate between 'not provided' (null) and 'provided' where needed.
-class ValueOption<StorageType, ValueType : StorageType>(longName: String,
-                                                        description: String,
-                                                        val defaultValueProvider: DefaultValueProvider<StorageType>,
-                                                        val valueConverter: (String) -> ValueConversionResult<ValueType>,
-                                                        shortName: Char? = null
+class ValueOption<StorageType, ValueType : StorageType>(
+    longName: String,
+    description: String,
+    val defaultValueProvider: DefaultValueProvider<StorageType>,
+    val valueConverter: (String) -> ValueConversionResult<ValueType>,
+    shortName: Char? = null
 ) : OptionDefinition(longName, description, true, shortName), ReadOnlyProperty<OptionParserContainer, StorageType> {
 
     var value: StorageType = defaultValueProvider.value

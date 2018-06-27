@@ -16,15 +16,15 @@
 
 package batect.cli.commands
 
-import batect.execution.TaskRunner
 import batect.config.Configuration
 import batect.config.Task
 import batect.config.io.ConfigurationLoader
 import batect.docker.DockerClient
-import batect.logging.Logger
 import batect.execution.RunOptions
 import batect.execution.TaskExecutionOrderResolutionException
 import batect.execution.TaskExecutionOrderResolver
+import batect.execution.TaskRunner
+import batect.logging.Logger
 import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.updates.UpdateNotifier
@@ -39,7 +39,8 @@ class RunTaskCommand(
     val dockerClient: DockerClient,
     val console: Console,
     val errorConsole: Console,
-    val logger: Logger) : Command {
+    val logger: Logger
+) : Command {
 
     override fun run(): Int {
         val config = configLoader.loadConfig(configFile)

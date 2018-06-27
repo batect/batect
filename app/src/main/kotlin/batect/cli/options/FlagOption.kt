@@ -19,10 +19,11 @@ package batect.cli.options
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-class FlagOption(longName: String,
-                 description: String,
-                 shortName: Char? = null)
-    : OptionDefinition(longName, description, false, shortName), ReadOnlyProperty<OptionParserContainer, Boolean> {
+class FlagOption(
+    longName: String,
+    description: String,
+    shortName: Char? = null
+) : OptionDefinition(longName, description, false, shortName), ReadOnlyProperty<OptionParserContainer, Boolean> {
     var value = false
         private set
 

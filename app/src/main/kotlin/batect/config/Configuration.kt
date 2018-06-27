@@ -17,6 +17,7 @@
 package batect.config
 
 data class Configuration(
-        val projectName: String,
-        val tasks: TaskMap,
-        val containers: ContainerMap)
+    val projectName: String,
+    val tasks: TaskMap,
+    val containers: ContainerMap
+)

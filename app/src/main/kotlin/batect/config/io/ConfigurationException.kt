@@ -17,11 +17,12 @@
 package batect.config.io
 
 data class ConfigurationException(
-        override val message: String,
-        val fileName: String?,
-        val lineNumber: Int?,
-        val column: Int?,
-        override val cause: Throwable?) : RuntimeException(message, cause) {
+    override val message: String,
+    val fileName: String?,
+    val lineNumber: Int?,
+    val column: Int?,
+    override val cause: Throwable?
+) : RuntimeException(message, cause) {
 
     constructor(message: String) : this(message, null, null, null, null)
 

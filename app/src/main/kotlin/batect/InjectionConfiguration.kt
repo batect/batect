@@ -90,7 +90,7 @@ enum class PrintStreamType {
     Error
 }
 
-private val cliModule = Kodein.Module {
+private val cliModule = Kodein.Module("cli") {
     bind<CommandFactory>() with singleton { CommandFactory() }
     bind<CommandLineOptionsParser>() with singleton { CommandLineOptionsParser() }
 
@@ -115,19 +115,19 @@ private val cliModule = Kodein.Module {
     bind<UpgradeCommand>() with singletonWithLogger { logger -> UpgradeCommand(instance(), instance(), instance(), instance(), instance(PrintStreamType.Output), instance(PrintStreamType.Error), logger) }
 }
 
-private val configModule = Kodein.Module {
+private val configModule = Kodein.Module("config") {
     bind<ConfigurationLoader>() with singletonWithLogger { logger -> ConfigurationLoader(instance(), instance(), logger) }
     bind<PathResolverFactory>() with singleton { PathResolverFactory() }
 }
 
-private val dockerModule = Kodein.Module {
+private val dockerModule = Kodein.Module("docker") {
     bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), logger) }
     bind<DockerContainerCreationCommandGenerator>() with singleton { DockerContainerCreationCommandGenerator() }
     bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
     bind<DockerImageLabellingStrategy>() with singleton { DockerImageLabellingStrategy() }
 }
 
-private val executionModule = Kodein.Module {
+private val executionModule = Kodein.Module("execution") {
     bind<CleanupStagePlanner>() with singletonWithLogger { logger -> CleanupStagePlanner(logger) }
     bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance()) }
     bind<ContainerDependencyGraphProvider>() with singletonWithLogger { logger -> ContainerDependencyGraphProvider(instance(), logger) }
@@ -141,20 +141,20 @@ private val executionModule = Kodein.Module {
     bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), instance(), instance(), instance(), logger) }
 }
 
-private val loggingModule = Kodein.Module {
+private val loggingModule = Kodein.Module("logging") {
     bind<ApplicationInfoLogger>() with singletonWithLogger { logger -> ApplicationInfoLogger(logger, instance(), instance(), instance()) }
     bind<LoggerFactory>() with singleton { LoggerFactory(instance()) }
     bind<LogMessageWriter>() with singleton { LogMessageWriter() }
     bind<StandardAdditionalDataSource>() with singleton { StandardAdditionalDataSource() }
 }
 
-private val osModule = Kodein.Module {
+private val osModule = Kodein.Module("os") {
     bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }
     bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider() }
     bind<SystemInfo>() with singleton { SystemInfo(instance()) }
 }
 
-private val uiModule = Kodein.Module {
+private val uiModule = Kodein.Module("ui") {
     bind<EventLoggerProvider>() with singleton {
         EventLoggerProvider(
             instance(),
@@ -174,14 +174,14 @@ private val uiModule = Kodein.Module {
     bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider() }
 }
 
-private val updatesModule = Kodein.Module {
+private val updatesModule = Kodein.Module("updates") {
     bind<UpdateInfoDownloader>() with singletonWithLogger { logger -> UpdateInfoDownloader(instance(), logger) }
     bind<UpdateInfoStorage>() with singletonWithLogger { logger -> UpdateInfoStorage(instance(), instance(), logger) }
     bind<UpdateInfoUpdater>() with singletonWithLogger { logger -> UpdateInfoUpdater(instance(), instance(), logger) }
     bind<UpdateNotifier>() with singletonWithLogger { logger -> UpdateNotifier(commandLineOptions().disableUpdateNotification, instance(), instance(), instance(), instance(PrintStreamType.Output), logger) }
 }
 
-private val coreModule = Kodein.Module {
+private val coreModule = Kodein.Module("core") {
     bind<VersionInfo>() with singleton { VersionInfo() }
 }
 

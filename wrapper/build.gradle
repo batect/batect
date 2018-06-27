@@ -30,7 +30,7 @@ task shellcheck(type: Exec) {
     commandLine 'docker', 'run', '--rm', '-t',
         '-v', "$projectDir:$projectDir",
         '-w', projectDir,
-        'koalaman/shellcheck:v0.4.6', templateFile
+        'koalaman/shellcheck:v0.5.0', templateFile
 
     doLast {
         // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java

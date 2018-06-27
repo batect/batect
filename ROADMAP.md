@@ -21,7 +21,9 @@ If there's something you're really keen to see, pull requests are always welcome
   * batch up printing updates to the console when using fancy output mode, rather than reprinting progress information on every event
   * only submit one `docker build` request for each build directory, rather than once per container that references that directory
 * check that Docker client and server are compatible versions
-* warn when using an image without a tag or with tag `latest`
+* `brew doctor` equivalent (`./batect doctor`? `lint`?)
+  * warn when using an image without a tag or with tag `latest`
+  * warn when mounting files / directories in non-read-only modes without `run_as_current_user` enabled
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 * support for Windows
 * don't allow both `start` and `dependencies` to be specified (Jackson doesn't support this natively)
@@ -60,6 +62,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * test against a variety of Docker versions (eg. earliest supported version and latest)
 * use batect to build batect (self-hosting)
 * tool to visualise execution on a timeline
+  * tab to show configuration as parsed
 * switch to [MockK](https://github.com/oleksiyp/mockk) - Kotlin specific library with clearer upgrade path to Kotlin/Native
   * remove MockMaker resource file
 * move to Kotlin/Native

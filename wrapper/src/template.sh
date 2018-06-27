@@ -55,9 +55,10 @@
             exit -1
         fi
 
-        java_version=$(java -version 2>&1 | head -n1 | sed -n ';s/.* version "\(.*\)\.\(.*\)\..*"/\1.\2/p;')
+        java_version=$(java -version 2>&1 | head -n1 | sed -En ';s/.* version "([0-9]+)(\.([0-9]+))?.*".*/\1.\3/p;')
         java_version_major="${java_version%.*}"
         java_version_minor="${java_version#*.}"
+        java_version_minor="${java_version_minor:-0}"
 
         if (( java_version_major < 1 || ( java_version_major == 1 && java_version_minor <= 7 ) )); then
             echo "The version of Java that is available on your PATH is version $java_version, but version 1.8 or greater is required."

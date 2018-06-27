@@ -65,15 +65,15 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
 
     def test_no_java(self):
-        path_dir = path_dir = self.create_limited_path(["/usr/bin/basename", "/usr/bin/dirname", "/usr/bin/curl"])
+        path_dir = self.create_limited_path(["/usr/bin/basename", "/usr/bin/dirname", "/usr/bin/curl"])
 
         result = self.run_script([], path=path_dir)
 
         self.assertIn("Java is not installed or not on your PATH. Please install it and try again.", result.stdout.decode())
         self.assertNotEqual(result.returncode, 0)
 
-    def test_old_java(self):
-        path_dir = path_dir = self.create_limited_path(["/usr/bin/basename", "/usr/bin/dirname", "/usr/bin/curl", "/usr/lib/jvm/java-1.7-openjdk-amd64/jre/bin/java", "/usr/bin/head"])
+    def test_unsupported_java(self):
+        path_dir = self.create_limited_path_for_specific_java_version("7")
 
         result = self.run_script([], path=path_dir)
 
@@ -81,6 +81,25 @@ class WrapperScriptTests(unittest.TestCase):
                       "If you have a newer version of Java installed, please make sure your PATH is set correctly.", result.stdout.decode())
 
         self.assertNotEqual(result.returncode, 0)
+
+    def test_supported_java(self):
+        for version in ["8", "9", "10", "11"]:
+            with self.subTest(java_version=version):
+                path_dir = self.create_limited_path_for_specific_java_version(version)
+
+                result = self.run_script([], path=path_dir)
+
+                self.assertIn("The Java application has started.", result.stdout.decode())
+                self.assertEqual(result.returncode, 0)
+
+    def create_limited_path_for_specific_java_version(self, java_version):
+        return self.create_limited_path([
+            "/usr/bin/basename",
+            "/usr/bin/dirname",
+            "/usr/bin/curl",
+            "/usr/bin/head",
+            "/usr/lib/jvm/java-{}-openjdk-amd64/bin/java".format(java_version),
+        ])
 
     def create_limited_path(self, executables):
         path_dir = tempfile.mkdtemp()

@@ -24,11 +24,13 @@ If there's something you're really keen to see, pull requests are always welcome
 * `brew doctor` equivalent (`./batect doctor`? `lint`?)
   * warn when using an image without a tag or with tag `latest`
   * warn when mounting files / directories in non-read-only modes without `run_as_current_user` enabled
+  * warn when mounting a directory in the same location as the home directory from `run_as_current_user`
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 * support for Windows
 * don't allow both `start` and `dependencies` to be specified (Jackson doesn't support this natively)
 * remove `start` on tasks (has been replaced by `dependencies`)
 * show progress information when cleaning up temporary files or directories in fancy output mode
+* fix #10 (proxies that refer to localhost)
 
 ### Bugs
 * fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information

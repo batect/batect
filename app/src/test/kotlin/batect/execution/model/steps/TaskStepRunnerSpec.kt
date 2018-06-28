@@ -20,13 +20,13 @@ import batect.config.BuildImage
 import batect.config.Container
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
+import batect.config.VolumeMount
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerDoesNotExistException
 import batect.docker.ContainerHealthCheckException
 import batect.docker.ContainerRemovalFailedException
 import batect.docker.ContainerStartFailedException
 import batect.docker.ContainerStopFailedException
-import batect.docker.CopyToContainerFailedException
 import batect.docker.DockerClient
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequest
@@ -100,7 +100,6 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import java.nio.file.Files
-import java.nio.file.Paths
 
 object TaskStepRunnerSpec : Spek({
     describe("a task step runner") {
@@ -114,10 +113,8 @@ object TaskStepRunnerSpec : Spek({
         }
 
         val runAsCurrentUserConfiguration = RunAsCurrentUserConfiguration(
-            UserAndGroup(456, 789),
-            mapOf(
-                Paths.get("/some-file") to "/some-container-file"
-            )
+            setOf(VolumeMount("/tmp/local-path", "/tmp/remote-path", "rw")),
+            UserAndGroup(456, 789)
         )
 
         val runAsCurrentUserConfigurationProvider = mock<RunAsCurrentUserConfigurationProvider> {
@@ -293,6 +290,7 @@ object TaskStepRunnerSpec : Spek({
                         network,
                         command,
                         additionalEnvironmentVariables,
+                        runAsCurrentUserConfiguration.volumeMounts,
                         additionalPortMappings,
                         runOptions.propagateProxyEnvironmentVariables,
                         runAsCurrentUserConfiguration.userAndGroup,
@@ -310,10 +308,6 @@ object TaskStepRunnerSpec : Spek({
                         verify(dockerClient).create(request)
                     }
 
-                    it("copies any local files from the 'run as current user' configuration into the container") {
-                        verify(dockerClient).copyToContainer(dockerContainer, Paths.get("/some-file"), "/some-container-file")
-                    }
-
                     it("emits a 'container created' event") {
                         verify(eventSink).postEvent(ContainerCreatedEvent(container, dockerContainer))
                     }
@@ -326,18 +320,6 @@ object TaskStepRunnerSpec : Spek({
 
                     it("emits a 'container creation failed' event") {
                         verify(eventSink).postEvent(ContainerCreationFailedEvent(container, "Something went wrong."))
-                    }
-                }
-
-                on("when copying files fails") {
-                    val dockerContainer = DockerContainer("some-id")
-                    whenever(dockerClient.create(request)).doReturn(dockerContainer)
-                    whenever(dockerClient.copyToContainer(any(), any(), any())).doThrow(CopyToContainerFailedException(Paths.get("/some-file"), "/some-container-file", "some-id", "File copy failed."))
-
-                    runner.run(step, eventSink, runOptions)
-
-                    it("emits a 'container creation failed' event") {
-                        verify(eventSink).postEvent(ContainerCreationFailedEvent(container, "Copying file '/some-file' to '/some-container-file' in container 'some-id' failed. Output from Docker was: File copy failed."))
                     }
                 }
             }

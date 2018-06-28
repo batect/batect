@@ -139,6 +139,7 @@ class TaskStepRunner(
                 step.network,
                 step.command,
                 step.additionalEnvironmentVariables,
+                runAsCurrentUserConfiguration.volumeMounts,
                 step.additionalPortMappings,
                 runOptions.propagateProxyEnvironmentVariables,
                 runAsCurrentUserConfiguration.userAndGroup,
@@ -146,11 +147,6 @@ class TaskStepRunner(
             )
 
             val dockerContainer = dockerClient.create(creationRequest)
-
-            runAsCurrentUserConfiguration.pathsToCopyToContainer.forEach { localSource, containerDestination ->
-                dockerClient.copyToContainer(dockerContainer, localSource, containerDestination)
-            }
-
             eventSink.postEvent(ContainerCreatedEvent(step.container, dockerContainer))
         } catch (e: ContainerCreationFailedException) {
             eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))

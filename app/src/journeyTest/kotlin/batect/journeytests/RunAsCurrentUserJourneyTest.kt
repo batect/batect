@@ -30,43 +30,48 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 object RunAsCurrentUserJourneyTest : Spek({
-    given("a task with 'run as current user' enabled") {
-        val runner = ApplicationRunner("run-as-current-user")
+    mapOf(
+        "run-as-current-user" to "a task with 'run as current user' enabled",
+        "run-as-current-user-with-mount" to "a task with 'run as current user' enabled that has a mount inside the home directory"
+    ).forEach { name, description ->
+        given(description) {
+            val runner = ApplicationRunner(name)
 
-        on("running that task") {
-            val outputDirectory = Paths.get("build/test-results/journey-tests/run-as-current-user").toAbsolutePath()
-            Files.createDirectories(outputDirectory)
-            deleteDirectoryContents(outputDirectory)
+            on("running that task") {
+                val outputDirectory = Paths.get("build/test-results/journey-tests/$name").toAbsolutePath()
+                Files.createDirectories(outputDirectory)
+                deleteDirectoryContents(outputDirectory)
 
-            val result = runner.runApplication(listOf("the-task"))
-            val userName = System.getProperty("user.name")
-            val groupName = getGroupName()
+                val result = runner.runApplication(listOf("the-task"))
+                val userName = System.getProperty("user.name")
+                val groupName = getGroupName()
 
-            it("prints the output from that task") {
-                val expectedOutput = listOf(
-                    "User: $userName",
-                    "Group: $groupName",
-                    "Home directory: /home/special-place",
-                    "Home directory exists",
-                    "Home directory owned by user: $userName",
-                    "Home directory owned by group: $groupName"
-                ).joinToString("\r\n")
+                it("prints the output from that task") {
+                    val expectedOutput = listOf(
+                        "User: $userName",
+                        "Group: $groupName",
+                        "Home directory: /home/special-place",
+                        "Home directory exists",
+                        "Home directory owned by user: $userName",
+                        "Home directory owned by group: $groupName"
+                    ).joinToString("\r\n")
 
-                assertThat(result.output, containsSubstring(expectedOutput))
-            }
+                    assertThat(result.output, containsSubstring(expectedOutput))
+                }
 
-            it("creates files as the current user, not root") {
-                val expectedFilePath = outputDirectory.resolve("created-file")
-                val owner = Files.getOwner(expectedFilePath)
-                assertThat(owner.name, equalTo(userName))
-            }
+                it("creates files as the current user, not root") {
+                    val expectedFilePath = outputDirectory.resolve("created-file")
+                    val owner = Files.getOwner(expectedFilePath)
+                    assertThat(owner.name, equalTo(userName))
+                }
 
-            it("returns the exit code from that task") {
-                assertThat(result.exitCode, equalTo(0))
-            }
+                it("returns the exit code from that task") {
+                    assertThat(result.exitCode, equalTo(0))
+                }
 
-            it("cleans up all containers it creates") {
-                assertThat(result.potentiallyOrphanedContainers, isEmpty)
+                it("cleans up all containers it creates") {
+                    assertThat(result.potentiallyOrphanedContainers, isEmpty)
+                }
             }
         }
     }

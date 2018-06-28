@@ -1,0 +1,17 @@
+project_name: run-as-current-user-with-mount-test
+
+containers:
+  build-env:
+    image: alpine:3.6
+    volumes:
+      - ../../../../build/test-results/journey-tests/run-as-current-user-with-mount:/output
+      - .:/home/special-place/code
+    run_as_current_user:
+      enabled: true
+      home_directory: /home/special-place
+
+tasks:
+  the-task:
+    run:
+      container: build-env
+      command: /home/special-place/code/test.sh

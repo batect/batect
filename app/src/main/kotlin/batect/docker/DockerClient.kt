@@ -444,30 +444,6 @@ class DockerClient(
         }
     }
 
-    fun copyToContainer(container: DockerContainer, source: Path, destination: String) {
-        logger.info {
-            message("Copying file or directory into container.")
-            data("container", container)
-            data("source", source.toString())
-            data("destination", destination)
-        }
-
-        val result = processRunner.runAndCaptureOutput(listOf("docker", "cp", source.toString(), "${container.id}:$destination"))
-
-        if (failed(result)) {
-            logger.error {
-                message("Could not copy file or directory into container.")
-                data("result", result)
-            }
-
-            throw CopyToContainerFailedException(source, destination, container.id, result.output.trim())
-        }
-
-        logger.info {
-            message("File or directory copied into container.")
-        }
-    }
-
     private fun haveImageLocally(imageName: String): Boolean {
         logger.info {
             message("Checking if image exists locally.")

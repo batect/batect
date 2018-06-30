@@ -56,6 +56,7 @@ class ConfigurationLoader(
         }
 
         Files.newInputStream(path, StandardOpenOption.READ).use {
+
             val config = loadConfig(it, path)
 
             logger.info {

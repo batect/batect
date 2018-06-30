@@ -777,5 +777,21 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat({ loader.loadConfig("/doesntexist.yml") }, throws(withMessage("The file '/doesntexist.yml' does not exist.")))
             }
         }
+
+        on("loading a configuration file with an empty container") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |containers:
+                |  container-1:
+                |    build_directory: container-1
+                |  container-2:
+                |
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Could not load configuration file: Container 'container-2' is invalid: no properties have been provided. At least one of image or build_directory is required")))
+            }
+        }
     }
 })

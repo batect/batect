@@ -21,7 +21,7 @@ classes/
 ### IntelliJ
 /.idea/
 out
-
+*.iml
 
 ### NodeJS
 node_modules/
@@ -44,3 +44,4 @@ docs/yarn-error.log
 
 tools/log-viewer/log.json
 tools/viz-tool/log.json
+

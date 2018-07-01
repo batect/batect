@@ -5,7 +5,7 @@ and, similarly, just because something isn't here doesn't mean I won't ever impl
 
 If there's something you're really keen to see, pull requests are always welcome :)
 
-## MVP
+## v1.0
 
 ### Config file handling
 * better error message when a key (eg. a task name) is used twice (at the moment it's `Duplicate field 'duplicated_task_name'`)

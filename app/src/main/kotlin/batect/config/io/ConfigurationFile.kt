@@ -35,7 +35,7 @@ data class ConfigurationFile(
             ContainerMap(containers.map { (name, container) -> fromFileToContainerConfiguration(name, container, pathResolver) }))
     }
 
-    private fun fromFileToContainerConfiguration(containerName: String, fileContainerConfig: ContainerFromFile, pathResolver: PathResolver): Container {
+    private fun fromFileToContainerConfiguration(containerName: String, fileContainerConfig: ContainerFromFile?, pathResolver: PathResolver): Container {
         if (fileContainerConfig == null) {
             throw ConfigurationException("Container '$containerName' is invalid: no properties have been provided. At least one of image or build_directory is required")
         }
@@ -51,6 +51,7 @@ data class ConfigurationFile(
         if (pathResolver.relativeTo.root == pathResolver.relativeTo) {
             throw ConfigurationException("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.")
         }
+
         return pathResolver.relativeTo.fileName.toString()
     }
 }

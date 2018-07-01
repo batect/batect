@@ -21,7 +21,7 @@ classes/
 ### IntelliJ
 /.idea/
 out
-
+*.iml
 
 ### NodeJS
 node_modules/

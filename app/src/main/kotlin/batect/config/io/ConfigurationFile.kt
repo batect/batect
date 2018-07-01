@@ -17,7 +17,9 @@
 package batect.config.io
 
 import batect.config.Configuration
+import batect.config.Container
 import batect.config.ContainerMap
+import batect.config.Task
 import batect.config.TaskMap
 
 data class ConfigurationFile(
@@ -26,10 +28,29 @@ data class ConfigurationFile(
     val containers: Map<String, ContainerFromFile> = emptyMap()
 ) {
 
-    fun toConfiguration(pathResolver: PathResolver): Configuration = Configuration(
-        resolveProjectName(pathResolver),
-        TaskMap(tasks.map { (name, task) -> task.toTask(name) }),
-        ContainerMap(containers.map { (name, container) -> container.toContainer(name, pathResolver) }))
+    fun toConfiguration(pathResolver: PathResolver): Configuration {
+
+        return Configuration(
+            resolveProjectName(pathResolver),
+            TaskMap(tasks.map { (name, task) -> fromFileToTaskConfiguration(name, task) }),
+            ContainerMap(containers.map { (name, container) -> fromFileToContainerConfiguration(name, container, pathResolver) }))
+    }
+
+    private fun fromFileToContainerConfiguration(containerName: String, fileContainerConfig: ContainerFromFile?, pathResolver: PathResolver): Container {
+        if (fileContainerConfig == null) {
+            throw ConfigurationException("Container '$containerName' is invalid: no properties have been provided. At least one of image or build_directory is required")
+        }
+
+        return fileContainerConfig.toContainer(containerName, pathResolver)
+    }
+
+    private fun fromFileToTaskConfiguration(taskName: String, fileTaskConfig: TaskFromFile?): Task {
+        if (fileTaskConfig == null) {
+            throw ConfigurationException("Task '$taskName' is invalid: no properties have been provided, container is required")
+        }
+
+        return fileTaskConfig.toTask(taskName)
+    }
 
     private fun resolveProjectName(pathResolver: PathResolver): String {
         if (projectName != null) {

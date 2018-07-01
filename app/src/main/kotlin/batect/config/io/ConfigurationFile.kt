@@ -19,6 +19,7 @@ package batect.config.io
 import batect.config.Configuration
 import batect.config.Container
 import batect.config.ContainerMap
+import batect.config.Task
 import batect.config.TaskMap
 
 data class ConfigurationFile(
@@ -31,7 +32,7 @@ data class ConfigurationFile(
 
         return Configuration(
             resolveProjectName(pathResolver),
-            TaskMap(tasks.map { (name, task) -> task.toTask(name) }),
+            TaskMap(tasks.map { (name, task) -> fromFileToTaskConfiguration(name, task) }),
             ContainerMap(containers.map { (name, container) -> fromFileToContainerConfiguration(name, container, pathResolver) }))
     }
 
@@ -41,6 +42,14 @@ data class ConfigurationFile(
         }
 
         return fileContainerConfig.toContainer(containerName, pathResolver)
+    }
+
+    private fun fromFileToTaskConfiguration(taskName: String, fileTaskConfig: TaskFromFile?): Task {
+        if (fileTaskConfig == null) {
+            throw ConfigurationException("Task '$taskName' is invalid: no properties have been provided, container is required")
+        }
+
+        return fileTaskConfig.toTask(taskName)
     }
 
     private fun resolveProjectName(pathResolver: PathResolver): String {

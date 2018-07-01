@@ -793,5 +793,22 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat({ loadConfiguration(config) }, throws(withMessage("Could not load configuration file: Container 'container-2' is invalid: no properties have been provided. At least one of image or build_directory is required")))
             }
         }
+
+        on("loading a configuration file with an empty task") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |containers:
+                |  container-1:
+                |    build_directory: container-1
+                |tasks:
+                |   task-1:
+                |
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Could not load configuration file: Task 'task-1' is invalid: no properties have been provided, container is required")))
+            }
+        }
     }
 })

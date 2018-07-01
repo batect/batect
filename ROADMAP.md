@@ -31,6 +31,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * remove `start` on tasks (has been replaced by `dependencies`)
 * show progress information when cleaning up temporary files or directories in fancy output mode
 * fix #10 (proxies that refer to localhost)
+* 'did you mean...' suggestions when requested task doesn't exist (eg. user runs `./batect unittest`, suggests `unit-test` might be what they meant)
 
 ### Bugs
 * fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information

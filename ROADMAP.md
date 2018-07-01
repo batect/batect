@@ -27,8 +27,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * warn when mounting a directory in the same location as the home directory from `run_as_current_user`
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 * support for Windows
-* don't allow both `start` and `dependencies` to be specified (Jackson doesn't support this natively)
-* remove `start` on tasks (has been replaced by `dependencies`)
 * show progress information when cleaning up temporary files or directories in fancy output mode
 * fix #10 (proxies that refer to localhost)
 * 'did you mean...' suggestions when requested task doesn't exist (eg. user runs `./batect unittest`, suggests `unit-test` might be what they meant)

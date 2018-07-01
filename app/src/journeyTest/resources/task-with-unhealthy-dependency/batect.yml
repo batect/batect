@@ -13,5 +13,5 @@ tasks:
     run:
       container: build-env
       command: echo "This task should never be executed!"
-    start:
+    dependencies:
       - http-server

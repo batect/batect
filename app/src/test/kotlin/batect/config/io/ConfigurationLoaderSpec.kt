@@ -241,42 +241,7 @@ object ConfigurationLoaderSpec : Spek({
             }
         }
 
-        on("loading a valid configuration file with a task with some container dependencies using the 'start' field") {
-            val configString = """
-                |project_name: the_cool_project
-                |
-                |tasks:
-                |  first_task:
-                |    run:
-                |      container: build-env
-                |      command: ./gradlew doStuff
-                |    start:
-                |      - dependency-1
-                |      - dependency-2
-                """.trimMargin()
-
-            val config = loadConfiguration(configString)
-
-            it("should load the project name") {
-                assertThat(config.projectName, equalTo("the_cool_project"))
-            }
-
-            it("should load the single task specified") {
-                assertThat(config.tasks.keys, equalTo(setOf("first_task")))
-            }
-
-            it("should load the configuration for the task") {
-                val task = config.tasks["first_task"]!!
-                assertThat(task.name, equalTo("first_task"))
-                assertThat(task.runConfiguration.container, equalTo("build-env"))
-                assertThat(task.runConfiguration.command, equalTo(Command.parse("./gradlew doStuff")))
-                assertThat(task.dependsOnContainers, equalTo(setOf("dependency-1", "dependency-2")))
-                assertThat(task.prerequisiteTasks, isEmpty)
-                assertThat(task.description, isEmptyString)
-            }
-        }
-
-        on("loading a valid configuration file with a task with some container dependencies using the 'dependencies' field") {
+        on("loading a valid configuration file with a task with some container dependencies") {
             val configString = """
                 |project_name: the_cool_project
                 |
@@ -319,7 +284,7 @@ object ConfigurationLoaderSpec : Spek({
                 |  first_task:
                 |    run:
                 |      container: build-env
-                |    start:
+                |    dependencies:
                 |      - dependency-1
                 |      - dependency-1
                 """.trimMargin()

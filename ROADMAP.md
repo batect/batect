@@ -29,7 +29,17 @@ If there's something you're really keen to see, pull requests are always welcome
 * support for Windows
 * show progress information when cleaning up temporary files or directories in fancy output mode
 * fix #10 (proxies that refer to localhost)
+  * Linux:
+    * Can get IP of host from `[0].IPAM.Config.Gateway` value from running `docker network inspect <network ID>`
+    * Need to run `sudo iptables -I INPUT -i docker0 -j ACCEPT` to allow containers to access host on Linux (but non-default networks don't use `docker0`,
+      they use a different interface, so this command needs to be adjusted to match)
+  * OS X:
+    * Docker 17.06+: use `docker.for.mac.localhost`
+    * Docker 17.12+: use `docker.for.mac.host.internal`
+    * Docker 18.03+: use `host.docker.internal`
+  * local proxy needs to be listening on correct IP(s) - need to warn users about this and about exposing them to the outside world (and thus allowing other people to access their proxy)
 * 'did you mean...' suggestions when requested task doesn't exist (eg. user runs `./batect unittest`, suggests `unit-test` might be what they meant)
+* add config file schema to schemastore.org to enable code completion for supported editors (eg. JetBrains 2018.2 series (https://blog.jetbrains.com/ruby/2018/06/more-yaml-improvements-2018-2-eap/#yaml_json) and VS Code)
 
 ### Bugs
 * fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information

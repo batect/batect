@@ -25,6 +25,9 @@ All documentation is available on [the documentation site](https://batect.charle
 * [Sample projects](https://batect.charleskorn.com/SampleProjects.html)
 * [Comparison with other tools](https://batect.charleskorn.com/Comparison.html)
 
+If you prefer watching videos to reading documentation, you can also watch Charles introduce batect and the rationale behind it
+at the [Evolution by ThoughtWorks conference](https://www.thoughtworks.com/evolution-by-thoughtworks/content#Presentations).
+
 ## Feedback
 
 Please [open an issue on GitHub](https://github.com/charleskorn/batect/issues/new) if you run into a problem, or you can also

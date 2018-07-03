@@ -16,27 +16,29 @@
 
 package batect.utils
 
-data class Version(val major: Int, val minor: Int, val patch: Int) : Comparable<Version> {
+data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: String = "") : Comparable<Version> {
     override fun compareTo(other: Version): Int {
         if (major != other.major) {
             return major.compareTo(other.major)
         } else if (minor != other.minor) {
             return minor.compareTo(other.minor)
-        } else {
+        } else if (patch != other.patch) {
             return patch.compareTo(other.patch)
+        } else {
+            return suffix.compareTo(other.suffix)
         }
     }
 
     override fun toString(): String {
-        if (patch == 0) {
-            return "$major.$minor"
-        } else {
-            return "$major.$minor.$patch"
+        when {
+            suffix != "" -> return "$major.$minor.$patch-$suffix"
+            patch != 0 -> return "$major.$minor.$patch"
+            else -> return "$major.$minor"
         }
     }
 
     companion object {
-        private val regex = """^(?<major>\d+)(\.(?<minor>\d+)(\.(?<patch>\d+))?)?$""".toRegex()
+        private val regex = """^(?<major>\d+)(\.(?<minor>\d+)(\.(?<patch>\d+)(-(?<suffix>[a-zA-Z0-9-.]+))?)?)?$""".toRegex()
 
         fun parse(value: String): Version {
             val match = regex.matchEntire(value)
@@ -48,17 +50,28 @@ data class Version(val major: Int, val minor: Int, val patch: Int) : Comparable<
             val major = match.getIntegerMatch(1)
             val minor = match.getIntegerMatch(3)
             val patch = match.getIntegerMatch(5)
+            val suffix = match.getStringMatch(7)
 
-            return Version(major, minor, patch)
+            return Version(major, minor, patch, suffix)
         }
 
-        private fun MatchResult.getIntegerMatch(index: Int, default: Int = 0): Int {
+        private fun MatchResult.getIntegerMatch(index: Int): Int {
             val group = this.groups[index]
 
             if (group == null) {
-                return default
+                return 0
             } else {
                 return group.value.toInt()
+            }
+        }
+
+        private fun MatchResult.getStringMatch(index: Int): String {
+            val group = this.groups[index]
+
+            if (group == null) {
+                return ""
+            } else {
+                return group.value
             }
         }
     }

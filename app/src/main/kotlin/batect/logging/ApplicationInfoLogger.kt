@@ -36,7 +36,7 @@ class ApplicationInfoLogger(
             data("commandLine", commandLineArgs)
             data("versionInfo", versionInfo)
             data("systemInfo", systemInfo)
-            data("dockerVersionInfo", dockerClient.getDockerVersionInfo())
+            data("dockerVersionInfo", dockerClient.getDockerVersionInfo().toString())
             data("environment", environmentVariables)
         }
     }

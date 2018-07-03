@@ -28,11 +28,12 @@ import batect.os.OutputProcessing
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.testutils.InMemoryLogSink
+import batect.testutils.equalTo
 import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
+import batect.utils.Version
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.any
@@ -586,13 +587,16 @@ object DockerClientSpec : Spek({
         }
 
         describe("getting Docker version information") {
-            val expectedCommand = listOf("docker", "version", "--format", "Client: {{.Client.Version}} (API: {{.Client.APIVersion}}, commit: {{.Client.GitCommit}}), Server: {{.Server.Version}} (API: {{.Server.APIVersion}}, minimum supported API: {{.Server.MinAPIVersion}}, commit: {{.Server.GitCommit}})")
+            val expectedCommand = listOf("docker", "version", "--format", "{{println .Client.Version}}{{println .Client.APIVersion}}{{println .Client.GitCommit}}{{println .Server.Version}}{{println .Server.APIVersion}}{{println .Server.MinAPIVersion}}{{println .Server.GitCommit}}")
 
             on("the Docker version command invocation succeeding") {
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "This is the version info.\n"))
+                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "0.1\n2.3\nabc123\n4.5\n6.7\n8.9\ndef456\n"))
 
                 it("returns the version information from Docker") {
-                    assertThat(client.getDockerVersionInfo(), equalTo("This is the version info."))
+                    assertThat(client.getDockerVersionInfo(), equalTo(DockerVersionInfoRetrievalResult.Succeeded(DockerVersionInfo(
+                        DockerClientVersionInfo(Version(0, 1, 0), "2.3", "abc123"),
+                        DockerServerVersionInfo(Version(4, 5, 0), "6.7", "8.9", "def456")
+                    ))))
                 }
             }
 
@@ -600,7 +604,7 @@ object DockerClientSpec : Spek({
                 whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong\n"))
 
                 it("returns an appropriate message") {
-                    assertThat(client.getDockerVersionInfo(), equalTo("(Could not get Docker version information: Something went wrong)"))
+                    assertThat(client.getDockerVersionInfo(), equalTo(DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because the command failed: Something went wrong")))
                 }
             }
 
@@ -609,7 +613,7 @@ object DockerClientSpec : Spek({
                 whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenThrow(exception)
 
                 it("returns an appropriate message") {
-                    assertThat(client.getDockerVersionInfo(), equalTo("(Could not get Docker version information because RuntimeException was thrown: Something went wrong)"))
+                    assertThat(client.getDockerVersionInfo(), equalTo(DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because RuntimeException was thrown: Something went wrong")))
                 }
             }
         }

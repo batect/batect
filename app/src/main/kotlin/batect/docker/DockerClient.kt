@@ -26,6 +26,7 @@ import batect.os.KilledDuringProcessing
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.ui.ConsoleInfo
+import batect.utils.Version
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
@@ -356,8 +357,11 @@ class DockerClient(
         }
     }
 
-    fun getDockerVersionInfo(): String {
-        val command = listOf("docker", "version", "--format", "Client: {{.Client.Version}} (API: {{.Client.APIVersion}}, commit: {{.Client.GitCommit}}), Server: {{.Server.Version}} (API: {{.Server.APIVersion}}, minimum supported API: {{.Server.MinAPIVersion}}, commit: {{.Server.GitCommit}})")
+    // Why does this method not just throw exceptions when things fail, like the other methods in this class do?
+    // It's used in a number of places where throwing exceptions would be undesirable or unsafe (eg. during logging startup
+    // and when showing version info), so instead we wrap the result.
+    fun getDockerVersionInfo(): DockerVersionInfoRetrievalResult {
+        val command = listOf("docker", "version", "--format", "{{println .Client.Version}}{{println .Client.APIVersion}}{{println .Client.GitCommit}}{{println .Server.Version}}{{println .Server.APIVersion}}{{println .Server.MinAPIVersion}}{{println .Server.GitCommit}}")
 
         try {
             val result = processRunner.runAndCaptureOutput(command)
@@ -368,17 +372,31 @@ class DockerClient(
                     data("result", result)
                 }
 
-                return "(Could not get Docker version information: ${result.output.trim()})"
+                return DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because the command failed: ${result.output.trim()}")
             }
 
-            return result.output.trim()
+            val parts = result.output.trim().split("\n")
+
+            if (parts.size != 7) {
+                logger.error {
+                    message("Received unexpected output from Docker version command.")
+                    data("result", result)
+                }
+
+                return DockerVersionInfoRetrievalResult.Failed("Received unexpected response to Docker version command with ${parts.size} parts: ${result.output.trim()}")
+            }
+
+            return DockerVersionInfoRetrievalResult.Succeeded(DockerVersionInfo(
+                DockerClientVersionInfo(Version.parse(parts[0]), parts[1], parts[2]),
+                DockerServerVersionInfo(Version.parse(parts[3]), parts[4], parts[5], parts[6])
+            ))
         } catch (t: Throwable) {
             logger.error {
                 message("An exception was thrown while getting Docker version info.")
                 exception(t)
             }
 
-            return "(Could not get Docker version information because ${t.javaClass.simpleName} was thrown: ${t.message})"
+            return DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because ${t.javaClass.simpleName} was thrown: ${t.message}")
         }
     }
 
@@ -499,6 +517,16 @@ data class DockerImageBuildProgress(val currentStep: Int, val totalSteps: Int, v
 
             return DockerImageBuildProgress(stepLineMatch.groupValues[1].toInt(), stepLineMatch.groupValues[2].toInt(), stepLineMatch.groupValues[3])
         }
+    }
+}
+
+sealed class DockerVersionInfoRetrievalResult {
+    data class Succeeded(val info: DockerVersionInfo) : DockerVersionInfoRetrievalResult() {
+        override fun toString(): String = info.toString()
+    }
+
+    data class Failed(val message: String) : DockerVersionInfoRetrievalResult() {
+        override fun toString(): String = "($message)"
     }
 }
 

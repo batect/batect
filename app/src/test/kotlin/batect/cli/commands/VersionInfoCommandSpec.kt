@@ -18,6 +18,7 @@ package batect.cli.commands
 
 import batect.VersionInfo
 import batect.docker.DockerClient
+import batect.docker.DockerVersionInfoRetrievalResult
 import batect.os.SystemInfo
 import batect.updates.UpdateNotifier
 import batect.utils.Version
@@ -49,7 +50,7 @@ object VersionInfoCommandSpec : Spek({
             }
 
             val dockerClient = mock<DockerClient> {
-                on { getDockerVersionInfo() } doReturn "DOCKER VERSION INFO"
+                on { getDockerVersionInfo() } doReturn DockerVersionInfoRetrievalResult.Failed("DOCKER VERSION INFO")
             }
 
             val outputStream = ByteArrayOutputStream()
@@ -65,7 +66,7 @@ object VersionInfoCommandSpec : Spek({
                     |Built from commit: THE BUILD COMMIT (commit date: COMMIT DATE)
                     |JVM version:       THE JVM VERSION
                     |OS version:        THE OS VERSION
-                    |Docker version:    DOCKER VERSION INFO
+                    |Docker version:    (DOCKER VERSION INFO)
                     |
                     |For documentation and further information on batect, visit https://github.com/charleskorn/batect.
                     |

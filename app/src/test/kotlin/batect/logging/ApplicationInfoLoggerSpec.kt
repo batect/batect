@@ -18,6 +18,7 @@ package batect.logging
 
 import batect.VersionInfo
 import batect.docker.DockerClient
+import batect.docker.DockerVersionInfoRetrievalResult
 import batect.os.SystemInfo
 import batect.testutils.InMemoryLogSink
 import batect.testutils.hasKeyWithValue
@@ -39,7 +40,7 @@ object ApplicationInfoLoggerSpec : Spek({
         val systemInfo = mock<SystemInfo>()
         val environmentVariables = mapOf("PATH" to "/bin:/usr/bin:/usr/local/bin")
         val dockerClient = mock<DockerClient> {
-            on { getDockerVersionInfo() } doReturn "Docker version 1.2.3.4"
+            on { getDockerVersionInfo() } doReturn DockerVersionInfoRetrievalResult.Failed("Docker version 1.2.3.4")
         }
 
         val infoLogger = ApplicationInfoLogger(logger, versionInfo, systemInfo, dockerClient, environmentVariables)
@@ -73,7 +74,7 @@ object ApplicationInfoLoggerSpec : Spek({
             }
 
             it("includes the Docker version") {
-                assertThat(logSink.loggedMessages.single().additionalData, hasKeyWithValue("dockerVersionInfo", "Docker version 1.2.3.4"))
+                assertThat(logSink.loggedMessages.single().additionalData, hasKeyWithValue("dockerVersionInfo", "(Docker version 1.2.3.4)"))
             }
 
             it("includes environment variables") {

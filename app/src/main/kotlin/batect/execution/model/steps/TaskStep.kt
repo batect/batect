@@ -47,8 +47,8 @@ data class CreateContainerStep(
     val image: DockerImage,
     val network: DockerNetwork
 ) : TaskStep() {
-    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', command: ${command?.parsedCommand
-        ?: "null"}, " +
+    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', " +
+        "command: ${command?.parsedCommand ?: "null"}, " +
         "additional environment variables: [${additionalEnvironmentVariables.map { "${it.key}='${it.value}'" }.joinToString(", ")}], " +
         "additional port mappings: $additionalPortMappings, " +
         "all containers in network: ${allContainersInNetwork.map { "'${it.name}'" }}, " +

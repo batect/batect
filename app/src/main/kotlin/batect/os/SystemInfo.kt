@@ -31,6 +31,12 @@ class SystemInfo(private val processRunner: ProcessRunner, private val systemPro
     val osVersion = "$osName $rawOSVersion ($osArch)"
     val homeDirectory: String = systemProperties.getProperty("user.home")
 
+    val operatingSystem = when {
+        osName.equals("Mac OS X", ignoreCase = true) -> OperatingSystem.Mac
+        osName.equals("Linux", ignoreCase = true) -> OperatingSystem.Linux
+        else -> OperatingSystem.Other
+    }
+
     val userId: Int by lazy { processRunner.runAndCaptureOutput(listOf("id", "-u")).output.trim().toInt() }
     val userName: String by lazy { processRunner.runAndCaptureOutput(listOf("id", "-un")).output.trim() }
     val groupId: Int by lazy { processRunner.runAndCaptureOutput(listOf("id", "-g")).output.trim().toInt() }

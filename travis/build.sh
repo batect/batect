@@ -14,6 +14,10 @@ echo "Running unit tests..."
 ./gradlew check
 echo
 
+echo "Generating code coverage report..."
+./gradlew jacocoTestReport
+echo
+
 echo "Running journey tests..."
 ./gradlew journeyTest
 echo

@@ -19,6 +19,9 @@ install: true
 
 script: ./travis/build.sh
 
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+
 before_deploy: ./gradlew validateRelease
 
 deploy:

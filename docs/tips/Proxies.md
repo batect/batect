@@ -1,7 +1,7 @@
 # Proxies, Docker and batect
 
 {% hint style='tip' %}
-**tl;dr**: batect will do its best to make things just work with proxies, with the exception of pulling images
+**tl;dr**: batect will do its best to make things just work with proxies, but you'll need to configure proxies for pulling images yourself
 {% endhint %}
 
 Most applications expect to find proxy configuration in a number of environment variables. The most common are:
@@ -24,7 +24,7 @@ Each of these are handled slightly differently by Docker, and so batect does its
 
 When pulling an image, the Docker daemon uses any proxy-related environment variables in the Docker daemon's
 environment to determine whether or not to use a proxy. These settings cannot be set at image pull time, so
-batect can't handle these settings for you - you must configure them yourself.
+batect can't configure these settings for you - you must configure them yourself.
 
 On OS X, Docker defaults to using your system's proxy settings, and you can change these by going to the Docker icon >
 Preferences > Proxies.
@@ -86,3 +86,14 @@ batect will propagate the following proxy-related environment variables:
 
 Note that batect will not add missing environment variables if only one in a pair is defined. (For example, if `http_proxy` is
 defined, but `HTTP_PROXY` isn't, then only `http_proxy` is propagated and `HTTP_PROXY` is left unset.)
+
+## Proxies running on the host machine
+
+If you run a local proxy on your host machine such as [Cntlm](http://cntlm.sourceforge.net/), referring to this proxy with `localhost`
+will not work from inside a Docker container, as `localhost` refers to the container, not the host machine.
+
+Starting with v0.16, if you are running batect on OS X with Docker 17.06 or later, batect will automatically rewrite proxy-related environment
+variables that refer to `localhost` so that they refer to the host machine.
+
+If you are running batect on Linux, or using an older version of Docker, batect will not rewrite proxy-related environment variables.
+Support for Linux will be added in the future, check [this issue on GitHub](https://github.com/charleskorn/batect/issues/10) for updates.

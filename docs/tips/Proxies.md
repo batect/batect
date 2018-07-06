@@ -93,7 +93,7 @@ If you run a local proxy on your host machine such as [Cntlm](http://cntlm.sourc
 will not work from inside a Docker container, as `localhost` refers to the container, not the host machine.
 
 Starting with v0.16, if you are running batect on OS X with Docker 17.06 or later, batect will automatically rewrite proxy-related environment
-variables that refer to `localhost` so that they refer to the host machine.
+variables that refer to `localhost`, `127.0.0.1` or `::1` so that they refer to the host machine.
 
 If you are running batect on Linux, or using an older version of Docker, batect will not rewrite proxy-related environment variables.
 Support for Linux will be added in the future, check [this issue on GitHub](https://github.com/charleskorn/batect/issues/10) for updates.

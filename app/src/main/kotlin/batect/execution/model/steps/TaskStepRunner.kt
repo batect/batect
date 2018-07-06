@@ -60,7 +60,7 @@ import batect.execution.model.events.TemporaryDirectoryDeletedEvent
 import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
-import batect.os.ProxyEnvironmentVariablesProvider
+import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import java.io.IOException
 import java.nio.file.Files
 

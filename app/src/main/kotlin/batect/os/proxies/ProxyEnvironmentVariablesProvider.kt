@@ -14,18 +14,28 @@
    limitations under the License.
 */
 
-package batect.os
+package batect.os.proxies
 
 import java.util.TreeSet
 
-class ProxyEnvironmentVariablesProvider(private val hostEnvironmentVariables: Map<String, String>) {
-    constructor() : this(System.getenv())
+class ProxyEnvironmentVariablesProvider(
+    private val preprocessor: ProxyEnvironmentVariablePreprocessor,
+    private val hostEnvironmentVariables: Map<String, String>
+) {
+    constructor(preprocessor: ProxyEnvironmentVariablePreprocessor) : this(preprocessor, System.getenv())
 
     private val proxyEnvironmentVariableNames: Set<String> = setOf("http_proxy", "https_proxy", "ftp_proxy", "no_proxy")
         .toCollection(TreeSet(String.CASE_INSENSITIVE_ORDER))
 
+    private val proxyEnvironmentVariablesNeedingPreprocessing = setOf("http_proxy", "https_proxy", "ftp_proxy")
+        .toCollection(TreeSet(String.CASE_INSENSITIVE_ORDER))
+
     fun getProxyEnvironmentVariables(extraNoProxyEntries: Set<String>): Map<String, String> {
-        val variables = hostEnvironmentVariables.filterKeys { name -> proxyEnvironmentVariableNames.contains(name) }
+        val variables = hostEnvironmentVariables
+            .filterKeys { name -> name in proxyEnvironmentVariableNames }
+            .mapValues { (name, value) ->
+                if (name in proxyEnvironmentVariablesNeedingPreprocessing) preprocessor.process(value) else value
+            }
 
         if (variables.isEmpty() || extraNoProxyEntries.isEmpty()) {
             return variables

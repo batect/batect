@@ -21,7 +21,7 @@ import batect.config.HealthCheckConfig
 import batect.config.PortMapping
 import batect.config.VolumeMount
 import batect.os.Command
-import batect.os.ProxyEnvironmentVariablesProvider
+import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.isEmptyMap
 import batect.testutils.withMessage

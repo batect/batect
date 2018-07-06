@@ -29,6 +29,7 @@ import batect.config.io.PathResolverFactory
 import batect.docker.DockerClient
 import batect.docker.DockerContainerCreationCommandGenerator
 import batect.docker.DockerContainerCreationRequestFactory
+import batect.docker.DockerHostNameResolver
 import batect.docker.DockerImageLabellingStrategy
 import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerDependencyGraphProvider
@@ -47,8 +48,9 @@ import batect.logging.LoggerFactory
 import batect.logging.StandardAdditionalDataSource
 import batect.logging.singletonWithLogger
 import batect.os.ProcessRunner
-import batect.os.ProxyEnvironmentVariablesProvider
 import batect.os.SystemInfo
+import batect.os.proxies.ProxyEnvironmentVariablePreprocessor
+import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.ui.Console
 import batect.ui.ConsoleInfo
 import batect.ui.EventLoggerProvider
@@ -124,6 +126,7 @@ private val dockerModule = Kodein.Module("docker") {
     bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), logger) }
     bind<DockerContainerCreationCommandGenerator>() with singleton { DockerContainerCreationCommandGenerator() }
     bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
+    bind<DockerHostNameResolver>() with singleton { DockerHostNameResolver(instance(), instance()) }
     bind<DockerImageLabellingStrategy>() with singleton { DockerImageLabellingStrategy() }
 }
 
@@ -150,7 +153,8 @@ private val loggingModule = Kodein.Module("logging") {
 
 private val osModule = Kodein.Module("os") {
     bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }
-    bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider() }
+    bind<ProxyEnvironmentVariablePreprocessor>() with singletonWithLogger { logger -> ProxyEnvironmentVariablePreprocessor(instance(), logger) }
+    bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider(instance()) }
     bind<SystemInfo>() with singleton { SystemInfo(instance()) }
 }
 

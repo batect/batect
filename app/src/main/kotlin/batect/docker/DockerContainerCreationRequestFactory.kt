@@ -20,7 +20,7 @@ import batect.config.Container
 import batect.config.PortMapping
 import batect.config.VolumeMount
 import batect.os.Command
-import batect.os.ProxyEnvironmentVariablesProvider
+import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.ui.ConsoleInfo
 import batect.utils.mapToSet
 

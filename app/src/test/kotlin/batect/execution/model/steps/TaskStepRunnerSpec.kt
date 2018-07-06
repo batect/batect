@@ -74,7 +74,7 @@ import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 import batect.logging.Logger
 import batect.logging.Severity
 import batect.os.Command
-import batect.os.ProxyEnvironmentVariablesProvider
+import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo

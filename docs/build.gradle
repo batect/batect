@@ -26,14 +26,24 @@ task installGitBookPlugins(type: Exec) {
 
 def outputDir = getBuildDir().toPath().resolve("book")
 
-task build(type: Exec) {
-    description 'Build the documentation.'
-    group 'Build'
-
+task buildGitBook(type: Exec) {
     dependsOn installYarnDependencies
     dependsOn installGitBookPlugins
 
     commandLine 'yarn', 'exec', 'gitbook', 'build', '.', outputDir
+}
+
+task copyConfigSchema(type: Copy) {
+    from "${rootProject.rootDir}/tools/schema/configSchema.json"
+    into outputDir
+}
+
+task build {
+    description 'Build the documentation.'
+    group 'Build'
+
+    dependsOn buildGitBook
+    dependsOn copyConfigSchema
 }
 
 task serve(type: Exec) {

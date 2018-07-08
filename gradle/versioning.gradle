@@ -1,0 +1,55 @@
+/*
+   Copyright 2017-2018 Charles Korn.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+allprojects {
+    version = '0.15.4'
+}
+
+task validateIsReleaseBuild {
+    description 'Validates that the current build is a release build.'
+    group 'Verification'
+
+    doLast {
+        if (!project.hasProperty("releaseBuild")) {
+            throw new Exception("The releaseBuild property was not set. This will cause the version information to be incorrect.")
+        }
+    }
+}
+
+task validateVersionMatchesTag {
+    description 'Validates that the version currently configured in Gradle matches the current Git commit tag.'
+    group 'Verification'
+
+    doLast {
+        def gitTag = runProcess("git", "describe", "--dirty", "--candidates=0")
+
+        if (gitTag.contains("-dirty")) {
+            throw new Exception("The working copy is dirty.")
+        }
+
+        if (gitTag != project.version) {
+            throw new Exception("The tag for this commit is '$gitTag', but the project version is set to '$project.version'.")
+        }
+    }
+}
+
+task validateRelease {
+    description 'Validates that the current commit is ready to be released.'
+    group 'Verification'
+
+    dependsOn validateIsReleaseBuild
+    dependsOn validateVersionMatchesTag
+}

@@ -1,0 +1,111 @@
+/*
+   Copyright 2017-2018 Charles Korn.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+// This is all based on https://github.com/sylvainlaurent/yaml-json-validator-maven-plugin.
+
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.github.fge.jsonschema.core.load.Dereferencing
+import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration
+import com.github.fge.jsonschema.core.report.LogLevel
+import com.github.fge.jsonschema.core.report.ProcessingReport
+import com.github.fge.jsonschema.main.JsonSchema
+import com.github.fge.jsonschema.main.JsonSchemaFactory
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.6'
+        classpath 'com.github.java-json-tools:json-schema-validator:2.2.10'
+    }
+}
+
+JsonSchema loadSchema(String schemaPath) {
+    LoadingConfiguration loadingConfiguration = LoadingConfiguration.newBuilder()
+        .dereferencing(Dereferencing.INLINE).freeze();
+    JsonSchemaFactory factory = JsonSchemaFactory.newBuilder()
+        .setLoadingConfiguration(loadingConfiguration).freeze();
+
+    return factory.getJsonSchema("file://$schemaPath")
+}
+
+boolean validateFileAgainstSchema(File fileToValidate, JsonSchema schema) {
+    final def schemaLogLevelsToGradleLogLevels = [
+        (LogLevel.DEBUG): org.gradle.api.logging.LogLevel.DEBUG,
+        (LogLevel.ERROR): org.gradle.api.logging.LogLevel.ERROR,
+        (LogLevel.FATAL): org.gradle.api.logging.LogLevel.ERROR,
+        (LogLevel.INFO): org.gradle.api.logging.LogLevel.INFO,
+        (LogLevel.NONE): org.gradle.api.logging.LogLevel.INFO,
+        (LogLevel.WARNING): org.gradle.api.logging.LogLevel.WARN
+    ]
+
+    try {
+        ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory())
+        JsonNode parsedFile = yamlMapper.readTree(fileToValidate)
+
+        ProcessingReport report = schema.validate(parsedFile)
+
+        report.forEach {
+            logger.log(schemaLogLevelsToGradleLogLevels[it.logLevel], "{}: {}: {}", it.logLevel, fileToValidate, it.toString())
+        }
+
+        return report.success
+
+    } catch (e) {
+        logger.error('Error: {}: could not validate file due to exception: {}', fileToValidate, e)
+
+        return false
+    }
+}
+
+task validateJourneyTestsAgainstSchema {
+    description 'Checks that all journey test configuration files are acceptable according to the schema.'
+    group 'Verification'
+
+    def schemaFile = "$projectDir/configSchema.json"
+    def configFiles = fileTree(dir: "${rootProject.projectDir}/app/src/journeyTest/resources", include: '**/*.yml')
+
+    inputs.file schemaFile
+    inputs.files configFiles
+
+    doLast {
+        def schema = loadSchema(schemaFile)
+        def failingFiles = []
+
+        configFiles.forEach {
+            def succeeded = validateFileAgainstSchema(it, schema)
+
+            if (!succeeded) {
+                failingFiles += it
+            }
+        }
+
+        if (!failingFiles.isEmpty()) {
+            throw new RuntimeException("Schema validation failed for ${failingFiles.size()} file(s).")
+        }
+    }
+}
+
+task check {
+    description 'Runs all checks.'
+    group 'Verification'
+
+    dependsOn validateJourneyTestsAgainstSchema
+}

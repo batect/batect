@@ -34,8 +34,8 @@ spotless {
     format 'misc', {
         target fileTree(
             dir: '.',
-            include: ['**/*.gradle', '**/*.md', '**/.gitignore', '**/*.yaml', '**/*.yml', '**/*.sh', '**/Dockerfile', '**/*.py'],
-            excludes: ['**/node_modules/*', 'docs/gradle/deploy.sh']
+            include: ['**/*.gradle', '**/*.md', '**/.gitignore', '**/*.yaml', '**/*.yml', '**/*.sh', '**/Dockerfile', '**/*.py', '**/*.json'],
+            excludes: ['**/node_modules/*', 'tools/viz-tool/src/build/*', 'docs/build/*']
         )
 
         trimTrailingWhitespace()
@@ -46,6 +46,6 @@ spotless {
     format 'gradle', {
         target '**/*.gradle'
 
-        licenseHeader "/*$licenseText*/\n\n", "(buildscript|import|apply|ext|allprojects|task|sourceSets|plugins|//)"
+        licenseHeader "/*$licenseText*/\n\n", "(buildscript|import|apply|ext|allprojects|task|sourceSets|plugins|def|//)"
     }
 }

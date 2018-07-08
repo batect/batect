@@ -25,7 +25,7 @@ task validateVersionMatchesTag {
             throw new Exception("The working copy is dirty.")
         }
 
-        if (gitTag != project.version) {
+        if (gitTag != project.version.toString()) {
             throw new Exception("The tag for this commit is '$gitTag', but the project version is set to '$project.version'.")
         }
     }

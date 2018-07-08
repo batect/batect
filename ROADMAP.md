@@ -36,7 +36,6 @@ If there's something you're really keen to see, pull requests are always welcome
       they use a different interface, so this command needs to be adjusted to match)
     * Local proxy needs to be listening on correct IP(s) - need to warn users about this and about exposing them to the outside world (and thus allowing other people to access their proxy)
 * 'did you mean...' suggestions when requested task doesn't exist (eg. user runs `./batect unittest`, suggests `unit-test` might be what they meant)
-* add config file schema to schemastore.org to enable code completion for supported editors (eg. JetBrains 2018.2 series (https://blog.jetbrains.com/ruby/2018/06/more-yaml-improvements-2018-2-eap/#yaml_json) and VS Code)
 
 ### Bugs
 * fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information

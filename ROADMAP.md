@@ -25,6 +25,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * warn when using an image without a tag or with tag `latest`
   * warn when mounting files / directories in non-read-only modes without `run_as_current_user` enabled
   * warn when mounting a directory in the same location as the home directory from `run_as_current_user`
+  * warn when proxy environment variables aren't in URL format or don't have the `http` or `https` schemes
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 * support for Windows
 * show progress information when cleaning up temporary files or directories in fancy output mode
@@ -33,8 +34,7 @@ If there's something you're really keen to see, pull requests are always welcome
     * Can get IP of host from `[0].IPAM.Config.Gateway` value from running `docker network inspect <network ID>`
     * Need to run `sudo iptables -I INPUT -i docker0 -j ACCEPT` to allow containers to access host on Linux (but non-default networks don't use `docker0`,
       they use a different interface, so this command needs to be adjusted to match)
-  * local proxy needs to be listening on correct IP(s) - need to warn users about this and about exposing them to the outside world (and thus allowing other people to access their proxy)
-  * update documentation
+    * Local proxy needs to be listening on correct IP(s) - need to warn users about this and about exposing them to the outside world (and thus allowing other people to access their proxy)
 * 'did you mean...' suggestions when requested task doesn't exist (eg. user runs `./batect unittest`, suggests `unit-test` might be what they meant)
 * add config file schema to schemastore.org to enable code completion for supported editors (eg. JetBrains 2018.2 series (https://blog.jetbrains.com/ruby/2018/06/more-yaml-improvements-2018-2-eap/#yaml_json) and VS Code)
 

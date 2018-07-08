@@ -14,21 +14,6 @@
    limitations under the License.
 */
 
-allprojects {
-    version = '0.15.4'
-}
-
-task validateIsReleaseBuild {
-    description 'Validates that the current build is a release build.'
-    group 'Verification'
-
-    doLast {
-        if (!project.hasProperty("releaseBuild")) {
-            throw new Exception("The releaseBuild property was not set. This will cause the version information to be incorrect.")
-        }
-    }
-}
-
 task validateVersionMatchesTag {
     description 'Validates that the version currently configured in Gradle matches the current Git commit tag.'
     group 'Verification'
@@ -50,6 +35,10 @@ task validateRelease {
     description 'Validates that the current commit is ready to be released.'
     group 'Verification'
 
-    dependsOn validateIsReleaseBuild
     dependsOn validateVersionMatchesTag
+}
+
+reckon {
+    scopeFromProp()
+    stageFromProp('dev', 'final')
 }

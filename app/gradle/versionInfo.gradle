@@ -27,13 +27,27 @@ String getCurrentGitCommitDate() {
     return runProcess('git', 'show', '-s', '--format=%ci', 'HEAD')
 }
 
+boolean isReleaseBuild() {
+    return !project.version.toString().contains("-")
+}
+
 String getBuildDate() {
-    if (project.hasProperty("releaseBuild")) {
+    if (isReleaseBuild()) {
         def dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z")
         dateFormat.setTimeZone(new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC"))
         return dateFormat.format(new Date())
     } else {
         return "(the build date is not populated for development builds)"
+    }
+}
+
+String getVersionForVersionInfo() {
+    def generatedVersion = project.version.toString()
+
+    if (generatedVersion.contains("+")) {
+        return generatedVersion.substring(0, generatedVersion.indexOf("+"))
+    } else {
+        return generatedVersion
     }
 }
 
@@ -49,7 +63,7 @@ String versionInfoFileContents() {
         |class VersionInfo {
         |    val gitCommitHash = "${getCurrentGitCommit()}"
         |    val gitCommitDate = "${getCurrentGitCommitDate()}"
-        |    val version = Version.parse("$project.version")
+        |    val version = Version.parse("${getVersionForVersionInfo()}")
         |    val buildDate = "${getBuildDate()}"
         |}
         |""".stripMargin("|")
@@ -61,7 +75,7 @@ task generateVersionInfoFile {
     description 'Generates the version info file that is compiled into the application.'
     group 'Build'
 
-    inputs.property("version", project.version)
+    inputs.property("version", { getVersionForVersionInfo() })
     outputs.file versionInfoFile
 
     outputs.upToDateWhen {

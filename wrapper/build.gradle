@@ -82,7 +82,7 @@ task build {
     def scriptFile = scriptDir.resolve(rootProject.name)
 
     inputs.file templateFile
-    inputs.property("version", { version })
+    inputs.property("version", { version.toString() })
     outputs.file scriptFile
 
     doLast {

@@ -14,17 +14,8 @@
    limitations under the License.
 */
 
-allprojects {
-    buildscript {
-        repositories {
-            mavenCentral()
-            jcenter()
-        }
-    }
-
-    repositories {
-        mavenCentral()
-    }
+plugins {
+    id 'com.diffplug.gradle.spotless' version '3.13.0'
 }
 
 apply from: "$rootDir/gradle/spotless.gradle"

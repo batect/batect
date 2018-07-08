@@ -14,18 +14,6 @@
    limitations under the License.
 */
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath "com.diffplug.spotless:spotless-plugin-gradle:3.5.2"
-    }
-}
-
-apply plugin: com.diffplug.gradle.spotless.SpotlessPlugin
-
 ext.licenseText = """
    Copyright 2017-2018 Charles Korn.
 
@@ -58,13 +46,6 @@ spotless {
     format 'gradle', {
         target '**/*.gradle'
 
-        licenseHeader "/*$licenseText*/\n\n", "(buildscript|import|apply|ext|allprojects|task|sourceSets|//)"
+        licenseHeader "/*$licenseText*/\n\n", "(buildscript|import|apply|ext|allprojects|task|sourceSets|plugins|//)"
     }
-}
-
-task check {
-    description 'Runs all checks.'
-    group 'Verification'
-
-    dependsOn ':spotlessCheck'
 }

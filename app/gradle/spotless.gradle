@@ -14,18 +14,6 @@
    limitations under the License.
 */
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath "com.diffplug.spotless:spotless-plugin-gradle:3.5.2"
-    }
-}
-
-apply plugin: com.diffplug.gradle.spotless.SpotlessPlugin
-
 ext.kotlinLicenseHeader = "/*$licenseText*/\n\n"
 
 spotless {

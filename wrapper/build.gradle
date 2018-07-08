@@ -66,14 +66,6 @@ task test(type: Exec) {
     }
 }
 
-task check {
-    description 'Runs all checks.'
-    group 'Verification'
-
-    dependsOn shellcheck
-    dependsOn test
-}
-
 task build {
     description 'Build the wrapper script.'
     group 'Build'
@@ -87,10 +79,19 @@ task build {
 
     doLast {
         def script = templateFile.text
-            .replace("VERSION-GOES-HERE", version)
+            .replace("VERSION-GOES-HERE", version.toString())
             .replace("DOWNLOAD-URL-GOES-HERE", "https://github.com/charleskorn/batect/releases/download/$version/batect-${version}.jar")
 
         Files.createDirectories scriptDir
         scriptFile.text = script
     }
+}
+
+task check {
+    description 'Runs all checks.'
+    group 'Verification'
+
+    dependsOn shellcheck
+    dependsOn test
+    dependsOn build
 }

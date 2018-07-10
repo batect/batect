@@ -1,5 +1,7 @@
 # IDE integration
 
+## Coding assistance
+
 {% hint style='tip' %}
 **tl;dr**: some IDEs can't provide their advanced features (eg. code completion) when using batect, but there are solutions
 {% endhint %}
@@ -20,3 +22,18 @@ Some solutions for this include:
 
 (Have you tried something else that worked? Or do you use another IDE or text editor that supports using runtimes inside a
 container? Please [submit a PR](https://github.com/charleskorn/batect/pulls) to add to the list above.)
+
+## Editing `batect.yml`
+
+{% hint style='tip' %}
+**tl;dr**: if your editor supports [schemastore.org](http://schemastore.org/json/) for YAML files, you'll get code completion
+and other nice features when editing `batect.yml`
+{% endhint %}
+
+batect has a schema published on [schemastore.org](http://schemastore.org/json/), which means that if your editor supports
+schemastore.org for YAML files, you'll get code completion, validation and other nice features automatically.
+
+Editors known to support this include:
+
+* Visual Studio Code with the [YAML Support by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) extension
+* JetBrains IDEs (such as IntelliJ, PyCharm and RubyMine) starting with the 2018.2 release

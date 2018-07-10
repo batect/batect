@@ -1,0 +1,51 @@
+project_name: many-tasks-test
+
+containers:
+  with-image:
+    image: alpine:3.5
+    command: do-the-thing
+    environment:
+      - THING=value
+    volumes:
+      - .:/code:cached
+      - ./.cache:/tmp/cache
+      - local: ~/.ssh
+        container: /root/.ssh
+      - local: ~/.m2
+        container: /root/.m2
+        options: consistent
+    ports:
+      - 123:456
+      - local: 789
+        container: 111
+    dependencies:
+      - abc
+    health_check:
+      retries: 1
+      interval: 2s
+      start_period: 5s
+    run_as_current_user:
+      enabled: true
+      home_directory: /root
+
+  with-build-dir:
+    build_directory: test
+    run_as_current_user:
+      enabled: false
+
+tasks:
+  task-1:
+    description: do the first thing
+    prerequisites:
+      - other-task
+    dependencies:
+      - other-container
+    run:
+      container: build-env
+      command: sh -c "echo 'This is some output from task 1' && exit 123"
+      environment:
+        - VAR=value
+      ports:
+        - 222:333
+        - local: 444
+          container: 555

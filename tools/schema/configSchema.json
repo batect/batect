@@ -63,7 +63,7 @@
         },
         "ports": {
           "description": "List of ports to make available to the host machine",
-          "$ref": "#/defintiions/portMappingList"
+          "$ref": "#/definitions/portMappingList"
         },
         "dependencies": {
           "description": "List of other containers that should be started and healthy before starting this container",

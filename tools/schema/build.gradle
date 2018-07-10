@@ -37,34 +37,31 @@ buildscript {
     }
 }
 
-JsonSchema loadSchema(String schemaPath) {
+JsonSchema loadSchema(File schemaFile) {
     LoadingConfiguration loadingConfiguration = LoadingConfiguration.newBuilder()
         .dereferencing(Dereferencing.INLINE).freeze();
     JsonSchemaFactory factory = JsonSchemaFactory.newBuilder()
         .setLoadingConfiguration(loadingConfiguration).freeze();
 
-    return factory.getJsonSchema("file://$schemaPath")
+    JsonNode schema = new ObjectMapper().readTree(schemaFile)
+
+    ProcessingReport schemaValidationReport = factory.syntaxValidator.validateSchema(schema)
+    printReport(schemaValidationReport, schemaFile)
+
+    if (!schemaValidationReport.success) {
+        throw new RuntimeException("The schema $schemaFile is not valid.")
+    }
+
+    return factory.getJsonSchema(schema)
 }
 
 boolean validateFileAgainstSchema(File fileToValidate, JsonSchema schema) {
-    final def schemaLogLevelsToGradleLogLevels = [
-        (LogLevel.DEBUG): org.gradle.api.logging.LogLevel.DEBUG,
-        (LogLevel.ERROR): org.gradle.api.logging.LogLevel.ERROR,
-        (LogLevel.FATAL): org.gradle.api.logging.LogLevel.ERROR,
-        (LogLevel.INFO): org.gradle.api.logging.LogLevel.INFO,
-        (LogLevel.NONE): org.gradle.api.logging.LogLevel.INFO,
-        (LogLevel.WARNING): org.gradle.api.logging.LogLevel.WARN
-    ]
-
     try {
         ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory())
         JsonNode parsedFile = yamlMapper.readTree(fileToValidate)
 
         ProcessingReport report = schema.validate(parsedFile)
-
-        report.forEach {
-            logger.log(schemaLogLevelsToGradleLogLevels[it.logLevel], "{}: {}: {}", it.logLevel, fileToValidate, it.toString())
-        }
+        printReport(report, fileToValidate)
 
         return report.success
 
@@ -75,12 +72,29 @@ boolean validateFileAgainstSchema(File fileToValidate, JsonSchema schema) {
     }
 }
 
+void printReport(ProcessingReport report, File sourceFile) {
+    final def schemaLogLevelsToGradleLogLevels = [
+        (LogLevel.DEBUG): org.gradle.api.logging.LogLevel.DEBUG,
+        (LogLevel.ERROR): org.gradle.api.logging.LogLevel.ERROR,
+        (LogLevel.FATAL): org.gradle.api.logging.LogLevel.ERROR,
+        (LogLevel.INFO): org.gradle.api.logging.LogLevel.INFO,
+        (LogLevel.NONE): org.gradle.api.logging.LogLevel.INFO,
+        (LogLevel.WARNING): org.gradle.api.logging.LogLevel.WARN
+    ]
+
+    report.forEach {
+        logger.log(schemaLogLevelsToGradleLogLevels[it.logLevel], "{}: {}: {}", it.logLevel, sourceFile.toString(), it.toString())
+    }
+}
+
 task validateJourneyTestsAgainstSchema {
     description 'Checks that all journey test configuration files are acceptable according to the schema.'
     group 'Verification'
 
-    def schemaFile = "$projectDir/configSchema.json"
-    def configFiles = fileTree(dir: "${rootProject.projectDir}/app/src/journeyTest/resources", include: '**/*.yml')
+    def schemaFile = new File("$projectDir/configSchema.json")
+    def configFiles =
+        fileTree(dir: "${rootProject.projectDir}/app/src/journeyTest/resources", include: '**/*.yml') +
+        fileTree(dir: "$projectDir/tests", include: '**/*.yml')
 
     inputs.file schemaFile
     inputs.files configFiles

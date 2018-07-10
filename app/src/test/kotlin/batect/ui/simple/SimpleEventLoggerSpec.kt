@@ -21,6 +21,10 @@ import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.execution.RunOptions
+import batect.execution.model.events.ContainerBecameHealthyEvent
+import batect.execution.model.events.ContainerStartedEvent
+import batect.execution.model.events.ImageBuiltEvent
+import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.execution.model.steps.CleanupStep
@@ -113,7 +117,7 @@ object SimpleEventLoggerSpec : Spek({
 
                 it("prints a message to the output") {
                     inOrder(whiteConsole) {
-                        verify(whiteConsole).print("Starting dependency ")
+                        verify(whiteConsole).print("Starting ")
                         verify(whiteConsole).printBold("the-cool-container")
                         verify(whiteConsole).println("...")
                     }
@@ -224,6 +228,57 @@ object SimpleEventLoggerSpec : Spek({
                     inOrder(redErrorConsole) {
                         verify(redErrorConsole).println()
                         verify(redErrorConsole).println("Something went wrong.")
+                    }
+                }
+            }
+
+            on("when an 'image built' event is posted") {
+                val event = ImageBuiltEvent(container, DockerImage("abc-123"))
+                logger.postEvent(event)
+
+                it("prints a message to the output") {
+                    inOrder(whiteConsole) {
+                        verify(whiteConsole).print("Built ")
+                        verify(whiteConsole).printBold("the-cool-container")
+                        verify(whiteConsole).println(".")
+                    }
+                }
+            }
+
+            on("when an 'image pulled' event is posted") {
+                val event = ImagePulledEvent(DockerImage("the-cool-image:1.2.3"))
+                logger.postEvent(event)
+
+                it("prints a message to the output") {
+                    inOrder(whiteConsole) {
+                        verify(whiteConsole).print("Pulled ")
+                        verify(whiteConsole).printBold("the-cool-image:1.2.3")
+                        verify(whiteConsole).println(".")
+                    }
+                }
+            }
+
+            on("when a 'container started' event is posted") {
+                val event = ContainerStartedEvent(container)
+                logger.postEvent(event)
+
+                it("prints a message to the output") {
+                    inOrder(whiteConsole) {
+                        verify(whiteConsole).print("Started ")
+                        verify(whiteConsole).printBold("the-cool-container")
+                        verify(whiteConsole).println(".")
+                    }
+                }
+            }
+
+            on("when a 'container became healthy' event is posted") {
+                val event = ContainerBecameHealthyEvent(container)
+                logger.postEvent(event)
+
+                it("prints a message to the output") {
+                    inOrder(whiteConsole) {
+                        verify(whiteConsole).printBold("the-cool-container")
+                        verify(whiteConsole).println(" has become healthy.")
                     }
                 }
             }

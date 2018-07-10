@@ -18,6 +18,10 @@ package batect.ui.simple
 
 import batect.config.Container
 import batect.execution.RunOptions
+import batect.execution.model.events.ContainerBecameHealthyEvent
+import batect.execution.model.events.ContainerStartedEvent
+import batect.execution.model.events.ImageBuiltEvent
+import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.BuildImageStep
@@ -45,8 +49,12 @@ class SimpleEventLogger(
 
     override fun postEvent(event: TaskEvent) {
         synchronized(lock) {
-            if (event is TaskFailedEvent) {
-                logTaskFailure(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
+            when (event) {
+                is TaskFailedEvent -> logTaskFailure(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
+                is ImageBuiltEvent -> logImageBuilt(event.container)
+                is ImagePulledEvent -> logImagePulled(event.image.id)
+                is ContainerStartedEvent -> logContainerStarted(event.container)
+                is ContainerBecameHealthyEvent -> logContainerBecameHealthy(event.container)
             }
         }
     }
@@ -63,7 +71,7 @@ class SimpleEventLogger(
             when (step) {
                 is BuildImageStep -> logImageBuildStarting(step.container)
                 is PullImageStep -> logImagePullStarting(step.imageName)
-                is StartContainerStep -> logDependencyContainerStarting(step.container)
+                is StartContainerStep -> logContainerStarting(step.container)
                 is RunContainerStep -> logCommandStarting(step.container, commands[step.container])
                 is CreateContainerStep -> commands[step.container] = step.command
                 is CleanupStep -> logCleanUpStarting()
@@ -79,11 +87,27 @@ class SimpleEventLogger(
         }
     }
 
+    private fun logImageBuilt(container: Container) {
+        console.withColor(ConsoleColor.White) {
+            print("Built ")
+            printBold(container.name)
+            println(".")
+        }
+    }
+
     private fun logImagePullStarting(imageName: String) {
         console.withColor(ConsoleColor.White) {
             print("Pulling ")
             printBold(imageName)
             println("...")
+        }
+    }
+
+    private fun logImagePulled(imageName: String) {
+        console.withColor(ConsoleColor.White) {
+            print("Pulled ")
+            printBold(imageName)
+            println(".")
         }
     }
 
@@ -101,11 +125,26 @@ class SimpleEventLogger(
         }
     }
 
-    private fun logDependencyContainerStarting(dependency: Container) {
+    private fun logContainerStarting(container: Container) {
         console.withColor(ConsoleColor.White) {
-            print("Starting dependency ")
-            printBold(dependency.name)
+            print("Starting ")
+            printBold(container.name)
             println("...")
+        }
+    }
+
+    private fun logContainerStarted(container: Container) {
+        console.withColor(ConsoleColor.White) {
+            print("Started ")
+            printBold(container.name)
+            println(".")
+        }
+    }
+
+    private fun logContainerBecameHealthy(container: Container) {
+        console.withColor(ConsoleColor.White) {
+            printBold(container.name)
+            println(" has become healthy.")
         }
     }
 

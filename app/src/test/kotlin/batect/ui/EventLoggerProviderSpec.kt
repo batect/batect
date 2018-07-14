@@ -16,8 +16,11 @@
 
 package batect.ui
 
+import batect.config.Container
 import batect.execution.ContainerDependencyGraph
+import batect.execution.ContainerDependencyGraphNode
 import batect.execution.RunOptions
+import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.fancy.FancyEventLogger
 import batect.ui.fancy.StartupProgressDisplay
 import batect.ui.fancy.StartupProgressDisplayProvider
@@ -39,7 +42,15 @@ object EventLoggerProviderSpec : Spek({
         val failureErrorMessageFormatter = mock<FailureErrorMessageFormatter>()
         val console = mock<Console>()
         val errorConsole = mock<Console>()
-        val graph = mock<ContainerDependencyGraph>()
+        val container1 = Container("container-1", imageSourceDoesNotMatter())
+        val container2 = Container("container-2", imageSourceDoesNotMatter())
+        val graph = mock<ContainerDependencyGraph> {
+            on { allNodes } doReturn setOf(
+                ContainerDependencyGraphNode(container1, null, emptyMap(), emptySet(), false, emptySet(), mock()),
+                ContainerDependencyGraphNode(container2, null, emptyMap(), emptySet(), false, emptySet(), mock())
+            )
+        }
+
         val runOptions = mock<RunOptions>()
 
         given("quiet output mode has not been forced on") {
@@ -58,6 +69,10 @@ object EventLoggerProviderSpec : Spek({
 
                 it("returns a simple event logger") {
                     assertThat(logger, isA<SimpleEventLogger>())
+                }
+
+                it("passes the set of containers to the event logger") {
+                    assertThat((logger as SimpleEventLogger).containers, equalTo(setOf(container1, container2)))
                 }
 
                 it("passes the failure error message formatter to the event logger") {
@@ -130,6 +145,10 @@ object EventLoggerProviderSpec : Spek({
 
                     it("returns a simple event logger") {
                         assertThat(logger, isA<SimpleEventLogger>())
+                    }
+
+                    it("passes the set of containers to the event logger") {
+                        assertThat((logger as SimpleEventLogger).containers, equalTo(setOf(container1, container2)))
                     }
 
                     it("passes the failure error message formatter to the event logger") {

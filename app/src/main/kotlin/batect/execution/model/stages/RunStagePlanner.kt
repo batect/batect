@@ -37,7 +37,7 @@ class RunStagePlanner(private val logger: Logger) {
     fun createStage(graph: ContainerDependencyGraph): RunStage {
         val allContainersInNetwork = graph.allNodes.mapToSet { it.container }
 
-        val rules = graph.allNodes.flatMapToSet { stepsFor(it, graph.config.projectName, allContainersInNetwork) } +
+        val rules = graph.allNodes.flatMapToSet { stepsFor(it, allContainersInNetwork) } +
             CreateTaskNetworkStepRule
 
         logger.info {
@@ -48,16 +48,16 @@ class RunStagePlanner(private val logger: Logger) {
         return RunStage(rules)
     }
 
-    private fun stepsFor(node: ContainerDependencyGraphNode, projectName: String, allContainersInNetwork: Set<Container>): Set<TaskStepRule> {
+    private fun stepsFor(node: ContainerDependencyGraphNode, allContainersInNetwork: Set<Container>): Set<TaskStepRule> {
         return startupRulesFor(node) +
-            imageCreationRuleFor(node.container, projectName) +
+            imageCreationRuleFor(node.container) +
             CreateContainerStepRule(node.container, node.command, node.additionalEnvironmentVariables, node.additionalPortMappings, allContainersInNetwork)
     }
 
-    private fun imageCreationRuleFor(container: Container, projectName: String): TaskStepRule {
+    private fun imageCreationRuleFor(container: Container): TaskStepRule {
         return when (container.imageSource) {
             is PullImage -> PullImageStepRule(container.imageSource.imageName)
-            is BuildImage -> BuildImageStepRule(projectName, container)
+            is BuildImage -> BuildImageStepRule(container.imageSource.buildDirectory)
         }
     }
 

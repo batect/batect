@@ -16,11 +16,9 @@
 
 package batect.execution.model.rules.run
 
-import batect.config.Container
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.BuildImageStep
 import batect.testutils.equalTo
-import batect.testutils.imageSourceDoesNotMatter
 import com.natpryce.hamkrest.assertion.assertThat
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -29,20 +27,19 @@ import org.jetbrains.spek.api.dsl.on
 
 object BuildImageStepRuleSpec : Spek({
     describe("a build image step rule") {
-        val container = Container("the-container", imageSourceDoesNotMatter())
-        val rule = BuildImageStepRule("the-project", container)
+        val rule = BuildImageStepRule("/some-build-dir")
 
         on("evaluating the rule") {
             val result = rule.evaluate(emptySet())
 
             it("returns a 'build image' step") {
-                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(BuildImageStep("the-project", container))))
+                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(BuildImageStep("/some-build-dir"))))
             }
         }
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(rule.toString(), equalTo("BuildImageStepRule(project name: 'the-project', container: 'the-container')"))
+                assertThat(rule.toString(), equalTo("BuildImageStepRule(build directory: '/some-build-dir')"))
             }
         }
     }

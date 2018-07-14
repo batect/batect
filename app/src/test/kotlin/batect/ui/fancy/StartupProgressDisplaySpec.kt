@@ -16,12 +16,10 @@
 
 package batect.ui.fancy
 
-import batect.config.Container
 import batect.docker.DockerNetwork
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.testutils.createForEachTest
-import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console
 import batect.ui.ConsolePrintStatements
 import com.nhaarman.mockito_kotlin.any
@@ -53,7 +51,7 @@ object StartupProgressDisplaySpec : Spek({
         }
 
         on("receiving notification that a step is about to start") {
-            val step = BuildImageStep("some-project", Container("some-container", imageSourceDoesNotMatter()))
+            val step = BuildImageStep("/some-image-dir")
             display.onStepStarting(step)
 
             it("forwards it to each progress line") {

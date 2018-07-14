@@ -29,12 +29,12 @@ data class TaskNetworkCreationFailedEvent(val message: String) : TaskFailedEvent
     override fun toString() = "${this::class.simpleName}(message: '$message')"
 }
 
-data class ImageBuildFailedEvent(val container: Container, val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', message: '$message')"
+data class ImageBuildFailedEvent(val buildDirectory: String, val message: String) : TaskFailedEvent() {
+    override fun toString() = "${this::class.simpleName}(build directory: '$buildDirectory', message: '$message')"
 }
 
 data class ImagePullFailedEvent(val imageName: String, val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(message: '$message')"
+    override fun toString() = "${this::class.simpleName}(image: '$imageName', message: '$message')"
 }
 
 data class ContainerCreationFailedEvent(val container: Container, val message: String) : TaskFailedEvent() {

@@ -16,8 +16,6 @@
 
 package batect.execution.model.steps
 
-import batect.config.Container
-import batect.testutils.imageSourceDoesNotMatter
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
@@ -27,12 +25,11 @@ import org.jetbrains.spek.api.dsl.on
 
 object BuildImageStepSpec : Spek({
     describe("a 'build image' step") {
-        val container = Container("the-container", imageSourceDoesNotMatter())
-        val step = BuildImageStep("the-project", container)
+        val step = BuildImageStep("/image-build-dir")
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(step.toString(), equalTo("BuildImageStep(project name: 'the-project', container: 'the-container')"))
+                assertThat(step.toString(), equalTo("BuildImageStep(build directory: '/image-build-dir')"))
             }
         }
     }

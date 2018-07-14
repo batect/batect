@@ -16,8 +16,6 @@
 
 package batect.execution.model.events
 
-import batect.config.BuildImage
-import batect.config.Container
 import batect.docker.DockerImageBuildProgress
 import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
@@ -27,12 +25,11 @@ import org.jetbrains.spek.api.dsl.on
 
 object ImageBuildProgressEventSpec : Spek({
     describe("an 'image build progress' event") {
-        val container = Container("container-1", BuildImage("/container-1-build-dir"))
-        val event = ImageBuildProgressEvent(container, DockerImageBuildProgress(1, 10, "Something is happening"))
+        val event = ImageBuildProgressEvent("/some-build-dir", DockerImageBuildProgress(1, 10, "Something is happening"))
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuildProgressEvent(container: 'container-1', current step: 1, total steps: 10, message: 'Something is happening')"))
+                com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuildProgressEvent(build directory: '/some-build-dir', current step: 1, total steps: 10, message: 'Something is happening')"))
             }
         }
     }

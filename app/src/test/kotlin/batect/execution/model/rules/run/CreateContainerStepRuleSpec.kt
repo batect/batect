@@ -127,7 +127,7 @@ object CreateContainerStepRuleSpec : Spek({
 
                 given("the image for the container has been built") {
                     val image = DockerImage("the-built-image")
-                    beforeEachTest { events.add(ImageBuiltEvent(container, image)) }
+                    beforeEachTest { events.add(ImageBuiltEvent("/some-image-directory", image)) }
 
                     on("evaluating the rule") {
                         val result = rule.evaluate(events)
@@ -147,8 +147,7 @@ object CreateContainerStepRuleSpec : Spek({
                 }
 
                 given("an image has been built for another container") {
-                    val otherContainer = Container("the-container", BuildImage("/some-other-image-directory"))
-                    beforeEachTest { events.add(ImageBuiltEvent(otherContainer, DockerImage("some-other-image"))) }
+                    beforeEachTest { events.add(ImageBuiltEvent("/some-other-image-directory", DockerImage("some-other-image"))) }
 
                     on("evaluating the rule") {
                         val result = rule.evaluate(events)

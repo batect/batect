@@ -38,7 +38,7 @@ import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 class FailureErrorMessageFormatter {
     fun formatErrorMessage(event: TaskFailedEvent, runOptions: RunOptions): String = when (event) {
         is TaskNetworkCreationFailedEvent -> "Could not create network for task: ${event.message}"
-        is ImageBuildFailedEvent -> "Could not build image for container '${event.container.name}': ${event.message}"
+        is ImageBuildFailedEvent -> "Could not build image from directory '${event.buildDirectory}': ${event.message}"
         is ImagePullFailedEvent -> "Could not pull image '${event.imageName}': ${event.message}"
         is ContainerCreationFailedEvent -> "Could not create container '${event.container.name}': ${event.message}"
         is ContainerStartFailedEvent -> "Could not start container '${event.container.name}': ${event.message}" + hintToReRunWithCleanupDisabled(runOptions)

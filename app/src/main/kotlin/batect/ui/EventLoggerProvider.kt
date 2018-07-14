@@ -23,6 +23,7 @@ import batect.ui.fancy.FancyEventLogger
 import batect.ui.fancy.StartupProgressDisplayProvider
 import batect.ui.quiet.QuietEventLogger
 import batect.ui.simple.SimpleEventLogger
+import batect.utils.mapToSet
 
 class EventLoggerProvider(
     private val failureErrorMessageFormatter: FailureErrorMessageFormatter,
@@ -42,6 +43,7 @@ class EventLoggerProvider(
             return FancyEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole, startupProgressDisplayProvider.createForDependencyGraph(graph), CleanupProgressDisplay())
         }
 
-        return SimpleEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole)
+        val containers = graph.allNodes.mapToSet { it.container }
+        return SimpleEventLogger(containers, failureErrorMessageFormatter, runOptions, console, errorConsole)
     }
 }

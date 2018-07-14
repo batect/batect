@@ -29,7 +29,7 @@ object ImagePullFailedEventSpec : Spek({
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(event.toString(), equalTo("ImagePullFailedEvent(message: 'Could not pull image 'some-image': Something went wrong')"))
+                assertThat(event.toString(), equalTo("ImagePullFailedEvent(image: 'some-image', message: 'Could not pull image 'some-image': Something went wrong')"))
             }
         }
     }

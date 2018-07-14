@@ -62,7 +62,7 @@ object FailureErrorMessageFormatterSpec : Spek({
 
             setOf(
                 Scenario("task network creation failed", TaskNetworkCreationFailedEvent("Something went wrong."), "Could not create network for task: Something went wrong."),
-                Scenario("image build failed", ImageBuildFailedEvent(container, "Something went wrong."), "Could not build image for container 'the-container': Something went wrong."),
+                Scenario("image build failed", ImageBuildFailedEvent("/some-build-dir", "Something went wrong."), "Could not build image from directory '/some-build-dir': Something went wrong."),
                 Scenario("image pull failed", ImagePullFailedEvent("the-image", "Something went wrong."), "Could not pull image 'the-image': Something went wrong."),
                 Scenario("container creation failed", ContainerCreationFailedEvent(container, "Something went wrong."), "Could not create container 'the-container': Something went wrong."),
                 Scenario("task network deletion failed", TaskNetworkDeletionFailedEvent("Something went wrong."), "Could not delete the task network: Something went wrong."),

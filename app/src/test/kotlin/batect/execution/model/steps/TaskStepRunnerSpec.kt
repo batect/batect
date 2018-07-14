@@ -16,7 +16,6 @@
 
 package batect.execution.model.steps
 
-import batect.config.BuildImage
 import batect.config.Container
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
@@ -157,8 +156,8 @@ object TaskStepRunnerSpec : Spek({
             }
 
             describe("running a 'build image' step") {
-                val container = Container("some-container", BuildImage("/some-build-dir"))
-                val step = BuildImageStep("some-project-name", container)
+                val buildDirectory = "/some-build-dir"
+                val step = BuildImageStep(buildDirectory)
 
                 describe("when building the image succeeds") {
                     on("and propagating proxy-related environment variables is enabled") {
@@ -166,10 +165,10 @@ object TaskStepRunnerSpec : Spek({
                         val update1 = DockerImageBuildProgress(1, 2, "First step")
                         val update2 = DockerImageBuildProgress(2, 2, "Second step")
 
-                        whenever(dockerClient.build(eq("some-project-name"), eq(container), any(), any()))
+                        whenever(dockerClient.build(eq(buildDirectory), any(), any()))
                             .then { invocation ->
                                 @Suppress("UNCHECKED_CAST")
-                                val onStatusUpdate: (DockerImageBuildProgress) -> Unit = invocation.arguments[3] as (DockerImageBuildProgress) -> Unit
+                                val onStatusUpdate: (DockerImageBuildProgress) -> Unit = invocation.arguments[2] as (DockerImageBuildProgress) -> Unit
 
                                 onStatusUpdate(update1)
                                 onStatusUpdate(update2)
@@ -180,43 +179,43 @@ object TaskStepRunnerSpec : Spek({
                         runner.run(step, eventSink, runOptions)
 
                         it("passes the proxy-related environment variables as image build arguments") {
-                            verify(dockerClient).build(any(), any(), eq(proxyVariables), any())
+                            verify(dockerClient).build(any(), eq(proxyVariables), any())
                         }
 
                         it("emits a 'image build progress' event for each update received from Docker") {
-                            verify(eventSink).postEvent(ImageBuildProgressEvent(container, update1))
-                            verify(eventSink).postEvent(ImageBuildProgressEvent(container, update2))
+                            verify(eventSink).postEvent(ImageBuildProgressEvent(buildDirectory, update1))
+                            verify(eventSink).postEvent(ImageBuildProgressEvent(buildDirectory, update2))
                         }
 
                         it("emits a 'image built' event") {
-                            verify(eventSink).postEvent(ImageBuiltEvent(container, image))
+                            verify(eventSink).postEvent(ImageBuiltEvent(buildDirectory, image))
                         }
                     }
 
                     on("and propagating proxy-related environment variables is disabled") {
                         val image = DockerImage("some-image")
-                        whenever(dockerClient.build(eq("some-project-name"), eq(container), any(), any())).thenReturn(image)
+                        whenever(dockerClient.build(eq(buildDirectory), any(), any())).thenReturn(image)
 
                         val runOptionsWithProxyEnvironmentVariablePropagationDisabled = RunOptions("some-task", emptyList(), 123, BehaviourAfterFailure.Cleanup, false)
                         runner.run(step, eventSink, runOptionsWithProxyEnvironmentVariablePropagationDisabled)
 
                         it("does not pass the proxy-related environment variables as image build arguments") {
-                            verify(dockerClient).build(any(), any(), eq(emptyMap()), any())
+                            verify(dockerClient).build(any(), eq(emptyMap()), any())
                         }
 
                         it("emits a 'image built' event") {
-                            verify(eventSink).postEvent(ImageBuiltEvent(container, image))
+                            verify(eventSink).postEvent(ImageBuiltEvent(buildDirectory, image))
                         }
                     }
                 }
 
                 on("when building the image fails") {
-                    whenever(dockerClient.build(eq("some-project-name"), eq(container), any(), any())).thenThrow(ImageBuildFailedException("Something went wrong."))
+                    whenever(dockerClient.build(eq(buildDirectory), any(), any())).thenThrow(ImageBuildFailedException("Something went wrong."))
 
                     runner.run(step, eventSink, runOptions)
 
                     it("emits a 'image build failed' event") {
-                        verify(eventSink).postEvent(ImageBuildFailedEvent(container, "Image build failed. Output from Docker was: Something went wrong."))
+                        verify(eventSink).postEvent(ImageBuildFailedEvent(buildDirectory, "Image build failed. Output from Docker was: Something went wrong."))
                     }
                 }
             }

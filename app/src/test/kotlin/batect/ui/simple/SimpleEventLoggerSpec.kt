@@ -16,6 +16,7 @@
 
 package batect.ui.simple
 
+import batect.config.BuildImage
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
@@ -58,6 +59,11 @@ import org.jetbrains.spek.api.dsl.on
 
 object SimpleEventLoggerSpec : Spek({
     describe("a simple event logger") {
+        val container1 = Container("container-1", BuildImage("/some-image-dir"))
+        val container2 = Container("container-2", BuildImage("/some-image-dir"))
+        val container3 = Container("container-3", BuildImage("/some-other-image-dir"))
+        val containers = setOf(container1, container2, container3)
+
         val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
         val runOptions by createForEachTest { mock<RunOptions>() }
 
@@ -81,18 +87,24 @@ object SimpleEventLoggerSpec : Spek({
             }
         }
 
-        val logger by createForEachTest { SimpleEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole) }
+        val logger by createForEachTest { SimpleEventLogger(containers, failureErrorMessageFormatter, runOptions, console, errorConsole) }
         val container = Container("the-cool-container", imageSourceDoesNotMatter())
 
         describe("handling when steps start") {
             on("when a 'build image' step is starting") {
-                val step = BuildImageStep("doesnt-matter", container)
+                val step = BuildImageStep("/some-image-dir")
                 logger.onStartingTaskStep(step)
 
-                it("prints a message to the output") {
+                it("prints a message to the output for each container that uses that built image") {
                     inOrder(whiteConsole) {
                         verify(whiteConsole).print("Building ")
-                        verify(whiteConsole).printBold("the-cool-container")
+                        verify(whiteConsole).printBold("container-1")
+                        verify(whiteConsole).println("...")
+                    }
+
+                    inOrder(whiteConsole) {
+                        verify(whiteConsole).print("Building ")
+                        verify(whiteConsole).printBold("container-2")
                         verify(whiteConsole).println("...")
                     }
                 }
@@ -233,13 +245,19 @@ object SimpleEventLoggerSpec : Spek({
             }
 
             on("when an 'image built' event is posted") {
-                val event = ImageBuiltEvent(container, DockerImage("abc-123"))
+                val event = ImageBuiltEvent("/some-image-dir", DockerImage("abc-123"))
                 logger.postEvent(event)
 
-                it("prints a message to the output") {
+                it("prints a message to the output for each container that uses that built image") {
                     inOrder(whiteConsole) {
                         verify(whiteConsole).print("Built ")
-                        verify(whiteConsole).printBold("the-cool-container")
+                        verify(whiteConsole).printBold("container-1")
+                        verify(whiteConsole).println(".")
+                    }
+
+                    inOrder(whiteConsole) {
+                        verify(whiteConsole).print("Built ")
+                        verify(whiteConsole).printBold("container-2")
                         verify(whiteConsole).println(".")
                     }
                 }

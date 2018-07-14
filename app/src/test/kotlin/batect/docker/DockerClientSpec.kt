@@ -16,8 +16,6 @@
 
 package batect.docker
 
-import batect.config.BuildImage
-import batect.config.Container
 import batect.config.HealthCheckConfig
 import batect.logging.Logger
 import batect.os.ExecutableDoesNotExistException
@@ -51,22 +49,16 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
-import org.mockito.ArgumentMatchers.anyString
 import java.util.UUID
 
 object DockerClientSpec : Spek({
     describe("a Docker client") {
-        val imageLabel = "the-image"
-        val labeller = mock<DockerImageLabellingStrategy> {
-            on { labelImage(anyString(), any()) } doReturn imageLabel
-        }
-
         val processRunner = mock<ProcessRunner>()
         val creationCommandGenerator = mock<DockerContainerCreationCommandGenerator>()
         val consoleInfo = mock<ConsoleInfo>()
         val logger = Logger("some.source", InMemoryLogSink())
 
-        val client = DockerClient(labeller, processRunner, creationCommandGenerator, consoleInfo, logger)
+        val client = DockerClient(processRunner, creationCommandGenerator, consoleInfo, logger)
 
         beforeEachTest {
             reset(processRunner)
@@ -76,7 +68,6 @@ object DockerClientSpec : Spek({
         describe("building an image") {
             given("a container configuration") {
                 val buildDirectory = "/path/to/build/dir"
-                val container = Container("the-container", BuildImage(buildDirectory))
                 val buildArgs = mapOf(
                     "some_name" to "some_value",
                     "some_other_name" to "some_other_value"
@@ -111,14 +102,13 @@ object DockerClientSpec : Spek({
                         statusUpdates.add(p)
                     }
 
-                    val result = client.build("the-project", container, buildArgs, onStatusUpdate)
+                    val result = client.build(buildDirectory, buildArgs, onStatusUpdate)
 
                     it("builds the image") {
                         verify(processRunner).runAndStreamOutput(eq(listOf(
                             "docker", "build",
                             "--build-arg", "some_name=some_value",
                             "--build-arg", "some_other_name=some_other_value",
-                            "--tag", imageLabel,
                             buildDirectory
                         )), any())
                     }
@@ -169,7 +159,7 @@ object DockerClientSpec : Spek({
                             ProcessOutput(0, output)
                         }
 
-                    val result = client.build("the-project", container, buildArgs) {}
+                    val result = client.build(buildDirectory, buildArgs) {}
 
                     it("returns the ID of the created image") {
                         assertThat(result.id, equalTo("95bc4e66a4f9"))
@@ -182,7 +172,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndStreamOutput(any(), any())).thenReturn(ProcessOutput(1, "Some output from Docker"))
 
                     it("raises an appropriate exception") {
-                        assertThat({ client.build("the-project", container, emptyMap(), onStatusUpdate) }, throws<ImageBuildFailedException>(withMessage("Image build failed. Output from Docker was: Some output from Docker")))
+                        assertThat({ client.build(buildDirectory, emptyMap(), onStatusUpdate) }, throws<ImageBuildFailedException>(withMessage("Image build failed. Output from Docker was: Some output from Docker")))
                     }
                 }
             }

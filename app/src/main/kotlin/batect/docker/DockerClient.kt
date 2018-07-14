@@ -16,8 +16,6 @@
 
 package batect.docker
 
-import batect.config.BuildImage
-import batect.config.Container
 import batect.logging.Logger
 import batect.os.ExecutableDoesNotExistException
 import batect.os.Exited
@@ -34,7 +32,6 @@ import java.nio.file.Path
 import java.util.UUID
 
 class DockerClient(
-    private val imageLabellingStrategy: DockerImageLabellingStrategy,
     private val processRunner: ProcessRunner,
     private val creationCommandGenerator: DockerContainerCreationCommandGenerator,
     private val consoleInfo: ConsoleInfo,
@@ -42,17 +39,18 @@ class DockerClient(
 ) {
     private val buildImageIdLineRegex = """^Successfully built (.*)$""".toRegex(RegexOption.MULTILINE)
 
-    fun build(projectName: String, container: Container, buildArgs: Map<String, String>, onStatusUpdate: (DockerImageBuildProgress) -> Unit): DockerImage {
+    fun build(buildDirectory: String, buildArgs: Map<String, String>, onStatusUpdate: (DockerImageBuildProgress) -> Unit): DockerImage {
         logger.info {
             message("Building image.")
-            data("container", container)
+            data("buildDirectory", buildDirectory)
             data("buildArgs", buildArgs)
         }
 
-        val label = imageLabellingStrategy.labelImage(projectName, container)
+        val buildArgsFlags = buildArgs.flatMap { (name, value) -> listOf("--build-arg", "$name=$value") }
+
         val command = listOf("docker", "build") +
-            buildArgs.flatMap { (name, value) -> listOf("--build-arg", "$name=$value") } +
-            listOf("--tag", label, (container.imageSource as BuildImage).buildDirectory)
+            buildArgsFlags +
+            buildDirectory
 
         val result = processRunner.runAndStreamOutput(command) { line ->
             logger.debug {
@@ -76,7 +74,7 @@ class DockerClient(
             throw ImageBuildFailedException(result.output.trim())
         }
 
-        val imageId = buildImageIdLineRegex.findAll(result.output).lastOrNull()?.groupValues?.get(1) ?: label
+        val imageId = buildImageIdLineRegex.findAll(result.output).last().groupValues.get(1)
 
         logger.info {
             message("Image build succeeded.")

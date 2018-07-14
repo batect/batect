@@ -16,6 +16,7 @@
 
 package batect.ui.simple
 
+import batect.config.BuildImage
 import batect.config.Container
 import batect.execution.RunOptions
 import batect.execution.model.events.ContainerBecameHealthyEvent
@@ -38,6 +39,7 @@ import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
 
 class SimpleEventLogger(
+    val containers: Set<Container>,
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
     val runOptions: RunOptions,
     val console: Console,
@@ -51,7 +53,7 @@ class SimpleEventLogger(
         synchronized(lock) {
             when (event) {
                 is TaskFailedEvent -> logTaskFailure(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
-                is ImageBuiltEvent -> logImageBuilt(event.container)
+                is ImageBuiltEvent -> logImageBuilt(event.buildDirectory)
                 is ImagePulledEvent -> logImagePulled(event.image.id)
                 is ContainerStartedEvent -> logContainerStarted(event.container)
                 is ContainerBecameHealthyEvent -> logContainerBecameHealthy(event.container)
@@ -69,7 +71,7 @@ class SimpleEventLogger(
     override fun onStartingTaskStep(step: TaskStep) {
         synchronized(lock) {
             when (step) {
-                is BuildImageStep -> logImageBuildStarting(step.container)
+                is BuildImageStep -> logImageBuildStarting(step.buildDirectory)
                 is PullImageStep -> logImagePullStarting(step.imageName)
                 is StartContainerStep -> logContainerStarting(step.container)
                 is RunContainerStep -> logCommandStarting(step.container, commands[step.container])
@@ -79,19 +81,27 @@ class SimpleEventLogger(
         }
     }
 
-    private fun logImageBuildStarting(container: Container) {
+    private fun logImageBuildStarting(buildDirectory: String) {
         console.withColor(ConsoleColor.White) {
-            print("Building ")
-            printBold(container.name)
-            println("...")
+            containers
+                .filter { it.imageSource == BuildImage(buildDirectory) }
+                .forEach {
+                    print("Building ")
+                    printBold(it.name)
+                    println("...")
+                }
         }
     }
 
-    private fun logImageBuilt(container: Container) {
+    private fun logImageBuilt(buildDirectory: String) {
         console.withColor(ConsoleColor.White) {
-            print("Built ")
-            printBold(container.name)
-            println(".")
+            containers
+                .filter { it.imageSource == BuildImage(buildDirectory) }
+                .forEach {
+                    print("Built ")
+                    printBold(it.name)
+                    println(".")
+                }
         }
     }
 

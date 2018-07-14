@@ -187,20 +187,20 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
     }
 
     private fun onImageBuildProgressEventPosted(event: ImageBuildProgressEvent) {
-        if (container.imageSource is BuildImage && event.buildDirectory == container.imageSource.buildDirectory) {
+        if (container.imageSource == BuildImage(event.buildDirectory)) {
             isBuilding = true
             lastBuildProgressUpdate = event.progress
         }
     }
 
     private fun onImageBuiltEventPosted(event: ImageBuiltEvent) {
-        if (container.imageSource is BuildImage && event.buildDirectory == container.imageSource.buildDirectory) {
+        if (container.imageSource == BuildImage(event.buildDirectory)) {
             hasBeenBuilt = true
         }
     }
 
     private fun onImagePulledEventPosted(event: ImagePulledEvent) {
-        if (container.imageSource is PullImage && container.imageSource.imageName == event.image.id) {
+        if (container.imageSource == PullImage(event.image.id)) {
             hasBeenPulled = true
         }
     }

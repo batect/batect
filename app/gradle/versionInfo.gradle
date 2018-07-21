@@ -19,10 +19,6 @@ import java.text.SimpleDateFormat
 
 apply from: "$rootDir/gradle/utilities.gradle"
 
-String getCurrentGitCommit() {
-    return runProcess('git', 'describe', '--always', '--dirty', '--exclude', '*', '--abbrev=0')
-}
-
 String getCurrentGitCommitDate() {
     return runProcess('git', 'show', '-s', '--format=%ci', 'HEAD')
 }

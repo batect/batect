@@ -108,5 +108,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 
 apply from: 'gradle/jacoco.gradle'
 apply from: 'gradle/journeyTest.gradle'
+apply from: 'gradle/performanceTest.gradle'
 apply from: 'gradle/spotless.gradle'
 apply from: 'gradle/versionInfo.gradle'

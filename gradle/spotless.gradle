@@ -48,4 +48,10 @@ spotless {
 
         licenseHeader "/*$licenseText*/\n\n", "(buildscript|import|apply|ext|allprojects|task|sourceSets|plugins|def|//)"
     }
+
+    format 'groovy', {
+        target '**/*.groovy'
+
+        licenseHeader "/*$licenseText*/\n\n", "package"
+    }
 }

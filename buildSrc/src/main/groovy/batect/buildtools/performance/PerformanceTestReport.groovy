@@ -1,24 +1,41 @@
 package batect.buildtools.performance
 
-import java.nio.file.Files
+import org.gradle.api.DefaultTask
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.DefaultTask
+
+import java.nio.file.Files
 
 class PerformanceTestReport extends DefaultTask {
     @InputDirectory
-    File testResultsDirectory = project.performanceTestScenarioResultsDirectory.toFile()
+    Property<File> testScenarioResultsDirectory
+
+    // This is just @Input because we only care about the value, not the contents of the directory
+    @Input
+    Property<File> testResultsDirectory
 
     @OutputFile
-    File reportFile = project.performanceTestResultsDirectory.resolve("report.txt").toFile()
+    Property<File> reportFile
+
+    PerformanceTestReport() {
+        testScenarioResultsDirectory = project.objects.property(File.class)
+        testResultsDirectory = project.objects.property(File.class)
+        reportFile = project.objects.property(File.class)
+
+        reportFile.set(project.providers.provider {
+            testResultsDirectory.get().toPath().resolve("report.txt").toFile()
+        })
+    }
 
     @TaskAction
     def run() {
-        def scenarioResultFiles = testResultsDirectory.listFiles()
+        def scenarioResultFiles = testScenarioResultsDirectory.get().listFiles()
         def lines = scenarioResultFiles.collect { getSummary(it) }
 
-        Files.write(reportFile.toPath(), lines)
+        Files.write(reportFile.get().toPath(), lines)
 
         lines.forEach { println(it) }
     }

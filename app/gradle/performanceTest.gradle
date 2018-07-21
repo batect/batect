@@ -14,8 +14,10 @@
    limitations under the License.
 */
 
-import batect.buildtools.performance.PerformanceTestReport
+import batect.buildtools.performance.PerformanceTestPlugin
 import batect.buildtools.performance.PerformanceTestScenario
+
+apply plugin: PerformanceTestPlugin
 
 // Test cases:
 // - single container based on image that is already pulled with fancy / simple / quiet output
@@ -26,22 +28,13 @@ import batect.buildtools.performance.PerformanceTestScenario
 // - container with two dependencies (A depends on B and C) with fancy / simple / quiet output, each with same image
 // - chain of tasks, each with single container with same image, with fancy / simple / quiet output
 
-ext {
-    performanceTestResultsDirectory = project.buildDir.toPath().resolve("reports/performanceTests")
-    performanceTestScenarioResultsDirectory = performanceTestResultsDirectory.resolve("scenarios")
-}
-
 task versionPerformanceScenario(type: PerformanceTestScenario) {
     description = "Run ./batect --version"
     args = ["--version"]
     workingDirectory = "src/journeyTest/resources/simple-task-using-image"
 }
 
-task performanceTestReport(type: PerformanceTestReport) {
-    mustRunAfter performanceTestScenarios
-}
-
-task performanceTest {
-    dependsOn performanceTestScenarios
-    dependsOn performanceTestReport
+tasks.withType(PerformanceTestScenario) {
+    dependsOn "installShadowDist"
+    executable = tasks.getByName("installShadowDist").outputs.files.singleFile.toPath().resolve("bin/batect").toFile()
 }

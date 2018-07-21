@@ -1,14 +1,13 @@
 package batect.buildtools.performance
 
-import java.nio.file.Files
-import java.time.Duration
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.DefaultTask
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.*
 import oshi.SystemInfo
 import oshi.hardware.HardwareAbstractionLayer
+
+import java.nio.file.Files
+import java.time.Duration
 
 class PerformanceTestScenario extends DefaultTask {
     @Input
@@ -17,18 +16,29 @@ class PerformanceTestScenario extends DefaultTask {
     @Input
     int count = 5
 
+    @InputFile
+    Property<File> executable
+
     @Input
     List<String> args
 
     @InputDirectory
     String workingDirectory
 
+    @Input
+    Property<File> outputDirectory
+
     @OutputFile
-    File outputFile = project.performanceTestScenarioResultsDirectory.resolve(name + ".perf").toFile()
+    Property<File> outputFile
 
     PerformanceTestScenario() {
-        this.dependsOn("installShadowDist")
-        project.tasks.maybeCreate("performanceTestScenarios").dependsOn(this)
+        executable = project.objects.property(File.class)
+        outputDirectory = project.objects.property(File.class)
+        outputFile = project.objects.property(File.class)
+
+        outputFile.set(project.providers.provider {
+            outputDirectory.get().toPath().resolve(name + ".perf").toFile()
+        })
     }
 
     @TaskAction
@@ -43,14 +53,13 @@ class PerformanceTestScenario extends DefaultTask {
     }
 
     Duration runProcess() {
-        def resolvedExecutablePath = resolveExecutablePath()
         def resolvedWorkingDirectory = resolveWorkingDirectory()
 
         def startTime = System.nanoTime()
 
         project.exec {
+            executable this.executable.get()
             args this.args
-            executable resolvedExecutablePath
             workingDir resolvedWorkingDirectory
             setIgnoreExitValue false
         }
@@ -66,13 +75,6 @@ class PerformanceTestScenario extends DefaultTask {
 
     private File resolveWorkingDirectory() {
         return project.projectDir.toPath().resolve(workingDirectory).toFile()
-    }
-
-    private String resolveExecutablePath() {
-        def outputs = project.tasks.getByName("installShadowDist").outputs
-        def outputDir = outputs.files.singleFile
-
-        return "$outputDir/bin/batect"
     }
 
     private def writeReport(List<Duration> durations) {
@@ -94,6 +96,6 @@ class PerformanceTestScenario extends DefaultTask {
                 "CPU: " + cpu
         ] + durations.collect { "Time: " + it.toMillis().toString() }
 
-        Files.write(outputFile.toPath(), lines)
+        Files.write(outputFile.get().toPath(), lines)
     }
 }

@@ -39,7 +39,7 @@ class PerformanceTestScenario extends DefaultTask {
     List<String> args
 
     @InputDirectory
-    String workingDirectory
+    String workingDirectory = "."
 
     @Input
     Property<File> outputDirectory

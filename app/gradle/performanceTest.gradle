@@ -31,7 +31,6 @@ apply plugin: PerformanceTestPlugin
 task versionPerformanceScenario(type: PerformanceTestScenario) {
     description = "Run ./batect --version"
     args = ["--version"]
-    workingDirectory = "src/journeyTest/resources/simple-task-using-image"
 }
 
 tasks.withType(PerformanceTestScenario) {

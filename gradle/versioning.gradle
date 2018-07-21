@@ -14,6 +14,8 @@
    limitations under the License.
 */
 
+apply from: "$rootDir/gradle/utilities.gradle"
+
 task validateVersionMatchesTag {
     description 'Validates that the version currently configured in Gradle matches the current Git commit tag.'
     group 'Verification'
@@ -31,14 +33,57 @@ task validateVersionMatchesTag {
     }
 }
 
+task validateIsReleaseBuild {
+    description 'Validates that the current build is a release build.'
+    group 'Verification'
+
+    doLast {
+        if (!isReleaseBuild()) {
+            throw new Exception("The current build is not a release build.")
+        }
+    }
+}
+
+
+
 task validateRelease {
     description 'Validates that the current commit is ready to be released.'
     group 'Verification'
 
     dependsOn validateVersionMatchesTag
+    dependsOn validateIsReleaseBuild
 }
 
 reckon {
     scopeFromProp()
     stageFromProp('dev', 'final')
+}
+
+String getCurrentGitCommitHash() {
+    return runProcess('git', 'describe', '--always', '--dirty', '--exclude', '*', '--abbrev=0')
+}
+
+String getCurrentGitCommitDate() {
+    return runProcess('git', 'show', '-s', '--format=%ci', 'HEAD')
+}
+
+boolean isReleaseBuild() {
+    return !project.version.toString().contains("-")
+}
+
+String getSimpleVersion() {
+    def generatedVersion = project.version.toString()
+
+    if (generatedVersion.contains("+")) {
+        return generatedVersion.substring(0, generatedVersion.indexOf("+"))
+    } else {
+        return generatedVersion
+    }
+}
+
+ext {
+    gitCommitHash = getCurrentGitCommitHash()
+    gitCommitDate = getCurrentGitCommitDate()
+    isReleaseBuild = isReleaseBuild()
+    simpleVersion = getSimpleVersion()
 }

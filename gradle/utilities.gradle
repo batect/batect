@@ -16,7 +16,6 @@
 
 ext {
     runProcess = this.&runProcess
-    getCurrentGitCommit = this.&getCurrentGitCommit
 }
 
 String runProcess(String... args) {
@@ -32,8 +31,4 @@ String runProcess(String... args) {
     }
 
     return output.trim()
-}
-
-String getCurrentGitCommit() {
-    return runProcess('git', 'describe', '--always', '--dirty', '--exclude', '*', '--abbrev=0')
 }

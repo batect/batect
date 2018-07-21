@@ -17,33 +17,13 @@
 import java.nio.file.Paths
 import java.text.SimpleDateFormat
 
-apply from: "$rootDir/gradle/utilities.gradle"
-
-String getCurrentGitCommitDate() {
-    return runProcess('git', 'show', '-s', '--format=%ci', 'HEAD')
-}
-
-boolean isReleaseBuild() {
-    return !project.version.toString().contains("-")
-}
-
 String getBuildDate() {
-    if (isReleaseBuild()) {
+    if (rootProject.isReleaseBuild) {
         def dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z")
         dateFormat.setTimeZone(new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC"))
         return dateFormat.format(new Date())
     } else {
         return "(the build date is not populated for development builds)"
-    }
-}
-
-String getVersionForVersionInfo() {
-    def generatedVersion = project.version.toString()
-
-    if (generatedVersion.contains("+")) {
-        return generatedVersion.substring(0, generatedVersion.indexOf("+"))
-    } else {
-        return generatedVersion
     }
 }
 
@@ -57,9 +37,9 @@ String versionInfoFileContents() {
         |// Do not edit it (it will be overwritten on the next build anyway).
         |// Do not commit it.
         |class VersionInfo {
-        |    val gitCommitHash = "${getCurrentGitCommit()}"
-        |    val gitCommitDate = "${getCurrentGitCommitDate()}"
-        |    val version = Version.parse("${getVersionForVersionInfo()}")
+        |    val gitCommitHash = "${rootProject.gitCommitHash}"
+        |    val gitCommitDate = "${rootProject.gitCommitDate}"
+        |    val version = Version.parse("${rootProject.simpleVersion}")
         |    val buildDate = "${getBuildDate()}"
         |}
         |""".stripMargin("|")
@@ -71,12 +51,11 @@ task generateVersionInfoFile {
     description 'Generates the version info file that is compiled into the application.'
     group 'Build'
 
-    inputs.property("version", { getVersionForVersionInfo() })
+    inputs.property("version", { rootProject.simpleVersion })
+    inputs.property("gitCommitHash", { rootProject.gitCommitHash })
+    inputs.property("gitCommitDate", { rootProject.gitCommitDate })
+    inputs.property("buildDate", { getBuildDate() })
     outputs.file versionInfoFile
-
-    outputs.upToDateWhen {
-        versionInfoFile.exists() && versionInfoFile.text == versionInfoFileContents()
-    }
 
     doLast {
         def text = versionInfoFileContents()

@@ -79,7 +79,7 @@ class PerformanceTestScenario extends DefaultTask {
         SystemInfo si = new SystemInfo()
         HardwareAbstractionLayer hal = si.getHardware()
 
-        String gitCommit = project.getCurrentGitCommit()
+        String gitCommit = project.rootProject.gitCommitHash
         String version = project.version.toString()
         String osDetails = System.getProperty("os.name") + " " + System.getProperty("os.version") + " " + System.getProperty("os.arch")
         String jvmDetails = System.getProperty("java.vm.vendor") + " " + System.getProperty("java.vm.name") + " " + System.getProperty("java.version")

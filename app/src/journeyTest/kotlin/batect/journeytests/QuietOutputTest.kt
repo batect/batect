@@ -30,7 +30,7 @@ object QuietOutputTest : Spek({
         val runner = ApplicationRunner("task-with-prerequisite")
 
         on("running that task") {
-            val result = runner.runApplication(listOf("--quiet", "do-stuff"))
+            val result = runner.runApplication(listOf("--output=quiet", "do-stuff"))
 
             it("prints the only the output from the task commands") {
                 assertThat(result.output, containsSubstring("This is some output from the build task\r\n\nThis is some output from the main task\r\n"))

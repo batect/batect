@@ -1,0 +1,22 @@
+containers:
+  test-env:
+    image: alpine:3.7
+
+tasks:
+  the-task:
+    run:
+      container: test-env
+      command: echo "This is the main task"
+    prerequisites:
+      - prerequisite-1
+      - prerequisite-2
+
+  prerequisite-1:
+    run:
+      container: test-env
+      command: echo "This is the first prerequisite"
+
+  prerequisite-2:
+    run:
+      container: test-env
+      command: echo "This is the second prerequisite"

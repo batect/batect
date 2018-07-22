@@ -41,8 +41,7 @@ class PerformanceTestScenario extends DefaultTask {
     int count = 10
 
     @Input
-    @Optional
-    List<String> before = null
+    List<String> before = []
 
     @InputFile
     Property<File> executable
@@ -73,7 +72,7 @@ class PerformanceTestScenario extends DefaultTask {
     def run() {
         ensureNotRunningInDaemon()
         ensurePlainOutputMode()
-        runBeforeCommand()
+        runBeforeCommands()
 
         def durations = (1..count).collect {
             println(">> Running iteration $it")
@@ -96,23 +95,23 @@ class PerformanceTestScenario extends DefaultTask {
         }
     }
 
-    def runBeforeCommand() {
-        if (before == null) {
-            return
-        }
+    def runBeforeCommands() {
+        def resolvedWorkingDirectory = resolveWorkingDirectory()
 
-        println(">> Running $before")
+        before.each { command ->
+            println(">> Running $command")
 
-        def processBuilder = new ProcessBuilder(this.before)
-                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-                .redirectInput(ProcessBuilder.Redirect.INHERIT)
-                .redirectError(ProcessBuilder.Redirect.INHERIT)
-                .directory(resolveWorkingDirectory())
+            def processBuilder = new ProcessBuilder(["sh", "-c", command])
+                    .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                    .redirectInput(ProcessBuilder.Redirect.INHERIT)
+                    .redirectError(ProcessBuilder.Redirect.INHERIT)
+                    .directory(resolvedWorkingDirectory)
 
-        def exitCode = processBuilder.start().waitFor()
+            def exitCode = processBuilder.start().waitFor()
 
-        if (exitCode != 0) {
-            throw new RuntimeException("Command exited with code $exitCode.")
+            if (exitCode != 0) {
+                throw new RuntimeException("Command exited with code $exitCode.")
+            }
         }
     }
 

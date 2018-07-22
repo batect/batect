@@ -106,6 +106,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     }
 }
 
+apply from: 'gradle/integrationTest.gradle'
 apply from: 'gradle/jacoco.gradle'
 apply from: 'gradle/journeyTest.gradle'
 apply from: 'gradle/performanceTest.gradle'

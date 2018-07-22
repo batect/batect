@@ -18,9 +18,10 @@ package batect.updates
 
 import batect.logging.Logger
 import batect.utils.Version
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+import kotlinx.serialization.json.JSON
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.time.ZoneOffset
@@ -53,11 +54,7 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
                     throw UpdateInfoDownloadException("The server returned HTTP ${response.code()}.")
                 }
 
-                val mapper = jacksonObjectMapper()
-                mapper.propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE
-                mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-
-                val releaseInfo = mapper.readValue(response.body()!!.byteStream(), GitHubReleaseInfo::class.java)
+                val releaseInfo = JSON.nonstrict.parse<GitHubReleaseInfo>(response.body()!!.string())
                 val updateInfo = UpdateInfo(Version.parse(releaseInfo.tagName), releaseInfo.htmlUrl, dateTimeProvider(), releaseInfo.scriptDownloadUrl)
 
                 logger.info {
@@ -78,13 +75,24 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
         }
     }
 
-    private data class GitHubReleaseInfo(val tagName: String, val htmlUrl: String, val assets: List<GitHubReleaseAsset>) {
+    @Serializable
+    private data class GitHubReleaseInfo(
+        @SerialName("tag_name") val tagName: String,
+        @SerialName("html_url") val htmlUrl: String,
+        val assets: List<GitHubReleaseAsset>
+    ) {
+        @Transient
         val scriptDownloadUrl: String? = assets
             .singleOrNull { it.name == "batect" && it.contentType == "application/octet-stream" }
             ?.browserDownloadUrl
     }
 
-    private data class GitHubReleaseAsset(val name: String, val contentType: String, val browserDownloadUrl: String)
+    @Serializable
+    private data class GitHubReleaseAsset(
+        val name: String,
+        @SerialName("content_type") val contentType: String,
+        @SerialName("browser_download_url") val browserDownloadUrl: String
+    )
 }
 
 class UpdateInfoDownloadException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

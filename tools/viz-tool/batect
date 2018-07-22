@@ -3,8 +3,8 @@
 {
     set -euo pipefail
 
-    VERSION="0.16.0"
-    DOWNLOAD_URL=${BATECT_DOWNLOAD_URL:-"https://github.com/charleskorn/batect/releases/download/0.16.0/batect-0.16.0.jar"}
+    VERSION="0.17.0"
+    DOWNLOAD_URL=${BATECT_DOWNLOAD_URL:-"https://github.com/charleskorn/batect/releases/download/0.17.0/batect-0.17.0.jar"}
 
     ROOT_CACHE_DIR=${BATECT_CACHE_DIR:-"$HOME/.batect/cache"}
     CACHE_DIR="$ROOT_CACHE_DIR/$VERSION"

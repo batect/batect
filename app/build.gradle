@@ -16,7 +16,7 @@
 
 buildscript {
     ext.spek_version = '1.1.5'
-    ext.serialization_version = '0.5.1'
+    ext.serialization_version = '0.6.0'
 
     repositories {
         maven { url "https://kotlin.bintray.com/kotlinx" }

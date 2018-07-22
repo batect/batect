@@ -35,6 +35,8 @@ If there's something you're really keen to see, pull requests are always welcome
       they use a different interface, so this command needs to be adjusted to match)
     * Local proxy needs to be listening on correct IP(s) - need to warn users about this and about exposing them to the outside world (and thus allowing other people to access their proxy)
 * 'did you mean...' suggestions when requested task doesn't exist (eg. user runs `./batect unittest`, suggests `unit-test` might be what they meant)
+* some way to clean up old images when they're no longer needed
+* handle the user pressing Ctrl-C during startup or cleanup
 
 ### Bugs
 * fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information
@@ -54,6 +56,7 @@ If there's something you're really keen to see, pull requests are always welcome
     * NodeJS
       * frontend
       * backend
+      * run `yarn install` as prerequisite before each task and explain performance benefit of using Yarn over NPM
     * Android app
     * pushing app to Kubernetes
   * add FAQs

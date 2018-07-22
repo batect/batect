@@ -29,7 +29,7 @@ import okhttp3.Response
 import okhttp3.ResponseBody
 
 fun OkHttpClient.mockGet(url: String, body: String, statusCode: Int = 200) {
-    val parsedUrl = HttpUrl.parse(url)
+    val parsedUrl = HttpUrl.get(url)
     val responseBody = ResponseBody.create(MediaType.parse("application/json; charset=utf-8"), body)
 
     whenever(this.newCall(com.nhaarman.mockito_kotlin.argThat { method() == "GET" && url().equals(parsedUrl) })).then { invocation ->

@@ -20,17 +20,35 @@ import batect.buildtools.performance.PerformanceTestScenario
 apply plugin: PerformanceTestPlugin
 
 // Test cases:
-// - single container based on image that is already pulled with fancy / simple / quiet output
-// - single container based on image that must be built with fancy / simple / quiet output
+// - single container based on image that must be built with fancy / simple / quiet output (pre-build image)
 // - chain of containers (A->B->C) with fancy / simple / quiet output, each with different images
 // - chain of containers (A->B->C) with fancy / simple / quiet output, all with the same image
 // - container with two dependencies (A depends on B and C) with fancy / simple / quiet output, each with different images
 // - container with two dependencies (A depends on B and C) with fancy / simple / quiet output, each with same image
 // - chain of tasks, each with single container with same image, with fancy / simple / quiet output
 
+sourceSets {
+    performanceTest {}
+}
+
 task versionPerformanceScenario(type: PerformanceTestScenario) {
     description = "Run ./batect --version"
     args = ["--version"]
+}
+
+def outputOptions = [
+    '--output=simple': 'Simple',
+    '--output=quiet': 'Quiet',
+    '--output=fancy': 'Fancy'
+]
+
+outputOptions.each { option, name ->
+    task "singleContainerExistingImage${name}OutputScenario"(type: PerformanceTestScenario) {
+        description = "Run a task that starts a single container (which uses an image that has been pulled) in ${name.toLowerCase()} output mode"
+        before = ["docker", "pull", "alpine:3.7"]
+        args = [option, "the-task"]
+        workingDirectory = "src/performanceTest/resources/single-container-existing-image"
+    }
 }
 
 tasks.withType(PerformanceTestScenario) {

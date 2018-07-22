@@ -48,7 +48,7 @@ class PerformanceTestReport extends DefaultTask {
 
     @TaskAction
     def run() {
-        def scenarioResultFiles = testScenarioResultsDirectory.get().listFiles()
+        def scenarioResultFiles = testScenarioResultsDirectory.get().listFiles().sort()
         def lines = scenarioResultFiles.collect { getSummary(it) }
 
         Files.write(reportFile.get().toPath(), lines)

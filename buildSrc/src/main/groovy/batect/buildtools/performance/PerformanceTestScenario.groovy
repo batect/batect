@@ -16,9 +16,17 @@
 
 package batect.buildtools.performance
 
+import org.gradle.StartParameter
 import org.gradle.api.DefaultTask
+import org.gradle.api.logging.configuration.ConsoleOutput
+import org.gradle.api.logging.configuration.LoggingConfiguration
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskAction
 import oshi.SystemInfo
 import oshi.hardware.HardwareAbstractionLayer
 
@@ -30,7 +38,11 @@ class PerformanceTestScenario extends DefaultTask {
     String description
 
     @Input
-    int count = 5
+    int count = 10
+
+    @Input
+    @Optional
+    List<String> before = null
 
     @InputFile
     Property<File> executable
@@ -59,6 +71,10 @@ class PerformanceTestScenario extends DefaultTask {
 
     @TaskAction
     def run() {
+        ensureNotRunningInDaemon()
+        ensurePlainOutputMode()
+        runBeforeCommand()
+
         def durations = (1..count).collect {
             println(">> Running iteration $it")
 
@@ -68,20 +84,54 @@ class PerformanceTestScenario extends DefaultTask {
         writeReport(durations)
     }
 
-    Duration runProcess() {
-        def resolvedWorkingDirectory = resolveWorkingDirectory()
+    def ensureNotRunningInDaemon() {
+        if (!System.getProperty("sun.java.command").startsWith("org.gradle.wrapper.GradleWrapperMain")) {
+            throw new RuntimeException("Performance tests must be run with the Gradle daemon disabled to ensure that output from the application is written directly to the console and not to the daemon's buffered console. Run Gradle with --no-daemon to fix this issue.")
+        }
+    }
 
-        def startTime = System.nanoTime()
+    def ensurePlainOutputMode() {
+        if (getServices().get(LoggingConfiguration.class).consoleOutput != ConsoleOutput.Plain) {
+            throw new RuntimeException("Performance tests must be run with Gradle's output set to plain mode to ensure that Gradle's output does not interfere with the output from the application. Run Gradle with --console=plain to fix this issue.")
+        }
+    }
 
-        project.exec {
-            executable this.executable.get()
-            args this.args
-            workingDir resolvedWorkingDirectory
-            setIgnoreExitValue false
+    def runBeforeCommand() {
+        if (before == null) {
+            return
         }
 
+        println(">> Running $before")
+
+        def processBuilder = new ProcessBuilder(this.before)
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                .redirectInput(ProcessBuilder.Redirect.INHERIT)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .directory(resolveWorkingDirectory())
+
+        def exitCode = processBuilder.start().waitFor()
+
+        if (exitCode != 0) {
+            throw new RuntimeException("Command exited with code $exitCode.")
+        }
+    }
+
+    Duration runProcess() {
+        def processBuilder = new ProcessBuilder([this.executable.get().toString()] + this.args)
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                .redirectInput(ProcessBuilder.Redirect.INHERIT)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .directory(resolveWorkingDirectory())
+
+        def startTime = System.nanoTime()
+        def exitCode = processBuilder.start().waitFor()
         def endTime = System.nanoTime()
+
         def elapsedTime = Duration.ofNanos(endTime - startTime)
+
+        if (exitCode != 0) {
+            throw new RuntimeException("Command exited with code $exitCode.")
+        }
 
         println(">> Finished in $elapsedTime")
         println()

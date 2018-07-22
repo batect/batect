@@ -16,6 +16,14 @@
 
 apply plugin: 'jacoco'
 
+repositories {
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+}
+
+jacoco {
+    toolVersion = '0.8.2-SNAPSHOT'
+}
+
 jacocoTestReport {
     reports {
         xml.enabled true

@@ -164,8 +164,8 @@ private val uiModule = Kodein.Module("ui") {
             instance(PrintStreamType.Error),
             instance(),
             instance(),
-            commandLineOptions().forceSimpleOutputMode,
-            commandLineOptions().forceQuietOutputMode
+            commandLineOptions().requestedOutputStyle,
+            commandLineOptions().disableColorOutput
         )
     }
 

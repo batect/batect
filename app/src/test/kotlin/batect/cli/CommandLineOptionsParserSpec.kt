@@ -17,6 +17,7 @@
 package batect.cli
 
 import batect.testutils.equalTo
+import batect.ui.OutputStyle
 import com.natpryce.hamkrest.assertion.assertThat
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -76,11 +77,11 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a flag followed by a single argument") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser().parse(listOf("--quiet", "some-task"))
+                val result = CommandLineOptionsParser().parse(listOf("--no-color", "some-task"))
 
                 it("returns a set of options with the task name populated and the flag set") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
-                        forceQuietOutputMode = true,
+                        disableColorOutput = true,
                         taskName = "some-task"
                     ))))
                 }
@@ -89,13 +90,23 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a flag followed by multiple arguments") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser().parse(listOf("--quiet", "some-task", "some-extra-arg"))
+                val result = CommandLineOptionsParser().parse(listOf("--no-color", "some-task", "some-extra-arg"))
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed(
                         "Too many arguments provided. The first extra argument is 'some-extra-arg'.\n" +
                             "To pass additional arguments to the task command, prefix them with '--', for example, './batect my-task -- --extra-option-1 --extra-option-2 value'."
                     )))
+                }
+            }
+        }
+
+        given("colour output has been disabled and fancy output mode has been selected") {
+            on("parsing the command line") {
+                val result = CommandLineOptionsParser().parse(listOf("--no-color", "--output=fancy", "some-task", "some-extra-arg"))
+
+                it("returns an error message") {
+                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("Fancy output mode cannot be used when colored output has been disabled.")))
                 }
             }
         }
@@ -112,9 +123,10 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("-f=somefile.yml", "some-task") to CommandLineOptions(configurationFileName = "somefile.yml", taskName = "some-task"),
             listOf("--config-file=somefile.yml", "some-task") to CommandLineOptions(configurationFileName = "somefile.yml", taskName = "some-task"),
             listOf("--log-file=somefile.log", "some-task") to CommandLineOptions(logFileName = "somefile.log", taskName = "some-task"),
-            listOf("--simple-output", "some-task") to CommandLineOptions(forceSimpleOutputMode = true, taskName = "some-task"),
-            listOf("--quiet", "some-task") to CommandLineOptions(forceQuietOutputMode = true, taskName = "some-task"),
-            listOf("--no-color", "some-task") to CommandLineOptions(disableColorOutput = true, forceSimpleOutputMode = true, taskName = "some-task"),
+            listOf("--output=simple", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Simple, taskName = "some-task"),
+            listOf("--output=quiet", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Quiet, taskName = "some-task"),
+            listOf("--output=fancy", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Fancy, taskName = "some-task"),
+            listOf("--no-color", "some-task") to CommandLineOptions(disableColorOutput = true, taskName = "some-task"),
             listOf("--no-update-notification", "some-task") to CommandLineOptions(disableUpdateNotification = true, taskName = "some-task"),
             listOf("--level-of-parallelism=900", "some-task") to CommandLineOptions(levelOfParallelism = 900, taskName = "some-task"),
             listOf("-p=900", "some-task") to CommandLineOptions(levelOfParallelism = 900, taskName = "some-task"),

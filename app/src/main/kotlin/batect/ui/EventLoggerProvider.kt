@@ -31,18 +31,31 @@ class EventLoggerProvider(
     private val errorConsole: Console,
     private val startupProgressDisplayProvider: StartupProgressDisplayProvider,
     private val consoleInfo: ConsoleInfo,
-    private val forceSimpleOutputMode: Boolean,
-    private val forceQuietOutputMode: Boolean
+    private val requestedOutputStyle: OutputStyle?,
+    private val disableColorOutput: Boolean
 ) {
     fun getEventLogger(graph: ContainerDependencyGraph, runOptions: RunOptions): EventLogger {
-        if (forceQuietOutputMode) {
-            return QuietEventLogger(failureErrorMessageFormatter, runOptions, errorConsole)
+        when (requestedOutputStyle) {
+            OutputStyle.Quiet -> return createQuietLogger(runOptions)
+            OutputStyle.Fancy -> return createFancyLogger(graph, runOptions)
+            OutputStyle.Simple -> return createSimpleLogger(graph, runOptions)
+            null -> {
+                if (!consoleInfo.supportsInteractivity || disableColorOutput) {
+                    return createSimpleLogger(graph, runOptions)
+                } else {
+                    return createFancyLogger(graph, runOptions)
+                }
+            }
         }
+    }
 
-        if (consoleInfo.supportsInteractivity && !forceSimpleOutputMode) {
-            return FancyEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole, startupProgressDisplayProvider.createForDependencyGraph(graph), CleanupProgressDisplay())
-        }
+    private fun createQuietLogger(runOptions: RunOptions) =
+        QuietEventLogger(failureErrorMessageFormatter, runOptions, errorConsole)
 
+    private fun createFancyLogger(graph: ContainerDependencyGraph, runOptions: RunOptions): FancyEventLogger =
+        FancyEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole, startupProgressDisplayProvider.createForDependencyGraph(graph), CleanupProgressDisplay())
+
+    private fun createSimpleLogger(graph: ContainerDependencyGraph, runOptions: RunOptions): SimpleEventLogger {
         val containers = graph.allNodes.mapToSet { it.container }
         return SimpleEventLogger(containers, failureErrorMessageFormatter, runOptions, console, errorConsole)
     }

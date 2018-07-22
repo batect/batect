@@ -21,6 +21,7 @@ import batect.cli.options.OptionParser
 import batect.cli.options.OptionParserContainer
 import batect.cli.options.OptionsParsingResult
 import batect.cli.options.ValueConverters
+import batect.ui.OutputStyle
 
 class CommandLineOptionsParser(override val optionParser: OptionParser) : OptionParserContainer {
     constructor() : this(OptionParser())
@@ -38,10 +39,15 @@ class CommandLineOptionsParser(override val optionParser: OptionParser) : Option
 
     private val configurationFileName: String by valueOption("config-file", "The configuration file to use.", "batect.yml", 'f')
     private val logFileName: String? by valueOption("log-file", "Write internal batect logs to file.")
-    private val forceSimpleOutputMode: Boolean by flagOption("simple-output", "Force simple output (eg. no updating text) from batect. Automatically enabled if your console is detected to not support these features. Does not affect task command output.")
-    private val forceQuietOutputMode: Boolean by flagOption("quiet", "Display only minimal output (eg. only error messages) from batect. Does not affect task command output.")
-    private val disableColorOutput: Boolean by flagOption("no-color", "Disable colored output from batect. Does not affect task command output. (implies --simple-output)")
+    private val disableColorOutput: Boolean by flagOption("no-color", "Disable colored output from batect. Does not affect task command output. (implies --output=simple)")
     private val disableUpdateNotification: Boolean by flagOption("no-update-notification", "Disable checking for updates to batect and notifying you when a new version is available.")
+
+    private val requestedOutputStyle: OutputStyle? by valueOption(
+        "output",
+        "Force a particular style of output from batect (does not affect task command output). Valid values are: fancy (default value if your console supports this), simple (no updating text), or quiet (only error messages).",
+        ValueConverters.optionalEnum(),
+        'o'
+    )
 
     private val levelOfParallelism: Int by valueOption(
         "level-of-parallelism",
@@ -64,6 +70,10 @@ class CommandLineOptionsParser(override val optionParser: OptionParser) : Option
     }
 
     private fun parseTaskName(remainingArgs: Iterable<String>): CommandLineOptionsParsingResult {
+        if (requestedOutputStyle == OutputStyle.Fancy && disableColorOutput) {
+            return CommandLineOptionsParsingResult.Failed("Fancy output mode cannot be used when colored output has been disabled.")
+        }
+
         if (showHelp || showVersionInfo || listTasks || runUpgrade) {
             return CommandLineOptionsParsingResult.Succeeded(createOptionsObject(null, emptyList()))
         }
@@ -97,8 +107,7 @@ class CommandLineOptionsParser(override val optionParser: OptionParser) : Option
         listTasks = listTasks,
         configurationFileName = configurationFileName,
         logFileName = logFileName,
-        forceSimpleOutputMode = forceSimpleOutputMode || disableColorOutput,
-        forceQuietOutputMode = forceQuietOutputMode,
+        requestedOutputStyle = requestedOutputStyle,
         disableColorOutput = disableColorOutput,
         disableUpdateNotification = disableUpdateNotification,
         levelOfParallelism = levelOfParallelism,

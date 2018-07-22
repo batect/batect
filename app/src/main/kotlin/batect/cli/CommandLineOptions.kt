@@ -20,6 +20,7 @@ import batect.cli.options.defaultvalues.LevelOfParallelismDefaultValueProvider
 import batect.logging.FileLogSink
 import batect.logging.LogSink
 import batect.logging.NullLogSink
+import batect.ui.OutputStyle
 import org.kodein.di.Copy
 import org.kodein.di.DKodein
 import org.kodein.di.Kodein
@@ -35,8 +36,7 @@ data class CommandLineOptions(
     val listTasks: Boolean = false,
     val configurationFileName: String = "batect.yml",
     val logFileName: String? = null,
-    val forceSimpleOutputMode: Boolean = false,
-    val forceQuietOutputMode: Boolean = false,
+    val requestedOutputStyle: OutputStyle? = null,
     val disableColorOutput: Boolean = false,
     val disableUpdateNotification: Boolean = false,
     val levelOfParallelism: Int = LevelOfParallelismDefaultValueProvider.value,

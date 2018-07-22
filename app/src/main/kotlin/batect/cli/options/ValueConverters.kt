@@ -16,6 +16,8 @@
 
 package batect.cli.options
 
+import java.util.Locale
+
 object ValueConverters {
     fun string(value: String): ValueConversionResult<String> = ValueConversionResult.ConversionSucceeded(value)
 
@@ -30,6 +32,27 @@ object ValueConverters {
             return ValueConversionResult.ConversionSucceeded(parsedValue)
         } catch (_: NumberFormatException) {
             return ValueConversionResult.ConversionFailed("Value is not a valid integer.")
+        }
+    }
+
+    inline fun <reified T : Enum<T>> optionalEnum(): (String) -> ValueConversionResult<T?> {
+        val valueMap = enumValues<T>()
+            .associate { it.name.toLowerCase(Locale.ROOT) to it }
+
+        return { value ->
+            val convertedValue = valueMap.get(value)
+
+            if (convertedValue != null) {
+                ValueConversionResult.ConversionSucceeded(convertedValue)
+            } else {
+                val validOptions = valueMap.keys
+                    .sorted()
+                    .map { "'$it'" }
+
+                val optionsDescription = validOptions.dropLast(1).joinToString(", ") + " or " + validOptions.last()
+
+                ValueConversionResult.ConversionFailed("Value must be one of $optionsDescription.")
+            }
         }
     }
 }

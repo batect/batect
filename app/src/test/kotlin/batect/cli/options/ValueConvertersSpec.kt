@@ -17,6 +17,7 @@
 package batect.cli.options
 
 import batect.testutils.equalTo
+import batect.ui.OutputStyle
 import com.natpryce.hamkrest.assertion.assertThat
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -72,6 +73,28 @@ object ValueConvertersSpec : Spek({
                 it("returns an error") {
                     assertThat(ValueConverters.positiveInteger("x"),
                             equalTo(ValueConversionResult.ConversionFailed("Value is not a valid integer.")))
+                }
+            }
+        }
+
+        describe("optional enum value converter") {
+            val converter = ValueConverters.optionalEnum<OutputStyle>()
+
+            given("a valid value") {
+                it("returns the equivalent enum constant") {
+                    assertThat(converter("simple"), equalTo(ValueConversionResult.ConversionSucceeded(OutputStyle.Simple)))
+                }
+            }
+
+            given("an empty string") {
+                it("returns an error") {
+                    assertThat(converter(""), equalTo(ValueConversionResult.ConversionFailed("Value must be one of 'fancy', 'quiet' or 'simple'.")))
+                }
+            }
+
+            given("an invalid value") {
+                it("returns an error") {
+                    assertThat(converter("nonsense"), equalTo(ValueConversionResult.ConversionFailed("Value must be one of 'fancy', 'quiet' or 'simple'.")))
                 }
             }
         }

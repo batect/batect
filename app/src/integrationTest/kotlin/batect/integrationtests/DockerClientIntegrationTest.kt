@@ -19,9 +19,11 @@ package batect.integrationtests
 import batect.config.HealthCheckConfig
 import batect.config.VolumeMount
 import batect.docker.DockerClient
+import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationCommandGenerator
 import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerHealthCheckResult
+import batect.docker.DockerHttpClientFactory
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.DockerVersionInfoRetrievalResult
@@ -49,10 +51,11 @@ object DockerClientIntegrationTest : Spek({
 
         val logger = mock<Logger>()
         val processRunner = ProcessRunner(logger)
+        val httpClient = DockerHttpClientFactory.create()
         val creationCommandGenerator = DockerContainerCreationCommandGenerator()
         val consoleInfo = ConsoleInfo(processRunner, logger)
         val systemInfo = SystemInfo(processRunner)
-        val client = DockerClient(processRunner, creationCommandGenerator, consoleInfo, logger)
+        val client = DockerClient(processRunner, httpClient, creationCommandGenerator, consoleInfo, logger)
 
         fun creationRequestForTestContainer(image: DockerImage, network: DockerNetwork, fileToCreate: Path, command: Iterable<String>): DockerContainerCreationRequest {
             val fileToCreateParent = fileToCreate.parent.toAbsolutePath()
@@ -85,15 +88,36 @@ object DockerClientIntegrationTest : Spek({
             return creationRequestForTestContainer(image, network, fileToCreate, command)
         }
 
-        on("building, creating, starting, stopping and removing a container") {
-            val image = client.build(testImagePath, emptyMap()) {}
+        fun <T> withNetwork(action: (DockerNetwork) -> T): T {
             val network = client.createNewBridgeNetwork()
+
+            try {
+                return action(network)
+            } finally {
+                client.deleteNetwork(network)
+            }
+        }
+
+        fun <T> withContainer(creationRequest: DockerContainerCreationRequest, action: (DockerContainer) -> T): T {
+            val container = client.create(creationRequest)
+
+            try {
+                return action(container)
+            } finally {
+                client.remove(container)
+            }
+        }
+
+        on("building, creating, starting, stopping and removing a container") {
             val fileToCreate = getRandomTemporaryFilePath()
-            val container = client.create(creationRequestForContainerThatWaits(image, network, fileToCreate))
-            client.start(container)
-            client.stop(container)
-            client.remove(container)
-            client.deleteNetwork(network)
+            val image = client.build(testImagePath, emptyMap()) {}
+
+            withNetwork { network ->
+                withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
+                    client.start(container)
+                    client.stop(container)
+                }
+            }
 
             it("starts the container successfully") {
                 assertThat(Files.exists(fileToCreate), equalTo(true))
@@ -102,14 +126,15 @@ object DockerClientIntegrationTest : Spek({
         }
 
         on("pulling an image and then creating, starting, stopping and removing a container") {
-            val image = client.pullImage("alpine:3.7")
-            val network = client.createNewBridgeNetwork()
             val fileToCreate = getRandomTemporaryFilePath()
-            val container = client.create(creationRequestForContainerThatWaits(image, network, fileToCreate))
-            client.start(container)
-            client.stop(container)
-            client.remove(container)
-            client.deleteNetwork(network)
+            val image = client.pullImage("alpine:3.7")
+
+            withNetwork { network ->
+                withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
+                    client.start(container)
+                    client.stop(container)
+                }
+            }
 
             it("starts the container successfully") {
                 assertThat(Files.exists(fileToCreate), equalTo(true))
@@ -118,13 +143,14 @@ object DockerClientIntegrationTest : Spek({
         }
 
         describe("creating, running and then removing a container") {
-            val image = client.pullImage("alpine:3.7")
-            val network = client.createNewBridgeNetwork()
             val fileToCreate = getRandomTemporaryFilePath()
-            val container = client.create(creationRequestForContainerThatExits(image, network, fileToCreate))
-            client.run(container)
-            client.remove(container)
-            client.deleteNetwork(network)
+            val image = client.pullImage("alpine:3.7")
+
+            withNetwork { network ->
+                withContainer(creationRequestForContainerThatExits(image, network, fileToCreate)) { container ->
+                    client.run(container)
+                }
+            }
 
             it("starts the container successfully") {
                 assertThat(Files.exists(fileToCreate), equalTo(true))
@@ -133,16 +159,19 @@ object DockerClientIntegrationTest : Spek({
         }
 
         describe("waiting for a container to become healthy") {
-            val image = client.build(testImagePath, emptyMap()) {}
-            val network = client.createNewBridgeNetwork()
             val fileToCreate = getRandomTemporaryFilePath()
-            val container = client.create(creationRequestForContainerThatWaits(image, network, fileToCreate))
-            client.start(container)
-            val healthStatus = client.waitForHealthStatus(container)
-            val lastHealthCheckResult = client.getLastHealthCheckResult(container)
-            client.stop(container)
-            client.remove(container)
-            client.deleteNetwork(network)
+            val image = client.build(testImagePath, emptyMap()) {}
+
+            val (healthStatus, lastHealthCheckResult) = withNetwork { network ->
+                withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
+                    client.start(container)
+                    val healthStatus = client.waitForHealthStatus(container)
+                    val lastHealthCheckResult = client.getLastHealthCheckResult(container)
+                    client.stop(container)
+
+                    Pair(healthStatus, lastHealthCheckResult)
+                }
+            }
 
             it("reports that the container became healthy") {
                 assertThat(healthStatus, equalTo(HealthStatus.BecameHealthy))

@@ -16,6 +16,7 @@
 
 package batect.docker
 
+import batect.os.unixsockets.UnixSocketDns
 import batect.logging.Logger
 import batect.os.ExecutableDoesNotExistException
 import batect.os.Exited
@@ -28,11 +29,22 @@ import batect.utils.Version
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
-import java.nio.file.Path
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonTreeParser
+import okhttp3.HttpUrl
+import okhttp3.MediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.Response
 import java.util.UUID
 
+// Unix sockets implementation inspired by
+// https://github.com/gesellix/okhttp/blob/master/samples/simple-client/src/main/java/okhttp3/sample/OkDocker.java and
+// https://github.com/square/okhttp/blob/master/samples/unixdomainsockets/src/main/java/okhttp3/unixdomainsockets/UnixDomainSocketFactory.java
 class DockerClient(
     private val processRunner: ProcessRunner,
+    private val httpClient: OkHttpClient,
     private val creationCommandGenerator: DockerContainerCreationCommandGenerator,
     private val consoleInfo: ConsoleInfo,
     private val logger: Logger
@@ -141,21 +153,34 @@ class DockerClient(
             data("container", container)
         }
 
-        val command = listOf("docker", "start", container.id)
-        val result = processRunner.runAndCaptureOutput(command)
+        val url = HttpUrl.Builder()
+            .scheme("http")
+            .host(UnixSocketDns.encodePath("/var/run/docker.sock"))
+            .addPathSegment("v1.12")
+            .addPathSegment("containers")
+            .addPathSegment(container.id)
+            .addPathSegment("start")
+            .build()
 
-        if (failed(result)) {
-            logger.error {
-                message("Starting container failed.")
-                data("result", result)
+        val request = Request.Builder()
+            .post(emptyRequestBody())
+            .url(url)
+            .build()
+
+        httpClient.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Starting container failed.")
+                    data("error", error)
+                }
+
+                throw ContainerStartFailedException(container.id, error.message)
             }
 
-            throw ContainerStartFailedException(container.id, result.output)
-        }
-
-        logger.info {
-            message("Container started.")
-            data("container", container)
+            logger.info {
+                message("Container started.")
+                data("container", container)
+            }
         }
     }
 
@@ -226,7 +251,7 @@ class DockerClient(
                 data("result", result)
             }
 
-            throw ContainerHealthCheckException("Checking if container '${container.id}' has a healthcheck failed. Output from Docker was: ${result.output.trim()}")
+            throw ContainerHealthCheckException("Checking if container '${container.id}' has a healthcheck failed: ${result.output.trim()}")
         }
 
         return result.output.trim() != "null"
@@ -243,7 +268,7 @@ class DockerClient(
                 data("result", result)
             }
 
-            throw ContainerHealthCheckException("Could not get the last health check result for container '${container.id}'. Output from Docker was: ${result.output.trim()}")
+            throw ContainerHealthCheckException("Could not get the last health check result for container '${container.id}': ${result.output.trim()}")
         }
 
         if (result.output.trim() == "null") {
@@ -417,7 +442,7 @@ class DockerClient(
                 data("result", result)
             }
 
-            throw ImagePullFailedException("Pulling image '$imageName' failed. Output from Docker was: ${result.output.trim()}")
+            throw ImagePullFailedException("Pulling image '$imageName' failed: ${result.output.trim()}")
         }
 
         logger.info {
@@ -475,7 +500,7 @@ class DockerClient(
                 data("result", result)
             }
 
-            throw ImagePullFailedException("Checking if image '$imageName' has already been pulled failed. Output from Docker was: ${result.output.trim()}")
+            throw ImagePullFailedException("Checking if image '$imageName' has already been pulled failed: ${result.output.trim()}")
         }
 
         val haveImage = result.output.trim().isNotEmpty()
@@ -490,8 +515,21 @@ class DockerClient(
 
     private fun failed(result: ProcessOutput): Boolean = result.exitCode != 0
 
+    private fun emptyRequestBody(): RequestBody = RequestBody.create(MediaType.get("text/plain"), "")
+
+    private fun checkForFailure(response: Response, errorHandler: (DockerAPIError) -> Unit) {
+        if (response.isSuccessful) {
+            return
+        }
+
+        val parsedError = JsonTreeParser(response.body()!!.string()).readFully() as JsonObject
+        errorHandler(DockerAPIError(response.code(), parsedError["message"].primitive.content))
+    }
+
     @Serializable
     data class DockerHealthCheckStatus(@SerialName("Log") val log: List<DockerHealthCheckResult>)
+
+    private data class DockerAPIError(val statusCode: Int, val message: String)
 }
 
 data class DockerImage(val id: String)
@@ -529,20 +567,19 @@ sealed class DockerVersionInfoRetrievalResult {
 }
 
 class ImageBuildFailedException(val outputFromDocker: String) : RuntimeException("Image build failed. Output from Docker was: $outputFromDocker")
-class CopyToContainerFailedException(val source: Path, val destination: String, val containerId: String, val outputFromDocker: String) : RuntimeException("Copying file '$source' to '$destination' in container '$containerId' failed. Output from Docker was: $outputFromDocker")
 
 class ContainerCreationFailedException(message: String?, cause: Throwable?) : RuntimeException(message, cause) {
     constructor(message: String?) : this(message, null)
 }
 
-class ContainerStartFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Starting container '$containerId' failed. Output from Docker was: $outputFromDocker")
-class ContainerStopFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Stopping container '$containerId' failed. Output from Docker was: $outputFromDocker")
+class ContainerStartFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Starting container '$containerId' failed: $outputFromDocker")
+class ContainerStopFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Stopping container '$containerId' failed: $outputFromDocker")
 class ImagePullFailedException(message: String) : RuntimeException(message)
 class ContainerDoesNotExistException(message: String) : RuntimeException(message)
 class ContainerHealthCheckException(message: String) : RuntimeException(message)
-class NetworkCreationFailedException(val outputFromDocker: String) : RuntimeException("Creation of network failed. Output from Docker was: $outputFromDocker")
-class ContainerRemovalFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Removal of container '$containerId' failed. Output from Docker was: $outputFromDocker")
-class NetworkDeletionFailedException(val networkId: String, val outputFromDocker: String) : RuntimeException("Deletion of network '$networkId' failed. Output from Docker was: $outputFromDocker")
+class NetworkCreationFailedException(val outputFromDocker: String) : RuntimeException("Creation of network failed: $outputFromDocker")
+class ContainerRemovalFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Removal of container '$containerId' failed: $outputFromDocker")
+class NetworkDeletionFailedException(val networkId: String, val outputFromDocker: String) : RuntimeException("Deletion of network '$networkId' failed: $outputFromDocker")
 
 enum class HealthStatus {
     NoHealthCheck,

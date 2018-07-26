@@ -17,6 +17,7 @@
 package batect.docker
 
 import batect.config.HealthCheckConfig
+import batect.os.unixsockets.UnixSocketDns
 import batect.logging.Logger
 import batect.os.ExecutableDoesNotExistException
 import batect.os.Exited
@@ -26,7 +27,9 @@ import batect.os.OutputProcessing
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.testutils.InMemoryLogSink
+import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.mockPost
 import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
 import batect.utils.Version
@@ -41,9 +44,9 @@ import com.nhaarman.mockito_kotlin.doThrow
 import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
-import com.nhaarman.mockito_kotlin.reset
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
+import okhttp3.OkHttpClient
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -53,17 +56,13 @@ import java.util.UUID
 
 object DockerClientSpec : Spek({
     describe("a Docker client") {
-        val processRunner = mock<ProcessRunner>()
-        val creationCommandGenerator = mock<DockerContainerCreationCommandGenerator>()
-        val consoleInfo = mock<ConsoleInfo>()
-        val logger = Logger("some.source", InMemoryLogSink())
+        val processRunner by createForEachTest { mock<ProcessRunner>() }
+        val httpClient by createForEachTest { mock<OkHttpClient>() }
+        val creationCommandGenerator by createForEachTest { mock<DockerContainerCreationCommandGenerator>() }
+        val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
+        val logger by createForEachTest { Logger("some.source", InMemoryLogSink()) }
 
-        val client = DockerClient(processRunner, creationCommandGenerator, consoleInfo, logger)
-
-        beforeEachTest {
-            reset(processRunner)
-            reset(creationCommandGenerator)
-        }
+        val client by createForEachTest { DockerClient(processRunner, httpClient, creationCommandGenerator, consoleInfo, logger) }
 
         describe("building an image") {
             given("a container configuration") {
@@ -258,22 +257,23 @@ object DockerClientSpec : Spek({
         describe("starting a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
+                val encodedHostname = UnixSocketDns.encodePath("/var/run/docker.sock")
 
                 on("starting that container") {
-                    whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(0, ""))
+                    val call = httpClient.mockPost("http://$encodedHostname/v1.12/containers/the-container-id/start", "", 204)
 
                     client.start(container)
 
-                    it("launches the Docker CLI to start the container") {
-                        verify(processRunner).runAndCaptureOutput(listOf("docker", "start", container.id))
+                    it("sends a request to the Docker daemon to start the container") {
+                        verify(call).execute()
                     }
                 }
 
                 on("an unsuccessful start attempt") {
-                    whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Something went wrong."))
+                    httpClient.mockPost("http://$encodedHostname/v1.12/containers/the-container-id/start", """{"message": "Something went wrong."}""", 418)
 
                     it("raises an appropriate exception") {
-                        assertThat({ client.start(container) }, throws<ContainerStartFailedException>(withMessage("Starting container 'the-container-id' failed. Output from Docker was: Something went wrong.")))
+                        assertThat({ client.start(container) }, throws<ContainerStartFailedException>(withMessage("Starting container 'the-container-id' failed: Something went wrong.")))
                     }
                 }
             }
@@ -297,7 +297,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Something went wrong."))
 
                     it("raises an appropriate exception") {
-                        assertThat({ client.stop(container) }, throws<ContainerStopFailedException>(withMessage("Stopping container 'the-container-id' failed. Output from Docker was: Something went wrong.")))
+                        assertThat({ client.stop(container) }, throws<ContainerStopFailedException>(withMessage("Stopping container 'the-container-id' failed: Something went wrong.")))
                     }
                 }
             }
@@ -327,7 +327,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong\n"))
 
                     it("throws an appropriate exception") {
-                        assertThat({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Checking if container 'the-container-id' has a healthcheck failed. Output from Docker was: Something went wrong")))
+                        assertThat({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Checking if container 'the-container-id' has a healthcheck failed: Something went wrong")))
                     }
                 }
             }
@@ -488,7 +488,7 @@ object DockerClientSpec : Spek({
 
                 it("throws an appropriate exception") {
                     assertThat({ client.getLastHealthCheckResult(container) },
-                        throws<ContainerHealthCheckException>(withMessage("Could not get the last health check result for container 'some-container'. Output from Docker was: Something went wrong.")))
+                        throws<ContainerHealthCheckException>(withMessage("Could not get the last health check result for container 'some-container': Something went wrong.")))
                 }
             }
         }
@@ -517,7 +517,7 @@ object DockerClientSpec : Spek({
                 whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
 
                 it("throws an appropriate exception") {
-                    assertThat({ client.createNewBridgeNetwork() }, throws<NetworkCreationFailedException>(withMessage("Creation of network failed. Output from Docker was: Something went wrong.")))
+                    assertThat({ client.createNewBridgeNetwork() }, throws<NetworkCreationFailedException>(withMessage("Creation of network failed: Something went wrong.")))
                 }
             }
         }
@@ -540,7 +540,7 @@ object DockerClientSpec : Spek({
                 whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
 
                 it("throws an appropriate exception") {
-                    assertThat({ client.deleteNetwork(network) }, throws<NetworkDeletionFailedException>(withMessage("Deletion of network 'abc123' failed. Output from Docker was: Something went wrong.")))
+                    assertThat({ client.deleteNetwork(network) }, throws<NetworkDeletionFailedException>(withMessage("Deletion of network 'abc123' failed: Something went wrong.")))
                 }
             }
         }
@@ -563,7 +563,7 @@ object DockerClientSpec : Spek({
                 whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
 
                 it("throws an appropriate exception") {
-                    assertThat({ client.remove(container) }, throws<ContainerRemovalFailedException>(withMessage("Removal of container 'some-id' failed. Output from Docker was: Something went wrong.")))
+                    assertThat({ client.remove(container) }, throws<ContainerRemovalFailedException>(withMessage("Removal of container 'some-id' failed: Something went wrong.")))
                 }
             }
 
@@ -634,7 +634,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndCaptureOutput(pullCommand)).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
 
                     it("throws an appropriate exception") {
-                        assertThat({ client.pullImage("some-image") }, throws<ImagePullFailedException>(withMessage("Pulling image 'some-image' failed. Output from Docker was: Something went wrong.")))
+                        assertThat({ client.pullImage("some-image") }, throws<ImagePullFailedException>(withMessage("Pulling image 'some-image' failed: Something went wrong.")))
                     }
                 }
             }
@@ -657,7 +657,7 @@ object DockerClientSpec : Spek({
                 whenever(processRunner.runAndCaptureOutput(listOf("docker", "images", "-q", "some-image"))).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
 
                 it("throws an appropriate exception") {
-                    assertThat({ client.pullImage("some-image") }, throws<ImagePullFailedException>(withMessage("Checking if image 'some-image' has already been pulled failed. Output from Docker was: Something went wrong.")))
+                    assertThat({ client.pullImage("some-image") }, throws<ImagePullFailedException>(withMessage("Checking if image 'some-image' has already been pulled failed: Something went wrong.")))
                 }
             }
         }

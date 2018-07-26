@@ -16,7 +16,8 @@
 
 package batect.testutils
 
-import com.nhaarman.mockito_kotlin.doAnswer
+import com.nhaarman.mockito_kotlin.argThat
+import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
 import okhttp3.Call
@@ -28,15 +29,17 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody
 
+private val jsonMediaType = MediaType.get("application/json; charset=utf-8")
+
 fun OkHttpClient.mockGet(url: String, body: String, statusCode: Int = 200) {
     val parsedUrl = HttpUrl.get(url)
-    val responseBody = ResponseBody.create(MediaType.parse("application/json; charset=utf-8"), body)
+    val responseBody = ResponseBody.create(jsonMediaType, body)
 
-    whenever(this.newCall(com.nhaarman.mockito_kotlin.argThat { method() == "GET" && url().equals(parsedUrl) })).then { invocation ->
+    whenever(this.newCall(argThat { method() == "GET" && url().equals(parsedUrl) })).then { invocation ->
         val request = invocation.getArgument<Request>(0)
 
         mock<Call> {
-            on { execute() } doAnswer {
+            on { execute() } doReturn (
                 Response.Builder()
                     .request(request)
                     .body(responseBody)
@@ -44,7 +47,31 @@ fun OkHttpClient.mockGet(url: String, body: String, statusCode: Int = 200) {
                     .code(statusCode)
                     .message("Something happened")
                     .build()
-            }
+                )
         }
     }
+}
+
+fun OkHttpClient.mockPost(url: String, body: String, statusCode: Int = 200): Call {
+    val parsedUrl = HttpUrl.get(url)
+    val responseBody = ResponseBody.create(jsonMediaType, body)
+    val call = mock<Call>()
+
+    whenever(this.newCall(argThat { method() == "POST" && url().equals(parsedUrl) })).then { invocation ->
+        val request = invocation.getArgument<Request>(0)
+
+        whenever(call.execute()).doReturn(
+            Response.Builder()
+                .request(request)
+                .body(responseBody)
+                .protocol(Protocol.HTTP_1_1)
+                .code(statusCode)
+                .message("Something happened")
+                .build()
+        )
+
+        call
+    }
+
+    return call
 }

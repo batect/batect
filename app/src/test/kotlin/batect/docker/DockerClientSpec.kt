@@ -17,7 +17,6 @@
 package batect.docker
 
 import batect.config.HealthCheckConfig
-import batect.logging.Logger
 import batect.os.ExecutableDoesNotExistException
 import batect.os.Exited
 import batect.os.KillProcess
@@ -25,8 +24,8 @@ import batect.os.KilledDuringProcessing
 import batect.os.OutputProcessing
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
-import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
 import batect.testutils.mockPost
 import batect.testutils.withMessage
@@ -68,7 +67,7 @@ object DockerClientSpec : Spek({
 
         val creationCommandGenerator by createForEachTest { mock<DockerContainerCreationCommandGenerator>() }
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
-        val logger by createForEachTest { Logger("some.source", InMemoryLogSink()) }
+        val logger by createLoggerForEachTest()
 
         val client by createForEachTest { DockerClient(processRunner, httpConfig, creationCommandGenerator, consoleInfo, logger) }
 

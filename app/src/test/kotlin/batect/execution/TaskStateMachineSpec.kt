@@ -19,7 +19,6 @@ package batect.execution
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
-import batect.logging.Logger
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
@@ -32,8 +31,8 @@ import batect.execution.model.stages.RunStage
 import batect.execution.model.stages.RunStagePlanner
 import batect.execution.model.stages.StepReady
 import batect.execution.model.steps.TaskStep
-import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
@@ -60,7 +59,7 @@ object TaskStateMachineSpec : Spek({
     describe("a task state machine") {
         val graph by createForEachTest { mock<ContainerDependencyGraph>() }
         val runOptions by createForEachTest { mock<RunOptions>() }
-        val logger by createForEachTest { Logger("the-source", InMemoryLogSink()) }
+        val logger by createLoggerForEachTest()
         val runStage by createForEachTest { mock<RunStage>() }
         val runStagePlanner by createForEachTest {
             mock<RunStagePlanner> {

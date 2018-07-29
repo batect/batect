@@ -16,10 +16,9 @@
 
 package batect.ui
 
-import batect.logging.Logger
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
-import batect.testutils.InMemoryLogSink
+import batect.testutils.createLoggerForEachTest
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -32,7 +31,7 @@ import org.jetbrains.spek.api.dsl.on
 
 object ConsoleInfoSpec : Spek({
     describe("a console information provider") {
-        val logger = Logger("some.source", InMemoryLogSink())
+        val logger by createLoggerForEachTest()
 
         describe("determining if STDIN is connected to a TTY") {
             on("STDIN being connected to a TTY") {

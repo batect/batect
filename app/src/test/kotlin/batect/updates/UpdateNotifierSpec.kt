@@ -17,9 +17,8 @@
 package batect.updates
 
 import batect.VersionInfo
-import batect.logging.Logger
 import batect.testutils.createForEachTest
-import batect.testutils.InMemoryLogSink
+import batect.testutils.createLoggerForEachTest
 import batect.ui.Console
 import batect.utils.Version
 import com.nhaarman.mockito_kotlin.inOrder
@@ -41,7 +40,7 @@ object UpdateNotifierSpec : Spek({
         val updateInfoUpdater by createForEachTest { mock<UpdateInfoUpdater>() }
         val versionInfo by createForEachTest { mock<VersionInfo>() }
         val console by createForEachTest { mock<Console>() }
-        val logger by createForEachTest { Logger("some.source", InMemoryLogSink()) }
+        val logger by createLoggerForEachTest()
         var currentTime = ZonedDateTime.of(0, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)
 
         beforeEachTest {

@@ -16,9 +16,8 @@
 
 package batect.updates
 
-import batect.logging.Logger
-import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.mockGet
 import batect.testutils.withCause
 import batect.testutils.withMessage
@@ -47,7 +46,7 @@ object UpdateInfoDownloaderSpec : Spek({
         val downloadUrl = "https://api.github.com/repos/charleskorn/batect/releases/latest"
         val client by createForEachTest { mock<OkHttpClient>() }
 
-        val logger by createForEachTest { Logger("UpdateInfoDownloader", InMemoryLogSink()) }
+        val logger by createLoggerForEachTest()
         val dateTime = ZonedDateTime.of(2017, 10, 3, 11, 2, 0, 0, ZoneOffset.UTC)
         val dateTimeProvider = { dateTime }
         val downloader by createForEachTest { UpdateInfoDownloader(client, logger, dateTimeProvider) }

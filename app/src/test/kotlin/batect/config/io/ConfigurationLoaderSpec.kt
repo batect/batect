@@ -23,9 +23,9 @@ import batect.config.PortMapping
 import batect.config.PullImage
 import batect.config.RunAsCurrentUserConfig
 import batect.config.VolumeMount
-import batect.logging.Logger
 import batect.os.Command
-import batect.testutils.InMemoryLogSink
+import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
@@ -51,26 +51,28 @@ import java.nio.file.Path
 
 object ConfigurationLoaderSpec : Spek({
     describe("a configuration loader") {
-        val fileSystem = Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix())
+        val fileSystem by createForEachTest { Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix()) }
 
-        val pathResolverFactory = mock<PathResolverFactory> {
-            on { createResolver(any()) } doAnswer { invocation ->
-                val rootPath = invocation.arguments[0] as Path
+        val pathResolverFactory by createForEachTest {
+            mock<PathResolverFactory> {
+                on { createResolver(any()) } doAnswer { invocation ->
+                    val rootPath = invocation.arguments[0] as Path
 
-                mock {
-                    on { resolve(anyString()) } doAnswer { invocation ->
-                        val path = invocation.arguments[0] as String
-                        PathResolutionResult.Resolved("/resolved/$path", PathType.Directory)
+                    mock {
+                        on { resolve(anyString()) } doAnswer { invocation ->
+                            val path = invocation.arguments[0] as String
+                            PathResolutionResult.Resolved("/resolved/$path", PathType.Directory)
+                        }
+
+                        on { relativeTo } doReturn rootPath
                     }
-
-                    on { relativeTo } doReturn rootPath
                 }
             }
         }
 
-        val logger = Logger("some.source", InMemoryLogSink())
+        val logger by createLoggerForEachTest()
         val testFileName = "/theTestFile.yml"
-        val loader = ConfigurationLoader(pathResolverFactory, fileSystem, logger)
+        val loader by createForEachTest { ConfigurationLoader(pathResolverFactory, fileSystem, logger) }
 
         fun loadConfiguration(config: String, path: String = testFileName): Configuration {
             val filePath = fileSystem.getPath(path)

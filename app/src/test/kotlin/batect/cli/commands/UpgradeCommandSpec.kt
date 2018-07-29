@@ -17,9 +17,8 @@
 package batect.cli.commands
 
 import batect.VersionInfo
-import batect.logging.Logger
-import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.mockGet
 import batect.ui.Console
 import batect.ui.ConsoleColor
@@ -52,7 +51,6 @@ import org.jetbrains.spek.api.dsl.on
 import java.io.IOException
 import java.nio.file.Files
 import java.time.ZonedDateTime
-import kotlin.reflect.jvm.jvmName
 
 object UpgradeCommandSpec : Spek({
     describe("an upgrade command") {
@@ -68,7 +66,7 @@ object UpgradeCommandSpec : Spek({
             }
         }
 
-        val logger by createForEachTest { Logger(UpgradeCommand::class.jvmName, InMemoryLogSink()) }
+        val logger by createLoggerForEachTest()
 
         given("the application was launched without using the wrapper script") {
             val updateInfoDownloader = mock<UpdateInfoDownloader>()

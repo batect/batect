@@ -21,9 +21,8 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.TaskStep
 import batect.execution.model.steps.TaskStepRunner
-import batect.logging.Logger
-import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.ui.EventLogger
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -51,7 +50,7 @@ object ParallelExecutionManagerSpec : Spek({
         val taskStepRunner by createForEachTest { mock<TaskStepRunner>() }
         val stateMachine by createForEachTest { mock<TaskStateMachine>() }
         val runOptions = RunOptions("some-task", emptyList(), 2, BehaviourAfterFailure.Cleanup, true)
-        val logger = Logger("some.source", InMemoryLogSink())
+        val logger by createLoggerForEachTest()
         val executionManager by createForEachTest {
             ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, runOptions, logger)
         }

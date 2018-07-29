@@ -23,9 +23,8 @@ import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.execution.model.events.RunningContainerExitedEvent
-import batect.logging.Logger
-import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
 import batect.ui.EventLogger
@@ -79,7 +78,7 @@ object TaskRunnerSpec : Spek({
             }
         }
 
-        val logger by createForEachTest { Logger("some.source", InMemoryLogSink()) }
+        val logger by createLoggerForEachTest()
         val taskRunner by createForEachTest { TaskRunner(eventLoggerProvider, graphProvider, stateMachineProvider, executionManagerProvider, logger) }
 
         describe("running a task") {

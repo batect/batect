@@ -26,7 +26,6 @@ import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
-import batect.logging.Logger
 import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerDependencyGraph
 import batect.execution.model.events.ContainerCreatedEvent
@@ -42,8 +41,8 @@ import batect.execution.model.rules.cleanup.DeleteTemporaryFileStepRule
 import batect.execution.model.rules.cleanup.RemoveContainerStepRule
 import batect.execution.model.rules.cleanup.StopContainerStepRule
 import batect.os.Command
-import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.hasElement
@@ -73,8 +72,8 @@ object CleanupStagePlannerSpec : Spek({
         val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2))
         val graph = ContainerDependencyGraph(config, task, commandResolver)
         val events by createForEachTest { mutableSetOf<TaskEvent>() }
-        val logger = Logger("cleanup-stage-test", InMemoryLogSink())
-        val planner = CleanupStagePlanner(logger)
+        val logger by createLoggerForEachTest()
+        val planner by createForEachTest { CleanupStagePlanner(logger) }
 
         given("no events were posted") {
             on("creating the stage") {

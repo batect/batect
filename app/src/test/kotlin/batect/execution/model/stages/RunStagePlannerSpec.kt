@@ -35,9 +35,9 @@ import batect.execution.model.rules.run.PullImageStepRule
 import batect.execution.model.rules.run.RunContainerStepRule
 import batect.execution.model.rules.run.StartContainerStepRule
 import batect.execution.model.rules.run.WaitForContainerToBecomeHealthyStepRule
-import batect.logging.Logger
 import batect.os.Command
-import batect.testutils.InMemoryLogSink
+import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.hasElement
@@ -50,6 +50,7 @@ import org.jetbrains.spek.api.dsl.TestContainer
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
+import org.jetbrains.spek.api.dsl.on
 
 object RunStagePlannerSpec : Spek({
     describe("a run stage planner") {
@@ -57,14 +58,14 @@ object RunStagePlannerSpec : Spek({
             on { resolveCommand(any(), any()) } doReturn Command.parse("do-stuff")
         }
 
-        val logger = Logger("run-stage-test", InMemoryLogSink())
-        val planner = RunStagePlanner(logger)
+        val logger by createLoggerForEachTest()
+        val planner by createForEachTest { RunStagePlanner(logger) }
 
         given("the task has a single container") {
             given("the task has no additional environment variables or port mappings") {
                 val task = Task("the-task", TaskRunConfiguration("the-container"))
 
-                given("that container pulls an existing image") {
+                on("that container pulls an existing image") {
                     val container = Container(task.runConfiguration.container, PullImage("some-image"))
                     val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                     val graph = ContainerDependencyGraph(config, task, commandResolver)
@@ -79,7 +80,7 @@ object RunStagePlannerSpec : Spek({
                     ))
                 }
 
-                given("that container builds an image from a Dockerfile") {
+                on("that container builds an image from a Dockerfile") {
                     val container = Container(task.runConfiguration.container, BuildImage("./my-image"))
                     val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                     val graph = ContainerDependencyGraph(config, task, commandResolver)
@@ -95,7 +96,7 @@ object RunStagePlannerSpec : Spek({
                 }
             }
 
-            given("the task has some additional environment variables") {
+            on("the task has some additional environment variables") {
                 val task = Task("the-task", TaskRunConfiguration("the-container", additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")))
                 val container = Container(task.runConfiguration.container, PullImage("some-image"))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
@@ -111,7 +112,7 @@ object RunStagePlannerSpec : Spek({
                 ))
             }
 
-            given("the task some additional port mappings") {
+            on("the task some additional port mappings") {
                 val task = Task("the-task", TaskRunConfiguration("the-container", additionalPortMappings = setOf(PortMapping(123, 456))))
                 val container = Container(task.runConfiguration.container, PullImage("some-image"))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
@@ -131,7 +132,7 @@ object RunStagePlannerSpec : Spek({
         given("the task has multiple containers") {
             val task = Task("the-task", TaskRunConfiguration("task-container", additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value"), additionalPortMappings = setOf(PortMapping(123, 456))))
 
-            given("each container has a unique build directory or existing image to pull") {
+            on("each container has a unique build directory or existing image to pull") {
                 val container1 = Container("container-1", BuildImage("./container-1"))
                 val container2 = Container("container-2", PullImage("image-2"))
                 val container3 = Container("container-3", PullImage("image-3"), dependencies = setOf(container2.name))
@@ -161,7 +162,7 @@ object RunStagePlannerSpec : Spek({
                 ))
             }
 
-            given("some containers share an existing image to pull") {
+            on("some containers share an existing image to pull") {
                 val container1 = Container("container-1", PullImage("shared-image"))
                 val container2 = Container("container-2", PullImage("shared-image"))
                 val taskContainer = Container(task.runConfiguration.container, PullImage("task-image"), dependencies = setOf(container1.name, container2.name))
@@ -185,7 +186,7 @@ object RunStagePlannerSpec : Spek({
                 ))
             }
 
-            given("some containers share an image to build") {
+            on("some containers share an image to build") {
                 val container1 = Container("container-1", BuildImage("/shared-image"))
                 val container2 = Container("container-2", BuildImage("/shared-image"))
                 val taskContainer = Container(task.runConfiguration.container, PullImage("task-image"), dependencies = setOf(container1.name, container2.name))

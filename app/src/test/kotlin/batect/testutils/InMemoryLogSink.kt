@@ -20,10 +20,12 @@ import batect.logging.LogMessage
 import batect.logging.LogMessageBuilder
 import batect.logging.LogMessageWriter
 import batect.logging.LogSink
+import batect.logging.Logger
 import batect.logging.Severity
 import batect.logging.StandardAdditionalDataSource
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
+import org.jetbrains.spek.api.dsl.SpecBody
 import java.io.ByteArrayOutputStream
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -51,3 +53,5 @@ class InMemoryLogSink : LogSink {
         }
     }
 }
+
+fun SpecBody.createLoggerForEachTest() = createForEachTest { Logger("test logger", InMemoryLogSink()) }

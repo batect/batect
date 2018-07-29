@@ -16,7 +16,6 @@
 
 package batect.docker
 
-import batect.os.unixsockets.UnixSocketDns
 import batect.logging.Logger
 import batect.os.ExecutableDoesNotExistException
 import batect.os.Exited
@@ -31,9 +30,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonTreeParser
-import okhttp3.HttpUrl
 import okhttp3.MediaType
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
@@ -44,7 +41,7 @@ import java.util.UUID
 // https://github.com/square/okhttp/blob/master/samples/unixdomainsockets/src/main/java/okhttp3/unixdomainsockets/UnixDomainSocketFactory.java
 class DockerClient(
     private val processRunner: ProcessRunner,
-    private val httpClient: OkHttpClient,
+    private val httpConfig: DockerHttpConfig,
     private val creationCommandGenerator: DockerContainerCreationCommandGenerator,
     private val consoleInfo: ConsoleInfo,
     private val logger: Logger
@@ -153,9 +150,7 @@ class DockerClient(
             data("container", container)
         }
 
-        val url = HttpUrl.Builder()
-            .scheme("http")
-            .host(UnixSocketDns.encodePath("/var/run/docker.sock"))
+        val url = httpConfig.baseUrl.newBuilder()
             .addPathSegment("v1.12")
             .addPathSegment("containers")
             .addPathSegment(container.id)
@@ -167,7 +162,7 @@ class DockerClient(
             .url(url)
             .build()
 
-        httpClient.newCall(request).execute().use { response ->
+        httpConfig.client.newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Starting container failed.")

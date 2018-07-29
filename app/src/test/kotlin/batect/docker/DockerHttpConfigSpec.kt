@@ -21,20 +21,30 @@ import batect.os.unixsockets.UnixSocketFactory
 import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isA
+import okhttp3.HttpUrl
+import okhttp3.OkHttpClient
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import java.net.InetSocketAddress
 import java.net.Proxy
+import java.time.Duration
+import java.util.concurrent.TimeUnit
 
-object DockerHttpClientFactorySpec : Spek({
-    describe("a Docker HTTP client factory") {
-        val factory = DockerHttpClientFactory
+object DockerHttpConfigSpec : Spek({
+    describe("a set of Docker HTTP configuration") {
+        val baseClient = OkHttpClient.Builder()
+            .proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress("some-proxy", 1234)))
+            .readTimeout(1, TimeUnit.DAYS)
+            .build()
 
-        on("creating a new HTTP client") {
-            val client = factory.create()
+        val config = DockerHttpConfig(baseClient)
 
-            it("disables the proxy") {
+        on("getting a HTTP client configured for use with the Docker API") {
+            val client = config.client
+
+            it("overrides any existing proxy settings") {
                 assertThat(client.proxy(), equalTo(Proxy.NO_PROXY))
             }
 
@@ -44,6 +54,18 @@ object DockerHttpClientFactorySpec : Spek({
 
             it("configures the client to use the fake DNS service") {
                 assertThat(client.dns(), isA<UnixSocketDns>())
+            }
+
+            it("inherits all other settings from the base client provided") {
+                assertThat(client.readTimeoutMillis().toLong(), equalTo(Duration.ofDays(1).toMillis()))
+            }
+        }
+
+        on("getting the base URL to use") {
+            val encodedPath = UnixSocketDns.encodePath("/var/run/docker.sock")
+
+            it("returns a URL ready for use with the local Unix socket") {
+                assertThat(config.baseUrl, equalTo(HttpUrl.parse("http://$encodedPath")!!))
             }
         }
     }

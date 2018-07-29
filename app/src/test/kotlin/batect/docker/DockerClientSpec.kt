@@ -17,7 +17,6 @@
 package batect.docker
 
 import batect.config.HealthCheckConfig
-import batect.os.unixsockets.UnixSocketDns
 import batect.logging.Logger
 import batect.os.ExecutableDoesNotExistException
 import batect.os.Exited
@@ -46,6 +45,7 @@ import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
+import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -58,11 +58,19 @@ object DockerClientSpec : Spek({
     describe("a Docker client") {
         val processRunner by createForEachTest { mock<ProcessRunner>() }
         val httpClient by createForEachTest { mock<OkHttpClient>() }
+        val dockerBaseUrl = "http://the-docker-daemon"
+        val httpConfig by createForEachTest {
+            mock<DockerHttpConfig> {
+                on { client } doReturn httpClient
+                on { baseUrl } doReturn HttpUrl.get(dockerBaseUrl)
+            }
+        }
+
         val creationCommandGenerator by createForEachTest { mock<DockerContainerCreationCommandGenerator>() }
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
         val logger by createForEachTest { Logger("some.source", InMemoryLogSink()) }
 
-        val client by createForEachTest { DockerClient(processRunner, httpClient, creationCommandGenerator, consoleInfo, logger) }
+        val client by createForEachTest { DockerClient(processRunner, httpConfig, creationCommandGenerator, consoleInfo, logger) }
 
         describe("building an image") {
             given("a container configuration") {
@@ -257,10 +265,9 @@ object DockerClientSpec : Spek({
         describe("starting a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
-                val encodedHostname = UnixSocketDns.encodePath("/var/run/docker.sock")
 
                 on("starting that container") {
-                    val call = httpClient.mockPost("http://$encodedHostname/v1.12/containers/the-container-id/start", "", 204)
+                    val call = httpClient.mockPost("$dockerBaseUrl/v1.12/containers/the-container-id/start", "", 204)
 
                     client.start(container)
 
@@ -270,7 +277,7 @@ object DockerClientSpec : Spek({
                 }
 
                 on("an unsuccessful start attempt") {
-                    httpClient.mockPost("http://$encodedHostname/v1.12/containers/the-container-id/start", """{"message": "Something went wrong."}""", 418)
+                    httpClient.mockPost("$dockerBaseUrl/v1.12/containers/the-container-id/start", """{"message": "Something went wrong."}""", 418)
 
                     it("raises an appropriate exception") {
                         assertThat({ client.start(container) }, throws<ContainerStartFailedException>(withMessage("Starting container 'the-container-id' failed: Something went wrong.")))

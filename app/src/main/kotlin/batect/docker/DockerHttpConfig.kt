@@ -18,13 +18,19 @@ package batect.docker
 
 import batect.os.unixsockets.UnixSocketDns
 import batect.os.unixsockets.UnixSocketFactory
+import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import java.net.Proxy
 
-object DockerHttpClientFactory {
-    fun create(): OkHttpClient = OkHttpClient.Builder()
+class DockerHttpConfig(baseClient: OkHttpClient) {
+    val client: OkHttpClient = baseClient.newBuilder()
         .proxy(Proxy.NO_PROXY)
         .socketFactory(UnixSocketFactory())
         .dns(UnixSocketDns())
+        .build()
+
+    val baseUrl: HttpUrl = HttpUrl.Builder()
+        .scheme("http")
+        .host(UnixSocketDns.encodePath("/var/run/docker.sock"))
         .build()
 }

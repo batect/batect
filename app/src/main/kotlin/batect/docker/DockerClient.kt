@@ -573,20 +573,6 @@ sealed class DockerVersionInfoRetrievalResult {
     }
 }
 
-class ImageBuildFailedException(val outputFromDocker: String) : RuntimeException("Image build failed. Output from Docker was: $outputFromDocker")
-
-class ContainerCreationFailedException(message: String?, cause: Throwable?) : RuntimeException(message, cause) {
-    constructor(message: String?) : this(message, null)
-}
-
-class ContainerStartFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Starting container '$containerId' failed: $outputFromDocker")
-class ContainerStopFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Stopping container '$containerId' failed: $outputFromDocker")
-class ImagePullFailedException(message: String) : RuntimeException(message)
-class ContainerHealthCheckException(message: String) : RuntimeException(message)
-class NetworkCreationFailedException(val outputFromDocker: String) : RuntimeException("Creation of network failed: $outputFromDocker")
-class ContainerRemovalFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Removal of container '$containerId' failed: $outputFromDocker")
-class NetworkDeletionFailedException(val networkId: String, val outputFromDocker: String) : RuntimeException("Deletion of network '$networkId' failed: $outputFromDocker")
-
 enum class HealthStatus {
     NoHealthCheck,
     BecameHealthy,

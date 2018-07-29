@@ -153,7 +153,7 @@ class DockerClient(
 
         val request = Request.Builder()
             .post(emptyRequestBody())
-            .url(urlForContainer(container, "start"))
+            .url(urlForContainerOperation(container, "start"))
             .build()
 
         httpConfig.client.newCall(request).execute().use { response ->
@@ -277,7 +277,7 @@ class DockerClient(
 
         val request = Request.Builder()
             .post(emptyRequestBody())
-            .url(urlForContainer(container, "stop"))
+            .url(urlForContainerOperation(container, "stop"))
             .build()
 
         httpConfig.client.newCall(request).execute().use { response ->
@@ -352,19 +352,23 @@ class DockerClient(
             data("container", container)
         }
 
-        val command = listOf("docker", "rm", "--volumes", container.id)
-        val result = processRunner.runAndCaptureOutput(command)
+        val url = urlForContainer(container).newBuilder()
+            .addQueryParameter("v", "true")
+            .build()
 
-        if (failed(result)) {
-            logger.error {
-                message("Could not remove container.")
-                data("result", result)
-            }
+        val request = Request.Builder()
+            .delete()
+            .url(url)
+            .build()
 
-            if (result.output.startsWith("Error response from daemon: No such container: ")) {
-                throw ContainerDoesNotExistException("Removing container '${container.id}' failed because it does not exist.")
-            } else {
-                throw ContainerRemovalFailedException(container.id, result.output.trim())
+        httpConfig.client.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Could not remove container.")
+                    data("error", error)
+                }
+
+                throw ContainerRemovalFailedException(container.id, error.message)
             }
         }
 
@@ -508,10 +512,13 @@ class DockerClient(
 
     private fun failed(result: ProcessOutput): Boolean = result.exitCode != 0
 
-    private fun urlForContainer(container: DockerContainer, operation: String): HttpUrl = httpConfig.baseUrl.newBuilder()
+    private fun urlForContainer(container: DockerContainer): HttpUrl = httpConfig.baseUrl.newBuilder()
         .addPathSegment("v1.12")
         .addPathSegment("containers")
         .addPathSegment(container.id)
+        .build()
+
+    private fun urlForContainerOperation(container: DockerContainer, operation: String): HttpUrl = urlForContainer(container).newBuilder()
         .addPathSegment(operation)
         .build()
 
@@ -575,7 +582,6 @@ class ContainerCreationFailedException(message: String?, cause: Throwable?) : Ru
 class ContainerStartFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Starting container '$containerId' failed: $outputFromDocker")
 class ContainerStopFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Stopping container '$containerId' failed: $outputFromDocker")
 class ImagePullFailedException(message: String) : RuntimeException(message)
-class ContainerDoesNotExistException(message: String) : RuntimeException(message)
 class ContainerHealthCheckException(message: String) : RuntimeException(message)
 class NetworkCreationFailedException(val outputFromDocker: String) : RuntimeException("Creation of network failed: $outputFromDocker")
 class ContainerRemovalFailedException(val containerId: String, val outputFromDocker: String) : RuntimeException("Removal of container '$containerId' failed: $outputFromDocker")

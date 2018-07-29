@@ -17,7 +17,6 @@
 package batect.execution.model.steps
 
 import batect.docker.ContainerCreationFailedException
-import batect.docker.ContainerDoesNotExistException
 import batect.docker.ContainerHealthCheckException
 import batect.docker.ContainerRemovalFailedException
 import batect.docker.ContainerStartFailedException
@@ -210,8 +209,6 @@ class TaskStepRunner(
             eventSink.postEvent(ContainerRemovedEvent(step.container))
         } catch (e: ContainerRemovalFailedException) {
             eventSink.postEvent(ContainerRemovalFailedEvent(step.container, e.outputFromDocker))
-        } catch (_: ContainerDoesNotExistException) {
-            eventSink.postEvent(ContainerRemovedEvent(step.container))
         }
     }
 

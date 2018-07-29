@@ -21,7 +21,6 @@ import batect.config.HealthCheckConfig
 import batect.config.PortMapping
 import batect.config.VolumeMount
 import batect.docker.ContainerCreationFailedException
-import batect.docker.ContainerDoesNotExistException
 import batect.docker.ContainerHealthCheckException
 import batect.docker.ContainerRemovalFailedException
 import batect.docker.ContainerStartFailedException
@@ -417,16 +416,6 @@ object TaskStepRunnerSpec : Spek({
 
                     it("emits a 'container removal failed' event") {
                         verify(eventSink).postEvent(ContainerRemovalFailedEvent(container, "Something went wrong"))
-                    }
-                }
-
-                on("when the container does not exist") {
-                    whenever(dockerClient.remove(dockerContainer)).thenThrow(ContainerDoesNotExistException("Some message"))
-
-                    runner.run(step, eventSink, runOptions)
-
-                    it("emits a 'container removed' event") {
-                        verify(eventSink).postEvent(ContainerRemovedEvent(container))
                     }
                 }
             }

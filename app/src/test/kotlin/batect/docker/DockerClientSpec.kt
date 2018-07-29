@@ -27,6 +27,7 @@ import batect.os.ProcessRunner
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
+import batect.testutils.mockDelete
 import batect.testutils.mockPost
 import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
@@ -264,10 +265,10 @@ object DockerClientSpec : Spek({
         describe("starting a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
+                val expectedUrl = "$dockerBaseUrl/v1.12/containers/the-container-id/start"
 
                 on("starting that container") {
-                    val call = httpClient.mockPost("$dockerBaseUrl/v1.12/containers/the-container-id/start", "", 204)
-
+                    val call = httpClient.mockPost(expectedUrl, "", 204)
                     client.start(container)
 
                     it("sends a request to the Docker daemon to start the container") {
@@ -276,7 +277,7 @@ object DockerClientSpec : Spek({
                 }
 
                 on("an unsuccessful start attempt") {
-                    httpClient.mockPost("$dockerBaseUrl/v1.12/containers/the-container-id/start", """{"message": "Something went wrong."}""", 418)
+                    httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
 
                     it("raises an appropriate exception") {
                         assertThat({ client.start(container) }, throws<ContainerStartFailedException>(withMessage("Starting container 'the-container-id' failed: Something went wrong.")))
@@ -288,10 +289,10 @@ object DockerClientSpec : Spek({
         describe("stopping a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
+                val expectedUrl = "$dockerBaseUrl/v1.12/containers/the-container-id/stop"
 
                 on("stopping that container") {
-                    val call = httpClient.mockPost("$dockerBaseUrl/v1.12/containers/the-container-id/stop", "", 204)
-
+                    val call = httpClient.mockPost(expectedUrl, "", 204)
                     client.stop(container)
 
                     it("sends a request to the Docker daemon to stop the container") {
@@ -300,7 +301,7 @@ object DockerClientSpec : Spek({
                 }
 
                 on("an unsuccessful stop attempt") {
-                    httpClient.mockPost("$dockerBaseUrl/v1.12/containers/the-container-id/stop", """{"message": "Something went wrong."}""", 418)
+                    httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
 
                     it("raises an appropriate exception") {
                         assertThat({ client.stop(container) }, throws<ContainerStopFailedException>(withMessage("Stopping container 'the-container-id' failed: Something went wrong.")))
@@ -552,32 +553,23 @@ object DockerClientSpec : Spek({
         }
 
         describe("removing a container") {
-            val container = DockerContainer("some-id")
-            val expectedCommand = listOf("docker", "rm", "--volumes", "some-id")
+            val container = DockerContainer("the-container-id")
+            val expectedUrl = "$dockerBaseUrl/v1.12/containers/the-container-id?v=true"
 
             on("a successful removal") {
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "Done!"))
-
+                val call = httpClient.mockDelete(expectedUrl, "", 204)
                 client.remove(container)
 
-                it("calls the Docker CLI to remove the container") {
-                    verify(processRunner).runAndCaptureOutput(expectedCommand)
+                it("sends a request to the Docker daemon to remove the container") {
+                    verify(call).execute()
                 }
             }
 
             on("an unsuccessful deletion") {
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
+                httpClient.mockDelete(expectedUrl, """{"message": "Something went wrong."}""", 418)
 
                 it("throws an appropriate exception") {
-                    assertThat({ client.remove(container) }, throws<ContainerRemovalFailedException>(withMessage("Removal of container 'some-id' failed: Something went wrong.")))
-                }
-            }
-
-            on("that container not existing") {
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Error response from daemon: No such container: ${container.id}"))
-
-                it("throws an appropriate exception") {
-                    assertThat({ client.remove(container) }, throws<ContainerDoesNotExistException>(withMessage("Removing container 'some-id' failed because it does not exist.")))
+                    assertThat({ client.remove(container) }, throws<ContainerRemovalFailedException>(withMessage("Removal of container 'the-container-id' failed: Something went wrong.")))
                 }
             }
         }

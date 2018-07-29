@@ -36,8 +36,6 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
-import org.jetbrains.spek.data_driven.data
-import org.jetbrains.spek.data_driven.on
 
 object ConfigurationFileSpec : Spek({
     describe("a configuration file") {
@@ -138,22 +136,26 @@ object ConfigurationFileSpec : Spek({
                 }
             }
 
-            on("converting a configuration file with a container that has a build directory that %s",
-                data("does not exist", PathResolutionResult.Resolved("/some_resolved_path", PathType.DoesNotExist) as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' does not exist."),
-                data("is a file", PathResolutionResult.Resolved("/some_resolved_path", PathType.File) as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."),
-                data("is neither a file or directory", PathResolutionResult.Resolved("/some_resolved_path", PathType.Other) as PathResolutionResult, "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."),
-                data("is an invalid path", PathResolutionResult.InvalidPath as PathResolutionResult, "Build directory 'build_dir' for container 'the_container_name' is not a valid path.")
-            ) { _, resolution, expectedMessage ->
-                val originalBuildDirectory = "build_dir"
-                val container = ContainerFromFile(originalBuildDirectory)
-                val configFile = ConfigurationFile("the_project_name", containers = mapOf("the_container_name" to container))
+            data class BuildDirectoryResolutionTestCase(val description: String, val resolution: PathResolutionResult, val expectedMessage: String)
 
-                val pathResolver = mock<PathResolver> {
-                    on { resolve(originalBuildDirectory) } doReturn resolution
-                }
+            setOf(
+                BuildDirectoryResolutionTestCase("does not exist", PathResolutionResult.Resolved("/some_resolved_path", PathType.DoesNotExist), "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' does not exist."),
+                BuildDirectoryResolutionTestCase("is a file", PathResolutionResult.Resolved("/some_resolved_path", PathType.File), "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."),
+                BuildDirectoryResolutionTestCase("is neither a file or directory", PathResolutionResult.Resolved("/some_resolved_path", PathType.Other), "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."),
+                BuildDirectoryResolutionTestCase("is an invalid path", PathResolutionResult.InvalidPath, "Build directory 'build_dir' for container 'the_container_name' is not a valid path.")
+            ).forEach { (description, resolution, expectedMessage) ->
+                on("converting a configuration file with a container that has a build directory that $description") {
+                    val originalBuildDirectory = "build_dir"
+                    val container = ContainerFromFile(originalBuildDirectory)
+                    val configFile = ConfigurationFile("the_project_name", containers = mapOf("the_container_name" to container))
 
-                it("fails with an appropriate error message") {
-                    assertThat({ configFile.toConfiguration(pathResolver) }, throws(withMessage(expectedMessage)))
+                    val pathResolver = mock<PathResolver> {
+                        on { resolve(originalBuildDirectory) } doReturn resolution
+                    }
+
+                    it("fails with an appropriate error message") {
+                        assertThat({ configFile.toConfiguration(pathResolver) }, throws(withMessage(expectedMessage)))
+                    }
                 }
             }
 

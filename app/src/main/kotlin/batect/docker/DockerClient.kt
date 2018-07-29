@@ -30,6 +30,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonTreeParser
+import okhttp3.HttpUrl
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -150,16 +151,9 @@ class DockerClient(
             data("container", container)
         }
 
-        val url = httpConfig.baseUrl.newBuilder()
-            .addPathSegment("v1.12")
-            .addPathSegment("containers")
-            .addPathSegment(container.id)
-            .addPathSegment("start")
-            .build()
-
         val request = Request.Builder()
             .post(emptyRequestBody())
-            .url(url)
+            .url(urlForContainer(container, "start"))
             .build()
 
         httpConfig.client.newCall(request).execute().use { response ->
@@ -281,16 +275,20 @@ class DockerClient(
             data("container", container)
         }
 
-        val command = listOf("docker", "stop", container.id)
-        val result = processRunner.runAndCaptureOutput(command)
+        val request = Request.Builder()
+            .post(emptyRequestBody())
+            .url(urlForContainer(container, "stop"))
+            .build()
 
-        if (failed(result)) {
-            logger.error {
-                message("Could not stop container.")
-                data("result", result)
+        httpConfig.client.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Could not stop container.")
+                    data("error", error)
+                }
+
+                throw ContainerStopFailedException(container.id, error.message)
             }
-
-            throw ContainerStopFailedException(container.id, result.output.trim())
         }
 
         logger.info {
@@ -509,6 +507,13 @@ class DockerClient(
     }
 
     private fun failed(result: ProcessOutput): Boolean = result.exitCode != 0
+
+    private fun urlForContainer(container: DockerContainer, operation: String): HttpUrl = httpConfig.baseUrl.newBuilder()
+        .addPathSegment("v1.12")
+        .addPathSegment("containers")
+        .addPathSegment(container.id)
+        .addPathSegment(operation)
+        .build()
 
     private fun emptyRequestBody(): RequestBody = RequestBody.create(MediaType.get("text/plain"), "")
 

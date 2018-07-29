@@ -290,17 +290,17 @@ object DockerClientSpec : Spek({
                 val container = DockerContainer("the-container-id")
 
                 on("stopping that container") {
-                    whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(0, ""))
+                    val call = httpClient.mockPost("$dockerBaseUrl/v1.12/containers/the-container-id/stop", "", 204)
 
                     client.stop(container)
 
-                    it("launches the Docker CLI to stop the container") {
-                        verify(processRunner).runAndCaptureOutput(listOf("docker", "stop", container.id))
+                    it("sends a request to the Docker daemon to stop the container") {
+                        verify(call).execute()
                     }
                 }
 
                 on("an unsuccessful stop attempt") {
-                    whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Something went wrong."))
+                    httpClient.mockPost("$dockerBaseUrl/v1.12/containers/the-container-id/stop", """{"message": "Something went wrong."}""", 418)
 
                     it("raises an appropriate exception") {
                         assertThat({ client.stop(container) }, throws<ContainerStopFailedException>(withMessage("Stopping container 'the-container-id' failed: Something went wrong.")))

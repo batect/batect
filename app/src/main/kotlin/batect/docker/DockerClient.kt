@@ -30,6 +30,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonTreeParser
+import kotlinx.serialization.json.json
 import okhttp3.HttpUrl
 import okhttp3.MediaType
 import okhttp3.Request
@@ -301,26 +302,41 @@ class DockerClient(
             message("Creating new network.")
         }
 
-        val command = listOf("docker", "network", "create", "--driver", "bridge", UUID.randomUUID().toString())
-        val result = processRunner.runAndCaptureOutput(command)
+        val url = urlForNetworks().newBuilder()
+            .addPathSegment("create")
+            .build()
 
-        if (failed(result)) {
-            logger.error {
-                message("Could not create network.")
-                data("result", result)
+        val body = json {
+            "Name" to UUID.randomUUID().toString()
+            "CheckDuplicate" to true
+            "Driver" to "bridge"
+        }
+
+        val request = Request.Builder()
+            .post(jsonRequestBody(body))
+            .url(url)
+            .build()
+
+        httpConfig.client.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Could not create network.")
+                    data("error", error)
+                }
+
+                throw NetworkCreationFailedException(error.message)
             }
 
-            throw NetworkCreationFailedException(result.output.trim())
+            val parsedResponse = JsonTreeParser(response.body()!!.string()).readFully() as JsonObject
+            val networkId = parsedResponse["Id"].primitive.content
+
+            logger.info {
+                message("Network created.")
+                data("networkId", networkId)
+            }
+
+            return DockerNetwork(networkId)
         }
-
-        val networkId = result.output.trim()
-
-        logger.info {
-            message("Network created.")
-            data("networkId", networkId)
-        }
-
-        return DockerNetwork(networkId)
     }
 
     fun deleteNetwork(network: DockerNetwork) {
@@ -526,20 +542,40 @@ class DockerClient(
         .addPathSegment(operation)
         .build()
 
-    private fun urlForNetwork(network: DockerNetwork): HttpUrl = httpConfig.baseUrl.newBuilder()
+    private fun urlForNetworks(): HttpUrl = httpConfig.baseUrl.newBuilder()
         .addPathSegment("v1.12")
         .addPathSegment("networks")
+        .build()
+
+    private fun urlForNetwork(network: DockerNetwork): HttpUrl = urlForNetworks().newBuilder()
         .addPathSegment(network.id)
         .build()
 
     private fun emptyRequestBody(): RequestBody = RequestBody.create(MediaType.get("text/plain"), "")
+
+    private val jsonMediaType = MediaType.get("application/json")
+    private fun jsonRequestBody(json: JsonObject): RequestBody = RequestBody.create(jsonMediaType, json.toString())
 
     private fun checkForFailure(response: Response, errorHandler: (DockerAPIError) -> Unit) {
         if (response.isSuccessful) {
             return
         }
 
-        val parsedError = JsonTreeParser(response.body()!!.string()).readFully() as JsonObject
+        val responseBody = response.body()!!.string()
+        val contentType = response.body()!!.contentType()!!
+
+        if (contentType.type() != jsonMediaType.type() || contentType.subtype() != jsonMediaType.subtype()) {
+            logger.warn {
+                message("Error response from Docker daemon was not in JSON format.")
+                data("statusCode", response.code())
+                data("message", responseBody)
+            }
+
+            errorHandler(DockerAPIError(response.code(), responseBody))
+            return
+        }
+
+        val parsedError = JsonTreeParser(responseBody).readFully() as JsonObject
         errorHandler(DockerAPIError(response.code(), parsedError["message"].primitive.content))
     }
 

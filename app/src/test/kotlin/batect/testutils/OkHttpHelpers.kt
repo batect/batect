@@ -16,7 +16,8 @@
 
 package batect.testutils
 
-import com.nhaarman.mockito_kotlin.argThat
+import com.natpryce.hamkrest.assertion.assertThat
+import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
@@ -39,8 +40,11 @@ fun OkHttpClient.mock(method: String, url: String, body: String, statusCode: Int
     val responseBody = ResponseBody.create(jsonMediaType, body)
     val call = mock<Call>()
 
-    whenever(this.newCall(argThat { method() == method && url().equals(parsedUrl) })).then { invocation ->
+    whenever(this.newCall(any())).then { invocation ->
         val request = invocation.getArgument<Request>(0)
+
+        assertThat(request.method(), equalTo(method))
+        assertThat(request.url(), equalTo(parsedUrl))
 
         whenever(call.execute()).doReturn(
             Response.Builder()

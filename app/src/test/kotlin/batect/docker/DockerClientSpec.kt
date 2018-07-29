@@ -45,8 +45,15 @@ import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonTreeParser
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.content
 import okhttp3.HttpUrl
+import okhttp3.MediaType
 import okhttp3.OkHttpClient
+import okhttp3.Request
+import okio.Buffer
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -501,17 +508,21 @@ object DockerClientSpec : Spek({
         }
 
         describe("creating a new bridge network") {
-            on("a successful creation") {
-                whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(0, "the-network-ID\n"))
+            val expectedUrl = "$dockerBaseUrl/v1.12/networks/create"
 
+            on("a successful creation") {
+                val call = httpClient.mockPost(expectedUrl, """{"Id": "the-network-ID"}""", 201)
                 val result = client.createNewBridgeNetwork()
 
                 it("creates the network") {
-                    verify(processRunner).runAndCaptureOutput(check { command ->
-                        val expectedCommandTemplate = listOf("docker", "network", "create", "--driver", "bridge")
-                        assertThat(command.count(), equalTo(expectedCommandTemplate.size + 1))
-                        assertThat(command.take(expectedCommandTemplate.size), equalTo(expectedCommandTemplate))
-                        assertThat(command.last(), isUUID)
+                    verify(call).execute()
+                }
+
+                it("creates the network with the expected settings") {
+                    verify(httpClient).newCall(requestWithJsonBody { body ->
+                        assertThat(body["Name"].content, isUUID)
+                        assertThat(body["CheckDuplicate"].boolean, equalTo(true))
+                        assertThat(body["Driver"].content, equalTo("bridge"))
                     })
                 }
 
@@ -521,7 +532,7 @@ object DockerClientSpec : Spek({
             }
 
             on("an unsuccessful creation") {
-                whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
+                httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
 
                 it("throws an appropriate exception") {
                     assertThat({ client.createNewBridgeNetwork() }, throws<NetworkCreationFailedException>(withMessage("Creation of network failed: Something went wrong.")))
@@ -720,4 +731,13 @@ private fun validUUID(value: String): Boolean {
     } catch (_: IllegalArgumentException) {
         return false
     }
+}
+
+private fun requestWithJsonBody(predicate: (JsonObject) -> Unit) = check<Request> { request ->
+    assertThat(request.body()!!.contentType(), equalTo(MediaType.get("application/json; charset=utf-8")))
+
+    val buffer = Buffer()
+    request.body()!!.writeTo(buffer)
+    val parsedBody = JsonTreeParser(buffer.readUtf8()).readFully() as JsonObject
+    predicate(parsedBody)
 }

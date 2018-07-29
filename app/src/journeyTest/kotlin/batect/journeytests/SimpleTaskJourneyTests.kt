@@ -18,6 +18,7 @@ package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.itCleansUpAllContainersItCreates
+import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
@@ -50,6 +51,7 @@ object SimpleTaskJourneyTests : Spek({
                 }
 
                 itCleansUpAllContainersItCreates(result)
+                itCleansUpAllNetworksItCreates(result)
             }
         }
     }

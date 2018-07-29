@@ -26,3 +26,9 @@ fun TestContainer.itCleansUpAllContainersItCreates(result: ApplicationResult) {
         assertThat(result.potentiallyOrphanedContainers, isEmpty)
     }
 }
+
+fun TestContainer.itCleansUpAllNetworksItCreates(result: ApplicationResult) {
+    it("cleans up all networks it creates") {
+        assertThat(result.potentiallyOrphanedNetworks, isEmpty)
+    }
+}

@@ -43,6 +43,7 @@ data class ApplicationRunner(val testName: String) {
 
     fun runCommandLine(commandLine: List<String>, environment: Map<String, String> = emptyMap()): ApplicationResult {
         val containersBefore = DockerUtils.getAllCreatedContainers()
+        val networksBefore = DockerUtils.getAllNetworks()
         val builder = ProcessBuilder(commandLine)
             .directory(testDirectory.toFile())
             .redirectErrorStream(true)
@@ -56,7 +57,10 @@ data class ApplicationRunner(val testName: String) {
         val containersAfter = DockerUtils.getAllCreatedContainers()
         val potentiallyOrphanedContainers = containersAfter - containersBefore
 
-        return ApplicationResult(process.exitValue(), output, potentiallyOrphanedContainers)
+        val networksAfter = DockerUtils.getAllNetworks()
+        val potentiallyOrphanedNetworks = networksAfter - networksBefore
+
+        return ApplicationResult(process.exitValue(), output, potentiallyOrphanedContainers, potentiallyOrphanedNetworks)
     }
 
     fun commandLineForApplication(arguments: Iterable<String>): List<String> {
@@ -64,4 +68,9 @@ data class ApplicationRunner(val testName: String) {
     }
 }
 
-data class ApplicationResult(val exitCode: Int, val output: String, val potentiallyOrphanedContainers: Set<String>)
+data class ApplicationResult(
+    val exitCode: Int,
+    val output: String,
+    val potentiallyOrphanedContainers: Set<String>,
+    val potentiallyOrphanedNetworks: Set<String>
+)

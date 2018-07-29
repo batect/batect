@@ -25,6 +25,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * warn when mounting files / directories in non-read-only modes without `run_as_current_user` enabled
   * warn when mounting a directory in the same location as the home directory from `run_as_current_user`
   * warn when proxy environment variables aren't in URL format or don't have the `http` or `https` schemes
+  * warn when proxy settings for daemon don't match local environment (can get this through API)
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 * support for Windows
 * show progress information when cleaning up temporary files or directories in fancy output mode

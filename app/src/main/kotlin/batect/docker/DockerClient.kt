@@ -329,16 +329,20 @@ class DockerClient(
             data("network", network)
         }
 
-        val command = listOf("docker", "network", "rm", network.id)
-        val result = processRunner.runAndCaptureOutput(command)
+        val request = Request.Builder()
+            .delete()
+            .url(urlForNetwork(network))
+            .build()
 
-        if (failed(result)) {
-            logger.error {
-                message("Could not delete network.")
-                data("result", result)
+        httpConfig.client.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Could not delete network.")
+                    data("error", error)
+                }
+
+                throw NetworkDeletionFailedException(network.id, error.message)
             }
-
-            throw NetworkDeletionFailedException(network.id, result.output.trim())
         }
 
         logger.info {
@@ -520,6 +524,12 @@ class DockerClient(
 
     private fun urlForContainerOperation(container: DockerContainer, operation: String): HttpUrl = urlForContainer(container).newBuilder()
         .addPathSegment(operation)
+        .build()
+
+    private fun urlForNetwork(network: DockerNetwork): HttpUrl = httpConfig.baseUrl.newBuilder()
+        .addPathSegment("v1.12")
+        .addPathSegment("networks")
+        .addPathSegment(network.id)
         .build()
 
     private fun emptyRequestBody(): RequestBody = RequestBody.create(MediaType.get("text/plain"), "")

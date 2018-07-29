@@ -531,20 +531,19 @@ object DockerClientSpec : Spek({
 
         describe("deleting a network") {
             val network = DockerNetwork("abc123")
-            val expectedCommand = listOf("docker", "network", "rm", network.id)
+            val expectedUrl = "$dockerBaseUrl/v1.12/networks/abc123"
 
             on("a successful deletion") {
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "Done!"))
-
+                val call = httpClient.mockDelete(expectedUrl, "", 204)
                 client.deleteNetwork(network)
 
-                it("calls the Docker CLI to delete the network") {
-                    verify(processRunner).runAndCaptureOutput(expectedCommand)
+                it("sends a request to the Docker daemon to delete the network") {
+                    verify(call).execute()
                 }
             }
 
             on("an unsuccessful deletion") {
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
+                httpClient.mockDelete(expectedUrl, """{"message": "Something went wrong."}""", 418)
 
                 it("throws an appropriate exception") {
                     assertThat({ client.deleteNetwork(network) }, throws<NetworkDeletionFailedException>(withMessage("Deletion of network 'abc123' failed: Something went wrong.")))

@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.journeytests
+package batect.journeytests.testutils
 
 import java.io.InputStreamReader
 import java.nio.file.Files

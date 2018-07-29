@@ -16,10 +16,11 @@
 
 package batect.journeytests
 
+import batect.journeytests.testutils.ApplicationRunner
+import batect.journeytests.testutils.itCleansUpAllContainersItCreates
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.isEmpty
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
@@ -44,9 +45,7 @@ object ContainerWithMountJourneyTests : Spek({
                     assertThat(result.exitCode, equalTo(123))
                 }
 
-                it("cleans up all containers it creates") {
-                    assertThat(result.potentiallyOrphanedContainers, isEmpty)
-                }
+                itCleansUpAllContainersItCreates(result)
             }
         }
     }

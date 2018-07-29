@@ -16,6 +16,7 @@
 
 package batect.journeytests
 
+import batect.journeytests.testutils.ApplicationRunner
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.greaterThan

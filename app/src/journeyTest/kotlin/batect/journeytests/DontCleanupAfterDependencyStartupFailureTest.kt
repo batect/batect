@@ -16,6 +16,8 @@
 
 package batect.journeytests
 
+import batect.journeytests.testutils.ApplicationRunner
+import batect.journeytests.testutils.DockerUtils
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.contains

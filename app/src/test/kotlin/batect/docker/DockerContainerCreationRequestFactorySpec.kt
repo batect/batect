@@ -36,6 +36,7 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import java.time.Duration
 
 object DockerContainerCreationRequestFactorySpec : Spek({
     describe("a Docker container creation request factory") {
@@ -77,7 +78,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                                     volumeMounts = setOf(VolumeMount("local", "remote", "mode")),
                                     portMappings = setOf(PortMapping(123, 456)),
                                     environment = mapOf("SOME_VAR" to "SOME_VALUE"),
-                                    healthCheckConfig = HealthCheckConfig("2s", 10, "5s")
+                                    healthCheckConfig = HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(5))
                                 )
 
                                 val userAndGroup = UserAndGroup(123, 456)

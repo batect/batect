@@ -72,6 +72,7 @@ class ConfigurationLoader(
         mapper.propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE
         mapper.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
         mapper.registerModule(KotlinModule())
+        mapper.registerModule(JacksonModule())
 
         val pathResolver = pathResolverFactory.createResolver(filePath.parent)
 

@@ -44,7 +44,6 @@ import java.util.UUID
 class DockerClient(
     private val processRunner: ProcessRunner,
     private val httpConfig: DockerHttpConfig,
-    private val creationCommandGenerator: DockerContainerCreationCommandGenerator,
     private val consoleInfo: ConsoleInfo,
     private val logger: Logger
 ) {
@@ -95,24 +94,35 @@ class DockerClient(
         return DockerImage(imageId)
     }
 
-    fun create(request: DockerContainerCreationRequest): DockerContainer {
+    fun create(creationRequest: DockerContainerCreationRequest): DockerContainer {
         logger.info {
             message("Creating container.")
-            data("request", request)
+            data("request", creationRequest)
         }
 
-        val args = creationCommandGenerator.createCommandLine(request)
-        val result = processRunner.runAndCaptureOutput(args)
+        val url = urlForContainers().newBuilder()
+            .addPathSegment("create")
+            .build()
 
-        if (failed(result)) {
-            logger.error {
-                message("Container creation failed.")
-                data("result", result)
+        val body = creationRequest.toJson()
+
+        val request = Request.Builder()
+            .post(jsonRequestBody(body))
+            .url(url)
+            .build()
+
+        httpConfig.client.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Container creation failed.")
+                    data("error", error)
+                }
+
+                throw ContainerCreationFailedException("Output from Docker was: ${error.message}")
             }
 
-            throw ContainerCreationFailedException("Output from Docker was: ${result.output.trim()}")
-        } else {
-            val containerId = result.output.trim()
+            val parsedResponse = JsonTreeParser(response.body()!!.string()).readFully() as JsonObject
+            val containerId = parsedResponse["Id"].primitive.content
 
             logger.info {
                 message("Container created.")
@@ -244,7 +254,7 @@ class DockerClient(
             throw ContainerHealthCheckException("Checking if container '${container.id}' has a healthcheck failed: ${result.output.trim()}")
         }
 
-        return result.output.trim() != "null"
+        return result.output.trim() != "{}"
     }
 
     fun getLastHealthCheckResult(container: DockerContainer): DockerHealthCheckResult {
@@ -532,9 +542,12 @@ class DockerClient(
 
     private fun failed(result: ProcessOutput): Boolean = result.exitCode != 0
 
-    private fun urlForContainer(container: DockerContainer): HttpUrl = httpConfig.baseUrl.newBuilder()
+    private fun urlForContainers(): HttpUrl = httpConfig.baseUrl.newBuilder()
         .addPathSegment("v1.12")
         .addPathSegment("containers")
+        .build()
+
+    private fun urlForContainer(container: DockerContainer): HttpUrl = urlForContainers().newBuilder()
         .addPathSegment(container.id)
         .build()
 
@@ -554,7 +567,8 @@ class DockerClient(
     private fun emptyRequestBody(): RequestBody = RequestBody.create(MediaType.get("text/plain"), "")
 
     private val jsonMediaType = MediaType.get("application/json")
-    private fun jsonRequestBody(json: JsonObject): RequestBody = RequestBody.create(jsonMediaType, json.toString())
+    private fun jsonRequestBody(json: JsonObject): RequestBody = jsonRequestBody(json.toString())
+    private fun jsonRequestBody(json: String): RequestBody = RequestBody.create(jsonMediaType, json)
 
     private fun checkForFailure(response: Response, errorHandler: (DockerAPIError) -> Unit) {
         if (response.isSuccessful) {

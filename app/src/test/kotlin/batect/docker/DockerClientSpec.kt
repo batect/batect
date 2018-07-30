@@ -73,11 +73,9 @@ object DockerClientSpec : Spek({
             }
         }
 
-        val creationCommandGenerator by createForEachTest { mock<DockerContainerCreationCommandGenerator>() }
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
         val logger by createLoggerForEachTest()
-
-        val client by createForEachTest { DockerClient(processRunner, httpConfig, creationCommandGenerator, consoleInfo, logger) }
+        val client by createForEachTest { DockerClient(processRunner, httpConfig, consoleInfo, logger) }
 
         describe("building an image") {
             given("a container configuration") {
@@ -193,34 +191,35 @@ object DockerClientSpec : Spek({
         }
 
         describe("creating a container") {
+            val expectedUrl = "$dockerBaseUrl/v1.12/containers/create"
+
             given("a container configuration and a built image") {
                 val image = DockerImage("the-image")
                 val network = DockerNetwork("the-network")
                 val command = listOf("doStuff")
-                val commandLine = listOf("docker", "doStuff", "please")
                 val request = DockerContainerCreationRequest(image, network, command, "some-host", "some-host", emptyMap(), "/some-dir", emptySet(), emptySet(), HealthCheckConfig(), null)
 
-                beforeEachTest {
-                    whenever(creationCommandGenerator.createCommandLine(request)).thenReturn(commandLine)
-                }
-
                 on("a successful creation") {
-                    val containerId = "abc123"
-                    whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(0, containerId + "\n"))
-
+                    val call = httpClient.mockPost(expectedUrl, """{"Id": "abc123"}""", 201)
                     val result = client.create(request)
 
                     it("creates the container") {
-                        verify(processRunner).runAndCaptureOutput(commandLine)
+                        verify(call).execute()
+                    }
+
+                    it("creates the container with the expected settings") {
+                        verify(httpClient).newCall(requestWithJsonBody { body ->
+                            assertThat(body, equalTo(JsonTreeParser(request.toJson()).readFully()))
+                        })
                     }
 
                     it("returns the ID of the created container") {
-                        assertThat(result.id, equalTo(containerId))
+                        assertThat(result.id, equalTo("abc123"))
                     }
                 }
 
                 on("a failed creation") {
-                    whenever(processRunner.runAndCaptureOutput(any())).thenReturn(ProcessOutput(1, "Something went wrong."))
+                    httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
 
                     it("raises an appropriate exception") {
                         assertThat({ client.create(request) }, throws<ContainerCreationFailedException>(withMessage("Output from Docker was: Something went wrong.")))
@@ -323,7 +322,7 @@ object DockerClientSpec : Spek({
 
                 on("waiting for that container to become healthy") {
                     val expectedCommand = listOf("docker", "inspect", "--format", "{{json .Config.Healthcheck}}", container.id)
-                    whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "null\n"))
+                    whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "{}\n"))
 
                     val result = client.waitForHealthStatus(container)
 

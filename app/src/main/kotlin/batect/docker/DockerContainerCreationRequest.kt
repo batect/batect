@@ -19,6 +19,10 @@ package batect.docker
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
 import batect.config.VolumeMount
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.json
 
 data class DockerContainerCreationRequest(
     val image: DockerImage,
@@ -32,6 +36,70 @@ data class DockerContainerCreationRequest(
     val portMappings: Set<PortMapping>,
     val healthCheckConfig: HealthCheckConfig,
     val userAndGroup: UserAndGroup?
-)
+) {
+    fun toJson(): String {
+        return json {
+            "AttachStdin" to true
+            "AttachStdout" to true
+            "AttachStderr" to true
+            "Tty" to true
+            "OpenStdin" to true
+            "StdinOnce" to true
+            "Image" to image.id
+            "Hostname" to hostname
+            "Env" to formatEnvironmentVariables()
+
+            if (command.count() > 0) {
+                "Cmd" to command.toJsonArray()
+            }
+
+            if (workingDirectory != null) {
+                "WorkingDir" to workingDirectory
+            }
+
+            if (userAndGroup != null) {
+                "User" to "${userAndGroup.userId}:${userAndGroup.groupId}"
+            }
+
+            "HostConfig" to json {
+                "NetworkMode" to network.id
+                "Binds" to formatVolumeMounts()
+                "PortBindings" to formatPortMappings()
+            }
+            "Healthcheck" to json {
+                "Test" to emptyList<String>().toJsonArray()
+                "Interval" to (healthCheckConfig.interval?.toNanos() ?: 0)
+                "Retries" to (healthCheckConfig.retries ?: 0)
+                "StartPeriod" to (healthCheckConfig.startPeriod?.toNanos() ?: 0)
+            }
+            "NetworkingConfig" to json {
+                "EndpointsConfig" to json {
+                    network.id to json {
+                        "Aliases" to listOf(networkAlias).toJsonArray()
+                    }
+                }
+            }
+        }.toString()
+    }
+
+    private fun Iterable<String>.toJsonArray() = JsonArray(this.map { JsonPrimitive(it) })
+
+    private fun formatEnvironmentVariables(): JsonArray = environmentVariables
+        .map { (key, value) -> "$key=$value" }
+        .toJsonArray()
+
+    private fun formatVolumeMounts(): JsonArray = volumeMounts
+        .map { it.toString() }
+        .toJsonArray()
+
+    private fun formatPortMappings(): JsonObject = json {
+        portMappings.forEach {
+            "${it.containerPort}/tcp" to json {
+                "HostIp" to ""
+                "HostPort" to it.localPort.toString()
+            }
+        }
+    }
+}
 
 data class UserAndGroup(val userId: Int, val groupId: Int)

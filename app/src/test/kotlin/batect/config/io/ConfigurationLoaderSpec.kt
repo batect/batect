@@ -48,6 +48,7 @@ import org.jetbrains.spek.api.dsl.on
 import org.mockito.ArgumentMatchers.anyString
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.Duration
 
 object ConfigurationLoaderSpec : Spek({
     describe("a configuration loader") {
@@ -475,7 +476,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.environment, equalTo(mapOf("OPTS" to "-Dthing", "BOOL_VALUE" to "1")))
                 assertThat(container.workingDirectory, equalTo("/here"))
                 assertThat(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
-                assertThat(container.healthCheckConfig, equalTo(HealthCheckConfig("2s", 10, "1s")))
+                assertThat(container.healthCheckConfig, equalTo(HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(1))))
                 assertThat(container.runAsCurrentUserConfig, equalTo(RunAsCurrentUserConfig(true, "/home/something")))
                 assertThat(container.volumeMounts, equalTo(setOf(
                     VolumeMount("/resolved/../", "/here", null),

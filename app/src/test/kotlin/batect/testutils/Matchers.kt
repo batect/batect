@@ -20,6 +20,7 @@ import batect.config.io.ConfigurationException
 import batect.logging.LogMessage
 import batect.logging.Severity
 import batect.utils.toDetailedString
+import com.fasterxml.jackson.core.JsonProcessingException
 import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.describe
@@ -40,6 +41,10 @@ fun <T, R : T> equalTo(expected: T?): Matcher<R?> =
 
 fun withMessage(message: String): Matcher<Throwable> {
     return has(Throwable::message, equalTo(message))
+}
+
+fun withOriginalMessage(message: String): Matcher<JsonProcessingException> {
+    return has(JsonProcessingException::getOriginalMessage, equalTo(message))
 }
 
 fun withCause(cause: Throwable): Matcher<Throwable> {

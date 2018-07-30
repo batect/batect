@@ -27,7 +27,6 @@ import batect.cli.commands.VersionInfoCommand
 import batect.config.io.ConfigurationLoader
 import batect.config.io.PathResolverFactory
 import batect.docker.DockerClient
-import batect.docker.DockerContainerCreationCommandGenerator
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerHostNameResolver
 import batect.docker.DockerHttpConfig
@@ -123,8 +122,7 @@ private val configModule = Kodein.Module("config") {
 }
 
 private val dockerModule = Kodein.Module("docker") {
-    bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), logger) }
-    bind<DockerContainerCreationCommandGenerator>() with singleton { DockerContainerCreationCommandGenerator() }
+    bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), logger) }
     bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
     bind<DockerHostNameResolver>() with singleton { DockerHostNameResolver(instance(), instance()) }
     bind<DockerHttpConfig>() with singleton { DockerHttpConfig(instance()) }

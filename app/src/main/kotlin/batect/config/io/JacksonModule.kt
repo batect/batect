@@ -14,12 +14,13 @@
    limitations under the License.
 */
 
-package batect.config
+package batect.config.io
 
+import com.fasterxml.jackson.databind.module.SimpleModule
 import java.time.Duration
 
-data class HealthCheckConfig(
-    val interval: Duration? = null,
-    val retries: Int? = null,
-    val startPeriod: Duration? = null
-)
+class JacksonModule : SimpleModule() {
+    init {
+        addDeserializer(Duration::class.java, DurationDeserializer())
+    }
+}

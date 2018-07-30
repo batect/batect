@@ -21,12 +21,14 @@ import batect.os.unixsockets.UnixSocketFactory
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import java.net.Proxy
+import java.util.concurrent.TimeUnit
 
 class DockerHttpConfig(baseClient: OkHttpClient) {
     val client: OkHttpClient = baseClient.newBuilder()
         .proxy(Proxy.NO_PROXY)
         .socketFactory(UnixSocketFactory())
         .dns(UnixSocketDns())
+        .readTimeout(11, TimeUnit.SECONDS)
         .build()
 
     val baseUrl: HttpUrl = HttpUrl.Builder()

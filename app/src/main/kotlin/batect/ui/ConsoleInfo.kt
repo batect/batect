@@ -18,23 +18,26 @@ package batect.ui
 
 import batect.logging.Logger
 import batect.os.ProcessRunner
+import jnr.posix.POSIX
+import java.io.FileDescriptor
 
 class ConsoleInfo(
+    private val posix: POSIX,
     private val processRunner: ProcessRunner,
     private val environment: Map<String, String>,
     private val logger: Logger
 ) {
-    constructor(processRunner: ProcessRunner, logger: Logger) : this(processRunner, System.getenv(), logger)
+    constructor(posix: POSIX, processRunner: ProcessRunner, logger: Logger) : this(posix, processRunner, System.getenv(), logger)
 
     val stdinIsTTY: Boolean by lazy {
-        val result = processRunner.runAndCaptureOutput(listOf("tty"))
+        val result = posix.isatty(FileDescriptor.`in`)
 
         logger.info {
-            message("Ran 'tty' to determine if STDIN is a TTY.")
+            message("Called 'isatty' to determine if STDIN is a TTY.")
             data("result", result)
         }
 
-        result.exitCode == 0
+        result
     }
 
     val supportsInteractivity: Boolean by lazy {

@@ -149,7 +149,7 @@ private val loggingModule = Kodein.Module("logging") {
     bind<ApplicationInfoLogger>() with singletonWithLogger { logger -> ApplicationInfoLogger(logger, instance(), instance(), instance()) }
     bind<LoggerFactory>() with singleton { LoggerFactory(instance()) }
     bind<LogMessageWriter>() with singleton { LogMessageWriter() }
-    bind<StandardAdditionalDataSource>() with singleton { StandardAdditionalDataSource() }
+    bind<StandardAdditionalDataSource>() with singleton { StandardAdditionalDataSource(instance()) }
 }
 
 private val osModule = Kodein.Module("os") {

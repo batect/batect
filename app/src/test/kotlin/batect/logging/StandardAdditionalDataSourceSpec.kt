@@ -20,6 +20,7 @@ import batect.testutils.hasKeyWithValue
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
+import jnr.posix.POSIX
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -27,15 +28,23 @@ import org.jetbrains.spek.api.dsl.on
 
 object StandardAdditionalDataSourceSpec : Spek({
     describe("a standard additional data source") {
+        val posix = mock<POSIX> {
+            on { getpid() } doReturn 456
+        }
+
         val thread = mock<Thread> {
             on { id } doReturn 123
             on { name } doReturn "The awesome thread"
         }
 
-        val source = StandardAdditionalDataSource({ thread })
+        val source = StandardAdditionalDataSource(posix, { thread })
 
         on("generating the set of additional data") {
             val data = source.getAdditionalData()
+
+            it("includes the current process' ID") {
+                assertThat(data, hasKeyWithValue("@processId", 456))
+            }
 
             it("includes the current thread's ID") {
                 assertThat(data, hasKeyWithValue("@threadId", 123L))

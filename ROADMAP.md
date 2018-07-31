@@ -46,8 +46,6 @@ If there's something you're really keen to see, pull requests are always welcome
 
 ### Other
 * replace factories with references to constructors
-* logging (for batect internals)
-  * include process ID with each message (this is non-trivial in versions prior to Java 9: https://stackoverflow.com/questions/35842/how-can-a-java-program-get-its-own-process-id)
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use Docker API directly rather than using Docker CLI (would allow for more detailed progress and error reporting)
 * documentation

@@ -16,13 +16,19 @@
 
 package batect.logging
 
-class StandardAdditionalDataSource(private val threadSource: () -> Thread) {
-    constructor() : this({ Thread.currentThread() })
+import jnr.posix.POSIX
+
+class StandardAdditionalDataSource(
+    private val posix: POSIX,
+    private val threadSource: () -> Thread = { Thread.currentThread() }
+) {
+    private val pid by lazy { posix.getpid() }
 
     fun getAdditionalData(): Map<String, Any> {
         val thread = threadSource()
 
         return mapOf(
+            "@processId" to pid,
             "@threadId" to thread.id,
             "@threadName" to thread.name
         )

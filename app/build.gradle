@@ -62,6 +62,7 @@ dependencies {
     compile 'org.kodein.di:kodein-di-generic-jvm:5.2.0'
     compile 'com.squareup.okhttp3:okhttp:3.11.0'
     compile 'com.github.jnr:jnr-unixsocket:0.19'
+    compile 'com.github.jnr:jnr-posix:3.0.46'
 
     testCompile 'com.natpryce:hamkrest:1.4.2.2'
     testCompile 'org.araqnid:hamkrest-json:1.0.3'

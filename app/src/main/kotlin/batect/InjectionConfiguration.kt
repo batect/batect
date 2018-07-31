@@ -59,6 +59,8 @@ import batect.updates.UpdateInfoDownloader
 import batect.updates.UpdateInfoStorage
 import batect.updates.UpdateInfoUpdater
 import batect.updates.UpdateNotifier
+import jnr.posix.POSIX
+import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
 import org.kodein.di.DKodein
 import org.kodein.di.Kodein
@@ -72,6 +74,7 @@ import java.nio.file.FileSystems
 fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStream): DKodein = Kodein.direct {
     bind<FileSystem>() with singleton { FileSystems.getDefault() }
     bind<OkHttpClient>() with singleton { OkHttpClient.Builder().build() }
+    bind<POSIX>() with singleton { POSIXFactory.getNativePOSIX() }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
     bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
 

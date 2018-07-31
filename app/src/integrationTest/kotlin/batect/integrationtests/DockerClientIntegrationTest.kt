@@ -36,6 +36,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockito_kotlin.mock
+import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -53,7 +54,8 @@ object DockerClientIntegrationTest : Spek({
         val processRunner = ProcessRunner(logger)
         val httpConfig = DockerHttpConfig(OkHttpClient())
         val consoleInfo = ConsoleInfo(processRunner, logger)
-        val systemInfo = SystemInfo(processRunner)
+        val posix = POSIXFactory.getNativePOSIX()
+        val systemInfo = SystemInfo(posix)
         val client = DockerClient(processRunner, httpConfig, consoleInfo, logger)
 
         fun creationRequestForTestContainer(image: DockerImage, network: DockerNetwork, fileToCreate: Path, command: Iterable<String>): DockerContainerCreationRequest {

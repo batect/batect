@@ -21,6 +21,9 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
+import jnr.posix.Group
+import jnr.posix.POSIX
+import jnr.posix.Passwd
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -29,11 +32,19 @@ import java.util.Properties
 
 object SystemInfoSpec : Spek({
     describe("a system info provider") {
-        val processRunner = mock<ProcessRunner> {
-            on { runAndCaptureOutput(listOf("id", "-u")) } doReturn ProcessOutput(0, "123\n")
-            on { runAndCaptureOutput(listOf("id", "-un")) } doReturn ProcessOutput(0, "awesome-user\n")
-            on { runAndCaptureOutput(listOf("id", "-g")) } doReturn ProcessOutput(0, "777\n")
-            on { runAndCaptureOutput(listOf("id", "-gn")) } doReturn ProcessOutput(0, "awesome-group\n")
+        val userInfo = mock<Passwd> {
+            on { loginName } doReturn "awesome-user"
+        }
+
+        val groupInfo = mock<Group> {
+            on { name } doReturn "awesome-group"
+        }
+
+        val posix = mock<POSIX> {
+            on { geteuid() } doReturn 123
+            on { getpwuid(123) } doReturn userInfo
+            on { getegid() } doReturn 777
+            on { getgrgid(777) } doReturn groupInfo
         }
 
         val systemProperties by createForEachTest {
@@ -51,7 +62,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the JVM version") {
-            val jvmVersion = SystemInfo(processRunner, systemProperties).jvmVersion
+            val jvmVersion = SystemInfo(posix, systemProperties).jvmVersion
 
             it("returns a formatted string containing the details of the JVM") {
                 assertThat(jvmVersion, equalTo("Awesome JVMs, Inc. Best JVM Ever 1.2.3"))
@@ -59,7 +70,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the OS version") {
-            val osVersion = SystemInfo(processRunner, systemProperties).osVersion
+            val osVersion = SystemInfo(posix, systemProperties).osVersion
 
             it("returns a formatted string containing the details of the OS") {
                 assertThat(osVersion, equalTo("Best OS Ever 4.5.6 (x86)"))
@@ -69,7 +80,7 @@ object SystemInfoSpec : Spek({
         describe("getting the operating system") {
             on("when running on OS X") {
                 systemProperties.setProperty("os.name", "Mac OS X")
-                val operatingSystem = SystemInfo(processRunner, systemProperties).operatingSystem
+                val operatingSystem = SystemInfo(posix, systemProperties).operatingSystem
 
                 it("returns that the operating system is Mac OS X") {
                     assertThat(operatingSystem, equalTo(OperatingSystem.Mac))
@@ -78,7 +89,7 @@ object SystemInfoSpec : Spek({
 
             on("when running on Linux") {
                 systemProperties.setProperty("os.name", "Linux")
-                val operatingSystem = SystemInfo(processRunner, systemProperties).operatingSystem
+                val operatingSystem = SystemInfo(posix, systemProperties).operatingSystem
 
                 it("returns that the operating system is Linux") {
                     assertThat(operatingSystem, equalTo(OperatingSystem.Linux))
@@ -87,7 +98,7 @@ object SystemInfoSpec : Spek({
 
             on("when running on another operating system") {
                 systemProperties.setProperty("os.name", "Something else")
-                val operatingSystem = SystemInfo(processRunner, systemProperties).operatingSystem
+                val operatingSystem = SystemInfo(posix, systemProperties).operatingSystem
 
                 it("returns that the operating system is unknown") {
                     assertThat(operatingSystem, equalTo(OperatingSystem.Other))
@@ -96,7 +107,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the home directory") {
-            val homeDir = SystemInfo(processRunner, systemProperties).homeDirectory
+            val homeDir = SystemInfo(posix, systemProperties).homeDirectory
 
             it("returns the user's home directory") {
                 assertThat(homeDir, equalTo("/some/home/dir"))
@@ -104,7 +115,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the current user ID") {
-            val userID = SystemInfo(processRunner, systemProperties).userId
+            val userID = SystemInfo(posix, systemProperties).userId
 
             it("returns the ID given by the `id -u` command") {
                 assertThat(userID, equalTo(123))
@@ -112,7 +123,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the current user name") {
-            val userName = SystemInfo(processRunner, systemProperties).userName
+            val userName = SystemInfo(posix, systemProperties).userName
 
             it("returns the ID given by the `id -un` command") {
                 assertThat(userName, equalTo("awesome-user"))
@@ -120,7 +131,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the current group ID") {
-            val groupID = SystemInfo(processRunner, systemProperties).groupId
+            val groupID = SystemInfo(posix, systemProperties).groupId
 
             it("returns the ID given by the `id -g` command") {
                 assertThat(groupID, equalTo(777))
@@ -128,7 +139,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the current group name") {
-            val groupName = SystemInfo(processRunner, systemProperties).groupName
+            val groupName = SystemInfo(posix, systemProperties).groupName
 
             it("returns the ID given by the `id -gn` command") {
                 assertThat(groupName, equalTo("awesome-group"))

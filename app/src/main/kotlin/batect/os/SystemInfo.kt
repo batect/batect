@@ -16,9 +16,10 @@
 
 package batect.os
 
+import jnr.posix.POSIX
 import java.util.Properties
 
-class SystemInfo(private val processRunner: ProcessRunner, private val systemProperties: Properties = System.getProperties()) {
+class SystemInfo(private val posix: POSIX, private val systemProperties: Properties = System.getProperties()) {
     private val jvmVendor = systemProperties.getProperty("java.vm.vendor")
     private val jvmName = systemProperties.getProperty("java.vm.name")
     private val javaVersion = systemProperties.getProperty("java.version")
@@ -37,8 +38,8 @@ class SystemInfo(private val processRunner: ProcessRunner, private val systemPro
         else -> OperatingSystem.Other
     }
 
-    val userId: Int by lazy { processRunner.runAndCaptureOutput(listOf("id", "-u")).output.trim().toInt() }
-    val userName: String by lazy { processRunner.runAndCaptureOutput(listOf("id", "-un")).output.trim() }
-    val groupId: Int by lazy { processRunner.runAndCaptureOutput(listOf("id", "-g")).output.trim().toInt() }
-    val groupName: String by lazy { processRunner.runAndCaptureOutput(listOf("id", "-gn")).output.trim() }
+    val userId: Int by lazy { posix.geteuid() }
+    val userName: String by lazy { posix.getpwuid(userId).loginName }
+    val groupId: Int by lazy { posix.getegid() }
+    val groupName: String by lazy { posix.getgrgid(groupId).name }
 }

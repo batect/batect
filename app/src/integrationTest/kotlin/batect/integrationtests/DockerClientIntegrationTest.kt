@@ -29,6 +29,7 @@ import batect.docker.DockerVersionInfoRetrievalResult
 import batect.docker.HealthStatus
 import batect.docker.UserAndGroup
 import batect.logging.Logger
+import batect.os.NativeMethods
 import batect.os.ProcessRunner
 import batect.os.SystemInfo
 import batect.ui.ConsoleInfo
@@ -52,9 +53,10 @@ object DockerClientIntegrationTest : Spek({
 
         val logger = mock<Logger>()
         val processRunner = ProcessRunner(logger)
-        val posix = POSIXFactory.getNativePOSIX()
         val httpConfig = DockerHttpConfig(OkHttpClient())
-        val consoleInfo = ConsoleInfo(posix, processRunner, logger)
+        val posix = POSIXFactory.getNativePOSIX()
+        val nativeMethods = NativeMethods(posix)
+        val consoleInfo = ConsoleInfo(posix, nativeMethods, logger)
         val systemInfo = SystemInfo(posix)
         val client = DockerClient(processRunner, httpConfig, consoleInfo, logger)
 

@@ -16,14 +16,17 @@
 
 package batect.ui
 
-import batect.os.ProcessOutput
-import batect.os.ProcessRunner
+import batect.os.NativeMethodException
+import batect.os.NativeMethods
 import batect.testutils.createLoggerForEachTest
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.doThrow
 import com.nhaarman.mockito_kotlin.mock
+import jnr.constants.platform.Errno
 import jnr.posix.POSIX
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -41,8 +44,8 @@ object ConsoleInfoSpec : Spek({
                     on { isatty(FileDescriptor.`in`) } doReturn true
                 }
 
-                val processRunner = mock<ProcessRunner>()
-                val consoleInfo = ConsoleInfo(posix, processRunner, emptyMap(), logger)
+                val nativeMethods = mock<NativeMethods>()
+                val consoleInfo = ConsoleInfo(posix, nativeMethods, emptyMap(), logger)
 
                 it("returns true") {
                     assertThat(consoleInfo.stdinIsTTY, equalTo(true))
@@ -54,8 +57,8 @@ object ConsoleInfoSpec : Spek({
                     on { isatty(FileDescriptor.`in`) } doReturn false
                 }
 
-                val processRunner = mock<ProcessRunner>()
-                val consoleInfo = ConsoleInfo(posix, processRunner, emptyMap(), logger)
+                val nativeMethods = mock<NativeMethods>()
+                val consoleInfo = ConsoleInfo(posix, nativeMethods, emptyMap(), logger)
 
                 it("returns false") {
                     assertThat(consoleInfo.stdinIsTTY, equalTo(false))
@@ -69,10 +72,10 @@ object ConsoleInfoSpec : Spek({
                     on { isatty(FileDescriptor.`in`) } doReturn true
                 }
 
-                val processRunner = mock<ProcessRunner>()
+                val nativeMethods = mock<NativeMethods>()
 
                 on("the TERM environment variable being set to 'dumb'") {
-                    val consoleInfo = ConsoleInfo(posix, processRunner, mapOf("TERM" to "dumb"), logger)
+                    val consoleInfo = ConsoleInfo(posix, nativeMethods, mapOf("TERM" to "dumb"), logger)
 
                     it("returns false") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -80,7 +83,7 @@ object ConsoleInfoSpec : Spek({
                 }
 
                 on("the TERM environment variables not being set") {
-                    val consoleInfo = ConsoleInfo(posix, processRunner, emptyMap(), logger)
+                    val consoleInfo = ConsoleInfo(posix, nativeMethods, emptyMap(), logger)
 
                     it("returns false") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -88,7 +91,7 @@ object ConsoleInfoSpec : Spek({
                 }
 
                 on("the TERM environment variable being set to something other than 'dumb' and the TRAVIS environment variable not being set") {
-                    val consoleInfo = ConsoleInfo(posix, processRunner, mapOf("TERM" to "other-terminal"), logger)
+                    val consoleInfo = ConsoleInfo(posix, nativeMethods, mapOf("TERM" to "other-terminal"), logger)
 
                     it("returns true") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(true))
@@ -96,7 +99,7 @@ object ConsoleInfoSpec : Spek({
                 }
 
                 on("the TERM environment variable being set to something other than 'dumb' and the TRAVIS environment variable being set") {
-                    val consoleInfo = ConsoleInfo(posix, processRunner, mapOf("TERM" to "other-terminal", "TRAVIS" to "true"), logger)
+                    val consoleInfo = ConsoleInfo(posix, nativeMethods, mapOf("TERM" to "other-terminal", "TRAVIS" to "true"), logger)
 
                     it("returns false") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -109,8 +112,8 @@ object ConsoleInfoSpec : Spek({
                     on { isatty(FileDescriptor.`in`) } doReturn false
                 }
 
-                val processRunner = mock<ProcessRunner>()
-                val consoleInfo = ConsoleInfo(posix, processRunner, mapOf("TERM" to "other-terminal"), logger)
+                val nativeMethods = mock<NativeMethods>()
+                val consoleInfo = ConsoleInfo(posix, nativeMethods, mapOf("TERM" to "other-terminal"), logger)
 
                 it("returns false") {
                     assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -120,10 +123,10 @@ object ConsoleInfoSpec : Spek({
 
         describe("getting the type of terminal") {
             val posix = mock<POSIX>()
-            val processRunner = mock<ProcessRunner>()
+            val nativeMethods = mock<NativeMethods>()
 
             on("when the TERM environment variable is not set") {
-                val consoleInfo = ConsoleInfo(posix, processRunner, emptyMap(), logger)
+                val consoleInfo = ConsoleInfo(posix, nativeMethods, emptyMap(), logger)
 
                 it("returns null") {
                     assertThat(consoleInfo.terminalType, absent())
@@ -131,7 +134,7 @@ object ConsoleInfoSpec : Spek({
             }
 
             on("when the TERM environment variable is set") {
-                val consoleInfo = ConsoleInfo(posix, processRunner, mapOf("TERM" to "some-terminal"), logger)
+                val consoleInfo = ConsoleInfo(posix, nativeMethods, mapOf("TERM" to "some-terminal"), logger)
 
                 it("returns its value") {
                     assertThat(consoleInfo.terminalType, equalTo("some-terminal"))
@@ -143,26 +146,38 @@ object ConsoleInfoSpec : Spek({
             val posix = mock<POSIX>()
 
             on("getting the dimensions succeeding") {
-                val processRunner = mock<ProcessRunner>() {
-                    on { runAndCaptureOutput(listOf("stty", "size")) } doReturn ProcessOutput(0, "51 204\n")
+                val nativeMethods = mock<NativeMethods> {
+                    on { getConsoleDimensions() } doReturn Dimensions(51, 204)
                 }
 
-                val consoleInfo = ConsoleInfo(posix, processRunner, emptyMap(), logger)
+                val consoleInfo = ConsoleInfo(posix, nativeMethods, emptyMap(), logger)
 
                 it("returns a parsed set of dimensions") {
-                    assertThat(consoleInfo.dimensions, equalTo(Dimensions(height = 51, width = 204)))
+                    assertThat(consoleInfo.dimensions, equalTo(Dimensions(51, 204)))
                 }
             }
 
-            on("getting the dimensions failing") {
-                val processRunner = mock<ProcessRunner>() {
-                    on { runAndCaptureOutput(listOf("stty", "size")) } doReturn ProcessOutput(1, "something went wrong")
+            on("getting the dimensions failing because the console is not a TTY") {
+                val nativeMethods = mock<NativeMethods> {
+                    on { getConsoleDimensions() } doThrow NativeMethodException("ioctl", Errno.ENOTTY)
                 }
 
-                val consoleInfo = ConsoleInfo(posix, processRunner, emptyMap(), logger)
+                val consoleInfo = ConsoleInfo(posix, nativeMethods, emptyMap(), logger)
 
                 it("returns a null set of dimensions") {
                     assertThat(consoleInfo.dimensions, absent())
+                }
+            }
+
+            on("getting the dimensions failing for another reason") {
+                val nativeMethods = mock<NativeMethods> {
+                    on { getConsoleDimensions() } doThrow NativeMethodException("ioctl", Errno.EBUSY)
+                }
+
+                val consoleInfo = ConsoleInfo(posix, nativeMethods, emptyMap(), logger)
+
+                it("propagates the exception") {
+                    assertThat({ consoleInfo.dimensions }, throws<NativeMethodException>())
                 }
             }
         }

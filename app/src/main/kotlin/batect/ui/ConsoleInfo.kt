@@ -17,17 +17,19 @@
 package batect.ui
 
 import batect.logging.Logger
-import batect.os.ProcessRunner
+import batect.os.NativeMethodException
+import batect.os.NativeMethods
+import jnr.constants.platform.Errno
 import jnr.posix.POSIX
 import java.io.FileDescriptor
 
 class ConsoleInfo(
     private val posix: POSIX,
-    private val processRunner: ProcessRunner,
+    private val nativeMethods: NativeMethods,
     private val environment: Map<String, String>,
     private val logger: Logger
 ) {
-    constructor(posix: POSIX, processRunner: ProcessRunner, logger: Logger) : this(posix, processRunner, System.getenv(), logger)
+    constructor(posix: POSIX, nativeMethods: NativeMethods, logger: Logger) : this(posix, nativeMethods, System.getenv(), logger)
 
     val stdinIsTTY: Boolean by lazy {
         val result = posix.isatty(FileDescriptor.`in`)
@@ -54,23 +56,28 @@ class ConsoleInfo(
     val terminalType: String? = environment["TERM"]
     private val isTravis: Boolean = environment["TRAVIS"] == "true"
 
-    // FIXME: This isn't perfect - if the user resizes the terminal after we run `stty`, we'll have stale information
+    // FIXME: This isn't perfect - if the user resizes the terminal after we call getConsoleDimensions(), we'll have stale information
     val dimensions: Dimensions? by lazy {
-        val result = processRunner.runAndCaptureOutput(listOf("stty", "size"))
+        try {
+            val result = nativeMethods.getConsoleDimensions()
 
-        logger.info {
-            message("Ran 'stty size' to determine terminal dimensions.")
-            data("result", result)
-        }
+            logger.info {
+                message("Got console dimensions.")
+                data("result", result)
+            }
 
-        if (result.exitCode != 0) {
-            null
-        } else {
-            val parts = result.output.trim().split(' ')
-            val height = parts[0].toInt()
-            val width = parts[1].toInt()
+            result
+        } catch (e: NativeMethodException) {
+            if (e.error == Errno.ENOTTY) {
+                null
+            } else {
+                logger.warn {
+                    message("Getting console dimensions failed.")
+                    exception(e)
+                }
 
-            Dimensions(height, width)
+                throw e
+            }
         }
     }
 }

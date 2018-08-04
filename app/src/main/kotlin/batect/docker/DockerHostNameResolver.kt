@@ -31,7 +31,7 @@ class DockerHostNameResolver(
             return DockerHostNameResolutionResult.NotSupported
         }
 
-        val version = (dockerVersionInfoRetrievalResult as? DockerVersionInfoRetrievalResult.Succeeded)?.info?.server?.version
+        val version = (dockerVersionInfoRetrievalResult as? DockerVersionInfoRetrievalResult.Succeeded)?.info?.version
 
         return when {
             version == null -> DockerHostNameResolutionResult.NotSupported

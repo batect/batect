@@ -26,16 +26,13 @@ import org.jetbrains.spek.api.dsl.on
 
 object DockerVersionInfoSpec : Spek({
     given("a set of Docker version information") {
-        val info = DockerVersionInfo(
-            DockerClientVersionInfo(Version(18, 3, 1, "ce-mac65"), "clientApi", "clientCommit"),
-            DockerServerVersionInfo(Version(17, 9, 1, "ce"), "serverApi", "serverMinApi", "serverCommit")
-        )
+        val info = DockerVersionInfo(Version(17, 9, 1, "ce"), "serverApi", "serverMinApi", "serverCommit")
 
         on("converting it to a string") {
             val result = info.toString()
 
             it("returns a human-readable representation of itself") {
-                assertThat(result, equalTo("Client: 18.3.1-ce-mac65 (API: clientApi, commit: clientCommit), server: 17.9.1-ce (API: serverApi, minimum supported API: serverMinApi, commit: serverCommit)"))
+                assertThat(result, equalTo("17.9.1-ce (API version: serverApi, minimum supported API version: serverMinApi, commit: serverCommit)"))
             }
         }
     }

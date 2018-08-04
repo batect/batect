@@ -411,7 +411,7 @@ class DockerClient(
     // It's used in a number of places where throwing exceptions would be undesirable or unsafe (eg. during logging startup
     // and when showing version info), so instead we wrap the result.
     fun getDockerVersionInfo(): DockerVersionInfoRetrievalResult {
-        val command = listOf("docker", "version", "--format", "{{println .Client.Version}}{{println .Client.APIVersion}}{{println .Client.GitCommit}}{{println .Server.Version}}{{println .Server.APIVersion}}{{println .Server.MinAPIVersion}}{{println .Server.GitCommit}}")
+        val command = listOf("docker", "version", "--format", "{{println .Server.Version}}{{println .Server.APIVersion}}{{println .Server.MinAPIVersion}}{{println .Server.GitCommit}}")
 
         try {
             val result = processRunner.runAndCaptureOutput(command)
@@ -427,7 +427,7 @@ class DockerClient(
 
             val parts = result.output.trim().split("\n")
 
-            if (parts.size != 7) {
+            if (parts.size != 4) {
                 logger.error {
                     message("Received unexpected output from Docker version command.")
                     data("result", result)
@@ -437,8 +437,7 @@ class DockerClient(
             }
 
             return DockerVersionInfoRetrievalResult.Succeeded(DockerVersionInfo(
-                DockerClientVersionInfo(Version.parse(parts[0]), parts[1], parts[2]),
-                DockerServerVersionInfo(Version.parse(parts[3]), parts[4], parts[5], parts[6])
+                Version.parse(parts[0]), parts[1], parts[2], parts[3]
             ))
         } catch (t: Throwable) {
             logger.error {

@@ -108,7 +108,4 @@ object DockerHostNameResolverSpec : Spek({
     }
 })
 
-private fun createDockerVersionInfoWithServerVersion(version: Version) = DockerVersionInfo(
-    DockerClientVersionInfo(Version(1, 0, 0), "", ""),
-    DockerServerVersionInfo(version, "", "", "")
-)
+private fun createDockerVersionInfoWithServerVersion(version: Version) = DockerVersionInfo(version, "", "", "")

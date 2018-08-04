@@ -18,14 +18,6 @@ package batect.docker
 
 import batect.utils.Version
 
-data class DockerVersionInfo(val client: DockerClientVersionInfo, val server: DockerServerVersionInfo) {
-    override fun toString(): String = "Client: $client, server: $server"
-}
-
-data class DockerClientVersionInfo(val version: Version, val apiVersion: String, val gitCommit: String) {
-    override fun toString(): String = "$version (API: $apiVersion, commit: $gitCommit)"
-}
-
-data class DockerServerVersionInfo(val version: Version, val apiVersion: String, val minAPIVersion: String, val gitCommit: String) {
-    override fun toString(): String = "$version (API: $apiVersion, minimum supported API: $minAPIVersion, commit: $gitCommit)"
+data class DockerVersionInfo(val version: Version, val apiVersion: String, val minAPIVersion: String, val gitCommit: String) {
+    override fun toString(): String = "$version (API version: $apiVersion, minimum supported API version: $minAPIVersion, commit: $gitCommit)"
 }

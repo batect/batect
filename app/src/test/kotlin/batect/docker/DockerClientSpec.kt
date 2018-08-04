@@ -584,15 +584,14 @@ object DockerClientSpec : Spek({
         }
 
         describe("getting Docker version information") {
-            val expectedCommand = listOf("docker", "version", "--format", "{{println .Client.Version}}{{println .Client.APIVersion}}{{println .Client.GitCommit}}{{println .Server.Version}}{{println .Server.APIVersion}}{{println .Server.MinAPIVersion}}{{println .Server.GitCommit}}")
+            val expectedCommand = listOf("docker", "version", "--format", "{{println .Server.Version}}{{println .Server.APIVersion}}{{println .Server.MinAPIVersion}}{{println .Server.GitCommit}}")
 
             on("the Docker version command invocation succeeding") {
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "0.1\n2.3\nabc123\n4.5\n6.7\n8.9\ndef456\n"))
+                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "4.5\n6.7\n8.9\ndef456\n"))
 
                 it("returns the version information from Docker") {
                     assertThat(client.getDockerVersionInfo(), equalTo(DockerVersionInfoRetrievalResult.Succeeded(DockerVersionInfo(
-                        DockerClientVersionInfo(Version(0, 1, 0), "2.3", "abc123"),
-                        DockerServerVersionInfo(Version(4, 5, 0), "6.7", "8.9", "def456")
+                        Version(4, 5, 0), "6.7", "8.9", "def456"
                     ))))
                 }
             }

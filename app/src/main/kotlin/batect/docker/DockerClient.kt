@@ -416,34 +416,43 @@ class DockerClient(
     // It's used in a number of places where throwing exceptions would be undesirable or unsafe (eg. during logging startup
     // and when showing version info), so instead we wrap the result.
     fun getDockerVersionInfo(): DockerVersionInfoRetrievalResult {
-        val command = listOf("docker", "version", "--format", "{{println .Server.Version}}{{println .Server.APIVersion}}{{println .Server.MinAPIVersion}}{{println .Server.GitCommit}}")
+        logger.info {
+            message("Getting Docker version information.")
+        }
+
+        val url = baseUrl.newBuilder()
+            .addPathSegment("version")
+            .build()
+
+        val request = Request.Builder()
+            .get()
+            .url(url)
+            .build()
 
         try {
-            val result = processRunner.runAndCaptureOutput(command)
+            httpConfig.client.newCall(request).execute().use { response ->
+                checkForFailure(response) { error ->
+                    logger.error {
+                        message("Could not get Docker version info.")
+                        data("error", error)
+                    }
 
-            if (failed(result)) {
-                logger.error {
-                    message("Could not get Docker version info.")
-                    data("result", result)
+                    return DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because the request failed: ${error.message}")
                 }
 
-                return DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because the command failed: ${result.output.trim()}")
+                val parsedResponse = JsonTreeParser(response.body()!!.string()).readFully() as JsonObject
+                val version = parsedResponse["Version"].primitive.content
+                val apiVersion = parsedResponse["ApiVersion"].primitive.content
+                val minAPIVersion = parsedResponse["MinAPIVersion"].primitive.content
+                val gitCommit = parsedResponse["GitCommit"].primitive.content
+
+                return DockerVersionInfoRetrievalResult.Succeeded(DockerVersionInfo(
+                    Version.parse(version),
+                    apiVersion,
+                    minAPIVersion,
+                    gitCommit
+                ))
             }
-
-            val parts = result.output.trim().split("\n")
-
-            if (parts.size != 4) {
-                logger.error {
-                    message("Received unexpected output from Docker version command.")
-                    data("result", result)
-                }
-
-                return DockerVersionInfoRetrievalResult.Failed("Received unexpected response to Docker version command with ${parts.size} parts: ${result.output.trim()}")
-            }
-
-            return DockerVersionInfoRetrievalResult.Succeeded(DockerVersionInfo(
-                Version.parse(parts[0]), parts[1], parts[2], parts[3]
-            ))
         } catch (t: Throwable) {
             logger.error {
                 message("An exception was thrown while getting Docker version info.")
@@ -546,8 +555,11 @@ class DockerClient(
 
     private fun failed(result: ProcessOutput): Boolean = result.exitCode != 0
 
-    private fun urlForContainers(): HttpUrl = httpConfig.baseUrl.newBuilder()
+    private val baseUrl: HttpUrl = httpConfig.baseUrl.newBuilder()
         .addPathSegment("v1.12")
+        .build()
+
+    private fun urlForContainers(): HttpUrl = baseUrl.newBuilder()
         .addPathSegment("containers")
         .build()
 
@@ -559,8 +571,7 @@ class DockerClient(
         .addPathSegment(operation)
         .build()
 
-    private fun urlForNetworks(): HttpUrl = httpConfig.baseUrl.newBuilder()
-        .addPathSegment("v1.12")
+    private fun urlForNetworks(): HttpUrl = baseUrl.newBuilder()
         .addPathSegment("networks")
         .build()
 
@@ -574,7 +585,7 @@ class DockerClient(
     private fun jsonRequestBody(json: JsonObject): RequestBody = jsonRequestBody(json.toString())
     private fun jsonRequestBody(json: String): RequestBody = RequestBody.create(jsonMediaType, json)
 
-    private fun checkForFailure(response: Response, errorHandler: (DockerAPIError) -> Unit) {
+    private inline fun checkForFailure(response: Response, errorHandler: (DockerAPIError) -> Unit) {
         if (response.isSuccessful) {
             return
         }

@@ -28,6 +28,7 @@ import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
 import batect.testutils.mockDelete
+import batect.testutils.mockGet
 import batect.testutils.mockPost
 import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
@@ -598,29 +599,41 @@ object DockerClientSpec : Spek({
         }
 
         describe("getting Docker version information") {
-            val expectedCommand = listOf("docker", "version", "--format", "{{println .Server.Version}}{{println .Server.APIVersion}}{{println .Server.MinAPIVersion}}{{println .Server.GitCommit}}")
+            val expectedUrl = "$dockerBaseUrl/v1.12/version"
 
             on("the Docker version command invocation succeeding") {
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "4.5\n6.7\n8.9\ndef456\n"))
+                httpClient.mockGet(expectedUrl, """
+                    |{
+                    |  "Version": "17.04.0",
+                    |  "Os": "linux",
+                    |  "KernelVersion": "3.19.0-23-generic",
+                    |  "GoVersion": "go1.7.5",
+                    |  "GitCommit": "deadbee",
+                    |  "Arch": "amd64",
+                    |  "ApiVersion": "1.27",
+                    |  "MinAPIVersion": "1.12",
+                    |  "BuildTime": "2016-06-14T07:09:13.444803460+00:00",
+                    |  "Experimental": true
+                    |}""".trimMargin(), 200)
 
                 it("returns the version information from Docker") {
                     assertThat(client.getDockerVersionInfo(), equalTo(DockerVersionInfoRetrievalResult.Succeeded(DockerVersionInfo(
-                        Version(4, 5, 0), "6.7", "8.9", "def456"
+                        Version(17, 4, 0), "1.27", "1.12", "deadbee"
                     ))))
                 }
             }
 
             on("the Docker version command invocation failing") {
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong\n"))
+                httpClient.mockGet(expectedUrl, """{"message": "Something went wrong."}""", 418)
 
                 it("returns an appropriate message") {
-                    assertThat(client.getDockerVersionInfo(), equalTo(DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because the command failed: Something went wrong")))
+                    assertThat(client.getDockerVersionInfo(), equalTo(DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because the request failed: Something went wrong.")))
                 }
             }
 
             on("running the Docker version command throwing an exception (for example, because Docker is not installed)") {
-                val exception = RuntimeException("Something went wrong")
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenThrow(exception)
+                val call = httpClient.mockGet(expectedUrl, "Should never receive this")
+                whenever(call.execute()).doThrow(RuntimeException("Something went wrong"))
 
                 it("returns an appropriate message") {
                     assertThat(client.getDockerVersionInfo(), equalTo(DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because RuntimeException was thrown: Something went wrong")))

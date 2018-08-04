@@ -430,23 +430,28 @@ object DockerClientSpec : Spek({
 
         describe("getting the last health check result for a container") {
             val container = DockerContainer("some-container")
-            val expectedCommand = listOf("docker", "inspect", container.id, "--format={{json .State.Health}}")
+            val expectedUrl = "$dockerBaseUrl/v1.12/containers/some-container/json"
 
             on("the container only having one last health check result") {
-                val response = """{
-                                  "Status": "unhealthy",
-                                  "FailingStreak": 130,
-                                  "Log": [
-                                    {
-                                      "Start": "2017-10-04T00:54:23.608075352Z",
-                                      "End": "2017-10-04T00:54:23.646606606Z",
-                                      "ExitCode": 1,
-                                      "Output": "something went wrong"
-                                    }
-                                  ]
-                                }""".trimIndent()
+                val response = """
+                    {
+                      "State": {
+                        "Health": {
+                          "Status": "unhealthy",
+                          "FailingStreak": 130,
+                          "Log": [
+                            {
+                              "Start": "2017-10-04T00:54:23.608075352Z",
+                              "End": "2017-10-04T00:54:23.646606606Z",
+                              "ExitCode": 1,
+                              "Output": "something went wrong"
+                            }
+                          ]
+                        }
+                      }
+                    }""".trimIndent()
 
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, response))
+                httpClient.mockGet(expectedUrl, response, 200)
 
                 val details = client.getLastHealthCheckResult(container)
 
@@ -456,44 +461,49 @@ object DockerClientSpec : Spek({
             }
 
             on("the container having a full set of previous health check results") {
-                val response = """{
-                                  "Status": "unhealthy",
-                                  "FailingStreak": 130,
-                                  "Log": [
-                                    {
-                                      "Start": "2017-10-04T00:54:15.389708057Z",
-                                      "End": "2017-10-04T00:54:15.426118682Z",
-                                      "ExitCode": 1,
-                                      "Output": ""
-                                    },
-                                    {
-                                      "Start": "2017-10-04T00:54:17.435801514Z",
-                                      "End": "2017-10-04T00:54:17.473788486Z",
-                                      "ExitCode": 1,
-                                      "Output": ""
-                                    },
-                                    {
-                                      "Start": "2017-10-04T00:54:19.483518154Z",
-                                      "End": "2017-10-04T00:54:19.534368638Z",
-                                      "ExitCode": 1,
-                                      "Output": ""
-                                    },
-                                    {
-                                      "Start": "2017-10-04T00:54:21.546935143Z",
-                                      "End": "2017-10-04T00:54:21.592975551Z",
-                                      "ExitCode": 1,
-                                      "Output": ""
-                                    },
-                                    {
-                                      "Start": "2017-10-04T00:54:23.608075352Z",
-                                      "End": "2017-10-04T00:54:23.646606606Z",
-                                      "ExitCode": 1,
-                                      "Output": "this is the most recent health check"
-                                    }
-                                  ]
-                                }""".trimIndent()
+                val response = """
+                    {
+                      "State": {
+                        "Health": {
+                          "Status": "unhealthy",
+                          "FailingStreak": 130,
+                          "Log": [
+                            {
+                              "Start": "2017-10-04T00:54:15.389708057Z",
+                              "End": "2017-10-04T00:54:15.426118682Z",
+                              "ExitCode": 1,
+                              "Output": ""
+                            },
+                            {
+                              "Start": "2017-10-04T00:54:17.435801514Z",
+                              "End": "2017-10-04T00:54:17.473788486Z",
+                              "ExitCode": 1,
+                              "Output": ""
+                            },
+                            {
+                              "Start": "2017-10-04T00:54:19.483518154Z",
+                              "End": "2017-10-04T00:54:19.534368638Z",
+                              "ExitCode": 1,
+                              "Output": ""
+                            },
+                            {
+                              "Start": "2017-10-04T00:54:21.546935143Z",
+                              "End": "2017-10-04T00:54:21.592975551Z",
+                              "ExitCode": 1,
+                              "Output": ""
+                            },
+                            {
+                              "Start": "2017-10-04T00:54:23.608075352Z",
+                              "End": "2017-10-04T00:54:23.646606606Z",
+                              "ExitCode": 1,
+                              "Output": "this is the most recent health check"
+                            }
+                          ]
+                        }
+                      }
+                    }""".trimIndent()
 
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, response))
+                httpClient.mockGet(expectedUrl, response, 200)
 
                 val details = client.getLastHealthCheckResult(container)
 
@@ -503,7 +513,12 @@ object DockerClientSpec : Spek({
             }
 
             on("the container not having a health check") {
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "null\n"))
+                val response = """
+                    {
+                      "State": {}
+                    }""".trimIndent()
+
+                httpClient.mockGet(expectedUrl, response, 200)
 
                 it("throws an appropriate exception") {
                     assertThat({ client.getLastHealthCheckResult(container) },
@@ -512,7 +527,7 @@ object DockerClientSpec : Spek({
             }
 
             on("getting the container's details failing") {
-                whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
+                httpClient.mockGet(expectedUrl, """{"message": "Something went wrong."}""", 418)
 
                 it("throws an appropriate exception") {
                     assertThat({ client.getLastHealthCheckResult(container) },

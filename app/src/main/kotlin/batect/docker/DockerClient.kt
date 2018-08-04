@@ -25,6 +25,7 @@ import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.ui.ConsoleInfo
 import batect.utils.Version
+import kotlinx.serialization.Optional
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JSON
@@ -259,26 +260,39 @@ class DockerClient(
     }
 
     fun getLastHealthCheckResult(container: DockerContainer): DockerHealthCheckResult {
-        val command = listOf("docker", "inspect", container.id, "--format={{json .State.Health}}")
-        val result = processRunner.runAndCaptureOutput(command)
+        logger.info {
+            message("Getting last health check result for container.")
+            data("container", container)
+        }
 
-        if (failed(result)) {
-            logger.error {
-                message("Could not get last health check result for container.")
-                data("container", container)
-                data("result", result)
+        val url = urlForContainer(container).newBuilder()
+            .addPathSegment("json")
+            .build()
+
+        val request = Request.Builder()
+            .get()
+            .url(url)
+            .build()
+
+        httpConfig.client.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Could not get last health check result for container.")
+                    data("container", container)
+                    data("error", error)
+                }
+
+                throw ContainerHealthCheckException("Could not get the last health check result for container '${container.id}': ${error.message}")
             }
 
-            throw ContainerHealthCheckException("Could not get the last health check result for container '${container.id}': ${result.output.trim()}")
+            val parsed = JSON.nonstrict.parse<DockerContainerInfo>(response.body()!!.string())
+
+            if (parsed.state.health == null) {
+                throw ContainerHealthCheckException("Could not get the last health check result for container '${container.id}'. The container does not have a health check.")
+            }
+
+            return parsed.state.health.log.last()
         }
-
-        if (result.output.trim() == "null") {
-            throw ContainerHealthCheckException("Could not get the last health check result for container '${container.id}'. The container does not have a health check.")
-        }
-
-        val parsed = JSON.nonstrict.parse<DockerHealthCheckStatus>(result.output)
-
-        return parsed.log.last()
     }
 
     fun stop(container: DockerContainer) {
@@ -609,7 +623,13 @@ class DockerClient(
     }
 
     @Serializable
-    data class DockerHealthCheckStatus(@SerialName("Log") val log: List<DockerHealthCheckResult>)
+    data class DockerContainerInfo(@SerialName("State") val state: DockerContainerState)
+
+    @Serializable
+    data class DockerContainerState(@SerialName("Health") @Optional val health: DockerContainerHealthCheckState? = null)
+
+    @Serializable
+    data class DockerContainerHealthCheckState(@SerialName("Log") val log: List<DockerHealthCheckResult> = emptyList())
 
     private data class DockerAPIError(val statusCode: Int, val message: String)
 }

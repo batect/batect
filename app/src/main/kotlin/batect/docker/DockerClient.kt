@@ -37,6 +37,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 // Unix sockets implementation inspired by
 // https://github.com/gesellix/okhttp/blob/master/samples/simple-client/src/main/java/okhttp3/sample/OkDocker.java and
@@ -291,7 +292,11 @@ class DockerClient(
             .url(urlForContainerOperation(container, "stop"))
             .build()
 
-        httpConfig.client.newCall(request).execute().use { response ->
+        val clientWithLongTimeout = httpConfig.client.newBuilder()
+            .readTimeout(11, TimeUnit.SECONDS)
+            .build()
+
+        clientWithLongTimeout.newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Could not stop container.")

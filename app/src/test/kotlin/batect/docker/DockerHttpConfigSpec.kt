@@ -36,7 +36,7 @@ object DockerHttpConfigSpec : Spek({
     describe("a set of Docker HTTP configuration") {
         val baseClient = OkHttpClient.Builder()
             .proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress("some-proxy", 1234)))
-            .writeTimeout(1, TimeUnit.DAYS)
+            .readTimeout(1, TimeUnit.DAYS)
             .build()
 
         val config = DockerHttpConfig(baseClient)
@@ -56,12 +56,8 @@ object DockerHttpConfigSpec : Spek({
                 assertThat(client.dns(), isA<UnixSocketDns>())
             }
 
-            it("configures the read timeout as slightly longer than the default time taken to stop a container in the worst case scenario") {
-                assertThat(client.readTimeoutMillis(), equalTo(11_000))
-            }
-
             it("inherits all other settings from the base client provided") {
-                assertThat(client.writeTimeoutMillis().toLong(), equalTo(Duration.ofDays(1).toMillis()))
+                assertThat(client.readTimeoutMillis().toLong(), equalTo(Duration.ofDays(1).toMillis()))
             }
         }
 

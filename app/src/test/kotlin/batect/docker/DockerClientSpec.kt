@@ -60,6 +60,7 @@ import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 object DockerClientSpec : Spek({
     describe("a Docker client") {
@@ -296,18 +297,31 @@ object DockerClientSpec : Spek({
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
                 val expectedUrl = "$dockerBaseUrl/v1.12/containers/the-container-id/stop"
+                val clientWithLongTimeout = mock<OkHttpClient>()
+                val longTimeoutClientBuilder = mock<OkHttpClient.Builder> { mock ->
+                    on { readTimeout(any(), any()) } doReturn mock
+                    on { build() } doReturn clientWithLongTimeout
+                }
+
+                beforeEachTest {
+                    whenever(httpClient.newBuilder()).doReturn(longTimeoutClientBuilder)
+                }
 
                 on("stopping that container") {
-                    val call = httpClient.mockPost(expectedUrl, "", 204)
+                    val call = clientWithLongTimeout.mockPost(expectedUrl, "", 204)
                     client.stop(container)
 
                     it("sends a request to the Docker daemon to stop the container") {
                         verify(call).execute()
                     }
+
+                    it("configures the Docker client with a longer timeout to allow for the default container stop timeout period of 10 seconds") {
+                        verify(longTimeoutClientBuilder).readTimeout(11, TimeUnit.SECONDS)
+                    }
                 }
 
                 on("an unsuccessful stop attempt") {
-                    httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                    clientWithLongTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
 
                     it("raises an appropriate exception") {
                         assertThat({ client.stop(container) }, throws<ContainerStopFailedException>(withMessage("Stopping container 'the-container-id' failed: Something went wrong.")))

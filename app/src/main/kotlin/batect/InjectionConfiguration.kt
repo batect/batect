@@ -26,6 +26,7 @@ import batect.cli.commands.UpgradeCommand
 import batect.cli.commands.VersionInfoCommand
 import batect.config.io.ConfigurationLoader
 import batect.config.io.PathResolverFactory
+import batect.docker.DockerAPI
 import batect.docker.DockerClient
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerHostNameResolver
@@ -126,6 +127,7 @@ private val configModule = Kodein.Module("config") {
 }
 
 private val dockerModule = Kodein.Module("docker") {
+    bind<DockerAPI>() with singletonWithLogger { logger -> DockerAPI(instance(), logger) }
     bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), logger) }
     bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
     bind<DockerHostNameResolver>() with singleton { DockerHostNameResolver(instance(), instance()) }

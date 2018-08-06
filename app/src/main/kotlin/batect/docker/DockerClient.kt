@@ -24,28 +24,13 @@ import batect.os.KilledDuringProcessing
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.ui.ConsoleInfo
-import batect.utils.Version
-import kotlinx.serialization.Optional
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JSON
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonTreeParser
-import kotlinx.serialization.json.json
-import okhttp3.HttpUrl
-import okhttp3.MediaType
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.Response
-import java.util.UUID
-import java.util.concurrent.TimeUnit
 
 // Unix sockets implementation inspired by
 // https://github.com/gesellix/okhttp/blob/master/samples/simple-client/src/main/java/okhttp3/sample/OkDocker.java and
 // https://github.com/square/okhttp/blob/master/samples/unixdomainsockets/src/main/java/okhttp3/unixdomainsockets/UnixDomainSocketFactory.java
 class DockerClient(
     private val processRunner: ProcessRunner,
-    private val httpConfig: DockerHttpConfig,
+    private val api: DockerAPI,
     private val consoleInfo: ConsoleInfo,
     private val logger: Logger
 ) {
@@ -96,44 +81,10 @@ class DockerClient(
         return DockerImage(imageId)
     }
 
-    fun create(creationRequest: DockerContainerCreationRequest): DockerContainer {
-        logger.info {
-            message("Creating container.")
-            data("request", creationRequest)
-        }
-
-        val url = urlForContainers().newBuilder()
-            .addPathSegment("create")
-            .build()
-
-        val body = creationRequest.toJson()
-
-        val request = Request.Builder()
-            .post(jsonRequestBody(body))
-            .url(url)
-            .build()
-
-        httpConfig.client.newCall(request).execute().use { response ->
-            checkForFailure(response) { error ->
-                logger.error {
-                    message("Container creation failed.")
-                    data("error", error)
-                }
-
-                throw ContainerCreationFailedException("Output from Docker was: ${error.message}")
-            }
-
-            val parsedResponse = JsonTreeParser(response.body()!!.string()).readFully() as JsonObject
-            val containerId = parsedResponse["Id"].primitive.content
-
-            logger.info {
-                message("Container created.")
-                data("containerId", containerId)
-            }
-
-            return DockerContainer(containerId)
-        }
-    }
+    fun create(creationRequest: DockerContainerCreationRequest): DockerContainer = api.createContainer(creationRequest)
+    fun start(container: DockerContainer) = api.startContainer(container)
+    fun stop(container: DockerContainer) = api.stopContainer(container)
+    fun remove(container: DockerContainer) = api.removeContainer(container)
 
     fun run(container: DockerContainer): DockerContainerRunResult {
         val command = if (consoleInfo.stdinIsTTY) {
@@ -156,34 +107,6 @@ class DockerClient(
         }
 
         return DockerContainerRunResult(exitCode)
-    }
-
-    fun start(container: DockerContainer) {
-        logger.info {
-            message("Starting container.")
-            data("container", container)
-        }
-
-        val request = Request.Builder()
-            .post(emptyRequestBody())
-            .url(urlForContainerOperation(container, "start"))
-            .build()
-
-        httpConfig.client.newCall(request).execute().use { response ->
-            checkForFailure(response) { error ->
-                logger.error {
-                    message("Starting container failed.")
-                    data("error", error)
-                }
-
-                throw ContainerStartFailedException(container.id, error.message)
-            }
-
-            logger.info {
-                message("Container started.")
-                data("container", container)
-            }
-        }
     }
 
     fun waitForHealthStatus(container: DockerContainer): HealthStatus {
@@ -260,213 +183,30 @@ class DockerClient(
     }
 
     fun getLastHealthCheckResult(container: DockerContainer): DockerHealthCheckResult {
-        logger.info {
-            message("Getting last health check result for container.")
-            data("container", container)
-        }
+        try {
+            val info = api.inspectContainer(container)
 
-        val url = urlForContainer(container).newBuilder()
-            .addPathSegment("json")
-            .build()
-
-        val request = Request.Builder()
-            .get()
-            .url(url)
-            .build()
-
-        httpConfig.client.newCall(request).execute().use { response ->
-            checkForFailure(response) { error ->
-                logger.error {
-                    message("Could not get last health check result for container.")
-                    data("container", container)
-                    data("error", error)
-                }
-
-                throw ContainerHealthCheckException("Could not get the last health check result for container '${container.id}': ${error.message}")
-            }
-
-            val parsed = JSON.nonstrict.parse<DockerContainerInfo>(response.body()!!.string())
-
-            if (parsed.state.health == null) {
+            if (info.state.health == null) {
                 throw ContainerHealthCheckException("Could not get the last health check result for container '${container.id}'. The container does not have a health check.")
             }
 
-            return parsed.state.health.log.last()
+            return info.state.health.log.last()
+        } catch (e: ContainerInspectionFailedException) {
+            throw ContainerHealthCheckException("Could not get the last health check result for container '${container.id}': ${e.message}", e)
         }
     }
 
-    fun stop(container: DockerContainer) {
-        logger.info {
-            message("Stopping container.")
-            data("container", container)
-        }
-
-        val request = Request.Builder()
-            .post(emptyRequestBody())
-            .url(urlForContainerOperation(container, "stop"))
-            .build()
-
-        val clientWithLongTimeout = httpConfig.client.newBuilder()
-            .readTimeout(11, TimeUnit.SECONDS)
-            .build()
-
-        clientWithLongTimeout.newCall(request).execute().use { response ->
-            checkForFailure(response) { error ->
-                logger.error {
-                    message("Could not stop container.")
-                    data("error", error)
-                }
-
-                throw ContainerStopFailedException(container.id, error.message)
-            }
-        }
-
-        logger.info {
-            message("Container stopped.")
-        }
-    }
-
-    fun createNewBridgeNetwork(): DockerNetwork {
-        logger.info {
-            message("Creating new network.")
-        }
-
-        val url = urlForNetworks().newBuilder()
-            .addPathSegment("create")
-            .build()
-
-        val body = json {
-            "Name" to UUID.randomUUID().toString()
-            "CheckDuplicate" to true
-            "Driver" to "bridge"
-        }
-
-        val request = Request.Builder()
-            .post(jsonRequestBody(body))
-            .url(url)
-            .build()
-
-        httpConfig.client.newCall(request).execute().use { response ->
-            checkForFailure(response) { error ->
-                logger.error {
-                    message("Could not create network.")
-                    data("error", error)
-                }
-
-                throw NetworkCreationFailedException(error.message)
-            }
-
-            val parsedResponse = JsonTreeParser(response.body()!!.string()).readFully() as JsonObject
-            val networkId = parsedResponse["Id"].primitive.content
-
-            logger.info {
-                message("Network created.")
-                data("networkId", networkId)
-            }
-
-            return DockerNetwork(networkId)
-        }
-    }
-
-    fun deleteNetwork(network: DockerNetwork) {
-        logger.info {
-            message("Deleting network.")
-            data("network", network)
-        }
-
-        val request = Request.Builder()
-            .delete()
-            .url(urlForNetwork(network))
-            .build()
-
-        httpConfig.client.newCall(request).execute().use { response ->
-            checkForFailure(response) { error ->
-                logger.error {
-                    message("Could not delete network.")
-                    data("error", error)
-                }
-
-                throw NetworkDeletionFailedException(network.id, error.message)
-            }
-        }
-
-        logger.info {
-            message("Network deleted.")
-        }
-    }
-
-    fun remove(container: DockerContainer) {
-        logger.info {
-            message("Removing container.")
-            data("container", container)
-        }
-
-        val url = urlForContainer(container).newBuilder()
-            .addQueryParameter("v", "true")
-            .build()
-
-        val request = Request.Builder()
-            .delete()
-            .url(url)
-            .build()
-
-        httpConfig.client.newCall(request).execute().use { response ->
-            checkForFailure(response) { error ->
-                logger.error {
-                    message("Could not remove container.")
-                    data("error", error)
-                }
-
-                throw ContainerRemovalFailedException(container.id, error.message)
-            }
-        }
-
-        logger.info {
-            message("Container removed.")
-        }
-    }
+    fun createNewBridgeNetwork(): DockerNetwork = api.createNetwork()
+    fun deleteNetwork(network: DockerNetwork) = api.deleteNetwork(network)
 
     // Why does this method not just throw exceptions when things fail, like the other methods in this class do?
     // It's used in a number of places where throwing exceptions would be undesirable or unsafe (eg. during logging startup
     // and when showing version info), so instead we wrap the result.
     fun getDockerVersionInfo(): DockerVersionInfoRetrievalResult {
-        logger.info {
-            message("Getting Docker version information.")
-        }
-
-        val url = baseUrl.newBuilder()
-            .addPathSegment("version")
-            .build()
-
-        val request = Request.Builder()
-            .get()
-            .url(url)
-            .build()
-
         try {
-            httpConfig.client.newCall(request).execute().use { response ->
-                checkForFailure(response) { error ->
-                    logger.error {
-                        message("Could not get Docker version info.")
-                        data("error", error)
-                    }
+            val info = api.getServerVersionInfo()
 
-                    return DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because the request failed: ${error.message}")
-                }
-
-                val parsedResponse = JsonTreeParser(response.body()!!.string()).readFully() as JsonObject
-                val version = parsedResponse["Version"].primitive.content
-                val apiVersion = parsedResponse["ApiVersion"].primitive.content
-                val minAPIVersion = parsedResponse["MinAPIVersion"].primitive.content
-                val gitCommit = parsedResponse["GitCommit"].primitive.content
-
-                return DockerVersionInfoRetrievalResult.Succeeded(DockerVersionInfo(
-                    Version.parse(version),
-                    apiVersion,
-                    minAPIVersion,
-                    gitCommit
-                ))
-            }
+            return DockerVersionInfoRetrievalResult.Succeeded(info)
         } catch (t: Throwable) {
             logger.error {
                 message("An exception was thrown while getting Docker version info.")
@@ -568,79 +308,7 @@ class DockerClient(
     }
 
     private fun failed(result: ProcessOutput): Boolean = result.exitCode != 0
-
-    private val baseUrl: HttpUrl = httpConfig.baseUrl.newBuilder()
-        .addPathSegment("v1.12")
-        .build()
-
-    private fun urlForContainers(): HttpUrl = baseUrl.newBuilder()
-        .addPathSegment("containers")
-        .build()
-
-    private fun urlForContainer(container: DockerContainer): HttpUrl = urlForContainers().newBuilder()
-        .addPathSegment(container.id)
-        .build()
-
-    private fun urlForContainerOperation(container: DockerContainer, operation: String): HttpUrl = urlForContainer(container).newBuilder()
-        .addPathSegment(operation)
-        .build()
-
-    private fun urlForNetworks(): HttpUrl = baseUrl.newBuilder()
-        .addPathSegment("networks")
-        .build()
-
-    private fun urlForNetwork(network: DockerNetwork): HttpUrl = urlForNetworks().newBuilder()
-        .addPathSegment(network.id)
-        .build()
-
-    private fun emptyRequestBody(): RequestBody = RequestBody.create(MediaType.get("text/plain"), "")
-
-    private val jsonMediaType = MediaType.get("application/json")
-    private fun jsonRequestBody(json: JsonObject): RequestBody = jsonRequestBody(json.toString())
-    private fun jsonRequestBody(json: String): RequestBody = RequestBody.create(jsonMediaType, json)
-
-    private inline fun checkForFailure(response: Response, errorHandler: (DockerAPIError) -> Unit) {
-        if (response.isSuccessful) {
-            return
-        }
-
-        val responseBody = response.body()!!.string()
-        val contentType = response.body()!!.contentType()!!
-
-        if (contentType.type() != jsonMediaType.type() || contentType.subtype() != jsonMediaType.subtype()) {
-            logger.warn {
-                message("Error response from Docker daemon was not in JSON format.")
-                data("statusCode", response.code())
-                data("message", responseBody)
-            }
-
-            errorHandler(DockerAPIError(response.code(), responseBody))
-            return
-        }
-
-        val parsedError = JsonTreeParser(responseBody).readFully() as JsonObject
-        errorHandler(DockerAPIError(response.code(), parsedError["message"].primitive.content))
-    }
-
-    @Serializable
-    data class DockerContainerInfo(@SerialName("State") val state: DockerContainerState)
-
-    @Serializable
-    data class DockerContainerState(@SerialName("Health") @Optional val health: DockerContainerHealthCheckState? = null)
-
-    @Serializable
-    data class DockerContainerHealthCheckState(@SerialName("Log") val log: List<DockerHealthCheckResult> = emptyList())
-
-    private data class DockerAPIError(val statusCode: Int, val message: String)
 }
-
-data class DockerImage(val id: String)
-data class DockerContainer(val id: String)
-data class DockerContainerRunResult(val exitCode: Int)
-data class DockerNetwork(val id: String)
-
-@Serializable
-data class DockerHealthCheckResult(@SerialName("ExitCode") val exitCode: Int, @SerialName("Output") val output: String)
 
 data class DockerImageBuildProgress(val currentStep: Int, val totalSteps: Int, val message: String) {
     companion object {

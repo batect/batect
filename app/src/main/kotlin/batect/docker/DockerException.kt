@@ -16,14 +16,22 @@
 
 package batect.docker
 
-open class DockerException(message: String) : RuntimeException(message)
+open class DockerException(message: String, cause: Throwable?) : RuntimeException(message, cause) {
+    constructor(message: String): this(message, null)
+}
 
-class ImageBuildFailedException(val outputFromDocker: String) : DockerException("Image build failed. Output from Docker was: $outputFromDocker")
 class ContainerCreationFailedException(message: String) : DockerException(message)
+class ContainerInspectionFailedException(message: String) : DockerException(message)
+class ContainerRemovalFailedException(val containerId: String, val outputFromDocker: String) : DockerException("Removal of container '$containerId' failed: $outputFromDocker")
 class ContainerStartFailedException(val containerId: String, val outputFromDocker: String) : DockerException("Starting container '$containerId' failed: $outputFromDocker")
 class ContainerStopFailedException(val containerId: String, val outputFromDocker: String) : DockerException("Stopping container '$containerId' failed: $outputFromDocker")
+
+class ContainerHealthCheckException(message: String, cause: Throwable?) : DockerException(message, cause) {
+    constructor(message: String) : this(message, null)
+}
+
+class DockerVersionInfoRetrievalException(message: String) : DockerException(message)
+class ImageBuildFailedException(val outputFromDocker: String) : DockerException("Image build failed. Output from Docker was: $outputFromDocker")
 class ImagePullFailedException(message: String) : DockerException(message)
-class ContainerHealthCheckException(message: String) : DockerException(message)
 class NetworkCreationFailedException(val outputFromDocker: String) : DockerException("Creation of network failed: $outputFromDocker")
-class ContainerRemovalFailedException(val containerId: String, val outputFromDocker: String) : DockerException("Removal of container '$containerId' failed: $outputFromDocker")
 class NetworkDeletionFailedException(val networkId: String, val outputFromDocker: String) : DockerException("Deletion of network '$networkId' failed: $outputFromDocker")

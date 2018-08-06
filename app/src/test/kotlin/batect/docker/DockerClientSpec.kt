@@ -27,18 +27,13 @@ import batect.os.ProcessRunner
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
-import batect.testutils.mockDelete
-import batect.testutils.mockGet
-import batect.testutils.mockPost
 import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
 import batect.utils.Version
-import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.check
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.doThrow
 import com.nhaarman.mockito_kotlin.eq
@@ -46,38 +41,19 @@ import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonTreeParser
-import kotlinx.serialization.json.boolean
-import kotlinx.serialization.json.content
-import okhttp3.HttpUrl
-import okhttp3.MediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okio.Buffer
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
-import java.util.UUID
-import java.util.concurrent.TimeUnit
 
 object DockerClientSpec : Spek({
     describe("a Docker client") {
         val processRunner by createForEachTest { mock<ProcessRunner>() }
-        val httpClient by createForEachTest { mock<OkHttpClient>() }
-        val dockerBaseUrl = "http://the-docker-daemon"
-        val httpConfig by createForEachTest {
-            mock<DockerHttpConfig> {
-                on { client } doReturn httpClient
-                on { baseUrl } doReturn HttpUrl.get(dockerBaseUrl)
-            }
-        }
-
+        val api by createForEachTest { mock<DockerAPI>() }
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
         val logger by createLoggerForEachTest()
-        val client by createForEachTest { DockerClient(processRunner, httpConfig, consoleInfo, logger) }
+        val client by createForEachTest { DockerClient(processRunner, api, consoleInfo, logger) }
 
         describe("building an image") {
             given("a container configuration") {
@@ -193,38 +169,23 @@ object DockerClientSpec : Spek({
         }
 
         describe("creating a container") {
-            val expectedUrl = "$dockerBaseUrl/v1.12/containers/create"
-
             given("a container configuration and a built image") {
                 val image = DockerImage("the-image")
                 val network = DockerNetwork("the-network")
                 val command = listOf("doStuff")
                 val request = DockerContainerCreationRequest(image, network, command, "some-host", "some-host", emptyMap(), "/some-dir", emptySet(), emptySet(), HealthCheckConfig(), null)
 
-                on("a successful creation") {
-                    val call = httpClient.mockPost(expectedUrl, """{"Id": "abc123"}""", 201)
+                on("creating the container") {
+                    whenever(api.createContainer(request)).doReturn(DockerContainer("abc123"))
+
                     val result = client.create(request)
 
-                    it("creates the container") {
-                        verify(call).execute()
-                    }
-
-                    it("creates the container with the expected settings") {
-                        verify(httpClient).newCall(requestWithJsonBody { body ->
-                            assertThat(body, equalTo(JsonTreeParser(request.toJson()).readFully()))
-                        })
+                    it("sends a request to the Docker daemon to create the container") {
+                        verify(api).createContainer(request)
                     }
 
                     it("returns the ID of the created container") {
                         assertThat(result.id, equalTo("abc123"))
-                    }
-                }
-
-                on("a failed creation") {
-                    httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
-
-                    it("raises an appropriate exception") {
-                        assertThat({ client.create(request) }, throws<ContainerCreationFailedException>(withMessage("Output from Docker was: Something went wrong.")))
                     }
                 }
             }
@@ -273,22 +234,12 @@ object DockerClientSpec : Spek({
         describe("starting a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
-                val expectedUrl = "$dockerBaseUrl/v1.12/containers/the-container-id/start"
 
                 on("starting that container") {
-                    val call = httpClient.mockPost(expectedUrl, "", 204)
                     client.start(container)
 
                     it("sends a request to the Docker daemon to start the container") {
-                        verify(call).execute()
-                    }
-                }
-
-                on("an unsuccessful start attempt") {
-                    httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
-
-                    it("raises an appropriate exception") {
-                        assertThat({ client.start(container) }, throws<ContainerStartFailedException>(withMessage("Starting container 'the-container-id' failed: Something went wrong.")))
+                        verify(api).startContainer(container)
                     }
                 }
             }
@@ -297,35 +248,12 @@ object DockerClientSpec : Spek({
         describe("stopping a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
-                val expectedUrl = "$dockerBaseUrl/v1.12/containers/the-container-id/stop"
-                val clientWithLongTimeout = mock<OkHttpClient>()
-                val longTimeoutClientBuilder = mock<OkHttpClient.Builder> { mock ->
-                    on { readTimeout(any(), any()) } doReturn mock
-                    on { build() } doReturn clientWithLongTimeout
-                }
-
-                beforeEachTest {
-                    whenever(httpClient.newBuilder()).doReturn(longTimeoutClientBuilder)
-                }
 
                 on("stopping that container") {
-                    val call = clientWithLongTimeout.mockPost(expectedUrl, "", 204)
                     client.stop(container)
 
                     it("sends a request to the Docker daemon to stop the container") {
-                        verify(call).execute()
-                    }
-
-                    it("configures the Docker client with a longer timeout to allow for the default container stop timeout period of 10 seconds") {
-                        verify(longTimeoutClientBuilder).readTimeout(11, TimeUnit.SECONDS)
-                    }
-                }
-
-                on("an unsuccessful stop attempt") {
-                    clientWithLongTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
-
-                    it("raises an appropriate exception") {
-                        assertThat({ client.stop(container) }, throws<ContainerStopFailedException>(withMessage("Stopping container 'the-container-id' failed: Something went wrong.")))
+                        verify(api).stopContainer(container)
                     }
                 }
             }
@@ -430,28 +358,13 @@ object DockerClientSpec : Spek({
 
         describe("getting the last health check result for a container") {
             val container = DockerContainer("some-container")
-            val expectedUrl = "$dockerBaseUrl/v1.12/containers/some-container/json"
 
             on("the container only having one last health check result") {
-                val response = """
-                    {
-                      "State": {
-                        "Health": {
-                          "Status": "unhealthy",
-                          "FailingStreak": 130,
-                          "Log": [
-                            {
-                              "Start": "2017-10-04T00:54:23.608075352Z",
-                              "End": "2017-10-04T00:54:23.646606606Z",
-                              "ExitCode": 1,
-                              "Output": "something went wrong"
-                            }
-                          ]
-                        }
-                      }
-                    }""".trimIndent()
+                val info = DockerContainerInfo(DockerContainerState(DockerContainerHealthCheckState(listOf(
+                    DockerHealthCheckResult(1, "something went wrong")
+                ))))
 
-                httpClient.mockGet(expectedUrl, response, 200)
+                whenever(api.inspectContainer(container)).doReturn(info)
 
                 val details = client.getLastHealthCheckResult(container)
 
@@ -461,49 +374,15 @@ object DockerClientSpec : Spek({
             }
 
             on("the container having a full set of previous health check results") {
-                val response = """
-                    {
-                      "State": {
-                        "Health": {
-                          "Status": "unhealthy",
-                          "FailingStreak": 130,
-                          "Log": [
-                            {
-                              "Start": "2017-10-04T00:54:15.389708057Z",
-                              "End": "2017-10-04T00:54:15.426118682Z",
-                              "ExitCode": 1,
-                              "Output": ""
-                            },
-                            {
-                              "Start": "2017-10-04T00:54:17.435801514Z",
-                              "End": "2017-10-04T00:54:17.473788486Z",
-                              "ExitCode": 1,
-                              "Output": ""
-                            },
-                            {
-                              "Start": "2017-10-04T00:54:19.483518154Z",
-                              "End": "2017-10-04T00:54:19.534368638Z",
-                              "ExitCode": 1,
-                              "Output": ""
-                            },
-                            {
-                              "Start": "2017-10-04T00:54:21.546935143Z",
-                              "End": "2017-10-04T00:54:21.592975551Z",
-                              "ExitCode": 1,
-                              "Output": ""
-                            },
-                            {
-                              "Start": "2017-10-04T00:54:23.608075352Z",
-                              "End": "2017-10-04T00:54:23.646606606Z",
-                              "ExitCode": 1,
-                              "Output": "this is the most recent health check"
-                            }
-                          ]
-                        }
-                      }
-                    }""".trimIndent()
+                val info = DockerContainerInfo(DockerContainerState(DockerContainerHealthCheckState(listOf(
+                    DockerHealthCheckResult(1, ""),
+                    DockerHealthCheckResult(1, ""),
+                    DockerHealthCheckResult(1, ""),
+                    DockerHealthCheckResult(1, ""),
+                    DockerHealthCheckResult(1, "this is the most recent health check")
+                ))))
 
-                httpClient.mockGet(expectedUrl, response, 200)
+                whenever(api.inspectContainer(container)).doReturn(info)
 
                 val details = client.getLastHealthCheckResult(container)
 
@@ -513,12 +392,9 @@ object DockerClientSpec : Spek({
             }
 
             on("the container not having a health check") {
-                val response = """
-                    {
-                      "State": {}
-                    }""".trimIndent()
+                val info = DockerContainerInfo(DockerContainerState(health = null))
 
-                httpClient.mockGet(expectedUrl, response, 200)
+                whenever(api.inspectContainer(container)).doReturn(info)
 
                 it("throws an appropriate exception") {
                     assertThat({ client.getLastHealthCheckResult(container) },
@@ -527,7 +403,7 @@ object DockerClientSpec : Spek({
             }
 
             on("getting the container's details failing") {
-                httpClient.mockGet(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                whenever(api.inspectContainer(container)).doThrow(ContainerInspectionFailedException("Something went wrong."))
 
                 it("throws an appropriate exception") {
                     assertThat({ client.getLastHealthCheckResult(container) },
@@ -536,119 +412,60 @@ object DockerClientSpec : Spek({
             }
         }
 
-        describe("creating a new bridge network") {
-            val expectedUrl = "$dockerBaseUrl/v1.12/networks/create"
+        on("creating a new bridge network") {
+            whenever(api.createNetwork()).doReturn(DockerNetwork("the-network-id"))
 
-            on("a successful creation") {
-                val call = httpClient.mockPost(expectedUrl, """{"Id": "the-network-ID"}""", 201)
-                val result = client.createNewBridgeNetwork()
+            val result = client.createNewBridgeNetwork()
 
-                it("creates the network") {
-                    verify(call).execute()
-                }
-
-                it("creates the network with the expected settings") {
-                    verify(httpClient).newCall(requestWithJsonBody { body ->
-                        assertThat(body["Name"].content, isUUID)
-                        assertThat(body["CheckDuplicate"].boolean, equalTo(true))
-                        assertThat(body["Driver"].content, equalTo("bridge"))
-                    })
-                }
-
-                it("returns the ID of the created network") {
-                    assertThat(result.id, equalTo("the-network-ID"))
-                }
+            it("creates the network") {
+                verify(api).createNetwork()
             }
 
-            on("an unsuccessful creation") {
-                httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
-
-                it("throws an appropriate exception") {
-                    assertThat({ client.createNewBridgeNetwork() }, throws<NetworkCreationFailedException>(withMessage("Creation of network failed: Something went wrong.")))
-                }
+            it("returns the ID of the created network") {
+                assertThat(result.id, equalTo("the-network-id"))
             }
         }
 
         describe("deleting a network") {
-            val network = DockerNetwork("abc123")
-            val expectedUrl = "$dockerBaseUrl/v1.12/networks/abc123"
+            given("an existing network") {
+                val network = DockerNetwork("abc123")
 
-            on("a successful deletion") {
-                val call = httpClient.mockDelete(expectedUrl, "", 204)
-                client.deleteNetwork(network)
+                on("deleting that network") {
+                    client.deleteNetwork(network)
 
-                it("sends a request to the Docker daemon to delete the network") {
-                    verify(call).execute()
-                }
-            }
-
-            on("an unsuccessful deletion") {
-                httpClient.mockDelete(expectedUrl, """{"message": "Something went wrong."}""", 418)
-
-                it("throws an appropriate exception") {
-                    assertThat({ client.deleteNetwork(network) }, throws<NetworkDeletionFailedException>(withMessage("Deletion of network 'abc123' failed: Something went wrong.")))
+                    it("sends a request to the Docker daemon to delete the network") {
+                        verify(api).deleteNetwork(network)
+                    }
                 }
             }
         }
 
         describe("removing a container") {
-            val container = DockerContainer("the-container-id")
-            val expectedUrl = "$dockerBaseUrl/v1.12/containers/the-container-id?v=true"
+            given("an existing container") {
+                val container = DockerContainer("the-container-id")
 
-            on("a successful removal") {
-                val call = httpClient.mockDelete(expectedUrl, "", 204)
-                client.remove(container)
+                on("removing that container") {
+                    client.remove(container)
 
-                it("sends a request to the Docker daemon to remove the container") {
-                    verify(call).execute()
-                }
-            }
-
-            on("an unsuccessful deletion") {
-                httpClient.mockDelete(expectedUrl, """{"message": "Something went wrong."}""", 418)
-
-                it("throws an appropriate exception") {
-                    assertThat({ client.remove(container) }, throws<ContainerRemovalFailedException>(withMessage("Removal of container 'the-container-id' failed: Something went wrong.")))
+                    it("sends a request to the Docker daemon to remove the container") {
+                        verify(api).removeContainer(container)
+                    }
                 }
             }
         }
 
         describe("getting Docker version information") {
-            val expectedUrl = "$dockerBaseUrl/v1.12/version"
-
             on("the Docker version command invocation succeeding") {
-                httpClient.mockGet(expectedUrl, """
-                    |{
-                    |  "Version": "17.04.0",
-                    |  "Os": "linux",
-                    |  "KernelVersion": "3.19.0-23-generic",
-                    |  "GoVersion": "go1.7.5",
-                    |  "GitCommit": "deadbee",
-                    |  "Arch": "amd64",
-                    |  "ApiVersion": "1.27",
-                    |  "MinAPIVersion": "1.12",
-                    |  "BuildTime": "2016-06-14T07:09:13.444803460+00:00",
-                    |  "Experimental": true
-                    |}""".trimMargin(), 200)
+                val versionInfo = DockerVersionInfo(Version(17, 4, 0), "1.27", "1.12", "deadbee")
+                whenever(api.getServerVersionInfo()).doReturn(versionInfo)
 
                 it("returns the version information from Docker") {
-                    assertThat(client.getDockerVersionInfo(), equalTo(DockerVersionInfoRetrievalResult.Succeeded(DockerVersionInfo(
-                        Version(17, 4, 0), "1.27", "1.12", "deadbee"
-                    ))))
-                }
-            }
-
-            on("the Docker version command invocation failing") {
-                httpClient.mockGet(expectedUrl, """{"message": "Something went wrong."}""", 418)
-
-                it("returns an appropriate message") {
-                    assertThat(client.getDockerVersionInfo(), equalTo(DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because the request failed: Something went wrong.")))
+                    assertThat(client.getDockerVersionInfo(), equalTo(DockerVersionInfoRetrievalResult.Succeeded(versionInfo)))
                 }
             }
 
             on("running the Docker version command throwing an exception (for example, because Docker is not installed)") {
-                val call = httpClient.mockGet(expectedUrl, "Should never receive this")
-                whenever(call.execute()).doThrow(RuntimeException("Something went wrong"))
+                whenever(api.getServerVersionInfo()).doThrow(RuntimeException("Something went wrong"))
 
                 it("returns an appropriate message") {
                     assertThat(client.getDockerVersionInfo(), equalTo(DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because RuntimeException was thrown: Something went wrong")))
@@ -761,23 +578,4 @@ private fun ProcessRunner.whenGettingEventsForContainerRespondWith(containerId: 
 
         KilledDuringProcessing((processingResponse as KillProcess<HealthStatus>).result)
     }
-}
-
-private val isUUID = Matcher(::validUUID)
-private fun validUUID(value: String): Boolean {
-    try {
-        UUID.fromString(value)
-        return true
-    } catch (_: IllegalArgumentException) {
-        return false
-    }
-}
-
-private fun requestWithJsonBody(predicate: (JsonObject) -> Unit) = check<Request> { request ->
-    assertThat(request.body()!!.contentType(), equalTo(MediaType.get("application/json; charset=utf-8")))
-
-    val buffer = Buffer()
-    request.body()!!.writeTo(buffer)
-    val parsedBody = JsonTreeParser(buffer.readUtf8()).readFully() as JsonObject
-    predicate(parsedBody)
 }

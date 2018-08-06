@@ -18,6 +18,7 @@ package batect.integrationtests
 
 import batect.config.HealthCheckConfig
 import batect.config.VolumeMount
+import batect.docker.DockerAPI
 import batect.docker.DockerClient
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequest
@@ -54,11 +55,12 @@ object DockerClientIntegrationTest : Spek({
         val logger = mock<Logger>()
         val processRunner = ProcessRunner(logger)
         val httpConfig = DockerHttpConfig(OkHttpClient())
+        val api = DockerAPI(httpConfig, logger)
         val posix = POSIXFactory.getNativePOSIX()
         val nativeMethods = NativeMethods(posix)
         val consoleInfo = ConsoleInfo(posix, nativeMethods, logger)
         val systemInfo = SystemInfo(posix)
-        val client = DockerClient(processRunner, httpConfig, consoleInfo, logger)
+        val client = DockerClient(processRunner, api, consoleInfo, logger)
 
         fun creationRequestForTestContainer(image: DockerImage, network: DockerNetwork, fileToCreate: Path, command: Iterable<String>): DockerContainerCreationRequest {
             val fileToCreateParent = fileToCreate.parent.toAbsolutePath()

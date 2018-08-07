@@ -260,97 +260,97 @@ object DockerClientSpec : Spek({
         }
 
         describe("waiting for a container to report its health status") {
-            given("a Docker container with no healthcheck") {
+            given("a Docker container with no health check") {
                 val container = DockerContainer("the-container-id")
 
-                on("waiting for that container to become healthy") {
-                    val expectedCommand = listOf("docker", "inspect", "--format", "{{json .Config.Healthcheck}}", container.id)
-                    whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(0, "{}\n"))
+                beforeEachTest {
+                    whenever(api.inspectContainer(container)).thenReturn(DockerContainerInfo(
+                        DockerContainerState(),
+                        DockerContainerConfiguration(
+                            healthCheck = DockerContainerHealthCheckConfig(null)
+                        )
+                    ))
+                }
 
+                on("waiting for that container to become healthy") {
                     val result = client.waitForHealthStatus(container)
 
-                    it("reports that the container does not have a healthcheck") {
+                    it("reports that the container does not have a health check") {
                         assertThat(result, equalTo(HealthStatus.NoHealthCheck))
                     }
                 }
             }
 
-            given("the Docker client returns an error when checking if the container has a healthcheck") {
+            given("the Docker client returns an error when checking if the container has a health check") {
                 val container = DockerContainer("the-container-id")
 
-                on("waiting for that container to become healthy") {
-                    val expectedCommand = listOf("docker", "inspect", "--format", "{{json .Config.Healthcheck}}", container.id)
-                    whenever(processRunner.runAndCaptureOutput(expectedCommand)).thenReturn(ProcessOutput(1, "Something went wrong\n"))
+                beforeEachTest {
+                    whenever(api.inspectContainer(container)).thenThrow(ContainerInspectionFailedException("Something went wrong"))
+                }
 
+                on("waiting for that container to become healthy") {
                     it("throws an appropriate exception") {
-                        assertThat({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Checking if container 'the-container-id' has a healthcheck failed: Something went wrong")))
+                        assertThat({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Checking if container 'the-container-id' has a health check failed: Something went wrong")))
                     }
                 }
             }
 
-            given("a Docker container with a healthcheck that passes") {
+            given("a Docker container with a health check") {
                 val container = DockerContainer("the-container-id")
 
-                on("waiting for that container to become healthy") {
-                    val hasHealthcheckCommand = listOf("docker", "inspect", "--format", "{{json .Config.Healthcheck}}", container.id)
-                    whenever(processRunner.runAndCaptureOutput(hasHealthcheckCommand)).thenReturn(ProcessOutput(0, "{some healthcheck config}\n"))
+                beforeEachTest {
+                    whenever(api.inspectContainer(container)).thenReturn(DockerContainerInfo(
+                        DockerContainerState(),
+                        DockerContainerConfiguration(
+                            healthCheck = DockerContainerHealthCheckConfig(listOf("some-command"))
+                        )
+                    ))
+                }
 
-                    processRunner.whenGettingEventsForContainerRespondWith(container.id, "health_status: healthy")
+                given("the health check passes") {
+                    beforeEachTest { processRunner.whenGettingEventsForContainerRespondWith(container.id, "health_status: healthy") }
 
-                    val result = client.waitForHealthStatus(container)
+                    on("waiting for that container to become healthy") {
+                        val result = client.waitForHealthStatus(container)
 
-                    it("reports that the container became healthy") {
-                        assertThat(result, equalTo(HealthStatus.BecameHealthy))
+                        it("reports that the container became healthy") {
+                            assertThat(result, equalTo(HealthStatus.BecameHealthy))
+                        }
                     }
                 }
-            }
 
-            given("a Docker container with a healthcheck that fails") {
-                val container = DockerContainer("the-container-id")
+                given("the health check fails") {
+                    beforeEachTest { processRunner.whenGettingEventsForContainerRespondWith(container.id, "health_status: unhealthy") }
 
-                on("waiting for that container to become healthy") {
-                    val hasHealthcheckCommand = listOf("docker", "inspect", "--format", "{{json .Config.Healthcheck}}", container.id)
-                    whenever(processRunner.runAndCaptureOutput(hasHealthcheckCommand)).thenReturn(ProcessOutput(0, "{some healthcheck config}\n"))
+                    on("waiting for that container to become healthy") {
+                        val result = client.waitForHealthStatus(container)
 
-                    processRunner.whenGettingEventsForContainerRespondWith(container.id, "health_status: unhealthy")
-
-                    val result = client.waitForHealthStatus(container)
-
-                    it("reports that the container became unhealthy") {
-                        assertThat(result, equalTo(HealthStatus.BecameUnhealthy))
+                        it("reports that the container became unhealthy") {
+                            assertThat(result, equalTo(HealthStatus.BecameUnhealthy))
+                        }
                     }
                 }
-            }
 
-            given("a Docker container with a healthcheck that exits before the healthcheck reports") {
-                val container = DockerContainer("the-container-id")
+                given("the container exits before the health check reports") {
+                    beforeEachTest { processRunner.whenGettingEventsForContainerRespondWith(container.id, "die") }
 
-                on("waiting for that container to become healthy") {
-                    val hasHealthcheckCommand = listOf("docker", "inspect", "--format", "{{json .Config.Healthcheck}}", container.id)
-                    whenever(processRunner.runAndCaptureOutput(hasHealthcheckCommand)).thenReturn(ProcessOutput(0, "{some healthcheck config}\n"))
+                    on("waiting for that container to become healthy") {
+                        val result = client.waitForHealthStatus(container)
 
-                    processRunner.whenGettingEventsForContainerRespondWith(container.id, "die")
-
-                    val result = client.waitForHealthStatus(container)
-
-                    it("reports that the container exited") {
-                        assertThat(result, equalTo(HealthStatus.Exited))
+                        it("reports that the container exited") {
+                            assertThat(result, equalTo(HealthStatus.Exited))
+                        }
                     }
                 }
-            }
 
-            given("a Docker container with a healthcheck that causes the 'docker events' command to terminate early") {
-                val container = DockerContainer("the-container-id")
-
-                on("waiting for that container to become healthy") {
-                    val hasHealthcheckCommand = listOf("docker", "inspect", "--format", "{{json .Config.Healthcheck}}", container.id)
-                    whenever(processRunner.runAndCaptureOutput(hasHealthcheckCommand)).thenReturn(ProcessOutput(0, "{some healthcheck config}\n"))
-
+                given("a Docker container with a health check that causes the 'docker events' command to terminate early") {
                     val command = eventsCommandForContainer(container.id)
-                    whenever(processRunner.runAndProcessOutput<HealthStatus>(eq(command), any())).thenReturn(Exited(123))
+                    beforeEachTest { whenever(processRunner.runAndProcessOutput<HealthStatus>(eq(command), any())).thenReturn(Exited(123)) }
 
-                    it("throws an appropriate exception") {
-                        assertThat({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Event stream for container 'the-container-id' exited early with exit code 123.")))
+                    on("waiting for that container to become healthy") {
+                        it("throws an appropriate exception") {
+                            assertThat({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Event stream for container 'the-container-id' exited early with exit code 123.")))
+                        }
                     }
                 }
             }
@@ -360,9 +360,14 @@ object DockerClientSpec : Spek({
             val container = DockerContainer("some-container")
 
             on("the container only having one last health check result") {
-                val info = DockerContainerInfo(DockerContainerState(DockerContainerHealthCheckState(listOf(
-                    DockerHealthCheckResult(1, "something went wrong")
-                ))))
+                val info = DockerContainerInfo(
+                    DockerContainerState(
+                        DockerContainerHealthCheckState(listOf(
+                            DockerHealthCheckResult(1, "something went wrong")
+                        ))
+                    ),
+                    DockerContainerConfiguration(DockerContainerHealthCheckConfig())
+                )
 
                 whenever(api.inspectContainer(container)).doReturn(info)
 
@@ -374,13 +379,18 @@ object DockerClientSpec : Spek({
             }
 
             on("the container having a full set of previous health check results") {
-                val info = DockerContainerInfo(DockerContainerState(DockerContainerHealthCheckState(listOf(
-                    DockerHealthCheckResult(1, ""),
-                    DockerHealthCheckResult(1, ""),
-                    DockerHealthCheckResult(1, ""),
-                    DockerHealthCheckResult(1, ""),
-                    DockerHealthCheckResult(1, "this is the most recent health check")
-                ))))
+                val info = DockerContainerInfo(
+                    DockerContainerState(
+                        DockerContainerHealthCheckState(listOf(
+                            DockerHealthCheckResult(1, ""),
+                            DockerHealthCheckResult(1, ""),
+                            DockerHealthCheckResult(1, ""),
+                            DockerHealthCheckResult(1, ""),
+                            DockerHealthCheckResult(1, "this is the most recent health check")
+                        ))
+                    ),
+                    DockerContainerConfiguration(DockerContainerHealthCheckConfig())
+                )
 
                 whenever(api.inspectContainer(container)).doReturn(info)
 
@@ -392,7 +402,10 @@ object DockerClientSpec : Spek({
             }
 
             on("the container not having a health check") {
-                val info = DockerContainerInfo(DockerContainerState(health = null))
+                val info = DockerContainerInfo(
+                    DockerContainerState(health = null),
+                    DockerContainerConfiguration(DockerContainerHealthCheckConfig())
+                )
 
                 whenever(api.inspectContainer(container)).doReturn(info)
 

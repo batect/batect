@@ -148,6 +148,11 @@ object DockerAPISpec : Spek({
                             }
                           ]
                         }
+                      },
+                      "Config": {
+                        "Healthcheck": {
+                          "Test": ["some-test"]
+                        }
                       }
                     }""".trimIndent()
 
@@ -162,6 +167,9 @@ object DockerAPISpec : Spek({
                                     DockerContainerHealthCheckState(listOf(
                                         DockerHealthCheckResult(1, "something went wrong")
                                     ))
+                                ),
+                                DockerContainerConfiguration(
+                                    DockerContainerHealthCheckConfig(listOf("some-test"))
                                 )
                             )))
                         }
@@ -171,7 +179,10 @@ object DockerAPISpec : Spek({
                 given("the container does not have a health check") {
                     val response = """
                     {
-                      "State": {}
+                      "State": {},
+                      "Config": {
+                        "Healthcheck": {}
+                      }
                     }""".trimIndent()
 
                     beforeEachTest { httpClient.mockGet(expectedUrl, response, 200) }
@@ -181,7 +192,8 @@ object DockerAPISpec : Spek({
 
                         it("returns the details of the container") {
                             assertThat(details, equalTo(DockerContainerInfo(
-                                DockerContainerState(health = null)
+                                DockerContainerState(health = null),
+                                DockerContainerConfiguration(healthCheck = DockerContainerHealthCheckConfig(null))
                             )))
                         }
                     }

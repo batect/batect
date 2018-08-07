@@ -167,19 +167,13 @@ class DockerClient(
     }
 
     private fun hasHealthCheck(container: DockerContainer): Boolean {
-        val command = listOf("docker", "inspect", "--format", "{{json .Config.Healthcheck}}", container.id)
-        val result = processRunner.runAndCaptureOutput(command)
+        try {
+            val info = api.inspectContainer(container)
 
-        if (failed(result)) {
-            logger.error {
-                message("Could not determine if container has a health check or not.")
-                data("result", result)
-            }
-
-            throw ContainerHealthCheckException("Checking if container '${container.id}' has a healthcheck failed: ${result.output.trim()}")
+            return info.config.healthCheck.test != null
+        } catch (e: ContainerInspectionFailedException) {
+            throw ContainerHealthCheckException("Checking if container '${container.id}' has a health check failed: ${e.message}", e)
         }
-
-        return result.output.trim() != "{}"
     }
 
     fun getLastHealthCheckResult(container: DockerContainer): DockerHealthCheckResult {

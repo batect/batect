@@ -26,7 +26,10 @@ data class DockerContainerRunResult(val exitCode: Int)
 data class DockerNetwork(val id: String)
 
 @Serializable
-data class DockerContainerInfo(@SerialName("State") val state: DockerContainerState)
+data class DockerContainerInfo(
+    @SerialName("State") val state: DockerContainerState,
+    @SerialName("Config") val config: DockerContainerConfiguration
+)
 
 @Serializable
 data class DockerContainerState(@SerialName("Health") @Optional val health: DockerContainerHealthCheckState? = null)
@@ -36,3 +39,9 @@ data class DockerContainerHealthCheckState(@SerialName("Log") val log: List<Dock
 
 @Serializable
 data class DockerHealthCheckResult(@SerialName("ExitCode") val exitCode: Int, @SerialName("Output") val output: String)
+
+@Serializable
+data class DockerContainerConfiguration(@SerialName("Healthcheck") val healthCheck: DockerContainerHealthCheckConfig)
+
+@Serializable
+data class DockerContainerHealthCheckConfig(@SerialName("Test") @Optional val test: List<String>? = null)

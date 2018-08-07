@@ -16,7 +16,7 @@
 
 buildscript {
     ext.spek_version = '1.2.0'
-    ext.serialization_version = '0.6.0'
+    ext.serialization_version = '0.6.1'
 
     repositories {
         maven { url "https://kotlin.bintray.com/kotlinx" }
@@ -30,7 +30,7 @@ buildscript {
 plugins {
     id 'com.diffplug.gradle.spotless'
     id 'com.github.johnrengelman.shadow' version '2.0.4'
-    id 'org.jetbrains.kotlin.jvm' version '1.2.51'
+    id 'org.jetbrains.kotlin.jvm' version '1.2.60'
 }
 
 apply plugin: 'application'

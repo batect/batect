@@ -52,7 +52,6 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
-import java.time.Duration
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
@@ -157,11 +156,7 @@ object DockerAPISpec : Spek({
                       },
                       "Config": {
                         "Healthcheck": {
-                          "Test": ["some-test"],
-                          "Interval": 20,
-                          "Timeout": 30,
-                          "StartPeriod": 100,
-                          "Retries": 4
+                          "Test": ["some-test"]
                         }
                       }
                     }""".trimIndent()
@@ -179,13 +174,7 @@ object DockerAPISpec : Spek({
                                     ))
                                 ),
                                 DockerContainerConfiguration(
-                                    DockerContainerHealthCheckConfig(
-                                        listOf("some-test"),
-                                        Duration.ofNanos(20),
-                                        Duration.ofNanos(30),
-                                        Duration.ofNanos(100),
-                                        4
-                                    )
+                                    DockerContainerHealthCheckConfig(listOf("some-test"))
                                 )
                             )))
                         }
@@ -209,7 +198,7 @@ object DockerAPISpec : Spek({
                         it("returns the details of the container") {
                             assertThat(details, equalTo(DockerContainerInfo(
                                 DockerContainerState(health = null),
-                                DockerContainerConfiguration(healthCheck = DockerContainerHealthCheckConfig())
+                                DockerContainerConfiguration(healthCheck = DockerContainerHealthCheckConfig(null))
                             )))
                         }
                     }
@@ -230,12 +219,10 @@ object DockerAPISpec : Spek({
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
                 val expectedUrl = "$dockerBaseUrl/v1.12/containers/the-container-id/stop"
-                val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
-                val longTimeoutClientBuilder by createForEachTest {
-                    mock<OkHttpClient.Builder> { mock ->
-                        on { readTimeout(any(), any()) } doReturn mock
-                        on { build() } doReturn clientWithLongTimeout
-                    }
+                val clientWithLongTimeout = mock<OkHttpClient>()
+                val longTimeoutClientBuilder = mock<OkHttpClient.Builder> { mock ->
+                    on { readTimeout(any(), any()) } doReturn mock
+                    on { build() } doReturn clientWithLongTimeout
                 }
 
                 beforeEachTest {
@@ -299,33 +286,17 @@ object DockerAPISpec : Spek({
                     hasQueryParameter("since", "0") and
                     hasQueryParameter("filters", """{"event": ["die", "health_status"], "container": ["the-container-id"]}""")
 
-                val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
-                val longTimeoutClientBuilder by createForEachTest {
-                    mock<OkHttpClient.Builder> { mock ->
-                        on { readTimeout(any(), any()) } doReturn mock
-                        on { build() } doReturn clientWithLongTimeout
-                    }
-                }
-
-                beforeEachTest {
-                    whenever(httpClient.newBuilder()).doReturn(longTimeoutClientBuilder)
-                }
-
                 on("the Docker daemon returning a single event") {
                     val responseBody = """
                         |{"status":"health_status: healthy","id":"f09004d33c0892ed74718bd0c1166b28a8d4788bea6449bb6ea8c4d402b20db7","from":"12ff4615e7ff","Type":"container","Action":"health_status: healthy","Actor":{"ID":"f09004d33c0892ed74718bd0c1166b28a8d4788bea6449bb6ea8c4d402b20db7","Attributes":{"image":"12ff4615e7ff","name":"distracted_stonebraker"}},"scope":"local","time":1533986037,"timeNano":1533986037977811448}
                         |
                     """.trimMargin()
 
-                    clientWithLongTimeout.mock("GET", expectedUrl, responseBody, 200)
-                    val event = api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123))
+                    httpClient.mock("GET", expectedUrl, responseBody, 200)
+                    val event = api.waitForNextEventForContainer(container, eventTypes)
 
                     it("returns that event") {
                         assertThat(event, equalTo(DockerEvent("health_status: healthy")))
-                    }
-
-                    it("configures the Docker client with the timeout provided") {
-                        verify(longTimeoutClientBuilder).readTimeout(123, TimeUnit.NANOSECONDS)
                     }
                 }
 
@@ -336,8 +307,8 @@ object DockerAPISpec : Spek({
                         |
                     """.trimMargin()
 
-                    clientWithLongTimeout.mock("GET", expectedUrl, responseBody, 200)
-                    val event = api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123))
+                    httpClient.mock("GET", expectedUrl, responseBody, 200)
+                    val event = api.waitForNextEventForContainer(container, eventTypes)
 
                     it("returns the first event") {
                         assertThat(event, equalTo(DockerEvent("die")))
@@ -345,10 +316,10 @@ object DockerAPISpec : Spek({
                 }
 
                 on("the API call failing") {
-                    clientWithLongTimeout.mock("GET", expectedUrl, """{"message": "Something went wrong."}""", 418)
+                    httpClient.mock("GET", expectedUrl, """{"message": "Something went wrong."}""", 418)
 
                     it("throws an appropriate exception") {
-                        assertThat({ api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123)) }, throws<DockerException>(withMessage("Getting events for container 'the-container-id' failed: Something went wrong.")))
+                        assertThat({ api.waitForNextEventForContainer(container, eventTypes) }, throws<DockerException>(withMessage("Getting events for container 'the-container-id' failed: Something went wrong.")))
                     }
                 }
             }

@@ -31,6 +31,7 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
+import java.time.Duration
 import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -198,7 +199,7 @@ class DockerAPI(
         }
     }
 
-    fun waitForNextEventForContainer(container: DockerContainer, eventTypes: Iterable<String>): DockerEvent {
+    fun waitForNextEventForContainer(container: DockerContainer, eventTypes: Iterable<String>, timeout: Duration): DockerEvent {
         logger.info {
             message("Getting next event for container.")
             data("container", container)
@@ -221,7 +222,11 @@ class DockerAPI(
             .url(url)
             .build()
 
-        httpConfig.client.newCall(request).execute().use { response ->
+        val client = httpConfig.client.newBuilder()
+            .readTimeout(timeout.toNanos(), TimeUnit.NANOSECONDS)
+            .build()
+
+        client.newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Getting events for container failed.")

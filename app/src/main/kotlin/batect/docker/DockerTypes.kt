@@ -19,6 +19,7 @@ package batect.docker
 import kotlinx.serialization.Optional
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.time.Duration
 
 data class DockerImage(val id: String)
 data class DockerContainer(val id: String)
@@ -33,16 +34,29 @@ data class DockerContainerInfo(
 )
 
 @Serializable
-data class DockerContainerState(@SerialName("Health") @Optional val health: DockerContainerHealthCheckState? = null)
+data class DockerContainerState(
+    @SerialName("Health") @Optional val health: DockerContainerHealthCheckState? = null
+)
 
 @Serializable
-data class DockerContainerHealthCheckState(@SerialName("Log") val log: List<DockerHealthCheckResult> = emptyList())
+data class DockerContainerHealthCheckState(
+    @SerialName("Log") val log: List<DockerHealthCheckResult> = emptyList()
+)
 
 @Serializable
-data class DockerHealthCheckResult(@SerialName("ExitCode") val exitCode: Int, @SerialName("Output") val output: String)
+data class DockerHealthCheckResult(
+    @SerialName("ExitCode") val exitCode: Int,
+    @SerialName("Output") val output: String
+)
 
 @Serializable
 data class DockerContainerConfiguration(@SerialName("Healthcheck") val healthCheck: DockerContainerHealthCheckConfig)
 
 @Serializable
-data class DockerContainerHealthCheckConfig(@SerialName("Test") @Optional val test: List<String>? = null)
+data class DockerContainerHealthCheckConfig(
+    @SerialName("Test") @Optional val test: List<String>? = null,
+    @SerialName("Interval") @Optional @Serializable(with = DurationSerializer::class) val interval: Duration = Duration.ofSeconds(30),
+    @SerialName("Timeout") @Optional @Serializable(with = DurationSerializer::class) val timeout: Duration = Duration.ofSeconds(30),
+    @SerialName("StartPeriod") @Optional @Serializable(with = DurationSerializer::class) val startPeriod: Duration = Duration.ZERO,
+    @SerialName("Retries") @Optional val retries: Int = 3
+)

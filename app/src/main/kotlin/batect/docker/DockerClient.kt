@@ -27,6 +27,7 @@ import batect.ui.ConsoleInfo
 import kotlinx.serialization.json.JsonObject
 import java.io.IOException
 import java.nio.file.Paths
+import java.time.Duration
 
 // Unix sockets implementation inspired by
 // https://github.com/gesellix/okhttp/blob/master/samples/simple-client/src/main/java/okhttp3/sample/OkDocker.java and
@@ -122,16 +123,22 @@ class DockerClient(
             data("container", container)
         }
 
-        if (!hasHealthCheck(container)) {
-            logger.warn {
-                message("Container has no health check.")
+        try {
+            val info = api.inspectContainer(container)
+
+            if (!hasHealthCheck(info)) {
+                logger.warn {
+                    message("Container has no health check.")
+                }
+
+                return HealthStatus.NoHealthCheck
             }
 
-            return HealthStatus.NoHealthCheck
-        }
-
-        try {
-            val event = api.waitForNextEventForContainer(container, setOf("die", "health_status"))
+            val healthCheckInfo = info.config.healthCheck
+            val checkPeriod = (healthCheckInfo.interval + healthCheckInfo.timeout).multipliedBy(healthCheckInfo.retries.toLong())
+            val overheadMargin = Duration.ofSeconds(1)
+            val timeout = healthCheckInfo.startPeriod + checkPeriod + overheadMargin
+            val event = api.waitForNextEventForContainer(container, setOf("die", "health_status"), timeout)
 
             logger.info {
                 message("Received event notification from Docker.")
@@ -144,20 +151,14 @@ class DockerClient(
                 event.status == "die" -> return HealthStatus.Exited
                 else -> throw ContainerHealthCheckException("Unexpected event received: ${event.status}")
             }
+        } catch (e: ContainerInspectionFailedException) {
+            throw ContainerHealthCheckException("Checking if container '${container.id}' has a health check failed: ${e.message}", e)
         } catch (e: DockerException) {
             throw ContainerHealthCheckException("Waiting for health status of container '${container.id}' failed: ${e.message}", e)
         }
     }
 
-    private fun hasHealthCheck(container: DockerContainer): Boolean {
-        try {
-            val info = api.inspectContainer(container)
-
-            return info.config.healthCheck.test != null
-        } catch (e: ContainerInspectionFailedException) {
-            throw ContainerHealthCheckException("Checking if container '${container.id}' has a health check failed: ${e.message}", e)
-        }
-    }
+    private fun hasHealthCheck(info: DockerContainerInfo): Boolean = info.config.healthCheck.test != null
 
     fun getLastHealthCheckResult(container: DockerContainer): DockerHealthCheckResult {
         try {

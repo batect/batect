@@ -41,6 +41,7 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import java.time.Duration
 
 object DockerClientSpec : Spek({
     describe("a Docker client") {
@@ -262,7 +263,7 @@ object DockerClientSpec : Spek({
                     whenever(api.inspectContainer(container)).thenReturn(DockerContainerInfo(
                         DockerContainerState(),
                         DockerContainerConfiguration(
-                            healthCheck = DockerContainerHealthCheckConfig(null)
+                            healthCheck = DockerContainerHealthCheckConfig()
                         )
                     ))
                 }
@@ -297,19 +298,29 @@ object DockerClientSpec : Spek({
                     whenever(api.inspectContainer(container)).thenReturn(DockerContainerInfo(
                         DockerContainerState(),
                         DockerContainerConfiguration(
-                            healthCheck = DockerContainerHealthCheckConfig(listOf("some-command"))
+                            healthCheck = DockerContainerHealthCheckConfig(
+                                test = listOf("some-command"),
+                                interval = Duration.ofSeconds(2),
+                                timeout = Duration.ofSeconds(1),
+                                startPeriod = Duration.ofSeconds(10),
+                                retries = 4
+                            )
                         )
                     ))
                 }
 
                 given("the health check passes") {
                     beforeEachTest {
-                        whenever(api.waitForNextEventForContainer(container, setOf("die", "health_status")))
+                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any()))
                             .thenReturn(DockerEvent("health_status: healthy"))
                     }
 
                     on("waiting for that container to become healthy") {
                         val result = client.waitForHealthStatus(container)
+
+                        it("waits with a timeout that allows the container time to start and become healthy") {
+                            verify(api).waitForNextEventForContainer(any(), any(), eq(Duration.ofSeconds(10 + (3 * 4) + 1)))
+                        }
 
                         it("reports that the container became healthy") {
                             assertThat(result, equalTo(HealthStatus.BecameHealthy))
@@ -319,7 +330,7 @@ object DockerClientSpec : Spek({
 
                 given("the health check fails") {
                     beforeEachTest {
-                        whenever(api.waitForNextEventForContainer(container, setOf("die", "health_status")))
+                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any()))
                             .thenReturn(DockerEvent("health_status: unhealthy"))
                     }
 
@@ -334,7 +345,7 @@ object DockerClientSpec : Spek({
 
                 given("the container exits before the health check reports") {
                     beforeEachTest {
-                        whenever(api.waitForNextEventForContainer(container, setOf("die", "health_status")))
+                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any()))
                             .thenReturn(DockerEvent("die"))
                     }
 
@@ -349,7 +360,7 @@ object DockerClientSpec : Spek({
 
                 given("getting the next event for the container fails") {
                     beforeEachTest {
-                        whenever(api.waitForNextEventForContainer(container, setOf("die", "health_status")))
+                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any()))
                             .thenThrow(DockerException("Something went wrong."))
                     }
 

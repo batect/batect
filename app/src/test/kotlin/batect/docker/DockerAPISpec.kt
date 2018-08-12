@@ -20,13 +20,17 @@ import batect.config.HealthCheckConfig
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
+import batect.testutils.mock
 import batect.testutils.mockDelete
 import batect.testutils.mockGet
 import batect.testutils.mockPost
 import batect.testutils.withMessage
 import batect.utils.Version
+import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
+import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.check
@@ -53,7 +57,8 @@ import java.util.concurrent.TimeUnit
 
 object DockerAPISpec : Spek({
     describe("a Docker API client") {
-        val dockerBaseUrl = "http://the-docker-daemon"
+        val dockerHost = "the-docker-daemon"
+        val dockerBaseUrl = "http://$dockerHost"
         val httpClient by createForEachTest { mock<OkHttpClient>() }
         val httpConfig by createForEachTest {
             mock<DockerHttpConfig> {
@@ -271,6 +276,55 @@ object DockerAPISpec : Spek({
             }
         }
 
+        describe("waiting for the next event from a container") {
+            given("a Docker container and a list of event types to listen for") {
+                val container = DockerContainer("the-container-id")
+                val eventTypes = listOf("die", "health_status")
+                val expectedUrl = hasScheme("http") and
+                    hasHost(dockerHost) and
+                    hasPath("/v1.12/events") and
+                    hasQueryParameter("since", "0") and
+                    hasQueryParameter("filters", """{"event": ["die", "health_status"], "container": ["the-container-id"]}""")
+
+                on("the Docker daemon returning a single event") {
+                    val responseBody = """
+                        |{"status":"health_status: healthy","id":"f09004d33c0892ed74718bd0c1166b28a8d4788bea6449bb6ea8c4d402b20db7","from":"12ff4615e7ff","Type":"container","Action":"health_status: healthy","Actor":{"ID":"f09004d33c0892ed74718bd0c1166b28a8d4788bea6449bb6ea8c4d402b20db7","Attributes":{"image":"12ff4615e7ff","name":"distracted_stonebraker"}},"scope":"local","time":1533986037,"timeNano":1533986037977811448}
+                        |
+                    """.trimMargin()
+
+                    httpClient.mock("GET", expectedUrl, responseBody, 200)
+                    val event = api.waitForNextEventForContainer(container, eventTypes)
+
+                    it("returns that event") {
+                        assertThat(event, equalTo(DockerEvent("health_status: healthy")))
+                    }
+                }
+
+                on("the Docker daemon returning multiple events") {
+                    val responseBody = """
+                        |{"status":"die","id":"4c44dd62529c1037111ea460fc445f8c7acaa92832b2f991a13052ebac6b50d0","from":"alpine:3.7","Type":"container","Action":"die","Actor":{"ID":"4c44dd62529c1037111ea460fc445f8c7acaa92832b2f991a13052ebac6b50d0","Attributes":{"exitCode":"0","image":"alpine:3.7","name":"nostalgic_lovelace"}},"scope":"local","time":1533986035,"timeNano":1533986035779321663}
+                        |{"status":"health_status: healthy","id":"f09004d33c0892ed74718bd0c1166b28a8d4788bea6449bb6ea8c4d402b20db7","from":"12ff4615e7ff","Type":"container","Action":"health_status: healthy","Actor":{"ID":"f09004d33c0892ed74718bd0c1166b28a8d4788bea6449bb6ea8c4d402b20db7","Attributes":{"image":"12ff4615e7ff","name":"distracted_stonebraker"}},"scope":"local","time":1533986037,"timeNano":1533986037977811448}
+                        |
+                    """.trimMargin()
+
+                    httpClient.mock("GET", expectedUrl, responseBody, 200)
+                    val event = api.waitForNextEventForContainer(container, eventTypes)
+
+                    it("returns the first event") {
+                        assertThat(event, equalTo(DockerEvent("die")))
+                    }
+                }
+
+                on("the API call failing") {
+                    httpClient.mock("GET", expectedUrl, """{"message": "Something went wrong."}""", 418)
+
+                    it("throws an appropriate exception") {
+                        assertThat({ api.waitForNextEventForContainer(container, eventTypes) }, throws<DockerException>(withMessage("Getting events for container 'the-container-id' failed: Something went wrong.")))
+                    }
+                }
+            }
+        }
+
         describe("creating a network") {
             val expectedUrl = "$dockerBaseUrl/v1.12/networks/create"
 
@@ -372,6 +426,29 @@ private fun validUUID(value: String): Boolean {
     } catch (_: IllegalArgumentException) {
         return false
     }
+}
+
+private fun hasScheme(expectedScheme: String) = has(HttpUrl::scheme, equalTo(expectedScheme))
+private fun hasHost(expectedHost: String) = has(HttpUrl::host, equalTo(expectedHost))
+private fun hasPath(expectedPath: String) = has(HttpUrl::encodedPath, equalTo(expectedPath))
+
+private fun hasQueryParameter(key: String, expectedValue: String) = object : Matcher<HttpUrl> {
+    override fun invoke(actual: HttpUrl): MatchResult {
+        val actualParameterValue = actual.queryParameter(key)
+
+        if (actualParameterValue == null) {
+            return MatchResult.Mismatch("'$actual' does not have query parameter '$key'")
+        }
+
+        if (actualParameterValue == expectedValue) {
+            return MatchResult.Match
+        } else {
+            return MatchResult.Mismatch("'$actual' has query parameter '$key' with value '$actualParameterValue'")
+        }
+    }
+
+    override val description: String
+        get() = "has query parameter '$key' with value '$expectedValue'"
 }
 
 private fun requestWithJsonBody(predicate: (JsonObject) -> Unit) = check<Request> { request ->

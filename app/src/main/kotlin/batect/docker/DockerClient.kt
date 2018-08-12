@@ -18,9 +18,6 @@ package batect.docker
 
 import batect.logging.Logger
 import batect.os.ExecutableDoesNotExistException
-import batect.os.Exited
-import batect.os.KillProcess
-import batect.os.KilledDuringProcessing
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.ui.ConsoleInfo
@@ -123,46 +120,22 @@ class DockerClient(
             return HealthStatus.NoHealthCheck
         }
 
-        val command = listOf("docker", "events", "--since=0",
-            "--format", "{{.Status}}",
-            "--filter", "container=${container.id}",
-            "--filter", "event=die",
-            "--filter", "event=health_status")
+        try {
+            val event = api.waitForNextEventForContainer(container, setOf("die", "health_status"))
 
-        val result = processRunner.runAndProcessOutput(command) { line ->
-            logger.debug {
+            logger.info {
                 message("Received event notification from Docker.")
-                data("event", line)
+                data("event", event)
             }
 
             when {
-                line == "health_status: healthy" -> KillProcess(HealthStatus.BecameHealthy)
-                line == "health_status: unhealthy" -> KillProcess(HealthStatus.BecameUnhealthy)
-                line.startsWith("health_status") -> throw ContainerHealthCheckException("Unexpected health_status event: $line")
-                line == "die" -> KillProcess(HealthStatus.Exited)
-                else -> throw ContainerHealthCheckException("Unexpected event received: $line")
+                event.status == "health_status: healthy" -> return HealthStatus.BecameHealthy
+                event.status == "health_status: unhealthy" -> return HealthStatus.BecameUnhealthy
+                event.status == "die" -> return HealthStatus.Exited
+                else -> throw ContainerHealthCheckException("Unexpected event received: ${event.status}")
             }
-        }
-
-        when (result) {
-            is KilledDuringProcessing -> {
-                val healthStatus = result.result
-
-                logger.info {
-                    message("Received health status for container.")
-                    data("status", healthStatus)
-                }
-
-                return healthStatus
-            }
-            is Exited -> {
-                logger.error {
-                    message("Event stream for container exited early.")
-                    data("result", result)
-                }
-
-                throw ContainerHealthCheckException("Event stream for container '${container.id}' exited early with exit code ${result.exitCode}.")
-            }
+        } catch (e: DockerException) {
+            throw ContainerHealthCheckException("Waiting for health status of container '${container.id}' failed: ${e.message}", e)
         }
     }
 

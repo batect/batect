@@ -21,7 +21,6 @@ import batect.config.PortMapping
 import batect.config.VolumeMount
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.json
 
 data class DockerContainerCreationRequest(
@@ -81,8 +80,6 @@ data class DockerContainerCreationRequest(
             }
         }.toString()
     }
-
-    private fun Iterable<String>.toJsonArray() = JsonArray(this.map { JsonPrimitive(it) })
 
     private fun formatEnvironmentVariables(): JsonArray = environmentVariables
         .map { (key, value) -> "$key=$value" }

@@ -193,6 +193,51 @@ class DockerAPI(
         }
     }
 
+    fun waitForNextEventForContainer(container: DockerContainer, eventTypes: Iterable<String>): DockerEvent {
+        logger.info {
+            message("Getting next event for container.")
+            data("container", container)
+            data("eventTypes", eventTypes)
+        }
+
+        val filters = json {
+            "event" to eventTypes.toJsonArray()
+            "container" to listOf(container.id).toJsonArray()
+        }
+
+        val url = baseUrl.newBuilder()
+            .addPathSegment("events")
+            .addQueryParameter("since", "0")
+            .addQueryParameter("filters", filters.toString())
+            .build()
+
+        val request = Request.Builder()
+            .get()
+            .url(url)
+            .build()
+
+        httpConfig.client.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Getting events for container failed.")
+                    data("error", error)
+                }
+
+                throw DockerException("Getting events for container '${container.id}' failed: ${error.message}")
+            }
+
+            val firstEvent = response.body()!!.source().readUtf8LineStrict()
+            val parsedEvent = JsonTreeParser(firstEvent).readFully() as JsonObject
+
+            logger.info {
+                message("Received event for container.")
+                data("event", firstEvent)
+            }
+
+            return DockerEvent(parsedEvent["status"].primitive.content)
+        }
+    }
+
     fun createNetwork(): DockerNetwork {
         logger.info {
             message("Creating new network.")

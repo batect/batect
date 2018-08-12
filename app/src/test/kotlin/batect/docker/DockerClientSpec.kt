@@ -18,10 +18,6 @@ package batect.docker
 
 import batect.config.HealthCheckConfig
 import batect.os.ExecutableDoesNotExistException
-import batect.os.Exited
-import batect.os.KillProcess
-import batect.os.KilledDuringProcessing
-import batect.os.OutputProcessing
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.testutils.createForEachTest
@@ -31,7 +27,6 @@ import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
 import batect.utils.Version
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doReturn
@@ -80,7 +75,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndStreamOutput(any(), any()))
                         .then { invocation ->
                             @Suppress("UNCHECKED_CAST")
-                            val outputProcessor: (String) -> OutputProcessing<Unit> = invocation.arguments[1] as (String) -> OutputProcessing<Unit>
+                            val outputProcessor: (String) -> Unit = invocation.arguments[1] as (String) -> Unit
                             output.lines().forEach { outputProcessor(it) }
 
                             ProcessOutput(0, output)
@@ -143,7 +138,7 @@ object DockerClientSpec : Spek({
                     whenever(processRunner.runAndStreamOutput(any(), any()))
                         .then { invocation ->
                             @Suppress("UNCHECKED_CAST")
-                            val outputProcessor: (String) -> OutputProcessing<Unit> = invocation.arguments[1] as (String) -> OutputProcessing<Unit>
+                            val outputProcessor: (String) -> Unit = invocation.arguments[1] as (String) -> Unit
                             output.lines().forEach { outputProcessor(it) }
 
                             ProcessOutput(0, output)
@@ -308,7 +303,10 @@ object DockerClientSpec : Spek({
                 }
 
                 given("the health check passes") {
-                    beforeEachTest { processRunner.whenGettingEventsForContainerRespondWith(container.id, "health_status: healthy") }
+                    beforeEachTest {
+                        whenever(api.waitForNextEventForContainer(container, setOf("die", "health_status")))
+                            .thenReturn(DockerEvent("health_status: healthy"))
+                    }
 
                     on("waiting for that container to become healthy") {
                         val result = client.waitForHealthStatus(container)
@@ -320,7 +318,10 @@ object DockerClientSpec : Spek({
                 }
 
                 given("the health check fails") {
-                    beforeEachTest { processRunner.whenGettingEventsForContainerRespondWith(container.id, "health_status: unhealthy") }
+                    beforeEachTest {
+                        whenever(api.waitForNextEventForContainer(container, setOf("die", "health_status")))
+                            .thenReturn(DockerEvent("health_status: unhealthy"))
+                    }
 
                     on("waiting for that container to become healthy") {
                         val result = client.waitForHealthStatus(container)
@@ -332,7 +333,10 @@ object DockerClientSpec : Spek({
                 }
 
                 given("the container exits before the health check reports") {
-                    beforeEachTest { processRunner.whenGettingEventsForContainerRespondWith(container.id, "die") }
+                    beforeEachTest {
+                        whenever(api.waitForNextEventForContainer(container, setOf("die", "health_status")))
+                            .thenReturn(DockerEvent("die"))
+                    }
 
                     on("waiting for that container to become healthy") {
                         val result = client.waitForHealthStatus(container)
@@ -343,13 +347,15 @@ object DockerClientSpec : Spek({
                     }
                 }
 
-                given("a Docker container with a health check that causes the 'docker events' command to terminate early") {
-                    val command = eventsCommandForContainer(container.id)
-                    beforeEachTest { whenever(processRunner.runAndProcessOutput<HealthStatus>(eq(command), any())).thenReturn(Exited(123)) }
+                given("getting the next event for the container fails") {
+                    beforeEachTest {
+                        whenever(api.waitForNextEventForContainer(container, setOf("die", "health_status")))
+                            .thenThrow(DockerException("Something went wrong."))
+                    }
 
                     on("waiting for that container to become healthy") {
                         it("throws an appropriate exception") {
-                            assertThat({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Event stream for container 'the-container-id' exited early with exit code 123.")))
+                            assertThat({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Waiting for health status of container 'the-container-id' failed: Something went wrong.")))
                         }
                     }
                 }
@@ -573,22 +579,3 @@ object DockerClientSpec : Spek({
         }
     }
 })
-
-private fun eventsCommandForContainer(containerId: String) = listOf("docker", "events", "--since=0",
-    "--format", "{{.Status}}",
-    "--filter", "container=$containerId",
-    "--filter", "event=die",
-    "--filter", "event=health_status")
-
-private fun ProcessRunner.whenGettingEventsForContainerRespondWith(containerId: String, event: String) {
-    val eventsCommand = eventsCommandForContainer(containerId)
-
-    whenever(this.runAndProcessOutput<HealthStatus>(eq(eventsCommand), any())).then { invocation ->
-        val processor: (String) -> OutputProcessing<HealthStatus> = invocation.getArgument(1)
-        val processingResponse = processor.invoke(event)
-
-        assertThat(processingResponse, isA<KillProcess<HealthStatus>>())
-
-        KilledDuringProcessing((processingResponse as KillProcess<HealthStatus>).result)
-    }
-}

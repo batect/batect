@@ -16,6 +16,7 @@
 
 package batect.testutils
 
+import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doReturn
@@ -36,6 +37,11 @@ fun OkHttpClient.mockDelete(url: String, body: String, statusCode: Int = 200): C
 
 fun OkHttpClient.mock(method: String, url: String, body: String, statusCode: Int = 200): Call {
     val parsedUrl = HttpUrl.get(url)
+
+    return this.mock(method, equalTo(parsedUrl), body, statusCode)
+}
+
+fun OkHttpClient.mock(method: String, urlMatcher: Matcher<HttpUrl>, body: String, statusCode: Int = 200): Call {
     val jsonMediaType = MediaType.get("application/json; charset=utf-8")
     val responseBody = ResponseBody.create(jsonMediaType, body)
     val call = mock<Call>()
@@ -44,7 +50,7 @@ fun OkHttpClient.mock(method: String, url: String, body: String, statusCode: Int
         val request = invocation.getArgument<Request>(0)
 
         assertThat(request.method(), equalTo(method))
-        assertThat(request.url(), equalTo(parsedUrl))
+        assertThat(request.url(), urlMatcher)
 
         whenever(call.execute()).doReturn(
             Response.Builder()

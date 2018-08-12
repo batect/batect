@@ -86,50 +86,6 @@ class ProcessRunner(private val logger: Logger) {
         }
     }
 
-    fun <T> runAndProcessOutput(command: Iterable<String>, outputProcessor: (String) -> OutputProcessing<T>): RunAndProcessOutputResult<T> {
-        logger.debug {
-            message("Starting process.")
-            data("command", command)
-        }
-
-        val process = ProcessBuilder(command.toList())
-            .redirectErrorStream(true)
-            .start()
-
-        try {
-            val reader = InputStreamReader(process.inputStream)
-
-            reader.useLines { lines ->
-                for (line in lines) {
-                    val result = outputProcessor(line)
-
-                    if (result is KillProcess) {
-                        process.destroy()
-
-                        logger.debug {
-                            message("Terminated process early after being requested to do so by application.")
-                            data("command", command)
-                        }
-
-                        return KilledDuringProcessing(result.result)
-                    }
-                }
-            }
-
-            val exitCode = process.waitFor()
-
-            logger.debug {
-                message("Process exited normally.")
-                data("command", command)
-                data("exitCode", exitCode)
-            }
-
-            return Exited(exitCode)
-        } finally {
-            process.destroyForcibly()
-        }
-    }
-
     fun runAndStreamOutput(command: Iterable<String>, outputProcessor: (String) -> Unit): ProcessOutput {
         logger.debug {
             message("Starting process.")
@@ -167,13 +123,5 @@ class ProcessRunner(private val logger: Logger) {
 }
 
 data class ProcessOutput(val exitCode: Int, val output: String)
-
-sealed class OutputProcessing<T>
-class Continue<T> : OutputProcessing<T>()
-class KillProcess<T>(val result: T) : OutputProcessing<T>()
-
-sealed class RunAndProcessOutputResult<T>
-data class Exited<T>(val exitCode: Int) : RunAndProcessOutputResult<T>()
-data class KilledDuringProcessing<T>(val result: T) : RunAndProcessOutputResult<T>()
 
 class ExecutableDoesNotExistException(val executableName: String, cause: Throwable?) : RuntimeException("The executable '$executableName' could not be found.", cause)

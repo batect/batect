@@ -24,6 +24,7 @@ data class DockerImage(val id: String)
 data class DockerContainer(val id: String)
 data class DockerContainerRunResult(val exitCode: Int)
 data class DockerNetwork(val id: String)
+data class DockerEvent(val status: String)
 
 @Serializable
 data class DockerContainerInfo(

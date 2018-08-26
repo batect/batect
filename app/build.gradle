@@ -64,7 +64,7 @@ dependencies {
     compile 'com.github.jnr:jnr-unixsocket:0.19'
     compile 'com.github.jnr:jnr-posix:3.0.46'
 
-    testCompile 'com.natpryce:hamkrest:1.4.2.2'
+    testCompile 'com.natpryce:hamkrest:1.6.0.0'
     testCompile 'org.araqnid:hamkrest-json:1.0.3'
     testCompile 'com.nhaarman:mockito-kotlin-kt1.1:1.6.0'
     testCompile 'com.google.jimfs:jimfs:1.1'

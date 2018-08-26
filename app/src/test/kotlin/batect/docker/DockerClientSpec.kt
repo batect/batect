@@ -493,33 +493,17 @@ object DockerClientSpec : Spek({
         }
 
         describe("pulling an image") {
-            val pullCommand = listOf("docker", "pull", "some-image")
+            on("when the image does not exist locally") {
+                whenever(api.hasImage("some-image")).thenReturn(false)
 
-            describe("when the image does not exist locally") {
-                beforeEachTest {
-                    whenever(api.hasImage("some-image")).thenReturn(false)
+                val image = client.pullImage("some-image")
+
+                it("calls the Docker CLI to pull the image") {
+                    verify(api).pullImage("some-image")
                 }
 
-                on("and pulling the image succeeds") {
-                    whenever(processRunner.runAndCaptureOutput(pullCommand)).thenReturn(ProcessOutput(0, "Image pulled!"))
-
-                    val image = client.pullImage("some-image")
-
-                    it("calls the Docker CLI to pull the image") {
-                        verify(processRunner).runAndCaptureOutput(pullCommand)
-                    }
-
-                    it("returns the Docker image") {
-                        assertThat(image, equalTo(DockerImage("some-image")))
-                    }
-                }
-
-                on("and pulling the image fails") {
-                    whenever(processRunner.runAndCaptureOutput(pullCommand)).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
-
-                    it("throws an appropriate exception") {
-                        assertThat({ client.pullImage("some-image") }, throws<ImagePullFailedException>(withMessage("Pulling image 'some-image' failed: Something went wrong.")))
-                    }
+                it("returns the Docker image") {
+                    assertThat(image, equalTo(DockerImage("some-image")))
                 }
             }
 
@@ -529,7 +513,7 @@ object DockerClientSpec : Spek({
                 val image = client.pullImage("some-image")
 
                 it("does not call the Docker CLI to pull the image again") {
-                    verify(processRunner, never()).runAndCaptureOutput(pullCommand)
+                    verify(api, never()).pullImage("some-image")
                 }
 
                 it("returns the Docker image") {

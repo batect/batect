@@ -382,6 +382,68 @@ object DockerAPISpec : Spek({
             }
         }
 
+        describe("pulling an image") {
+            val imageName = "some-image"
+            val expectedUrl = "$dockerBaseUrl/v1.12/images/create?fromImage=some-image"
+
+            on("the pull succeeding because the image is already present") {
+                val response = """
+                    |{"status":"Pulling from library/some-image","id":"latest"}
+                    |{"status":"Status: Image is up to date for some-image"}
+                """.trimMargin()
+
+                val call = httpClient.mockPost(expectedUrl, response, 200)
+                api.pullImage(imageName)
+
+                it("sends a request to the Docker daemon to pull the image") {
+                    verify(call).execute()
+                }
+            }
+
+            on("the pull succeeding because the image was pulled") {
+                val response = """
+                    |{"status":"Pulling from library/some-image","id":"latest"}
+                    |{"status":"Pulling fs layer","progressDetail":{},"id":"d660b1f15b9b"}
+                    |{"status":"Pulling fs layer","progressDetail":{},"id":"46dde23c37b3"}
+                    |{"status":"Pulling fs layer","progressDetail":{},"id":"6ebaeb074589"}
+                    |{"status":"Pulling fs layer","progressDetail":{},"id":"e7428f935583"}
+                    |{"status":"Status: Downloaded newer image for some-image:latest"}
+                """.trimMargin()
+
+                val call = httpClient.mockPost(expectedUrl, response, 200)
+                api.pullImage(imageName)
+
+                it("sends a request to the Docker daemon to pull the image") {
+                    verify(call).execute()
+                }
+            }
+
+            on("the pull failing immediately") {
+                httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+
+                it("throws an appropriate exception") {
+                    assertThat({ api.pullImage(imageName) }, throws<ImagePullFailedException>(withMessage("Pulling image 'some-image' failed: Something went wrong.")))
+                }
+            }
+
+            on("the pull failing part-way through the process") {
+                val response = """
+                    |{"status":"Pulling from library/some-image","id":"latest"}
+                    |{"status":"Pulling fs layer","progressDetail":{},"id":"d660b1f15b9b"}
+                    |{"status":"Pulling fs layer","progressDetail":{},"id":"46dde23c37b3"}
+                    |{"status":"Pulling fs layer","progressDetail":{},"id":"6ebaeb074589"}
+                    |{"status":"Pulling fs layer","progressDetail":{},"id":"e7428f935583"}
+                    |{"error":"Server error: 404 trying to fetch remote history for some-image","errorDetail":{"code":404,"message":"Server error: 404 trying to fetch remote history for some-image"}}
+                """.trimMargin()
+
+                httpClient.mockPost(expectedUrl, response, 200)
+
+                it("throws an appropriate exception") {
+                    assertThat({ api.pullImage(imageName) }, throws<ImagePullFailedException>(withMessage("Pulling image 'some-image' failed: Server error: 404 trying to fetch remote history for some-image")))
+                }
+            }
+        }
+
         describe("checking if an image has been pulled") {
             val imageName = "some:image"
             val expectedUrl = hasScheme("http") and

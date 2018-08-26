@@ -185,29 +185,8 @@ class DockerClient(
     }
 
     fun pullImage(imageName: String): DockerImage {
-        if (api.hasImage(imageName)) {
-            return DockerImage(imageName)
-        }
-
-        logger.info {
-            message("Pulling image.")
-            data("imageName", imageName)
-        }
-
-        val command = listOf("docker", "pull", imageName)
-        val result = processRunner.runAndCaptureOutput(command)
-
-        if (failed(result)) {
-            logger.error {
-                message("Could not pull image.")
-                data("result", result)
-            }
-
-            throw ImagePullFailedException("Pulling image '$imageName' failed: ${result.output.trim()}")
-        }
-
-        logger.info {
-            message("Image pulled.")
+        if (!api.hasImage(imageName)) {
+            api.pullImage(imageName)
         }
 
         return DockerImage(imageName)

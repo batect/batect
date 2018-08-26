@@ -308,6 +308,48 @@ class DockerAPI(
         }
     }
 
+    fun pullImage(imageName: String) {
+        logger.info {
+            message("Pulling image.")
+            data("imageName", imageName)
+        }
+
+        val url = urlForImages().newBuilder()
+            .addPathSegment("create")
+            .addQueryParameter("fromImage", imageName)
+            .build()
+
+        val request = Request.Builder()
+            .post(emptyRequestBody())
+            .url(url)
+            .build()
+
+        httpConfig.client.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Could not pull image.")
+                    data("error", error)
+                }
+
+                throw ImagePullFailedException("Pulling image '$imageName' failed: ${error.message}")
+            }
+
+            response.body()!!.charStream().forEachLine { line ->
+                val parsedLine = JsonTreeParser(line).readFully() as JsonObject
+
+                if (parsedLine.containsKey("error")) {
+                    val message = parsedLine["error"].primitive.content
+
+                    throw ImagePullFailedException("Pulling image '$imageName' failed: $message")
+                }
+            }
+        }
+
+        logger.info {
+            message("Image pulled.")
+        }
+    }
+
     fun hasImage(imageName: String): Boolean {
         logger.info {
             message("Checking if image has already been pulled.")

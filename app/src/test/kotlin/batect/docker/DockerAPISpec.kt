@@ -382,6 +382,40 @@ object DockerAPISpec : Spek({
             }
         }
 
+        describe("checking if an image has been pulled") {
+            val imageName = "some:image"
+            val expectedUrl = hasScheme("http") and
+                hasHost(dockerHost) and
+                hasPath("/v1.12/images/json") and
+                hasQueryParameter("filters", """{"reference": ["some:image"]}""")
+
+            on("the image already having been pulled") {
+                httpClient.mock("GET", expectedUrl, """[{"Id": "abc123"}]""")
+                val hasImage = api.hasImage(imageName)
+
+                it("returns true") {
+                    assertThat(hasImage, equalTo(true))
+                }
+            }
+
+            on("the image not having been pulled") {
+                httpClient.mock("GET", expectedUrl, """[]""")
+                val hasImage = api.hasImage(imageName)
+
+                it("returns false") {
+                    assertThat(hasImage, equalTo(false))
+                }
+            }
+
+            on("the HTTP call failing") {
+                httpClient.mock("GET", expectedUrl, """{"message": "Something went wrong."}""", 418)
+
+                it("throws an appropriate exception") {
+                    assertThat({ api.hasImage(imageName) }, throws<ImagePullFailedException>(withMessage("Checking if image 'some:image' has already been pulled failed: Something went wrong.")))
+                }
+            }
+        }
+
         describe("getting server version information") {
             val expectedUrl = "$dockerBaseUrl/v1.12/version"
 

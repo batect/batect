@@ -19,6 +19,7 @@ package batect.docker
 import batect.logging.Logger
 import batect.utils.Version
 import kotlinx.serialization.json.JSON
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonTreeParser
 import kotlinx.serialization.json.json
@@ -307,6 +308,42 @@ class DockerAPI(
         }
     }
 
+    fun hasImage(imageName: String): Boolean {
+        logger.info {
+            message("Checking if image has already been pulled.")
+            data("imageName", imageName)
+        }
+
+        val filters = json {
+            "reference" to listOf(imageName).toJsonArray()
+        }
+
+        val url = urlForImages().newBuilder()
+            .addPathSegment("json")
+            .addQueryParameter("filters", filters.toString())
+            .build()
+
+        val request = Request.Builder()
+            .url(url)
+            .build()
+
+        httpConfig.client.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Could not check if image has already been pulled.")
+                    data("error", error)
+                }
+
+                throw ImagePullFailedException("Checking if image '$imageName' has already been pulled failed: ${error.message}")
+            }
+
+            val body = response.body()!!.string()
+            val parsedBody = JsonTreeParser(body).readFully() as JsonArray
+
+            return parsedBody.isNotEmpty()
+        }
+    }
+
     fun getServerVersionInfo(): DockerVersionInfo {
         logger.info {
             message("Getting Docker version information.")
@@ -368,6 +405,10 @@ class DockerAPI(
 
     private fun urlForNetwork(network: DockerNetwork): HttpUrl = urlForNetworks().newBuilder()
         .addPathSegment(network.id)
+        .build()
+
+    private fun urlForImages(): HttpUrl = baseUrl.newBuilder()
+        .addPathSegment("images")
         .build()
 
     private fun emptyRequestBody(): RequestBody = RequestBody.create(MediaType.get("text/plain"), "")

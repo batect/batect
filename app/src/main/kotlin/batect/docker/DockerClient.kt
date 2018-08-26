@@ -185,7 +185,7 @@ class DockerClient(
     }
 
     fun pullImage(imageName: String): DockerImage {
-        if (haveImageLocally(imageName)) {
+        if (api.hasImage(imageName)) {
             return DockerImage(imageName)
         }
 
@@ -244,34 +244,6 @@ class DockerClient(
 
             return false
         }
-    }
-
-    private fun haveImageLocally(imageName: String): Boolean {
-        logger.info {
-            message("Checking if image exists locally.")
-            data("imageName", imageName)
-        }
-
-        val command = listOf("docker", "images", "-q", imageName)
-        val result = processRunner.runAndCaptureOutput(command)
-
-        if (failed(result)) {
-            logger.error {
-                message("Could not check if image exists locally.")
-                data("result", result)
-            }
-
-            throw ImagePullFailedException("Checking if image '$imageName' has already been pulled failed: ${result.output.trim()}")
-        }
-
-        val haveImage = result.output.trim().isNotEmpty()
-
-        logger.info {
-            message("Checking if image exists locally succeeded.")
-            data("haveImage", haveImage)
-        }
-
-        return haveImage
     }
 
     private fun failed(result: ProcessOutput): Boolean = result.exitCode != 0

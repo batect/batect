@@ -497,7 +497,7 @@ object DockerClientSpec : Spek({
 
             describe("when the image does not exist locally") {
                 beforeEachTest {
-                    whenever(processRunner.runAndCaptureOutput(listOf("docker", "images", "-q", "some-image"))).thenReturn(ProcessOutput(0, ""))
+                    whenever(api.hasImage("some-image")).thenReturn(false)
                 }
 
                 on("and pulling the image succeeds") {
@@ -524,7 +524,7 @@ object DockerClientSpec : Spek({
             }
 
             on("when the image already exists locally") {
-                whenever(processRunner.runAndCaptureOutput(listOf("docker", "images", "-q", "some-image"))).thenReturn(ProcessOutput(0, "abc123"))
+                whenever(api.hasImage("some-image")).thenReturn(true)
 
                 val image = client.pullImage("some-image")
 
@@ -534,14 +534,6 @@ object DockerClientSpec : Spek({
 
                 it("returns the Docker image") {
                     assertThat(image, equalTo(DockerImage("some-image")))
-                }
-            }
-
-            on("when checking if the image has already been pulled fails") {
-                whenever(processRunner.runAndCaptureOutput(listOf("docker", "images", "-q", "some-image"))).thenReturn(ProcessOutput(1, "Something went wrong.\n"))
-
-                it("throws an appropriate exception") {
-                    assertThat({ client.pullImage("some-image") }, throws<ImagePullFailedException>(withMessage("Checking if image 'some-image' has already been pulled failed: Something went wrong.")))
                 }
             }
         }

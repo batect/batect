@@ -1,0 +1,17 @@
+project_name: task-with-slow-healthy-dependency-test
+
+containers:
+  build-env:
+    image: alpine:3.7
+
+  dependency:
+    build_directory: dependency
+
+
+tasks:
+  the-task:
+    run:
+      container: build-env
+      command: "sh -c 'echo Started!'"
+    dependencies:
+      - dependency

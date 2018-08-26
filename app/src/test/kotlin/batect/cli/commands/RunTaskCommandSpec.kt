@@ -55,6 +55,7 @@ import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.verifyZeroInteractions
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
+import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 
@@ -86,13 +87,13 @@ object RunTaskCommandSpec : Spek({
                 }
             }
 
-            on("when the configuration file can be loaded") {
-                on("when Docker is available") {
+            given("configuration file can be loaded") {
+                given("Docker is available") {
                     val dockerClient = mock<DockerClient> {
                         on { checkIfDockerIsAvailable() } doReturn true
                     }
 
-                    on("when the task has no dependencies") {
+                    given("the task has no dependencies") {
                         val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {
                             on { resolveExecutionOrder(config, taskName) } doReturn listOf(mainTask)
                         }
@@ -162,7 +163,7 @@ object RunTaskCommandSpec : Spek({
                         }
                     }
 
-                    on("when the task has a dependency") {
+                    given("the task has a dependency") {
                         val otherTask = Task("other-task", TaskRunConfiguration("the-other-container"))
 
                         val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {

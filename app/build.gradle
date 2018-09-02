@@ -15,7 +15,7 @@
 */
 
 buildscript {
-    ext.spek_version = '1.2.0'
+    ext.spek_version = '1.2.1'
     ext.serialization_version = '0.6.1'
 
     repositories {

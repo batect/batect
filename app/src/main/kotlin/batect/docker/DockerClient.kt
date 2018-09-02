@@ -16,6 +16,7 @@
 
 package batect.docker
 
+import batect.docker.pullcredentials.DockerRegistryCredentialsProvider
 import batect.logging.Logger
 import batect.os.ExecutableDoesNotExistException
 import batect.os.ProcessOutput
@@ -29,6 +30,7 @@ class DockerClient(
     private val processRunner: ProcessRunner,
     private val api: DockerAPI,
     private val consoleInfo: ConsoleInfo,
+    private val credentialsProvider: DockerRegistryCredentialsProvider,
     private val logger: Logger
 ) {
     private val buildImageIdLineRegex = """^Successfully built (.*)$""".toRegex(RegexOption.MULTILINE)
@@ -185,11 +187,17 @@ class DockerClient(
     }
 
     fun pullImage(imageName: String): DockerImage {
-        if (!api.hasImage(imageName)) {
-            api.pullImage(imageName)
-        }
+        try {
+            if (!api.hasImage(imageName)) {
+                val credentials = credentialsProvider.getCredentials(imageName)
 
-        return DockerImage(imageName)
+                api.pullImage(imageName, credentials)
+            }
+
+            return DockerImage(imageName)
+        } catch (e: DockerRegistryCredentialsException) {
+            throw ImagePullFailedException("Could not pull image '$imageName': ${e.message}", e)
+        }
     }
 
     fun checkIfDockerIsAvailable(): Boolean {

@@ -18,11 +18,13 @@ package batect.testutils
 
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.has
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
 import okhttp3.Call
+import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
@@ -31,17 +33,17 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody
 
-fun OkHttpClient.mockGet(url: String, body: String, statusCode: Int = 200): Call = mock("GET", url, body, statusCode)
-fun OkHttpClient.mockPost(url: String, body: String, statusCode: Int = 200): Call = mock("POST", url, body, statusCode)
-fun OkHttpClient.mockDelete(url: String, body: String, statusCode: Int = 200): Call = mock("DELETE", url, body, statusCode)
+fun OkHttpClient.mockGet(url: String, body: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call = mock("GET", url, body, statusCode, headers)
+fun OkHttpClient.mockPost(url: String, body: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call = mock("POST", url, body, statusCode, headers)
+fun OkHttpClient.mockDelete(url: String, body: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call = mock("DELETE", url, body, statusCode, headers)
 
-fun OkHttpClient.mock(method: String, url: String, body: String, statusCode: Int = 200): Call {
+fun OkHttpClient.mock(method: String, url: String, body: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call {
     val parsedUrl = HttpUrl.get(url)
 
-    return this.mock(method, equalTo(parsedUrl), body, statusCode)
+    return this.mock(method, equalTo(parsedUrl), body, statusCode, headers)
 }
 
-fun OkHttpClient.mock(method: String, urlMatcher: Matcher<HttpUrl>, body: String, statusCode: Int = 200): Call {
+fun OkHttpClient.mock(method: String, urlMatcher: Matcher<HttpUrl>, body: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call {
     val jsonMediaType = MediaType.get("application/json; charset=utf-8")
     val responseBody = ResponseBody.create(jsonMediaType, body)
     val call = mock<Call>()
@@ -49,8 +51,9 @@ fun OkHttpClient.mock(method: String, urlMatcher: Matcher<HttpUrl>, body: String
     whenever(this.newCall(any())).then { invocation ->
         val request = invocation.getArgument<Request>(0)
 
-        assertThat(request.method(), equalTo(method))
-        assertThat(request.url(), urlMatcher)
+        assertThat(request, has(Request::method, equalTo(method)))
+        assertThat(request, has(Request::url, urlMatcher))
+        assertThat(request, has(Request::headerSet, equalTo(headers)))
 
         whenever(call.execute()).doReturn(
             Response.Builder()
@@ -67,3 +70,6 @@ fun OkHttpClient.mock(method: String, urlMatcher: Matcher<HttpUrl>, body: String
 
     return call
 }
+
+// This is to resolve the ambiguity when referring to Request::headers() above in the has() call.
+private fun Request.headerSet() = this.headers()

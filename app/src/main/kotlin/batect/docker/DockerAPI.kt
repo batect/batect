@@ -16,6 +16,7 @@
 
 package batect.docker
 
+import batect.docker.pullcredentials.DockerRegistryCredentials
 import batect.logging.Logger
 import batect.utils.Version
 import kotlinx.serialization.json.JSON
@@ -28,6 +29,7 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
+import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
@@ -308,7 +310,7 @@ class DockerAPI(
         }
     }
 
-    fun pullImage(imageName: String) {
+    fun pullImage(imageName: String, registryCredentials: DockerRegistryCredentials?) {
         logger.info {
             message("Pulling image.")
             data("imageName", imageName)
@@ -319,10 +321,18 @@ class DockerAPI(
             .addQueryParameter("fromImage", imageName)
             .build()
 
-        val request = Request.Builder()
+        val requestBuilder = Request.Builder()
             .post(emptyRequestBody())
             .url(url)
-            .build()
+
+        if (registryCredentials != null) {
+            val credentialBytes = registryCredentials.toJSON().toByteArray()
+            val encodedCredentials = Base64.getEncoder().encodeToString(credentialBytes)
+
+            requestBuilder.header("X-Registry-Auth", encodedCredentials)
+        }
+
+        val request = requestBuilder.build()
 
         httpConfig.client.newCall(request).execute().use { response ->
             checkForFailure(response) { error ->

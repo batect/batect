@@ -17,6 +17,7 @@
 package batect.docker
 
 import batect.config.HealthCheckConfig
+import batect.docker.pullcredentials.DockerRegistryCredentials
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
@@ -42,6 +43,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonTreeParser
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.content
+import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
@@ -385,6 +387,12 @@ object DockerAPISpec : Spek({
         describe("pulling an image") {
             val imageName = "some-image"
             val expectedUrl = "$dockerBaseUrl/v1.12/images/create?fromImage=some-image"
+            val registryCredentials = mock<DockerRegistryCredentials> {
+                on { toJSON() } doReturn "some json credentials"
+            }
+
+            val base64EncodedJSONCredentials = "c29tZSBqc29uIGNyZWRlbnRpYWxz"
+            val expectedHeadersForAuthentication = Headers.Builder().set("X-Registry-Auth", base64EncodedJSONCredentials).build()
 
             on("the pull succeeding because the image is already present") {
                 val response = """
@@ -392,8 +400,8 @@ object DockerAPISpec : Spek({
                     |{"status":"Status: Image is up to date for some-image"}
                 """.trimMargin()
 
-                val call = httpClient.mockPost(expectedUrl, response, 200)
-                api.pullImage(imageName)
+                val call = httpClient.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication)
+                api.pullImage(imageName, registryCredentials)
 
                 it("sends a request to the Docker daemon to pull the image") {
                     verify(call).execute()
@@ -410,19 +418,31 @@ object DockerAPISpec : Spek({
                     |{"status":"Status: Downloaded newer image for some-image:latest"}
                 """.trimMargin()
 
-                val call = httpClient.mockPost(expectedUrl, response, 200)
-                api.pullImage(imageName)
+                val call = httpClient.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication)
+                api.pullImage(imageName, registryCredentials)
 
                 it("sends a request to the Docker daemon to pull the image") {
                     verify(call).execute()
                 }
             }
 
+            on("the pull request having no registry credentials") {
+                val expectedHeadersForNoAuthentication = Headers.Builder().build()
+                val call = httpClient.mockPost(expectedUrl, "", 200, expectedHeadersForNoAuthentication)
+                api.pullImage(imageName, null)
+
+                it("sends a request to the Docker daemon to pull the image with no authentication header") {
+                    verify(call).execute()
+                }
+            }
+
             on("the pull failing immediately") {
-                httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418, expectedHeadersForAuthentication)
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.pullImage(imageName) }, throws<ImagePullFailedException>(withMessage("Pulling image 'some-image' failed: Something went wrong.")))
+                    assertThat({ api.pullImage(imageName, registryCredentials) }, throws<ImagePullFailedException>(
+                        withMessage("Pulling image 'some-image' failed: Something went wrong."))
+                    )
                 }
             }
 
@@ -436,10 +456,12 @@ object DockerAPISpec : Spek({
                     |{"error":"Server error: 404 trying to fetch remote history for some-image","errorDetail":{"code":404,"message":"Server error: 404 trying to fetch remote history for some-image"}}
                 """.trimMargin()
 
-                httpClient.mockPost(expectedUrl, response, 200)
+                httpClient.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication)
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.pullImage(imageName) }, throws<ImagePullFailedException>(withMessage("Pulling image 'some-image' failed: Server error: 404 trying to fetch remote history for some-image")))
+                    assertThat({ api.pullImage(imageName, registryCredentials) }, throws<ImagePullFailedException>(
+                        withMessage("Pulling image 'some-image' failed: Server error: 404 trying to fetch remote history for some-image"))
+                    )
                 }
             }
         }

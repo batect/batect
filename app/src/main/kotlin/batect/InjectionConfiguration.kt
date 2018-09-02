@@ -31,6 +31,10 @@ import batect.docker.DockerClient
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerHostNameResolver
 import batect.docker.DockerHttpConfig
+import batect.docker.pullcredentials.DockerRegistryCredentialsConfigurationFile
+import batect.docker.pullcredentials.DockerRegistryCredentialsProvider
+import batect.docker.pullcredentials.DockerRegistryDomainResolver
+import batect.docker.pullcredentials.DockerRegistryIndexResolver
 import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerDependencyGraphProvider
 import batect.execution.ParallelExecutionManagerProvider
@@ -128,10 +132,14 @@ private val configModule = Kodein.Module("config") {
 
 private val dockerModule = Kodein.Module("docker") {
     bind<DockerAPI>() with singletonWithLogger { logger -> DockerAPI(instance(), logger) }
-    bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), logger) }
+    bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), logger) }
     bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
     bind<DockerHostNameResolver>() with singleton { DockerHostNameResolver(instance(), instance()) }
     bind<DockerHttpConfig>() with singleton { DockerHttpConfig(instance()) }
+    bind<DockerRegistryCredentialsConfigurationFile>() with singletonWithLogger { logger -> DockerRegistryCredentialsConfigurationFile(instance(), instance(), logger) }
+    bind<DockerRegistryCredentialsProvider>() with singleton { DockerRegistryCredentialsProvider(instance(), instance(), instance()) }
+    bind<DockerRegistryDomainResolver>() with singleton { DockerRegistryDomainResolver() }
+    bind<DockerRegistryIndexResolver>() with singleton { DockerRegistryIndexResolver() }
 }
 
 private val executionModule = Kodein.Module("execution") {

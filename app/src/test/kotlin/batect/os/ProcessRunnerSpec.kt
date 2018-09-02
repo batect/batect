@@ -77,32 +77,50 @@ object ProcessRunnerSpec : Spek({
 
         describe("running a process and capturing the output") {
             given("the executable exists") {
-                on("running it") {
-                    val command = listOf("sh", "-c", "echo hello world && echo hello error world 1>&2 && echo more non-error output && exit 201")
-                    val result = runner.runAndCaptureOutput(command)
+                given("there is no input to pipe to stdin") {
+                    on("running it") {
+                        val command = listOf("sh", "-c", "echo hello world && echo hello error world 1>&2 && echo more non-error output && exit 201")
+                        val result = runner.runAndCaptureOutput(command)
 
-                    it("returns the exit code of the command") {
-                        assertThat(result.exitCode, equalTo(201))
+                        it("returns the exit code of the command") {
+                            assertThat(result.exitCode, equalTo(201))
+                        }
+
+                        it("returns the combined standard output and standard error of the command") {
+                            assertThat(result.output, equalTo("hello world\nhello error world\nmore non-error output\n"))
+                        }
+
+                        it("logs before running the command") {
+                            assertThat(logSink, hasMessage(
+                                withSeverity(Severity.Debug) and
+                                    withLogMessage("Starting process.") and
+                                    withAdditionalData("command", command)))
+                        }
+
+                        it("logs the result of running the command") {
+                            assertThat(logSink, hasMessage(
+                                withSeverity(Severity.Debug) and
+                                    withLogMessage("Process exited.") and
+                                    withAdditionalData("command", command) and
+                                    withAdditionalData("exitCode", 201)
+                            ))
+                        }
                     }
+                }
 
-                    it("returns the combined standard output and standard error of the command") {
-                        assertThat(result.output, equalTo("hello world\nhello error world\nmore non-error output\n"))
-                    }
+                given("there is some input to pipe to stdin") {
+                    on("running it") {
+                        val command = listOf("tee")
+                        val stdin = "This is some input to stdin that will be returned by tee as output"
+                        val result = runner.runAndCaptureOutput(command, stdin)
 
-                    it("logs before running the command") {
-                        assertThat(logSink, hasMessage(
-                            withSeverity(Severity.Debug) and
-                                withLogMessage("Starting process.") and
-                                withAdditionalData("command", command)))
-                    }
+                        it("returns the exit code of the command") {
+                            assertThat(result.exitCode, equalTo(0))
+                        }
 
-                    it("logs the result of running the command") {
-                        assertThat(logSink, hasMessage(
-                            withSeverity(Severity.Debug) and
-                                withLogMessage("Process exited.") and
-                                withAdditionalData("command", command) and
-                                withAdditionalData("exitCode", 201)
-                        ))
+                        it("writes the input provided to stdin") {
+                            assertThat(result.output, equalTo(stdin))
+                        }
                     }
                 }
             }

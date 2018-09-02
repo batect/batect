@@ -17,15 +17,19 @@
 package batect.docker
 
 import batect.config.HealthCheckConfig
+import batect.docker.pullcredentials.DockerRegistryCredentials
+import batect.docker.pullcredentials.DockerRegistryCredentialsProvider
 import batect.os.ExecutableDoesNotExistException
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
+import batect.testutils.withCause
 import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
 import batect.utils.Version
+import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.any
@@ -47,8 +51,9 @@ object DockerClientSpec : Spek({
         val processRunner by createForEachTest { mock<ProcessRunner>() }
         val api by createForEachTest { mock<DockerAPI>() }
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
+        val credentialsProvider by createForEachTest { mock<DockerRegistryCredentialsProvider>() }
         val logger by createLoggerForEachTest()
-        val client by createForEachTest { DockerClient(processRunner, api, consoleInfo, logger) }
+        val client by createForEachTest { DockerClient(processRunner, api, consoleInfo, credentialsProvider, logger) }
 
         describe("building an image") {
             given("a container configuration") {
@@ -493,17 +498,46 @@ object DockerClientSpec : Spek({
         }
 
         describe("pulling an image") {
-            on("when the image does not exist locally") {
-                whenever(api.hasImage("some-image")).thenReturn(false)
-
-                val image = client.pullImage("some-image")
-
-                it("calls the Docker CLI to pull the image") {
-                    verify(api).pullImage("some-image")
+            given("the image does not exist locally") {
+                beforeEachTest {
+                    whenever(api.hasImage("some-image")).thenReturn(false)
                 }
 
-                it("returns the Docker image") {
-                    assertThat(image, equalTo(DockerImage("some-image")))
+                given("getting credentials for the image succeeds") {
+                    val credentials = mock<DockerRegistryCredentials>()
+
+                    beforeEachTest {
+                        whenever(credentialsProvider.getCredentials("some-image")).thenReturn(credentials)
+                    }
+
+                    on("pulling the image") {
+                        val image = client.pullImage("some-image")
+
+                        it("calls the Docker CLI to pull the image") {
+                            verify(api).pullImage("some-image", credentials)
+                        }
+
+                        it("returns the Docker image") {
+                            assertThat(image, equalTo(DockerImage("some-image")))
+                        }
+                    }
+                }
+
+                given("getting credentials for the image fails") {
+                    val exception = DockerRegistryCredentialsException("Could not load credentials: something went wrong.")
+
+                    beforeEachTest {
+                        whenever(credentialsProvider.getCredentials("some-image")).thenThrow(exception)
+                    }
+
+                    on("pulling the image") {
+                        it("throws an appropriate exception") {
+                            assertThat({ client.pullImage("some-image") }, throws<ImagePullFailedException>(
+                                withMessage("Could not pull image 'some-image': Could not load credentials: something went wrong.")
+                                    and withCause(exception)
+                            ))
+                        }
+                    }
                 }
             }
 
@@ -513,7 +547,7 @@ object DockerClientSpec : Spek({
                 val image = client.pullImage("some-image")
 
                 it("does not call the Docker CLI to pull the image again") {
-                    verify(api, never()).pullImage("some-image")
+                    verify(api, never()).pullImage(any(), any())
                 }
 
                 it("returns the Docker image") {

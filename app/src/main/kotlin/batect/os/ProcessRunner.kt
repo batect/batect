@@ -19,6 +19,7 @@ package batect.os
 import batect.logging.Logger
 import java.io.IOException
 import java.io.InputStreamReader
+import java.nio.charset.Charset
 
 class ProcessRunner(private val logger: Logger) {
     // NOTESTS (for input / output redirection)
@@ -53,7 +54,7 @@ class ProcessRunner(private val logger: Logger) {
         return exitCode
     }
 
-    fun runAndCaptureOutput(command: Iterable<String>): ProcessOutput {
+    fun runAndCaptureOutput(command: Iterable<String>, stdin: String = ""): ProcessOutput {
         logger.debug {
             message("Starting process.")
             data("command", command)
@@ -62,8 +63,11 @@ class ProcessRunner(private val logger: Logger) {
         try {
             val process = ProcessBuilder(command.toList())
                 .redirectErrorStream(true)
-                .redirectInput(ProcessBuilder.Redirect.INHERIT)
+                .redirectInput(ProcessBuilder.Redirect.PIPE)
                 .start()
+
+            process.outputStream.write(stdin.toByteArray(Charset.defaultCharset()))
+            process.outputStream.close()
 
             val exitCode = process.waitFor()
             val output = InputStreamReader(process.inputStream).readText()

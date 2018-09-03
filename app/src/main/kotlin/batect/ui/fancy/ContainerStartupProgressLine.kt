@@ -92,6 +92,7 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
     private fun printDescriptionWhenPulling(console: Console) {
         console.print("pulling ")
         console.printBold(containerImageName)
+        console.print("...")
     }
 
     private fun printDescriptionWhenWaitingToStart(console: Console) {

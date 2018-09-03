@@ -476,6 +476,7 @@ object ContainerStartupProgressLineSpec : Spek({
                             verify(whiteConsole).print(": ")
                             verify(whiteConsole).print("pulling ")
                             verify(whiteConsole).printBold("some-image")
+                            verify(whiteConsole).print("...")
                         }
                     }
                 }
@@ -543,12 +544,13 @@ object ContainerStartupProgressLineSpec : Spek({
                     line.onEventPosted(event)
                     line.print(console)
 
-                    it("prints that the container is building") {
+                    it("prints that the container is being pulled") {
                         inOrder(whiteConsole) {
                             verify(whiteConsole).printBold(container.name)
                             verify(whiteConsole).print(": ")
                             verify(whiteConsole).print("pulling ")
                             verify(whiteConsole).printBold("some-image")
+                            verify(whiteConsole).print("...")
                         }
                     }
                 }

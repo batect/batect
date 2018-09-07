@@ -22,12 +22,14 @@ import batect.config.PullImage
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerImageBuildProgress
+import batect.docker.DockerImagePullProgress
 import batect.docker.DockerNetwork
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
+import batect.execution.model.events.ImagePullProgressEvent
 import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.steps.BuildImageStep
@@ -492,6 +494,42 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
             }
 
+            describe("after receiving an 'image pull progress' notification") {
+                beforeEachTest {
+                    line.onStepStarting(PullImageStep("some-image"))
+                }
+
+                on("that notification being for this line's container's image") {
+                    line.onEventPosted(ImagePullProgressEvent("some-image", DockerImagePullProgress("extracting", 10, 20)))
+                    line.print(console)
+
+                    it("prints that the image is being pulled with detailed progress information") {
+                        inOrder(whiteConsole) {
+                            verify(whiteConsole).printBold(container.name)
+                            verify(whiteConsole).print(": ")
+                            verify(whiteConsole).print("pulling ")
+                            verify(whiteConsole).printBold("some-image")
+                            verify(whiteConsole).print(": extracting 10 B of 20 B (50%)")
+                        }
+                    }
+                }
+
+                on("that notification being for another image") {
+                    line.onEventPosted(ImagePullProgressEvent("some-other-image", DockerImagePullProgress("Doing something", 10, 20)))
+                    line.print(console)
+
+                    it("prints that the image is being pulled") {
+                        inOrder(whiteConsole) {
+                            verify(whiteConsole).printBold(container.name)
+                            verify(whiteConsole).print(": ")
+                            verify(whiteConsole).print("pulling ")
+                            verify(whiteConsole).printBold("some-image")
+                            verify(whiteConsole).print("...")
+                        }
+                    }
+                }
+            }
+
             describe("after receiving an 'image pulled' notification") {
                 describe("and that notification being for this line's container's image") {
                     val event = ImagePulledEvent(DockerImage("some-image"))
@@ -539,7 +577,7 @@ object ContainerStartupProgressLineSpec : Spek({
                     }
                 }
 
-                on("when the image is still being pulled") {
+                on("when the image is still being pulled but no progress information has been received yet") {
                     line.onStepStarting(PullImageStep("some-image"))
                     line.onEventPosted(event)
                     line.print(console)
@@ -551,6 +589,23 @@ object ContainerStartupProgressLineSpec : Spek({
                             verify(whiteConsole).print("pulling ")
                             verify(whiteConsole).printBold("some-image")
                             verify(whiteConsole).print("...")
+                        }
+                    }
+                }
+
+                on("when the image is being pulled and some progress information has been received") {
+                    line.onStepStarting(PullImageStep("some-image"))
+                    line.onEventPosted(ImagePullProgressEvent("some-image", DockerImagePullProgress("extracting", 10, 20)))
+                    line.onEventPosted(event)
+                    line.print(console)
+
+                    it("prints that the image is being pulled with detailed progress information") {
+                        inOrder(whiteConsole) {
+                            verify(whiteConsole).printBold(container.name)
+                            verify(whiteConsole).print(": ")
+                            verify(whiteConsole).print("pulling ")
+                            verify(whiteConsole).printBold("some-image")
+                            verify(whiteConsole).print(": extracting 10 B of 20 B (50%)")
                         }
                     }
                 }

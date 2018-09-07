@@ -33,6 +33,7 @@ import batect.docker.DockerContainerRunResult
 import batect.docker.DockerHealthCheckResult
 import batect.docker.DockerImage
 import batect.docker.DockerImageBuildProgress
+import batect.docker.DockerImagePullProgress
 import batect.docker.DockerNetwork
 import batect.docker.HealthStatus
 import batect.docker.ImageBuildFailedException
@@ -58,6 +59,7 @@ import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePullFailedEvent
+import batect.execution.model.events.ImagePullProgressEvent
 import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskEventSink
@@ -167,7 +169,7 @@ object TaskStepRunnerSpec : Spek({
                         whenever(dockerClient.build(eq(buildDirectory), any(), any()))
                             .then { invocation ->
                                 @Suppress("UNCHECKED_CAST")
-                                val onStatusUpdate: (DockerImageBuildProgress) -> Unit = invocation.arguments[2] as (DockerImageBuildProgress) -> Unit
+                                val onStatusUpdate = invocation.arguments[2] as (DockerImageBuildProgress) -> Unit
 
                                 onStatusUpdate(update1)
                                 onStatusUpdate(update2)
@@ -224,17 +226,33 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when pulling the image succeeds") {
                     val image = DockerImage("some-image")
-                    whenever(dockerClient.pullImage("some-image")).thenReturn(image)
+                    val update1 = DockerImagePullProgress("Update 1", 10, 20)
+                    val update2 = DockerImagePullProgress("Update 2", 15, 20)
+
+                    whenever(dockerClient.pullImage(eq("some-image"), any())).then { invocation ->
+                        @Suppress("UNCHECKED_CAST")
+                        val onStatusUpdate = invocation.arguments[1] as (DockerImagePullProgress) -> Unit
+
+                        onStatusUpdate(update1)
+                        onStatusUpdate(update2)
+
+                        image
+                    }
 
                     runner.run(step, eventSink, runOptions)
 
                     it("emits a 'image pulled' event") {
                         verify(eventSink).postEvent(ImagePulledEvent(image))
                     }
+
+                    it("emits a 'image pull progress' event for each update received from Docker") {
+                        verify(eventSink).postEvent(ImagePullProgressEvent("some-image", update1))
+                        verify(eventSink).postEvent(ImagePullProgressEvent("some-image", update2))
+                    }
                 }
 
                 on("when building the image fails") {
-                    whenever(dockerClient.pullImage("some-image")).thenThrow(ImagePullFailedException("Pulling image 'some-image' failed. Output from Docker was: Something went wrong."))
+                    whenever(dockerClient.pullImage(eq("some-image"), any())).thenThrow(ImagePullFailedException("Pulling image 'some-image' failed. Output from Docker was: Something went wrong."))
 
                     runner.run(step, eventSink, runOptions)
 

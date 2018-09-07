@@ -46,25 +46,26 @@ class DockerImagePullProgressReporter {
 
     private fun computeNewStateForLayer(previousState: LayerStatus?, currentOperation: LayerOperation, progressUpdate: JsonObject): LayerStatus {
         val progressDetail = progressUpdate.getObject("progressDetail")
-
-        if (previousState == null) {
-            val completedBytes = progressDetail.getPrimitive("current").int
-            val totalBytes = progressDetail.getPrimitive("total").int
-
-            return LayerStatus(currentOperation, completedBytes, totalBytes)
-        }
-
-        val completedBytes = progressDetail.getPrimitiveOrNull("current")?.int
+        val completedBytes = progressDetail.getPrimitiveOrNull("current")?.long
+        val totalBytes = progressDetail.getPrimitiveOrNull("total")?.long
 
         val completedBytesToUse = if (completedBytes != null) {
             completedBytes
-        } else if (currentOperation.assumeAllBytesCompleted) {
+        } else if (currentOperation.assumeAllBytesCompleted && previousState != null) {
             previousState.totalBytes
         } else {
             0
         }
 
-        return previousState.copy(currentOperation = currentOperation, completedBytes = completedBytesToUse)
+        val totalBytesToUse = if (totalBytes != null) {
+            totalBytes
+        } else if (previousState != null) {
+            previousState.totalBytes
+        } else {
+            0
+        }
+
+        return LayerStatus(currentOperation, completedBytesToUse, totalBytesToUse)
     }
 
     private fun computeOverallProgress(): DockerImagePullProgress {
@@ -78,19 +79,29 @@ class DockerImagePullProgressReporter {
         return DockerImagePullProgress(earliestOperation.displayName, overallCompletedBytes, overallTotalBytes)
     }
 
-    private enum class LayerOperation(val statusName: String, val displayName: String = statusName, val assumeAllBytesCompleted: Boolean = false) {
+    private enum class LayerOperation(val statusName: String, val assumeAllBytesCompleted: Boolean = false) {
         Downloading("Downloading"),
-        VerifyingChecksum("Verifying Checksum", "Verifying checksum"),
+        VerifyingChecksum("Verifying Checksum"),
         DownloadComplete("Download complete", assumeAllBytesCompleted = true),
         Extracting("Extracting"),
         PullComplete("Pull complete", assumeAllBytesCompleted = true);
+
+        val displayName: String = statusName.toLowerCase()
 
         companion object {
             val knownOperations = LayerOperation.values().associate { it.statusName to it }
         }
     }
 
-    private data class LayerStatus(val currentOperation: LayerOperation, val completedBytes: Int, val totalBytes: Int)
-}
+    private data class LayerStatus(val currentOperation: LayerOperation, val completedBytes: Long, val totalBytes: Long)
 
-data class DockerImagePullProgress(val currentOperation: String, val completedBytes: Int, val totalBytes: Int)
+    private fun <T> Iterable<T>.sumBy(selector: (T) -> Long): Long {
+        var sum: Long = 0
+
+        for (element in this) {
+            sum += selector(element)
+        }
+
+        return sum
+    }
+}

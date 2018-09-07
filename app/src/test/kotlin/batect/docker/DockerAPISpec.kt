@@ -401,10 +401,15 @@ object DockerAPISpec : Spek({
                 """.trimMargin()
 
                 val call = httpClient.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication)
-                api.pullImage(imageName, registryCredentials)
+                val progressReceiver = ProgressReceiver()
+                api.pullImage(imageName, registryCredentials, progressReceiver::onProgressUpdate)
 
                 it("sends a request to the Docker daemon to pull the image") {
                     verify(call).execute()
+                }
+
+                it("sends all progress updates to the receiver") {
+                    assertThat(progressReceiver, receivedAllUpdatesFrom(response))
                 }
             }
 
@@ -419,17 +424,22 @@ object DockerAPISpec : Spek({
                 """.trimMargin()
 
                 val call = httpClient.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication)
-                api.pullImage(imageName, registryCredentials)
+                val progressReceiver = ProgressReceiver()
+                api.pullImage(imageName, registryCredentials, progressReceiver::onProgressUpdate)
 
                 it("sends a request to the Docker daemon to pull the image") {
                     verify(call).execute()
+                }
+
+                it("sends all progress updates to the receiver") {
+                    assertThat(progressReceiver, receivedAllUpdatesFrom(response))
                 }
             }
 
             on("the pull request having no registry credentials") {
                 val expectedHeadersForNoAuthentication = Headers.Builder().build()
                 val call = httpClient.mockPost(expectedUrl, "", 200, expectedHeadersForNoAuthentication)
-                api.pullImage(imageName, null)
+                api.pullImage(imageName, null, {})
 
                 it("sends a request to the Docker daemon to pull the image with no authentication header") {
                     verify(call).execute()
@@ -440,7 +450,7 @@ object DockerAPISpec : Spek({
                 httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418, expectedHeadersForAuthentication)
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.pullImage(imageName, registryCredentials) }, throws<ImagePullFailedException>(
+                    assertThat({ api.pullImage(imageName, registryCredentials, {}) }, throws<ImagePullFailedException>(
                         withMessage("Pulling image 'some-image' failed: Something went wrong."))
                     )
                 }
@@ -457,11 +467,16 @@ object DockerAPISpec : Spek({
                 """.trimMargin()
 
                 httpClient.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication)
+                val progressReceiver = ProgressReceiver()
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.pullImage(imageName, registryCredentials) }, throws<ImagePullFailedException>(
+                    assertThat({ api.pullImage(imageName, registryCredentials, progressReceiver::onProgressUpdate) }, throws<ImagePullFailedException>(
                         withMessage("Pulling image 'some-image' failed: Server error: 404 trying to fetch remote history for some-image"))
                     )
+                }
+
+                it("sends all progress updates to the receiver except for the error") {
+                    assertThat(progressReceiver, receivedAllUpdatesFrom(response.lines().dropLast(1)))
                 }
             }
         }
@@ -576,4 +591,20 @@ private fun requestWithJsonBody(predicate: (JsonObject) -> Unit) = check<Request
     request.body()!!.writeTo(buffer)
     val parsedBody = JsonTreeParser(buffer.readUtf8()).readFully() as JsonObject
     predicate(parsedBody)
+}
+
+class ProgressReceiver {
+    val updatesReceived = mutableListOf<JsonObject>()
+
+    fun onProgressUpdate(update: JsonObject) {
+        updatesReceived.add(update)
+    }
+}
+
+private fun receivedAllUpdatesFrom(response: String): Matcher<ProgressReceiver> = receivedAllUpdatesFrom(response.lines())
+
+private fun receivedAllUpdatesFrom(lines: Iterable<String>): Matcher<ProgressReceiver> {
+    val expectedUpdates = lines.map { JsonTreeParser(it).readFully().jsonObject }
+
+    return has(ProgressReceiver::updatesReceived, equalTo(expectedUpdates))
 }

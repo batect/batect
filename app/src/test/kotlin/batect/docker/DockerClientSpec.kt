@@ -40,6 +40,8 @@ import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonTreeParser
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -53,7 +55,9 @@ object DockerClientSpec : Spek({
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
         val credentialsProvider by createForEachTest { mock<DockerRegistryCredentialsProvider>() }
         val logger by createLoggerForEachTest()
-        val client by createForEachTest { DockerClient(processRunner, api, consoleInfo, credentialsProvider, logger) }
+        val imagePullProgressReporter by createForEachTest { mock<DockerImagePullProgressReporter>() }
+        val imagePullProgressReporterFactory = { imagePullProgressReporter }
+        val client by createForEachTest { DockerClient(processRunner, api, consoleInfo, credentialsProvider, logger, imagePullProgressReporterFactory) }
 
         describe("building an image") {
             given("a container configuration") {
@@ -511,10 +515,30 @@ object DockerClientSpec : Spek({
                     }
 
                     on("pulling the image") {
-                        val image = client.pullImage("some-image")
+                        val firstProgressUpdate = JsonTreeParser("""{"thing": "value"}""").readFully().jsonObject
+                        val secondProgressUpdate = JsonTreeParser("""{"thing": "other value"}""").readFully().jsonObject
+
+                        whenever(imagePullProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(DockerImagePullProgress("Doing something", 10, 20))
+                        whenever(imagePullProgressReporter.processProgressUpdate(secondProgressUpdate)).thenReturn(null)
+
+                        whenever(api.pullImage(any(), any(), any())).then { invocation ->
+                            @Suppress("UNCHECKED_CAST")
+                            val onProgressUpdate = invocation.arguments[2] as (JsonObject) -> Unit
+                            onProgressUpdate(firstProgressUpdate)
+                            onProgressUpdate(secondProgressUpdate)
+
+                            null
+                        }
+
+                        val progressUpdatesReceived = mutableListOf<DockerImagePullProgress>()
+                        val image = client.pullImage("some-image") { progressUpdatesReceived.add(it) }
 
                         it("calls the Docker CLI to pull the image") {
-                            verify(api).pullImage("some-image", credentials)
+                            verify(api).pullImage(eq("some-image"), eq(credentials), any())
+                        }
+
+                        it("sends notifications for all relevant progress updates") {
+                            assertThat(progressUpdatesReceived, equalTo(listOf(DockerImagePullProgress("Doing something", 10, 20))))
                         }
 
                         it("returns the Docker image") {
@@ -532,7 +556,7 @@ object DockerClientSpec : Spek({
 
                     on("pulling the image") {
                         it("throws an appropriate exception") {
-                            assertThat({ client.pullImage("some-image") }, throws<ImagePullFailedException>(
+                            assertThat({ client.pullImage("some-image", {}) }, throws<ImagePullFailedException>(
                                 withMessage("Could not pull image 'some-image': Could not load credentials: something went wrong.")
                                     and withCause(exception)
                             ))
@@ -544,10 +568,10 @@ object DockerClientSpec : Spek({
             on("when the image already exists locally") {
                 whenever(api.hasImage("some-image")).thenReturn(true)
 
-                val image = client.pullImage("some-image")
+                val image = client.pullImage("some-image", {})
 
                 it("does not call the Docker CLI to pull the image again") {
-                    verify(api, never()).pullImage(any(), any())
+                    verify(api, never()).pullImage(any(), any(), any())
                 }
 
                 it("returns the Docker image") {

@@ -139,7 +139,7 @@ object DockerClientIntegrationTest : Spek({
 
         on("pulling an image and then creating, starting, stopping and removing a container") {
             val fileToCreate = getRandomTemporaryFilePath()
-            val image = client.pullImage("alpine:3.7")
+            val image = client.pullImage("alpine:3.7", {})
 
             withNetwork { network ->
                 withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
@@ -156,7 +156,7 @@ object DockerClientIntegrationTest : Spek({
 
         describe("creating, running and then removing a container") {
             val fileToCreate = getRandomTemporaryFilePath()
-            val image = client.pullImage("alpine:3.7")
+            val image = client.pullImage("alpine:3.7", {})
 
             withNetwork { network ->
                 withContainer(creationRequestForContainerThatExits(image, network, fileToCreate)) { container ->

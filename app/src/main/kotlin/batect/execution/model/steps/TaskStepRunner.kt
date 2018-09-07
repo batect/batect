@@ -46,6 +46,7 @@ import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePullFailedEvent
+import batect.execution.model.events.ImagePullProgressEvent
 import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskEventSink
@@ -111,7 +112,10 @@ class TaskStepRunner(
 
     private fun handlePullImageStep(step: PullImageStep, eventSink: TaskEventSink) {
         try {
-            val image = dockerClient.pullImage(step.imageName)
+            val image = dockerClient.pullImage(step.imageName) { progressUpdate ->
+                eventSink.postEvent(ImagePullProgressEvent(step.imageName, progressUpdate))
+            }
+
             eventSink.postEvent(ImagePulledEvent(image))
         } catch (e: ImagePullFailedException) {
             eventSink.postEvent(ImagePullFailedEvent(step.imageName, e.message ?: ""))

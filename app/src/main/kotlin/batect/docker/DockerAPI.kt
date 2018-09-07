@@ -310,7 +310,7 @@ class DockerAPI(
         }
     }
 
-    fun pullImage(imageName: String, registryCredentials: DockerRegistryCredentials?) {
+    fun pullImage(imageName: String, registryCredentials: DockerRegistryCredentials?, onProgressUpdate: (JsonObject) -> Unit) {
         logger.info {
             message("Pulling image.")
             data("imageName", imageName)
@@ -352,6 +352,8 @@ class DockerAPI(
 
                     throw ImagePullFailedException("Pulling image '$imageName' failed: $message")
                 }
+
+                onProgressUpdate(parsedLine)
             }
         }
 

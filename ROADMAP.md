@@ -13,8 +13,7 @@ If there's something you're really keen to see, pull requests are always welcome
 
 ### Features
 * automatically enable `--no-color` or `--simple-output` if console doesn't support it (use terminfo database rather than current detection system)
-* show more detailed image pull progress (eg. `build-env: Pulling some-image:1.2.3: 25%`) - requires using Docker API to get this level of detail
-  * this also applies when building an image and the first step is to pull a base image
+* show more detailed image pull progress (eg. `build-env: Pulling some-image:1.2.3: 25%`) when building
 * performance improvements
   * prioritise running steps that lie on the critical path (eg. favour pulling image for leaf of dependency graph over creating container for task container)
   * print updates to the console asynchronously (they currently block whatever thread posts the event or is starting the step)

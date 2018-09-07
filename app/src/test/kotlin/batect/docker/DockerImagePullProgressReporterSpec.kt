@@ -59,7 +59,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate = reporter.processRawProgressUpdate(json)
 
                 it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("Downloading", 329, 4159)))
+                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("downloading", 329, 4159)))
                 }
             }
         }
@@ -71,7 +71,19 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate = reporter.processRawProgressUpdate(json)
 
                 it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("Extracting", 329, 4159)))
+                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("extracting", 329, 4159)))
+                }
+            }
+        }
+
+        given("a single 'verifying checksum' event without any previous events for that layer") {
+            val json = """{"status":"Verifying Checksum","progressDetail":{},"id":"d6cd23cd1a2c"}"""
+
+            on("processing the event") {
+                val progressUpdate = reporter.processRawProgressUpdate(json)
+
+                it("returns an appropriate progress update") {
+                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("verifying checksum", 0, 0)))
                 }
             }
         }
@@ -86,7 +98,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate = reporter.processRawProgressUpdate(json)
 
                 it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("Downloading", 900, 4159)))
+                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("downloading", 900, 4159)))
                 }
             }
 
@@ -106,7 +118,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate = reporter.processRawProgressUpdate(json)
 
                 it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("Verifying checksum", 0, 4159)))
+                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("verifying checksum", 0, 4159)))
                 }
             }
 
@@ -115,7 +127,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate = reporter.processRawProgressUpdate(json)
 
                 it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("Download complete", 4159, 4159)))
+                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("download complete", 4159, 4159)))
                 }
             }
 
@@ -124,7 +136,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate = reporter.processRawProgressUpdate(json)
 
                 it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("Extracting", 1000, 4159)))
+                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("extracting", 1000, 4159)))
                 }
             }
 
@@ -133,7 +145,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate = reporter.processRawProgressUpdate(json)
 
                 it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("Pull complete", 4159, 4159)))
+                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("pull complete", 4159, 4159)))
                 }
             }
 
@@ -142,7 +154,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate = reporter.processRawProgressUpdate(json)
 
                 it("returns a progress update combining the state of both layers") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("Downloading", 329 + 900, 4159 + 7000)))
+                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("downloading", 329 + 900, 4159 + 7000)))
                 }
             }
 
@@ -154,14 +166,14 @@ object DockerImagePullProgressReporterSpec : Spek({
                 mapOf(
                     "verifying checksum" to """{"status":"Verifying Checksum","progressDetail":{},"id":"b59856e9f0ab"}""",
                     "download complete" to """{"status":"Download complete","progressDetail":{},"id":"b59856e9f0ab"}""",
-                    "extracting" to """{"status":"Extracting","progressDetail":{"current":1000,"total":4159},"id":"b59856e9f0ab"}""",
+                    "extracting" to """{"status":"Extracting","progressDetail":{"current":1000,"total":7000},"id":"b59856e9f0ab"}""",
                     "pull complete" to """{"status":"Pull complete","progressDetail":{},"id":"b59856e9f0ab"}"""
                 ).forEach { eventType, json ->
                     on("processing a '$eventType' event for that other layer") {
                         val progressUpdate = reporter.processRawProgressUpdate(json)
 
                         it("returns a progress update combining the state of both layers") {
-                            assertThat(progressUpdate, equalTo(DockerImagePullProgress("Downloading", 329 + 7000, 4159 + 7000)))
+                            assertThat(progressUpdate, equalTo(DockerImagePullProgress("downloading", 329 + 7000, 4159 + 7000)))
                         }
                     }
                 }
@@ -177,8 +189,32 @@ object DockerImagePullProgressReporterSpec : Spek({
                     val progressUpdate = reporter.processRawProgressUpdate(json)
 
                     it("returns a progress update combining the state of both layers") {
-                        assertThat(progressUpdate, equalTo(DockerImagePullProgress("Downloading", 4159 + 900, 4159 + 7000)))
+                        assertThat(progressUpdate, equalTo(DockerImagePullProgress("downloading", 4159 + 900, 4159 + 7000)))
                     }
+                }
+            }
+        }
+
+        given("a single 'verifying checksum' event has been processed") {
+            beforeEachTest {
+                reporter.processRawProgressUpdate("""{"status":"Verifying Checksum","progressDetail":{},"id":"d6cd23cd1a2c"}""")
+            }
+
+            on("processing another 'verifying checksum' event for the same layer") {
+                val json = """{"status":"Verifying Checksum","progressDetail":{},"id":"d6cd23cd1a2c"}"""
+                val progressUpdate = reporter.processRawProgressUpdate(json)
+
+                it("does not return an update") {
+                    assertThat(progressUpdate, absent())
+                }
+            }
+
+            on("processing a 'layer downloading' event for the same layer") {
+                val json = """{"status":"Downloading","progressDetail":{"current":900,"total":4159},"id":"d6cd23cd1a2c"}"""
+                val progressUpdate = reporter.processRawProgressUpdate(json)
+
+                it("returns an appropriate progress update") {
+                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("downloading", 900, 4159)))
                 }
             }
         }

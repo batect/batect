@@ -31,7 +31,8 @@ class DockerClient(
     private val api: DockerAPI,
     private val consoleInfo: ConsoleInfo,
     private val credentialsProvider: DockerRegistryCredentialsProvider,
-    private val logger: Logger
+    private val logger: Logger,
+    private val imagePullProgressReporterFactory: () -> DockerImagePullProgressReporter = ::DockerImagePullProgressReporter
 ) {
     private val buildImageIdLineRegex = """^Successfully built (.*)$""".toRegex(RegexOption.MULTILINE)
 
@@ -186,12 +187,19 @@ class DockerClient(
         }
     }
 
-    fun pullImage(imageName: String): DockerImage {
+    fun pullImage(imageName: String, onProgressUpdate: (DockerImagePullProgress) -> Unit): DockerImage {
         try {
             if (!api.hasImage(imageName)) {
                 val credentials = credentialsProvider.getCredentials(imageName)
+                val reporter = imagePullProgressReporterFactory()
 
-                api.pullImage(imageName, credentials)
+                api.pullImage(imageName, credentials) { progress ->
+                    val progressUpdate = reporter.processProgressUpdate(progress)
+
+                    if (progressUpdate != null) {
+                        onProgressUpdate(progressUpdate)
+                    }
+                }
             }
 
             return DockerImage(imageName)

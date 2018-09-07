@@ -20,11 +20,13 @@ import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
 import batect.docker.DockerImageBuildProgress
+import batect.docker.DockerImagePullProgress
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
+import batect.execution.model.events.ImagePullProgressEvent
 import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
@@ -42,6 +44,7 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
     private var isBuilding = false
     private var lastBuildProgressUpdate: DockerImageBuildProgress? = null
     private var isPulling = false
+    private var lastPullProgressUpdate: DockerImagePullProgress? = null
     private var hasBeenBuilt = false
     private var hasBeenPulled = false
     private var isCreating = false
@@ -63,10 +66,10 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
 
             when {
                 isHealthy -> print("running")
-                isRunning -> printDescriptionWhenRunning(this)
+                isRunning -> printDescriptionWhenRunning()
                 hasStarted -> print("container started, waiting for it to become healthy...")
                 isStarting -> print("starting container...")
-                hasBeenCreated -> printDescriptionWhenWaitingToStart(this)
+                hasBeenCreated -> printDescriptionWhenWaitingToStart()
                 isCreating -> print("creating container...")
                 hasBeenBuilt && networkHasBeenCreated -> print("image built, ready to create container")
                 hasBeenBuilt && !networkHasBeenCreated -> print("image built, waiting for network to be ready...")
@@ -74,63 +77,68 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
                 hasBeenPulled && !networkHasBeenCreated -> print("image pulled, waiting for network to be ready...")
                 isBuilding && lastBuildProgressUpdate == null -> print("building image...")
                 isBuilding && lastBuildProgressUpdate != null -> print("building image: step ${lastBuildProgressUpdate!!.currentStep} of ${lastBuildProgressUpdate!!.totalSteps}: ${lastBuildProgressUpdate!!.message}")
-                isPulling -> printDescriptionWhenPulling(this)
-                else -> printDescriptionWhenWaitingToBuildOrPull(this)
+                isPulling -> printDescriptionWhenPulling()
+                else -> printDescriptionWhenWaitingToBuildOrPull()
             }
         }
     }
 
-    private fun printDescriptionWhenWaitingToBuildOrPull(console: Console) {
+    private fun Console.printDescriptionWhenWaitingToBuildOrPull() {
         when (container.imageSource) {
-            is BuildImage -> console.print("ready to build image")
-            is PullImage -> console.print("ready to pull image")
+            is BuildImage -> print("ready to build image")
+            is PullImage -> print("ready to pull image")
         }
     }
 
     private val containerImageName by lazy { (container.imageSource as PullImage).imageName }
 
-    private fun printDescriptionWhenPulling(console: Console) {
-        console.print("pulling ")
-        console.printBold(containerImageName)
-        console.print("...")
+    private fun Console.printDescriptionWhenPulling() {
+        print("pulling ")
+        printBold(containerImageName)
+
+        if (lastPullProgressUpdate == null) {
+            print("...")
+        } else {
+            print(": " + lastPullProgressUpdate!!.toStringForDisplay())
+        }
     }
 
-    private fun printDescriptionWhenWaitingToStart(console: Console) {
+    private fun Console.printDescriptionWhenWaitingToStart() {
         val remainingDependencies = dependencies - healthyContainers
 
         if (remainingDependencies.isEmpty()) {
-            console.print("ready to start")
+            print("ready to start")
             return
         }
 
         if (remainingDependencies.size == 1) {
-            console.print("waiting for dependency ")
+            print("waiting for dependency ")
         } else {
-            console.print("waiting for dependencies ")
+            print("waiting for dependencies ")
         }
 
         remainingDependencies.forEachIndexed { i, dependency ->
-            console.printBold(dependency.name)
+            printBold(dependency.name)
 
             val secondLastDependency = i == remainingDependencies.size - 2
             val beforeSecondLastDependency = i < remainingDependencies.size - 2
 
             if (secondLastDependency) {
-                console.print(" and ")
+                print(" and ")
             } else if (beforeSecondLastDependency) {
-                console.print(", ")
+                print(", ")
             }
         }
 
-        console.print(" to be ready...")
+        print(" to be ready...")
     }
 
-    private fun printDescriptionWhenRunning(console: Console) {
+    private fun Console.printDescriptionWhenRunning() {
         if (command == null) {
-            console.print("running")
+            print("running")
         } else {
-            console.print("running ")
-            console.printBold(command!!.originalCommand)
+            print("running ")
+            printBold(command!!.originalCommand)
         }
     }
 
@@ -179,6 +187,7 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
         when (event) {
             is ImageBuildProgressEvent -> onImageBuildProgressEventPosted(event)
             is ImageBuiltEvent -> onImageBuiltEventPosted(event)
+            is ImagePullProgressEvent -> onImagePullProgressEventPosted(event)
             is ImagePulledEvent -> onImagePulledEventPosted(event)
             is TaskNetworkCreatedEvent -> networkHasBeenCreated = true
             is ContainerCreatedEvent -> onContainerCreatedEventPosted(event)
@@ -197,6 +206,13 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
     private fun onImageBuiltEventPosted(event: ImageBuiltEvent) {
         if (container.imageSource == BuildImage(event.buildDirectory)) {
             hasBeenBuilt = true
+        }
+    }
+
+    private fun onImagePullProgressEventPosted(event: ImagePullProgressEvent) {
+        if (container.imageSource == PullImage(event.imageName)) {
+            isPulling = true
+            lastPullProgressUpdate = event.progress
         }
     }
 

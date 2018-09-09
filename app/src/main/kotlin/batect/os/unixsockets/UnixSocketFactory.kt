@@ -19,6 +19,7 @@ package batect.os.unixsockets
 import jnr.unixsocket.UnixSocket
 import jnr.unixsocket.UnixSocketAddress
 import jnr.unixsocket.UnixSocketChannel
+import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -37,7 +38,11 @@ class UnixSocketFactory() : SocketFactory() {
                 val encodedHostName = (addr as InetSocketAddress).hostName
                 val socketPath = UnixSocketDns.decodePath(encodedHostName)
 
-                super.connect(UnixSocketAddress(socketPath), timeout as Int?)
+                try {
+                    super.connect(UnixSocketAddress(socketPath), timeout as Int?)
+                } catch (e: IOException) {
+                    throw IOException("Cannot connect to '$socketPath'.", e)
+                }
             }
         }
     }

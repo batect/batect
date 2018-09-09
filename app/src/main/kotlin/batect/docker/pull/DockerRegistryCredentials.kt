@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.docker.pullcredentials
+package batect.docker.pull
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

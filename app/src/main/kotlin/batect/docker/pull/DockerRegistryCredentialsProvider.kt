@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.docker.pullcredentials
+package batect.docker.pull
 
 class DockerRegistryCredentialsProvider(
     private val domainResolver: DockerRegistryDomainResolver,

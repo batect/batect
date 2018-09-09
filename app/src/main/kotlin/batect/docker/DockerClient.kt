@@ -16,7 +16,9 @@
 
 package batect.docker
 
-import batect.docker.pullcredentials.DockerRegistryCredentialsProvider
+import batect.docker.pull.DockerImagePullProgress
+import batect.docker.pull.DockerImagePullProgressReporter
+import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.logging.Logger
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner

@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.docker.pullcredentials
+package batect.docker.pull
 
 import batect.logging.Logger
 import batect.os.ProcessRunner

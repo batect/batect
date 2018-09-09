@@ -16,7 +16,7 @@
 
 package batect.docker
 
-import batect.docker.pullcredentials.DockerRegistryCredentials
+import batect.docker.pull.DockerRegistryCredentials
 import batect.logging.Logger
 import batect.utils.Version
 import kotlinx.serialization.json.JSON

@@ -22,7 +22,7 @@ import batect.config.PullImage
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerImageBuildProgress
-import batect.docker.DockerImagePullProgress
+import batect.docker.pull.DockerImagePullProgress
 import batect.docker.DockerNetwork
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreatedEvent

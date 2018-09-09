@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.docker.pullcredentials
+package batect.docker.pull
 
 import com.natpryce.hamkrest.assertion.assertThat
 import org.araqnid.hamkrest.json.equivalentTo

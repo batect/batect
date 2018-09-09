@@ -31,10 +31,10 @@ import batect.docker.DockerClient
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerHostNameResolver
 import batect.docker.DockerHttpConfig
-import batect.docker.pullcredentials.DockerRegistryCredentialsConfigurationFile
-import batect.docker.pullcredentials.DockerRegistryCredentialsProvider
-import batect.docker.pullcredentials.DockerRegistryDomainResolver
-import batect.docker.pullcredentials.DockerRegistryIndexResolver
+import batect.docker.pull.DockerRegistryCredentialsConfigurationFile
+import batect.docker.pull.DockerRegistryCredentialsProvider
+import batect.docker.pull.DockerRegistryDomainResolver
+import batect.docker.pull.DockerRegistryIndexResolver
 import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerDependencyGraphProvider
 import batect.execution.ParallelExecutionManagerProvider

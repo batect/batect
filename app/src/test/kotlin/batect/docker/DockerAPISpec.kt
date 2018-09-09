@@ -17,7 +17,7 @@
 package batect.docker
 
 import batect.config.HealthCheckConfig
-import batect.docker.pullcredentials.DockerRegistryCredentials
+import batect.docker.pull.DockerRegistryCredentials
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo

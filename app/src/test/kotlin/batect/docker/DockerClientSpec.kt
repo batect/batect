@@ -17,8 +17,10 @@
 package batect.docker
 
 import batect.config.HealthCheckConfig
-import batect.docker.pullcredentials.DockerRegistryCredentials
-import batect.docker.pullcredentials.DockerRegistryCredentialsProvider
+import batect.docker.pull.DockerImagePullProgress
+import batect.docker.pull.DockerImagePullProgressReporter
+import batect.docker.pull.DockerRegistryCredentials
+import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.testutils.createForEachTest

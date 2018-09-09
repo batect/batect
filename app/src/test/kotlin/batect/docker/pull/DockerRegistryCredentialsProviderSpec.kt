@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.docker.pullcredentials
+package batect.docker.pull
 
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo

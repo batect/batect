@@ -33,7 +33,7 @@ import batect.docker.DockerContainerRunResult
 import batect.docker.DockerHealthCheckResult
 import batect.docker.DockerImage
 import batect.docker.DockerImageBuildProgress
-import batect.docker.DockerImagePullProgress
+import batect.docker.pull.DockerImagePullProgress
 import batect.docker.DockerNetwork
 import batect.docker.HealthStatus
 import batect.docker.ImageBuildFailedException

@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.docker
+package batect.docker.pull
 
 import kotlinx.serialization.json.JsonObject
 

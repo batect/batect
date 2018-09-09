@@ -30,10 +30,10 @@ import batect.docker.DockerNetwork
 import batect.docker.DockerVersionInfoRetrievalResult
 import batect.docker.HealthStatus
 import batect.docker.UserAndGroup
-import batect.docker.pullcredentials.DockerRegistryCredentialsConfigurationFile
-import batect.docker.pullcredentials.DockerRegistryCredentialsProvider
-import batect.docker.pullcredentials.DockerRegistryDomainResolver
-import batect.docker.pullcredentials.DockerRegistryIndexResolver
+import batect.docker.pull.DockerRegistryCredentialsConfigurationFile
+import batect.docker.pull.DockerRegistryCredentialsProvider
+import batect.docker.pull.DockerRegistryDomainResolver
+import batect.docker.pull.DockerRegistryIndexResolver
 import batect.logging.Logger
 import batect.os.NativeMethods
 import batect.os.ProcessRunner

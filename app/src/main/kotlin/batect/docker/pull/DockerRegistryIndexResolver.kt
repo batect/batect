@@ -14,25 +14,18 @@
    limitations under the License.
 */
 
-package batect.docker.pullcredentials
+package batect.docker.pull
 
 import batect.docker.defaultRegistryName
 
-// The logic for this is based on https://github.com/docker/distribution/blob/master/reference/normalize.go.
-class DockerRegistryDomainResolver {
-    fun resolveDomainForImage(imageName: String): String {
-        val parts = imageName.split('/')
-
-        if (parts.size < 3) {
-            return defaultRegistryName
+// The logic for this is based on https://github.com/docker/cli/blob/master/cli/trust/trust.go
+// I don't know why it returns a URL in one case and a domain name in the other, but we have to follow what it does.
+class DockerRegistryIndexResolver {
+    fun resolveRegistryIndex(registryDomain: String): String {
+        if (registryDomain == defaultRegistryName) {
+            return "https://index.docker.io/v1/"
         }
 
-        val registryName = parts[0]
-
-        if (registryName == "index.docker.io") {
-            return defaultRegistryName
-        }
-
-        return registryName
+        return registryDomain
     }
 }

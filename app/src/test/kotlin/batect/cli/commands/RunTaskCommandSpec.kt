@@ -24,6 +24,7 @@ import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.config.io.ConfigurationLoader
 import batect.docker.DockerClient
+import batect.docker.DockerConnectivityCheckResult
 import batect.logging.Logger
 import batect.logging.Severity
 import batect.execution.BehaviourAfterFailure
@@ -90,7 +91,7 @@ object RunTaskCommandSpec : Spek({
             given("configuration file can be loaded") {
                 given("Docker is available") {
                     val dockerClient = mock<DockerClient> {
-                        on { checkIfDockerIsAvailable() } doReturn true
+                        on { checkConnectivity() } doReturn DockerConnectivityCheckResult.Succeeded
                     }
 
                     given("the task has no dependencies") {
@@ -273,14 +274,14 @@ object RunTaskCommandSpec : Spek({
                     val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver>()
                     val taskRunner = mock<TaskRunner>()
                     val dockerClient = mock<DockerClient> {
-                        on { checkIfDockerIsAvailable() } doReturn false
+                        on { checkConnectivity() } doReturn DockerConnectivityCheckResult.Failed("Something went wrong.")
                     }
 
                     val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger)
                     val exitCode = command.run()
 
                     it("prints a message to the output") {
-                        verify(redErrorConsole).println("Docker is not installed, or the Docker executable is not on your PATH.")
+                        verify(redErrorConsole).println("Docker is not installed, or not available: Something went wrong.")
                     }
 
                     it("returns a non-zero exit code") {

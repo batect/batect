@@ -41,7 +41,7 @@ class UnixSocketFactory() : SocketFactory() {
                 try {
                     super.connect(UnixSocketAddress(socketPath), timeout as Int?)
                 } catch (e: IOException) {
-                    throw IOException("Cannot connect to '$socketPath'.", e)
+                    throw IOException("Cannot connect to '$socketPath': ${e.message}", e)
                 }
             }
         }

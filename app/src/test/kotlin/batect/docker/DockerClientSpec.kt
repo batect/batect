@@ -19,7 +19,6 @@ package batect.docker
 import batect.config.HealthCheckConfig
 import batect.docker.pullcredentials.DockerRegistryCredentials
 import batect.docker.pullcredentials.DockerRegistryCredentialsProvider
-import batect.os.ExecutableDoesNotExistException
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.testutils.createForEachTest
@@ -33,6 +32,7 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.doThrow
 import com.nhaarman.mockito_kotlin.eq
@@ -47,6 +47,7 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import java.io.IOException
 
 object DockerClientSpec : Spek({
     describe("a Docker client") {
@@ -580,34 +581,30 @@ object DockerClientSpec : Spek({
             }
         }
 
-        describe("checking if Docker is available") {
-            given("running 'docker --version' succeeds") {
-                beforeEachTest {
-                    whenever(processRunner.runAndCaptureOutput(listOf("docker", "--version"))).doReturn(ProcessOutput(0, "Some output"))
-                }
-
-                it("returns true") {
-                    assertThat(client.checkIfDockerIsAvailable(), equalTo(true))
+        describe("checking connectivity to the Docker daemon") {
+            given("pinging the daemon succeeds") {
+                it("returns success") {
+                    assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded))
                 }
             }
 
-            given("running 'docker --version' fails") {
+            given("pinging the daemon fails with a general Docker exception") {
                 beforeEachTest {
-                    whenever(processRunner.runAndCaptureOutput(listOf("docker", "--version"))).doReturn(ProcessOutput(1, "Some output"))
+                    whenever(api.ping()).doThrow(DockerException("Something went wrong."))
                 }
 
-                it("returns false") {
-                    assertThat(client.checkIfDockerIsAvailable(), equalTo(false))
+                it("returns failure") {
+                    assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Failed("Something went wrong.")))
                 }
             }
 
-            given("the Docker executable cannot be found") {
+            given("pinging the daemon fails due to an I/O issue") {
                 beforeEachTest {
-                    whenever(processRunner.runAndCaptureOutput(listOf("docker", "--version"))).doThrow(ExecutableDoesNotExistException("docker", null))
+                    whenever(api.ping()).doAnswer { throw IOException("Something went wrong.") }
                 }
 
-                it("returns false") {
-                    assertThat(client.checkIfDockerIsAvailable(), equalTo(false))
+                it("returns failure") {
+                    assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Failed("Something went wrong.")))
                 }
             }
         }

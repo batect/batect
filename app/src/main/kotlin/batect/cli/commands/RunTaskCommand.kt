@@ -20,6 +20,7 @@ import batect.config.Configuration
 import batect.config.Task
 import batect.config.io.ConfigurationLoader
 import batect.docker.DockerClient
+import batect.docker.DockerConnectivityCheckResult
 import batect.execution.RunOptions
 import batect.execution.TaskExecutionOrderResolutionException
 import batect.execution.TaskExecutionOrderResolver
@@ -45,9 +46,11 @@ class RunTaskCommand(
     override fun run(): Int {
         val config = configLoader.loadConfig(configFile)
 
-        if (dockerClient.checkIfDockerIsAvailable() == false) {
+        val connectivityCheckResult = dockerClient.checkConnectivity()
+
+        if (connectivityCheckResult is DockerConnectivityCheckResult.Failed) {
             errorConsole.withColor(ConsoleColor.Red) {
-                println("Docker is not installed, or the Docker executable is not on your PATH.")
+                println("Docker is not installed, or not available: ${connectivityCheckResult.message}")
             }
 
             return -1

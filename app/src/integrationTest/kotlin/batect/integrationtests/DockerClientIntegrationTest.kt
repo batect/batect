@@ -20,6 +20,7 @@ import batect.config.HealthCheckConfig
 import batect.config.VolumeMount
 import batect.docker.DockerAPI
 import batect.docker.DockerClient
+import batect.docker.DockerConnectivityCheckResult
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerHealthCheckResult
@@ -194,11 +195,11 @@ object DockerClientIntegrationTest : Spek({
             }
         }
 
-        on("checking if Docker is available locally") {
-            val isAvailable = client.checkIfDockerIsAvailable()
+        on("checking if Docker is available") {
+            val result = client.checkConnectivity()
 
-            it("returns true") {
-                assertThat(isAvailable, equalTo(true))
+            it("returns that Docker is available") {
+                assertThat(result, equalTo<DockerConnectivityCheckResult>(DockerConnectivityCheckResult.Succeeded))
             }
         }
 

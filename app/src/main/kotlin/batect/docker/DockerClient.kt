@@ -18,10 +18,10 @@ package batect.docker
 
 import batect.docker.pullcredentials.DockerRegistryCredentialsProvider
 import batect.logging.Logger
-import batect.os.ExecutableDoesNotExistException
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.ui.ConsoleInfo
+import java.io.IOException
 
 // Unix sockets implementation inspired by
 // https://github.com/gesellix/okhttp/blob/master/samples/simple-client/src/main/java/okhttp3/sample/OkDocker.java and
@@ -208,36 +208,33 @@ class DockerClient(
         }
     }
 
-    fun checkIfDockerIsAvailable(): Boolean {
+    fun checkConnectivity(): DockerConnectivityCheckResult {
         logger.info {
-            message("Checking if Docker is available.")
+            message("Checking Docker daemon connectivity.")
         }
 
         try {
-            val result = processRunner.runAndCaptureOutput(listOf("docker", "--version"))
-
-            if (failed(result)) {
-                logger.error {
-                    message("'docker --version' returned unexpected exit code.")
-                    data("result", result)
-                }
-
-                return false
-            }
+            api.ping()
 
             logger.info {
-                message("Docker is available.")
-                data("result", result)
+                message("Connectivity check succeeded.")
             }
 
-            return true
-        } catch (e: ExecutableDoesNotExistException) {
+            return DockerConnectivityCheckResult.Succeeded
+        } catch (e: DockerException) {
             logger.warn {
-                message("The Docker executable is not available.")
+                message("Connectivity check failed.")
                 exception(e)
             }
 
-            return false
+            return DockerConnectivityCheckResult.Failed(e.message!!)
+        } catch (e: IOException) {
+            logger.warn {
+                message("Connectivity check failed.")
+                exception(e)
+            }
+
+            return DockerConnectivityCheckResult.Failed(e.message!!)
         }
     }
 
@@ -268,6 +265,12 @@ sealed class DockerVersionInfoRetrievalResult {
     data class Failed(val message: String) : DockerVersionInfoRetrievalResult() {
         override fun toString(): String = "($message)"
     }
+}
+
+sealed class DockerConnectivityCheckResult {
+    object Succeeded : DockerConnectivityCheckResult()
+
+    data class Failed(val message: String) : DockerConnectivityCheckResult()
 }
 
 enum class HealthStatus {

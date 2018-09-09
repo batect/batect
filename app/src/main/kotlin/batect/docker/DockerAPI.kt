@@ -437,6 +437,38 @@ class DockerAPI(
         }
     }
 
+    fun ping() {
+        logger.info {
+            message("Pinging daemon.")
+        }
+
+        val url = httpConfig.baseUrl.newBuilder()
+            .addPathSegment("_ping")
+            .build()
+
+        val request = Request.Builder()
+            .get()
+            .url(url)
+            .build()
+
+        httpConfig.client.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Could not ping daemon.")
+                    data("error", error)
+                }
+
+                throw DockerException("Could not ping Docker daemon, daemon responded with HTTP ${response.code()}: ${error.message}")
+            }
+
+            val responseBody = response.body()!!.string()
+
+            if (responseBody != "OK") {
+                throw DockerException("Could not ping Docker daemon, daemon responded with HTTP ${response.code()}: $responseBody")
+            }
+        }
+    }
+
     private val baseUrl: HttpUrl = httpConfig.baseUrl.newBuilder()
         .addPathSegment("v1.12")
         .build()
@@ -476,7 +508,7 @@ class DockerAPI(
             return
         }
 
-        val responseBody = response.body()!!.string()
+        val responseBody = response.body()!!.string().trim()
         val contentType = response.body()!!.contentType()!!
 
         if (contentType.type() != jsonMediaType.type() || contentType.subtype() != jsonMediaType.subtype()) {

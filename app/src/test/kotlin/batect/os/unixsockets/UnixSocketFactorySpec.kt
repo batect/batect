@@ -69,7 +69,7 @@ object UnixSocketFactorySpec : Spek({
                 val address = InetSocketAddress.createUnresolved(encodedPath, 1234)
 
                 it("throws an appropriate exception") {
-                    assertThat({ socket.connect(address) }, throws<IOException>(withMessage("Cannot connect to '/var/run/does-not-exist.sock'.")))
+                    assertThat({ socket.connect(address) }, throws<IOException>(withMessage("Cannot connect to '/var/run/does-not-exist.sock': No such file or directory")))
                 }
             }
         }

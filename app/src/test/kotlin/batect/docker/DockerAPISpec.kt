@@ -548,6 +548,34 @@ object DockerAPISpec : Spek({
                 }
             }
         }
+
+        describe("pinging the server") {
+            val expectedUrl = "$dockerBaseUrl/_ping"
+
+            on("the ping succeeding") {
+                httpClient.mockGet(expectedUrl, "OK")
+
+                it("does not throw an exception") {
+                    assertThat({ api.ping() }, !throws<Throwable>())
+                }
+            }
+
+            on("the ping failing") {
+                httpClient.mockGet(expectedUrl, """{"message": "Something went wrong."}""", 418)
+
+                it("throws an appropriate exception") {
+                    assertThat({ api.ping() }, throws<DockerException>(withMessage("Could not ping Docker daemon, daemon responded with HTTP 418: Something went wrong.")))
+                }
+            }
+
+            on("the ping returning an unexpected response") {
+                httpClient.mockGet(expectedUrl, "Something went wrong.", 200)
+
+                it("throws an appropriate exception") {
+                    assertThat({ api.ping() }, throws<DockerException>(withMessage("Could not ping Docker daemon, daemon responded with HTTP 200: Something went wrong.")))
+                }
+            }
+        }
     }
 })
 

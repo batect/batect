@@ -42,7 +42,10 @@ Alias for `dependencies`. If both `dependencies` and `start` are given, the beha
 ## `prerequisites`
 List of other tasks that should be run before running this task.
 
-If a prerequisite task finishes with a non-zero exit code, then neither this task nor any other prerequisites will be run. The tasks are run in the exact same order as in which they were declared
+If a prerequisite task finishes with a non-zero exit code, then neither this task nor any other prerequisites will be run.
+
+The tasks are run in the same order that they are declared in, unless reordering is required to satisfy the prerequisites of
+of of this task's prerequisites.
 
 ## Examples
 

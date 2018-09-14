@@ -37,6 +37,10 @@ If there's something you're really keen to see, pull requests are always welcome
 * 'did you mean...' suggestions when requested task doesn't exist (eg. user runs `./batect unittest`, suggests `unit-test` might be what they meant)
 * some way to clean up old images when they're no longer needed
 * handle the user pressing Ctrl-C during startup or cleanup
+* allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
+* allow specifying default values for environment variables
+* if a proxy-related environment variable is specified in uppercase but not lowercase (or vice versa), add the other version (eg. if `no_proxy` has a value but `NO_PROXY` does not, default `NO_PROXY`
+  to be the same as `no_proxy`)
 
 ### Bugs
 * fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information
@@ -45,6 +49,7 @@ If there's something you're really keen to see, pull requests are always welcome
 
 ### Other
 * replace factories with references to constructors
+* reintroduce image tagging
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use Docker API directly rather than using Docker CLI (would allow for more detailed progress and error reporting)
 * documentation
@@ -121,9 +126,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * warn if a dependency does not have a health check defined
 * default to just terminating all containers at clean up time with option to gracefully shut down on individual containers
   (eg. database where data is shared between invocations and we don't want to corrupt it)
-* fancy progress bar output for building images and starting dependencies
-  * make sure accidental input on stdin doesn't mangle it
-  * test with different console colour schemes (eg. white background, black background, OS X default, Ubuntu default, Ubuntu GUI terminal default)
 * some way to group tasks shown when running `batect --list-tasks`
 * group display of options shown when running `batect --help`
 * add dependency relationship between containers and tasks (eg. running the app container requires running the build first - removes the need to specify

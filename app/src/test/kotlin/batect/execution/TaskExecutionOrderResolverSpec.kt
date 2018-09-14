@@ -110,6 +110,10 @@ object TaskExecutionOrderResolverSpec : Spek({
                 assertThat(executionOrder, dependencyTask1 executesBefore mainTask)
                 assertThat(executionOrder, dependencyTask2 executesBefore mainTask)
             }
+
+            it("schedules the dependencies in the same order they are specified in the configuration file") {
+                assertThat(executionOrder, dependencyTask1 executesBefore dependencyTask2)
+            }
         }
 
         on("resolving the execution order for a task that depends on itself") {

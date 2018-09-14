@@ -2,6 +2,7 @@
 ### Gradle template
 .gradle
 build/
+!app/src/*/kotlin/batect/docker/build/
 
 # Ignore Gradle GUI config
 gradle-app.setting

@@ -23,5 +23,5 @@ repositories {
 dependencies {
     compile localGroovy()
     compile gradleApi()
-    compile 'com.github.oshi:oshi-core:3.8.1'
+    compile 'com.github.oshi:oshi-core:3.8.3'
 }

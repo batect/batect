@@ -216,7 +216,7 @@ object TaskStepRunnerSpec : Spek({
                     runner.run(step, eventSink, runOptions)
 
                     it("emits a 'image build failed' event") {
-                        verify(eventSink).postEvent(ImageBuildFailedEvent(buildDirectory, "Image build failed. Output from Docker was: Something went wrong."))
+                        verify(eventSink).postEvent(ImageBuildFailedEvent(buildDirectory, "Something went wrong."))
                     }
                 }
             }

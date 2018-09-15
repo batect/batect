@@ -70,7 +70,7 @@ class DockerClient(
                 data("result", result)
             }
 
-            throw ImageBuildFailedException(result.output.trim())
+            throw ImageBuildFailedException("Image build failed. Output from Docker was: ${result.output.trim()}")
         }
 
         val imageId = buildImageIdLineRegex.findAll(result.output).last().groupValues.get(1)

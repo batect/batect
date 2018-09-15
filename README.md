@@ -1,5 +1,6 @@
 # batect
 [![Build Status](https://travis-ci.org/charleskorn/batect.svg?branch=master)](https://travis-ci.org/charleskorn/batect)
+[![codecov](https://codecov.io/gh/charleskorn/batect/branch/master/graph/badge.svg)](https://codecov.io/gh/charleskorn/batect)
 
 **b**uild **a**nd **t**esting **e**nvironments as **c**ode **t**ool
 

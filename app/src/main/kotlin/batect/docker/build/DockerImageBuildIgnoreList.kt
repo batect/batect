@@ -16,11 +16,6 @@
 
 package batect.docker.build
 
-import batect.docker.DockerException
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-
 data class DockerImageBuildIgnoreList(private val entries: List<DockerImageBuildIgnoreEntry>) {
     fun shouldIncludeInContext(pathToTest: String): Boolean {
         if (pathToTest == ".dockerignore" || pathToTest == "Dockerfile") {
@@ -38,50 +33,5 @@ data class DockerImageBuildIgnoreList(private val entries: List<DockerImageBuild
         }
 
         return true
-    }
-
-    companion object {
-    // Based on https://github.com/docker/cli/blob/master/cli/command/image/build/dockerignore.go and
-    // https://github.com/docker/engine/blob/master/builder/dockerignore/dockerignore.go
-        fun parse(path: Path): DockerImageBuildIgnoreList {
-            if (Files.notExists(path)) {
-                return DockerImageBuildIgnoreList(emptyList())
-            }
-
-            val lines = Files.readAllLines(path)
-
-            val entries = lines
-                .filterNot { it.startsWith('#') }
-                .map { it.trim() }
-                .filterNot { it.isEmpty() }
-                .filterNot { it.equals(".") }
-                .map {
-                    if (it == "!") {
-                        throw DockerException("The .dockerignore pattern '$it' is invalid.")
-                    }
-
-                    if (it.startsWith('!')) {
-                        Pair(it.substring(1).trimStart(), true)
-                    } else {
-                        Pair(it, false)
-                    }
-                }.map { (pattern, inverted) ->
-                    DockerImageBuildIgnoreEntry(cleanPattern(pattern), inverted)
-                }
-
-            return DockerImageBuildIgnoreList(entries)
-        }
-
-        private fun cleanPattern(pattern: String): String {
-            val patternToClean = Paths.get(pattern).normalize().toString()
-
-            if (patternToClean.isEmpty() || patternToClean == "/") {
-                return "."
-            } else if (patternToClean.startsWith('/')) {
-                return patternToClean.substring(1)
-            } else {
-                return patternToClean
-            }
-        }
     }
 }

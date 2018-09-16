@@ -63,6 +63,7 @@ dependencies {
     compile 'com.squareup.okhttp3:okhttp:3.11.0'
     compile 'com.github.jnr:jnr-unixsocket:0.19'
     compile 'com.github.jnr:jnr-posix:3.0.46'
+    compile 'org.apache.commons:commons-compress:1.18'
 
     testCompile 'com.natpryce:hamkrest:1.6.0.0'
     testCompile 'org.araqnid:hamkrest-json:1.0.3'

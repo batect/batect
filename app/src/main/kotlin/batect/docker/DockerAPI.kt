@@ -16,6 +16,8 @@
 
 package batect.docker
 
+import batect.docker.build.DockerImageBuildContext
+import batect.docker.build.DockerImageBuildContextRequestBody
 import batect.docker.pull.DockerRegistryCredentials
 import batect.logging.Logger
 import batect.utils.Version
@@ -310,6 +312,71 @@ class DockerAPI(
         }
     }
 
+    fun buildImage(context: DockerImageBuildContext, buildArgs: Map<String, String>, registryCredentials: DockerRegistryCredentials?, onProgressUpdate: (JsonObject) -> Unit): DockerImage {
+        logger.info {
+            message("Building image.")
+            data("context", context)
+            data("buildArgs", buildArgs)
+        }
+
+        val url = baseUrl.newBuilder()
+            .addPathSegment("build")
+            .addQueryParameter("buildargs", buildArgs.toJsonObject().toString())
+            .build()
+
+        val request = Request.Builder()
+            .post(DockerImageBuildContextRequestBody(context))
+            .url(url)
+            .addRegistryCredentials(registryCredentials)
+            .build()
+
+        httpConfig.client.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Could not build image.")
+                    data("error", error)
+                }
+
+                throw ImageBuildFailedException("Building image failed: ${error.message}")
+            }
+
+            var builtImageId: String? = null
+            val outputSoFar = StringBuilder()
+
+            response.body()!!.charStream().forEachLine { line ->
+                val parsedLine = JsonTreeParser(line).readFully() as JsonObject
+                val output = parsedLine.getPrimitiveOrNull("stream")?.content
+                val error = parsedLine.getPrimitiveOrNull("error")?.content
+
+                if (output != null) {
+                    outputSoFar.append(output)
+                }
+
+                if (error != null) {
+                    throw ImageBuildFailedException("Building image failed: $error. Output from build process was:\n" + outputSoFar.trim().toString())
+                }
+
+                val imageId = parsedLine.getObjectOrNull("aux")?.getPrimitiveOrNull("ID")?.content
+
+                if (imageId != null) {
+                    builtImageId = imageId
+                }
+
+                onProgressUpdate(parsedLine)
+            }
+
+            if (builtImageId == null) {
+                throw ImageBuildFailedException("Building image failed: daemon never sent built image ID.")
+            }
+
+            logger.info {
+                message("Image built.")
+            }
+
+            return DockerImage(builtImageId!!)
+        }
+    }
+
     fun pullImage(imageName: String, registryCredentials: DockerRegistryCredentials?, onProgressUpdate: (JsonObject) -> Unit) {
         logger.info {
             message("Pulling image.")
@@ -321,18 +388,11 @@ class DockerAPI(
             .addQueryParameter("fromImage", imageName)
             .build()
 
-        val requestBuilder = Request.Builder()
+        val request = Request.Builder()
             .post(emptyRequestBody())
             .url(url)
-
-        if (registryCredentials != null) {
-            val credentialBytes = registryCredentials.toJSON().toByteArray()
-            val encodedCredentials = Base64.getEncoder().encodeToString(credentialBytes)
-
-            requestBuilder.header("X-Registry-Auth", encodedCredentials)
-        }
-
-        val request = requestBuilder.build()
+            .addRegistryCredentials(registryCredentials)
+            .build()
 
         httpConfig.client.newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
@@ -360,6 +420,17 @@ class DockerAPI(
         logger.info {
             message("Image pulled.")
         }
+    }
+
+    private fun Request.Builder.addRegistryCredentials(registryCredentials: DockerRegistryCredentials?): Request.Builder {
+        if (registryCredentials != null) {
+            val credentialBytes = registryCredentials.toJSON().toByteArray()
+            val encodedCredentials = Base64.getEncoder().encodeToString(credentialBytes)
+
+            this.header("X-Registry-Auth", encodedCredentials)
+        }
+
+        return this
     }
 
     fun hasImage(imageName: String): Boolean {
@@ -470,7 +541,7 @@ class DockerAPI(
     }
 
     private val baseUrl: HttpUrl = httpConfig.baseUrl.newBuilder()
-        .addPathSegment("v1.12")
+        .addPathSegment("v1.30")
         .build()
 
     private fun urlForContainers(): HttpUrl = baseUrl.newBuilder()

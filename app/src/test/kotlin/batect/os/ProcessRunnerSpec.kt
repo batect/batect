@@ -145,42 +145,5 @@ object ProcessRunnerSpec : Spek({
                 }
             }
         }
-
-        on("running a process and streaming the output") {
-            val command = listOf("sh", "-c", "echo line1 && echo line2 1>&2 && echo line3 && exit 123")
-            val linesProcessed = mutableListOf<String>()
-
-            val result = runner.runAndStreamOutput(command) { line ->
-                linesProcessed.add(line)
-            }
-
-            it("calls the processing method provided for each line written to stdout or stderr") {
-                assertThat(linesProcessed, equalTo(listOf("line1", "line2", "line3")))
-            }
-
-            it("returns the exit code of the command") {
-                assertThat(result.exitCode, equalTo(123))
-            }
-
-            it("returns the combined stdout and stderr of the command") {
-                assertThat(result.output, equalTo("line1\nline2\nline3\n"))
-            }
-
-            it("logs before running the command") {
-                assertThat(logSink, hasMessage(
-                    withSeverity(Severity.Debug) and
-                        withLogMessage("Starting process.") and
-                        withAdditionalData("command", command)))
-            }
-
-            it("logs the result of running the command") {
-                assertThat(logSink, hasMessage(
-                    withSeverity(Severity.Debug) and
-                        withLogMessage("Process exited.") and
-                        withAdditionalData("command", command) and
-                        withAdditionalData("exitCode", 123)
-                ))
-            }
-        }
     }
 })

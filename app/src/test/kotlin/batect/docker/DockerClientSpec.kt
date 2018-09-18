@@ -17,11 +17,13 @@
 package batect.docker
 
 import batect.config.HealthCheckConfig
+import batect.docker.build.DockerImageBuildContext
+import batect.docker.build.DockerImageBuildContextFactory
+import batect.docker.build.DockerfileParser
 import batect.docker.pull.DockerImagePullProgress
 import batect.docker.pull.DockerImagePullProgressReporter
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.pull.DockerRegistryCredentialsProvider
-import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
@@ -50,6 +52,7 @@ import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import java.io.IOException
+import java.nio.file.Paths
 
 object DockerClientSpec : Spek({
     describe("a Docker client") {
@@ -57,41 +60,68 @@ object DockerClientSpec : Spek({
         val api by createForEachTest { mock<DockerAPI>() }
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
         val credentialsProvider by createForEachTest { mock<DockerRegistryCredentialsProvider>() }
+        val imageBuildContextFactory by createForEachTest { mock<DockerImageBuildContextFactory>() }
+        val dockerfileParser by createForEachTest { mock<DockerfileParser>() }
         val logger by createLoggerForEachTest()
         val imagePullProgressReporter by createForEachTest { mock<DockerImagePullProgressReporter>() }
         val imagePullProgressReporterFactory = { imagePullProgressReporter }
-        val client by createForEachTest { DockerClient(processRunner, api, consoleInfo, credentialsProvider, logger, imagePullProgressReporterFactory) }
+        val client by createForEachTest { DockerClient(processRunner, api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger, imagePullProgressReporterFactory) }
 
         describe("building an image") {
-            given("a container configuration") {
-                val buildDirectory = "/path/to/build/dir"
-                val buildArgs = mapOf(
-                    "some_name" to "some_value",
-                    "some_other_name" to "some_other_value"
-                )
+            val buildDirectory = "/path/to/build/dir"
+            val buildArgs = mapOf(
+                "some_name" to "some_value",
+                "some_other_name" to "some_other_value"
+            )
+
+            val context = DockerImageBuildContext(emptySet())
+
+            beforeEachTest {
+                whenever(imageBuildContextFactory.createFromDirectory(Paths.get(buildDirectory))).doReturn(context)
+                whenever(dockerfileParser.extractBaseImageName(Paths.get("/path/to/build/dir/Dockerfile"))).doReturn("nginx:1.13.0")
+            }
+
+            given("getting the credentials for the base image succeeds") {
+                val credentials = mock<DockerRegistryCredentials>()
+
+                beforeEachTest {
+                    whenever(credentialsProvider.getCredentials("nginx:1.13.0")).doReturn(credentials)
+                }
 
                 on("a successful build") {
                     val output = """
-                        |Sending build context to Docker daemon  3.072kB
-                        |Step 1/3 : FROM nginx:1.13.0
-                        | ---> 3448f27c273f
-                        |Step 2/3 : COPY health-check.sh /tools/
-                        | ---> Using cache
-                        | ---> 071856168043
-                        |Step 3/3 : HEALTHCHECK --interval=2s --retries=1 CMD /tools/health-check.sh
-                        | ---> Using cache
-                        | ---> 11d3e1df9526
-                        |Successfully built 11d3e1df9526
-                        |""".trimMargin()
+                        |{"stream":"Step 1/5 : FROM nginx:1.13.0"}
+                        |{"stream":"\n"}
+                        |{"stream":" ---\u003e 3448f27c273f\n"}
+                        |{"stream":"Step 2/5 : RUN apt update \u0026\u0026 apt install -y curl \u0026\u0026 rm -rf /var/lib/apt/lists/*"}
+                        |{"stream":"\n"}
+                        |{"stream":" ---\u003e Using cache\n"}
+                        |{"stream":" ---\u003e 0ceae477da9d\n"}
+                        |{"stream":"Step 3/5 : COPY index.html /usr/share/nginx/html"}
+                        |{"stream":"\n"}
+                        |{"stream":" ---\u003e b288a67b828c\n"}
+                        |{"stream":"Step 4/5 : COPY health-check.sh /tools/"}
+                        |{"stream":"\n"}
+                        |{"stream":" ---\u003e 951e32ae4f76\n"}
+                        |{"stream":"Step 5/5 : HEALTHCHECK --interval=2s --retries=1 CMD /tools/health-check.sh"}
+                        |{"stream":"\n"}
+                        |{"stream":" ---\u003e Running in 3de7e4521d69\n"}
+                        |{"stream":"Removing intermediate container 3de7e4521d69\n"}
+                        |{"stream":" ---\u003e 24125bbc6cbe\n"}
+                        |{"aux":{"ID":"sha256:24125bbc6cbe08f530e97c81ee461357fa3ba56f4d7693d7895ec86671cf3540"}}
+                        |{"stream":"Successfully built 24125bbc6cbe\n"}
+                    """.trimMargin()
 
-                    whenever(processRunner.runAndStreamOutput(any(), any()))
-                        .then { invocation ->
-                            @Suppress("UNCHECKED_CAST")
-                            val outputProcessor: (String) -> Unit = invocation.arguments[1] as (String) -> Unit
-                            output.lines().forEach { outputProcessor(it) }
+                    whenever(api.buildImage(any(), any(), any(), any())).doAnswer { invocation ->
+                        @Suppress("UNCHECKED_CAST")
+                        val onProgressUpdate = invocation.arguments.last() as (JsonObject) -> Unit
 
-                            ProcessOutput(0, output)
+                        output.lines().forEach { line ->
+                            onProgressUpdate(JsonTreeParser(line).readFully().jsonObject)
                         }
+
+                        DockerImage("some-image-id")
+                    }
 
                     val statusUpdates = mutableListOf<DockerImageBuildProgress>()
 
@@ -102,74 +132,38 @@ object DockerClientSpec : Spek({
                     val result = client.build(buildDirectory, buildArgs, onStatusUpdate)
 
                     it("builds the image") {
-                        verify(processRunner).runAndStreamOutput(eq(listOf(
-                            "docker", "build",
-                            "--build-arg", "some_name=some_value",
-                            "--build-arg", "some_other_name=some_other_value",
-                            buildDirectory
-                        )), any())
+                        verify(api).buildImage(eq(context), eq(buildArgs), eq(credentials), any())
                     }
 
                     it("returns the ID of the created image") {
-                        assertThat(result.id, equalTo("11d3e1df9526"))
+                        assertThat(result.id, equalTo("some-image-id"))
                     }
 
                     it("sends status updates as the build progresses") {
                         assertThat(statusUpdates, equalTo(listOf(
-                            DockerImageBuildProgress(1, 3, "FROM nginx:1.13.0"),
-                            DockerImageBuildProgress(2, 3, "COPY health-check.sh /tools/"),
-                            DockerImageBuildProgress(3, 3, "HEALTHCHECK --interval=2s --retries=1 CMD /tools/health-check.sh")
+                            DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0"),
+                            DockerImageBuildProgress(2, 5, "RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*"),
+                            DockerImageBuildProgress(3, 5, "COPY index.html /usr/share/nginx/html"),
+                            DockerImageBuildProgress(4, 5, "COPY health-check.sh /tools/"),
+                            DockerImageBuildProgress(5, 5, "HEALTHCHECK --interval=2s --retries=1 CMD /tools/health-check.sh")
                         )))
                     }
                 }
+            }
 
-                on("a successful build with multiple messages that appear to contain the image ID") {
-                    val output = """
-                        |Sending build context to Docker daemon  2.048kB
-                        |Step 1/3 : FROM ucalgary/python-librdkafka
-                        |---> 18f2baa09b5a
-                        |Step 2/3 : RUN apk add --no-cache gcc linux-headers libc-dev
-                        |---> Using cache
-                        |---> aba46ffd34d1
-                        |Step 3/3 : RUN pip install confluent-kafka
-                        |---> Running in 881227951a4a
-                        |Collecting confluent-kafka
-                        |  Downloading confluent-kafka-0.11.0.tar.gz (42kB)
-                        |Building wheels for collected packages: confluent-kafka
-                        |  Running setup.py bdist_wheel for confluent-kafka: started
-                        |  Running setup.py bdist_wheel for confluent-kafka: finished with status 'done'
-                        |  Stored in directory: /root/.cache/pip/wheels/16/01/47/3c47cdadbcfb415df612631e5168db2123594c3903523716df
-                        |Successfully built confluent-kafka
-                        |Installing collected packages: confluent-kafka
-                        |Successfully installed confluent-kafka-0.11.0
-                        |Removing intermediate container 881227951a4a
-                        |---> 95bc4e66a4f9
-                        |Successfully built 95bc4e66a4f9
-                        |""".trimMargin()
+            given("getting credentials for the base image fails") {
+                val exception = DockerRegistryCredentialsException("Could not load credentials: something went wrong.")
 
-                    whenever(processRunner.runAndStreamOutput(any(), any()))
-                        .then { invocation ->
-                            @Suppress("UNCHECKED_CAST")
-                            val outputProcessor: (String) -> Unit = invocation.arguments[1] as (String) -> Unit
-                            output.lines().forEach { outputProcessor(it) }
-
-                            ProcessOutput(0, output)
-                        }
-
-                    val result = client.build(buildDirectory, buildArgs) {}
-
-                    it("returns the ID of the created image") {
-                        assertThat(result.id, equalTo("95bc4e66a4f9"))
-                    }
+                beforeEachTest {
+                    whenever(credentialsProvider.getCredentials("nginx:1.13.0")).thenThrow(exception)
                 }
 
-                on("a failed build") {
-                    val onStatusUpdate = { _: DockerImageBuildProgress -> }
-
-                    whenever(processRunner.runAndStreamOutput(any(), any())).thenReturn(ProcessOutput(1, "Some output from Docker"))
-
-                    it("raises an appropriate exception") {
-                        assertThat({ client.build(buildDirectory, emptyMap(), onStatusUpdate) }, throws<ImageBuildFailedException>(withMessage("Image build failed. Output from Docker was: Some output from Docker")))
+                on("building the image") {
+                    it("throws an appropriate exception") {
+                        assertThat({ client.build(buildDirectory, buildArgs, {}) }, throws<ImageBuildFailedException>(
+                            withMessage("Could not build image: Could not load credentials: something went wrong.")
+                                and withCause(exception)
+                        ))
                     }
                 }
             }

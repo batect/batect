@@ -30,6 +30,9 @@ import batect.docker.DockerNetwork
 import batect.docker.DockerVersionInfoRetrievalResult
 import batect.docker.HealthStatus
 import batect.docker.UserAndGroup
+import batect.docker.build.DockerIgnoreParser
+import batect.docker.build.DockerImageBuildContextFactory
+import batect.docker.build.DockerfileParser
 import batect.docker.pull.DockerRegistryCredentialsConfigurationFile
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.pull.DockerRegistryDomainResolver
@@ -67,7 +70,10 @@ object DockerClientIntegrationTest : Spek({
         val consoleInfo = ConsoleInfo(posix, nativeMethods, logger)
         val credentialsConfigurationFile = DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger)
         val credentialsProvider = DockerRegistryCredentialsProvider(DockerRegistryDomainResolver(), DockerRegistryIndexResolver(), credentialsConfigurationFile)
-        val client = DockerClient(processRunner, api, consoleInfo, credentialsProvider, logger)
+        val ignoreParser = DockerIgnoreParser()
+        val imageBuildContextFactory = DockerImageBuildContextFactory(ignoreParser)
+        val dockerfileParser = DockerfileParser()
+        val client = DockerClient(processRunner, api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger)
 
         fun creationRequestForTestContainer(image: DockerImage, network: DockerNetwork, fileToCreate: Path, command: Iterable<String>): DockerContainerCreationRequest {
             val fileToCreateParent = fileToCreate.parent.toAbsolutePath()

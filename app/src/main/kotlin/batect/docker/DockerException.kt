@@ -27,7 +27,7 @@ class ContainerStartFailedException(val containerId: String, val outputFromDocke
 class ContainerStopFailedException(val containerId: String, val outputFromDocker: String) : DockerException("Stopping container '$containerId' failed: $outputFromDocker")
 class ContainerHealthCheckException(message: String, cause: Throwable? = null) : DockerException(message, cause)
 class DockerVersionInfoRetrievalException(message: String) : DockerException(message)
-class ImageBuildFailedException(message: String) : DockerException(message)
+class ImageBuildFailedException(message: String, cause: Throwable? = null) : DockerException(message, cause)
 class ImagePullFailedException(message: String, cause: Throwable? = null) : DockerException(message, cause)
 class NetworkCreationFailedException(val outputFromDocker: String) : DockerException("Creation of network failed: $outputFromDocker")
 class NetworkDeletionFailedException(val networkId: String, val outputFromDocker: String) : DockerException("Deletion of network '$networkId' failed: $outputFromDocker")

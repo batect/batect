@@ -16,14 +16,17 @@
 
 package batect.docker
 
+import batect.docker.build.DockerImageBuildContextFactory
+import batect.docker.build.DockerfileParser
 import batect.docker.pull.DockerImagePullProgress
 import batect.docker.pull.DockerImagePullProgressReporter
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.logging.Logger
-import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.ui.ConsoleInfo
+import kotlinx.serialization.json.JsonObject
 import java.io.IOException
+import java.nio.file.Paths
 
 // Unix sockets implementation inspired by
 // https://github.com/gesellix/okhttp/blob/master/samples/simple-client/src/main/java/okhttp3/sample/OkDocker.java and
@@ -33,11 +36,11 @@ class DockerClient(
     private val api: DockerAPI,
     private val consoleInfo: ConsoleInfo,
     private val credentialsProvider: DockerRegistryCredentialsProvider,
+    private val imageBuildContextFactory: DockerImageBuildContextFactory,
+    private val dockerfileParser: DockerfileParser,
     private val logger: Logger,
     private val imagePullProgressReporterFactory: () -> DockerImagePullProgressReporter = ::DockerImagePullProgressReporter
 ) {
-    private val buildImageIdLineRegex = """^Successfully built (.*)$""".toRegex(RegexOption.MULTILINE)
-
     fun build(buildDirectory: String, buildArgs: Map<String, String>, onStatusUpdate: (DockerImageBuildProgress) -> Unit): DockerImage {
         logger.info {
             message("Building image.")
@@ -45,42 +48,34 @@ class DockerClient(
             data("buildArgs", buildArgs)
         }
 
-        val buildArgsFlags = buildArgs.flatMap { (name, value) -> listOf("--build-arg", "$name=$value") }
+        try {
+            val buildPath = Paths.get(buildDirectory)
+            val context = imageBuildContextFactory.createFromDirectory(buildPath)
+            val baseImageName = dockerfileParser.extractBaseImageName(buildPath.resolve("Dockerfile"))
+            val credentials = credentialsProvider.getCredentials(baseImageName)
 
-        val command = listOf("docker", "build") +
-            buildArgsFlags +
-            buildDirectory
+            val image = api.buildImage(context, buildArgs, credentials) { line ->
+                logger.debug {
+                    message("Received output from Docker during image build.")
+                    data("outputLine", line.toString())
+                }
 
-        val result = processRunner.runAndStreamOutput(command) { line ->
-            logger.debug {
-                message("Received output from Docker during image build.")
-                data("outputLine", line)
+                val progress = DockerImageBuildProgress.fromBuildOutput(line)
+
+                if (progress != null) {
+                    onStatusUpdate(progress)
+                }
             }
 
-            val progress = DockerImageBuildProgress.fromBuildOutput(line)
-
-            if (progress != null) {
-                onStatusUpdate(progress)
-            }
-        }
-
-        if (failed(result)) {
-            logger.error {
-                message("Image build failed.")
-                data("result", result)
+            logger.info {
+                message("Image build succeeded.")
+                data("image", image)
             }
 
-            throw ImageBuildFailedException("Image build failed. Output from Docker was: ${result.output.trim()}")
+            return image
+        } catch (e: DockerRegistryCredentialsException) {
+            throw ImageBuildFailedException("Could not build image: ${e.message}", e)
         }
-
-        val imageId = buildImageIdLineRegex.findAll(result.output).last().groupValues.get(1)
-
-        logger.info {
-            message("Image build succeeded.")
-            data("imageId", imageId)
-        }
-
-        return DockerImage(imageId)
     }
 
     fun create(creationRequest: DockerContainerCreationRequest): DockerContainer = api.createContainer(creationRequest)
@@ -239,16 +234,20 @@ class DockerClient(
             return DockerConnectivityCheckResult.Failed(e.message!!)
         }
     }
-
-    private fun failed(result: ProcessOutput): Boolean = result.exitCode != 0
 }
 
 data class DockerImageBuildProgress(val currentStep: Int, val totalSteps: Int, val message: String) {
     companion object {
         private val buildStepLineRegex = """^Step (\d+)/(\d+) : (.*)$""".toRegex()
 
-        fun fromBuildOutput(line: String): DockerImageBuildProgress? {
-            val stepLineMatch = buildStepLineRegex.matchEntire(line)
+        fun fromBuildOutput(line: JsonObject): DockerImageBuildProgress? {
+            val output = line.getPrimitiveOrNull("stream")?.content
+
+            if (output == null) {
+                return null
+            }
+
+            val stepLineMatch = buildStepLineRegex.matchEntire(output)
 
             if (stepLineMatch == null) {
                 return null

@@ -89,41 +89,6 @@ class ProcessRunner(private val logger: Logger) {
             throw e
         }
     }
-
-    fun runAndStreamOutput(command: Iterable<String>, outputProcessor: (String) -> Unit): ProcessOutput {
-        logger.debug {
-            message("Starting process.")
-            data("command", command)
-        }
-
-        val process = ProcessBuilder(command.toList())
-            .redirectErrorStream(true)
-            .start()
-
-        try {
-            val reader = InputStreamReader(process.inputStream)
-            val output = StringBuilder()
-
-            reader.useLines { lines ->
-                for (line in lines) {
-                    outputProcessor(line)
-                    output.appendln(line)
-                }
-            }
-
-            val exitCode = process.waitFor()
-
-            logger.debug {
-                message("Process exited.")
-                data("command", command)
-                data("exitCode", exitCode)
-            }
-
-            return ProcessOutput(exitCode, output.toString())
-        } finally {
-            process.destroyForcibly()
-        }
-    }
 }
 
 data class ProcessOutput(val exitCode: Int, val output: String)

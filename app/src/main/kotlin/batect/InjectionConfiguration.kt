@@ -31,6 +31,9 @@ import batect.docker.DockerClient
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerHostNameResolver
 import batect.docker.DockerHttpConfig
+import batect.docker.build.DockerIgnoreParser
+import batect.docker.build.DockerImageBuildContextFactory
+import batect.docker.build.DockerfileParser
 import batect.docker.pull.DockerRegistryCredentialsConfigurationFile
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.pull.DockerRegistryDomainResolver
@@ -132,8 +135,11 @@ private val configModule = Kodein.Module("config") {
 
 private val dockerModule = Kodein.Module("docker") {
     bind<DockerAPI>() with singletonWithLogger { logger -> DockerAPI(instance(), logger) }
-    bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), logger) }
+    bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), instance(), instance(), logger) }
     bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
+    bind<DockerfileParser>() with singleton { DockerfileParser() }
+    bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
+    bind<DockerImageBuildContextFactory>() with singleton { DockerImageBuildContextFactory(instance()) }
     bind<DockerHostNameResolver>() with singleton { DockerHostNameResolver(instance(), instance()) }
     bind<DockerHttpConfig>() with singleton { DockerHttpConfig(instance()) }
     bind<DockerRegistryCredentialsConfigurationFile>() with singletonWithLogger { logger -> DockerRegistryCredentialsConfigurationFile(instance(), instance(), logger) }

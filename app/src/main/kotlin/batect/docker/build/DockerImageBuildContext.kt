@@ -23,7 +23,7 @@ import java.util.stream.Collectors
 data class DockerImageBuildContext(val entries: Set<DockerImageBuildContextEntry>)
 data class DockerImageBuildContextEntry(val localPath: Path, val contextPath: String)
 
-class DockerImageBuildContextFactory(val ignoreParser: DockerIgnoreParser) {
+class DockerImageBuildContextFactory(private val ignoreParser: DockerIgnoreParser) {
     fun createFromDirectory(contextDirectory: Path): DockerImageBuildContext {
         val ignoreList = ignoreParser.parse(contextDirectory.resolve(".dockerignore"))
 

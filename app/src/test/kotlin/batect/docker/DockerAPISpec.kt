@@ -17,6 +17,8 @@
 package batect.docker
 
 import batect.config.HealthCheckConfig
+import batect.docker.build.DockerImageBuildContext
+import batect.docker.build.DockerImageBuildContextRequestBody
 import batect.docker.pull.DockerRegistryCredentials
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
@@ -48,6 +50,7 @@ import okhttp3.HttpUrl
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody
 import okio.Buffer
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -73,7 +76,7 @@ object DockerAPISpec : Spek({
         val api by createForEachTest { DockerAPI(httpConfig, logger) }
 
         describe("creating a container") {
-            val expectedUrl = "$dockerBaseUrl/v1.12/containers/create"
+            val expectedUrl = "$dockerBaseUrl/v1.30/containers/create"
 
             given("a container configuration and a built image") {
                 val image = DockerImage("the-image")
@@ -113,7 +116,7 @@ object DockerAPISpec : Spek({
         describe("starting a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
-                val expectedUrl = "$dockerBaseUrl/v1.12/containers/the-container-id/start"
+                val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/start"
 
                 on("starting that container") {
                     val call = httpClient.mockPost(expectedUrl, "", 204)
@@ -137,7 +140,7 @@ object DockerAPISpec : Spek({
         describe("inspecting a container") {
             given("an existing container") {
                 val container = DockerContainer("some-container")
-                val expectedUrl = "$dockerBaseUrl/v1.12/containers/some-container/json"
+                val expectedUrl = "$dockerBaseUrl/v1.30/containers/some-container/json"
 
                 given("the container has previous health check results") {
                     val response = """
@@ -220,7 +223,7 @@ object DockerAPISpec : Spek({
         describe("stopping a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
-                val expectedUrl = "$dockerBaseUrl/v1.12/containers/the-container-id/stop"
+                val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/stop"
                 val clientWithLongTimeout = mock<OkHttpClient>()
                 val longTimeoutClientBuilder = mock<OkHttpClient.Builder> { mock ->
                     on { readTimeout(any(), any()) } doReturn mock
@@ -257,7 +260,7 @@ object DockerAPISpec : Spek({
         describe("removing a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
-                val expectedUrl = "$dockerBaseUrl/v1.12/containers/the-container-id?v=true"
+                val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id?v=true"
 
                 on("a successful removal") {
                     val call = httpClient.mockDelete(expectedUrl, "", 204)
@@ -284,7 +287,7 @@ object DockerAPISpec : Spek({
                 val eventTypes = listOf("die", "health_status")
                 val expectedUrl = hasScheme("http") and
                     hasHost(dockerHost) and
-                    hasPath("/v1.12/events") and
+                    hasPath("/v1.30/events") and
                     hasQueryParameter("since", "0") and
                     hasQueryParameter("filters", """{"event": ["die", "health_status"], "container": ["the-container-id"]}""")
 
@@ -328,7 +331,7 @@ object DockerAPISpec : Spek({
         }
 
         describe("creating a network") {
-            val expectedUrl = "$dockerBaseUrl/v1.12/networks/create"
+            val expectedUrl = "$dockerBaseUrl/v1.30/networks/create"
 
             on("a successful creation") {
                 val call = httpClient.mockPost(expectedUrl, """{"Id": "the-network-ID"}""", 201)
@@ -363,7 +366,7 @@ object DockerAPISpec : Spek({
         describe("deleting a network") {
             given("an existing network") {
                 val network = DockerNetwork("abc123")
-                val expectedUrl = "$dockerBaseUrl/v1.12/networks/abc123"
+                val expectedUrl = "$dockerBaseUrl/v1.30/networks/abc123"
 
                 on("a successful deletion") {
                     val call = httpClient.mockDelete(expectedUrl, "", 204)
@@ -384,9 +387,144 @@ object DockerAPISpec : Spek({
             }
         }
 
+        describe("building an image") {
+            val expectedUrl = hasScheme("http") and
+                hasHost(dockerHost) and
+                hasPath("/v1.30/build") and
+                hasQueryParameter("buildargs", """{"someArg": "someValue"}""")
+
+            val context = DockerImageBuildContext(emptySet())
+            val buildArgs = mapOf("someArg" to "someValue")
+            val registryCredentials = mock<DockerRegistryCredentials> {
+                on { toJSON() } doReturn "some json credentials"
+            }
+
+            val base64EncodedJSONCredentials = "c29tZSBqc29uIGNyZWRlbnRpYWxz"
+            val expectedHeadersForAuthentication = Headers.Builder().set("X-Registry-Auth", base64EncodedJSONCredentials).build()
+
+            val successResponse = """
+                |{"stream":"Step 1/5 : FROM nginx:1.13.0"}
+                |{"stream":"\n"}
+                |{"stream":" ---\u003e 3448f27c273f\n"}
+                |{"stream":"Step 2/5 : RUN apt update \u0026\u0026 apt install -y curl \u0026\u0026 rm -rf /var/lib/apt/lists/*"}
+                |{"stream":"\n"}
+                |{"stream":" ---\u003e Using cache\n"}
+                |{"stream":" ---\u003e 0ceae477da9d\n"}
+                |{"stream":"Step 3/5 : COPY index.html /usr/share/nginx/html"}
+                |{"stream":"\n"}
+                |{"stream":" ---\u003e b288a67b828c\n"}
+                |{"stream":"Step 4/5 : COPY health-check.sh /tools/"}
+                |{"stream":"\n"}
+                |{"stream":" ---\u003e 951e32ae4f76\n"}
+                |{"stream":"Step 5/5 : HEALTHCHECK --interval=2s --retries=1 CMD /tools/health-check.sh"}
+                |{"stream":"\n"}
+                |{"stream":" ---\u003e Running in 3de7e4521d69\n"}
+                |{"stream":"Removing intermediate container 3de7e4521d69\n"}
+                |{"stream":" ---\u003e 24125bbc6cbe\n"}
+                |{"aux":{"ID":"sha256:24125bbc6cbe08f530e97c81ee461357fa3ba56f4d7693d7895ec86671cf3540"}}
+                |{"stream":"Successfully built 24125bbc6cbe\n"}
+            """.trimMargin()
+
+            on("the build succeeding") {
+                val call = httpClient.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForAuthentication)
+                val progressReceiver = ProgressReceiver()
+                val image = api.buildImage(context, buildArgs, registryCredentials, progressReceiver::onProgressUpdate)
+
+                it("sends a request to the Docker daemon to build the image") {
+                    verify(call).execute()
+                }
+
+                it("builds the image with the expected context") {
+                    verify(httpClient).newCall(requestWithBody(DockerImageBuildContextRequestBody(context)))
+                }
+
+                it("sends all progress updates to the receiver") {
+                    assertThat(progressReceiver, receivedAllUpdatesFrom(successResponse))
+                }
+
+                it("returns the build image") {
+                    assertThat(image, equalTo(DockerImage("sha256:24125bbc6cbe08f530e97c81ee461357fa3ba56f4d7693d7895ec86671cf3540")))
+                }
+            }
+
+            on("the build having no registry credentials") {
+                val expectedHeadersForNoAuthentication = Headers.Builder().build()
+                val call = httpClient.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForNoAuthentication)
+                api.buildImage(context, buildArgs, null, {})
+
+                it("sends a request to the Docker daemon to build the image with no authentication header") {
+                    verify(call).execute()
+                }
+            }
+
+            on("the build having no build args") {
+                val expectedUrlWithNoBuildArgs = hasScheme("http") and
+                    hasHost(dockerHost) and
+                    hasPath("/v1.30/build") and
+                    hasQueryParameter("buildargs", """{}""")
+
+                val call = httpClient.mock("POST", expectedUrlWithNoBuildArgs, successResponse, 200, expectedHeadersForAuthentication)
+                api.buildImage(context, emptyMap(), registryCredentials, {})
+
+                it("sends a request to the Docker daemon to build the image with an empty set of build args") {
+                    verify(call).execute()
+                }
+            }
+
+            on("the build failing immediately") {
+                httpClient.mock("POST", expectedUrl, """{"message": "Something went wrong."}""", 418, expectedHeadersForAuthentication)
+
+                it("throws an appropriate exception") {
+                    assertThat({ api.buildImage(context, buildArgs, registryCredentials, {}) }, throws<ImageBuildFailedException>(
+                        withMessage("Building image failed: Something went wrong."))
+                    )
+                }
+            }
+
+            on("the build failing during the build process") {
+                val errorResponse = """
+                    |{"stream":"Step 1/6 : FROM nginx:1.13.0"}
+                    |{"stream":"\n"}
+                    |{"stream":" ---\u003e 3448f27c273f\n"}
+                    |{"stream":"Step 2/6 : RUN exit 1"}
+                    |{"stream":"\n"}
+                    |{"stream":" ---\u003e Running in 4427f9f56fad\n"}
+                    |{"errorDetail":{"code":1,"message":"The command '/bin/sh -c exit 1' returned a non-zero code: 1"},"error":"The command '/bin/sh -c exit 1' returned a non-zero code: 1"}
+                """.trimMargin()
+
+                httpClient.mock("POST", expectedUrl, errorResponse, 200, expectedHeadersForAuthentication)
+
+                it("throws an appropriate exception") {
+                    assertThat({ api.buildImage(context, buildArgs, registryCredentials, {}) }, throws<ImageBuildFailedException>(
+                        withMessage(
+                            "Building image failed: The command '/bin/sh -c exit 1' returned a non-zero code: 1. Output from build process was:\n" +
+                                "Step 1/6 : FROM nginx:1.13.0\n" +
+                                " ---> 3448f27c273f\n" +
+                                "Step 2/6 : RUN exit 1\n" +
+                                " ---> Running in 4427f9f56fad"
+                        ))
+                    )
+                }
+            }
+
+            on("the build process never sending an output line with the built image ID") {
+                val malformedResponse = """
+                    |{"stream":"Step 1/6 : FROM nginx:1.13.0"}
+                """.trimMargin()
+
+                httpClient.mock("POST", expectedUrl, malformedResponse, 200, expectedHeadersForAuthentication)
+
+                it("throws an appropriate exception") {
+                    assertThat({ api.buildImage(context, buildArgs, registryCredentials, {}) }, throws<ImageBuildFailedException>(
+                        withMessage("Building image failed: daemon never sent built image ID."))
+                    )
+                }
+            }
+        }
+
         describe("pulling an image") {
             val imageName = "some-image"
-            val expectedUrl = "$dockerBaseUrl/v1.12/images/create?fromImage=some-image"
+            val expectedUrl = "$dockerBaseUrl/v1.30/images/create?fromImage=some-image"
             val registryCredentials = mock<DockerRegistryCredentials> {
                 on { toJSON() } doReturn "some json credentials"
             }
@@ -485,7 +623,7 @@ object DockerAPISpec : Spek({
             val imageName = "some:image"
             val expectedUrl = hasScheme("http") and
                 hasHost(dockerHost) and
-                hasPath("/v1.12/images/json") and
+                hasPath("/v1.30/images/json") and
                 hasQueryParameter("filters", """{"reference": ["some:image"]}""")
 
             on("the image already having been pulled") {
@@ -516,7 +654,7 @@ object DockerAPISpec : Spek({
         }
 
         describe("getting server version information") {
-            val expectedUrl = "$dockerBaseUrl/v1.12/version"
+            val expectedUrl = "$dockerBaseUrl/v1.30/version"
 
             on("the Docker version command invocation succeeding") {
                 httpClient.mockGet(expectedUrl, """
@@ -619,6 +757,10 @@ private fun requestWithJsonBody(predicate: (JsonObject) -> Unit) = check<Request
     request.body()!!.writeTo(buffer)
     val parsedBody = JsonTreeParser(buffer.readUtf8()).readFully() as JsonObject
     predicate(parsedBody)
+}
+
+private fun requestWithBody(expectedBody: RequestBody) = check<Request> { request ->
+    assertThat(request.body(), equalTo(expectedBody))
 }
 
 class ProgressReceiver {

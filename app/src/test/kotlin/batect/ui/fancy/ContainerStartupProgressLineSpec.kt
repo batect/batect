@@ -120,18 +120,38 @@ object ContainerStartupProgressLineSpec : Spek({
             }
 
             describe("after receiving an 'image build progress' notification") {
-                on("that notification being for this line's container") {
-                    val event = ImageBuildProgressEvent(buildDirectory, DockerImageBuildProgress(2, 5, "COPY health-check.sh /tools/"))
-                    line.onEventPosted(event)
-                    line.print(console)
+                given("that notification is for this line's container") {
+                    on("that notification containing image pull progress information") {
+                        val event = ImageBuildProgressEvent(buildDirectory, DockerImageBuildProgress(1, 5, "FROM the-image:1.2.3", DockerImagePullProgress("downloading", 12, 20)))
+                        line.onEventPosted(event)
+                        line.print(console)
 
-                    it("prints detailed build progress") {
-                        verifyPrintedDescription("building image: step 2 of 5: COPY health-check.sh /tools/")
+                        it("prints detailed build progress") {
+                            // FIXME: this test shouldn't be so coupled to the particular way we've broken down the message into separate print() calls.
+                            // Maybe add some kind of abstract representation of formatted text that we can use?
+                            inOrder(whiteConsole) {
+                                verify(whiteConsole).printBold(containerName)
+                                verify(whiteConsole).print(": ")
+                                verify(whiteConsole).print("building image: step 1 of 5: FROM the-image:1.2.3")
+                                verify(whiteConsole).print(": ")
+                                verify(whiteConsole).print("downloading 12 B of 20 B (60%)")
+                            }
+                        }
+                    }
+
+                    on("that notification not containing image pull progress information") {
+                        val event = ImageBuildProgressEvent(buildDirectory, DockerImageBuildProgress(2, 5, "COPY health-check.sh /tools/", null))
+                        line.onEventPosted(event)
+                        line.print(console)
+
+                        it("prints detailed build progress") {
+                            verifyPrintedDescription("building image: step 2 of 5: COPY health-check.sh /tools/")
+                        }
                     }
                 }
 
                 on("that notification being for another container") {
-                    val event = ImageBuildProgressEvent(otherBuildDirectory, DockerImageBuildProgress(2, 5, "COPY health-check.sh /tools/"))
+                    val event = ImageBuildProgressEvent(otherBuildDirectory, DockerImageBuildProgress(2, 5, "COPY health-check.sh /tools/", null))
                     line.onEventPosted(event)
                     line.print(console)
 

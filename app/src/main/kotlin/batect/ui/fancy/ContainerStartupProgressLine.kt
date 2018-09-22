@@ -76,7 +76,7 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
                 hasBeenPulled && networkHasBeenCreated -> print("image pulled, ready to create container")
                 hasBeenPulled && !networkHasBeenCreated -> print("image pulled, waiting for network to be ready...")
                 isBuilding && lastBuildProgressUpdate == null -> print("building image...")
-                isBuilding && lastBuildProgressUpdate != null -> print("building image: step ${lastBuildProgressUpdate!!.currentStep} of ${lastBuildProgressUpdate!!.totalSteps}: ${lastBuildProgressUpdate!!.message}")
+                isBuilding && lastBuildProgressUpdate != null -> printDescriptionWhenBuilding()
                 isPulling -> printDescriptionWhenPulling()
                 else -> printDescriptionWhenWaitingToBuildOrPull()
             }
@@ -100,6 +100,15 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
             print("...")
         } else {
             print(": " + lastPullProgressUpdate!!.toStringForDisplay())
+        }
+    }
+
+    private fun Console.printDescriptionWhenBuilding() {
+        print("building image: step ${lastBuildProgressUpdate!!.currentStep} of ${lastBuildProgressUpdate!!.totalSteps}: ${lastBuildProgressUpdate!!.message}")
+
+        if (lastBuildProgressUpdate!!.pullProgress != null) {
+            print(": ")
+            print(lastBuildProgressUpdate!!.pullProgress!!.toStringForDisplay())
         }
     }
 

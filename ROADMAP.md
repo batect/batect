@@ -13,7 +13,6 @@ If there's something you're really keen to see, pull requests are always welcome
 
 ### Features
 * automatically enable `--no-color` or `--simple-output` if console doesn't support it (use terminfo database rather than current detection system)
-* show more detailed image pull progress (eg. `build-env: Pulling some-image:1.2.3: 25%`) when building
 * performance improvements
   * prioritise running steps that lie on the critical path (eg. favour pulling image for leaf of dependency graph over creating container for task container)
   * print updates to the console asynchronously (they currently block whatever thread posts the event or is starting the step)
@@ -52,6 +51,8 @@ If there's something you're really keen to see, pull requests are always welcome
 * reintroduce image tagging
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use Docker API directly rather than using Docker CLI (would allow for more detailed progress and error reporting)
+* rework console printing stuff so that tests aren't coupled to the particular choice of how messages are broken into `print()` calls (eg. introduce some kind of abstract representation of formatted text)
+  * ContainerStartupProgressLineSpec is an example of the issue at the moment
 * documentation
   * add check for broken internal or external links
   * examples for common languages and scenarios

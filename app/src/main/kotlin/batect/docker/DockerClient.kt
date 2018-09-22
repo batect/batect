@@ -53,6 +53,8 @@ class DockerClient(
             val context = imageBuildContextFactory.createFromDirectory(buildPath)
             val baseImageName = dockerfileParser.extractBaseImageName(buildPath.resolve("Dockerfile"))
             val credentials = credentialsProvider.getCredentials(baseImageName)
+            val reporter = imagePullProgressReporterFactory()
+            var lastStepProgressUpdate: DockerImageBuildProgress? = null
 
             val image = api.buildImage(context, buildArgs, credentials) { line ->
                 logger.debug {
@@ -60,10 +62,18 @@ class DockerClient(
                     data("outputLine", line.toString())
                 }
 
-                val progress = DockerImageBuildProgress.fromBuildOutput(line)
+                val stepProgress = DockerImageBuildProgress.fromBuildOutput(line)
 
-                if (progress != null) {
-                    onStatusUpdate(progress)
+                if (stepProgress != null) {
+                    lastStepProgressUpdate = stepProgress
+                    onStatusUpdate(lastStepProgressUpdate!!)
+                }
+
+                val pullProgress = reporter.processProgressUpdate(line)
+
+                if (pullProgress != null && lastStepProgressUpdate != null) {
+                    lastStepProgressUpdate = lastStepProgressUpdate!!.copy(pullProgress = pullProgress)
+                    onStatusUpdate(lastStepProgressUpdate!!)
                 }
             }
 
@@ -236,7 +246,7 @@ class DockerClient(
     }
 }
 
-data class DockerImageBuildProgress(val currentStep: Int, val totalSteps: Int, val message: String) {
+data class DockerImageBuildProgress(val currentStep: Int, val totalSteps: Int, val message: String, val pullProgress: DockerImagePullProgress?) {
     companion object {
         private val buildStepLineRegex = """^Step (\d+)/(\d+) : (.*)$""".toRegex()
 
@@ -253,7 +263,7 @@ data class DockerImageBuildProgress(val currentStep: Int, val totalSteps: Int, v
                 return null
             }
 
-            return DockerImageBuildProgress(stepLineMatch.groupValues[1].toInt(), stepLineMatch.groupValues[2].toInt(), stepLineMatch.groupValues[3])
+            return DockerImageBuildProgress(stepLineMatch.groupValues[1].toInt(), stepLineMatch.groupValues[2].toInt(), stepLineMatch.groupValues[3], null)
         }
     }
 }

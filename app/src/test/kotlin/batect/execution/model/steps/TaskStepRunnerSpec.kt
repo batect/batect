@@ -163,8 +163,8 @@ object TaskStepRunnerSpec : Spek({
                 describe("when building the image succeeds") {
                     on("and propagating proxy-related environment variables is enabled") {
                         val image = DockerImage("some-image")
-                        val update1 = DockerImageBuildProgress(1, 2, "First step")
-                        val update2 = DockerImageBuildProgress(2, 2, "Second step")
+                        val update1 = DockerImageBuildProgress(1, 2, "First step", null)
+                        val update2 = DockerImageBuildProgress(2, 2, "Second step", null)
 
                         whenever(dockerClient.build(eq(buildDirectory), any(), any()))
                             .then { invocation ->

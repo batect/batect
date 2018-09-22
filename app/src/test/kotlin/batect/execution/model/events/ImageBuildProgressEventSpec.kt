@@ -17,19 +17,33 @@
 package batect.execution.model.events
 
 import batect.docker.DockerImageBuildProgress
+import batect.docker.pull.DockerImagePullProgress
 import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
+import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 
 object ImageBuildProgressEventSpec : Spek({
     describe("an 'image build progress' event") {
-        val event = ImageBuildProgressEvent("/some-build-dir", DockerImageBuildProgress(1, 10, "Something is happening"))
+        given("it has some image pull progress information") {
+            val event = ImageBuildProgressEvent("/some-build-dir", DockerImageBuildProgress(1, 10, "Something is happening", DockerImagePullProgress("downloading", 12, 20)))
 
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuildProgressEvent(build directory: '/some-build-dir', current step: 1, total steps: 10, message: 'Something is happening')"))
+            on("toString()") {
+                it("returns a human-readable representation of itself") {
+                    com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuildProgressEvent(build directory: '/some-build-dir', current step: 1, total steps: 10, message: 'Something is happening', pull progress: 'downloading 12 B of 20 B (60%)')"))
+                }
+            }
+        }
+
+        given("it has no image pull progress information") {
+            val event = ImageBuildProgressEvent("/some-build-dir", DockerImageBuildProgress(1, 10, "Something is happening", null))
+
+            on("toString()") {
+                it("returns a human-readable representation of itself") {
+                    com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuildProgressEvent(build directory: '/some-build-dir', current step: 1, total steps: 10, message: 'Something is happening', pull progress: null)"))
+                }
             }
         }
     }

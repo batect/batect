@@ -330,7 +330,11 @@ class DockerAPI(
             .addRegistryCredentials(registryCredentials)
             .build()
 
-        httpConfig.client.newCall(request).execute().use { response ->
+        val clientWithLongTimeout = httpConfig.client.newBuilder()
+            .readTimeout(0, TimeUnit.MILLISECONDS)
+            .build()
+
+        clientWithLongTimeout.newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Could not build image.")

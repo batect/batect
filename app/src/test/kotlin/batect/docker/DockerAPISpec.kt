@@ -388,6 +388,16 @@ object DockerAPISpec : Spek({
         }
 
         describe("building an image") {
+            val clientWithLongTimeout = mock<OkHttpClient>()
+            val longTimeoutClientBuilder = mock<OkHttpClient.Builder> { mock ->
+                on { readTimeout(any(), any()) } doReturn mock
+                on { build() } doReturn clientWithLongTimeout
+            }
+
+            beforeEachTest {
+                whenever(httpClient.newBuilder()).doReturn(longTimeoutClientBuilder)
+            }
+
             val expectedUrl = hasScheme("http") and
                 hasHost(dockerHost) and
                 hasPath("/v1.30/build") and
@@ -426,7 +436,7 @@ object DockerAPISpec : Spek({
             """.trimMargin()
 
             on("the build succeeding") {
-                val call = httpClient.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForAuthentication)
+                val call = clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForAuthentication)
                 val progressReceiver = ProgressReceiver()
                 val image = api.buildImage(context, buildArgs, registryCredentials, progressReceiver::onProgressUpdate)
 
@@ -434,8 +444,12 @@ object DockerAPISpec : Spek({
                     verify(call).execute()
                 }
 
+                it("configures the HTTP client with no timeout to allow for slow build output") {
+                    verify(longTimeoutClientBuilder).readTimeout(0, TimeUnit.MILLISECONDS)
+                }
+
                 it("builds the image with the expected context") {
-                    verify(httpClient).newCall(requestWithBody(DockerImageBuildContextRequestBody(context)))
+                    verify(clientWithLongTimeout).newCall(requestWithBody(DockerImageBuildContextRequestBody(context)))
                 }
 
                 it("sends all progress updates to the receiver") {
@@ -449,7 +463,7 @@ object DockerAPISpec : Spek({
 
             on("the build having no registry credentials") {
                 val expectedHeadersForNoAuthentication = Headers.Builder().build()
-                val call = httpClient.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForNoAuthentication)
+                val call = clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForNoAuthentication)
                 api.buildImage(context, buildArgs, null, {})
 
                 it("sends a request to the Docker daemon to build the image with no authentication header") {
@@ -463,7 +477,7 @@ object DockerAPISpec : Spek({
                     hasPath("/v1.30/build") and
                     hasQueryParameter("buildargs", """{}""")
 
-                val call = httpClient.mock("POST", expectedUrlWithNoBuildArgs, successResponse, 200, expectedHeadersForAuthentication)
+                val call = clientWithLongTimeout.mock("POST", expectedUrlWithNoBuildArgs, successResponse, 200, expectedHeadersForAuthentication)
                 api.buildImage(context, emptyMap(), registryCredentials, {})
 
                 it("sends a request to the Docker daemon to build the image with an empty set of build args") {
@@ -472,7 +486,7 @@ object DockerAPISpec : Spek({
             }
 
             on("the build failing immediately") {
-                httpClient.mock("POST", expectedUrl, """{"message": "Something went wrong."}""", 418, expectedHeadersForAuthentication)
+                clientWithLongTimeout.mock("POST", expectedUrl, """{"message": "Something went wrong."}""", 418, expectedHeadersForAuthentication)
 
                 it("throws an appropriate exception") {
                     assertThat({ api.buildImage(context, buildArgs, registryCredentials, {}) }, throws<ImageBuildFailedException>(
@@ -492,7 +506,7 @@ object DockerAPISpec : Spek({
                     |{"errorDetail":{"code":1,"message":"The command '/bin/sh -c exit 1' returned a non-zero code: 1"},"error":"The command '/bin/sh -c exit 1' returned a non-zero code: 1"}
                 """.trimMargin()
 
-                httpClient.mock("POST", expectedUrl, errorResponse, 200, expectedHeadersForAuthentication)
+                clientWithLongTimeout.mock("POST", expectedUrl, errorResponse, 200, expectedHeadersForAuthentication)
 
                 it("throws an appropriate exception") {
                     assertThat({ api.buildImage(context, buildArgs, registryCredentials, {}) }, throws<ImageBuildFailedException>(
@@ -512,7 +526,7 @@ object DockerAPISpec : Spek({
                     |{"stream":"Step 1/6 : FROM nginx:1.13.0"}
                 """.trimMargin()
 
-                httpClient.mock("POST", expectedUrl, malformedResponse, 200, expectedHeadersForAuthentication)
+                clientWithLongTimeout.mock("POST", expectedUrl, malformedResponse, 200, expectedHeadersForAuthentication)
 
                 it("throws an appropriate exception") {
                     assertThat({ api.buildImage(context, buildArgs, registryCredentials, {}) }, throws<ImageBuildFailedException>(

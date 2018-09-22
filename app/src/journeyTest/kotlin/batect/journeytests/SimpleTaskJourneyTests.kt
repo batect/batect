@@ -34,7 +34,8 @@ object SimpleTaskJourneyTests : Spek({
         "simple-task-dockerfile-command" to "a simple task with the command specified in the Dockerfile",
         "simple-task-container-command" to "a simple task with the command specified on the container in the configuration file",
         "simple-task-with-environment" to "a simple task with a task-level environment variable",
-        "container-with-health-check-overrides" to "a task with a dependency container that has a batect-specific health check configuration"
+        "container-with-health-check-overrides" to "a task with a dependency container that has a batect-specific health check configuration",
+        "container-with-port" to "a task with a container that exposes a port"
     ).forEach { testName, description ->
         given(description) {
             val runner = ApplicationRunner(testName)

@@ -70,10 +70,12 @@ object DockerContainerCreationRequestSpec : Spek({
                         |           "/local:/container:ro"
                         |       ],
                         |       "PortBindings": {
-                        |           "456/tcp": {
-                        |               "HostIp": "",
-                        |               "HostPort": "123"
-                        |           }
+                        |           "456/tcp": [
+                        |               {
+                        |                   "HostIp": "",
+                        |                   "HostPort": "123"
+                        |               }
+                        |           ]
                         |       }
                         |   },
                         |   "Healthcheck": {

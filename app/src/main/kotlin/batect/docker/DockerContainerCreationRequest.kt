@@ -91,10 +91,12 @@ data class DockerContainerCreationRequest(
 
     private fun formatPortMappings(): JsonObject = json {
         portMappings.forEach {
-            "${it.containerPort}/tcp" to json {
-                "HostIp" to ""
-                "HostPort" to it.localPort.toString()
-            }
+            "${it.containerPort}/tcp" to JsonArray(listOf(
+                json {
+                    "HostIp" to ""
+                    "HostPort" to it.localPort.toString()
+                }
+            ))
         }
     }
 }

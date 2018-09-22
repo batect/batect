@@ -161,7 +161,7 @@ object DockerClientIntegrationTest : Spek({
             }
         }
 
-        describe("creating, running and then removing a container") {
+        on("creating, running and then removing a container") {
             val fileToCreate = getRandomTemporaryFilePath()
             val image = client.pullImage("alpine:3.7", {})
 
@@ -177,7 +177,16 @@ object DockerClientIntegrationTest : Spek({
             }
         }
 
-        describe("waiting for a container to become healthy") {
+        on("pulling an image that has not been cached locally already") {
+            removeImage("hello-world:latest")
+            val image = client.pullImage("hello-world:latest", {})
+
+            it("pulls the image successfully") {
+                assertThat(image, equalTo(DockerImage("hello-world:latest")))
+            }
+        }
+
+        on("waiting for a container to become healthy") {
             val fileToCreate = getRandomTemporaryFilePath()
             val image = client.build(testImagePath, emptyMap()) {}
 
@@ -227,4 +236,11 @@ private fun getRandomTemporaryFilePath(): Path {
     path.toFile().deleteOnExit()
 
     return path
+}
+
+private fun removeImage(imageName: String) {
+    val processRunner = ProcessRunner(mock())
+    val result = processRunner.runAndCaptureOutput(listOf("docker", "rmi", "-f", imageName))
+
+    assertThat(result.exitCode, equalTo(0))
 }

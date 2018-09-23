@@ -39,8 +39,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * handle the user pressing Ctrl-C during startup or cleanup
 * allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
 * allow specifying default values for environment variables
-* if a proxy-related environment variable is specified in uppercase but not lowercase (or vice versa), add the other version (eg. if `no_proxy` has a value but `NO_PROXY` does not, default `NO_PROXY`
-  to be the same as `no_proxy`)
 
 ### Bugs
 * fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information

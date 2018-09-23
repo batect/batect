@@ -84,8 +84,9 @@ batect will propagate the following proxy-related environment variables:
 * `no_proxy`
 * `NO_PROXY`
 
-Note that batect will not add missing environment variables if only one in a pair is defined. (For example, if `http_proxy` is
-defined, but `HTTP_PROXY` isn't, then only `http_proxy` is propagated and `HTTP_PROXY` is left unset.)
+Starting with v0.18, batect will add missing environment variables if only one in a pair is defined. (For example, if `http_proxy` is
+defined, but `HTTP_PROXY` isn't, then both `http_proxy` and `HTTP_PROXY` are propagated, with `HTTP_PROXY` set to the same value as
+`http_proxy`.)
 
 ## Proxies running on the host machine
 

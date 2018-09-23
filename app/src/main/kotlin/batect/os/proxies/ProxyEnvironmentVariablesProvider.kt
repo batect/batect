@@ -16,6 +16,7 @@
 
 package batect.os.proxies
 
+import batect.utils.mapToSet
 import java.util.TreeSet
 
 class ProxyEnvironmentVariablesProvider(
@@ -24,15 +25,20 @@ class ProxyEnvironmentVariablesProvider(
 ) {
     constructor(preprocessor: ProxyEnvironmentVariablePreprocessor) : this(preprocessor, System.getenv())
 
-    private val proxyEnvironmentVariableNames: Set<String> = setOf("http_proxy", "https_proxy", "ftp_proxy", "no_proxy")
-        .toCollection(TreeSet(String.CASE_INSENSITIVE_ORDER))
-
     private val proxyEnvironmentVariablesNeedingPreprocessing = setOf("http_proxy", "https_proxy", "ftp_proxy")
         .toCollection(TreeSet(String.CASE_INSENSITIVE_ORDER))
 
+    private val lowercaseProxyEnvironmentVariableNames = (proxyEnvironmentVariablesNeedingPreprocessing + "no_proxy")
+
+    private val allPossibleEnvironmentVariableNames =
+        lowercaseProxyEnvironmentVariableNames +
+            lowercaseProxyEnvironmentVariableNames.mapToSet { it.toUpperCase() }
+
     fun getProxyEnvironmentVariables(extraNoProxyEntries: Set<String>): Map<String, String> {
-        val variables = hostEnvironmentVariables
-            .filterKeys { name -> name in proxyEnvironmentVariableNames }
+        val variables = allPossibleEnvironmentVariableNames
+            .associate { it to hostEnvironmentVariables.getMatchingCaseOrOtherCase(it) }
+            .filterValues { it != null }
+            .mapValues { (_, value) -> value!! }
             .mapValues { (name, value) ->
                 if (name in proxyEnvironmentVariablesNeedingPreprocessing) preprocessor.process(value) else value
             }
@@ -57,5 +63,21 @@ class ProxyEnvironmentVariablesProvider(
         }
 
         return existingValue + "," + extraEntries
+    }
+
+    private fun Map<String, String>.getMatchingCaseOrOtherCase(key: String): String? {
+        if (this.containsKey(key)) {
+            return this[key]
+        }
+
+        if (this.containsKey(key.toUpperCase())) {
+            return this[key.toUpperCase()]
+        }
+
+        if (this.containsKey(key.toLowerCase())) {
+            return this[key.toLowerCase()]
+        }
+
+        return null
     }
 }

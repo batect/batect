@@ -99,9 +99,10 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                         on("getting proxy environment variables") {
                             val proxyEnvironmentVariables = provider.getProxyEnvironmentVariables(extraNoProxyEntries)
 
-                            it("returns that environment variable, passing it through the preprocessor") {
+                            it("returns that environment variable and its uppercase equivalent, passing it through the preprocessor") {
                                 assertThat(proxyEnvironmentVariables, equalTo(mapOf(
-                                    lowercaseName to "http://proxy:1234_processed"
+                                    lowercaseName to "http://proxy:1234_processed",
+                                    uppercaseName to "http://proxy:1234_processed"
                                 )))
                             }
                         }
@@ -119,8 +120,9 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                         on("getting proxy environment variables") {
                             val proxyEnvironmentVariables = provider.getProxyEnvironmentVariables(extraNoProxyEntries)
 
-                            it("returns that environment variable, passing it through the preprocessor") {
+                            it("returns that environment variable and its lowercase equivalent, passing it through the preprocessor") {
                                 assertThat(proxyEnvironmentVariables, equalTo(mapOf(
+                                    lowercaseName to "http://proxy:1234_processed",
                                     uppercaseName to "http://proxy:1234_processed"
                                 )))
                             }
@@ -168,6 +170,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                             it("returns that environment variable, with the no_proxy variables set") {
                                 assertThat(proxyEnvironmentVariables, equalTo(mapOf(
                                     lowercaseName to "http://proxy:1234_processed",
+                                    uppercaseName to "http://proxy:1234_processed",
                                     "no_proxy" to "host-1,host-2",
                                     "NO_PROXY" to "host-1,host-2"
                                 )))
@@ -189,6 +192,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
 
                             it("returns that environment variable, with the no_proxy variables set") {
                                 assertThat(proxyEnvironmentVariables, equalTo(mapOf(
+                                    lowercaseName to "http://proxy:1234_processed",
                                     uppercaseName to "http://proxy:1234_processed",
                                     "no_proxy" to "host-1,host-2",
                                     "NO_PROXY" to "host-1,host-2"
@@ -240,9 +244,10 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                     on("getting proxy environment variables") {
                         val proxyEnvironmentVariables = provider.getProxyEnvironmentVariables(extraNoProxyEntries)
 
-                        it("returns that environment variable") {
+                        it("returns that environment variable and its uppercase equivalent") {
                             assertThat(proxyEnvironmentVariables, equalTo(mapOf(
-                                "no_proxy" to "host-1"
+                                "no_proxy" to "host-1",
+                                "NO_PROXY" to "host-1"
                             )))
                         }
                     }
@@ -260,9 +265,10 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                     on("getting proxy environment variables") {
                         val proxyEnvironmentVariables = provider.getProxyEnvironmentVariables(extraNoProxyEntries)
 
-                        it("returns that environment variable") {
+                        it("returns that environment variable and its lowercase equivalent") {
                             assertThat(proxyEnvironmentVariables, equalTo(mapOf(
-                                "NO_PROXY" to "host-1"
+                                "NO_PROXY" to "host-1",
+                                "no_proxy" to "host-1"
                             )))
                         }
                     }
@@ -309,7 +315,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                         it("returns that environment variable, with the no_proxy variables set") {
                             assertThat(proxyEnvironmentVariables, equalTo(mapOf(
                                 "no_proxy" to "existing-host,host-1,host-2",
-                                "NO_PROXY" to "host-1,host-2"
+                                "NO_PROXY" to "existing-host,host-1,host-2"
                             )))
                         }
                     }
@@ -329,7 +335,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
 
                         it("returns that environment variable, with the no_proxy variables set") {
                             assertThat(proxyEnvironmentVariables, equalTo(mapOf(
-                                "no_proxy" to "host-1,host-2",
+                                "no_proxy" to "existing-host,host-1,host-2",
                                 "NO_PROXY" to "existing-host,host-1,host-2"
                             )))
                         }

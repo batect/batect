@@ -17,6 +17,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * prioritise running steps that lie on the critical path (eg. favour pulling image for leaf of dependency graph over creating container for task container)
   * print updates to the console asynchronously (they currently block whatever thread posts the event or is starting the step)
   * batch up printing updates to the console when using fancy output mode, rather than reprinting progress information on every event
+  * improve performance (and reduce flickering) by only printing updated lines when updating startup progress
 * check that Docker client and server are compatible versions
 * `brew doctor` equivalent (`./batect doctor`? `lint`?)
   * warn when using an image without a tag or with tag `latest`
@@ -45,12 +46,16 @@ If there's something you're really keen to see, pull requests are always welcome
 * fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information
   doesn't correctly overwrite previous updates
   * this is fixed if the console is not resized while batect is running, still need to handle the case where the console is resized while batect is running
+* ensure prerequisite order is respected, even with multiple dependencies
+* fix crash if using fancy output and command contains line breaks
 
 ### Other
 * replace factories with references to constructors
+* switch to Kotlin's built-in `Result` where appropriate
 * reintroduce image tagging
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use Docker API directly rather than using Docker CLI (would allow for more detailed progress and error reporting)
+* use tmpfs for home directories? (https://docs.docker.com/engine/reference/run/#tmpfs-mount-tmpfs-filesystems)
 * rework console printing stuff so that tests aren't coupled to the particular choice of how messages are broken into `print()` calls (eg. introduce some kind of abstract representation of formatted text)
   * ContainerStartupProgressLineSpec is an example of the issue at the moment
 * documentation

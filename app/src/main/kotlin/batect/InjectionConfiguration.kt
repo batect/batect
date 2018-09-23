@@ -50,6 +50,7 @@ import batect.execution.model.stages.CleanupStagePlanner
 import batect.execution.model.stages.RunStagePlanner
 import batect.execution.model.steps.TaskStepRunner
 import batect.logging.ApplicationInfoLogger
+import batect.logging.HttpLoggingInterceptor
 import batect.logging.LogMessageWriter
 import batect.logging.LoggerFactory
 import batect.logging.StandardAdditionalDataSource
@@ -82,10 +83,15 @@ import java.nio.file.FileSystems
 
 fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStream): DKodein = Kodein.direct {
     bind<FileSystem>() with singleton { FileSystems.getDefault() }
-    bind<OkHttpClient>() with singleton { OkHttpClient.Builder().build() }
     bind<POSIX>() with singleton { POSIXFactory.getNativePOSIX() }
     bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
     bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
+
+    bind<OkHttpClient>() with singleton {
+        OkHttpClient.Builder()
+            .addInterceptor(instance<HttpLoggingInterceptor>())
+            .build()
+    }
 
     import(cliModule)
     import(configModule)
@@ -164,6 +170,7 @@ private val executionModule = Kodein.Module("execution") {
 
 private val loggingModule = Kodein.Module("logging") {
     bind<ApplicationInfoLogger>() with singletonWithLogger { logger -> ApplicationInfoLogger(logger, instance(), instance(), instance()) }
+    bind<HttpLoggingInterceptor>() with singletonWithLogger { logger -> HttpLoggingInterceptor(logger) }
     bind<LoggerFactory>() with singleton { LoggerFactory(instance()) }
     bind<LogMessageWriter>() with singleton { LogMessageWriter() }
     bind<StandardAdditionalDataSource>() with singleton { StandardAdditionalDataSource(instance()) }

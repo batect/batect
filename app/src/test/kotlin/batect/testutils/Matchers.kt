@@ -90,7 +90,7 @@ fun hasMessage(messageCriteria: Matcher<LogMessage>): Matcher<InMemoryLogSink> {
 
 fun withLogMessage(message: String): Matcher<LogMessage> = has(LogMessage::message, equalTo(message))
 fun withSeverity(severity: Severity): Matcher<LogMessage> = has(LogMessage::severity, equalTo(severity))
-fun withAdditionalData(key: String, value: Any): Matcher<LogMessage> = has(LogMessage::additionalData, hasKeyWithValue(key, value))
+fun withAdditionalData(key: String, value: Any?): Matcher<LogMessage> = has(LogMessage::additionalData, hasKeyWithValue(key, value))
 fun withException(exception: Throwable): Matcher<LogMessage> = withAdditionalData("exception", exception.toDetailedString())
 
 fun <K, V> isEmptyMap() = Matcher(Map<K, V>::isEmpty)

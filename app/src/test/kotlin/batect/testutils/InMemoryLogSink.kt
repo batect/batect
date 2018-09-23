@@ -38,7 +38,7 @@ class InMemoryLogSink : LogSink {
     private val writer = LogMessageWriter()
 
     private val additionalDataSource = mock<StandardAdditionalDataSource> {
-        on { getAdditionalData() } doReturn emptyMap<String, Any>()
+        on { getAdditionalData() } doReturn emptyMap()
     }
 
     override fun write(severity: Severity, loggerAdditionalData: Map<String, Any>, build: LogMessageBuilder.() -> LogMessageBuilder) {

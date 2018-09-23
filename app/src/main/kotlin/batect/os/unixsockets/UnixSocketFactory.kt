@@ -29,6 +29,7 @@ import javax.net.SocketFactory
 class UnixSocketFactory() : SocketFactory() {
     override fun createSocket(): Socket {
         val channel = UnixSocketChannel.create()
+
         return object : UnixSocket(channel) {
             override fun connect(addr: SocketAddress?) {
                 this.connect(addr, 0)
@@ -43,6 +44,14 @@ class UnixSocketFactory() : SocketFactory() {
                 } catch (e: IOException) {
                     throw IOException("Cannot connect to '$socketPath': ${e.message}", e)
                 }
+            }
+
+            override fun close() {
+                // This works around https://github.com/jnr/jnr-unixsocket/issues/60, which causes https://github.com/square/okhttp/issues/4233.
+                channel.shutdownInput()
+                channel.shutdownOutput()
+
+                super.close()
             }
         }
     }

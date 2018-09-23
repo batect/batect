@@ -515,7 +515,8 @@ object DockerAPISpec : Spek({
                                 "Step 1/6 : FROM nginx:1.13.0\n" +
                                 " ---> 3448f27c273f\n" +
                                 "Step 2/6 : RUN exit 1\n" +
-                                " ---> Running in 4427f9f56fad"
+                                " ---> Running in 4427f9f56fad\n" +
+                                "The command '/bin/sh -c exit 1' returned a non-zero code: 1"
                         ))
                     )
                 }

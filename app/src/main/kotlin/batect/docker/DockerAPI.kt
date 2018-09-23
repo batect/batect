@@ -357,6 +357,7 @@ class DockerAPI(
                 }
 
                 if (error != null) {
+                    outputSoFar.append(error)
                     throw ImageBuildFailedException("Building image failed: $error. Output from build process was:\n" + outputSoFar.trim().toString())
                 }
 

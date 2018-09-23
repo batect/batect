@@ -31,6 +31,8 @@ class UnixSocketFactory() : SocketFactory() {
         val channel = UnixSocketChannel.create()
 
         return object : UnixSocket(channel) {
+            private var connected = false
+
             override fun connect(addr: SocketAddress?) {
                 this.connect(addr, 0)
             }
@@ -41,15 +43,18 @@ class UnixSocketFactory() : SocketFactory() {
 
                 try {
                     super.connect(UnixSocketAddress(socketPath), timeout as Int?)
+                    connected = true
                 } catch (e: IOException) {
                     throw IOException("Cannot connect to '$socketPath': ${e.message}", e)
                 }
             }
 
             override fun close() {
-                // This works around https://github.com/jnr/jnr-unixsocket/issues/60, which causes https://github.com/square/okhttp/issues/4233.
-                channel.shutdownInput()
-                channel.shutdownOutput()
+                if (connected) {
+                    // This works around https://github.com/jnr/jnr-unixsocket/issues/60, which causes https://github.com/square/okhttp/issues/4233.
+                    channel.shutdownInput()
+                    channel.shutdownOutput()
+                }
 
                 super.close()
             }

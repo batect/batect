@@ -153,6 +153,14 @@ class DockerAPI(
             .build()
 
         clientWithLongTimeout.newCall(request).execute().use { response ->
+            if (response.code() == 304) {
+                logger.warn {
+                    message("Container has already stopped.")
+                }
+
+                return
+            }
+
             checkForFailure(response) { error ->
                 logger.error {
                     message("Could not stop container.")

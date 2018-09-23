@@ -260,6 +260,15 @@ object DockerAPISpec : Spek({
                     }
                 }
 
+                on("that container already being stopped") {
+                    val call = clientWithLongTimeout.mockPost(expectedUrl, "", 304)
+                    api.stopContainer(container)
+
+                    it("sends a request to the Docker daemon to stop the container") {
+                        verify(call).execute()
+                    }
+                }
+
                 on("an unsuccessful stop attempt") {
                     clientWithLongTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
 

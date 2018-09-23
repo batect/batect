@@ -448,6 +448,21 @@ object ContainerStartupProgressLineSpec : Spek({
                         }
                     }
 
+                    on("and the container has a command specified in the configuration file that contains line breaks") {
+                        line.onStepStarting(CreateContainerStep(container, Command.parse("some-command\ndo-stuff"), emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network")))
+                        line.onStepStarting(step)
+                        line.print(console)
+
+                        it("prints that the container has finished starting up and the command that it is running with the line breaks replaced with spaces") {
+                            inOrder(whiteConsole) {
+                                verify(whiteConsole).printBold(container.name)
+                                verify(whiteConsole).print(": ")
+                                verify(whiteConsole).print("running ")
+                                verify(whiteConsole).printBold("some-command do-stuff")
+                            }
+                        }
+                    }
+
                     on("and another container has a command specified in the configuration file") {
                         line.onStepStarting(CreateContainerStep(otherContainer, Command.parse("some-command"), emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network")))
                         line.onStepStarting(step)

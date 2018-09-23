@@ -147,7 +147,7 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
             print("running")
         } else {
             print("running ")
-            printBold(command!!.originalCommand)
+            printBold(command!!.originalCommand.replace('\n', ' '))
         }
     }
 

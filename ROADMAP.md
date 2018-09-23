@@ -47,7 +47,6 @@ If there's something you're really keen to see, pull requests are always welcome
   doesn't correctly overwrite previous updates
   * this is fixed if the console is not resized while batect is running, still need to handle the case where the console is resized while batect is running
 * ensure prerequisite order is respected, even with multiple dependencies
-* fix crash if using fancy output and command contains line breaks
 
 ### Other
 * replace factories with references to constructors

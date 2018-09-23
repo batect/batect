@@ -35,3 +35,18 @@ Please [open an issue on GitHub](https://github.com/charleskorn/batect/issues/ne
 [email me your feedback](mailto:me@charleskorn.com).
 
 You can see what new features and improvements are planned in the [roadmap](ROADMAP.md).
+
+## Acknowledgements
+
+Thank you to the following people for their bug reports, pull requests, suggestions and feedback, in alphabetical order:
+
+* [@andeemarks](https://github.com/andeemarks)
+* [@assafw](https://github.com/assafw)
+* [@Byron-TW](https://github.com/Byron-TW)
+* [@ekamara](https://github.com/ekamara)
+* [@Letitia-May](https://github.com/Letitia-May)
+* [@minnn-minnn](https://github.com/minnn-minnn)
+* [@pameck](https://github.com/pameck)
+* ...and everyone else who has used the tool and provided feedback offline
+
+Thank you to YourKit for providing a complimentary copy of the [YourKit profiler](https://www.yourkit.com/java/profiler).

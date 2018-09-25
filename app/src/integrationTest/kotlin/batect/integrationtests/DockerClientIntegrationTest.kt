@@ -17,6 +17,7 @@
 package batect.integrationtests
 
 import batect.config.HealthCheckConfig
+import batect.config.PortMapping
 import batect.config.VolumeMount
 import batect.docker.DockerAPI
 import batect.docker.DockerClient
@@ -44,10 +45,13 @@ import batect.os.SystemInfo
 import batect.ui.ConsoleInfo
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockito_kotlin.mock
 import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -75,10 +79,7 @@ object DockerClientIntegrationTest : Spek({
         val dockerfileParser = DockerfileParser()
         val client = DockerClient(processRunner, api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger)
 
-        fun creationRequestForTestContainer(image: DockerImage, network: DockerNetwork, fileToCreate: Path, command: Iterable<String>): DockerContainerCreationRequest {
-            val fileToCreateParent = fileToCreate.parent.toAbsolutePath()
-            val systemInfo = SystemInfo(posix)
-
+        fun creationRequestForContainer(image: DockerImage, network: DockerNetwork, command: Iterable<String>, volumeMounts: Set<VolumeMount> = emptySet(), portMappings: Set<PortMapping> = emptySet(), userAndGroup: UserAndGroup? = null): DockerContainerCreationRequest {
             return DockerContainerCreationRequest(
                 image,
                 network,
@@ -87,11 +88,21 @@ object DockerClientIntegrationTest : Spek({
                 "test-container",
                 emptyMap(),
                 null,
-                setOf(VolumeMount(fileToCreateParent.toString(), fileToCreateParent.toString(), null)),
-                emptySet(),
+                volumeMounts,
+                portMappings,
                 HealthCheckConfig(),
-                UserAndGroup(systemInfo.userId, systemInfo.groupId)
+                userAndGroup
             )
+        }
+
+        fun creationRequestForTestContainer(image: DockerImage, network: DockerNetwork, fileToCreate: Path, command: Iterable<String>): DockerContainerCreationRequest {
+            val fileToCreateParent = fileToCreate.parent.toAbsolutePath()
+            val volumeMount = VolumeMount(fileToCreateParent.toString(), fileToCreateParent.toString(), null)
+
+            val systemInfo = SystemInfo(posix)
+            val userAndGroup = UserAndGroup(systemInfo.userId, systemInfo.groupId)
+
+            return creationRequestForContainer(image, network, command, volumeMounts = setOf(volumeMount), userAndGroup = userAndGroup)
         }
 
         fun creationRequestForContainerThatWaits(image: DockerImage, network: DockerNetwork, fileToCreate: Path): DockerContainerCreationRequest {
@@ -210,6 +221,26 @@ object DockerClientIntegrationTest : Spek({
             }
         }
 
+        on("running a container that exposes a port") {
+            val image = client.pullImage("nginx:1.15.3", {})
+
+            val response = withNetwork { network ->
+                withContainer(creationRequestForContainer(image, network, emptyList(), portMappings = setOf(PortMapping(8080, 80)))) { container ->
+                    client.start(container)
+
+                    val response = httpGet("http://localhost:8080")
+
+                    client.stop(container)
+
+                    response
+                }
+            }
+
+            it("successfully starts the container and exposes the port") {
+                assertThat(response, has(Response::code, equalTo(200)))
+            }
+        }
+
         on("checking if Docker is available") {
             val result = client.checkConnectivity()
 
@@ -243,4 +274,11 @@ private fun removeImage(imageName: String) {
     val result = processRunner.runAndCaptureOutput(listOf("docker", "rmi", "-f", imageName))
 
     assertThat(result.exitCode, equalTo(0))
+}
+
+private fun httpGet(url: String): Response {
+    val client = OkHttpClient.Builder().build()
+    val request = Request.Builder().url(url).build()
+
+    return client.newCall(request).execute()
 }

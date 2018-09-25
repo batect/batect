@@ -15,7 +15,7 @@
 */
 
 plugins {
-    id 'com.diffplug.gradle.spotless' version '3.14.0'
+    id 'com.diffplug.gradle.spotless' version '3.15.0'
     id 'com.github.ben-manes.versions' version '0.20.0'
     id 'org.ajoberstar.reckon' version '0.8.0'
 }

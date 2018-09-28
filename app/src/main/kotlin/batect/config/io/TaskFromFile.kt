@@ -23,8 +23,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 data class TaskFromFile(
     @JsonProperty("run") val runConfiguration: TaskRunConfigurationFromFile,
     val description: String = "",
-    @JsonProperty("dependencies") @JsonDeserialize(using = StringSetDeserializer::class) val dependsOnContainers: Set<String> = emptySet(),
-    @JsonProperty("prerequisites") @JsonDeserialize(using = StringSetDeserializer::class) val prerequisiteTasks: Set<String> = emptySet()
+    @JsonProperty("dependencies") @JsonDeserialize(using = DependencySetDeserializer::class) val dependsOnContainers: Set<String> = emptySet(),
+    @JsonProperty("prerequisites") @JsonDeserialize(using = PrerequisiteSetDeserializer::class) val prerequisiteTasks: Set<String> = emptySet()
 ) {
 
     fun toTask(name: String): Task = Task(name, runConfiguration.toRunConfiguration(name), description, dependsOnContainers, prerequisiteTasks)

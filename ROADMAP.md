@@ -9,7 +9,6 @@ If there's something you're really keen to see, pull requests are always welcome
 
 ### Config file handling
 * better error message when a key (eg. a task name) is used twice (at the moment it's `Duplicate field 'duplicated_task_name'`)
-* better error message when a dependency is given twice (at the moment it's `Duplicate value 'dependency-name'`)
 
 ### Features
 * automatically enable `--no-color` or `--simple-output` if console doesn't support it (use terminfo database rather than current detection system)

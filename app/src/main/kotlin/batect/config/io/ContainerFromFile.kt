@@ -37,7 +37,7 @@ data class ContainerFromFile(
     val workingDirectory: String? = null,
     @JsonProperty("volumes") val volumeMounts: Set<VolumeMount> = emptySet(),
     @JsonProperty("ports") val portMappings: Set<PortMapping> = emptySet(),
-    @JsonDeserialize(using = StringSetDeserializer::class) val dependencies: Set<String> = emptySet(),
+    @JsonDeserialize(using = DependencySetDeserializer::class) val dependencies: Set<String> = emptySet(),
     @JsonProperty("health_check") val healthCheckConfig: HealthCheckConfig = HealthCheckConfig(),
     @JsonProperty("run_as_current_user") val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig()
 ) {

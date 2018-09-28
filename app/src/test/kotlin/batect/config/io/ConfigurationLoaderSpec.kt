@@ -293,7 +293,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate value 'dependency-1'") and withLineNumber(9)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("The dependency 'dependency-1' is given more than once") and withLineNumber(9)))
             }
         }
 
@@ -346,7 +346,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate value 'dependency-1'") and withLineNumber(9)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("The prerequisite 'dependency-1' is given more than once") and withLineNumber(9)))
             }
         }
 
@@ -593,7 +593,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate value 'container-2'") and withLineNumber(8)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("The dependency 'container-2' is given more than once") and withLineNumber(8)))
             }
         }
 

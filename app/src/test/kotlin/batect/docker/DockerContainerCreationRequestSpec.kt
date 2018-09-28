@@ -64,6 +64,9 @@ object DockerContainerCreationRequestSpec : Spek({
                         |   "Env": [
                         |       "SOME_VAR=some value"
                         |   ],
+                        |   "ExposedPorts": {
+                        |       "456/tcp": {}
+                        |   },
                         |   "HostConfig": {
                         |       "NetworkMode": "the-network",
                         |       "Binds": [
@@ -127,6 +130,7 @@ object DockerContainerCreationRequestSpec : Spek({
                         |   "Image": "the-image",
                         |   "Hostname": "the-hostname",
                         |   "Env": [],
+                        |   "ExposedPorts": {},
                         |   "HostConfig": {
                         |       "NetworkMode": "the-network",
                         |       "Binds": [],

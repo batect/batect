@@ -203,12 +203,14 @@ object DockerClientIntegrationTest : Spek({
 
             val (healthStatus, lastHealthCheckResult) = withNetwork { network ->
                 withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
-                    client.start(container)
-                    val healthStatus = client.waitForHealthStatus(container)
-                    val lastHealthCheckResult = client.getLastHealthCheckResult(container)
-                    client.stop(container)
-
-                    Pair(healthStatus, lastHealthCheckResult)
+                    try {
+                        client.start(container)
+                        val healthStatus = client.waitForHealthStatus(container)
+                        val lastHealthCheckResult = client.getLastHealthCheckResult(container)
+                        Pair(healthStatus, lastHealthCheckResult)
+                    } finally {
+                        client.stop(container)
+                    }
                 }
             }
 
@@ -221,23 +223,44 @@ object DockerClientIntegrationTest : Spek({
             }
         }
 
-        on("running a container that exposes a port") {
-            val image = client.pullImage("nginx:1.15.3", {})
+        describe("running a container that exposes a port") {
+            on("the image having an EXPOSE instruction for the port to be exposed") {
+                val image = client.pullImage("nginx:1.15.3", {})
 
-            val response = withNetwork { network ->
-                withContainer(creationRequestForContainer(image, network, emptyList(), portMappings = setOf(PortMapping(8080, 80)))) { container ->
-                    client.start(container)
+                val response = withNetwork { network ->
+                    withContainer(creationRequestForContainer(image, network, emptyList(), portMappings = setOf(PortMapping(8080, 80)))) { container ->
+                        try {
+                            client.start(container)
+                            httpGet("http://localhost:8080")
+                        } finally {
+                            client.stop(container)
+                        }
+                    }
+                }
 
-                    val response = httpGet("http://localhost:8080")
-
-                    client.stop(container)
-
-                    response
+                it("successfully starts the container and exposes the port") {
+                    assertThat(response, has(Response::code, equalTo(200)))
                 }
             }
 
-            it("successfully starts the container and exposes the port") {
-                assertThat(response, has(Response::code, equalTo(200)))
+            on("the image not having an EXPOSE instruction for the port to be exposed") {
+                val image = client.pullImage("busybox:1.29.2", {})
+                val command = listOf("busybox", "httpd", "-f", "-p", "80")
+
+                val response = withNetwork { network ->
+                    withContainer(creationRequestForContainer(image, network, command, portMappings = setOf(PortMapping(8080, 80)))) { container ->
+                        try {
+                            client.start(container)
+                            httpGet("http://localhost:8080/.dockerenv")
+                        } finally {
+                            client.stop(container)
+                        }
+                    }
+                }
+
+                it("successfully starts the container and exposes the port") {
+                    assertThat(response, has(Response::code, equalTo(200)))
+                }
             }
         }
 

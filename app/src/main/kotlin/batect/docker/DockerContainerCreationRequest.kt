@@ -47,6 +47,7 @@ data class DockerContainerCreationRequest(
             "Image" to image.id
             "Hostname" to hostname
             "Env" to formatEnvironmentVariables()
+            "ExposedPorts" to formatExposedPorts()
 
             if (command.count() > 0) {
                 "Cmd" to command.toJsonArray()
@@ -97,6 +98,12 @@ data class DockerContainerCreationRequest(
                     "HostPort" to it.localPort.toString()
                 }
             ))
+        }
+    }
+
+    private fun formatExposedPorts(): JsonObject = json {
+        portMappings.forEach {
+            "${it.containerPort}/tcp" to json {}
         }
     }
 }

@@ -95,10 +95,19 @@ class ConfigurationLoader(
     }
 
     private fun messageForJsonProcessingException(e: JsonProcessingException, fileName: String): String = when {
-        e is UnrecognizedPropertyException -> "Unknown field '${e.propertyName}'"
+        e is UnrecognizedPropertyException -> messageForUnrecognizedPropertyException(e)
         e is MissingKotlinParameterException -> "Missing required field '${e.path.last().fieldName}'"
         e.originalMessage == "No content to map due to end-of-input" -> "File '$fileName' is empty"
         e.cause is JsonParseException -> (e.cause as JsonParseException).originalMessage
         else -> e.originalMessage
+    }
+
+    private fun messageForUnrecognizedPropertyException(e: UnrecognizedPropertyException): String {
+        val validProperties = e.knownPropertyIds
+            .map { it as String }
+            .sorted()
+            .joinToString(", ")
+
+        return "Unknown field '${e.propertyName}' (fields permitted here: $validProperties)"
     }
 }

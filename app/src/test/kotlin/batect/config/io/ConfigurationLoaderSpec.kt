@@ -615,7 +615,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Unknown field 'thing'") and withLineNumber(2)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Unknown field 'thing' (fields permitted here: containers, project_name, tasks)") and withLineNumber(2)))
             }
         }
 

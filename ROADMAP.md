@@ -8,8 +8,7 @@ If there's something you're really keen to see, pull requests are always welcome
 ## v1.0
 
 ### Config file handling
-* do as much validation at configuration loading time as possible (eg. validate command lines are syntactically valid, environment variable expressions are syntactically valid) - this allows us to
-  include line numbers etc.
+* resolve / normalise paths in error messages (eg. remove .. segments)
 
 ### Features
 * automatically enable `--no-color` or `--simple-output` if console doesn't support it (use terminfo database rather than current detection system)
@@ -39,12 +38,15 @@ If there's something you're really keen to see, pull requests are always welcome
 * handle the user pressing Ctrl-C during startup or cleanup
 * allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
 * allow specifying default values for environment variables
+* do as much validation at configuration loading time as possible (eg. validate command lines are syntactically valid, environment variable expressions are syntactically valid) - this allows us to
+  include line numbers etc.
 
 ### Bugs
 * fix the issue where if the fancy output mode is enabled and any of the lines of output is longer than the console width, the progress information
   doesn't correctly overwrite previous updates
   * this is fixed if the console is not resized while batect is running, still need to handle the case where the console is resized while batect is running
 * ensure prerequisite order is respected, even with multiple dependencies
+* if logging is enabled with --log-file=~/Desktop/log.json, ~ isn't expanded correctly (works correctly when specified as --log-file ~/Desktop/log.json due to shell expansion)
 
 ### Other
 * replace factories with references to constructors
@@ -73,7 +75,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * explain the task lifecycle (read config, construct graph, pull images / build images, start containers, wait for healthy etc.)
   * add note about increasing default CPU and memory limits when using Docker on OS X
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
-* make configuration-related error messages clearer and remove exception class names etc.
 * test against a variety of Docker versions (eg. earliest supported version and latest)
 * use batect to build batect (self-hosting)
 * tool to visualise execution on a timeline

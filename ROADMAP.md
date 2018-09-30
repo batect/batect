@@ -8,7 +8,10 @@ If there's something you're really keen to see, pull requests are always welcome
 ## v1.0
 
 ### Config file handling
-* better error message when a key (eg. a task name) is used twice (at the moment it's `Duplicate field 'duplicated_task_name'`)
+* don't print Jackson's error message if the configuration can't be loaded, just print our message
+* print configuration error messages in red like all other error messages
+* do as much validation at configuration loading time as possible (eg. validate command lines are syntactically valid, environment variable expressions are syntactically valid) - this allows us to
+  include line numbers etc.
 
 ### Features
 * automatically enable `--no-color` or `--simple-output` if console doesn't support it (use terminfo database rather than current detection system)

@@ -17,39 +17,22 @@
 package batect.config.io
 
 import batect.config.Configuration
-import batect.config.Container
 import batect.config.ContainerMap
-import batect.config.Task
 import batect.config.TaskMap
+import batect.config.io.deserializers.ContainerListDeserializer
+import batect.config.io.deserializers.TaskListDeserializer
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 data class ConfigurationFile(
     val projectName: String?,
-    val tasks: Map<String, TaskFromFile> = emptyMap(),
-    val containers: Map<String, ContainerFromFile> = emptyMap()
+    @JsonDeserialize(using = TaskListDeserializer::class) val tasks: Map<String, TaskFromFile> = emptyMap(),
+    @JsonDeserialize(using = ContainerListDeserializer::class) val containers: Map<String, ContainerFromFile> = emptyMap()
 ) {
-
     fun toConfiguration(pathResolver: PathResolver): Configuration {
-
         return Configuration(
             resolveProjectName(pathResolver),
-            TaskMap(tasks.map { (name, task) -> fromFileToTaskConfiguration(name, task) }),
-            ContainerMap(containers.map { (name, container) -> fromFileToContainerConfiguration(name, container, pathResolver) }))
-    }
-
-    private fun fromFileToContainerConfiguration(containerName: String, fileContainerConfig: ContainerFromFile?, pathResolver: PathResolver): Container {
-        if (fileContainerConfig == null) {
-            throw ConfigurationException("Container '$containerName' is invalid: no properties have been provided. At least one of image or build_directory is required")
-        }
-
-        return fileContainerConfig.toContainer(containerName, pathResolver)
-    }
-
-    private fun fromFileToTaskConfiguration(taskName: String, fileTaskConfig: TaskFromFile?): Task {
-        if (fileTaskConfig == null) {
-            throw ConfigurationException("Task '$taskName' is invalid: no properties have been provided, container is required")
-        }
-
-        return fileTaskConfig.toTask(taskName)
+            TaskMap(tasks.map { (name, task) -> task.toTask(name) }),
+            ContainerMap(containers.map { (name, container) -> container.toContainer(name, pathResolver) }))
     }
 
     private fun resolveProjectName(pathResolver: PathResolver): String {

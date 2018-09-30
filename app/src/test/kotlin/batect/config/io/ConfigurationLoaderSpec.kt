@@ -654,7 +654,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate field 'first_task'") and withLineNumber(7)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate task 'first_task'") and withLineNumber(7)))
             }
         }
 
@@ -670,7 +670,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate field 'container-1'") and withLineNumber(6)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate container 'container-1'") and withLineNumber(6)))
             }
         }
 
@@ -758,7 +758,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Could not load configuration file: Container 'container-2' is invalid: no properties have been provided. At least one of image or build_directory is required")))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Expected at least one field for container 'container-2'. At least one of 'image' or 'build_directory' is required.") and withLineNumber(6)))
             }
         }
 
@@ -775,7 +775,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Could not load configuration file: Task 'task-1' is invalid: no properties have been provided, container is required")))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Expected at least one field for task 'task-1'. At least 'run' is required.") and withLineNumber(7)))
             }
         }
 

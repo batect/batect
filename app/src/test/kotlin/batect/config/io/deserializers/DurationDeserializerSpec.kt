@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.config.io
+package batect.config.io.deserializers
 
 import batect.testutils.equalTo
 import batect.testutils.withOriginalMessage

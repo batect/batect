@@ -17,6 +17,8 @@
 package batect.config.io
 
 import batect.config.Task
+import batect.config.io.deserializers.DependencySetDeserializer
+import batect.config.io.deserializers.PrerequisiteSetDeserializer
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 

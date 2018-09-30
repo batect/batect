@@ -16,6 +16,7 @@
 
 package batect.config.io
 
+import batect.config.io.deserializers.DurationDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
 import java.time.Duration
 

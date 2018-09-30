@@ -24,6 +24,8 @@ import batect.config.PortMapping
 import batect.config.PullImage
 import batect.config.RunAsCurrentUserConfig
 import batect.config.VolumeMount
+import batect.config.io.deserializers.DependencySetDeserializer
+import batect.config.io.deserializers.EnvironmentDeserializer
 import batect.os.Command
 import batect.os.InvalidCommandLineException
 import com.fasterxml.jackson.annotation.JsonProperty

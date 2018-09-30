@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-package batect.config.io
+package batect.config.io.deserializers
 
-internal class DependencySetDeserializer : StringSetDeserializer() {
-    override fun getDuplicateValueMessage(value: String) = "The dependency '$value' is given more than once"
+internal class PrerequisiteSetDeserializer : StringSetDeserializer() {
+    override fun getDuplicateValueMessage(value: String) = "The prerequisite '$value' is given more than once"
 }

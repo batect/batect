@@ -18,6 +18,7 @@ package batect.config.io
 
 import batect.config.PortMapping
 import batect.config.TaskRunConfiguration
+import batect.config.io.deserializers.EnvironmentDeserializer
 import batect.os.Command
 import batect.os.InvalidCommandLineException
 import com.fasterxml.jackson.annotation.JsonProperty

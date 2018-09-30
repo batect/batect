@@ -23,7 +23,10 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
+import com.fasterxml.jackson.databind.exc.InvalidDefinitionException
+import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException
+import com.fasterxml.jackson.databind.util.ClassUtil
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
@@ -97,6 +100,8 @@ class ConfigurationLoader(
     private fun messageForJsonProcessingException(e: JsonProcessingException, fileName: String): String = when {
         e is UnrecognizedPropertyException -> messageForUnrecognizedPropertyException(e)
         e is MissingKotlinParameterException -> "Missing required field '${e.path.last().fieldName}'"
+        e is InvalidFormatException -> messageForInvalidFormatException(e)
+        e is InvalidDefinitionException -> messageForInvalidDefinitionException(e)
         e.originalMessage == "No content to map due to end-of-input" -> "File '$fileName' is empty"
         e.cause is JsonParseException -> (e.cause as JsonParseException).originalMessage
         else -> e.originalMessage
@@ -109,5 +114,17 @@ class ConfigurationLoader(
             .joinToString(", ")
 
         return "Unknown field '${e.propertyName}' (fields permitted here: $validProperties)"
+    }
+
+    private fun messageForInvalidFormatException(e: InvalidFormatException): String {
+        // There are some edge cases where the message won't be in the format we expect, so in those cases, we should just show the whole original message.
+        val message = e.originalMessage.substringAfter("Cannot deserialize value of type ${ClassUtil.nameOf(e.targetType)} from String \"${e.value}\": ")
+
+        return "Value '${e.value}' for field '${e.path.last().fieldName}' is invalid: $message"
+    }
+
+    private fun messageForInvalidDefinitionException(e: InvalidDefinitionException): String {
+        // There are some edge cases where the message won't be in the format we expect, so in those cases, we should just show the whole original message.
+        return e.originalMessage.substringAfter("Cannot construct instance of ${ClassUtil.nameOf(e.type.rawClass)}, problem: ")
     }
 }

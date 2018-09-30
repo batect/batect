@@ -778,5 +778,108 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat({ loadConfiguration(config) }, throws(withMessage("Could not load configuration file: Task 'task-1' is invalid: no properties have been provided, container is required")))
             }
         }
+
+        on("loading a configuration file with a container with an invalid local port in the expanded format") {
+            val config = """
+                    |project_name: the_cool_project
+                    |
+                    |containers:
+                    |  container-1:
+                    |    image: some-image:1.2.3
+                    |    ports:
+                    |      - local: abc123
+                    |        container: 1000
+                    """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value 'abc123' for field 'local' is invalid: not a valid Integer value") and withLineNumber(7)))
+            }
+        }
+
+        on("loading a configuration file with a container with an invalid container port in the expanded format") {
+            val config = """
+                    |project_name: the_cool_project
+                    |
+                    |containers:
+                    |  container-1:
+                    |    image: some-image:1.2.3
+                    |    ports:
+                    |      - local: 1000
+                    |        container: abc123
+                    """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value 'abc123' for field 'container' is invalid: not a valid Integer value") and withLineNumber(8)))
+            }
+        }
+
+        on("loading a configuration file with a container with an invalid port mapping in the concise format") {
+            val config = """
+                    |project_name: the_cool_project
+                    |
+                    |containers:
+                    |  container-1:
+                    |    image: some-image:1.2.3
+                    |    ports:
+                    |      - abc123:1000
+                    """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.") and withLineNumber(7)))
+            }
+        }
+
+        on("loading a configuration file with a task with an invalid local port in the expanded format") {
+            val config = """
+                    |project_name: the_cool_project
+                    |
+                    |tasks:
+                    |  task-1:
+                    |    run:
+                    |       container: some-container
+                    |       ports:
+                    |         - local: abc123
+                    |           container: 1000
+                    """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value 'abc123' for field 'local' is invalid: not a valid Integer value") and withLineNumber(8)))
+            }
+        }
+
+        on("loading a configuration file with a task with an invalid container port in the expanded format") {
+            val config = """
+                    |project_name: the_cool_project
+                    |
+                    |tasks:
+                    |  task-1:
+                    |    run:
+                    |      container: some-container
+                    |      ports:
+                    |        - local: 1000
+                    |          container: abc123
+                    """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value 'abc123' for field 'container' is invalid: not a valid Integer value") and withLineNumber(9)))
+            }
+        }
+
+        on("loading a configuration file with a task with an invalid port mapping in the concise format") {
+            val config = """
+                    |project_name: the_cool_project
+                    |
+                    |tasks:
+                    |  task-1:
+                    |    run:
+                    |      container: some-container
+                    |      ports:
+                    |        - abc123:1000
+                    """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.") and withLineNumber(8)))
+            }
+        }
     }
 })

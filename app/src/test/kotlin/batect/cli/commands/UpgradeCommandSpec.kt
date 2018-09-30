@@ -134,9 +134,9 @@ object UpgradeCommandSpec : Spek({
                                         verify(console).println("Downloading latest update information...")
                                         verify(updateInfoDownloader).getLatestVersionInfo()
                                         verify(console).println("Current version is 1.1.1, latest version is 1.2.3.")
-                                        verify(console).println("Downloading latest version...")
+                                        verify(console).println("Downloading latest version of the wrapper script...")
                                         verify(httpClient).newCall(any())
-                                        verify(console).println("Replacing existing version...")
+                                        verify(console).println("Replacing existing wrapper script...")
                                         verify(console).println("Upgrade complete! You can read more about this version at: https://batect.com/release-notes/1.2.2")
                                     }
                                 }
@@ -170,9 +170,9 @@ object UpgradeCommandSpec : Spek({
                                         verify(console).println("Downloading latest update information...")
                                         verify(updateInfoDownloader).getLatestVersionInfo()
                                         verify(console).println("Current version is 1.1.1, latest version is 1.2.3.")
-                                        verify(console).println("Downloading latest version...")
+                                        verify(console).println("Downloading latest version of the wrapper script...")
                                         verify(httpClient).newCall(any())
-                                        verify(redErrorConsole).println("Downloading latest version failed. Could not download https://batect.com/script-download: The server returned HTTP 404.")
+                                        verify(redErrorConsole).println("Download failed. Could not download https://batect.com/script-download: The server returned HTTP 404.")
                                     }
                                 }
 
@@ -206,9 +206,9 @@ object UpgradeCommandSpec : Spek({
                                         verify(console).println("Downloading latest update information...")
                                         verify(updateInfoDownloader).getLatestVersionInfo()
                                         verify(console).println("Current version is 1.1.1, latest version is 1.2.3.")
-                                        verify(console).println("Downloading latest version...")
+                                        verify(console).println("Downloading latest version of the wrapper script...")
                                         verify(httpClient).newCall(any())
-                                        verify(redErrorConsole).println("Downloading latest version failed. Could not download https://batect.com/script-download: Could not do what you asked because stuff happened.")
+                                        verify(redErrorConsole).println("Download failed. Could not download https://batect.com/script-download: Could not do what you asked because stuff happened.")
                                     }
                                 }
 

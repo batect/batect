@@ -46,7 +46,7 @@ class UpgradeCommand(
         val wrapperScriptLocation = environmentVariables["BATECT_WRAPPER_SCRIPT_PATH"]
 
         if (wrapperScriptLocation == null) {
-            logger.info {
+            logger.error {
                 message("batect was started without using the wrapper script and so cannot upgrade it.")
             }
 
@@ -121,7 +121,7 @@ class UpgradeCommand(
     }
 
     private fun downloadNewScript(url: String): ByteArray? {
-        console.println("Downloading latest version...")
+        console.println("Downloading latest version of the wrapper script...")
 
         val request = Request.Builder()
             .url(url)
@@ -155,7 +155,7 @@ class UpgradeCommand(
             }
 
             errorConsole.withColor(ConsoleColor.Red) {
-                println("Downloading latest version failed. Could not download $url: ${e.message}")
+                println("Download failed. Could not download $url: ${e.message}")
             }
 
             return null
@@ -163,7 +163,7 @@ class UpgradeCommand(
     }
 
     private fun writeNewScript(path: Path, content: ByteArray) {
-        console.println("Replacing existing version...")
+        console.println("Replacing existing wrapper script...")
         Files.write(path, content)
     }
 }

@@ -28,13 +28,11 @@ data class ConfigurationException(
 
     override fun toString(): String {
         val location = locationString()
-        val causeDescription = if (cause != null) "\nCaused by: $cause" else ""
-        val description = message + causeDescription
 
         return if (location != "") {
-            "$location: $description"
+            "$location: $message"
         } else {
-            description
+            message
         }
     }
 

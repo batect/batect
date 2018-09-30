@@ -43,7 +43,7 @@ object ConfigurationExceptionSpec : Spek({
 
                 on("converting to a string") {
                     it("returns the message and details of the cause") {
-                        assertThat(exception.toString(), equalTo("This is the error message\nCaused by: java.lang.RuntimeException: Something went wrong"))
+                        assertThat(exception.toString(), equalTo("This is the error message"))
                     }
                 }
             }
@@ -84,7 +84,7 @@ object ConfigurationExceptionSpec : Spek({
 
                 on("converting to a string") {
                     it("returns the message, the file name, the line number, the column and the cause") {
-                        assertThat(exception.toString(), equalTo("source.txt (line 12, column 54): This is the error message\nCaused by: java.lang.RuntimeException: Something went wrong"))
+                        assertThat(exception.toString(), equalTo("source.txt (line 12, column 54): This is the error message"))
                     }
                 }
             }

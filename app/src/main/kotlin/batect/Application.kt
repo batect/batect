@@ -22,6 +22,8 @@ import batect.cli.CommandLineOptionsParsingResult
 import batect.cli.commands.CommandFactory
 import batect.logging.ApplicationInfoLogger
 import batect.logging.logger
+import batect.ui.Console
+import batect.ui.ConsoleColor
 import org.kodein.di.DKodein
 import org.kodein.di.DKodeinAware
 import org.kodein.di.generic.instance
@@ -59,6 +61,7 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
     private fun runCommand(options: CommandLineOptions, args: Iterable<String>): Int {
         val extendedKodein = options.extend(dkodein)
         val logger = extendedKodein.logger<Application>()
+        val errorConsole = extendedKodein.instance<Console>(PrintStreamType.Error)
 
         try {
             val applicationInfoLogger = extendedKodein.instance<ApplicationInfoLogger>()
@@ -67,7 +70,7 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
             val command = commandFactory.createCommand(options, extendedKodein)
             return command.run()
         } catch (e: Throwable) {
-            errorStream.println(e)
+            errorConsole.withColor(ConsoleColor.Red) { println(e.toString()) }
 
             logger.error {
                 message("Exception thrown during execution.")
@@ -79,6 +82,8 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
     }
 
     private fun handleOptionsParsingFailed(result: CommandLineOptionsParsingResult.Failed): Int {
+        // We can't use the Console object here because those aren't available until after options parsing has been completed
+        // (because we need to respect things like --no-color).
         errorStream.println(result.message)
         return -1
     }

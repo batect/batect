@@ -30,14 +30,20 @@ import batect.testutils.createForEachTest
 import batect.testutils.hasMessage
 import batect.testutils.withException
 import batect.testutils.withSeverity
+import batect.ui.Console
+import batect.ui.ConsoleColor
+import batect.ui.ConsolePrintStatements
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.doThrow
+import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -77,10 +83,21 @@ object ApplicationSpec : Spek({
                 }
             }
 
+            val redErrorConsole by createForEachTest { mock<Console>() }
+            val errorConsole by createForEachTest {
+                mock<Console> {
+                    on { withColor(eq(ConsoleColor.Red), any()) } doAnswer {
+                        val printStatements = it.getArgument<ConsolePrintStatements>(1)
+                        printStatements(redErrorConsole)
+                    }
+                }
+            }
+
             val extendedDependencies by createForEachTest {
                 Kodein.direct {
                     bind<ApplicationInfoLogger>() with instance(applicationInfoLogger)
                     bind<LoggerFactory>() with instance(loggerFactory)
+                    bind<Console>(PrintStreamType.Error) with instance(errorConsole)
                 }
             }
 
@@ -136,8 +153,8 @@ object ApplicationSpec : Spek({
                 on("running the application") {
                     val exitCode = application.run(args)
 
-                    it("prints the exception message to the error stream") {
-                        assertThat(errorStream.toString(), containsSubstring("Everything is broken"))
+                    it("prints the exception message to the error console in red") {
+                        verify(redErrorConsole).println("java.lang.RuntimeException: Everything is broken")
                     }
 
                     it("logs the exception to the log") {

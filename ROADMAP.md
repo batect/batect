@@ -7,9 +7,6 @@ If there's something you're really keen to see, pull requests are always welcome
 
 ## v1.0
 
-### Config file handling
-* resolve / normalise paths in error messages (eg. remove .. segments)
-
 ### Features
 * automatically enable `--no-color` or `--simple-output` if console doesn't support it (use terminfo database rather than current detection system)
 * performance improvements

@@ -19,7 +19,6 @@ package batect.cli.options
 import batect.os.PathResolutionResult
 import batect.os.PathResolverFactory
 import batect.os.PathType
-import java.nio.file.FileSystem
 import java.nio.file.Path
 import java.util.Locale
 
@@ -61,8 +60,8 @@ object ValueConverters {
         }
     }
 
-    fun pathToFile(fileSystem: FileSystem, pathResolverFactory: PathResolverFactory): (String) -> ValueConversionResult<Path> {
-        val resolver = pathResolverFactory.createResolver(fileSystem.getPath("."))
+    fun pathToFile(pathResolverFactory: PathResolverFactory): (String) -> ValueConversionResult<Path> {
+        val resolver = pathResolverFactory.createResolverForCurrentDirectory()
 
         return { value ->
             val result = resolver.resolve(value)

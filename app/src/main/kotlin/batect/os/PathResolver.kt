@@ -21,10 +21,6 @@ import java.nio.file.InvalidPathException
 import java.nio.file.Path
 import java.util.Properties
 
-class PathResolverFactory {
-    fun createResolver(relativeTo: Path): PathResolver = PathResolver(relativeTo)
-}
-
 data class PathResolver(val relativeTo: Path, private val systemProperties: Properties = System.getProperties()) {
     private val homeDir = getPath(systemProperties.getProperty("user.home"))
 

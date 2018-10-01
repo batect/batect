@@ -119,10 +119,10 @@ object ValueConvertersSpec : Spek({
             }
 
             val pathResolverFactory = mock<PathResolverFactory> {
-                on { createResolver(fileSystem.getPath(".")) } doReturn pathResolver
+                on { createResolverForCurrentDirectory() } doReturn pathResolver
             }
 
-            val converter = ValueConverters.pathToFile(fileSystem, pathResolverFactory)
+            val converter = ValueConverters.pathToFile(pathResolverFactory)
 
             given("a path to a file that exists") {
                 it("returns the resolved path") {

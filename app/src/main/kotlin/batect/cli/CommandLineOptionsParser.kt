@@ -23,10 +23,9 @@ import batect.cli.options.OptionsParsingResult
 import batect.cli.options.ValueConverters
 import batect.os.PathResolverFactory
 import batect.ui.OutputStyle
-import java.nio.file.FileSystem
 import java.nio.file.Path
 
-class CommandLineOptionsParser(fileSystem: FileSystem, pathResolverFactory: PathResolverFactory) : OptionParserContainer {
+class CommandLineOptionsParser(pathResolverFactory: PathResolverFactory) : OptionParserContainer {
     override val optionParser: OptionParser = OptionParser()
 
     companion object {
@@ -47,7 +46,7 @@ class CommandLineOptionsParser(fileSystem: FileSystem, pathResolverFactory: Path
     private val logFileName: Path? by valueOption(
         "log-file",
         "Write internal batect logs to file.",
-        ValueConverters.pathToFile(fileSystem, pathResolverFactory)
+        ValueConverters.pathToFile(pathResolverFactory)
     )
 
     private val requestedOutputStyle: OutputStyle? by valueOption(

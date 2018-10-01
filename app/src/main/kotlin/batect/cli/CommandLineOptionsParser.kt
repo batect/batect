@@ -21,10 +21,13 @@ import batect.cli.options.OptionParser
 import batect.cli.options.OptionParserContainer
 import batect.cli.options.OptionsParsingResult
 import batect.cli.options.ValueConverters
+import batect.os.PathResolverFactory
 import batect.ui.OutputStyle
+import java.nio.file.FileSystem
+import java.nio.file.Path
 
-class CommandLineOptionsParser(override val optionParser: OptionParser) : OptionParserContainer {
-    constructor() : this(OptionParser())
+class CommandLineOptionsParser(fileSystem: FileSystem, pathResolverFactory: PathResolverFactory) : OptionParserContainer {
+    override val optionParser: OptionParser = OptionParser()
 
     companion object {
         const val disableCleanupAfterFailureFlagName = "no-cleanup-after-failure"
@@ -38,9 +41,14 @@ class CommandLineOptionsParser(override val optionParser: OptionParser) : Option
     private val listTasks: Boolean by flagOption("list-tasks", "List available tasks and exit.")
 
     private val configurationFileName: String by valueOption("config-file", "The configuration file to use.", "batect.yml", 'f')
-    private val logFileName: String? by valueOption("log-file", "Write internal batect logs to file.")
     private val disableColorOutput: Boolean by flagOption("no-color", "Disable colored output from batect. Does not affect task command output. (implies --output=simple)")
     private val disableUpdateNotification: Boolean by flagOption("no-update-notification", "Disable checking for updates to batect and notifying you when a new version is available.")
+
+    private val logFileName: Path? by valueOption(
+        "log-file",
+        "Write internal batect logs to file.",
+        ValueConverters.pathToFile(fileSystem, pathResolverFactory)
+    )
 
     private val requestedOutputStyle: OutputStyle? by valueOption(
         "output",

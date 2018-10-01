@@ -27,7 +27,7 @@ import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
 import org.kodein.di.generic.singleton
-import java.nio.file.FileSystem
+import java.nio.file.Path
 
 data class CommandLineOptions(
     val showHelp: Boolean = false,
@@ -35,7 +35,7 @@ data class CommandLineOptions(
     val runUpgrade: Boolean = false,
     val listTasks: Boolean = false,
     val configurationFileName: String = "batect.yml",
-    val logFileName: String? = null,
+    val logFileName: Path? = null,
     val requestedOutputStyle: OutputStyle? = null,
     val disableColorOutput: Boolean = false,
     val disableUpdateNotification: Boolean = false,
@@ -53,9 +53,7 @@ data class CommandLineOptions(
             if (logFileName == null) {
                 NullLogSink()
             } else {
-                val fileSystem = instance<FileSystem>()
-
-                FileLogSink(fileSystem.getPath(logFileName), instance(), instance())
+                FileLogSink(logFileName, instance(), instance())
             }
         }
     }

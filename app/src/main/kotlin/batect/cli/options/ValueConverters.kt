@@ -16,6 +16,11 @@
 
 package batect.cli.options
 
+import batect.os.PathResolutionResult
+import batect.os.PathResolverFactory
+import batect.os.PathType
+import java.nio.file.FileSystem
+import java.nio.file.Path
 import java.util.Locale
 
 object ValueConverters {
@@ -52,6 +57,23 @@ object ValueConverters {
                 val optionsDescription = validOptions.dropLast(1).joinToString(", ") + " or " + validOptions.last()
 
                 ValueConversionResult.ConversionFailed("Value must be one of $optionsDescription.")
+            }
+        }
+    }
+
+    fun pathToFile(fileSystem: FileSystem, pathResolverFactory: PathResolverFactory): (String) -> ValueConversionResult<Path> {
+        val resolver = pathResolverFactory.createResolver(fileSystem.getPath("."))
+
+        return { value ->
+            val result = resolver.resolve(value)
+
+            when (result) {
+                is PathResolutionResult.Resolved -> when (result.pathType) {
+                    PathType.File, PathType.DoesNotExist -> ValueConversionResult.ConversionSucceeded(result.absolutePath)
+                    PathType.Directory -> ValueConversionResult.ConversionFailed("The path '$value' refers to a directory.")
+                    PathType.Other -> ValueConversionResult.ConversionFailed("The path '$value' refers to something other than a file.")
+                }
+                is PathResolutionResult.InvalidPath -> ValueConversionResult.ConversionFailed("'$value' is not a valid path.")
             }
         }
     }

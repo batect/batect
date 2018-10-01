@@ -16,9 +16,17 @@
 
 package batect.cli
 
+import batect.os.PathResolutionResult
+import batect.os.PathResolver
+import batect.os.PathResolverFactory
+import batect.os.PathType
 import batect.testutils.equalTo
 import batect.ui.OutputStyle
+import com.google.common.jimfs.Configuration
+import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -27,9 +35,19 @@ import org.jetbrains.spek.api.dsl.on
 
 object CommandLineOptionsParserSpec : Spek({
     describe("a command line interface") {
+        val fileSystem = Jimfs.newFileSystem(Configuration.unix())
+
+        val pathResolver = mock<PathResolver> {
+            on { resolve("somefile.log") } doReturn PathResolutionResult.Resolved(fileSystem.getPath("/resolved/somefile.log"), PathType.File)
+        }
+
+        val pathResolverFactory = mock<PathResolverFactory> {
+            on { createResolver(fileSystem.getPath(".")) } doReturn pathResolver
+        }
+
         given("no arguments") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser().parse(emptyList())
+                val result = CommandLineOptionsParser(fileSystem, pathResolverFactory).parse(emptyList())
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("No task name provided.")))
@@ -39,7 +57,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a single argument for the task name") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser().parse(listOf("some-task"))
+                val result = CommandLineOptionsParser(fileSystem, pathResolverFactory).parse(listOf("some-task"))
 
                 it("returns a set of options with just the task name populated") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
@@ -51,7 +69,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("multiple arguments without a '--' prefix") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser().parse(listOf("some-task", "some-extra-arg"))
+                val result = CommandLineOptionsParser(fileSystem, pathResolverFactory).parse(listOf("some-task", "some-extra-arg"))
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed(
@@ -64,7 +82,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("multiple arguments with a '--' prefix") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser().parse(listOf("some-task", "--", "some-extra-arg"))
+                val result = CommandLineOptionsParser(fileSystem, pathResolverFactory).parse(listOf("some-task", "--", "some-extra-arg"))
 
                 it("returns a set of options with the task name and additional arguments populated") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
@@ -77,7 +95,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a flag followed by a single argument") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser().parse(listOf("--no-color", "some-task"))
+                val result = CommandLineOptionsParser(fileSystem, pathResolverFactory).parse(listOf("--no-color", "some-task"))
 
                 it("returns a set of options with the task name populated and the flag set") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
@@ -90,7 +108,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a flag followed by multiple arguments") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser().parse(listOf("--no-color", "some-task", "some-extra-arg"))
+                val result = CommandLineOptionsParser(fileSystem, pathResolverFactory).parse(listOf("--no-color", "some-task", "some-extra-arg"))
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed(
@@ -103,7 +121,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("colour output has been disabled and fancy output mode has been selected") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser().parse(listOf("--no-color", "--output=fancy", "some-task", "some-extra-arg"))
+                val result = CommandLineOptionsParser(fileSystem, pathResolverFactory).parse(listOf("--no-color", "--output=fancy", "some-task", "some-extra-arg"))
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("Fancy output mode cannot be used when colored output has been disabled.")))
@@ -122,7 +140,7 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--upgrade", "some-task") to CommandLineOptions(runUpgrade = true),
             listOf("-f=somefile.yml", "some-task") to CommandLineOptions(configurationFileName = "somefile.yml", taskName = "some-task"),
             listOf("--config-file=somefile.yml", "some-task") to CommandLineOptions(configurationFileName = "somefile.yml", taskName = "some-task"),
-            listOf("--log-file=somefile.log", "some-task") to CommandLineOptions(logFileName = "somefile.log", taskName = "some-task"),
+            listOf("--log-file=somefile.log", "some-task") to CommandLineOptions(logFileName = fileSystem.getPath("/resolved/somefile.log"), taskName = "some-task"),
             listOf("--output=simple", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Simple, taskName = "some-task"),
             listOf("--output=quiet", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Quiet, taskName = "some-task"),
             listOf("--output=fancy", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Fancy, taskName = "some-task"),
@@ -135,7 +153,7 @@ object CommandLineOptionsParserSpec : Spek({
         ).forEach { args, expectedResult ->
             given("the arguments $args") {
                 on("parsing the command line") {
-                    val result = CommandLineOptionsParser().parse(args)
+                    val result = CommandLineOptionsParser(fileSystem, pathResolverFactory).parse(args)
 
                     it("returns a set of options with the expected options populated") {
                         assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(expectedResult)))

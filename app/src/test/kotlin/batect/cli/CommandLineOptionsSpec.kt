@@ -35,7 +35,6 @@ import org.jetbrains.spek.api.dsl.on
 import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
-import java.nio.file.FileSystem
 
 object CommandLineOptionsSpec : Spek({
     describe("a set of command line options") {
@@ -64,14 +63,13 @@ object CommandLineOptionsSpec : Spek({
         }
 
         given("a log file name has been provided") {
-            val options = CommandLineOptions(taskName = "some-task", logFileName = "some-log.log")
+            val fileSystem = Jimfs.newFileSystem(Configuration.unix())
+            val resolvedPath = fileSystem.getPath("some-log.log")
+            val options = CommandLineOptions(taskName = "some-task", logFileName = resolvedPath)
 
             on("extending an existing Kodein configuration") {
-                val fileSystem = Jimfs.newFileSystem(Configuration.unix())
-
                 val originalKodein = Kodein.direct {
                     bind<String>("some string") with instance("The string value")
-                    bind<FileSystem>() with instance(fileSystem)
                     bind<LogMessageWriter>() with instance(mock())
                     bind<StandardAdditionalDataSource>() with instance(mock())
                 }
@@ -79,11 +77,11 @@ object CommandLineOptionsSpec : Spek({
                 val extendedKodein = options.extend(originalKodein)
 
                 it("includes the configuration from the original instance") {
-                    assertThat(extendedKodein.instance<String>("some string"), equalTo("The string value"))
+                    assertThat(extendedKodein.instance("some string"), equalTo("The string value"))
                 }
 
                 it("adds itself to the Kodein configuration") {
-                    assertThat(extendedKodein.instance<CommandLineOptions>(), equalTo(options))
+                    assertThat(extendedKodein.instance(), equalTo(options))
                 }
 
                 it("creates a file log sink to use") {
@@ -91,7 +89,7 @@ object CommandLineOptionsSpec : Spek({
                 }
 
                 it("creates the file log sink with the expected file name") {
-                    assertThat((extendedKodein.instance<LogSink>() as FileLogSink).path, equalTo(fileSystem.getPath("some-log.log")))
+                    assertThat((extendedKodein.instance<LogSink>() as FileLogSink).path, equalTo(resolvedPath))
                 }
             }
         }

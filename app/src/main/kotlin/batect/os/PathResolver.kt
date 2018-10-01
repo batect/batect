@@ -32,7 +32,7 @@ data class PathResolver(val relativeTo: Path, private val systemProperties: Prop
         try {
             val originalPath = resolveHomeDir(getPath(path))
             val resolvedPath = relativeTo.resolve(originalPath).normalize()
-            return PathResolutionResult.Resolved(resolvedPath.toString(), pathType(resolvedPath))
+            return PathResolutionResult.Resolved(resolvedPath, pathType(resolvedPath))
         } catch (e: InvalidPathException) {
             return PathResolutionResult.InvalidPath
         }
@@ -61,7 +61,7 @@ data class PathResolver(val relativeTo: Path, private val systemProperties: Prop
 }
 
 sealed class PathResolutionResult {
-    data class Resolved(val absolutePath: String, val pathType: PathType) : PathResolutionResult()
+    data class Resolved(val absolutePath: Path, val pathType: PathType) : PathResolutionResult()
     object InvalidPath : PathResolutionResult()
 }
 

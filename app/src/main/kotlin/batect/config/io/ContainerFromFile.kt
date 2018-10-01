@@ -92,7 +92,7 @@ data class ContainerFromFile(
 
         when (result) {
             is PathResolutionResult.Resolved -> when (result.pathType) {
-                PathType.Directory -> return result.absolutePath
+                PathType.Directory -> return result.absolutePath.toString()
                 PathType.DoesNotExist -> throw ConfigurationException("Build directory '$buildDirectory' (resolved to '${result.absolutePath}') for container '$containerName' does not exist.")
                 else -> throw ConfigurationException("Build directory '$buildDirectory' (resolved to '${result.absolutePath}') for container '$containerName' is not a directory.")
             }
@@ -104,7 +104,7 @@ data class ContainerFromFile(
         val result = pathResolver.resolve(volumeMount.localPath)
 
         val resolvedLocalPath = when (result) {
-            is PathResolutionResult.Resolved -> result.absolutePath
+            is PathResolutionResult.Resolved -> result.absolutePath.toString()
             is PathResolutionResult.InvalidPath -> throw ConfigurationException("Local path '${volumeMount.localPath}' for volume mount in container '$containerName' is not a valid path.")
         }
 

@@ -111,7 +111,7 @@ enum class PrintStreamType {
 
 private val cliModule = Kodein.Module("cli") {
     bind<CommandFactory>() with singleton { CommandFactory() }
-    bind<CommandLineOptionsParser>() with singleton { CommandLineOptionsParser() }
+    bind<CommandLineOptionsParser>() with singleton { CommandLineOptionsParser(instance(), instance()) }
 
     bind<RunTaskCommand>() with singletonWithLogger { logger ->
         RunTaskCommand(

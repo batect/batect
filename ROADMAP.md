@@ -46,7 +46,6 @@ If there's something you're really keen to see, pull requests are always welcome
   doesn't correctly overwrite previous updates
   * this is fixed if the console is not resized while batect is running, still need to handle the case where the console is resized while batect is running
 * ensure prerequisite order is respected, even with multiple dependencies
-* if logging is enabled with --log-file=~/Desktop/log.json, ~ isn't expanded correctly (works correctly when specified as --log-file ~/Desktop/log.json due to shell expansion)
 
 ### Other
 * replace factories with references to constructors

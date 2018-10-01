@@ -16,9 +16,17 @@
 
 package batect.cli.options
 
+import batect.os.PathResolutionResult
+import batect.os.PathResolver
+import batect.os.PathResolverFactory
+import batect.os.PathType
 import batect.testutils.equalTo
 import batect.ui.OutputStyle
+import com.google.common.jimfs.Configuration
+import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -29,7 +37,7 @@ object ValueConvertersSpec : Spek({
         describe("string value converter") {
             it("returns the value passed to it") {
                 assertThat(ValueConverters.string("some-value"),
-                        equalTo(ValueConversionResult.ConversionSucceeded("some-value")))
+                    equalTo(ValueConversionResult.ConversionSucceeded("some-value")))
             }
         }
 
@@ -37,42 +45,42 @@ object ValueConvertersSpec : Spek({
             given("a positive integer") {
                 it("returns the parsed representation of that integer") {
                     assertThat(ValueConverters.positiveInteger("1"),
-                            equalTo(ValueConversionResult.ConversionSucceeded(1)))
+                        equalTo(ValueConversionResult.ConversionSucceeded(1)))
                 }
             }
 
             given("zero") {
                 it("returns an error") {
                     assertThat(ValueConverters.positiveInteger("0"),
-                            equalTo(ValueConversionResult.ConversionFailed("Value must be positive.")))
+                        equalTo(ValueConversionResult.ConversionFailed("Value must be positive.")))
                 }
             }
 
             given("a negative integer") {
                 it("returns an error") {
                     assertThat(ValueConverters.positiveInteger("-1"),
-                            equalTo(ValueConversionResult.ConversionFailed("Value must be positive.")))
+                        equalTo(ValueConversionResult.ConversionFailed("Value must be positive.")))
                 }
             }
 
             given("an empty string") {
                 it("returns an error") {
                     assertThat(ValueConverters.positiveInteger(""),
-                            equalTo(ValueConversionResult.ConversionFailed("Value is not a valid integer.")))
+                        equalTo(ValueConversionResult.ConversionFailed("Value is not a valid integer.")))
                 }
             }
 
             given("a hexadecimal number") {
                 it("returns an error") {
                     assertThat(ValueConverters.positiveInteger("123AAA"),
-                            equalTo(ValueConversionResult.ConversionFailed("Value is not a valid integer.")))
+                        equalTo(ValueConversionResult.ConversionFailed("Value is not a valid integer.")))
                 }
             }
 
             given("something that is not a number") {
                 it("returns an error") {
                     assertThat(ValueConverters.positiveInteger("x"),
-                            equalTo(ValueConversionResult.ConversionFailed("Value is not a valid integer.")))
+                        equalTo(ValueConversionResult.ConversionFailed("Value is not a valid integer.")))
                 }
             }
         }
@@ -95,6 +103,54 @@ object ValueConvertersSpec : Spek({
             given("an invalid value") {
                 it("returns an error") {
                     assertThat(converter("nonsense"), equalTo(ValueConversionResult.ConversionFailed("Value must be one of 'fancy', 'quiet' or 'simple'.")))
+                }
+            }
+        }
+
+        describe("path to file converter") {
+            val fileSystem = Jimfs.newFileSystem(Configuration.unix())
+
+            val pathResolver = mock<PathResolver> {
+                on { resolve("file") } doReturn PathResolutionResult.Resolved(fileSystem.getPath("/resolved/file"), PathType.File)
+                on { resolve("directory") } doReturn PathResolutionResult.Resolved(fileSystem.getPath("/resolved/directory"), PathType.Directory)
+                on { resolve("other") } doReturn PathResolutionResult.Resolved(fileSystem.getPath("/resolved/other"), PathType.Other)
+                on { resolve("does-not-exist") } doReturn PathResolutionResult.Resolved(fileSystem.getPath("/resolved/does-not-exist"), PathType.DoesNotExist)
+                on { resolve("invalid") } doReturn PathResolutionResult.InvalidPath
+            }
+
+            val pathResolverFactory = mock<PathResolverFactory> {
+                on { createResolver(fileSystem.getPath(".")) } doReturn pathResolver
+            }
+
+            val converter = ValueConverters.pathToFile(fileSystem, pathResolverFactory)
+
+            given("a path to a file that exists") {
+                it("returns the resolved path") {
+                    assertThat(converter("file"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/file"))))
+                }
+            }
+
+            given("a path to a directory") {
+                it("returns an error") {
+                    assertThat(converter("directory"), equalTo(ValueConversionResult.ConversionFailed("The path 'directory' refers to a directory.")))
+                }
+            }
+
+            given("a path to something other than a file or directory") {
+                it("returns an error") {
+                    assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' refers to something other than a file.")))
+                }
+            }
+
+            given("a path to a file that does not exist") {
+                it("returns the resolved path") {
+                    assertThat(converter("does-not-exist"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/does-not-exist"))))
+                }
+            }
+
+            given("an invalid path") {
+                it("returns an error") {
+                    assertThat(converter("invalid"), equalTo(ValueConversionResult.ConversionFailed("'invalid' is not a valid path.")))
                 }
             }
         }

@@ -39,6 +39,7 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import java.nio.file.Paths
 
 object ConfigurationFileSpec : Spek({
     describe("a configuration file") {
@@ -92,9 +93,9 @@ object ConfigurationFileSpec : Spek({
 
             on("converting a configuration file with a container") {
                 val originalBuildDirectory = "build_dir"
-                val resolvedBuildDirectory = "/the_resolved_build_dir"
+                val resolvedBuildDirectory = Paths.get("/the_resolved_build_dir")
                 val originalVolumeMountPath = "local_volume_dir"
-                val resolvedVolumeMountPath = "/the_resolved_local_volume_dir"
+                val resolvedVolumeMountPath = Paths.get("/the_resolved_local_volume_dir")
                 val volumeMountTargetPath = "/remote"
 
                 val container = ContainerFromFile(
@@ -128,11 +129,11 @@ object ConfigurationFileSpec : Spek({
                     assertThat(resultingConfig.containers, equalTo(ContainerMap(
                         Container(
                             containerName,
-                            BuildImage(resolvedBuildDirectory),
+                            BuildImage(resolvedBuildDirectory.toString()),
                             Command.parse(container.command),
                             container.environment,
                             container.workingDirectory,
-                            setOf(VolumeMount(resolvedVolumeMountPath, volumeMountTargetPath, "some-options")),
+                            setOf(VolumeMount(resolvedVolumeMountPath.toString(), volumeMountTargetPath, "some-options")),
                             container.portMappings,
                             container.dependencies)
                     )))
@@ -142,10 +143,26 @@ object ConfigurationFileSpec : Spek({
             data class BuildDirectoryResolutionTestCase(val description: String, val resolution: PathResolutionResult, val expectedMessage: String)
 
             setOf(
-                BuildDirectoryResolutionTestCase("does not exist", PathResolutionResult.Resolved("/some_resolved_path", PathType.DoesNotExist), "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' does not exist."),
-                BuildDirectoryResolutionTestCase("is a file", PathResolutionResult.Resolved("/some_resolved_path", PathType.File), "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."),
-                BuildDirectoryResolutionTestCase("is neither a file or directory", PathResolutionResult.Resolved("/some_resolved_path", PathType.Other), "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."),
-                BuildDirectoryResolutionTestCase("is an invalid path", PathResolutionResult.InvalidPath, "Build directory 'build_dir' for container 'the_container_name' is not a valid path.")
+                BuildDirectoryResolutionTestCase(
+                    "does not exist",
+                    PathResolutionResult.Resolved(Paths.get("/some_resolved_path"), PathType.DoesNotExist),
+                    "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' does not exist."
+                ),
+                BuildDirectoryResolutionTestCase(
+                    "is a file",
+                    PathResolutionResult.Resolved(Paths.get("/some_resolved_path"), PathType.File),
+                    "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."
+                ),
+                BuildDirectoryResolutionTestCase(
+                    "is neither a file or directory",
+                    PathResolutionResult.Resolved(Paths.get("/some_resolved_path"), PathType.Other),
+                    "Build directory 'build_dir' (resolved to '/some_resolved_path') for container 'the_container_name' is not a directory."
+                ),
+                BuildDirectoryResolutionTestCase(
+                    "is an invalid path",
+                    PathResolutionResult.InvalidPath,
+                    "Build directory 'build_dir' for container 'the_container_name' is not a valid path."
+                )
             ).forEach { (description, resolution, expectedMessage) ->
                 on("converting a configuration file with a container that has a build directory that $description") {
                     val originalBuildDirectory = "build_dir"
@@ -168,7 +185,7 @@ object ConfigurationFileSpec : Spek({
                 val configFile = ConfigurationFile("the_project_name", containers = mapOf("the_container_name" to container))
 
                 val pathResolver = mock<PathResolver> {
-                    on { resolve(originalVolumeMountPath) } doReturn PathResolutionResult.Resolved("/some_resolved_path", PathType.File)
+                    on { resolve(originalVolumeMountPath) } doReturn PathResolutionResult.Resolved(Paths.get("/some_resolved_path"), PathType.File)
                 }
 
                 val resultingConfig = configFile.toConfiguration(pathResolver)

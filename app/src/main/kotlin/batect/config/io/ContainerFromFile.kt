@@ -28,6 +28,9 @@ import batect.config.io.deserializers.DependencySetDeserializer
 import batect.config.io.deserializers.EnvironmentDeserializer
 import batect.os.Command
 import batect.os.InvalidCommandLineException
+import batect.os.PathResolutionResult
+import batect.os.PathResolver
+import batect.os.PathType
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 

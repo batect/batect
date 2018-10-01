@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.config.io
+package batect.os
 
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs

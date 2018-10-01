@@ -25,6 +25,9 @@ import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.config.VolumeMount
 import batect.os.Command
+import batect.os.PathResolutionResult
+import batect.os.PathResolver
+import batect.os.PathType
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo

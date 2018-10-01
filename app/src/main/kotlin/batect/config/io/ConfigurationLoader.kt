@@ -18,6 +18,7 @@ package batect.config.io
 
 import batect.config.Configuration
 import batect.logging.Logger
+import batect.os.PathResolverFactory
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonProcessingException

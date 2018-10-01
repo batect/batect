@@ -24,6 +24,9 @@ import batect.config.PullImage
 import batect.config.RunAsCurrentUserConfig
 import batect.config.VolumeMount
 import batect.os.Command
+import batect.os.PathResolutionResult
+import batect.os.PathResolverFactory
+import batect.os.PathType
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo

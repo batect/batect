@@ -21,6 +21,7 @@ import batect.config.ContainerMap
 import batect.config.TaskMap
 import batect.config.io.deserializers.ContainerListDeserializer
 import batect.config.io.deserializers.TaskListDeserializer
+import batect.os.PathResolver
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 data class ConfigurationFile(

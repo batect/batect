@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.config.io
+package batect.os
 
 import java.nio.file.Files
 import java.nio.file.InvalidPathException

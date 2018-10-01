@@ -25,7 +25,6 @@ import batect.cli.commands.RunTaskCommand
 import batect.cli.commands.UpgradeCommand
 import batect.cli.commands.VersionInfoCommand
 import batect.config.io.ConfigurationLoader
-import batect.config.io.PathResolverFactory
 import batect.docker.DockerAPI
 import batect.docker.DockerClient
 import batect.docker.DockerContainerCreationRequestFactory
@@ -56,6 +55,7 @@ import batect.logging.LoggerFactory
 import batect.logging.StandardAdditionalDataSource
 import batect.logging.singletonWithLogger
 import batect.os.NativeMethods
+import batect.os.PathResolverFactory
 import batect.os.ProcessRunner
 import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablePreprocessor

@@ -18,8 +18,9 @@ package batect.cli.commands
 
 import batect.config.io.ConfigurationLoader
 import java.io.PrintStream
+import java.nio.file.Path
 
-class ListTasksCommand(val configFile: String, val configLoader: ConfigurationLoader, val outputStream: PrintStream) : Command {
+class ListTasksCommand(val configFile: Path, val configLoader: ConfigurationLoader, val outputStream: PrintStream) : Command {
     override fun run(): Int {
         val config = configLoader.loadConfig(configFile)
 

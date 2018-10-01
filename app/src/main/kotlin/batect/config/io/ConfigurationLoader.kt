@@ -32,35 +32,33 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
 import java.io.InputStream
-import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
 class ConfigurationLoader(
     private val pathResolverFactory: PathResolverFactory,
-    private val fileSystem: FileSystem,
     private val logger: Logger
 ) {
-    fun loadConfig(fileName: String): Configuration {
-        val path = fileSystem.getPath(fileName).toAbsolutePath()
+    fun loadConfig(path: Path): Configuration {
+        val absolutePath = path.toAbsolutePath()
 
         logger.info {
             message("Loading configuration.")
-            data("path", path.toString())
+            data("path", absolutePath.toString())
         }
 
-        if (!Files.exists(path)) {
+        if (!Files.exists(absolutePath)) {
             logger.error {
                 message("Configuration file could not be found.")
-                data("path", path.toString())
+                data("path", absolutePath.toString())
             }
 
-            throw ConfigurationException("The file '$path' does not exist.")
+            throw ConfigurationException("The file '$absolutePath' does not exist.")
         }
 
-        Files.newInputStream(path, StandardOpenOption.READ).use {
-            val config = loadConfig(it, path)
+        Files.newInputStream(absolutePath, StandardOpenOption.READ).use { stream ->
+            val config = loadConfig(stream, absolutePath)
 
             logger.info {
                 message("Configuration loaded.")

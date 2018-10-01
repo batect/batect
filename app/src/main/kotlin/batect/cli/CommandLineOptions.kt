@@ -28,13 +28,14 @@ import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
 import org.kodein.di.generic.singleton
 import java.nio.file.Path
+import java.nio.file.Paths
 
 data class CommandLineOptions(
     val showHelp: Boolean = false,
     val showVersionInfo: Boolean = false,
     val runUpgrade: Boolean = false,
     val listTasks: Boolean = false,
-    val configurationFileName: String = "batect.yml",
+    val configurationFileName: Path = Paths.get("batect.yml"),
     val logFileName: Path? = null,
     val requestedOutputStyle: OutputStyle? = null,
     val disableColorOutput: Boolean = false,

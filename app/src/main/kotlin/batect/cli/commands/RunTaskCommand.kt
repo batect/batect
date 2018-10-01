@@ -29,9 +29,10 @@ import batect.logging.Logger
 import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.updates.UpdateNotifier
+import java.nio.file.Path
 
 class RunTaskCommand(
-    val configFile: String,
+    val configFile: Path,
     val runOptions: RunOptions,
     val configLoader: ConfigurationLoader,
     val taskExecutionOrderResolver: TaskExecutionOrderResolver,

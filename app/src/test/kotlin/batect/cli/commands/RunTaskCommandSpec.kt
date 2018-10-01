@@ -40,6 +40,7 @@ import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.ui.ConsolePrintStatements
 import batect.updates.UpdateNotifier
+import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -63,7 +64,8 @@ import org.jetbrains.spek.api.dsl.on
 object RunTaskCommandSpec : Spek({
     describe("a 'run task' command") {
         describe("when invoked") {
-            val configFile = "config.yml"
+            val fileSystem = Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix())
+            val configFile = fileSystem.getPath("config.yml")
             val taskName = "the-task"
             val mainTask = Task(taskName, TaskRunConfiguration("the-container"))
             val config = Configuration("the_project", TaskMap(), ContainerMap())

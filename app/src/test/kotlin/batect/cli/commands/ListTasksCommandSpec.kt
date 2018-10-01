@@ -23,6 +23,7 @@ import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.config.io.ConfigurationLoader
 import batect.os.Command
+import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.doReturn
@@ -36,7 +37,8 @@ import java.io.PrintStream
 object ListTasksCommandSpec : Spek({
     describe("a 'list tasks' command") {
         describe("when invoked") {
-            val configFile = "config.yml"
+            val fileSystem = Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix())
+            val configFile = fileSystem.getPath("config.yml")
             val taskRunConfig = TaskRunConfiguration("some-container", Command.parse("dont-care"))
             val task1 = Task("first-task", taskRunConfig)
             val task2 = Task("other-task", taskRunConfig)

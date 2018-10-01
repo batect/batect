@@ -76,7 +76,7 @@ object ConfigurationLoaderSpec : Spek({
 
         val logger by createLoggerForEachTest()
         val testFileName = "/theTestFile.yml"
-        val loader by createForEachTest { ConfigurationLoader(pathResolverFactory, fileSystem, logger) }
+        val loader by createForEachTest { ConfigurationLoader(pathResolverFactory, logger) }
 
         fun loadConfiguration(config: String, path: String = testFileName): Configuration {
             val filePath = fileSystem.getPath(path)
@@ -89,7 +89,7 @@ object ConfigurationLoaderSpec : Spek({
             Files.write(filePath, config.toByteArray())
 
             try {
-                return loader.loadConfig(path)
+                return loader.loadConfig(filePath)
             } finally {
                 Files.delete(filePath)
             }
@@ -745,7 +745,7 @@ object ConfigurationLoaderSpec : Spek({
 
         on("loading attempting to load a configuration file that does not exist") {
             it("should fail with an appropriate error message") {
-                assertThat({ loader.loadConfig("/doesntexist.yml") }, throws(withMessage("The file '/doesntexist.yml' does not exist.")))
+                assertThat({ loader.loadConfig(fileSystem.getPath("/doesntexist.yml")) }, throws(withMessage("The file '/doesntexist.yml' does not exist.")))
             }
         }
 

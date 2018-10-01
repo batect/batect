@@ -16,14 +16,15 @@
 
 package batect.cli
 
-import batect.cli.options.defaultvalues.LevelOfParallelismDefaultValueProvider
 import batect.cli.options.OptionParser
 import batect.cli.options.OptionParserContainer
 import batect.cli.options.OptionsParsingResult
 import batect.cli.options.ValueConverters
+import batect.cli.options.defaultvalues.LevelOfParallelismDefaultValueProvider
 import batect.os.PathResolverFactory
 import batect.ui.OutputStyle
 import java.nio.file.Path
+import java.nio.file.Paths
 
 class CommandLineOptionsParser(pathResolverFactory: PathResolverFactory) : OptionParserContainer {
     override val optionParser: OptionParser = OptionParser()
@@ -39,9 +40,16 @@ class CommandLineOptionsParser(pathResolverFactory: PathResolverFactory) : Optio
     private val runUpgrade: Boolean by flagOption(upgradeFlagName, "Upgrade batect to the latest available version.")
     private val listTasks: Boolean by flagOption("list-tasks", "List available tasks and exit.")
 
-    private val configurationFileName: String by valueOption("config-file", "The configuration file to use.", "batect.yml", 'f')
     private val disableColorOutput: Boolean by flagOption("no-color", "Disable colored output from batect. Does not affect task command output. (implies --output=simple)")
     private val disableUpdateNotification: Boolean by flagOption("no-update-notification", "Disable checking for updates to batect and notifying you when a new version is available.")
+
+    private val configurationFileName: Path by valueOption(
+        "config-file",
+        "The configuration file to use.",
+        Paths.get("batect.yml"),
+        ValueConverters.pathToFile(pathResolverFactory),
+        'f'
+    )
 
     private val logFileName: Path? by valueOption(
         "log-file",

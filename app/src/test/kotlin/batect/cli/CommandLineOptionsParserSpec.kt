@@ -39,6 +39,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         val pathResolver = mock<PathResolver> {
             on { resolve("somefile.log") } doReturn PathResolutionResult.Resolved(fileSystem.getPath("/resolved/somefile.log"), PathType.File)
+            on { resolve("somefile.yml") } doReturn PathResolutionResult.Resolved(fileSystem.getPath("/resolved/somefile.yml"), PathType.File)
         }
 
         val pathResolverFactory = mock<PathResolverFactory> {
@@ -138,8 +139,8 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--list-tasks", "some-task") to CommandLineOptions(listTasks = true),
             listOf("--upgrade") to CommandLineOptions(runUpgrade = true),
             listOf("--upgrade", "some-task") to CommandLineOptions(runUpgrade = true),
-            listOf("-f=somefile.yml", "some-task") to CommandLineOptions(configurationFileName = "somefile.yml", taskName = "some-task"),
-            listOf("--config-file=somefile.yml", "some-task") to CommandLineOptions(configurationFileName = "somefile.yml", taskName = "some-task"),
+            listOf("-f=somefile.yml", "some-task") to CommandLineOptions(configurationFileName = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task"),
+            listOf("--config-file=somefile.yml", "some-task") to CommandLineOptions(configurationFileName = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task"),
             listOf("--log-file=somefile.log", "some-task") to CommandLineOptions(logFileName = fileSystem.getPath("/resolved/somefile.log"), taskName = "some-task"),
             listOf("--output=simple", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Simple, taskName = "some-task"),
             listOf("--output=quiet", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Quiet, taskName = "some-task"),

@@ -135,7 +135,7 @@ private val cliModule = Kodein.Module("cli") {
 }
 
 private val configModule = Kodein.Module("config") {
-    bind<ConfigurationLoader>() with singletonWithLogger { logger -> ConfigurationLoader(instance(), instance(), logger) }
+    bind<ConfigurationLoader>() with singletonWithLogger { logger -> ConfigurationLoader(instance(), logger) }
     bind<PathResolverFactory>() with singleton { PathResolverFactory(instance()) }
 }
 

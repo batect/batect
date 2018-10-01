@@ -56,30 +56,30 @@ class ConsoleInfo(
     val terminalType: String? = environment["TERM"]
     private val isTravis: Boolean = environment["TRAVIS"] == "true"
 
-    // FIXME: This isn't perfect - if the user resizes the terminal after we call getConsoleDimensions(), we'll have stale information
-    val dimensions: Dimensions? by lazy {
-        try {
-            val result = nativeMethods.getConsoleDimensions()
+    val dimensions: Dimensions?
+        get() {
+            try {
+                val result = nativeMethods.getConsoleDimensions()
 
-            logger.info {
-                message("Got console dimensions.")
-                data("result", result)
-            }
-
-            result
-        } catch (e: NativeMethodException) {
-            if (e.error == Errno.ENOTTY) {
-                null
-            } else {
-                logger.warn {
-                    message("Getting console dimensions failed.")
-                    exception(e)
+                logger.info {
+                    message("Got console dimensions.")
+                    data("result", result)
                 }
 
-                throw e
+                return result
+            } catch (e: NativeMethodException) {
+                if (e.error == Errno.ENOTTY) {
+                    return null
+                } else {
+                    logger.warn {
+                        message("Getting console dimensions failed.")
+                        exception(e)
+                    }
+
+                    throw e
+                }
             }
         }
-    }
 }
 
 data class Dimensions(val height: Int, val width: Int)

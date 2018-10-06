@@ -59,7 +59,7 @@ dependencies {
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.7'
     compile 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.7'
     compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.7'
-    compile 'org.kodein.di:kodein-di-generic-jvm:5.2.0'
+    compile 'org.kodein.di:kodein-di-generic-jvm:5.3.0'
     compile 'com.squareup.okhttp3:okhttp:3.11.0'
     compile 'com.github.jnr:jnr-unixsocket:0.20'
     compile 'com.github.jnr:jnr-posix:3.0.46'

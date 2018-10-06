@@ -16,7 +16,10 @@
 
 package batect.ui
 
+import batect.testutils.createForEachTest
 import batect.testutils.withMessage
+import batect.ui.text.Text
+import batect.ui.text.TextRun
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
@@ -39,12 +42,8 @@ object ConsoleSpec : Spek({
 
     describe("a console") {
         describe("when complex output is enabled") {
-            val output = ByteArrayOutputStream()
-            val console = Console(PrintStream(output), enableComplexOutput = true, consoleInfo = mock())
-
-            beforeEachTest {
-                output.reset()
-            }
+            val output by createForEachTest { ByteArrayOutputStream() }
+            val console by createForEachTest { Console(PrintStream(output), enableComplexOutput = true, consoleInfo = mock()) }
 
             on("printing text") {
                 console.print("This is some text")
@@ -70,130 +69,131 @@ object ConsoleSpec : Spek({
                 }
             }
 
-            on("printing coloured text") {
-                console.withColor(ConsoleColor.White) {
-                    print("the white text")
+            on("printing unformatted text") {
+                console.print(Text("Hello"))
+
+                it("writes that text directly to the output") {
+                    assertThat(output.toString(), equalTo("Hello"))
                 }
+            }
+
+            on("printing unformatted text, ending with a new line") {
+                console.println(Text("Hello"))
+
+                it("writes that text directly to the output") {
+                    assertThat(output.toString(), equalTo("Hello\n"))
+                }
+            }
+
+            on("printing some coloured text") {
+                console.print(Text.white("the white text"))
 
                 it("writes the text to the output with the appropriate escape codes") {
                     assertThat(output.toString(), equalTo("${whiteText}the white text$reset"))
                 }
             }
 
-            on("nesting coloured text") {
-                console.withColor(ConsoleColor.White) {
-                    println("white")
-
-                    withColor(ConsoleColor.Red) {
-                        println("red")
-                    }
-
-                    println("more white")
-                }
+            on("printing some coloured text, ending with a new line") {
+                console.println(Text.white("the white text"))
 
                 it("writes the text to the output with the appropriate escape codes") {
-                    assertThat(output.toString(), equalTo("${whiteText}white\n${reset}${redText}red\n${reset}${whiteText}more white\n$reset"))
+                    assertThat(output.toString(), equalTo("${whiteText}the white text$reset\n"))
                 }
             }
 
-            on("nesting coloured text of the same colour") {
-                console.withColor(ConsoleColor.White) {
-                    println("white 1")
-
-                    withColor(ConsoleColor.White) {
-                        println("white 2")
-                    }
-
-                    println("white 3")
-                }
-
-                it("writes the text to the output with the appropriate escape codes") {
-                    assertThat(output.toString(), equalTo("${whiteText}white 1\nwhite 2\nwhite 3\n$reset"))
-                }
-            }
-
-            on("printing bold text using a lambda") {
-                console.inBold {
-                    print("the bold text")
-                }
+            on("printing some bold text") {
+                console.print(Text.bold("the bold text"))
 
                 it("writes the text to the output with the appropriate escape codes") {
                     assertThat(output.toString(), equalTo("${boldText}the bold text$reset"))
                 }
             }
 
-            on("printing bold text from a string") {
-                console.printBold("the bold text")
+            on("printing some bold text, ending with a new line") {
+                console.println(Text.bold("the bold text"))
 
                 it("writes the text to the output with the appropriate escape codes") {
-                    assertThat(output.toString(), equalTo("${boldText}the bold text$reset"))
+                    assertThat(output.toString(), equalTo("${boldText}the bold text$reset\n"))
                 }
             }
 
-            on("nesting bold text inside bold text") {
-                console.inBold {
-                    inBold {
-                        print("the bold text")
-                    }
-                }
+            on("printing bold and coloured text") {
+                console.print(Text("bold and red", ConsoleColor.Red, true))
 
                 it("writes the text to the output with the appropriate escape codes") {
-                    assertThat(output.toString(), equalTo("${boldText}the bold text$reset"))
+                    assertThat(output.toString(), equalTo("${redText}${boldText}bold and red$reset"))
                 }
             }
 
-            on("nesting bold text inside coloured text") {
-                console.withColor(ConsoleColor.Red) {
-                    print("red")
-                    inBold {
-                        print("bold")
-                    }
-                    print("more red")
-                }
+            on("printing bold and coloured text, ending with a new line") {
+                console.println(Text("bold and red", ConsoleColor.Red, true))
 
                 it("writes the text to the output with the appropriate escape codes") {
-                    assertThat(output.toString(), equalTo("${redText}red${boldText}bold${reset}${redText}more red$reset"))
+                    assertThat(output.toString(), equalTo("${redText}${boldText}bold and red$reset\n"))
                 }
             }
 
-            on("nesting coloured text inside bold text") {
-                console.inBold {
-                    print("bold")
-                    withColor(ConsoleColor.Red) {
-                        print("red")
-                    }
-                    print("more bold")
-                }
+            on("printing a series of unformatted text elements") {
+                console.print(Text("Hello") + Text(" World"))
 
-                it("writes the text to the output with the appropriate escape codes") {
-                    assertThat(output.toString(), equalTo("${boldText}bold${redText}red${reset}${boldText}more bold$reset"))
+                it("writes that text directly to the output") {
+                    assertThat(output.toString(), equalTo("Hello World"))
                 }
             }
 
-            on("nested coloured text printing inside bold text") {
-                console.inBold {
-                    print("bold")
+            on("printing a series of unformatted text elements, ending with a new line") {
+                console.println(Text("Hello") + Text(" World"))
 
-                    withColor(ConsoleColor.White) {
-                        print("white")
-
-                        withColor(ConsoleColor.Red) {
-                            print("red")
-                        }
-
-                        print("more white")
-                    }
-
-                    print("more bold")
+                it("writes that text directly to the output") {
+                    assertThat(output.toString(), equalTo("Hello World\n"))
                 }
+            }
+
+            on("printing a series of coloured text elements") {
+                console.print(Text.red("red") + Text.white("white"))
 
                 it("writes the text to the output with the appropriate escape codes") {
-                    val expected = "${boldText}bold${whiteText}white$reset" +
-                        "${boldText}${redText}red$reset" +
-                        "${boldText}${whiteText}more white$reset" +
-                        "${boldText}more bold$reset"
+                    assertThat(output.toString(), equalTo("${redText}red${reset}${whiteText}white$reset"))
+                }
+            }
 
-                    assertThat(output.toString(), equalTo(expected))
+            on("printing a series of coloured text elements, ending with a new line") {
+                console.println(Text.red("red") + Text.white("white"))
+
+                it("writes the text to the output with the appropriate escape codes") {
+                    assertThat(output.toString(), equalTo("${redText}red${reset}${whiteText}white$reset\n"))
+                }
+            }
+
+            on("printing a series of bold and non-bold text elements") {
+                console.print(Text.bold("bold") + Text("not"))
+
+                it("writes the text to the output with the appropriate escape codes") {
+                    assertThat(output.toString(), equalTo("${boldText}bold${reset}not"))
+                }
+            }
+
+            on("printing a series of bold and non-bold text elements, ending with a new line") {
+                console.println(Text.bold("bold") + Text("not"))
+
+                it("writes the text to the output with the appropriate escape codes") {
+                    assertThat(output.toString(), equalTo("${boldText}bold${reset}not\n"))
+                }
+            }
+
+            on("printing some bold and coloured text elements") {
+                console.print(Text.bold(Text.red("red") + Text.white("white")))
+
+                it("writes the text to the output with the appropriate escape codes") {
+                    assertThat(output.toString(), equalTo("${redText}${boldText}red${reset}${whiteText}${boldText}white$reset"))
+                }
+            }
+
+            on("printing some bold and coloured text elements, ending with a new line") {
+                console.println(Text.bold(Text.red("red") + Text.white("white")))
+
+                it("writes the text to the output with the appropriate escape codes") {
+                    assertThat(output.toString(), equalTo("${redText}${boldText}red${reset}${whiteText}${boldText}white$reset\n"))
                 }
             }
 
@@ -275,12 +275,8 @@ object ConsoleSpec : Spek({
         }
 
         describe("when complex output is disabled") {
-            val output = ByteArrayOutputStream()
-            val console = Console(PrintStream(output), enableComplexOutput = false, consoleInfo = mock())
-
-            beforeEachTest {
-                output.reset()
-            }
+            val output by createForEachTest { ByteArrayOutputStream() }
+            val console by createForEachTest { Console(PrintStream(output), enableComplexOutput = false, consoleInfo = mock()) }
 
             on("printing text") {
                 console.print("This is some text")
@@ -307,58 +303,18 @@ object ConsoleSpec : Spek({
             }
 
             on("printing coloured text") {
-                console.withColor(ConsoleColor.White) {
-                    print("the white text")
-                }
+                console.print(Text.white("the white text"))
 
                 it("writes the text to the output without any escape codes") {
                     assertThat(output.toString(), equalTo("the white text"))
                 }
             }
 
-            on("printing bold text using a lambda") {
-                console.inBold {
-                    print("the bold text")
-                }
+            on("printing bold text") {
+                console.print(Text.bold("the bold text"))
 
                 it("writes the text to the output without any escape codes") {
                     assertThat(output.toString(), equalTo("the bold text"))
-                }
-            }
-
-            on("printing bold text from a string") {
-                console.printBold("the bold text")
-
-                it("writes the text to the output without any escape codes") {
-                    assertThat(output.toString(), equalTo("the bold text"))
-                }
-            }
-
-            on("nesting bold text inside coloured text") {
-                console.withColor(ConsoleColor.Red) {
-                    print("red ")
-                    inBold {
-                        print("bold")
-                    }
-                    print(" more red")
-                }
-
-                it("writes the text to the output without any escape codes") {
-                    assertThat(output.toString(), equalTo("red bold more red"))
-                }
-            }
-
-            on("nesting coloured text inside bold text") {
-                console.inBold {
-                    print("bold ")
-                    withColor(ConsoleColor.Red) {
-                        print("red")
-                    }
-                    print(" more bold")
-                }
-
-                it("writes the text to the output without any escape codes") {
-                    assertThat(output.toString(), equalTo("bold red more bold"))
                 }
             }
 
@@ -389,173 +345,43 @@ object ConsoleSpec : Spek({
 
         describe("printing text restricted to the width of the console") {
             given("the console dimensions are not available") {
-                val consoleInfo = mock<ConsoleInfo> {
-                    on { dimensions } doReturn null as Dimensions?
+                val consoleInfo by createForEachTest {
+                    mock<ConsoleInfo> {
+                        on { dimensions } doReturn null as Dimensions?
+                    }
                 }
 
-                val output = ByteArrayOutputStream()
-                val console = Console(PrintStream(output), true, consoleInfo)
+                val output by createForEachTest { ByteArrayOutputStream() }
+                val console by createForEachTest { Console(PrintStream(output), true, consoleInfo) }
 
                 on("printing text") {
-                    console.restrictToConsoleWidth {
-                        print("This is some text")
-                    }
+                    console.printLineLimitedToConsoleWidth(TextRun("This is some text"))
 
                     it("prints all text") {
-                        assertThat(output.toString(), equalTo("This is some text"))
+                        assertThat(output.toString(), equalTo("This is some text\n"))
                     }
                 }
             }
 
             given("the console dimensions are available") {
-                val consoleInfo = mock<ConsoleInfo> {
-                    on { dimensions } doReturn Dimensions(40, 10)
-                }
-
-                val output = ByteArrayOutputStream()
-                val console = Console(PrintStream(output), true, consoleInfo)
-
-                beforeEachTest {
-                    output.reset()
-                }
-
-                on("printing text that is shorter than the width of the console") {
-                    console.restrictToConsoleWidth {
-                        print("123456789")
-                    }
-
-                    it("prints all text") {
-                        assertThat(output.toString(), equalTo("123456789"))
+                val consoleInfo by createForEachTest {
+                    mock<ConsoleInfo> {
+                        on { dimensions } doReturn Dimensions(40, 10)
                     }
                 }
 
-                on("printing text that is equal to the width of the console") {
-                    console.restrictToConsoleWidth {
-                        print("1234567890")
+                val output by createForEachTest { ByteArrayOutputStream() }
+                val console by createForEachTest { Console(PrintStream(output), true, consoleInfo) }
+
+                on("printing text") {
+                    val text = mock<TextRun> {
+                        on { limitToLength(10) } doReturn TextRun("This is some shortened text")
                     }
 
-                    it("prints all text") {
-                        assertThat(output.toString(), equalTo("1234567890"))
-                    }
-                }
+                    console.printLineLimitedToConsoleWidth(text)
 
-                on("printing text that is longer than the width of the console") {
-                    console.restrictToConsoleWidth {
-                        print("12345678901")
-                    }
-
-                    it("prints as much text as possible, replacing the last three characters with ellipsis") {
-                        assertThat(output.toString(), equalTo("1234567..."))
-                    }
-                }
-
-                on("printing text with multiple lines") {
-                    it("throws an appropriate exception") {
-                        assertThat({
-                            console.restrictToConsoleWidth {
-                                println("12345678901")
-                            }
-                        }, throws<UnsupportedOperationException>(withMessage("Cannot restrict the width of output containing line breaks.")))
-                    }
-                }
-
-                on("printing text that is shorter than the width of the console but contains more control characters than the width of the console") {
-                    console.restrictToConsoleWidth {
-                        withColor(ConsoleColor.Red) {
-                            print("abc123")
-                        }
-                    }
-
-                    it("prints all text, including the control characters") {
-                        assertThat(output.toString(), equalTo("${redText}abc123$reset"))
-                    }
-                }
-
-                on("printing coloured text that is longer than the width of the console") {
-                    console.restrictToConsoleWidth {
-                        withColor(ConsoleColor.Red) {
-                            print("12345678901")
-                        }
-                    }
-
-                    it("prints as much text as possible, replacing the last three characters with ellipsis") {
-                        assertThat(output.toString(), equalTo("${redText}1234567...$reset"))
-                    }
-                }
-
-                on("printing coloured text that is longer than the width of the console, with further coloured text afterwards") {
-                    console.restrictToConsoleWidth {
-                        withColor(ConsoleColor.Red) {
-                            print("12345678901")
-                        }
-                        withColor(ConsoleColor.White) {
-                            print("white")
-                        }
-                    }
-
-                    it("prints as much text as possible, replacing the last three characters with ellipsis, and does not include the redundant escape sequences") {
-                        assertThat(output.toString(), equalTo("${redText}1234567...$reset"))
-                    }
-                }
-
-                on("printing text where the colour would change for the first character of the ellipsis") {
-                    console.restrictToConsoleWidth {
-                        withColor(ConsoleColor.Red) {
-                            print("abc1234")
-                        }
-                        withColor(ConsoleColor.White) {
-                            print("wwww")
-                        }
-                    }
-
-                    it("prints the text, with the ellipsis taking the colour of the text it appears next to") {
-                        assertThat(output.toString(), equalTo("${redText}abc1234...$reset"))
-                    }
-                }
-
-                on("printing coloured text from within a console that is already coloured") {
-                    console.withColor(ConsoleColor.Red) {
-                        print("red")
-
-                        restrictToConsoleWidth {
-                            withColor(ConsoleColor.White) {
-                                print("white123456")
-                            }
-                        }
-
-                        print("red")
-                    }
-
-                    it("prints the text, resetting the output to the original colour afterwards") {
-                        assertThat(output.toString(), equalTo("${redText}red$reset${whiteText}white12...$reset${redText}red$reset"))
-                    }
-                }
-
-                on("attempting to move the cursor up while restricted to the width of the console") {
-                    it("throws an appropriate exception") {
-                        assertThat({ console.restrictToConsoleWidth { moveCursorUp(1) } },
-                            throws<UnsupportedOperationException>(withMessage("Cannot move the cursor while restricted to the width of the console.")))
-                    }
-                }
-
-                on("attempting to move the cursor down while restricted to the width of the console") {
-                    it("throws an appropriate exception") {
-                        assertThat({ console.restrictToConsoleWidth { moveCursorDown(1) } },
-                            throws<UnsupportedOperationException>(withMessage("Cannot move the cursor while restricted to the width of the console.")))
-                    }
-                }
-
-                on("attempting to move the cursor to the start of the line while restricted to the width of the console") {
-                    it("throws an appropriate exception") {
-                        assertThat({ console.restrictToConsoleWidth { moveCursorToStartOfLine() } },
-                            throws<UnsupportedOperationException>(withMessage("Cannot move the cursor while restricted to the width of the console.")))
-                    }
-                }
-
-                on("attempting to clear the current line while restricted to the width of the console") {
-                    it("throws an appropriate exception") {
-                        assertThat({ console.restrictToConsoleWidth { clearCurrentLine() } },
-                            throws<UnsupportedOperationException>(withMessage("Cannot clear the current line while restricted to the width of the console.")))
+                    it("prints the shortened text") {
+                        assertThat(output.toString(), equalTo("This is some shortened text\n"))
                     }
                 }
             }

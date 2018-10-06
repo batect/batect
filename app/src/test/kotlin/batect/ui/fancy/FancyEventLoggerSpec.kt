@@ -31,13 +31,10 @@ import batect.execution.model.steps.RunContainerStep
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console
-import batect.ui.ConsoleColor
-import batect.ui.ConsolePrintStatements
 import batect.ui.FailureErrorMessageFormatter
+import batect.ui.text.Text
 import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
@@ -54,27 +51,8 @@ object FancyEventLoggerSpec : Spek({
     describe("a fancy event logger") {
         val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
         val runOptions by createForEachTest { mock<RunOptions>() }
-
-        val whiteConsole by createForEachTest { mock<Console>() }
-        val console by createForEachTest {
-            mock<Console> {
-                on { withColor(eq(ConsoleColor.White), any()) } doAnswer {
-                    val printStatements = it.getArgument<ConsolePrintStatements>(1)
-                    printStatements(whiteConsole)
-                }
-            }
-        }
-
-        val redErrorConsole by createForEachTest { mock<Console>() }
-        val errorConsole by createForEachTest {
-            mock<Console> {
-                on { withColor(eq(ConsoleColor.Red), any()) } doAnswer {
-                    val printStatements = it.getArgument<ConsolePrintStatements>(1)
-                    printStatements(redErrorConsole)
-                }
-            }
-        }
-
+        val console by createForEachTest { mock<Console>() }
+        val errorConsole by createForEachTest { mock<Console>() }
         val startupProgressDisplay by createForEachTest { mock<StartupProgressDisplay>() }
         val cleanupProgressDisplay by createForEachTest { mock<CleanupProgressDisplay>() }
 
@@ -153,7 +131,7 @@ object FancyEventLoggerSpec : Spek({
                     logger.onStartingTaskStep(cleanupStep)
 
                     it("clears the existing cleanup progress before reprinting the cleanup progress") {
-                        inOrder(console, redErrorConsole, cleanupProgressDisplay) {
+                        inOrder(cleanupProgressDisplay) {
                             verify(cleanupProgressDisplay).clear(console)
                             verify(cleanupProgressDisplay).print(console)
                         }
@@ -300,9 +278,9 @@ object FancyEventLoggerSpec : Spek({
                         logger.postEvent(event)
 
                         it("prints the message to the output") {
-                            inOrder(console, redErrorConsole) {
+                            inOrder(console, errorConsole) {
                                 verify(console).println()
-                                verify(redErrorConsole).println("Something went wrong.")
+                                verify(errorConsole).println(Text.red("Something went wrong."))
                             }
                         }
 
@@ -323,7 +301,7 @@ object FancyEventLoggerSpec : Spek({
                 given("clean up has already started") {
                     beforeEachTest {
                         logger.onStartingTaskStep(DeleteTaskNetworkStep(DockerNetwork("some-network-id")))
-                        reset(redErrorConsole)
+                        reset(errorConsole)
                         reset(console)
                         reset(cleanupProgressDisplay)
 
@@ -334,7 +312,7 @@ object FancyEventLoggerSpec : Spek({
                         logger.postEvent(event)
 
                         it("prints the message to the output") {
-                            verify(redErrorConsole).println("Something went wrong for a second time.")
+                            verify(errorConsole).println(Text.red("Something went wrong for a second time."))
                         }
 
                         it("prints the cleanup progress to the console") {
@@ -342,9 +320,9 @@ object FancyEventLoggerSpec : Spek({
                         }
 
                         it("clears the existing cleanup progress before printing the error message and reprinting the cleanup progress") {
-                            inOrder(console, redErrorConsole, cleanupProgressDisplay) {
+                            inOrder(console, errorConsole, cleanupProgressDisplay) {
                                 verify(cleanupProgressDisplay).clear(console)
-                                verify(redErrorConsole).println("Something went wrong for a second time.")
+                                verify(errorConsole).println(Text.red("Something went wrong for a second time."))
                                 verify(console).println()
                                 verify(cleanupProgressDisplay).print(console)
                             }
@@ -358,11 +336,7 @@ object FancyEventLoggerSpec : Spek({
             logger.onTaskStarting("some-task")
 
             it("prints a message to the output") {
-                inOrder(whiteConsole) {
-                    verify(whiteConsole).print("Running ")
-                    verify(whiteConsole).printBold("some-task")
-                    verify(whiteConsole).println("...")
-                }
+                verify(console).println(Text.white(Text("Running ") + Text.bold("some-task") + Text("...")))
             }
         }
 
@@ -374,11 +348,9 @@ object FancyEventLoggerSpec : Spek({
                     logger.onTaskFailed("some-task", cleanupInstructions)
 
                     it("prints a message to the output") {
-                        inOrder(redErrorConsole) {
-                            verify(redErrorConsole).println()
-                            verify(redErrorConsole).print("The task ")
-                            verify(redErrorConsole).printBold("some-task")
-                            verify(redErrorConsole).println(" failed. See above for details.")
+                        inOrder(errorConsole) {
+                            verify(errorConsole).println()
+                            verify(errorConsole).println(Text.red(Text("The task ") + Text.bold("some-task") + Text(" failed. See above for details.")))
                         }
                     }
                 }
@@ -391,13 +363,11 @@ object FancyEventLoggerSpec : Spek({
                     logger.onTaskFailed("some-task", cleanupInstructions)
 
                     it("prints a message to the output, including the instructions") {
-                        inOrder(redErrorConsole) {
-                            verify(redErrorConsole).println()
-                            verify(redErrorConsole).println(cleanupInstructions)
-                            verify(redErrorConsole).println()
-                            verify(redErrorConsole).print("The task ")
-                            verify(redErrorConsole).printBold("some-task")
-                            verify(redErrorConsole).println(" failed. See above for details.")
+                        inOrder(errorConsole) {
+                            verify(errorConsole).println()
+                            verify(errorConsole).println(Text.red(cleanupInstructions))
+                            verify(errorConsole).println()
+                            verify(errorConsole).println(Text.red(Text("The task ") + Text.bold("some-task") + Text(" failed. See above for details.")))
                         }
                     }
                 }

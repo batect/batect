@@ -19,7 +19,7 @@ package batect.cli.commands
 import batect.VersionInfo
 import batect.logging.Logger
 import batect.ui.Console
-import batect.ui.ConsoleColor
+import batect.ui.text.Text
 import batect.updates.UpdateInfo
 import batect.updates.UpdateInfoDownloadException
 import batect.updates.UpdateInfoDownloader
@@ -50,10 +50,7 @@ class UpgradeCommand(
                 message("batect was started without using the wrapper script and so cannot upgrade it.")
             }
 
-            errorConsole.withColor(ConsoleColor.Red) {
-                println("batect was started without using the wrapper script and so cannot upgrade it.")
-            }
-
+            errorConsole.println(Text.red("batect was started without using the wrapper script and so cannot upgrade it."))
             return -1
         }
 
@@ -77,11 +74,8 @@ class UpgradeCommand(
         console.println("Current version is ${versionInfo.version}, latest version is ${updateInfo.version}.")
 
         if (updateInfo.scriptDownloadUrl == null) {
-            errorConsole.withColor(ConsoleColor.Red) {
-                println("A newer version of batect (${updateInfo.version}) is available, but the upgrade cannot be performed automatically.")
-                println("Visit ${updateInfo.url} for more information.")
-            }
-
+            errorConsole.println(Text.red("A newer version of batect (${updateInfo.version}) is available, but the upgrade cannot be performed automatically."))
+            errorConsole.println(Text.red("Visit ${updateInfo.url} for more information."))
             return -1
         }
 
@@ -112,10 +106,7 @@ class UpgradeCommand(
 
             return updateInfo
         } catch (e: UpdateInfoDownloadException) {
-            errorConsole.withColor(ConsoleColor.Red) {
-                println("Downloading update information failed: ${e.message}")
-            }
-
+            errorConsole.println(Text.red("Downloading update information failed: ${e.message}"))
             return null
         }
     }
@@ -154,10 +145,7 @@ class UpgradeCommand(
                 exception(e)
             }
 
-            errorConsole.withColor(ConsoleColor.Red) {
-                println("Download failed. Could not download $url: ${e.message}")
-            }
-
+            errorConsole.println(Text.red("Download failed. Could not download $url: ${e.message}"))
             return null
         }
     }

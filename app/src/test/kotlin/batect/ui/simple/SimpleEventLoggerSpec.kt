@@ -38,13 +38,9 @@ import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console
-import batect.ui.ConsoleColor
-import batect.ui.ConsolePrintStatements
 import batect.ui.FailureErrorMessageFormatter
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doAnswer
+import batect.ui.text.Text
 import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.times
@@ -66,26 +62,8 @@ object SimpleEventLoggerSpec : Spek({
 
         val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
         val runOptions by createForEachTest { mock<RunOptions>() }
-
-        val whiteConsole by createForEachTest { mock<Console>() }
-        val console by createForEachTest {
-            mock<Console> {
-                on { withColor(eq(ConsoleColor.White), any()) } doAnswer {
-                    val printStatements = it.getArgument<ConsolePrintStatements>(1)
-                    printStatements(whiteConsole)
-                }
-            }
-        }
-
-        val redErrorConsole by createForEachTest { mock<Console>() }
-        val errorConsole by createForEachTest {
-            mock<Console> {
-                on { withColor(eq(ConsoleColor.Red), any()) } doAnswer {
-                    val printStatements = it.getArgument<ConsolePrintStatements>(1)
-                    printStatements(redErrorConsole)
-                }
-            }
-        }
+        val console by createForEachTest { mock<Console>() }
+        val errorConsole by createForEachTest { mock<Console>() }
 
         val logger by createForEachTest { SimpleEventLogger(containers, failureErrorMessageFormatter, runOptions, console, errorConsole) }
         val container = Container("the-cool-container", imageSourceDoesNotMatter())
@@ -96,17 +74,8 @@ object SimpleEventLoggerSpec : Spek({
                 logger.onStartingTaskStep(step)
 
                 it("prints a message to the output for each container that uses that built image") {
-                    inOrder(whiteConsole) {
-                        verify(whiteConsole).print("Building ")
-                        verify(whiteConsole).printBold("container-1")
-                        verify(whiteConsole).println("...")
-                    }
-
-                    inOrder(whiteConsole) {
-                        verify(whiteConsole).print("Building ")
-                        verify(whiteConsole).printBold("container-2")
-                        verify(whiteConsole).println("...")
-                    }
+                    verify(console).println(Text.white(Text("Building ") + Text.bold("container-1") + Text("...")))
+                    verify(console).println(Text.white(Text("Building ") + Text.bold("container-2") + Text("...")))
                 }
             }
 
@@ -115,11 +84,7 @@ object SimpleEventLoggerSpec : Spek({
                 logger.onStartingTaskStep(step)
 
                 it("prints a message to the output") {
-                    inOrder(whiteConsole) {
-                        verify(whiteConsole).print("Pulling ")
-                        verify(whiteConsole).printBold("some-image:1.2.3")
-                        verify(whiteConsole).println("...")
-                    }
+                    verify(console).println(Text.white(Text("Pulling ") + Text.bold("some-image:1.2.3") + Text("...")))
                 }
             }
 
@@ -128,11 +93,7 @@ object SimpleEventLoggerSpec : Spek({
                 logger.onStartingTaskStep(step)
 
                 it("prints a message to the output") {
-                    inOrder(whiteConsole) {
-                        verify(whiteConsole).print("Starting ")
-                        verify(whiteConsole).printBold("the-cool-container")
-                        verify(whiteConsole).println("...")
-                    }
+                    verify(console).println(Text.white(Text("Starting ") + Text.bold("the-cool-container") + Text("...")))
                 }
             }
 
@@ -142,11 +103,7 @@ object SimpleEventLoggerSpec : Spek({
                     logger.onStartingTaskStep(step)
 
                     it("prints a message to the output without mentioning a command") {
-                        inOrder(whiteConsole) {
-                            verify(whiteConsole).print("Running ")
-                            verify(whiteConsole).printBold("the-cool-container")
-                            verify(whiteConsole).println("...")
-                        }
+                        verify(console).println(Text.white(Text("Running ") + Text.bold("the-cool-container") + Text("...")))
                     }
                 }
 
@@ -159,11 +116,7 @@ object SimpleEventLoggerSpec : Spek({
                         logger.onStartingTaskStep(runContainerStep)
 
                         it("prints a message to the output without mentioning a command") {
-                            inOrder(whiteConsole) {
-                                verify(whiteConsole).print("Running ")
-                                verify(whiteConsole).printBold("the-cool-container")
-                                verify(whiteConsole).println("...")
-                            }
+                            verify(console).println(Text.white(Text("Running ") + Text.bold("the-cool-container") + Text("...")))
                         }
                     }
 
@@ -175,13 +128,7 @@ object SimpleEventLoggerSpec : Spek({
                         logger.onStartingTaskStep(runContainerStep)
 
                         it("prints a message to the output including the original command") {
-                            inOrder(whiteConsole) {
-                                verify(whiteConsole).print("Running ")
-                                verify(whiteConsole).printBold("do-stuff.sh")
-                                verify(whiteConsole).print(" in ")
-                                verify(whiteConsole).printBold("the-cool-container")
-                                verify(whiteConsole).println("...")
-                            }
+                            verify(console).println(Text.white(Text("Running ") + Text.bold("do-stuff.sh") + Text(" in ") + Text.bold("the-cool-container") + Text("...")))
                         }
                     }
                 }
@@ -195,9 +142,9 @@ object SimpleEventLoggerSpec : Spek({
                         logger.onStartingTaskStep(cleanupStep)
 
                         it("prints a blank line before then printing that clean up has started") {
-                            inOrder(whiteConsole) {
-                                verify(whiteConsole).println()
-                                verify(whiteConsole).println("Cleaning up...")
+                            inOrder(console) {
+                                verify(console).println()
+                                verify(console).println(Text.white("Cleaning up..."))
                             }
                         }
                     }
@@ -213,7 +160,7 @@ object SimpleEventLoggerSpec : Spek({
                         logger.onStartingTaskStep(cleanupStep)
 
                         it("only prints one message to the output") {
-                            verify(whiteConsole, times(1)).println("Cleaning up...")
+                            verify(console, times(1)).println(Text.white("Cleaning up..."))
                         }
                     }
                 }
@@ -237,10 +184,8 @@ object SimpleEventLoggerSpec : Spek({
                 logger.postEvent(event)
 
                 it("prints the message to the console") {
-                    inOrder(redErrorConsole) {
-                        verify(redErrorConsole).println()
-                        verify(redErrorConsole).println("Something went wrong.")
-                    }
+                    verify(errorConsole).println()
+                    verify(errorConsole).println(Text.red("Something went wrong."))
                 }
             }
 
@@ -249,17 +194,8 @@ object SimpleEventLoggerSpec : Spek({
                 logger.postEvent(event)
 
                 it("prints a message to the output for each container that uses that built image") {
-                    inOrder(whiteConsole) {
-                        verify(whiteConsole).print("Built ")
-                        verify(whiteConsole).printBold("container-1")
-                        verify(whiteConsole).println(".")
-                    }
-
-                    inOrder(whiteConsole) {
-                        verify(whiteConsole).print("Built ")
-                        verify(whiteConsole).printBold("container-2")
-                        verify(whiteConsole).println(".")
-                    }
+                    verify(console).println(Text.white(Text("Built ") + Text.bold("container-1") + Text(".")))
+                    verify(console).println(Text.white(Text("Built ") + Text.bold("container-2") + Text(".")))
                 }
             }
 
@@ -268,11 +204,7 @@ object SimpleEventLoggerSpec : Spek({
                 logger.postEvent(event)
 
                 it("prints a message to the output") {
-                    inOrder(whiteConsole) {
-                        verify(whiteConsole).print("Pulled ")
-                        verify(whiteConsole).printBold("the-cool-image:1.2.3")
-                        verify(whiteConsole).println(".")
-                    }
+                    verify(console).println(Text.white(Text("Pulled ") + Text.bold("the-cool-image:1.2.3") + Text(".")))
                 }
             }
 
@@ -281,11 +213,7 @@ object SimpleEventLoggerSpec : Spek({
                 logger.postEvent(event)
 
                 it("prints a message to the output") {
-                    inOrder(whiteConsole) {
-                        verify(whiteConsole).print("Started ")
-                        verify(whiteConsole).printBold("the-cool-container")
-                        verify(whiteConsole).println(".")
-                    }
+                    verify(console).println(Text.white(Text("Started ") + Text.bold("the-cool-container") + Text(".")))
                 }
             }
 
@@ -294,10 +222,7 @@ object SimpleEventLoggerSpec : Spek({
                 logger.postEvent(event)
 
                 it("prints a message to the output") {
-                    inOrder(whiteConsole) {
-                        verify(whiteConsole).printBold("the-cool-container")
-                        verify(whiteConsole).println(" has become healthy.")
-                    }
+                    verify(console).println(Text.white(Text.bold("the-cool-container") + Text(" has become healthy.")))
                 }
             }
         }
@@ -306,11 +231,7 @@ object SimpleEventLoggerSpec : Spek({
             logger.onTaskStarting("some-task")
 
             it("prints a message to the output") {
-                inOrder(whiteConsole) {
-                    verify(whiteConsole).print("Running ")
-                    verify(whiteConsole).printBold("some-task")
-                    verify(whiteConsole).println("...")
-                }
+                verify(console).println(Text.white(Text("Running ") + Text.bold("some-task") + Text("...")))
             }
         }
 
@@ -322,11 +243,9 @@ object SimpleEventLoggerSpec : Spek({
                     logger.onTaskFailed("some-task", cleanupInstructions)
 
                     it("prints a message to the output") {
-                        inOrder(redErrorConsole) {
-                            verify(redErrorConsole).println()
-                            verify(redErrorConsole).print("The task ")
-                            verify(redErrorConsole).printBold("some-task")
-                            verify(redErrorConsole).println(" failed. See above for details.")
+                        inOrder(errorConsole) {
+                            verify(errorConsole).println()
+                            verify(errorConsole).println(Text.red(Text("The task ") + Text.bold("some-task") + Text(" failed. See above for details.")))
                         }
                     }
                 }
@@ -339,13 +258,11 @@ object SimpleEventLoggerSpec : Spek({
                     logger.onTaskFailed("some-task", cleanupInstructions)
 
                     it("prints a message to the output, including the instructions") {
-                        inOrder(redErrorConsole) {
-                            verify(redErrorConsole).println()
-                            verify(redErrorConsole).println(cleanupInstructions)
-                            verify(redErrorConsole).println()
-                            verify(redErrorConsole).print("The task ")
-                            verify(redErrorConsole).printBold("some-task")
-                            verify(redErrorConsole).println(" failed. See above for details.")
+                        inOrder(errorConsole) {
+                            verify(errorConsole).println()
+                            verify(errorConsole).println(Text.red(cleanupInstructions))
+                            verify(errorConsole).println()
+                            verify(errorConsole).println(Text.red(Text("The task ") + Text.bold("some-task") + Text(" failed. See above for details.")))
                         }
                     }
                 }

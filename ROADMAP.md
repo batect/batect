@@ -48,8 +48,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use Docker API directly rather than using Docker CLI (would allow for more detailed progress and error reporting)
 * use tmpfs for home directories? (https://docs.docker.com/engine/reference/run/#tmpfs-mount-tmpfs-filesystems)
-* rework console printing stuff so that tests aren't coupled to the particular choice of how messages are broken into `print()` calls (eg. introduce some kind of abstract representation of formatted text)
-  * ContainerStartupProgressLineSpec is an example of the issue at the moment
 * documentation
   * add check for broken internal or external links
   * examples for common languages and scenarios

@@ -23,7 +23,7 @@ import batect.cli.commands.CommandFactory
 import batect.logging.ApplicationInfoLogger
 import batect.logging.logger
 import batect.ui.Console
-import batect.ui.ConsoleColor
+import batect.ui.text.Text
 import org.kodein.di.DKodein
 import org.kodein.di.DKodeinAware
 import org.kodein.di.generic.instance
@@ -70,7 +70,7 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
             val command = commandFactory.createCommand(options, extendedKodein)
             return command.run()
         } catch (e: Throwable) {
-            errorConsole.withColor(ConsoleColor.Red) { println(e.toString()) }
+            errorConsole.println(Text.red(e.toString()))
 
             logger.error {
                 message("Exception thrown during execution.")

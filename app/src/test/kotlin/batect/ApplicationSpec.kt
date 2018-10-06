@@ -31,16 +31,12 @@ import batect.testutils.hasMessage
 import batect.testutils.withException
 import batect.testutils.withSeverity
 import batect.ui.Console
-import batect.ui.ConsoleColor
-import batect.ui.ConsolePrintStatements
+import batect.ui.text.Text
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.doThrow
-import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
@@ -83,15 +79,7 @@ object ApplicationSpec : Spek({
                 }
             }
 
-            val redErrorConsole by createForEachTest { mock<Console>() }
-            val errorConsole by createForEachTest {
-                mock<Console> {
-                    on { withColor(eq(ConsoleColor.Red), any()) } doAnswer {
-                        val printStatements = it.getArgument<ConsolePrintStatements>(1)
-                        printStatements(redErrorConsole)
-                    }
-                }
-            }
+            val errorConsole by createForEachTest { mock<Console>() }
 
             val extendedDependencies by createForEachTest {
                 Kodein.direct {
@@ -154,7 +142,7 @@ object ApplicationSpec : Spek({
                     val exitCode = application.run(args)
 
                     it("prints the exception message to the error console in red") {
-                        verify(redErrorConsole).println("java.lang.RuntimeException: Everything is broken")
+                        verify(errorConsole).println(Text.red("java.lang.RuntimeException: Everything is broken"))
                     }
 
                     it("logs the exception to the log") {

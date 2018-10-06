@@ -34,9 +34,10 @@ import batect.execution.model.steps.StartContainerStep
 import batect.execution.model.steps.TaskStep
 import batect.os.Command
 import batect.ui.Console
-import batect.ui.ConsoleColor
 import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
+import batect.ui.text.Text
+import batect.ui.text.TextRun
 
 class SimpleEventLogger(
     val containers: Set<Container>,
@@ -62,10 +63,8 @@ class SimpleEventLogger(
     }
 
     private fun logTaskFailure(message: String) {
-        errorConsole.withColor(ConsoleColor.Red) {
-            println()
-            println(message)
-        }
+        errorConsole.println()
+        errorConsole.println(Text.red(message))
     }
 
     override fun onStartingTaskStep(step: TaskStep) {
@@ -82,80 +81,49 @@ class SimpleEventLogger(
     }
 
     private fun logImageBuildStarting(buildDirectory: String) {
-        console.withColor(ConsoleColor.White) {
-            containers
-                .filter { it.imageSource == BuildImage(buildDirectory) }
-                .forEach {
-                    print("Building ")
-                    printBold(it.name)
-                    println("...")
-                }
-        }
+        containers
+            .filter { it.imageSource == BuildImage(buildDirectory) }
+            .forEach {
+                console.println(Text.white(Text("Building ") + Text.bold(it.name) + Text("...")))
+            }
     }
 
     private fun logImageBuilt(buildDirectory: String) {
-        console.withColor(ConsoleColor.White) {
-            containers
-                .filter { it.imageSource == BuildImage(buildDirectory) }
-                .forEach {
-                    print("Built ")
-                    printBold(it.name)
-                    println(".")
-                }
-        }
+        containers
+            .filter { it.imageSource == BuildImage(buildDirectory) }
+            .forEach {
+                console.println(Text.white(Text("Built ") + Text.bold(it.name) + Text(".")))
+            }
     }
 
     private fun logImagePullStarting(imageName: String) {
-        console.withColor(ConsoleColor.White) {
-            print("Pulling ")
-            printBold(imageName)
-            println("...")
-        }
+        console.println(Text.white(Text("Pulling ") + Text.bold(imageName) + Text("...")))
     }
 
     private fun logImagePulled(imageName: String) {
-        console.withColor(ConsoleColor.White) {
-            print("Pulled ")
-            printBold(imageName)
-            println(".")
-        }
+        console.println(Text.white(Text("Pulled ") + Text.bold(imageName) + Text(".")))
     }
 
     private fun logCommandStarting(container: Container, command: Command?) {
-        console.withColor(ConsoleColor.White) {
-            print("Running ")
-
-            if (command != null) {
-                printBold(command.originalCommand)
-                print(" in ")
-            }
-
-            printBold(container.name)
-            println("...")
+        val commandText = if (command != null) {
+            Text.bold(command.originalCommand) + Text(" in ")
+        } else {
+            TextRun()
         }
+
+        console.println(Text.white(Text("Running ") + commandText + Text.bold(container.name) + Text("...")))
     }
 
     private fun logContainerStarting(container: Container) {
-        console.withColor(ConsoleColor.White) {
-            print("Starting ")
-            printBold(container.name)
-            println("...")
-        }
+        console.println(Text.white(Text("Starting ") + Text.bold(container.name) + Text("...")))
     }
 
     private fun logContainerStarted(container: Container) {
-        console.withColor(ConsoleColor.White) {
-            print("Started ")
-            printBold(container.name)
-            println(".")
-        }
+        console.println(Text.white(Text("Started ") + Text.bold(container.name) + Text(".")))
     }
 
     private fun logContainerBecameHealthy(container: Container) {
-        console.withColor(ConsoleColor.White) {
-            printBold(container.name)
-            println(" has become healthy.")
-        }
+        console.println(Text.white(Text.bold(container.name) + Text(" has become healthy.")))
     }
 
     private fun logCleanUpStarting() {
@@ -163,33 +131,23 @@ class SimpleEventLogger(
             return
         }
 
-        console.withColor(ConsoleColor.White) {
-            println()
-            println("Cleaning up...")
-        }
+        console.println()
+        console.println(Text.white("Cleaning up..."))
 
         haveStartedCleanUp = true
     }
 
     override fun onTaskFailed(taskName: String, manualCleanupInstructions: String) {
-        errorConsole.withColor(ConsoleColor.Red) {
-            if (manualCleanupInstructions != "") {
-                println()
-                println(manualCleanupInstructions)
-            }
-
-            println()
-            print("The task ")
-            printBold(taskName)
-            println(" failed. See above for details.")
+        if (manualCleanupInstructions != "") {
+            errorConsole.println()
+            errorConsole.println(Text.red(manualCleanupInstructions))
         }
+
+        errorConsole.println()
+        errorConsole.println(Text.red(Text("The task ") + Text.bold(taskName) + Text(" failed. See above for details.")))
     }
 
     override fun onTaskStarting(taskName: String) {
-        console.withColor(ConsoleColor.White) {
-            print("Running ")
-            printBold(taskName)
-            println("...")
-        }
+        console.println(Text.white(Text("Running ") + Text.bold(taskName) + Text("...")))
     }
 }

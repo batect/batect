@@ -16,7 +16,6 @@
 
 package batect.cli.commands
 
-import batect.execution.TaskRunner
 import batect.config.Configuration
 import batect.config.ContainerMap
 import batect.config.Task
@@ -25,20 +24,20 @@ import batect.config.TaskRunConfiguration
 import batect.config.io.ConfigurationLoader
 import batect.docker.DockerClient
 import batect.docker.DockerConnectivityCheckResult
-import batect.logging.Logger
-import batect.logging.Severity
 import batect.execution.BehaviourAfterFailure
 import batect.execution.RunOptions
 import batect.execution.TaskExecutionOrderResolutionException
 import batect.execution.TaskExecutionOrderResolver
+import batect.execution.TaskRunner
+import batect.logging.Logger
+import batect.logging.Severity
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.hasMessage
 import batect.testutils.withException
 import batect.testutils.withSeverity
 import batect.ui.Console
-import batect.ui.ConsoleColor
-import batect.ui.ConsolePrintStatements
+import batect.ui.text.Text
 import batect.updates.UpdateNotifier
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.and
@@ -46,10 +45,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.atLeastOnce
-import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.doThrow
-import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
@@ -80,15 +77,7 @@ object RunTaskCommandSpec : Spek({
 
             val updateNotifier by createForEachTest { mock<UpdateNotifier>() }
             val console by createForEachTest { mock<Console>() }
-            val redErrorConsole by createForEachTest { mock<Console>() }
-            val errorConsole by createForEachTest {
-                mock<Console> {
-                    on { withColor(eq(ConsoleColor.Red), any()) } doAnswer {
-                        val printStatements = it.getArgument<ConsolePrintStatements>(1)
-                        printStatements(redErrorConsole)
-                    }
-                }
-            }
+            val errorConsole by createForEachTest { mock<Console>() }
 
             given("configuration file can be loaded") {
                 given("Docker is available") {
@@ -259,7 +248,7 @@ object RunTaskCommandSpec : Spek({
                         val exitCode = command.run()
 
                         it("prints a message to the output") {
-                            verify(redErrorConsole).println("Something went wrong.")
+                            verify(errorConsole).println(Text.red("Something went wrong."))
                         }
 
                         it("returns a non-zero exit code") {
@@ -283,7 +272,7 @@ object RunTaskCommandSpec : Spek({
                     val exitCode = command.run()
 
                     it("prints a message to the output") {
-                        verify(redErrorConsole).println("Docker is not installed, or not available: Something went wrong.")
+                        verify(errorConsole).println(Text.red("Docker is not installed, or not available: Something went wrong."))
                     }
 
                     it("returns a non-zero exit code") {

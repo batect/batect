@@ -27,7 +27,7 @@ import batect.execution.TaskExecutionOrderResolver
 import batect.execution.TaskRunner
 import batect.logging.Logger
 import batect.ui.Console
-import batect.ui.ConsoleColor
+import batect.ui.text.Text
 import batect.updates.UpdateNotifier
 import java.nio.file.Path
 
@@ -50,10 +50,7 @@ class RunTaskCommand(
         val connectivityCheckResult = dockerClient.checkConnectivity()
 
         if (connectivityCheckResult is DockerConnectivityCheckResult.Failed) {
-            errorConsole.withColor(ConsoleColor.Red) {
-                println("Docker is not installed, or not available: ${connectivityCheckResult.message}")
-            }
-
+            errorConsole.println(Text.red("Docker is not installed, or not available: ${connectivityCheckResult.message}"))
             return -1
         }
 
@@ -73,10 +70,7 @@ class RunTaskCommand(
                 exception(e)
             }
 
-            errorConsole.withColor(ConsoleColor.Red) {
-                println(e.message ?: "")
-            }
-
+            errorConsole.println(Text.red(e.message ?: ""))
             return -1
         }
     }

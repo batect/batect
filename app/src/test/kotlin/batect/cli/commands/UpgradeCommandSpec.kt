@@ -21,8 +21,7 @@ import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.mockGet
 import batect.ui.Console
-import batect.ui.ConsoleColor
-import batect.ui.ConsolePrintStatements
+import batect.ui.text.Text
 import batect.updates.UpdateInfo
 import batect.updates.UpdateInfoDownloadException
 import batect.updates.UpdateInfoDownloader
@@ -32,10 +31,8 @@ import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.doThrow
-import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
@@ -56,15 +53,7 @@ object UpgradeCommandSpec : Spek({
     describe("an upgrade command") {
         val httpClient by createForEachTest { mock<OkHttpClient>() }
         val console by createForEachTest { mock<Console>() }
-        val redErrorConsole by createForEachTest { mock<Console>() }
-        val errorConsole by createForEachTest {
-            mock<Console> {
-                on { withColor(eq(ConsoleColor.Red), any()) } doAnswer {
-                    val printStatements = it.getArgument<ConsolePrintStatements>(1)
-                    printStatements(redErrorConsole)
-                }
-            }
-        }
+        val errorConsole by createForEachTest { mock<Console>() }
 
         val logger by createLoggerForEachTest()
 
@@ -83,7 +72,7 @@ object UpgradeCommandSpec : Spek({
                 }
 
                 it("prints an appropriate error message") {
-                    verify(redErrorConsole).println("batect was started without using the wrapper script and so cannot upgrade it.")
+                    verify(errorConsole).println(Text.red("batect was started without using the wrapper script and so cannot upgrade it."))
                 }
             }
         }
@@ -166,13 +155,13 @@ object UpgradeCommandSpec : Spek({
                                 }
 
                                 it("prints status information to the console as it performs the upgrade, including an error message when the download fails") {
-                                    inOrder(updateInfoDownloader, httpClient, console, redErrorConsole) {
+                                    inOrder(updateInfoDownloader, httpClient, console, errorConsole) {
                                         verify(console).println("Downloading latest update information...")
                                         verify(updateInfoDownloader).getLatestVersionInfo()
                                         verify(console).println("Current version is 1.1.1, latest version is 1.2.3.")
                                         verify(console).println("Downloading latest version of the wrapper script...")
                                         verify(httpClient).newCall(any())
-                                        verify(redErrorConsole).println("Download failed. Could not download https://batect.com/script-download: The server returned HTTP 404.")
+                                        verify(errorConsole).println(Text.red("Download failed. Could not download https://batect.com/script-download: The server returned HTTP 404."))
                                     }
                                 }
 
@@ -202,13 +191,13 @@ object UpgradeCommandSpec : Spek({
                                 }
 
                                 it("prints status information to the console as it performs the upgrade, including an error message when the download fails") {
-                                    inOrder(updateInfoDownloader, httpClient, console, redErrorConsole) {
+                                    inOrder(updateInfoDownloader, httpClient, console, errorConsole) {
                                         verify(console).println("Downloading latest update information...")
                                         verify(updateInfoDownloader).getLatestVersionInfo()
                                         verify(console).println("Current version is 1.1.1, latest version is 1.2.3.")
                                         verify(console).println("Downloading latest version of the wrapper script...")
                                         verify(httpClient).newCall(any())
-                                        verify(redErrorConsole).println("Download failed. Could not download https://batect.com/script-download: Could not do what you asked because stuff happened.")
+                                        verify(errorConsole).println(Text.red("Download failed. Could not download https://batect.com/script-download: Could not do what you asked because stuff happened."))
                                     }
                                 }
 
@@ -287,12 +276,12 @@ object UpgradeCommandSpec : Spek({
                             }
 
                             it("prints status information to the console as it performs the upgrade, including a message indicating that the upgrade must be performed manually") {
-                                inOrder(updateInfoDownloader, console, redErrorConsole) {
+                                inOrder(updateInfoDownloader, console, errorConsole) {
                                     verify(console).println("Downloading latest update information...")
                                     verify(updateInfoDownloader).getLatestVersionInfo()
                                     verify(console).println("Current version is 1.2.1, latest version is 1.2.3.")
-                                    verify(redErrorConsole).println("A newer version of batect (1.2.3) is available, but the upgrade cannot be performed automatically.")
-                                    verify(redErrorConsole).println("Visit https://batect.com/release-notes/1.2.2 for more information.")
+                                    verify(errorConsole).println(Text.red("A newer version of batect (1.2.3) is available, but the upgrade cannot be performed automatically."))
+                                    verify(errorConsole).println(Text.red("Visit https://batect.com/release-notes/1.2.2 for more information."))
                                 }
                             }
                         }
@@ -363,7 +352,7 @@ object UpgradeCommandSpec : Spek({
                     }
 
                     it("prints an appropriate error message") {
-                        verify(redErrorConsole).println("Downloading update information failed: Something went wrong.")
+                        verify(errorConsole).println(Text.red("Downloading update information failed: Something went wrong."))
                     }
                 }
             }

@@ -19,6 +19,8 @@ package batect.testutils
 import batect.config.io.ConfigurationException
 import batect.logging.LogMessage
 import batect.logging.Severity
+import batect.ui.text.Text
+import batect.ui.text.TextRun
 import batect.utils.toDetailedString
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.natpryce.hamkrest.MatchResult
@@ -94,3 +96,17 @@ fun withAdditionalData(key: String, value: Any?): Matcher<LogMessage> = has(LogM
 fun withException(exception: Throwable): Matcher<LogMessage> = withAdditionalData("exception", exception.toDetailedString())
 
 fun <K, V> isEmptyMap() = Matcher(Map<K, V>::isEmpty)
+
+fun equivalentTo(expected: TextRun): Matcher<TextRun> =
+    object : Matcher<TextRun> {
+        override fun invoke(actual: TextRun): MatchResult = if (actual.simplify() == expected.simplify()) {
+            MatchResult.Match
+        } else {
+            MatchResult.Mismatch("was: ${describe(actual)}")
+        }
+
+        override val description: String get() = "equivalent to ${describe(expected)}"
+        override val negatedDescription: String get() = "not equivalent to ${describe(expected)}"
+    }
+
+fun equivalentTo(expected: Text) = equivalentTo(TextRun(expected))

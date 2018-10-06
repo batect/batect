@@ -41,11 +41,7 @@ class StartupProgressDisplay(val containerLines: List<ContainerStartupProgressLi
                 console.clearCurrentLine()
             }
 
-            console.restrictToConsoleWidth {
-                line.print(this)
-            }
-
-            console.println()
+            console.printLineLimitedToConsoleWidth(line.print())
         }
 
         havePrintedOnceBefore = true

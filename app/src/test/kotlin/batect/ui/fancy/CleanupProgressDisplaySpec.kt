@@ -16,23 +16,14 @@
 
 package batect.ui.fancy
 
-import batect.config.Container
-import batect.docker.DockerContainer
-import batect.docker.DockerNetwork
-import batect.execution.model.events.ContainerCreatedEvent
-import batect.execution.model.events.ContainerRemovedEvent
-import batect.execution.model.events.TaskNetworkCreatedEvent
-import batect.execution.model.events.TaskNetworkDeletedEvent
+import batect.execution.model.events.TaskEvent
 import batect.testutils.createForEachTest
-import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console
-import batect.ui.ConsoleColor
-import batect.ui.ConsolePrintStatements
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doAnswer
-import com.nhaarman.mockito_kotlin.eq
+import batect.ui.text.TextRun
+import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.verify
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -40,232 +31,22 @@ import org.jetbrains.spek.api.dsl.on
 
 object CleanupProgressDisplaySpec : Spek({
     describe("a cleanup progress display") {
-        val restrictedWidthConsole by createForEachTest { mock<Console>() }
+        val console by createForEachTest { mock<Console>() }
+        val lineText = TextRun("This is the cleanup progress")
 
-        val whiteConsole by createForEachTest {
-            mock<Console> {
-                on { restrictToConsoleWidth(any()) } doAnswer {
-                    val printStatements = it.getArgument<ConsolePrintStatements>(0)
-                    printStatements(restrictedWidthConsole)
-                }
+        val line by createForEachTest {
+            mock<CleanupProgressDisplayLine> {
+                on { print() } doReturn lineText
             }
         }
 
-        val console by createForEachTest {
-            mock<Console> {
-                on { withColor(eq(ConsoleColor.White), any()) } doAnswer {
-                    val printStatements = it.getArgument<ConsolePrintStatements>(1)
-                    printStatements(whiteConsole)
-                }
-            }
-        }
+        val cleanupDisplay by createForEachTest { CleanupProgressDisplay(line) }
 
-        val cleanupDisplay by createForEachTest { CleanupProgressDisplay() }
+        on("printing progress information") {
+            cleanupDisplay.print(console)
 
-        describe("printing cleanup progress to the console") {
-            on("when there is nothing to clean up") {
-                cleanupDisplay.print(console)
-
-                it("prints that clean up is complete") {
-                    inOrder(whiteConsole, restrictedWidthConsole) {
-                        verify(restrictedWidthConsole).print("Clean up: done")
-                        verify(whiteConsole).println()
-                    }
-                }
-            }
-
-            describe("when there is only the network to clean up") {
-                beforeEachTest {
-                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
-                }
-
-                on("and the network hasn't been removed yet") {
-                    cleanupDisplay.print(console)
-
-                    it("prints that the network still needs to be cleaned up") {
-                        inOrder(whiteConsole, restrictedWidthConsole) {
-                            verify(restrictedWidthConsole).print("Cleaning up: removing task network...")
-                            verify(whiteConsole).println()
-                        }
-                    }
-                }
-
-                on("and the network has been removed") {
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
-                    cleanupDisplay.print(console)
-
-                    it("prints that clean up is complete") {
-                        inOrder(whiteConsole, restrictedWidthConsole) {
-                            verify(restrictedWidthConsole).print("Clean up: done")
-                            verify(whiteConsole).println()
-                        }
-                    }
-                }
-            }
-
-            describe("when there is a container and the network to clean up") {
-                val container = Container("some-container", imageSourceDoesNotMatter())
-
-                beforeEachTest {
-                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container, DockerContainer("some-container-id")))
-                }
-
-                on("and the container hasn't been removed yet") {
-                    cleanupDisplay.print(console)
-
-                    it("prints that the container still needs to be cleaned up") {
-                        inOrder(whiteConsole, restrictedWidthConsole) {
-                            verify(restrictedWidthConsole).print("Cleaning up: 1 container (")
-                            verify(restrictedWidthConsole).printBold("some-container")
-                            verify(restrictedWidthConsole).print(") left to remove...")
-                            verify(whiteConsole).println()
-                        }
-                    }
-                }
-
-                on("and the container has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.print(console)
-
-                    it("prints that the network still needs to be cleaned up") {
-                        inOrder(whiteConsole, restrictedWidthConsole) {
-                            verify(restrictedWidthConsole).print("Cleaning up: removing task network...")
-                            verify(whiteConsole).println()
-                        }
-                    }
-                }
-
-                on("and the network has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
-                    cleanupDisplay.print(console)
-
-                    it("prints that clean up is complete") {
-                        inOrder(whiteConsole, restrictedWidthConsole) {
-                            verify(restrictedWidthConsole).print("Clean up: done")
-                            verify(whiteConsole).println()
-                        }
-                    }
-                }
-            }
-
-            describe("when there are two containers and the network to clean up") {
-                val container1 = Container("container-1", imageSourceDoesNotMatter())
-                val container2 = Container("container-2", imageSourceDoesNotMatter())
-
-                beforeEachTest {
-                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container1, DockerContainer("container-1-id")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container2, DockerContainer("container-2-id")))
-                }
-
-                on("and neither container has been removed yet") {
-                    cleanupDisplay.print(console)
-
-                    it("prints that both of the containers still need to be cleaned up") {
-                        inOrder(whiteConsole, restrictedWidthConsole) {
-                            verify(restrictedWidthConsole).print("Cleaning up: 2 containers (")
-                            verify(restrictedWidthConsole).printBold("container-1")
-                            verify(restrictedWidthConsole).print(" and ")
-                            verify(restrictedWidthConsole).printBold("container-2")
-                            verify(restrictedWidthConsole).print(") left to remove...")
-                            verify(whiteConsole).println()
-                        }
-                    }
-                }
-
-                on("and one container has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container1))
-                    cleanupDisplay.print(console)
-
-                    it("prints that the other container still needs to be cleaned up") {
-                        inOrder(whiteConsole, restrictedWidthConsole) {
-                            verify(restrictedWidthConsole).print("Cleaning up: 1 container (")
-                            verify(restrictedWidthConsole).printBold("container-2")
-                            verify(restrictedWidthConsole).print(") left to remove...")
-                            verify(whiteConsole).println()
-                        }
-                    }
-                }
-
-                on("and the network has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container1))
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container2))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
-                    cleanupDisplay.print(console)
-
-                    it("prints that clean up is complete") {
-                        inOrder(whiteConsole, restrictedWidthConsole) {
-                            verify(restrictedWidthConsole).print("Clean up: done")
-                            verify(whiteConsole).println()
-                        }
-                    }
-                }
-            }
-
-            describe("when there are three containers and the network to clean up") {
-                val container1 = Container("container-1", imageSourceDoesNotMatter())
-                val container2 = Container("container-2", imageSourceDoesNotMatter())
-                val container3 = Container("container-3", imageSourceDoesNotMatter())
-
-                beforeEachTest {
-                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container1, DockerContainer("container-1-id")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container2, DockerContainer("container-2-id")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container3, DockerContainer("container-3-id")))
-                }
-
-                on("and none of the containers have been removed yet") {
-                    cleanupDisplay.print(console)
-
-                    it("prints that all of the containers still need to be cleaned up") {
-                        inOrder(whiteConsole, restrictedWidthConsole) {
-                            verify(restrictedWidthConsole).print("Cleaning up: 3 containers (")
-                            verify(restrictedWidthConsole).printBold("container-1")
-                            verify(restrictedWidthConsole).print(", ")
-                            verify(restrictedWidthConsole).printBold("container-2")
-                            verify(restrictedWidthConsole).print(" and ")
-                            verify(restrictedWidthConsole).printBold("container-3")
-                            verify(restrictedWidthConsole).print(") left to remove...")
-                            verify(whiteConsole).println()
-                        }
-                    }
-                }
-            }
-
-            describe("when there are four containers and the network to clean up") {
-                val container1 = Container("container-1", imageSourceDoesNotMatter())
-                val container2 = Container("container-2", imageSourceDoesNotMatter())
-                val container3 = Container("container-3", imageSourceDoesNotMatter())
-                val container4 = Container("container-4", imageSourceDoesNotMatter())
-
-                beforeEachTest {
-                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container1, DockerContainer("container-1-id")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container2, DockerContainer("container-2-id")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container3, DockerContainer("container-3-id")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container4, DockerContainer("container-4-id")))
-                }
-
-                on("and none of the containers have been removed yet") {
-                    cleanupDisplay.print(console)
-
-                    it("prints that all of the containers still need to be cleaned up") {
-                        inOrder(whiteConsole, restrictedWidthConsole) {
-                            verify(restrictedWidthConsole).print("Cleaning up: 4 containers (")
-                            verify(restrictedWidthConsole).printBold("container-1")
-                            verify(restrictedWidthConsole).print(", ")
-                            verify(restrictedWidthConsole).printBold("container-2")
-                            verify(restrictedWidthConsole).print(", ")
-                            verify(restrictedWidthConsole).printBold("container-3")
-                            verify(restrictedWidthConsole).print(" and ")
-                            verify(restrictedWidthConsole).printBold("container-4")
-                            verify(restrictedWidthConsole).print(") left to remove...")
-                            verify(whiteConsole).println()
-                        }
-                    }
-                }
+            it("prints the information from the progress line") {
+                verify(console).printLineLimitedToConsoleWidth(lineText)
             }
         }
 
@@ -277,6 +58,16 @@ object CleanupProgressDisplaySpec : Spek({
                     verify(console).moveCursorUp()
                     verify(console).clearCurrentLine()
                 }
+            }
+        }
+
+        on("receiving an event") {
+            val event = mock<TaskEvent>()
+
+            cleanupDisplay.onEventPosted(event)
+
+            it("passes the event to the progress line") {
+                verify(line).onEventPosted(event)
             }
         }
     }

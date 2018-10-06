@@ -37,8 +37,8 @@ import batect.execution.model.steps.RunContainerStep
 import batect.execution.model.steps.StartContainerStep
 import batect.execution.model.steps.TaskStep
 import batect.os.Command
-import batect.ui.Console
-import batect.ui.ConsoleColor
+import batect.ui.text.Text
+import batect.ui.text.TextRun
 
 class ContainerStartupProgressLine(val container: Container, val dependencies: Set<Container>) {
     private var isBuilding = false
@@ -59,96 +59,80 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
 
     private val healthyContainers = mutableSetOf<Container>()
 
-    fun print(console: Console) {
-        console.withColor(ConsoleColor.White) {
-            printBold(container.name)
-            print(": ")
-
-            when {
-                isHealthy -> print("running")
-                isRunning -> printDescriptionWhenRunning()
-                hasStarted -> print("container started, waiting for it to become healthy...")
-                isStarting -> print("starting container...")
-                hasBeenCreated -> printDescriptionWhenWaitingToStart()
-                isCreating -> print("creating container...")
-                hasBeenBuilt && networkHasBeenCreated -> print("image built, ready to create container")
-                hasBeenBuilt && !networkHasBeenCreated -> print("image built, waiting for network to be ready...")
-                hasBeenPulled && networkHasBeenCreated -> print("image pulled, ready to create container")
-                hasBeenPulled && !networkHasBeenCreated -> print("image pulled, waiting for network to be ready...")
-                isBuilding && lastBuildProgressUpdate == null -> print("building image...")
-                isBuilding && lastBuildProgressUpdate != null -> printDescriptionWhenBuilding()
-                isPulling -> printDescriptionWhenPulling()
-                else -> printDescriptionWhenWaitingToBuildOrPull()
-            }
+    fun print(): TextRun {
+        val description = when {
+            isHealthy -> TextRun("running")
+            isRunning -> descriptionWhenRunning()
+            hasStarted -> TextRun("container started, waiting for it to become healthy...")
+            isStarting -> TextRun("starting container...")
+            hasBeenCreated -> descriptionWhenWaitingToStart()
+            isCreating -> TextRun("creating container...")
+            hasBeenBuilt && networkHasBeenCreated -> TextRun("image built, ready to create container")
+            hasBeenBuilt && !networkHasBeenCreated -> TextRun("image built, waiting for network to be ready...")
+            hasBeenPulled && networkHasBeenCreated -> TextRun("image pulled, ready to create container")
+            hasBeenPulled && !networkHasBeenCreated -> TextRun("image pulled, waiting for network to be ready...")
+            isBuilding && lastBuildProgressUpdate == null -> TextRun("building image...")
+            isBuilding && lastBuildProgressUpdate != null -> descriptionWhenBuilding()
+            isPulling -> descriptionWhenPulling()
+            else -> descriptionWhenWaitingToBuildOrPull()
         }
+
+        return Text.white(Text.bold(container.name) + Text(": ") + description)
     }
 
-    private fun Console.printDescriptionWhenWaitingToBuildOrPull() {
-        when (container.imageSource) {
-            is BuildImage -> print("ready to build image")
-            is PullImage -> print("ready to pull image")
+    private fun descriptionWhenWaitingToBuildOrPull(): TextRun {
+        return when (container.imageSource) {
+            is BuildImage -> TextRun("ready to build image")
+            is PullImage -> TextRun("ready to pull image")
         }
     }
 
     private val containerImageName by lazy { (container.imageSource as PullImage).imageName }
 
-    private fun Console.printDescriptionWhenPulling() {
-        print("pulling ")
-        printBold(containerImageName)
-
-        if (lastPullProgressUpdate == null) {
-            print("...")
+    private fun descriptionWhenPulling(): TextRun {
+        val progressInformation = if (lastPullProgressUpdate == null) {
+            Text("...")
         } else {
-            print(": " + lastPullProgressUpdate!!.toStringForDisplay())
+            Text(": " + lastPullProgressUpdate!!.toStringForDisplay())
         }
+
+        return Text("pulling ") + Text.bold(containerImageName) + progressInformation
     }
 
-    private fun Console.printDescriptionWhenBuilding() {
-        print("building image: step ${lastBuildProgressUpdate!!.currentStep} of ${lastBuildProgressUpdate!!.totalSteps}: ${lastBuildProgressUpdate!!.message}")
-
-        if (lastBuildProgressUpdate!!.pullProgress != null) {
-            print(": ")
-            print(lastBuildProgressUpdate!!.pullProgress!!.toStringForDisplay())
+    private fun descriptionWhenBuilding(): TextRun {
+        val progressInformation = if (lastBuildProgressUpdate!!.pullProgress != null) {
+            ": " + lastBuildProgressUpdate!!.pullProgress!!.toStringForDisplay()
+        } else {
+            ""
         }
+
+        return TextRun("building image: step ${lastBuildProgressUpdate!!.currentStep} of ${lastBuildProgressUpdate!!.totalSteps}: ${lastBuildProgressUpdate!!.message}" + progressInformation)
     }
 
-    private fun Console.printDescriptionWhenWaitingToStart() {
+    private fun descriptionWhenWaitingToStart(): TextRun {
         val remainingDependencies = dependencies - healthyContainers
 
         if (remainingDependencies.isEmpty()) {
-            print("ready to start")
-            return
+            return TextRun("ready to start")
         }
 
-        if (remainingDependencies.size == 1) {
-            print("waiting for dependency ")
+        val noun = if (remainingDependencies.size == 1) {
+            "dependency"
         } else {
-            print("waiting for dependencies ")
+            "dependencies"
         }
 
-        remainingDependencies.forEachIndexed { i, dependency ->
-            printBold(dependency.name)
+        val formattedDependencyNames = remainingDependencies.map { Text.bold(it.name) }
 
-            val secondLastDependency = i == remainingDependencies.size - 2
-            val beforeSecondLastDependency = i < remainingDependencies.size - 2
-
-            if (secondLastDependency) {
-                print(" and ")
-            } else if (beforeSecondLastDependency) {
-                print(", ")
-            }
-        }
-
-        print(" to be ready...")
+        return Text("waiting for $noun ") + humanReadableList(formattedDependencyNames) + Text(" to be ready...")
     }
 
-    private fun Console.printDescriptionWhenRunning() {
+    private fun descriptionWhenRunning(): TextRun {
         if (command == null) {
-            print("running")
-        } else {
-            print("running ")
-            printBold(command!!.originalCommand.replace('\n', ' '))
+            return TextRun("running")
         }
+
+        return Text("running ") + Text.bold(command!!.originalCommand.replace('\n', ' '))
     }
 
     fun onStepStarting(step: TaskStep) {

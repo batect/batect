@@ -24,9 +24,9 @@ import batect.execution.model.steps.CleanupStep
 import batect.execution.model.steps.RunContainerStep
 import batect.execution.model.steps.TaskStep
 import batect.ui.Console
-import batect.ui.ConsoleColor
 import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
+import batect.ui.text.Text
 
 class FancyEventLogger(
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
@@ -99,9 +99,7 @@ class FancyEventLogger(
             console.println()
         }
 
-        errorConsole.withColor(ConsoleColor.Red) {
-            println(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
-        }
+        errorConsole.println(Text.red(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)))
 
         if (haveStartedCleanup) {
             console.println()
@@ -110,24 +108,16 @@ class FancyEventLogger(
     }
 
     override fun onTaskFailed(taskName: String, manualCleanupInstructions: String) {
-        errorConsole.withColor(ConsoleColor.Red) {
-            if (manualCleanupInstructions != "") {
-                println()
-                println(manualCleanupInstructions)
-            }
-
-            println()
-            print("The task ")
-            printBold(taskName)
-            println(" failed. See above for details.")
+        if (manualCleanupInstructions != "") {
+            errorConsole.println()
+            errorConsole.println(Text.red(manualCleanupInstructions))
         }
+
+        errorConsole.println()
+        errorConsole.println(Text.red(Text("The task ") + Text.bold(taskName) + Text(" failed. See above for details.")))
     }
 
     override fun onTaskStarting(taskName: String) {
-        console.withColor(ConsoleColor.White) {
-            print("Running ")
-            printBold(taskName)
-            println("...")
-        }
+        console.println(Text.white(Text("Running ") + Text.bold(taskName) + Text("...")))
     }
 }

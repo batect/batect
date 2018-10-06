@@ -21,12 +21,10 @@ import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.testutils.createForEachTest
 import batect.ui.Console
-import batect.ui.ConsolePrintStatements
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doAnswer
+import batect.ui.text.TextRun
+import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.reset
 import com.nhaarman.mockito_kotlin.verify
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -35,8 +33,19 @@ import org.jetbrains.spek.api.dsl.on
 
 object StartupProgressDisplaySpec : Spek({
     describe("a startup progress display") {
-        val line1 by createForEachTest { mock<ContainerStartupProgressLine>() }
-        val line2 by createForEachTest { mock<ContainerStartupProgressLine>() }
+        val line1Text = TextRun("The first line's text")
+        val line1 by createForEachTest {
+            mock<ContainerStartupProgressLine> {
+                on { print() } doReturn line1Text
+            }
+        }
+
+        val line2Text = TextRun("The second line's text")
+        val line2 by createForEachTest {
+            mock<ContainerStartupProgressLine> {
+                on { print() } doReturn line2Text
+            }
+        }
 
         val display by createForEachTest { StartupProgressDisplay(listOf(line1, line2)) }
 
@@ -61,46 +70,32 @@ object StartupProgressDisplaySpec : Spek({
         }
 
         describe("displaying the current progress") {
-            val restrictedWidthConsole by createForEachTest { mock<Console>(name = "restrictedWidthConsole") }
-            val console by createForEachTest {
-                mock<Console>(name = "console") {
-                    on { restrictToConsoleWidth(any()) } doAnswer {
-                        val printStatements = it.getArgument<ConsolePrintStatements>(0)
-                        printStatements(restrictedWidthConsole)
-                    }
-                }
-            }
+            val console by createForEachTest { mock<Console>() }
 
             on("when the progress has never been displayed before") {
                 display.print(console)
 
-                it("just prints each progress line in a restricted width console") {
-                    inOrder(line1, line2, console) {
-                        verify(line1).print(restrictedWidthConsole)
-                        verify(console).println()
-                        verify(line2).print(restrictedWidthConsole)
-                        verify(console).println()
+                it("just prints each progress line, limited to the width of the console") {
+                    inOrder(console) {
+                        verify(console).printLineLimitedToConsoleWidth(line1Text)
+                        verify(console).printLineLimitedToConsoleWidth(line2Text)
                     }
                 }
             }
 
             on("when the progress has been displayed before") {
                 display.print(mock())
-                reset(line1, line2)
-
                 display.print(console)
 
                 it("moves the cursor to the start of the progress block, and then clears each line and prints the corresponding progress line in a restricted width console") {
-                    inOrder(console, line1, line2) {
+                    inOrder(console) {
                         verify(console).moveCursorUp(2)
 
                         verify(console).clearCurrentLine()
-                        verify(line1).print(restrictedWidthConsole)
-                        verify(console).println()
+                        verify(console).printLineLimitedToConsoleWidth(line1Text)
 
                         verify(console).clearCurrentLine()
-                        verify(line2).print(restrictedWidthConsole)
-                        verify(console).println()
+                        verify(console).printLineLimitedToConsoleWidth(line2Text)
                     }
                 }
             }

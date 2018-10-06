@@ -16,22 +16,22 @@
 
 package batect.ui.fancy
 
-import batect.execution.model.events.TaskEvent
-import batect.ui.Console
+import batect.ui.text.Text
+import batect.ui.text.TextRun
 
-class CleanupProgressDisplay(private val line: CleanupProgressDisplayLine) {
-    constructor() : this(CleanupProgressDisplayLine())
+internal fun humanReadableList(list: Collection<Text>): TextRun {
+    return list.foldIndexed(TextRun()) { index, acc, current ->
+        val secondLastItem = index == list.size - 2
+        val beforeSecondLastItem = index < list.size - 2
 
-    fun print(console: Console) {
-        console.printLineLimitedToConsoleWidth(line.print())
-    }
+        val separator = if (secondLastItem) {
+            Text(" and ")
+        } else if (beforeSecondLastItem) {
+            Text(", ")
+        } else {
+            Text("")
+        }
 
-    fun clear(console: Console) {
-        console.moveCursorUp()
-        console.clearCurrentLine()
-    }
-
-    fun onEventPosted(event: TaskEvent) {
-        line.onEventPosted(event)
+        acc + current + separator
     }
 }

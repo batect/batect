@@ -21,9 +21,9 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.TaskStep
 import batect.ui.Console
-import batect.ui.ConsoleColor
 import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
+import batect.ui.text.Text
 
 class QuietEventLogger(
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
@@ -32,10 +32,8 @@ class QuietEventLogger(
 ) : EventLogger() {
     override fun postEvent(event: TaskEvent) {
         if (event is TaskFailedEvent) {
-            errorConsole.withColor(ConsoleColor.Red) {
-                println()
-                println(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
-            }
+            errorConsole.println()
+            errorConsole.println(Text.red(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)))
         }
     }
 

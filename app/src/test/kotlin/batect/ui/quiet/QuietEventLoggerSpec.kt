@@ -20,13 +20,9 @@ import batect.execution.RunOptions
 import batect.execution.model.events.TaskFailedEvent
 import batect.testutils.createForEachTest
 import batect.ui.Console
-import batect.ui.ConsoleColor
-import batect.ui.ConsolePrintStatements
 import batect.ui.FailureErrorMessageFormatter
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doAnswer
+import batect.ui.text.Text
 import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verifyZeroInteractions
@@ -40,16 +36,7 @@ object QuietEventLoggerSpec : Spek({
     describe("a quiet event logger") {
         val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
         val runOptions by createForEachTest { mock<RunOptions>() }
-
-        val redErrorConsole by createForEachTest { mock<Console>() }
-        val errorConsole by createForEachTest {
-            mock<Console> {
-                on { withColor(eq(ConsoleColor.Red), any()) } doAnswer {
-                    val printStatements = it.getArgument<ConsolePrintStatements>(1)
-                    printStatements(redErrorConsole)
-                }
-            }
-        }
+        val errorConsole by createForEachTest { mock<Console>() }
 
         val logger by createForEachTest { QuietEventLogger(failureErrorMessageFormatter, runOptions, errorConsole) }
 
@@ -60,9 +47,9 @@ object QuietEventLoggerSpec : Spek({
             logger.postEvent(event)
 
             it("prints the message to the console") {
-                inOrder(redErrorConsole) {
-                    verify(redErrorConsole).println()
-                    verify(redErrorConsole).println("Something went wrong.")
+                inOrder(errorConsole) {
+                    verify(errorConsole).println()
+                    verify(errorConsole).println(Text.red("Something went wrong."))
                 }
             }
         }

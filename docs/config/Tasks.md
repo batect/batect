@@ -15,13 +15,15 @@ Specifies what to do when this task starts:
   Overrides any command specified on the container definition and the default image command. If no command is provided here, the command
   specified on the container definition is used if there is one, otherwise the image's default command is used.
 
-* `environment` List of environment variables (in `name=value` format) to pass to the container, in addition to those defined on the
+* `environment` List of environment variables (in `name: value` format) to pass to the container, in addition to those defined on the
   container itself.
 
   If a variable is specified both here and on the container itself, the value given here will override the value defined on the container.
   Just like when [specifying a variable directly on the container](Containers.md#environment), you can pass variables from the host to the
-  container in the `CONTAINER_VARIABLE=$HOST_VARIABLE` format. If the referenced host variable is not present, batect will show an error
+  container in the `CONTAINER_VARIABLE: $HOST_VARIABLE` format. If the referenced host variable is not present, batect will show an error
   message and not start the task.
+
+  Prior to v0.21, environment variables were required to be supplied in `name=value` format.
 
 * `ports` List of port mappings to create for the container, in addition to those defined on the container itself.
 
@@ -109,8 +111,8 @@ tasks:
     run:
       container: app
       environment:
-        - ENABLE_COOL_NEW_FEATURE=true
-        - SUPER_SECRET_VALUE=$SECRET_PASSWORD
+        ENABLE_COOL_NEW_FEATURE: true
+        SUPER_SECRET_VALUE: $SECRET_PASSWORD
 ```
 
 Running the task `start-app` will start the `app` container with the following environment variables:

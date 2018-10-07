@@ -20,12 +20,14 @@ If not provided, the default command for the image will be run.
 Both of these can be overridden for an individual task by specifying a [`command` at the task level](Tasks.md#run).
 
 ## `environment`
-List of environment variables (in `name=value` format) for the container.
+List of environment variables (in `name: value` format) for the container.
+
+Prior to v0.21, environment variables were required to be supplied in `name=value` format.
 
 ### Environment variable substitution
 You can pass environment variables from the host (ie. where you run batect) to the container by using `$<name>`. For example, to set
 `SUPER_SECRET_PASSWORD` in the container to the value of the `MY_PASSWORD` variable on the host, use
-`SUPER_SECRET_PASSWORD=$MY_PASSWORD`. Substitutions in the middle of values is not supported (eg. `SUPER_SECRET_PASSWORD=My password is $MY_PASSWORD`
+`SUPER_SECRET_PASSWORD: $MY_PASSWORD`. Substitutions in the middle of values is not supported (eg. `SUPER_SECRET_PASSWORD: My password is $MY_PASSWORD`
 will not work). Be careful when using this - by relying on the host's environment variables, you are introducing inconsistency to how the container
 runs between hosts, which is something you generally want to avoid. If the referenced host variable is not present, batect will show an error
 message and not start the task.
@@ -179,8 +181,8 @@ containers:
   build-env:
     image: ruby:2.4.3
     environment:
-      - ENABLE_COOL_NEW_FEATURE=true
-      - SUPER_SECRET_VALUE=$SECRET_PASSWORD
+      ENABLE_COOL_NEW_FEATURE: true
+      SUPER_SECRET_VALUE: $SECRET_PASSWORD
 ```
 
 Running the container `build-env` will launch a container that uses the `ruby:2.4.3` image with the following environment variables:

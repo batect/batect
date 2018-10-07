@@ -5,7 +5,7 @@ containers:
     image: alpine:3.5
     command: do-the-thing
     environment:
-      - THING=value
+      THING: value
     volumes:
       - .:/code:cached
       - ./.cache:/tmp/cache
@@ -44,7 +44,7 @@ tasks:
       container: build-env
       command: sh -c "echo 'This is some output from task 1' && exit 123"
       environment:
-        - VAR=value
+        VAR: value
       ports:
         - 222:333
         - local: 444

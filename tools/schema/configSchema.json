@@ -164,10 +164,9 @@
       }
     },
     "environmentVariableList": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "pattern": "^.+=.+$"
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
       }
     },
     "portMappingList": {

@@ -154,7 +154,8 @@ object ConfigurationLoaderSpec : Spek({
                 |      container: build-env
                 |      command: ./gradlew doStuff
                 |      environment:
-                |        - SOME_VAR=value
+                |        SOME_VAR: value
+                |        SOME_OTHER_VAR: "the value"
                 |      ports:
                 |        - 123:456
                 |        - local: 1000
@@ -176,7 +177,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.name, equalTo("first_task"))
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, equalTo(Command.parse("./gradlew doStuff")))
-                assertThat(task.runConfiguration.additionalEnvironmentVariables, equalTo(mapOf("SOME_VAR" to "value")))
+                assertThat(task.runConfiguration.additionalEnvironmentVariables, equalTo(mapOf("SOME_VAR" to "value", "SOME_OTHER_VAR" to "the value")))
                 assertThat(task.runConfiguration.additionalPortMappings, equalTo(setOf(PortMapping(123, 456), PortMapping(1000, 2000))))
                 assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.prerequisiteTasks, isEmpty)
@@ -443,8 +444,9 @@ object ConfigurationLoaderSpec : Spek({
                     |    build_directory: container-1-build-dir
                     |    command: do-the-thing.sh some-param
                     |    environment:
-                    |      - OPTS=-Dthing
-                    |      - BOOL_VALUE=1
+                    |      OPTS: -Dthing
+                    |      BOOL_VALUE: 1
+                    |      OTHER_VALUE: "the value"
                     |    working_directory: /here
                     |    volumes:
                     |      - ../:/here
@@ -476,7 +478,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.name, equalTo("container-1"))
                 assertThat(container.imageSource, equalTo(BuildImage("/resolved/container-1-build-dir")))
                 assertThat(container.command, equalTo(Command.parse("do-the-thing.sh some-param")))
-                assertThat(container.environment, equalTo(mapOf("OPTS" to "-Dthing", "BOOL_VALUE" to "1")))
+                assertThat(container.environment, equalTo(mapOf("OPTS" to "-Dthing", "BOOL_VALUE" to "1", "OTHER_VALUE" to "the value")))
                 assertThat(container.workingDirectory, equalTo("/here"))
                 assertThat(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
                 assertThat(container.healthCheckConfig, equalTo(HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(1))))
@@ -685,12 +687,63 @@ object ConfigurationLoaderSpec : Spek({
                 |  container-1:
                 |    build_directory: container-1
                 |    environment:
-                |      - THING=value1
-                |      - THING=value2
+                |      THING: value1
+                |      THING: value2
                 """.trimMargin()
 
             it("should fail with an error message") {
                 assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate environment variable 'THING'") and withLineNumber(8)))
+            }
+        }
+
+        on("loading a configuration file with a task with an environment variable defined twice") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |tasks:
+                |  the-task:
+                |    run:
+                |      container: the-container
+                |      environment:
+                |        THING: value1
+                |        THING: value2
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate environment variable 'THING'") and withLineNumber(9)))
+            }
+        }
+
+        on("loading a configuration file with a container with an environment variable with no value") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |containers:
+                |  container-1:
+                |    build_directory: container-1
+                |    environment:
+                |      THING:
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Environment variable 'THING' has no value") and withLineNumber(7)))
+            }
+        }
+
+        on("loading a configuration file with a task with an environment variable with no value") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |tasks:
+                |  the-task:
+                |    run:
+                |      container: the-container
+                |      environment:
+                |        THING:
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Environment variable 'THING' has no value") and withLineNumber(8)))
             }
         }
 

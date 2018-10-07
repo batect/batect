@@ -10,4 +10,4 @@ tasks:
       container: build-env
       command: sh -c "echo $MESSAGE && exit 123"
       environment:
-        - "MESSAGE=This is some output from the task"
+        MESSAGE: "This is some output from the task"

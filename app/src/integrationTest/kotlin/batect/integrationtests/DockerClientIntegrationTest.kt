@@ -301,7 +301,13 @@ private fun removeImage(imageName: String) {
 
 private fun httpGet(url: String): Response {
     val client = OkHttpClient.Builder().build()
-    val request = Request.Builder().url(url).build()
+    val request = Request.Builder()
+        .url(url)
+        .header("Connection", "close")
+        .build()
 
-    return client.newCall(request).execute()
+    val response = client.newCall(request).execute()
+    response.close() // We don't use the body.
+
+    return response
 }

@@ -271,7 +271,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     on("creating the request") {
                         it("throws an appropriate exception") {
                             assertThat({ factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork) },
-                                throws<ContainerCreationFailedException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: The host environment variable 'SOME_HOST_VARIABLE_THAT_ISNT_DEFINED' is not set.")))
+                                throws<ContainerCreationFailedException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: The host environment variable 'SOME_HOST_VARIABLE_THAT_ISNT_DEFINED' is not set, and no default value has been provided.")))
                         }
                     }
                 }
@@ -308,7 +308,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     on("creating the request") {
                         it("throws an appropriate exception") {
                             assertThat({ factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork) },
-                                throws<ContainerCreationFailedException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: The host environment variable 'SOME_HOST_VARIABLE_THAT_ISNT_DEFINED' is not set.")))
+                                throws<ContainerCreationFailedException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: The host environment variable 'SOME_HOST_VARIABLE_THAT_ISNT_DEFINED' is not set, and no default value has been provided.")))
                         }
                     }
                 }

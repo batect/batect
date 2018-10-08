@@ -27,12 +27,29 @@ Values that are YAML booleans or numbers should be wrapped in double quotes.
 Prior to v0.21, environment variables were required to be supplied in `name=value` format.
 
 ### Environment variable substitution
-You can pass environment variables from the host (ie. where you run batect) to the container by using `$<name>`. For example, to set
-`SUPER_SECRET_PASSWORD` in the container to the value of the `MY_PASSWORD` variable on the host, use
-`SUPER_SECRET_PASSWORD: $MY_PASSWORD`. Substitutions in the middle of values is not supported (eg. `SUPER_SECRET_PASSWORD: My password is $MY_PASSWORD`
-will not work). Be careful when using this - by relying on the host's environment variables, you are introducing inconsistency to how the container
-runs between hosts, which is something you generally want to avoid. If the referenced host variable is not present, batect will show an error
-message and not start the task.
+You can pass environment variables from the host (ie. where you run batect) to the container by using any of the following formats:
+
+* `$<name>` or `${<name>}`: use the value of `<name>` from the host as the value inside the container.
+
+  If the referenced host variable is not present, batect will show an error message and not start the task.
+
+* `${<name>:-<default>}`: use the value of `<name>` from the host as the value inside the container.
+
+  If the referenced host variable is not present, `<default>` is used instead.
+
+For example, to set `SUPER_SECRET_PASSWORD` in the container to the value of the `MY_PASSWORD` variable on the host, use
+`SUPER_SECRET_PASSWORD: $MY_PASSWORD` or `SUPER_SECRET_PASSWORD: ${MY_PASSWORD}`. Or, to default it to `insecure` if
+`MY_PASSWORD` is not set, use `SUPER_SECRET_PASSWORD: ${MY_PASSWORD:-insecure}`.
+
+Substitutions in the middle of values is not supported (eg. `SUPER_SECRET_PASSWORD: My password is $MY_PASSWORD` will not work).
+
+{% hint style='danger' %}
+Be careful when using this - by relying on the host's environment variables, you are introducing inconsistency to how the container
+runs between hosts, which is something you generally want to avoid.
+{% endhint %}
+
+The curly brace syntax for environment variables, including the ability to specify default values for environment variables,
+was added in v0.21.
 
 ### `TERM`
 The `TERM` environment variable, if set on the host, is always automatically passed through to the container.
@@ -183,17 +200,24 @@ containers:
   build-env:
     image: ruby:2.4.3
     environment:
-      ENABLE_COOL_NEW_FEATURE: true
+      COUNTRY: Australia
       SUPER_SECRET_VALUE: $SECRET_PASSWORD
+      ANOTHER_SECRET_VALUE: ${SECRET_PASSWORD}
+      OPTIMISATION_LEVEL: ${HOST_OPTIMISATION_LEVEL:-none}
 ```
 
 Running the container `build-env` will launch a container that uses the `ruby:2.4.3` image with the following environment variables:
 
-* The environment variable `ENABLE_COOL_NEW_FEATURE` will have value `true`.
-* The environment variable `SUPER_SECRET_VALUE` will have the value of the `SECRET_PASSWORD` environment variable on the host. (So, for example, if
-  `SECRET_PASSWORD` is `abc123` on the host, then `SUPER_SECRET_VALUE` will have the value `abc123` in the container.)
+* The environment variable `COUNTRY` will have value `Australia`.
 
-If `SECRET_PASSWORD` is not set on the host, batect will show an error message and not start the task.
+* The environment variables `SUPER_SECRET_VALUE` and `ANOTHER_SECRET_VALUE` will have the value of the `SECRET_PASSWORD` environment variable on
+  the host. (So, for example, if `SECRET_PASSWORD` is `abc123` on the host, then `SUPER_SECRET_VALUE` will have the value `abc123` in the container.)
+
+  If `SECRET_PASSWORD` is not set on the host, batect will show an error message and not start the task.
+
+* The environment variable `OPTIMISATION_LEVEL` will have the value of the `HOST_OPTIMISATION_LEVEL` environment variable on the host.
+
+  If `HOST_OPTIMISATION_LEVEL` is not set on the host, then `OPTIMISATION_LEVEL` will have the value `none` in the container.
 
 These environment variables could be overridden (and added to) with [`environment` at the task level](Tasks.md#run).
 

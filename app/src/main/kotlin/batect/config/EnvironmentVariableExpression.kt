@@ -22,44 +22,72 @@ sealed class EnvironmentVariableExpression {
     abstract fun evaluate(hostEnvironmentVariables: Map<String, String>): String
 
     companion object {
-        @JvmStatic @JsonCreator
-        fun parse(source: String): EnvironmentVariableExpression {
-            if (source.startsWith('$')) {
-                return ReferenceValue(source.drop(1))
-            } else {
-                return LiteralValue(source)
+        private val patterns = listOf(
+            Regex("\\$\\{(.+):-(.*)}") to { match: MatchResult -> ReferenceValue(match.groupValues[1], match.groupValues[2]) },
+            Regex("\\$\\{([^:]+)}") to { match: MatchResult -> ReferenceValue(match.groupValues[1]) },
+            Regex("\\$([^{](.*[^}])?)") to { match: MatchResult -> ReferenceValue(match.groupValues[1]) },
+            Regex("[^$].*") to { match: MatchResult ->
+                if (match.value.startsWith("\\$")) {
+                    LiteralValue(match.value.drop(1))
+                } else {
+                    LiteralValue(match.value)
+                }
             }
+        )
+
+        @JvmStatic
+        @JsonCreator
+        fun parse(source: String): EnvironmentVariableExpression {
+            patterns.forEach { (pattern, generator) ->
+                val result = pattern.matchEntire(source)
+
+                if (result != null) {
+                    return generator(result)
+                }
+            }
+
+            throw IllegalArgumentException("Invalid environment variable expression '$source'")
         }
 
-        @JvmStatic @JsonCreator
+        @JvmStatic
+        @JsonCreator
         fun parse(source: Int): EnvironmentVariableExpression = LiteralValue(source.toString())
 
-        @JvmStatic @JsonCreator
+        @JvmStatic
+        @JsonCreator
         fun parse(source: Long): EnvironmentVariableExpression = LiteralValue(source.toString())
 
         // We can't reliably convert booleans or doubles back to strings that are exactly as the user specified them, so just give up.
         // These methods exist to give the user a nicer error message in this case.
-        @JvmStatic @JsonCreator
+        @JvmStatic
+        @JsonCreator
         fun parse(@Suppress("UNUSED_PARAMETER") source: Boolean): EnvironmentVariableExpression = throw UnsupportedOperationException("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)")
 
-        @JvmStatic @JsonCreator
+        @JvmStatic
+        @JsonCreator
         fun parse(@Suppress("UNUSED_PARAMETER") source: Double): EnvironmentVariableExpression = throw UnsupportedOperationException("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)")
     }
 }
 
 data class LiteralValue(val value: String) : EnvironmentVariableExpression() {
     override fun evaluate(hostEnvironmentVariables: Map<String, String>) = value
-    override fun toString() = "${this::class.simpleName}(\"$value\")"
+    override fun toString() = "${this::class.simpleName}(value: '$value')"
 }
 
-data class ReferenceValue(val referenceTo: String) : EnvironmentVariableExpression() {
+data class ReferenceValue(val referenceTo: String, val default: String? = null) : EnvironmentVariableExpression() {
     override fun evaluate(hostEnvironmentVariables: Map<String, String>): String {
-        return hostEnvironmentVariables.getOrElse(referenceTo) {
-            throw EnvironmentVariableExpressionEvaluationException("The host environment variable '$referenceTo' is not set.")
+        val hostValue = hostEnvironmentVariables.get(referenceTo)
+
+        if (hostValue != null) {
+            return hostValue
+        } else if (default != null) {
+            return default
+        } else {
+            throw EnvironmentVariableExpressionEvaluationException("The host environment variable '$referenceTo' is not set, and no default value has been provided.")
         }
     }
 
-    override fun toString() = "${this::class.simpleName}($referenceTo)"
+    override fun toString() = "${this::class.simpleName}(reference to: '$referenceTo', default: '$default')"
 }
 
 class EnvironmentVariableExpressionEvaluationException(message: String) : RuntimeException(message)

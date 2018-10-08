@@ -35,7 +35,7 @@ object SimpleTaskWithEnvironmentFromHostTest : Spek({
             val result = runner.runApplication(listOf("the-task"), mapOf("MESSAGE" to "This is some output from the environment variable"))
 
             it("prints the output from that task") {
-                assertThat(result.output, containsSubstring("This is some output from the environment variable\r\n"))
+                assertThat(result.output, containsSubstring("This is some output from the environment variable\r\nThis is the default message\r\n"))
             }
 
             it("returns the exit code from that task") {

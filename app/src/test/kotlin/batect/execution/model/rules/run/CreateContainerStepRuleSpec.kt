@@ -194,7 +194,7 @@ object CreateContainerStepRuleSpec : Spek({
 
                 it("returns a human-readable representation of itself") {
                     assertThat(rule.toString(), equalTo("CreateContainerStepRule(container: 'the-container', command: [the-command, some-arg], " +
-                        "additional environment variables: [SOME_VAR=LiteralValue(\"some value\")], additional port mappings: [123:456], all containers in network: ['the-container', 'the-other-container'])"))
+                        "additional environment variables: [SOME_VAR=LiteralValue(value: 'some value')], additional port mappings: [123:456], all containers in network: ['the-container', 'the-other-container'])"))
                 }
             }
 
@@ -204,7 +204,7 @@ object CreateContainerStepRuleSpec : Spek({
 
                 it("returns a human-readable representation of itself") {
                     assertThat(rule.toString(), equalTo("CreateContainerStepRule(container: 'the-container', command: null, " +
-                        "additional environment variables: [SOME_VAR=LiteralValue(\"some value\")], additional port mappings: [123:456], all containers in network: ['the-container', 'the-other-container'])"))
+                        "additional environment variables: [SOME_VAR=LiteralValue(value: 'some value')], additional port mappings: [123:456], all containers in network: ['the-container', 'the-other-container'])"))
                 }
             }
         }

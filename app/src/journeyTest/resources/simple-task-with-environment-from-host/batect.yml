@@ -8,6 +8,7 @@ tasks:
   the-task:
     run:
       container: build-env
-      command: sh -c "echo $MESSAGE && exit 123"
+      command: sh -c "echo $MESSAGE && echo $OTHER_MESSAGE && exit 123"
       environment:
         MESSAGE: $MESSAGE
+        OTHER_MESSAGE: ${OTHER_MESSAGE:-This is the default message}

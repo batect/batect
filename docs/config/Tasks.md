@@ -19,9 +19,9 @@ Specifies what to do when this task starts:
   container itself.
 
   If a variable is specified both here and on the container itself, the value given here will override the value defined on the container.
-  Just like when [specifying a variable directly on the container](Containers.md#environment), you can pass variables from the host to the
-  container in the `CONTAINER_VARIABLE: $HOST_VARIABLE` format. If the referenced host variable is not present, batect will show an error
-  message and not start the task.
+
+  This field supports all of the same syntax as when [specifying a variable directly on the container](Containers.md#environment),
+  including passing variables from the host to the container and providing defaults for when the host variable is not set.
 
   Values that are YAML booleans or numbers should be wrapped in double quotes.
 
@@ -113,17 +113,24 @@ tasks:
     run:
       container: app
       environment:
-        ENABLE_COOL_NEW_FEATURE: true
+        COUNTRY: Australia
         SUPER_SECRET_VALUE: $SECRET_PASSWORD
+        ANOTHER_SECRET_VALUE: ${SECRET_PASSWORD}
+        OPTIMISATION_LEVEL: ${HOST_OPTIMISATION_LEVEL:-none}
 ```
 
 Running the task `start-app` will start the `app` container with the following environment variables:
 
-* The environment variable `ENABLE_COOL_NEW_FEATURE` will have value `true`.
-* The environment variable `SUPER_SECRET_VALUE` will have the value of the `SECRET_PASSWORD` environment variable on the host. (So, for example, if
-  `SECRET_PASSWORD` is `abc123` on the host, then `SUPER_SECRET_VALUE` will have the value `abc123` in the container.)
+* The environment variable `COUNTRY` will have value `Australia`.
 
-If `SECRET_PASSWORD` is not set on the host, batect will show an error message and not start the task.
+* The environment variables `SUPER_SECRET_VALUE` and `ANOTHER_SECRET_VALUE` will have the value of the `SECRET_PASSWORD` environment variable on
+  the host. (So, for example, if `SECRET_PASSWORD` is `abc123` on the host, then `SUPER_SECRET_VALUE` will have the value `abc123` in the container.)
+
+  If `SECRET_PASSWORD` is not set on the host, batect will show an error message and not start the task.
+
+* The environment variable `OPTIMISATION_LEVEL` will have the value of the `HOST_OPTIMISATION_LEVEL` environment variable on the host.
+
+  If `HOST_OPTIMISATION_LEVEL` is not set on the host, then `OPTIMISATION_LEVEL` will have the value `none` in the container.
 
 ### Task with port mappings
 ```yaml

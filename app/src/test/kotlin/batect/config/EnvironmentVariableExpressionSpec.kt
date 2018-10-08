@@ -29,26 +29,41 @@ import org.jetbrains.spek.api.dsl.on
 object EnvironmentVariableExpressionSpec : Spek({
     describe("an environment variable expression") {
         describe("parsing it from a string") {
-            given("the string is a literal value") {
-                val source = "some literal value"
-
-                on("parsing that string") {
+            mapOf(
+                "some literal value" to LiteralValue("some literal value"),
+                "a" to LiteralValue("a"),
+                "\\\$some literal value" to LiteralValue("\$some literal value"),
+                "\$SOME_VAR" to ReferenceValue("SOME_VAR"),
+                "\$a" to ReferenceValue("a"),
+                "\$ab" to ReferenceValue("ab"),
+                "\${SOME_VAR}" to ReferenceValue("SOME_VAR"),
+                "\${a}" to ReferenceValue("a"),
+                "\${SOME_VAR:-}" to ReferenceValue("SOME_VAR", ""),
+                "\${SOME_VAR:-default}" to ReferenceValue("SOME_VAR", "default"),
+                "\${SOME_VAR:-some value}" to ReferenceValue("SOME_VAR", "some value")
+            ).forEach { source, expectedExpression ->
+                on("parsing the input '$source'") {
                     val expression = EnvironmentVariableExpression.parse(source)
 
-                    it("returns a literal value expression") {
-                        assertThat(expression, equalTo(LiteralValue("some literal value")))
+                    it("returns the expected expression") {
+                        assertThat(expression, equalTo(expectedExpression))
                     }
                 }
             }
 
-            given("the string is a reference to another environment variable") {
-                val source = "\$SOME_VAR"
-
-                on("parsing that string") {
-                    val expression = EnvironmentVariableExpression.parse(source)
-
-                    it("returns a reference expression") {
-                        assertThat(expression, equalTo(ReferenceValue("SOME_VAR")))
+            listOf(
+                "$",
+                "\${",
+                "\${}",
+                "\${some",
+                "\${some:",
+                "\${some:}",
+                "\${:-}",
+                "\${:-default}"
+            ).forEach { source ->
+                on("parsing the input '$source'") {
+                    it("throws an appropriate exception") {
+                        assertThat({ EnvironmentVariableExpression.parse(source) }, throws<IllegalArgumentException>(withMessage("Invalid environment variable expression '$source'")))
                     }
                 }
             }
@@ -92,27 +107,57 @@ object EnvironmentVariableExpressionSpec : Spek({
     }
 
     describe("an environment variable expression that refers to another environment variable") {
-        val expression = ReferenceValue("THE_VAR")
+        given("the expression has no default value") {
+            val expression = ReferenceValue("THE_VAR")
 
-        given("the referenced environment variable is set") {
-            val hostEnvironmentVariables = mapOf("THE_VAR" to "some value")
+            given("the referenced environment variable is set") {
+                val hostEnvironmentVariables = mapOf("THE_VAR" to "some value")
 
-            on("evaluating the expression") {
-                val value = expression.evaluate(hostEnvironmentVariables)
+                on("evaluating the expression") {
+                    val value = expression.evaluate(hostEnvironmentVariables)
 
-                it("returns the value") {
-                    assertThat(value, equalTo("some value"))
+                    it("returns the value from the host") {
+                        assertThat(value, equalTo("some value"))
+                    }
+                }
+            }
+
+            given("the referenced environment variable is not set") {
+                val hostEnvironmentVariables = mapOf("SOME_OTHER_VAR" to "some value")
+
+                on("evaluating the expression") {
+                    it("throws an appropriate exception") {
+                        assertThat({ expression.evaluate(hostEnvironmentVariables) },
+                            throws<EnvironmentVariableExpressionEvaluationException>(withMessage("The host environment variable 'THE_VAR' is not set, and no default value has been provided.")))
+                    }
                 }
             }
         }
 
-        given("the referenced environment variable is not set") {
-            val hostEnvironmentVariables = mapOf("SOME_OTHER_VAR" to "some value")
+        given("the expression has a default value") {
+            val expression = ReferenceValue("THE_VAR", "the default value")
 
-            on("evaluating the expression") {
-                it("throws an appropriate exception") {
-                    assertThat({ expression.evaluate(hostEnvironmentVariables) },
-                        throws<EnvironmentVariableExpressionEvaluationException>(withMessage("The host environment variable 'THE_VAR' is not set.")))
+            given("the referenced environment variable is set") {
+                val hostEnvironmentVariables = mapOf("THE_VAR" to "some value")
+
+                on("evaluating the expression") {
+                    val value = expression.evaluate(hostEnvironmentVariables)
+
+                    it("returns the value from the host") {
+                        assertThat(value, equalTo("some value"))
+                    }
+                }
+            }
+
+            given("the referenced environment variable is not set") {
+                val hostEnvironmentVariables = mapOf("SOME_OTHER_VAR" to "some value")
+
+                on("evaluating the expression") {
+                    val value = expression.evaluate(hostEnvironmentVariables)
+
+                    it("returns the default value") {
+                        assertThat(value, equalTo("the default value"))
+                    }
                 }
             }
         }

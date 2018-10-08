@@ -18,6 +18,7 @@ package batect.execution.model.rules.run
 
 import batect.config.BuildImage
 import batect.config.Container
+import batect.config.LiteralValue
 import batect.config.PortMapping
 import batect.config.PullImage
 import batect.docker.DockerImage
@@ -46,7 +47,7 @@ object CreateContainerStepRuleSpec : Spek({
             val container = Container("the-container", PullImage(imageName))
             val otherContainer = Container("the-other-container", imageSourceDoesNotMatter())
             val command = Command.parse("the-command")
-            val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
+            val additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value"))
             val additionalPortMappings = setOf(PortMapping(123, 456))
             val allContainersInNetwork = setOf(container, otherContainer)
             val rule = CreateContainerStepRule(container, command, additionalEnvironmentVariables, additionalPortMappings, allContainersInNetwork)
@@ -115,7 +116,7 @@ object CreateContainerStepRuleSpec : Spek({
             val container = Container("the-container", BuildImage("/some-image-directory"))
             val otherContainerInNetwork = Container("the-other-container", imageSourceDoesNotMatter())
             val command = Command.parse("the-command")
-            val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
+            val additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value"))
             val additionalPortMappings = setOf(PortMapping(123, 456))
             val allContainersInNetwork = setOf(container, otherContainerInNetwork)
             val rule = CreateContainerStepRule(container, command, additionalEnvironmentVariables, additionalPortMappings, allContainersInNetwork)
@@ -183,7 +184,7 @@ object CreateContainerStepRuleSpec : Spek({
         describe("toString()") {
             val container = Container("the-container", imageSourceDoesNotMatter())
             val otherContainer = Container("the-other-container", imageSourceDoesNotMatter())
-            val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
+            val additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value"))
             val additionalPortMappings = setOf(PortMapping(123, 456))
             val allContainersInNetwork = setOf(container, otherContainer)
 
@@ -193,7 +194,7 @@ object CreateContainerStepRuleSpec : Spek({
 
                 it("returns a human-readable representation of itself") {
                     assertThat(rule.toString(), equalTo("CreateContainerStepRule(container: 'the-container', command: [the-command, some-arg], " +
-                        "additional environment variables: [SOME_VAR='some value'], additional port mappings: [123:456], all containers in network: ['the-container', 'the-other-container'])"))
+                        "additional environment variables: [SOME_VAR=LiteralValue(\"some value\")], additional port mappings: [123:456], all containers in network: ['the-container', 'the-other-container'])"))
                 }
             }
 
@@ -203,7 +204,7 @@ object CreateContainerStepRuleSpec : Spek({
 
                 it("returns a human-readable representation of itself") {
                     assertThat(rule.toString(), equalTo("CreateContainerStepRule(container: 'the-container', command: null, " +
-                        "additional environment variables: [SOME_VAR='some value'], additional port mappings: [123:456], all containers in network: ['the-container', 'the-other-container'])"))
+                        "additional environment variables: [SOME_VAR=LiteralValue(\"some value\")], additional port mappings: [123:456], all containers in network: ['the-container', 'the-other-container'])"))
                 }
             }
         }

@@ -17,8 +17,11 @@
 package batect.docker
 
 import batect.config.Container
+import batect.config.EnvironmentVariableExpression
 import batect.config.HealthCheckConfig
+import batect.config.LiteralValue
 import batect.config.PortMapping
+import batect.config.ReferenceValue
 import batect.config.VolumeMount
 import batect.os.Command
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
@@ -61,7 +64,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 val factory = DockerContainerCreationRequestFactory(consoleInfo, proxyEnvironmentVariablesProvider, hostEnvironmentVariables)
 
                 given("there are no additional environment variables") {
-                    val additionalEnvironmentVariables = emptyMap<String, String>()
+                    val additionalEnvironmentVariables = emptyMap<String, EnvironmentVariableExpression>()
 
                     given("there are no additional volume mounts") {
                         val additionalVolumeMounts = emptySet<VolumeMount>()
@@ -77,7 +80,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                                     workingDirectory = "/some-work-dir",
                                     volumeMounts = setOf(VolumeMount("local", "remote", "mode")),
                                     portMappings = setOf(PortMapping(123, 456)),
-                                    environment = mapOf("SOME_VAR" to "SOME_VALUE"),
+                                    environment = mapOf("SOME_VAR" to LiteralValue("SOME_VALUE")),
                                     healthCheckConfig = HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(5))
                                 )
 
@@ -102,7 +105,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                                 }
 
                                 it("populates the environment variables on the request with the environment variables from the container") {
-                                    assertThat(request.environmentVariables, equalTo(container.environment))
+                                    assertThat(request.environmentVariables, equalTo(mapOf("SOME_VAR" to "SOME_VALUE")))
                                 }
 
                                 it("populates the working directory on the request with the working directory from the container") {
@@ -187,14 +190,14 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
                 given("there are additional environment variables") {
                     val additionalEnvironmentVariables = mapOf(
-                        "SOME_HOST_VAR" to "SOME_HOST_VALUE"
+                        "SOME_HOST_VAR" to LiteralValue("SOME_HOST_VALUE")
                     )
 
                     given("none of them conflict with environment variables on the container") {
                         val container = Container(
                             "some-container",
                             imageSourceDoesNotMatter(),
-                            environment = mapOf("SOME_VAR" to "SOME_VALUE")
+                            environment = mapOf("SOME_VAR" to LiteralValue("SOME_VALUE"))
                         )
 
                         on("creating the request") {
@@ -213,7 +216,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                         val container = Container(
                             "some-container",
                             imageSourceDoesNotMatter(),
-                            environment = mapOf("SOME_HOST_VAR" to "SOME_CONTAINER_VALUE")
+                            environment = mapOf("SOME_HOST_VAR" to LiteralValue("SOME_CONTAINER_VALUE"))
                         )
 
                         on("creating the request") {
@@ -238,13 +241,13 @@ object DockerContainerCreationRequestFactorySpec : Spek({
             val propagateProxyEnvironmentVariables = false
 
             given("and those references are on the container") {
-                val additionalEnvironmentVariables = emptyMap<String, String>()
+                val additionalEnvironmentVariables = emptyMap<String, EnvironmentVariableExpression>()
 
                 given("and the reference is valid") {
                     val container = Container(
                         "some-container",
                         imageSourceDoesNotMatter(),
-                        environment = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE")
+                        environment = mapOf("SOME_VAR" to ReferenceValue("SOME_HOST_VARIABLE"))
                     )
 
                     on("creating the request") {
@@ -262,13 +265,13 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     val container = Container(
                         "some-container",
                         imageSourceDoesNotMatter(),
-                        environment = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE_THAT_ISNT_DEFINED")
+                        environment = mapOf("SOME_VAR" to ReferenceValue("SOME_HOST_VARIABLE_THAT_ISNT_DEFINED"))
                     )
 
                     on("creating the request") {
                         it("throws an appropriate exception") {
                             assertThat({ factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork) },
-                                throws<ContainerCreationFailedException>(withMessage("The environment variable 'SOME_VAR' refers to host environment variable 'SOME_HOST_VARIABLE_THAT_ISNT_DEFINED', but it is not set.")))
+                                throws<ContainerCreationFailedException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: The host environment variable 'SOME_HOST_VARIABLE_THAT_ISNT_DEFINED' is not set.")))
                         }
                     }
                 }
@@ -281,7 +284,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                         imageSourceDoesNotMatter()
                     )
 
-                    val additionalEnvironmentVariables = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE")
+                    val additionalEnvironmentVariables = mapOf("SOME_VAR" to ReferenceValue("SOME_HOST_VARIABLE"))
 
                     on("creating the request") {
                         val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
@@ -300,12 +303,12 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                         imageSourceDoesNotMatter()
                     )
 
-                    val additionalEnvironmentVariables = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE_THAT_ISNT_DEFINED")
+                    val additionalEnvironmentVariables = mapOf("SOME_VAR" to ReferenceValue("SOME_HOST_VARIABLE_THAT_ISNT_DEFINED"))
 
                     on("creating the request") {
                         it("throws an appropriate exception") {
                             assertThat({ factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork) },
-                                throws<ContainerCreationFailedException>(withMessage("The environment variable 'SOME_VAR' refers to host environment variable 'SOME_HOST_VARIABLE_THAT_ISNT_DEFINED', but it is not set.")))
+                                throws<ContainerCreationFailedException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: The host environment variable 'SOME_HOST_VARIABLE_THAT_ISNT_DEFINED' is not set.")))
                         }
                     }
                 }
@@ -314,10 +317,10 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     val container = Container(
                         "some-container",
                         imageSourceDoesNotMatter(),
-                        environment = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE_THAT_ISNT_DEFINED")
+                        environment = mapOf("SOME_VAR" to ReferenceValue("SOME_HOST_VARIABLE_THAT_ISNT_DEFINED"))
                     )
 
-                    val additionalEnvironmentVariables = mapOf("SOME_VAR" to "\$SOME_HOST_VARIABLE")
+                    val additionalEnvironmentVariables = mapOf("SOME_VAR" to ReferenceValue("SOME_HOST_VARIABLE"))
 
                     on("creating the request") {
                         val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
@@ -353,7 +356,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                         imageSourceDoesNotMatter()
                     )
 
-                    val additionalEnvironmentVariables = emptyMap<String, String>()
+                    val additionalEnvironmentVariables = emptyMap<String, EnvironmentVariableExpression>()
 
                     on("creating the request") {
                         val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
@@ -372,11 +375,11 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                         "some-container",
                         imageSourceDoesNotMatter(),
                         environment = mapOf(
-                            "HTTP_PROXY" to "http://some-other-proxy"
+                            "HTTP_PROXY" to LiteralValue("http://some-other-proxy")
                         )
                     )
 
-                    val additionalEnvironmentVariables = emptyMap<String, String>()
+                    val additionalEnvironmentVariables = emptyMap<String, EnvironmentVariableExpression>()
 
                     on("creating the request") {
                         val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
@@ -395,12 +398,12 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                         "some-container",
                         imageSourceDoesNotMatter(),
                         environment = mapOf(
-                            "HTTP_PROXY" to "http://some-other-proxy"
+                            "HTTP_PROXY" to LiteralValue("http://some-other-proxy")
                         )
                     )
 
                     val additionalEnvironmentVariables = mapOf(
-                        "HTTP_PROXY" to "http://some-additional-proxy"
+                        "HTTP_PROXY" to LiteralValue("http://some-additional-proxy")
                     )
 
                     on("creating the request") {
@@ -425,7 +428,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                         imageSourceDoesNotMatter()
                     )
 
-                    val additionalEnvironmentVariables = emptyMap<String, String>()
+                    val additionalEnvironmentVariables = emptyMap<String, EnvironmentVariableExpression>()
                     val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
 
                     it("does not propagate the proxy environment variables") {
@@ -449,10 +452,10 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 val container = Container(
                     "some-container",
                     imageSourceDoesNotMatter(),
-                    environment = mapOf("SOME_VAR" to "SOME_VALUE")
+                    environment = mapOf("SOME_VAR" to LiteralValue("SOME_VALUE"))
                 )
 
-                val additionalEnvironmentVariables = emptyMap<String, String>()
+                val additionalEnvironmentVariables = emptyMap<String, EnvironmentVariableExpression>()
 
                 on("creating the request") {
                     val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
@@ -471,12 +474,12 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     "some-container",
                     imageSourceDoesNotMatter(),
                     environment = mapOf(
-                        "SOME_VAR" to "SOME_VALUE",
-                        "TERM" to "some-other-term"
+                        "SOME_VAR" to LiteralValue("SOME_VALUE"),
+                        "TERM" to LiteralValue("some-other-term")
                     )
                 )
 
-                val additionalEnvironmentVariables = emptyMap<String, String>()
+                val additionalEnvironmentVariables = emptyMap<String, EnvironmentVariableExpression>()
 
                 on("creating the request") {
                     val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
@@ -495,11 +498,11 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     "some-container",
                     imageSourceDoesNotMatter(),
                     environment = mapOf(
-                        "SOME_VAR" to "SOME_VALUE"
+                        "SOME_VAR" to LiteralValue("SOME_VALUE")
                     )
                 )
 
-                val additionalEnvironmentVariables = mapOf("TERM" to "some-additional-term")
+                val additionalEnvironmentVariables = mapOf("TERM" to LiteralValue("some-additional-term"))
 
                 on("creating the request") {
                     val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)
@@ -518,12 +521,12 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     "some-container",
                     imageSourceDoesNotMatter(),
                     environment = mapOf(
-                        "SOME_VAR" to "SOME_VALUE",
-                        "TERM" to "some-container-term"
+                        "SOME_VAR" to LiteralValue("SOME_VALUE"),
+                        "TERM" to LiteralValue("some-container-term")
                     )
                 )
 
-                val additionalEnvironmentVariables = mapOf("TERM" to "some-additional-term")
+                val additionalEnvironmentVariables = mapOf("TERM" to LiteralValue("some-additional-term"))
 
                 on("creating the request") {
                     val request = factory.create(container, image, network, command, additionalEnvironmentVariables, emptySet(), emptySet(), propagateProxyEnvironmentVariables, null, allContainersInNetwork)

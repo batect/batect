@@ -17,6 +17,8 @@
 package batect.docker
 
 import batect.config.Container
+import batect.config.EnvironmentVariableExpression
+import batect.config.EnvironmentVariableExpressionEvaluationException
 import batect.config.PortMapping
 import batect.config.VolumeMount
 import batect.os.Command
@@ -37,7 +39,7 @@ class DockerContainerCreationRequestFactory(
         image: DockerImage,
         network: DockerNetwork,
         command: Command?,
-        additionalEnvironmentVariables: Map<String, String>,
+        additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression>,
         additionalVolumeMounts: Set<VolumeMount>,
         additionalPortMappings: Set<PortMapping>,
         propagateProxyEnvironmentVariables: Boolean,
@@ -59,7 +61,7 @@ class DockerContainerCreationRequestFactory(
         )
     }
 
-    private fun environmentVariablesFor(container: Container, additionalEnvironmentVariables: Map<String, String>, propagateProxyEnvironmentVariables: Boolean, allContainersInNetwork: Set<Container>): Map<String, String> =
+    private fun environmentVariablesFor(container: Container, additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression>, propagateProxyEnvironmentVariables: Boolean, allContainersInNetwork: Set<Container>): Map<String, String> =
         terminalEnvironmentVariablesFor(consoleInfo) +
             proxyEnvironmentVariables(propagateProxyEnvironmentVariables, allContainersInNetwork) +
             substituteEnvironmentVariables(container.environment + additionalEnvironmentVariables)
@@ -76,21 +78,14 @@ class DockerContainerCreationRequestFactory(
         emptyMap()
     }
 
-    private fun substituteEnvironmentVariables(original: Map<String, String>): Map<String, String> =
-        original.mapValues { (name, value) -> substituteEnvironmentVariable(name, value) }
+    private fun substituteEnvironmentVariables(original: Map<String, EnvironmentVariableExpression>): Map<String, String> =
+        original.mapValues { (name, value) -> evaluateEnvironmentVariableValue(name, value) }
 
-    private fun substituteEnvironmentVariable(name: String, originalValue: String): String {
-        if (!originalValue.startsWith('$')) {
-            return originalValue
+    private fun evaluateEnvironmentVariableValue(name: String, expression: EnvironmentVariableExpression): String {
+        try {
+            return expression.evaluate(hostEnvironmentVariables)
+        } catch (e: EnvironmentVariableExpressionEvaluationException) {
+            throw ContainerCreationFailedException("The value for the environment variable '$name' cannot be evaluated: ${e.message}", e)
         }
-
-        val variableName = originalValue.drop(1)
-        val valueFromHost = hostEnvironmentVariables[variableName]
-
-        if (valueFromHost == null) {
-            throw ContainerCreationFailedException("The environment variable '$name' refers to host environment variable '$variableName', but it is not set.")
-        }
-
-        return valueFromHost
     }
 }

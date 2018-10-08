@@ -18,6 +18,7 @@ package batect.execution.model.steps
 
 import batect.config.Container
 import batect.config.HealthCheckConfig
+import batect.config.LiteralValue
 import batect.config.PortMapping
 import batect.config.VolumeMount
 import batect.docker.ContainerCreationFailedException
@@ -291,7 +292,7 @@ object TaskStepRunnerSpec : Spek({
                 val container = Container("some-container", imageSourceDoesNotMatter())
                 val otherContainer = Container("some-other-container", imageSourceDoesNotMatter())
                 val command = Command.parse("do-stuff")
-                val additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")
+                val additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value"))
                 val additionalPortMappings = setOf(PortMapping(123, 456))
                 val image = DockerImage("some-image")
                 val network = DockerNetwork("some-network")

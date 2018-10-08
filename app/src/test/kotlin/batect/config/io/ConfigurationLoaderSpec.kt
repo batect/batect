@@ -19,6 +19,7 @@ package batect.config.io
 import batect.config.BuildImage
 import batect.config.Configuration
 import batect.config.HealthCheckConfig
+import batect.config.LiteralValue
 import batect.config.PortMapping
 import batect.config.PullImage
 import batect.config.RunAsCurrentUserConfig
@@ -154,8 +155,9 @@ object ConfigurationLoaderSpec : Spek({
                 |      container: build-env
                 |      command: ./gradlew doStuff
                 |      environment:
-                |        SOME_VAR: value
-                |        SOME_OTHER_VAR: "the value"
+                |        OPTS: -Dthing
+                |        INT_VALUE: 1
+                |        OTHER_VALUE: "the value"
                 |      ports:
                 |        - 123:456
                 |        - local: 1000
@@ -177,7 +179,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.name, equalTo("first_task"))
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, equalTo(Command.parse("./gradlew doStuff")))
-                assertThat(task.runConfiguration.additionalEnvironmentVariables, equalTo(mapOf("SOME_VAR" to "value", "SOME_OTHER_VAR" to "the value")))
+                assertThat(task.runConfiguration.additionalEnvironmentVariables, equalTo(mapOf("OPTS" to LiteralValue("-Dthing"), "INT_VALUE" to LiteralValue("1"), "OTHER_VALUE" to LiteralValue("the value"))))
                 assertThat(task.runConfiguration.additionalPortMappings, equalTo(setOf(PortMapping(123, 456), PortMapping(1000, 2000))))
                 assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.prerequisiteTasks, isEmpty)
@@ -445,7 +447,7 @@ object ConfigurationLoaderSpec : Spek({
                     |    command: do-the-thing.sh some-param
                     |    environment:
                     |      OPTS: -Dthing
-                    |      BOOL_VALUE: 1
+                    |      INT_VALUE: 1
                     |      OTHER_VALUE: "the value"
                     |    working_directory: /here
                     |    volumes:
@@ -478,7 +480,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.name, equalTo("container-1"))
                 assertThat(container.imageSource, equalTo(BuildImage("/resolved/container-1-build-dir")))
                 assertThat(container.command, equalTo(Command.parse("do-the-thing.sh some-param")))
-                assertThat(container.environment, equalTo(mapOf("OPTS" to "-Dthing", "BOOL_VALUE" to "1", "OTHER_VALUE" to "the value")))
+                assertThat(container.environment, equalTo(mapOf("OPTS" to LiteralValue("-Dthing"), "INT_VALUE" to LiteralValue("1"), "OTHER_VALUE" to LiteralValue("the value"))))
                 assertThat(container.workingDirectory, equalTo("/here"))
                 assertThat(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
                 assertThat(container.healthCheckConfig, equalTo(HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(1))))
@@ -935,6 +937,72 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should fail with an error message") {
                 assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.") and withLineNumber(8)))
+            }
+        }
+
+        on("loading a configuration file with a task with an environment variable defined with a floating point number") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |tasks:
+                |  the-task:
+                |    run:
+                |      container: the-container
+                |      environment:
+                |        THING: 12.3456000
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)") and withLineNumber(8)))
+            }
+        }
+
+        on("loading a configuration file with a container with an environment variable with a floating point number") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |containers:
+                |  container-1:
+                |    build_directory: container-1
+                |    environment:
+                |      THING: 12.3456000
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)") and withLineNumber(7)))
+            }
+        }
+
+        on("loading a configuration file with a task with an environment variable defined with a boolean value") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |tasks:
+                |  the-task:
+                |    run:
+                |      container: the-container
+                |      environment:
+                |        THING: true
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)") and withLineNumber(8)))
+            }
+        }
+
+        on("loading a configuration file with a container with an environment variable with a boolean value") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |containers:
+                |  container-1:
+                |    build_directory: container-1
+                |    environment:
+                |      THING: true
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)") and withLineNumber(7)))
             }
         }
     }

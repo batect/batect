@@ -20,6 +20,7 @@ import batect.config.BuildImage
 import batect.config.Configuration
 import batect.config.Container
 import batect.config.ContainerMap
+import batect.config.LiteralValue
 import batect.config.PortMapping
 import batect.config.PullImage
 import batect.config.Task
@@ -97,7 +98,7 @@ object RunStagePlannerSpec : Spek({
             }
 
             on("the task has some additional environment variables") {
-                val task = Task("the-task", TaskRunConfiguration("the-container", additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value")))
+                val task = Task("the-task", TaskRunConfiguration("the-container", additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value"))))
                 val container = Container(task.runConfiguration.container, PullImage("some-image"))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                 val graph = ContainerDependencyGraph(config, task, commandResolver)
@@ -130,7 +131,7 @@ object RunStagePlannerSpec : Spek({
         }
 
         given("the task has multiple containers") {
-            val task = Task("the-task", TaskRunConfiguration("task-container", additionalEnvironmentVariables = mapOf("SOME_VAR" to "some value"), additionalPortMappings = setOf(PortMapping(123, 456))))
+            val task = Task("the-task", TaskRunConfiguration("task-container", additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value")), additionalPortMappings = setOf(PortMapping(123, 456))))
 
             on("each container has a unique build directory or existing image to pull") {
                 val container1 = Container("container-1", BuildImage("./container-1"))

@@ -20,7 +20,7 @@ open class DockerException(message: String, cause: Throwable?) : RuntimeExceptio
     constructor(message: String) : this(message, null)
 }
 
-class ContainerCreationFailedException(message: String) : DockerException(message)
+class ContainerCreationFailedException(message: String, cause: Throwable? = null) : DockerException(message, cause)
 class ContainerInspectionFailedException(message: String) : DockerException(message)
 class ContainerRemovalFailedException(val containerId: String, val outputFromDocker: String) : DockerException("Removal of container '$containerId' failed: $outputFromDocker")
 class ContainerStartFailedException(val containerId: String, val outputFromDocker: String) : DockerException("Starting container '$containerId' failed: $outputFromDocker")

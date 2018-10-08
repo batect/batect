@@ -22,7 +22,7 @@ data class Container(
     val name: String,
     val imageSource: ImageSource,
     val command: Command? = null,
-    val environment: Map<String, String> = emptyMap(),
+    val environment: Map<String, EnvironmentVariableExpression> = emptyMap(),
     val workingDirectory: String? = null,
     val volumeMounts: Set<VolumeMount> = emptySet(),
     val portMappings: Set<PortMapping> = emptySet(),

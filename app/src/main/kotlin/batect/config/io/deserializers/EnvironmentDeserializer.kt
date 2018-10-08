@@ -16,7 +16,9 @@
 
 package batect.config.io.deserializers
 
-internal class EnvironmentDeserializer : MapDeserializer<String>(String::class.java) {
+import batect.config.EnvironmentVariableExpression
+
+internal class EnvironmentDeserializer : MapDeserializer<EnvironmentVariableExpression>(EnvironmentVariableExpression::class.java) {
     override fun getDuplicateEntryErrorMessage(name: String) = "Duplicate environment variable $name"
     override fun getNullEntryErrorMessage(name: String) = "Environment variable '$name' has no value"
 }

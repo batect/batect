@@ -19,6 +19,7 @@ package batect.config.io
 import batect.config.BuildImage
 import batect.config.Container
 import batect.config.ContainerMap
+import batect.config.LiteralValue
 import batect.config.PortMapping
 import batect.config.Task
 import batect.config.TaskMap
@@ -63,7 +64,7 @@ object ConfigurationFileSpec : Spek({
             }
 
             on("converting a configuration file with a task") {
-                val runConfiguration = TaskRunConfigurationFromFile("some_container", "some_command", mapOf("SOME_VAR" to "some value"), setOf(PortMapping(123, 456)))
+                val runConfiguration = TaskRunConfigurationFromFile("some_container", "some_command", mapOf("SOME_VAR" to LiteralValue("some value")), setOf(PortMapping(123, 456)))
                 val task = TaskFromFile(runConfiguration, "Some description", setOf("dependency-1"), setOf("other-task"))
                 val taskName = "the_task_name"
                 val configFile = ConfigurationFile("the_project_name", mapOf(taskName to task))
@@ -101,7 +102,7 @@ object ConfigurationFileSpec : Spek({
                 val container = ContainerFromFile(
                     buildDirectory = originalBuildDirectory,
                     command = "the-command",
-                    environment = mapOf("ENV_VAR" to "/here"),
+                    environment = mapOf("ENV_VAR" to LiteralValue("/here")),
                     workingDirectory = "working_dir",
                     volumeMounts = setOf(VolumeMount(originalVolumeMountPath, volumeMountTargetPath, "some-options")),
                     portMappings = setOf(PortMapping(1234, 5678)),

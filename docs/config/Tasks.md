@@ -23,6 +23,8 @@ Specifies what to do when this task starts:
   container in the `CONTAINER_VARIABLE: $HOST_VARIABLE` format. If the referenced host variable is not present, batect will show an error
   message and not start the task.
 
+  Values that are YAML booleans or numbers should be wrapped in double quotes.
+
   Prior to v0.21, environment variables were required to be supplied in `name=value` format.
 
 * `ports` List of port mappings to create for the container, in addition to those defined on the container itself.

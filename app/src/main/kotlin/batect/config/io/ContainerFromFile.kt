@@ -18,6 +18,7 @@ package batect.config.io
 
 import batect.config.BuildImage
 import batect.config.Container
+import batect.config.EnvironmentVariableExpression
 import batect.config.HealthCheckConfig
 import batect.config.ImageSource
 import batect.config.PortMapping
@@ -38,7 +39,7 @@ data class ContainerFromFile(
     val buildDirectory: String? = null,
     @JsonProperty("image") val imageName: String? = null,
     val command: String? = null,
-    @JsonDeserialize(using = EnvironmentDeserializer::class) val environment: Map<String, String> = emptyMap(),
+    @JsonDeserialize(using = EnvironmentDeserializer::class) val environment: Map<String, EnvironmentVariableExpression> = emptyMap(),
     val workingDirectory: String? = null,
     @JsonProperty("volumes") val volumeMounts: Set<VolumeMount> = emptySet(),
     @JsonProperty("ports") val portMappings: Set<PortMapping> = emptySet(),

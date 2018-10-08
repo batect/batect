@@ -22,6 +22,8 @@ Both of these can be overridden for an individual task by specifying a [`command
 ## `environment`
 List of environment variables (in `name: value` format) for the container.
 
+Values that are YAML booleans or numbers should be wrapped in double quotes.
+
 Prior to v0.21, environment variables were required to be supplied in `name=value` format.
 
 ### Environment variable substitution

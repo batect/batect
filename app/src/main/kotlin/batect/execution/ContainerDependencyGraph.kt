@@ -18,6 +18,7 @@ package batect.execution
 
 import batect.config.Configuration
 import batect.config.Container
+import batect.config.EnvironmentVariableExpression
 import batect.config.PortMapping
 import batect.config.Task
 import batect.os.Command
@@ -129,7 +130,7 @@ data class ContainerDependencyGraph(val config: Configuration, val task: Task, v
         return "Container $firstContainer depends on " + otherContainers.joinToString(", which depends on ") + "."
     }
 
-    private fun additionalEnvironmentVariables(isRootNode: Boolean): Map<String, String> =
+    private fun additionalEnvironmentVariables(isRootNode: Boolean): Map<String, EnvironmentVariableExpression> =
         if (isRootNode) {
             task.runConfiguration.additionalEnvironmentVariables
         } else {
@@ -147,7 +148,7 @@ data class ContainerDependencyGraph(val config: Configuration, val task: Task, v
 data class ContainerDependencyGraphNode(
     val container: Container,
     val command: Command?,
-    val additionalEnvironmentVariables: Map<String, String>,
+    val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression>,
     val additionalPortMappings: Set<PortMapping>,
     val isRootNode: Boolean,
     val dependsOn: Set<ContainerDependencyGraphNode>,

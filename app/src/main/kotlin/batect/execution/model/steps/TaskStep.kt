@@ -17,6 +17,7 @@
 package batect.execution.model.steps
 
 import batect.config.Container
+import batect.config.EnvironmentVariableExpression
 import batect.config.PortMapping
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
@@ -41,7 +42,7 @@ object CreateTaskNetworkStep : TaskStep() {
 data class CreateContainerStep(
     val container: Container,
     val command: Command?,
-    val additionalEnvironmentVariables: Map<String, String>,
+    val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression>,
     val additionalPortMappings: Set<PortMapping>,
     val allContainersInNetwork: Set<Container>,
     val image: DockerImage,
@@ -49,7 +50,7 @@ data class CreateContainerStep(
 ) : TaskStep() {
     override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', " +
         "command: ${command?.parsedCommand ?: "null"}, " +
-        "additional environment variables: [${additionalEnvironmentVariables.map { "${it.key}='${it.value}'" }.joinToString(", ")}], " +
+        "additional environment variables: [${additionalEnvironmentVariables.map { "${it.key}=${it.value}" }.joinToString(", ")}], " +
         "additional port mappings: $additionalPortMappings, " +
         "all containers in network: ${allContainersInNetwork.map { "'${it.name}'" }}, " +
         "image: '${image.id}', network: '${network.id}')"

@@ -19,6 +19,7 @@ package batect.execution
 import batect.config.Configuration
 import batect.config.Container
 import batect.config.ContainerMap
+import batect.config.LiteralValue
 import batect.config.PortMapping
 import batect.config.Task
 import batect.config.TaskMap
@@ -52,7 +53,7 @@ object ContainerDependencyGraphSpec : Spek({
 
         given("a task with no dependencies") {
             val container = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("some-container-command"))
-            val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to "the value"), setOf(PortMapping(123, 456)))
+            val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)))
             val task = Task("the-task", runConfig, dependsOnContainers = emptySet())
             val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
             val graph = ContainerDependencyGraph(config, task, commandResolver)
@@ -113,7 +114,7 @@ object ContainerDependencyGraphSpec : Spek({
         given("a task with a dependency") {
             val taskContainer = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("task-command-that-wont-be-used"))
             val dependencyContainer = Container("dependency-container", imageSourceDoesNotMatter(), command = Command.parse("dependency-command"))
-            val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to "the value"), setOf(PortMapping(123, 456)))
+            val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(dependencyContainer.name))
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
             val graph = ContainerDependencyGraph(config, task, commandResolver)

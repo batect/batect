@@ -16,6 +16,7 @@
 
 package batect.config.io
 
+import batect.config.EnvironmentVariableExpression
 import batect.config.PortMapping
 import batect.config.TaskRunConfiguration
 import batect.config.io.deserializers.EnvironmentDeserializer
@@ -27,7 +28,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 data class TaskRunConfigurationFromFile(
     val container: String,
     val command: String? = null,
-    @JsonDeserialize(using = EnvironmentDeserializer::class) @JsonProperty("environment") val additionalEnvironmentVariables: Map<String, String> = emptyMap(),
+    @JsonDeserialize(using = EnvironmentDeserializer::class) @JsonProperty("environment") val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression> = emptyMap(),
     @JsonProperty("ports") val additionalPortMappings: Set<PortMapping> = emptySet()
 ) {
     fun toRunConfiguration(taskName: String): TaskRunConfiguration {

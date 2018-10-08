@@ -40,10 +40,10 @@ sealed class EnvironmentVariableExpression {
         // We can't reliably convert booleans or doubles back to strings that are exactly as the user specified them, so just give up.
         // These methods exist to give the user a nicer error message in this case.
         @JvmStatic @JsonCreator
-        fun parse(source: Boolean): EnvironmentVariableExpression = throw UnsupportedOperationException("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)")
+        fun parse(@Suppress("UNUSED_PARAMETER") source: Boolean): EnvironmentVariableExpression = throw UnsupportedOperationException("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)")
 
         @JvmStatic @JsonCreator
-        fun parse(source: Double): EnvironmentVariableExpression = throw UnsupportedOperationException("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)")
+        fun parse(@Suppress("UNUSED_PARAMETER") source: Double): EnvironmentVariableExpression = throw UnsupportedOperationException("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)")
     }
 }
 

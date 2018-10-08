@@ -34,8 +34,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * some way to clean up old images when they're no longer needed
 * handle the user pressing Ctrl-C during startup or cleanup
 * allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
-* do as much validation at configuration loading time as possible (eg. validate command lines are syntactically valid, environment variable expressions are syntactically valid) - this allows us to
-  include line numbers etc.
 
 ### Bugs
 * ensure prerequisite order is respected, even with multiple dependencies

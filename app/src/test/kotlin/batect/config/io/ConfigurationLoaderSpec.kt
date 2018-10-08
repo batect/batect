@@ -1005,5 +1005,36 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat({ loadConfiguration(config) }, throws(withMessage("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)") and withLineNumber(7)))
             }
         }
+
+        on("loading a configuration file with a task with an invalid command line") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |tasks:
+                |  the-task:
+                |    run:
+                |      container: the-container
+                |      command: "'"
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Command `'` is invalid: it contains an unbalanced single quote") and withLineNumber(7)))
+            }
+        }
+
+        on("loading a configuration file with a container with an invalid command line") {
+            val config = """
+                |project_name: the_cool_project
+                |
+                |containers:
+                |  container-1:
+                |    build_directory: container-1
+                |    command: "'"
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Command `'` is invalid: it contains an unbalanced single quote") and withLineNumber(6)))
+            }
+        }
     }
 })

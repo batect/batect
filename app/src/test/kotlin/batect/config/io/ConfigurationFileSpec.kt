@@ -64,7 +64,7 @@ object ConfigurationFileSpec : Spek({
             }
 
             on("converting a configuration file with a task") {
-                val runConfiguration = TaskRunConfigurationFromFile("some_container", "some_command", mapOf("SOME_VAR" to LiteralValue("some value")), setOf(PortMapping(123, 456)))
+                val runConfiguration = TaskRunConfiguration("some_container", Command.parse("some_command"), mapOf("SOME_VAR" to LiteralValue("some value")), setOf(PortMapping(123, 456)))
                 val task = TaskFromFile(runConfiguration, "Some description", setOf("dependency-1"), setOf("other-task"))
                 val taskName = "the_task_name"
                 val configFile = ConfigurationFile("the_project_name", mapOf(taskName to task))
@@ -79,7 +79,7 @@ object ConfigurationFileSpec : Spek({
                     assertThat(resultingConfig.tasks, equalTo(TaskMap(
                         Task(
                             taskName,
-                            TaskRunConfiguration(runConfiguration.container, Command.parse(runConfiguration.command), runConfiguration.additionalEnvironmentVariables, runConfiguration.additionalPortMappings),
+                            TaskRunConfiguration(runConfiguration.container, runConfiguration.command, runConfiguration.additionalEnvironmentVariables, runConfiguration.additionalPortMappings),
                             "Some description",
                             task.dependsOnContainers,
                             task.prerequisiteTasks
@@ -101,7 +101,7 @@ object ConfigurationFileSpec : Spek({
 
                 val container = ContainerFromFile(
                     buildDirectory = originalBuildDirectory,
-                    command = "the-command",
+                    command = Command.parse("the-command"),
                     environment = mapOf("ENV_VAR" to LiteralValue("/here")),
                     workingDirectory = "working_dir",
                     volumeMounts = setOf(VolumeMount(originalVolumeMountPath, volumeMountTargetPath, "some-options")),
@@ -131,7 +131,7 @@ object ConfigurationFileSpec : Spek({
                         Container(
                             containerName,
                             BuildImage(resolvedBuildDirectory.toString()),
-                            Command.parse(container.command),
+                            container.command,
                             container.environment,
                             container.workingDirectory,
                             setOf(VolumeMount(resolvedVolumeMountPath.toString(), volumeMountTargetPath, "some-options")),
@@ -209,28 +209,6 @@ object ConfigurationFileSpec : Spek({
                 it("fails with an appropriate error message") {
                     assertThat({ configFile.toConfiguration(pathResolver) },
                         throws(withMessage("Local path 'local_volume_path' for volume mount in container 'the_container_name' is not a valid path.")))
-                }
-            }
-
-            on("converting a configuration file with a container with an invalid command") {
-                val container = ContainerFromFile(imageName = "some-image", command = "'")
-                val configFile = ConfigurationFile("the_project_name", containers = mapOf("the_container_name" to container))
-
-                it("fails with an appropriate error message") {
-                    assertThat({ configFile.toConfiguration(mock()) },
-                        throws(withMessage("Command for container 'the_container_name' is invalid: Command `'` is invalid: it contains an unbalanced single quote")))
-                }
-            }
-
-            on("converting a configuration file with a task run configuration with an invalid command") {
-                val container = ContainerFromFile(imageName = "some-image")
-                val runConfig = TaskRunConfigurationFromFile("the_container_name", command = "'")
-                val task = TaskFromFile(runConfig)
-                val configFile = ConfigurationFile("the_project_name", containers = mapOf("the_container_name" to container), tasks = mapOf("the_task_name" to task))
-
-                it("fails with an appropriate error message") {
-                    assertThat({ configFile.toConfiguration(mock()) },
-                        throws(withMessage("Command for task 'the_task_name' is invalid: Command `'` is invalid: it contains an unbalanced single quote")))
                 }
             }
         }

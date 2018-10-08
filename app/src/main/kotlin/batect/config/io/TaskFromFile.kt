@@ -17,17 +17,17 @@
 package batect.config.io
 
 import batect.config.Task
+import batect.config.TaskRunConfiguration
 import batect.config.io.deserializers.DependencySetDeserializer
 import batect.config.io.deserializers.PrerequisiteSetDeserializer
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 data class TaskFromFile(
-    @JsonProperty("run") val runConfiguration: TaskRunConfigurationFromFile,
+    @JsonProperty("run") val runConfiguration: TaskRunConfiguration,
     val description: String = "",
     @JsonProperty("dependencies") @JsonDeserialize(using = DependencySetDeserializer::class) val dependsOnContainers: Set<String> = emptySet(),
     @JsonProperty("prerequisites") @JsonDeserialize(using = PrerequisiteSetDeserializer::class) val prerequisiteTasks: Set<String> = emptySet()
 ) {
-
-    fun toTask(name: String): Task = Task(name, runConfiguration.toRunConfiguration(name), description, dependsOnContainers, prerequisiteTasks)
+    fun toTask(name: String): Task = Task(name, runConfiguration, description, dependsOnContainers, prerequisiteTasks)
 }

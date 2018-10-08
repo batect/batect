@@ -28,7 +28,6 @@ import batect.config.VolumeMount
 import batect.config.io.deserializers.DependencySetDeserializer
 import batect.config.io.deserializers.EnvironmentDeserializer
 import batect.os.Command
-import batect.os.InvalidCommandLineException
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
 import batect.os.PathType
@@ -38,7 +37,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 data class ContainerFromFile(
     val buildDirectory: String? = null,
     @JsonProperty("image") val imageName: String? = null,
-    val command: String? = null,
+    val command: Command? = null,
     @JsonDeserialize(using = EnvironmentDeserializer::class) val environment: Map<String, EnvironmentVariableExpression> = emptyMap(),
     val workingDirectory: String? = null,
     @JsonProperty("volumes") val volumeMounts: Set<VolumeMount> = emptySet(),
@@ -63,13 +62,7 @@ data class ContainerFromFile(
             throw ConfigurationException("Container '$name' is invalid: running as the current user has been enabled, but a home directory for that user has not been provided.")
         }
 
-        try {
-            val parsedCommand = Command.parse(command)
-
-            return Container(name, imageSource, parsedCommand, environment, workingDirectory, resolvedVolumeMounts, portMappings, dependencies, healthCheckConfig, runAsCurrentUserConfig)
-        } catch (e: InvalidCommandLineException) {
-            throw ConfigurationException("Command for container '$name' is invalid: ${e.message}")
-        }
+        return Container(name, imageSource, command, environment, workingDirectory, resolvedVolumeMounts, portMappings, dependencies, healthCheckConfig, runAsCurrentUserConfig)
     }
 
     private fun resolveImageSource(containerName: String, pathResolver: PathResolver): ImageSource {

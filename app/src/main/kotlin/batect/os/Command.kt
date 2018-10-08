@@ -16,6 +16,8 @@
 
 package batect.os
 
+import com.fasterxml.jackson.annotation.JsonCreator
+
 data class Command private constructor(val originalCommand: String, val parsedCommand: Iterable<String>) {
     operator fun plus(newArguments: Iterable<String>): Command {
         val formattedCommand = originalCommand + formatNewArguments(newArguments)
@@ -35,6 +37,8 @@ data class Command private constructor(val originalCommand: String, val parsedCo
     }
 
     companion object {
+        @JvmStatic
+        @JsonCreator
         fun parse(command: String?): Command? {
             if (command == null) {
                 return null

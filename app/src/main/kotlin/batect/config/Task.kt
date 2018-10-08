@@ -16,7 +16,10 @@
 
 package batect.config
 
+import batect.config.io.deserializers.EnvironmentDeserializer
 import batect.os.Command
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 data class Task(
     val name: String,
@@ -29,6 +32,6 @@ data class Task(
 data class TaskRunConfiguration(
     val container: String,
     val command: Command? = null,
-    val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression> = emptyMap(),
-    val additionalPortMappings: Set<PortMapping> = emptySet()
+    @JsonDeserialize(using = EnvironmentDeserializer::class) @JsonProperty("environment") val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression> = emptyMap(),
+    @JsonProperty("ports") val additionalPortMappings: Set<PortMapping> = emptySet()
 )

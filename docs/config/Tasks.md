@@ -38,11 +38,6 @@ List of other containers that should be started and healthy before starting the 
 
 The behaviour is the same as if the dependencies were specified for the `dependencies` property of the task's container's definition.
 
-## `start`
-Alias for `dependencies`. If both `dependencies` and `start` are given, the behaviour is undefined.
-
-**Deprecated** since v0.12 and **removed** in v0.16: use `dependencies` instead.
-
 ## `prerequisites`
 List of other tasks that should be run before running this task.
 

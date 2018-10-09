@@ -255,7 +255,7 @@ object DockerAPISpec : Spek({
                         verify(call).execute()
                     }
 
-                    it("configures the Docker client with a longer timeout to allow for the default container stop timeout period of 10 seconds") {
+                    it("configures the HTTP client with a longer timeout to allow for the default container stop timeout period of 10 seconds") {
                         verify(longTimeoutClientBuilder).readTimeout(11, TimeUnit.SECONDS)
                     }
                 }
@@ -338,7 +338,7 @@ object DockerAPISpec : Spek({
                         assertThat(event, equalTo(DockerEvent("health_status: healthy")))
                     }
 
-                    it("configures the Docker client with the timeout provided") {
+                    it("configures the HTTP client with the timeout provided") {
                         verify(longTimeoutClientBuilder).readTimeout(123, TimeUnit.NANOSECONDS)
                     }
                 }
@@ -395,7 +395,7 @@ object DockerAPISpec : Spek({
                         assertThat(exitCode, equalTo(123))
                     }
 
-                    it("configures the Docker client with no timeout") {
+                    it("configures the HTTP client with no timeout") {
                         verify(noTimeoutClientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
                     }
                 }

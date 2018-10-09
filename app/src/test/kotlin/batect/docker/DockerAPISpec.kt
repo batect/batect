@@ -368,6 +368,58 @@ object DockerAPISpec : Spek({
             }
         }
 
+        describe("waiting for a container to exit") {
+            given("a Docker container") {
+                val container = DockerContainer("the-container-id")
+                val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/wait?condition=next-exit"
+
+                val clientWithNoTimeout by createForEachTest { mock<OkHttpClient>() }
+                val noTimeoutClientBuilder by createForEachTest {
+                    mock<OkHttpClient.Builder> { mock ->
+                        on { readTimeout(any(), any()) } doReturn mock
+                        on { build() } doReturn clientWithNoTimeout
+                    }
+                }
+
+                beforeEachTest {
+                    whenever(httpClient.newBuilder()).doReturn(noTimeoutClientBuilder)
+                }
+
+                on("the wait succeeding") {
+                    val responseBody = """{"StatusCode": 123, "Error": null}"""
+
+                    clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200)
+                    val exitCode = api.waitForExit(container)
+
+                    it("returns the exit code from the container") {
+                        assertThat(exitCode, equalTo(123))
+                    }
+
+                    it("configures the Docker client with no timeout") {
+                        verify(noTimeoutClientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
+                    }
+                }
+
+                on("the wait returning an error in the body of the response") {
+                    val responseBody = """{"StatusCode": 123, "Error": "Something might have gone wrong."}"""
+
+                    clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200)
+
+                    it("throws an appropriate exception") {
+                        assertThat({ api.waitForExit(container) }, throws<DockerException>(withMessage("Waiting for container 'the-container-id' to exit succeeded but returned an error: Something might have gone wrong.")))
+                    }
+                }
+
+                on("the API call failing") {
+                    clientWithNoTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+
+                    it("throws an appropriate exception") {
+                        assertThat({ api.waitForExit(container) }, throws<DockerException>(withMessage("Waiting for container 'the-container-id' to exit failed: Something went wrong.")))
+                    }
+                }
+            }
+        }
+
         describe("creating a network") {
             val expectedUrl = "$dockerBaseUrl/v1.30/networks/create"
 

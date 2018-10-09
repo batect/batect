@@ -256,6 +256,52 @@ class DockerAPI(
         }
     }
 
+    fun waitForExit(container: DockerContainer): Int {
+        logger.info {
+            message("Waiting for container to exit.")
+            data("container", container)
+        }
+
+        val url = urlForContainer(container).newBuilder()
+            .addPathSegment("wait")
+            .addQueryParameter("condition", "next-exit")
+            .build()
+
+        val request = Request.Builder()
+            .post(emptyRequestBody())
+            .url(url)
+            .build()
+
+        val client = httpConfig.client.newBuilder()
+            .readTimeout(0, TimeUnit.NANOSECONDS)
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Waiting for container to exit failed.")
+                    data("error", error)
+                }
+
+                throw DockerException("Waiting for container '${container.id}' to exit failed: ${error.message}")
+            }
+
+            val responseBody = response.body()!!.string()
+            val parsedResponse = JsonTreeParser(responseBody).readFully() as JsonObject
+
+            logger.info {
+                message("Container exited.")
+                data("result", responseBody)
+            }
+
+            if (!parsedResponse["Error"].isNull) {
+                throw DockerException("Waiting for container '${container.id}' to exit succeeded but returned an error: ${parsedResponse["Error"].primitive.content}")
+            }
+
+            return parsedResponse["StatusCode"].primitive.int
+        }
+    }
+
     fun createNetwork(): DockerNetwork {
         logger.info {
             message("Creating new network.")

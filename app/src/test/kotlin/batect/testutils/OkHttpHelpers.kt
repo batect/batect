@@ -33,19 +33,19 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody
 
-fun OkHttpClient.mockGet(url: String, body: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call = mock("GET", url, body, statusCode, headers)
-fun OkHttpClient.mockPost(url: String, body: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call = mock("POST", url, body, statusCode, headers)
-fun OkHttpClient.mockDelete(url: String, body: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call = mock("DELETE", url, body, statusCode, headers)
+fun OkHttpClient.mockGet(url: String, responseBody: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call = mock("GET", url, responseBody, statusCode, headers)
+fun OkHttpClient.mockPost(url: String, responseBody: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call = mock("POST", url, responseBody, statusCode, headers)
+fun OkHttpClient.mockDelete(url: String, responseBody: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call = mock("DELETE", url, responseBody, statusCode, headers)
 
-fun OkHttpClient.mock(method: String, url: String, body: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call {
+fun OkHttpClient.mock(method: String, url: String, responseBody: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call {
     val parsedUrl = HttpUrl.get(url)
 
-    return this.mock(method, equalTo(parsedUrl), body, statusCode, headers)
+    return this.mock(method, equalTo(parsedUrl), responseBody, statusCode, headers)
 }
 
-fun OkHttpClient.mock(method: String, urlMatcher: Matcher<HttpUrl>, body: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call {
+fun OkHttpClient.mock(method: String, urlMatcher: Matcher<HttpUrl>, responseBody: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call {
     val jsonMediaType = MediaType.get("application/json; charset=utf-8")
-    val responseBody = ResponseBody.create(jsonMediaType, body)
+    val parsedResponseBody = ResponseBody.create(jsonMediaType, responseBody)
     val call = mock<Call>()
 
     whenever(this.newCall(any())).then { invocation ->
@@ -58,7 +58,7 @@ fun OkHttpClient.mock(method: String, urlMatcher: Matcher<HttpUrl>, body: String
         whenever(call.execute()).doReturn(
             Response.Builder()
                 .request(request)
-                .body(responseBody)
+                .body(parsedResponseBody)
                 .protocol(Protocol.HTTP_1_1)
                 .code(statusCode)
                 .message("Something happened")

@@ -129,9 +129,13 @@ object ContainerIOStreamerSpec : Spek({
                 }
             }
 
-            on("the output from the container finishing before stdin is closed") {
+            on("the output from the container finishing before stdin is closed by the user") {
                 val stdin = object : InputStream() {
+                    val readStarted = CountDownLatch(1)
+
                     override fun read(): Int {
+                        readStarted.countDown()
+
                         // Block forever to emulate the user not typing anything.
                         CountDownLatch(1).await()
 
@@ -144,7 +148,26 @@ object ContainerIOStreamerSpec : Spek({
 
                 val response = mock<Response>()
 
-                val containerOutputStream = ByteArrayInputStream("This is the output".toByteArray())
+                val containerOutputStream = object : ByteArrayInputStream("This is the output".toByteArray()) {
+                    override fun read(): Int {
+                        stdin.readStarted.await()
+
+                        return super.read()
+                    }
+
+                    override fun read(b: ByteArray?, off: Int, len: Int): Int {
+                        stdin.readStarted.await()
+
+                        return super.read(b, off, len)
+                    }
+
+                    override fun read(b: ByteArray?): Int {
+                        stdin.readStarted.await()
+
+                        return super.read(b)
+                    }
+                }
+
                 val containerInputStream = CloseableByteArrayOutputStream()
 
                 val outputStream = ContainerOutputStream(response, Okio.buffer(Okio.source(containerOutputStream)))

@@ -16,6 +16,7 @@
 
 package batect.logging
 
+import batect.testutils.CloseableByteArrayOutputStream
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -23,7 +24,6 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
-import java.io.ByteArrayOutputStream
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
@@ -34,7 +34,7 @@ object LogMessageWriterSpec : Spek({
 
         on("writing a message with no extra data") {
             val message = LogMessage(Severity.Info, "This is the message", messageTime, emptyMap())
-            val output = ByteArrayOutputStreamWithClosedStatus()
+            val output = CloseableByteArrayOutputStream()
             writer.writeTo(message, output)
 
             val parsed = jacksonObjectMapper().readTree(output.toString())
@@ -74,7 +74,7 @@ object LogMessageWriterSpec : Spek({
                     "some-int" to 123
                 ))
 
-            val output = ByteArrayOutputStreamWithClosedStatus()
+            val output = CloseableByteArrayOutputStream()
             writer.writeTo(message, output)
 
             val parsed = jacksonObjectMapper().readTree(output.toString())
@@ -110,13 +110,3 @@ object LogMessageWriterSpec : Spek({
         }
     }
 })
-
-class ByteArrayOutputStreamWithClosedStatus : ByteArrayOutputStream() {
-    var isClosed: Boolean = false
-        private set
-
-    override fun close() {
-        isClosed = true
-        super.close()
-    }
-}

@@ -109,8 +109,10 @@ class DockerClient(
 
         api.startContainer(container)
 
-        api.attachToContainer(container, attachStdin).use { streams ->
-            ioStreamer.stream(streams)
+        api.attachToContainerOutput(container).use { outputStream ->
+            api.attachToContainerInput(container).use { inputStream ->
+                ioStreamer.stream(outputStream, inputStream)
+            }
         }
 
         val exitCode = exitCodeSource.get()

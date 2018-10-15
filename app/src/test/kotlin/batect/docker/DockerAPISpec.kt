@@ -21,7 +21,8 @@ import batect.docker.build.DockerImageBuildContext
 import batect.docker.build.DockerImageBuildContextRequestBody
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.run.ConnectionHijacker
-import batect.docker.run.ContainerIOStreams
+import batect.docker.run.ContainerInputStream
+import batect.docker.run.ContainerOutputStream
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
@@ -453,8 +454,8 @@ object DockerAPISpec : Spek({
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
 
-                given("attaching to stdin is enabled") {
-                    val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/attach?logs=true&stream=true&stdout=true&stderr=true&stdin=true"
+                describe("attaching to output") {
+                    val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/attach?logs=true&stream=true&stdout=true&stderr=true"
 
                     on("the attach succeeding") {
                         val response = mock<Response> {
@@ -463,10 +464,10 @@ object DockerAPISpec : Spek({
 
                         clientWithNoTimeout.mock("POST", expectedUrl, response)
 
-                        val streams = api.attachToContainer(container, true)
+                        val streams = api.attachToContainerOutput(container)
 
-                        it("returns the streams from the underlying connection") {
-                            assertThat(streams, equalTo(ContainerIOStreams(response, sink, source)))
+                        it("returns the stream from the underlying connection") {
+                            assertThat(streams, equalTo(ContainerOutputStream(response, source)))
                         }
 
                         it("does not close the underlying connection") {
@@ -482,13 +483,13 @@ object DockerAPISpec : Spek({
                         clientWithNoTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
 
                         it("raises an appropriate exception") {
-                            assertThat({ api.attachToContainer(container, true) }, throws<DockerException>(withMessage("Attaching to container 'the-container-id' failed: Something went wrong.")))
+                            assertThat({ api.attachToContainerOutput(container) }, throws<DockerException>(withMessage("Attaching to output from container 'the-container-id' failed: Something went wrong.")))
                         }
                     }
                 }
 
-                given("attaching to stdout is disabled") {
-                    val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/attach?logs=true&stream=true&stdout=true&stderr=true&stdin=false"
+                describe("attaching to stdin") {
+                    val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/attach?logs=true&stream=true&stdin=true"
 
                     on("the attach succeeding") {
                         val response = mock<Response> {
@@ -497,10 +498,10 @@ object DockerAPISpec : Spek({
 
                         clientWithNoTimeout.mock("POST", expectedUrl, response)
 
-                        val streams = api.attachToContainer(container, false)
+                        val streams = api.attachToContainerInput(container)
 
-                        it("returns the streams from the underlying connection") {
-                            assertThat(streams, equalTo(ContainerIOStreams(response, sink, source)))
+                        it("returns the stream from the underlying connection") {
+                            assertThat(streams, equalTo(ContainerInputStream(response, sink)))
                         }
 
                         it("does not close the underlying connection") {
@@ -516,7 +517,7 @@ object DockerAPISpec : Spek({
                         clientWithNoTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
 
                         it("raises an appropriate exception") {
-                            assertThat({ api.attachToContainer(container, false) }, throws<DockerException>(withMessage("Attaching to container 'the-container-id' failed: Something went wrong.")))
+                            assertThat({ api.attachToContainerInput(container) }, throws<DockerException>(withMessage("Attaching to input for container 'the-container-id' failed: Something went wrong.")))
                         }
                     }
                 }

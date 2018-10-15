@@ -14,22 +14,16 @@
    limitations under the License.
 */
 
-package batect.docker.run
+package batect.testutils
 
-import okhttp3.Response
-import okio.BufferedSink
-import okio.BufferedSource
+import java.io.ByteArrayOutputStream
 
-data class ContainerOutputStream(
-    private val response: Response,
-    val stream: BufferedSource
-) : AutoCloseable {
-    override fun close() = response.close()
-}
+open class CloseableByteArrayOutputStream : ByteArrayOutputStream() {
+    var isClosed: Boolean = false
+        private set
 
-data class ContainerInputStream(
-    private val response: Response,
-    val stream: BufferedSink
-) : AutoCloseable {
-    override fun close() = response.close()
+    override fun close() {
+        isClosed = true
+        super.close()
+    }
 }

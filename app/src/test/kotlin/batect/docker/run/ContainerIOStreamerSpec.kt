@@ -16,6 +16,7 @@
 
 package batect.docker.run
 
+import batect.testutils.CloseableByteArrayOutputStream
 import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockito_kotlin.mock
@@ -41,10 +42,12 @@ object ContainerIOStreamerSpec : Spek({
 
                 val response = mock<Response>()
                 val containerOutputStream = ByteArrayInputStream("This is the output".toByteArray())
-                val containerInputStream = ByteArrayOutputStream()
-                val streams = ContainerIOStreams(response, Okio.buffer(Okio.sink(containerInputStream)), Okio.buffer(Okio.source(containerOutputStream)))
+                val containerInputStream = CloseableByteArrayOutputStream()
 
-                streamer.stream(streams)
+                val outputStream = ContainerOutputStream(response, Okio.buffer(Okio.source(containerOutputStream)))
+                val inputStream = ContainerInputStream(response, Okio.buffer(Okio.sink(containerInputStream)))
+
+                streamer.stream(outputStream, inputStream)
 
                 it("writes all of the input from stdin to the input stream") {
                     assertThat(containerInputStream.toString(), equalTo("This is the input"))
@@ -52,6 +55,10 @@ object ContainerIOStreamerSpec : Spek({
 
                 it("writes all of the output from the output stream to stdout") {
                     assertThat(stdout.toString(), equalTo("This is the output"))
+                }
+
+                it("closes the container's input stream") {
+                    assertThat(containerInputStream.isClosed, equalTo(true))
                 }
             }
 
@@ -81,7 +88,7 @@ object ContainerIOStreamerSpec : Spek({
                     }
                 }
 
-                val containerInputStream = object : ByteArrayOutputStream() {
+                val containerInputStream = object : CloseableByteArrayOutputStream() {
                     override fun write(b: Int) {
                         super.write(b)
                         checkIfInputComplete()
@@ -104,9 +111,10 @@ object ContainerIOStreamerSpec : Spek({
                     }
                 }
 
-                val streams = ContainerIOStreams(response, Okio.buffer(Okio.sink(containerInputStream)), Okio.buffer(Okio.source(containerOutputStream)))
+                val outputStream = ContainerOutputStream(response, Okio.buffer(Okio.source(containerOutputStream)))
+                val inputStream = ContainerInputStream(response, Okio.buffer(Okio.sink(containerInputStream)))
 
-                streamer.stream(streams)
+                streamer.stream(outputStream, inputStream)
 
                 it("writes all of the input from stdin to the input stream") {
                     assertThat(containerInputStream.toString(), equalTo("This is the input"))
@@ -114,6 +122,10 @@ object ContainerIOStreamerSpec : Spek({
 
                 it("writes all of the output from the container to stdout") {
                     assertThat(stdout.toString(), equalTo("This is the output"))
+                }
+
+                it("closes the container's input stream") {
+                    assertThat(containerInputStream.isClosed, equalTo(true))
                 }
             }
 
@@ -133,65 +145,21 @@ object ContainerIOStreamerSpec : Spek({
                 val response = mock<Response>()
 
                 val containerOutputStream = ByteArrayInputStream("This is the output".toByteArray())
-                val containerInputStream = ByteArrayOutputStream()
-                val streams = ContainerIOStreams(response, Okio.buffer(Okio.sink(containerInputStream)), Okio.buffer(Okio.source(containerOutputStream)))
+                val containerInputStream = CloseableByteArrayOutputStream()
 
-                streamer.stream(streams)
+                val outputStream = ContainerOutputStream(response, Okio.buffer(Okio.source(containerOutputStream)))
+                val inputStream = ContainerInputStream(response, Okio.buffer(Okio.sink(containerInputStream)))
+
+                streamer.stream(outputStream, inputStream)
 
                 it("writes all of the output from the output stream to stdout") {
                     assertThat(stdout.toString(), equalTo("This is the output"))
+                }
+
+                it("closes the container's input stream") {
+                    assertThat(containerInputStream.isClosed, equalTo(true))
                 }
             }
         }
     }
 })
-
-private class TwoLineInputStream(
-    private val firstLine: String,
-    private val secondLine: String,
-    private val allowSecondLine: CountDownLatch
-) : InputStream() {
-    private var nextIndex = 0
-
-    override fun read(): Int {
-        val indexInFirstLine = nextIndex
-
-        if (indexInFirstLine < firstLine.length) {
-            nextIndex++
-            return firstLine[indexInFirstLine].toInt()
-        }
-
-        allowSecondLine.await()
-
-        val indexInSecondLine = nextIndex - firstLine.length
-
-        if (indexInSecondLine < secondLine.length) {
-            nextIndex++
-            return secondLine[indexInSecondLine].toInt()
-        }
-
-        return -1
-    }
-
-    override fun available(): Int {
-        val total = if (allowSecondLine.count == 0L) {
-            firstLine.length + secondLine.length
-        } else {
-            firstLine.length
-        }
-
-        return total - nextIndex
-    }
-
-    // This emulates the behaviour of read() on a socket - it returns at least one byte (blocking if necessary),
-    // but tries to return as much available data as possible immediately without blocking if it can.
-    override fun read(b: ByteArray?, off: Int, len: Int): Int {
-        val lengthToRead = if (available() == 0) {
-            1
-        } else {
-            Math.min(len, available())
-        }
-
-        return super.read(b, off, lengthToRead)
-    }
-}

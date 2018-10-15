@@ -20,7 +20,8 @@ import batect.docker.build.DockerImageBuildContext
 import batect.docker.build.DockerImageBuildContextRequestBody
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.run.ConnectionHijacker
-import batect.docker.run.ContainerIOStreams
+import batect.docker.run.ContainerInputStream
+import batect.docker.run.ContainerOutputStream
 import batect.logging.Logger
 import batect.utils.Version
 import kotlinx.serialization.json.JSON
@@ -305,14 +306,17 @@ class DockerAPI(
         }
     }
 
-    // Note that this method assumes that the container was created with the TTY option enabled, even if the local terminal is not a TTY.
+    // Note that these two methods assume that the container was created with the TTY option enabled, even if the local terminal is not a TTY.
     // The caller must call close() on the response to clean up all connections once it is finished with the streams.
     //
     // This entire thing is a bit of a gross hack. The WebSocket version of this API doesn't work properly on OS X (see https://github.com/docker/for-mac/issues/1662),
     // and OkHttp doesn't cleanly support Docker's non-standard connection hijacking mechanism.
-    fun attachToContainer(container: DockerContainer, attachStdin: Boolean): ContainerIOStreams {
+    // And, to make things more complicated, we can't use the same socket for both container input and container output, as we need to be able to close
+    // the input stream when there's no more input without closing the output stream - Java sockets don't seem to support closing one side of the
+    // connection without also closing the other at the same time.
+    fun attachToContainerOutput(container: DockerContainer): ContainerOutputStream {
         logger.info {
-            message("Attaching to container.")
+            message("Attaching to container output.")
             data("container", container)
         }
 
@@ -322,7 +326,6 @@ class DockerAPI(
             .addQueryParameter("stream", "true")
             .addQueryParameter("stdout", "true")
             .addQueryParameter("stderr", "true")
-            .addQueryParameter("stdin", attachStdin.toString())
             .build()
 
         val request = Request.Builder()
@@ -341,14 +344,53 @@ class DockerAPI(
 
         checkForFailure(response) { error ->
             logger.error {
-                message("Attaching to container failed.")
+                message("Attaching to container output failed.")
                 data("error", error)
             }
 
-            throw DockerException("Attaching to container '${container.id}' failed: ${error.message}")
+            throw DockerException("Attaching to output from container '${container.id}' failed: ${error.message}")
         }
 
-        return ContainerIOStreams(response, hijacker.sink!!, hijacker.source!!)
+        return ContainerOutputStream(response, hijacker.source!!)
+    }
+
+    fun attachToContainerInput(container: DockerContainer): ContainerInputStream {
+        logger.info {
+            message("Attaching to container input.")
+            data("container", container)
+        }
+
+        val url = urlForContainer(container).newBuilder()
+            .addPathSegment("attach")
+            .addQueryParameter("logs", "true")
+            .addQueryParameter("stream", "true")
+            .addQueryParameter("stdin", "true")
+            .build()
+
+        val request = Request.Builder()
+            .post(emptyRequestBody())
+            .url(url)
+            .build()
+
+        val hijacker = hijackerFactory()
+
+        val client = httpConfig.client.newBuilder()
+            .readTimeout(0, TimeUnit.NANOSECONDS)
+            .addNetworkInterceptor(hijacker)
+            .build()
+
+        val response = client.newCall(request).execute()
+
+        checkForFailure(response) { error ->
+            logger.error {
+                message("Attaching to container input failed.")
+                data("error", error)
+            }
+
+            throw DockerException("Attaching to input for container '${container.id}' failed: ${error.message}")
+        }
+
+        return ContainerInputStream(response, hijacker.sink!!)
     }
 
     fun createNetwork(): DockerNetwork {

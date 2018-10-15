@@ -27,12 +27,12 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
 class ContainerIOStreamer(private val stdout: PrintStream, private val stdin: InputStream) {
-    fun stream(streams: ContainerIOStreams) {
+    fun stream(outputStream: ContainerOutputStream, inputStream: ContainerInputStream) {
         val executor = Executors.newFixedThreadPool(2)
 
         try {
-            val stdinHandler = executor.submit { streamStdin(streams) }
-            val stdoutHandler = executor.submit { streamStdout(streams, stdinHandler) }
+            val stdinHandler = executor.submit { streamStdin(inputStream) }
+            val stdoutHandler = executor.submit { streamStdout(outputStream, stdinHandler) }
 
             stdinHandler.get()
             stdoutHandler.get()
@@ -43,14 +43,18 @@ class ContainerIOStreamer(private val stdout: PrintStream, private val stdin: In
         }
     }
 
-    private fun streamStdin(streams: ContainerIOStreams) {
-        val stdinStream = Okio.buffer(Okio.source(stdin))
-        stdinStream.copyTo(streams.inputStream)
+    private fun streamStdin(inputStream: ContainerInputStream) {
+        try {
+            val stdinStream = Okio.buffer(Okio.source(stdin))
+            stdinStream.copyTo(inputStream.stream)
+        } finally {
+            inputStream.stream.close()
+        }
     }
 
-    private fun streamStdout(streams: ContainerIOStreams, stdinHandler: Future<*>) {
+    private fun streamStdout(outputStream: ContainerOutputStream, stdinHandler: Future<*>) {
         val stdoutSink = Okio.sink(stdout)
-        streams.outputStream.copyTo(stdoutSink)
+        outputStream.stream.copyTo(stdoutSink)
         stdinHandler.cancel(true)
     }
 

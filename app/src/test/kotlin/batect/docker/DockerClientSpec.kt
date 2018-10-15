@@ -25,7 +25,8 @@ import batect.docker.pull.DockerImagePullProgressReporter
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.run.ContainerIOStreamer
-import batect.docker.run.ContainerIOStreams
+import batect.docker.run.ContainerInputStream
+import batect.docker.run.ContainerOutputStream
 import batect.docker.run.ContainerWaiter
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
@@ -230,11 +231,13 @@ object DockerClientSpec : Spek({
         describe("running a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
-                val streams by createForEachTest { mock<ContainerIOStreams>() }
+                val outputStream by createForEachTest { mock<ContainerOutputStream>() }
+                val inputStream by createForEachTest { mock<ContainerInputStream>() }
 
                 beforeEachTest {
                     whenever(waiter.startWaitingForContainerToExit(container)).doReturn(CompletableFuture.completedFuture(123))
-                    whenever(api.attachToContainer(eq(container), any())).doReturn(streams)
+                    whenever(api.attachToContainerOutput(container)).doReturn(outputStream)
+                    whenever(api.attachToContainerInput(container)).doReturn(inputStream)
                 }
 
                 given("the application is being run with a TTY connected to stdin") {
@@ -249,12 +252,8 @@ object DockerClientSpec : Spek({
                             verify(api).startContainer(container)
                         }
 
-                        it("attaches to stdin") {
-                            verify(api).attachToContainer(any(), eq(true))
-                        }
-
-                        it("streams the output from the container") {
-                            verify(ioStreamer).stream(streams)
+                        it("streams the input and output from the container") {
+                            verify(ioStreamer).stream(outputStream, inputStream)
                         }
 
                         it("returns the exit code from the container") {
@@ -269,16 +268,23 @@ object DockerClientSpec : Spek({
                         }
 
                         it("starts streaming I/O after starting the container") {
-                            inOrder(api) {
+                            inOrder(api, ioStreamer) {
                                 verify(api).startContainer(container)
-                                verify(api).attachToContainer(container, true)
+                                verify(ioStreamer).stream(outputStream, inputStream)
                             }
                         }
 
-                        it("closes the I/O streams after streaming the output completes") {
-                            inOrder(ioStreamer, streams) {
-                                verify(ioStreamer).stream(streams)
-                                verify(streams).close()
+                        it("closes the output stream after streaming the output completes") {
+                            inOrder(ioStreamer, outputStream) {
+                                verify(ioStreamer).stream(outputStream, inputStream)
+                                verify(outputStream).close()
+                            }
+                        }
+
+                        it("closes the input stream after streaming the output completes") {
+                            inOrder(ioStreamer, inputStream) {
+                                verify(ioStreamer).stream(outputStream, inputStream)
+                                verify(inputStream).close()
                             }
                         }
                     }
@@ -296,12 +302,8 @@ object DockerClientSpec : Spek({
                             verify(api).startContainer(container)
                         }
 
-                        it("does not attach to stdin") {
-                            verify(api).attachToContainer(any(), eq(false))
-                        }
-
-                        it("streams the output from the container") {
-                            verify(ioStreamer).stream(streams)
+                        it("streams the input and output from the container") {
+                            verify(ioStreamer).stream(outputStream, inputStream)
                         }
 
                         it("returns the exit code from the container") {
@@ -316,16 +318,23 @@ object DockerClientSpec : Spek({
                         }
 
                         it("starts streaming I/O after starting the container") {
-                            inOrder(api) {
+                            inOrder(api, ioStreamer) {
                                 verify(api).startContainer(container)
-                                verify(api).attachToContainer(container, false)
+                                verify(ioStreamer).stream(outputStream, inputStream)
                             }
                         }
 
-                        it("closes the I/O streams after streaming the output completes") {
-                            inOrder(ioStreamer, streams) {
-                                verify(ioStreamer).stream(streams)
-                                verify(streams).close()
+                        it("closes the output stream after streaming the output completes") {
+                            inOrder(ioStreamer, outputStream) {
+                                verify(ioStreamer).stream(outputStream, inputStream)
+                                verify(outputStream).close()
+                            }
+                        }
+
+                        it("closes the input stream after streaming the output completes") {
+                            inOrder(ioStreamer, inputStream) {
+                                verify(ioStreamer).stream(outputStream, inputStream)
+                                verify(inputStream).close()
                             }
                         }
                     }

@@ -24,7 +24,9 @@ import batect.docker.pull.DockerImagePullProgress
 import batect.docker.pull.DockerImagePullProgressReporter
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.pull.DockerRegistryCredentialsProvider
-import batect.os.ProcessRunner
+import batect.docker.run.ContainerIOStreamer
+import batect.docker.run.ContainerIOStreams
+import batect.docker.run.ContainerWaiter
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
@@ -40,6 +42,7 @@ import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.doThrow
 import com.nhaarman.mockito_kotlin.eq
+import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
@@ -55,19 +58,21 @@ import org.mockito.invocation.InvocationOnMock
 import java.io.IOException
 import java.nio.file.Paths
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
 
 object DockerClientSpec : Spek({
     describe("a Docker client") {
-        val processRunner by createForEachTest { mock<ProcessRunner>() }
         val api by createForEachTest { mock<DockerAPI>() }
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
         val credentialsProvider by createForEachTest { mock<DockerRegistryCredentialsProvider>() }
         val imageBuildContextFactory by createForEachTest { mock<DockerImageBuildContextFactory>() }
         val dockerfileParser by createForEachTest { mock<DockerfileParser>() }
+        val waiter by createForEachTest { mock<ContainerWaiter>() }
+        val ioStreamer by createForEachTest { mock<ContainerIOStreamer>() }
         val logger by createLoggerForEachTest()
         val imagePullProgressReporter by createForEachTest { mock<DockerImagePullProgressReporter>() }
         val imagePullProgressReporterFactory = { imagePullProgressReporter }
-        val client by createForEachTest { DockerClient(processRunner, api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger, imagePullProgressReporterFactory) }
+        val client by createForEachTest { DockerClient(api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, ioStreamer, logger, imagePullProgressReporterFactory) }
 
         describe("building an image") {
             val buildDirectory = "/path/to/build/dir"
@@ -225,37 +230,103 @@ object DockerClientSpec : Spek({
         describe("running a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
+                val streams by createForEachTest { mock<ContainerIOStreams>() }
 
-                given("and that the application is being run with a TTY connected to STDIN") {
-                    on("running the container") {
+                beforeEachTest {
+                    whenever(waiter.startWaitingForContainerToExit(container)).doReturn(CompletableFuture.completedFuture(123))
+                    whenever(api.attachToContainer(eq(container), any())).doReturn(streams)
+                }
+
+                given("the application is being run with a TTY connected to stdin") {
+                    beforeEachTest {
                         whenever(consoleInfo.stdinIsTTY).thenReturn(true)
-                        whenever(processRunner.run(any())).thenReturn(123)
+                    }
 
+                    on("running the container") {
                         val result = client.run(container)
 
-                        it("starts the container in interactive mode") {
-                            verify(processRunner).run(listOf("docker", "start", "--attach", "--interactive", container.id))
+                        it("starts the container") {
+                            verify(api).startContainer(container)
+                        }
+
+                        it("attaches to stdin") {
+                            verify(api).attachToContainer(any(), eq(true))
+                        }
+
+                        it("streams the output from the container") {
+                            verify(ioStreamer).stream(streams)
                         }
 
                         it("returns the exit code from the container") {
                             assertThat(result.exitCode, equalTo(123))
+                        }
+
+                        it("starts waiting for the container to exit before starting the container") {
+                            inOrder(api, waiter) {
+                                verify(waiter).startWaitingForContainerToExit(container)
+                                verify(api).startContainer(container)
+                            }
+                        }
+
+                        it("starts streaming I/O after starting the container") {
+                            inOrder(api) {
+                                verify(api).startContainer(container)
+                                verify(api).attachToContainer(container, true)
+                            }
+                        }
+
+                        it("closes the I/O streams after streaming the output completes") {
+                            inOrder(ioStreamer, streams) {
+                                verify(ioStreamer).stream(streams)
+                                verify(streams).close()
+                            }
                         }
                     }
                 }
 
-                given("and that the application is being run without a TTY connected to STDIN") {
-                    on("running the container") {
+                given("the application is being run without a TTY connected to stdin") {
+                    beforeEachTest {
                         whenever(consoleInfo.stdinIsTTY).thenReturn(false)
-                        whenever(processRunner.run(any())).thenReturn(123)
+                    }
 
+                    on("running the container") {
                         val result = client.run(container)
 
-                        it("starts the container in non-interactive mode") {
-                            verify(processRunner).run(listOf("docker", "start", "--attach", container.id))
+                        it("starts the container") {
+                            verify(api).startContainer(container)
+                        }
+
+                        it("does not attach to stdin") {
+                            verify(api).attachToContainer(any(), eq(false))
+                        }
+
+                        it("streams the output from the container") {
+                            verify(ioStreamer).stream(streams)
                         }
 
                         it("returns the exit code from the container") {
                             assertThat(result.exitCode, equalTo(123))
+                        }
+
+                        it("starts waiting for the container to exit before starting the container") {
+                            inOrder(api, waiter) {
+                                verify(waiter).startWaitingForContainerToExit(container)
+                                verify(api).startContainer(container)
+                            }
+                        }
+
+                        it("starts streaming I/O after starting the container") {
+                            inOrder(api) {
+                                verify(api).startContainer(container)
+                                verify(api).attachToContainer(container, false)
+                            }
+                        }
+
+                        it("closes the I/O streams after streaming the output completes") {
+                            inOrder(ioStreamer, streams) {
+                                verify(ioStreamer).stream(streams)
+                                verify(streams).close()
+                            }
                         }
                     }
                 }

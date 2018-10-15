@@ -20,6 +20,8 @@ import batect.config.HealthCheckConfig
 import batect.docker.build.DockerImageBuildContext
 import batect.docker.build.DockerImageBuildContextRequestBody
 import batect.docker.pull.DockerRegistryCredentials
+import batect.docker.run.ConnectionHijacker
+import batect.docker.run.ContainerIOStreams
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
@@ -37,8 +39,10 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.check
+import com.nhaarman.mockito_kotlin.doAnswer
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
 import kotlinx.serialization.json.JsonObject
@@ -51,7 +55,10 @@ import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.Response
 import okio.Buffer
+import okio.BufferedSink
+import okio.BufferedSource
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -74,7 +81,8 @@ object DockerAPISpec : Spek({
         }
 
         val logger by createLoggerForEachTest()
-        val api by createForEachTest { DockerAPI(httpConfig, logger) }
+        val hijacker by createForEachTest { mock<ConnectionHijacker>() }
+        val api by createForEachTest { DockerAPI(httpConfig, logger, { hijacker }) }
 
         describe("creating a container") {
             val expectedUrl = "$dockerBaseUrl/v1.30/containers/create"
@@ -415,6 +423,101 @@ object DockerAPISpec : Spek({
 
                     it("throws an appropriate exception") {
                         assertThat({ api.waitForExit(container) }, throws<DockerException>(withMessage("Waiting for container 'the-container-id' to exit failed: Something went wrong.")))
+                    }
+                }
+            }
+        }
+
+        describe("attaching to a container") {
+            val source by createForEachTest { mock<BufferedSource>() }
+            val sink by createForEachTest { mock<BufferedSink>() }
+            val clientWithNoTimeout by createForEachTest { mock<OkHttpClient>() }
+
+            val noTimeoutClientBuilder by createForEachTest {
+                mock<OkHttpClient.Builder> { mock ->
+                    on { readTimeout(any(), any()) } doReturn mock
+                    on { addNetworkInterceptor(hijacker) } doAnswer {
+                        whenever(hijacker.source).doReturn(source)
+                        whenever(hijacker.sink).doReturn(sink)
+
+                        mock
+                    }
+                    on { build() } doReturn clientWithNoTimeout
+                }
+            }
+
+            beforeEachTest {
+                whenever(httpClient.newBuilder()).doReturn(noTimeoutClientBuilder)
+            }
+
+            given("a Docker container") {
+                val container = DockerContainer("the-container-id")
+
+                given("attaching to stdin is enabled") {
+                    val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/attach?logs=true&stream=true&stdout=true&stderr=true&stdin=true"
+
+                    on("the attach succeeding") {
+                        val response = mock<Response> {
+                            on { isSuccessful } doReturn true
+                        }
+
+                        clientWithNoTimeout.mock("POST", expectedUrl, response)
+
+                        val streams = api.attachToContainer(container, true)
+
+                        it("returns the streams from the underlying connection") {
+                            assertThat(streams, equalTo(ContainerIOStreams(response, sink, source)))
+                        }
+
+                        it("does not close the underlying connection") {
+                            verify(response, never()).close()
+                        }
+
+                        it("configures the HTTP client with no timeout") {
+                            verify(noTimeoutClientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
+                        }
+                    }
+
+                    on("an unsuccessful attach attempt") {
+                        clientWithNoTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+
+                        it("raises an appropriate exception") {
+                            assertThat({ api.attachToContainer(container, true) }, throws<DockerException>(withMessage("Attaching to container 'the-container-id' failed: Something went wrong.")))
+                        }
+                    }
+                }
+
+                given("attaching to stdout is disabled") {
+                    val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/attach?logs=true&stream=true&stdout=true&stderr=true&stdin=false"
+
+                    on("the attach succeeding") {
+                        val response = mock<Response> {
+                            on { isSuccessful } doReturn true
+                        }
+
+                        clientWithNoTimeout.mock("POST", expectedUrl, response)
+
+                        val streams = api.attachToContainer(container, false)
+
+                        it("returns the streams from the underlying connection") {
+                            assertThat(streams, equalTo(ContainerIOStreams(response, sink, source)))
+                        }
+
+                        it("does not close the underlying connection") {
+                            verify(response, never()).close()
+                        }
+
+                        it("configures the HTTP client with no timeout") {
+                            verify(noTimeoutClientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
+                        }
+                    }
+
+                    on("an unsuccessful attach attempt") {
+                        clientWithNoTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+
+                        it("raises an appropriate exception") {
+                            assertThat({ api.attachToContainer(container, false) }, throws<DockerException>(withMessage("Attaching to container 'the-container-id' failed: Something went wrong.")))
+                        }
                     }
                 }
             }

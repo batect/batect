@@ -37,6 +37,8 @@ import batect.docker.pull.DockerRegistryCredentialsConfigurationFile
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.pull.DockerRegistryDomainResolver
 import batect.docker.pull.DockerRegistryIndexResolver
+import batect.docker.run.ContainerIOStreamer
+import batect.docker.run.ContainerWaiter
 import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerDependencyGraphProvider
 import batect.execution.ParallelExecutionManagerProvider
@@ -77,15 +79,17 @@ import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
 import org.kodein.di.generic.singleton
+import java.io.InputStream
 import java.io.PrintStream
 import java.nio.file.FileSystem
 import java.nio.file.FileSystems
 
-fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStream): DKodein = Kodein.direct {
+fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStream, inputStream: InputStream): DKodein = Kodein.direct {
     bind<FileSystem>() with singleton { FileSystems.getDefault() }
     bind<POSIX>() with singleton { POSIXFactory.getNativePOSIX() }
-    bind<PrintStream>(PrintStreamType.Error) with instance(errorStream)
-    bind<PrintStream>(PrintStreamType.Output) with instance(outputStream)
+    bind<PrintStream>(StreamType.Error) with instance(errorStream)
+    bind<PrintStream>(StreamType.Output) with instance(outputStream)
+    bind<InputStream>(StreamType.Input) with instance(inputStream)
 
     bind<OkHttpClient>() with singleton {
         OkHttpClient.Builder()
@@ -104,7 +108,8 @@ fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStrea
     import(coreModule)
 }
 
-enum class PrintStreamType {
+enum class StreamType {
+    Input,
     Output,
     Error
 }
@@ -122,16 +127,16 @@ private val cliModule = Kodein.Module("cli") {
             instance(),
             instance(),
             instance(),
-            instance(PrintStreamType.Output),
-            instance(PrintStreamType.Error),
+            instance(StreamType.Output),
+            instance(StreamType.Error),
             logger
         )
     }
 
-    bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(PrintStreamType.Output)) }
-    bind<ListTasksCommand>() with singleton { ListTasksCommand(commandLineOptions().configurationFileName, instance(), instance(PrintStreamType.Output)) }
-    bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(PrintStreamType.Output), instance(), instance(), instance()) }
-    bind<UpgradeCommand>() with singletonWithLogger { logger -> UpgradeCommand(instance(), instance(), instance(), instance(), instance(PrintStreamType.Output), instance(PrintStreamType.Error), logger) }
+    bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(StreamType.Output)) }
+    bind<ListTasksCommand>() with singleton { ListTasksCommand(commandLineOptions().configurationFileName, instance(), instance(StreamType.Output)) }
+    bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(StreamType.Output), instance(), instance(), instance()) }
+    bind<UpgradeCommand>() with singletonWithLogger { logger -> UpgradeCommand(instance(), instance(), instance(), instance(), instance(StreamType.Output), instance(StreamType.Error), logger) }
 }
 
 private val configModule = Kodein.Module("config") {
@@ -140,8 +145,10 @@ private val configModule = Kodein.Module("config") {
 }
 
 private val dockerModule = Kodein.Module("docker") {
+    bind<ContainerIOStreamer>() with singleton { ContainerIOStreamer(instance(StreamType.Output), instance(StreamType.Input)) }
+    bind<ContainerWaiter>() with singleton { ContainerWaiter(instance()) }
     bind<DockerAPI>() with singletonWithLogger { logger -> DockerAPI(instance(), logger) }
-    bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), instance(), instance(), logger) }
+    bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), instance(), instance(), instance(), logger) }
     bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
     bind<DockerfileParser>() with singleton { DockerfileParser() }
     bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
@@ -188,8 +195,8 @@ private val uiModule = Kodein.Module("ui") {
     bind<EventLoggerProvider>() with singleton {
         EventLoggerProvider(
             instance(),
-            instance(PrintStreamType.Output),
-            instance(PrintStreamType.Error),
+            instance(StreamType.Output),
+            instance(StreamType.Error),
             instance(),
             instance(),
             commandLineOptions().requestedOutputStyle,
@@ -197,8 +204,8 @@ private val uiModule = Kodein.Module("ui") {
         )
     }
 
-    bind<Console>(PrintStreamType.Output) with singleton { Console(instance(PrintStreamType.Output), enableComplexOutput = !commandLineOptions().disableColorOutput, consoleInfo = instance()) }
-    bind<Console>(PrintStreamType.Error) with singleton { Console(instance(PrintStreamType.Error), enableComplexOutput = !commandLineOptions().disableColorOutput, consoleInfo = instance()) }
+    bind<Console>(StreamType.Output) with singleton { Console(instance(StreamType.Output), enableComplexOutput = !commandLineOptions().disableColorOutput, consoleInfo = instance()) }
+    bind<Console>(StreamType.Error) with singleton { Console(instance(StreamType.Error), enableComplexOutput = !commandLineOptions().disableColorOutput, consoleInfo = instance()) }
     bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), instance(), logger) }
     bind<FailureErrorMessageFormatter>() with singleton { FailureErrorMessageFormatter() }
     bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider() }
@@ -208,7 +215,7 @@ private val updatesModule = Kodein.Module("updates") {
     bind<UpdateInfoDownloader>() with singletonWithLogger { logger -> UpdateInfoDownloader(instance(), logger) }
     bind<UpdateInfoStorage>() with singletonWithLogger { logger -> UpdateInfoStorage(instance(), instance(), logger) }
     bind<UpdateInfoUpdater>() with singletonWithLogger { logger -> UpdateInfoUpdater(instance(), instance(), logger) }
-    bind<UpdateNotifier>() with singletonWithLogger { logger -> UpdateNotifier(commandLineOptions().disableUpdateNotification, instance(), instance(), instance(), instance(PrintStreamType.Output), logger) }
+    bind<UpdateNotifier>() with singletonWithLogger { logger -> UpdateNotifier(commandLineOptions().disableUpdateNotification, instance(), instance(), instance(), instance(StreamType.Output), logger) }
 }
 
 private val coreModule = Kodein.Module("core") {

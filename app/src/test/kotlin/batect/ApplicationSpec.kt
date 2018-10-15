@@ -60,7 +60,7 @@ object ApplicationSpec : Spek({
 
         val dependencies by createForEachTest {
             Kodein.direct {
-                bind<PrintStream>(PrintStreamType.Error) with instance(PrintStream(errorStream))
+                bind<PrintStream>(StreamType.Error) with instance(PrintStream(errorStream))
                 bind<CommandLineOptionsParser>() with instance(commandLineOptionsParser)
                 bind<CommandFactory>() with instance(commandFactory)
             }
@@ -85,7 +85,7 @@ object ApplicationSpec : Spek({
                 Kodein.direct {
                     bind<ApplicationInfoLogger>() with instance(applicationInfoLogger)
                     bind<LoggerFactory>() with instance(loggerFactory)
-                    bind<Console>(PrintStreamType.Error) with instance(errorConsole)
+                    bind<Console>(StreamType.Error) with instance(errorConsole)
                 }
             }
 

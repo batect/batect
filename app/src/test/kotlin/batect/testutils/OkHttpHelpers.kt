@@ -71,5 +71,24 @@ fun OkHttpClient.mock(method: String, urlMatcher: Matcher<HttpUrl>, responseBody
     return call
 }
 
+fun OkHttpClient.mock(method: String, url: String, response: Response, headers: Headers = Headers.Builder().build()): Call {
+    val parsedUrl = HttpUrl.get(url)
+    val call = mock<Call>()
+
+    whenever(this.newCall(any())).then { invocation ->
+        val request = invocation.getArgument<Request>(0)
+
+        assertThat(request, has(Request::method, equalTo(method)))
+        assertThat(request, has(Request::url, equalTo(parsedUrl)))
+        assertThat(request, has(Request::headerSet, equalTo(headers)))
+
+        whenever(call.execute()).doReturn(response)
+
+        call
+    }
+
+    return call
+}
+
 // This is to resolve the ambiguity when referring to Request::headers() above in the has() call.
 private fun Request.headerSet() = this.headers()

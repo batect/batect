@@ -29,12 +29,13 @@ import org.kodein.di.Copy
 import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 
 object InjectionConfigurationSpec : Spek({
     describe("Kodein injection configuration") {
-        val originalConfiguration = createKodeinConfiguration(PrintStream(ByteArrayOutputStream()), PrintStream(ByteArrayOutputStream()))
+        val originalConfiguration = createKodeinConfiguration(PrintStream(ByteArrayOutputStream()), PrintStream(ByteArrayOutputStream()), ByteArrayInputStream(ByteArray(0)))
         val configuration = Kodein.direct {
             extend(originalConfiguration, copy = Copy.All)
             bind<CommandLineOptions>() with instance(CommandLineOptions(taskName = "test-task"))

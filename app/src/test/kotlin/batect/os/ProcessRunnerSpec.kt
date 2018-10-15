@@ -34,7 +34,6 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
-import java.io.File
 import java.io.IOException
 
 object ProcessRunnerSpec : Spek({
@@ -42,38 +41,6 @@ object ProcessRunnerSpec : Spek({
         val logSink by createForEachTest { InMemoryLogSink() }
         val logger by createForEachTest { Logger("some.source", logSink) }
         val runner by createForEachTest { ProcessRunner(logger) }
-
-        on("running a process") {
-            val filePath = File.createTempFile("processrunner", ".tmp")
-            filePath.deleteOnExit()
-
-            val command = listOf("sh", "-c", "rm '${filePath.absoluteFile}' && exit 123")
-            val exitCode = runner.run(command)
-
-            it("executes the command given") {
-                assertThat(filePath.exists(), equalTo(false))
-            }
-
-            it("returns the exit code of the command") {
-                assertThat(exitCode, equalTo(123))
-            }
-
-            it("logs before running the command") {
-                assertThat(logSink, hasMessage(
-                    withSeverity(Severity.Debug) and
-                        withLogMessage("Starting process.") and
-                        withAdditionalData("command", command)))
-            }
-
-            it("logs the result of running the command") {
-                assertThat(logSink, hasMessage(
-                    withSeverity(Severity.Debug) and
-                        withLogMessage("Process exited.") and
-                        withAdditionalData("command", command) and
-                        withAdditionalData("exitCode", 123)
-                ))
-            }
-        }
 
         describe("running a process and capturing the output") {
             given("the executable exists") {

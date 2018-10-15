@@ -27,12 +27,13 @@ import batect.ui.text.Text
 import org.kodein.di.DKodein
 import org.kodein.di.DKodeinAware
 import org.kodein.di.generic.instance
+import java.io.InputStream
 import java.io.PrintStream
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
     try {
-        val status = Application(System.out, System.err).run(args.toList())
+        val status = Application(System.out, System.err, System.`in`).run(args.toList())
         exitProcess(status)
     } catch (e: Throwable) {
         System.err.println("Fatal exception: ")
@@ -42,10 +43,10 @@ fun main(args: Array<String>) {
 }
 
 class Application(override val dkodein: DKodein) : DKodeinAware {
-    constructor(outputStream: PrintStream, errorStream: PrintStream) :
-        this(createKodeinConfiguration(outputStream, errorStream))
+    constructor(outputStream: PrintStream, errorStream: PrintStream, inputStream: InputStream) :
+        this(createKodeinConfiguration(outputStream, errorStream, inputStream))
 
-    private val errorStream: PrintStream = instance(PrintStreamType.Error)
+    private val errorStream: PrintStream = instance(StreamType.Error)
     private val commandLineOptionsParser: CommandLineOptionsParser = instance()
     private val commandFactory: CommandFactory = instance()
 
@@ -61,7 +62,7 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
     private fun runCommand(options: CommandLineOptions, args: Iterable<String>): Int {
         val extendedKodein = options.extend(dkodein)
         val logger = extendedKodein.logger<Application>()
-        val errorConsole = extendedKodein.instance<Console>(PrintStreamType.Error)
+        val errorConsole = extendedKodein.instance<Console>(StreamType.Error)
 
         try {
             val applicationInfoLogger = extendedKodein.instance<ApplicationInfoLogger>()

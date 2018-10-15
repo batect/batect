@@ -19,6 +19,8 @@ package batect.docker
 import batect.docker.build.DockerImageBuildContext
 import batect.docker.build.DockerImageBuildContextRequestBody
 import batect.docker.pull.DockerRegistryCredentials
+import batect.docker.run.ConnectionHijacker
+import batect.docker.run.ContainerIOStreams
 import batect.logging.Logger
 import batect.utils.Version
 import kotlinx.serialization.json.JSON
@@ -38,7 +40,8 @@ import java.util.concurrent.TimeUnit
 
 class DockerAPI(
     private val httpConfig: DockerHttpConfig,
-    private val logger: Logger
+    private val logger: Logger,
+    private val hijackerFactory: () -> ConnectionHijacker = ::ConnectionHijacker
 ) {
     fun createContainer(creationRequest: DockerContainerCreationRequest): DockerContainer {
         logger.info {
@@ -300,6 +303,52 @@ class DockerAPI(
 
             return parsedResponse["StatusCode"].primitive.int
         }
+    }
+
+    // Note that this method assumes that the container was created with the TTY option enabled, even if the local terminal is not a TTY.
+    // The caller must call close() on the response to clean up all connections once it is finished with the streams.
+    //
+    // This entire thing is a bit of a gross hack. The WebSocket version of this API doesn't work properly on OS X (see https://github.com/docker/for-mac/issues/1662),
+    // and OkHttp doesn't cleanly support Docker's non-standard connection hijacking mechanism.
+    fun attachToContainer(container: DockerContainer, attachStdin: Boolean): ContainerIOStreams {
+        logger.info {
+            message("Attaching to container.")
+            data("container", container)
+        }
+
+        val url = urlForContainer(container).newBuilder()
+            .addPathSegment("attach")
+            .addQueryParameter("logs", "true")
+            .addQueryParameter("stream", "true")
+            .addQueryParameter("stdout", "true")
+            .addQueryParameter("stderr", "true")
+            .addQueryParameter("stdin", attachStdin.toString())
+            .build()
+
+        val request = Request.Builder()
+            .post(emptyRequestBody())
+            .url(url)
+            .build()
+
+        val hijacker = hijackerFactory()
+
+        val client = httpConfig.client.newBuilder()
+            .readTimeout(0, TimeUnit.NANOSECONDS)
+            .addNetworkInterceptor(hijacker)
+            .build()
+
+        val response = client.newCall(request).execute()
+
+        checkForFailure(response) { error ->
+            logger.error {
+                message("Attaching to container failed.")
+                data("error", error)
+            }
+
+            throw DockerException("Attaching to container '${container.id}' failed: ${error.message}")
+        }
+
+        return ContainerIOStreams(response, hijacker.sink!!, hijacker.source!!)
     }
 
     fun createNetwork(): DockerNetwork {

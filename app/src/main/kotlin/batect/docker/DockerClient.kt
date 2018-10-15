@@ -21,8 +21,9 @@ import batect.docker.build.DockerfileParser
 import batect.docker.pull.DockerImagePullProgress
 import batect.docker.pull.DockerImagePullProgressReporter
 import batect.docker.pull.DockerRegistryCredentialsProvider
+import batect.docker.run.ContainerIOStreamer
+import batect.docker.run.ContainerWaiter
 import batect.logging.Logger
-import batect.os.ProcessRunner
 import batect.ui.ConsoleInfo
 import kotlinx.serialization.json.JsonObject
 import java.io.IOException
@@ -33,12 +34,13 @@ import java.time.Duration
 // https://github.com/gesellix/okhttp/blob/master/samples/simple-client/src/main/java/okhttp3/sample/OkDocker.java and
 // https://github.com/square/okhttp/blob/master/samples/unixdomainsockets/src/main/java/okhttp3/unixdomainsockets/UnixDomainSocketFactory.java
 class DockerClient(
-    private val processRunner: ProcessRunner,
     private val api: DockerAPI,
     private val consoleInfo: ConsoleInfo,
     private val credentialsProvider: DockerRegistryCredentialsProvider,
     private val imageBuildContextFactory: DockerImageBuildContextFactory,
     private val dockerfileParser: DockerfileParser,
+    private val waiter: ContainerWaiter,
+    private val ioStreamer: ContainerIOStreamer,
     private val logger: Logger,
     private val imagePullProgressReporterFactory: () -> DockerImagePullProgressReporter = ::DockerImagePullProgressReporter
 ) {
@@ -95,19 +97,23 @@ class DockerClient(
     fun remove(container: DockerContainer) = api.removeContainer(container)
 
     fun run(container: DockerContainer): DockerContainerRunResult {
-        val command = if (consoleInfo.stdinIsTTY) {
-            listOf("docker", "start", "--attach", "--interactive", container.id)
-        } else {
-            listOf("docker", "start", "--attach", container.id)
-        }
+        val attachStdin = consoleInfo.stdinIsTTY
 
         logger.info {
             message("Running container.")
             data("container", container)
-            data("interactiveMode", consoleInfo.stdinIsTTY)
+            data("attachStdin", attachStdin)
         }
 
-        val exitCode = processRunner.run(command)
+        val exitCodeSource = waiter.startWaitingForContainerToExit(container)
+
+        api.startContainer(container)
+
+        api.attachToContainer(container, attachStdin).use { streams ->
+            ioStreamer.stream(streams)
+        }
+
+        val exitCode = exitCodeSource.get()
 
         logger.info {
             message("Container run finished.")

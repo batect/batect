@@ -107,10 +107,10 @@ class DockerClient(
 
         val exitCodeSource = waiter.startWaitingForContainerToExit(container)
 
-        api.startContainer(container)
-
         api.attachToContainerOutput(container).use { outputStream ->
             api.attachToContainerInput(container).use { inputStream ->
+                api.startContainer(container)
+
                 ioStreamer.stream(outputStream, inputStream)
             }
         }

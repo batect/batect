@@ -274,6 +274,20 @@ object DockerClientSpec : Spek({
                             }
                         }
 
+                        it("attaches to the container output before starting the container") {
+                            inOrder(api) {
+                                verify(api).attachToContainerOutput(container)
+                                verify(api).startContainer(container)
+                            }
+                        }
+
+                        it("attaches to the container input before starting the container") {
+                            inOrder(api) {
+                                verify(api).attachToContainerInput(container)
+                                verify(api).startContainer(container)
+                            }
+                        }
+
                         it("closes the output stream after streaming the output completes") {
                             inOrder(ioStreamer, outputStream) {
                                 verify(ioStreamer).stream(outputStream, inputStream)
@@ -321,6 +335,20 @@ object DockerClientSpec : Spek({
                             inOrder(api, ioStreamer) {
                                 verify(api).startContainer(container)
                                 verify(ioStreamer).stream(outputStream, inputStream)
+                            }
+                        }
+
+                        it("attaches to the container output before starting the container") {
+                            inOrder(api) {
+                                verify(api).attachToContainerOutput(container)
+                                verify(api).startContainer(container)
+                            }
+                        }
+
+                        it("attaches to the container input before starting the container") {
+                            inOrder(api) {
+                                verify(api).attachToContainerInput(container)
+                                verify(api).startContainer(container)
                             }
                         }
 

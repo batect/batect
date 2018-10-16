@@ -47,69 +47,71 @@ object NativeMethodsSpec : Spek({
         val posix by createForEachTest { mock<POSIX>() }
         val nativeMethods by createForEachTest { NativeMethods(libc, runtime, platform, posix) }
 
-        describe("when running on any supported platform") {
-            beforeEachTest { whenever(platform.os).thenReturn(Platform.OS.DARWIN) }
+        describe("getting the console dimensions") {
+            describe("when running on any supported platform") {
+                beforeEachTest { whenever(platform.os).thenReturn(Platform.OS.DARWIN) }
 
-            on("calling ioctl() succeeding") {
-                val expectedRows = 123
-                val expectedColumns = 456
+                on("calling ioctl() succeeding") {
+                    val expectedRows = 123
+                    val expectedColumns = 456
 
-                whenever(libc.ioctl(eq(0), any(), any())).thenAnswer { invocation ->
-                    val size = invocation.arguments[2] as NativeMethods.WindowSize
+                    whenever(libc.ioctl(eq(0), any(), any())).thenAnswer { invocation ->
+                        val size = invocation.arguments[2] as NativeMethods.WindowSize
 
-                    size.ws_row.set(expectedRows)
-                    size.ws_col.set(expectedColumns)
+                        size.ws_row.set(expectedRows)
+                        size.ws_col.set(expectedColumns)
 
-                    0
+                        0
+                    }
+
+                    val dimensions = nativeMethods.getConsoleDimensions()
+
+                    it("returns a set of dimensions with the expected values") {
+                        assertThat(dimensions, equalTo(Dimensions(expectedRows, expectedColumns)))
+                    }
                 }
 
-                val dimensions = nativeMethods.getConsoleDimensions()
+                on("calling ioctl() failing") {
+                    whenever(libc.ioctl(any(), any(), any())).thenReturn(-1)
+                    whenever(posix.errno()).thenReturn(Errno.ENOTTY.intValue())
 
-                it("returns a set of dimensions with the expected values") {
-                    assertThat(dimensions, equalTo(Dimensions(expectedRows, expectedColumns)))
+                    it("throws an appropriate exception") {
+                        assertThat({ nativeMethods.getConsoleDimensions() }, throws<NativeMethodException>(withMethod("ioctl") and withError(Errno.ENOTTY)))
+                    }
+                }
+            }
+
+            describe("when running on OS X") {
+                beforeEachTest { whenever(platform.os).thenReturn(Platform.OS.DARWIN) }
+
+                on("calling ioctl()") {
+                    nativeMethods.getConsoleDimensions()
+
+                    it("invokes ioctl() with the OS X-specific value for TIOCGWINSZ") {
+                        verify(libc).ioctl(any(), eq(0x40087468), any())
+                    }
                 }
             }
 
-            on("calling ioctl() failing") {
-                whenever(libc.ioctl(any(), any(), any())).thenReturn(-1)
-                whenever(posix.errno()).thenReturn(Errno.ENOTTY.intValue())
+            describe("when running on Linux") {
+                beforeEachTest { whenever(platform.os).thenReturn(Platform.OS.LINUX) }
 
-                it("throws an appropriate exception") {
-                    assertThat({ nativeMethods.getConsoleDimensions() }, throws<NativeMethodException>(withMethod("ioctl") and withError(Errno.ENOTTY)))
+                on("calling ioctl()") {
+                    nativeMethods.getConsoleDimensions()
+
+                    it("invokes ioctl() with the Linux-specific value for TIOCGWINSZ") {
+                        verify(libc).ioctl(any(), eq(0x00005413), any())
+                    }
                 }
             }
-        }
 
-        describe("when running on OS X") {
-            beforeEachTest { whenever(platform.os).thenReturn(Platform.OS.DARWIN) }
+            describe("when running on unsupported operating system") {
+                beforeEachTest { whenever(platform.os).thenReturn(Platform.OS.WINDOWS) }
 
-            on("calling ioctl()") {
-                nativeMethods.getConsoleDimensions()
-
-                it("invokes ioctl() with the OS X-specific value for TIOCGWINSZ") {
-                    verify(libc).ioctl(any(), eq(0x40087468), any())
-                }
-            }
-        }
-
-        describe("when running on Linux") {
-            beforeEachTest { whenever(platform.os).thenReturn(Platform.OS.LINUX) }
-
-            on("calling ioctl()") {
-                nativeMethods.getConsoleDimensions()
-
-                it("invokes ioctl() with the Linux-specific value for TIOCGWINSZ") {
-                    verify(libc).ioctl(any(), eq(0x00005413), any())
-                }
-            }
-        }
-
-        describe("when running on unsupported operating system") {
-            beforeEachTest { whenever(platform.os).thenReturn(Platform.OS.WINDOWS) }
-
-            on("getting the console dimensions") {
-                it("throws an appropriate exception") {
-                    assertThat({ nativeMethods.getConsoleDimensions() }, throws<UnsupportedOperationException>(withMessage("The platform WINDOWS is not supported.")))
+                on("getting the console dimensions") {
+                    it("throws an appropriate exception") {
+                        assertThat({ nativeMethods.getConsoleDimensions() }, throws<UnsupportedOperationException>(withMessage("The platform WINDOWS is not supported.")))
+                    }
                 }
             }
         }

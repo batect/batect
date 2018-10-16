@@ -46,9 +46,11 @@ class NativeMethods(
         posix
     )
 
+    private val STDIN_FILENO = 0
+
     fun getConsoleDimensions(): Dimensions {
         val size = WindowSize(runtime)
-        val result = libc.ioctl(0, TIOCGWINSZ, size)
+        val result = libc.ioctl(STDIN_FILENO, TIOCGWINSZ.getForPlatform(platform), size)
 
         if (result != 0) {
             val error = Errno.valueOf(posix.errno().toLong())
@@ -58,19 +60,14 @@ class NativeMethods(
         return Dimensions(size.ws_row.get(), size.ws_col.get())
     }
 
-    private val TIOCGWINSZ: Int by lazy {
-        when (platform.os) {
-            Platform.OS.DARWIN -> 0x40087468
-            Platform.OS.LINUX -> 0x00005413
-            else -> throw UnsupportedOperationException("The platform ${platform.os.name} is not supported.")
-        }
-    }
+    private val TIOCGWINSZ = PlatformSpecificConstant(darwinValue = 0x40087468, linuxValue = 0x00005413)
 
     interface LibC {
         @SaveError
         fun ioctl(fd: Int, request: Int, @Out @Transient winsize: WindowSize): Int
     }
 
+    // Native name is winsize
     class WindowSize(runtime: Runtime) : Struct(runtime) {
         val ws_row = Unsigned16()
         val ws_col = Unsigned16()
@@ -80,6 +77,16 @@ class NativeMethods(
         override fun toString(): kotlin.String {
             return "Rows: $ws_row, cols: $ws_col"
         }
+    }
+}
+
+data class PlatformSpecificConstant<T>(val darwinValue: T, val linuxValue: T) {
+    constructor(valueForAllPlatforms: T) : this(valueForAllPlatforms, valueForAllPlatforms)
+
+    fun getForPlatform(platform: Platform): T = when (platform.os) {
+        Platform.OS.DARWIN -> darwinValue
+        Platform.OS.LINUX -> linuxValue
+        else -> throw UnsupportedOperationException("The platform ${platform.os.name} is not supported.")
     }
 }
 

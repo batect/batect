@@ -46,6 +46,7 @@ import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
+import jnr.constants.platform.Signal
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonTreeParser
 import kotlinx.serialization.json.boolean
@@ -519,6 +520,31 @@ object DockerAPISpec : Spek({
                         it("raises an appropriate exception") {
                             assertThat({ api.attachToContainerInput(container) }, throws<DockerException>(withMessage("Attaching to input for container 'the-container-id' failed: Something went wrong.")))
                         }
+                    }
+                }
+            }
+        }
+
+        describe("sending a signal to a container") {
+            given("a Docker container") {
+                val container = DockerContainer("the-container-id")
+                val signal = Signal.SIGINT
+                val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/kill?signal=SIGINT"
+
+                on("the API call succeeding") {
+                    val call = httpClient.mockPost(expectedUrl, "", 204)
+                    api.sendSignalToContainer(container, signal)
+
+                    it("sends a request to the Docker daemon to send the signal to the container") {
+                        verify(call).execute()
+                    }
+                }
+
+                on("the API call failing") {
+                    httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+
+                    it("throws an appropriate exception") {
+                        assertThat({ api.sendSignalToContainer(container, signal) }, throws<DockerException>(withMessage("Sending signal SIGINT to container 'the-container-id' failed: Something went wrong.")))
                     }
                 }
             }

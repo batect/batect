@@ -24,6 +24,7 @@ import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputStream
 import batect.logging.Logger
 import batect.utils.Version
+import jnr.constants.platform.Signal
 import kotlinx.serialization.json.JSON
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -391,6 +392,39 @@ class DockerAPI(
         }
 
         return ContainerInputStream(response, hijacker.sink!!)
+    }
+
+    fun sendSignalToContainer(container: DockerContainer, signal: Signal) {
+        logger.info {
+            message("Sending signal to container.")
+            data("container", container)
+            data("signal", signal.name)
+        }
+
+        val url = urlForContainer(container).newBuilder()
+            .addPathSegment("kill")
+            .addQueryParameter("signal", signal.name)
+            .build()
+
+        val request = Request.Builder()
+            .post(emptyRequestBody())
+            .url(url)
+            .build()
+
+        httpConfig.client.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Could not send signal to container.")
+                    data("error", error)
+                }
+
+                throw DockerException("Sending signal ${signal.name} to container '${container.id}' failed: ${error.message}")
+            }
+        }
+
+        logger.info {
+            message("Signal sent to container.")
+        }
     }
 
     fun createNetwork(): DockerNetwork {

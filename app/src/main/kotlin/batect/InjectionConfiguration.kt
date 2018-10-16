@@ -206,7 +206,7 @@ private val uiModule = Kodein.Module("ui") {
 
     bind<Console>(StreamType.Output) with singleton { Console(instance(StreamType.Output), enableComplexOutput = !commandLineOptions().disableColorOutput, consoleInfo = instance()) }
     bind<Console>(StreamType.Error) with singleton { Console(instance(StreamType.Error), enableComplexOutput = !commandLineOptions().disableColorOutput, consoleInfo = instance()) }
-    bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), instance(), logger) }
+    bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), instance(), instance(), logger) }
     bind<FailureErrorMessageFormatter>() with singleton { FailureErrorMessageFormatter() }
     bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider() }
 }

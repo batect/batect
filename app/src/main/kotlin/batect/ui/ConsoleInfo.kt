@@ -19,6 +19,7 @@ package batect.ui
 import batect.logging.Logger
 import batect.os.NativeMethodException
 import batect.os.NativeMethods
+import batect.os.ProcessRunner
 import jnr.constants.platform.Errno
 import jnr.posix.POSIX
 import java.io.FileDescriptor
@@ -26,10 +27,11 @@ import java.io.FileDescriptor
 class ConsoleInfo(
     private val posix: POSIX,
     private val nativeMethods: NativeMethods,
+    private val processRunner: ProcessRunner,
     private val environment: Map<String, String>,
     private val logger: Logger
 ) {
-    constructor(posix: POSIX, nativeMethods: NativeMethods, logger: Logger) : this(posix, nativeMethods, System.getenv(), logger)
+    constructor(posix: POSIX, nativeMethods: NativeMethods, processRunner: ProcessRunner, logger: Logger) : this(posix, nativeMethods, processRunner, System.getenv(), logger)
 
     val stdinIsTTY: Boolean by lazy {
         val result = posix.isatty(FileDescriptor.`in`)
@@ -80,6 +82,45 @@ class ConsoleInfo(
                 }
             }
         }
+
+    fun enterRawMode(): AutoCloseable {
+        if (!stdinIsTTY) {
+            throw UnsupportedOperationException("Terminal is not a TTY.")
+        }
+
+        val existingState = getExistingTerminalState()
+        startRawMode()
+
+        return TerminalStateRestorer(existingState, processRunner)
+    }
+
+    private fun getExistingTerminalState(): String {
+        val output = processRunner.runAndCaptureOutput(listOf("stty", "-g"))
+
+        if (output.exitCode != 0) {
+            throw RuntimeException("Invoking 'stty -g' failed with exit code ${output.exitCode}: ${output.output.trim()}")
+        }
+
+        return output.output.trim()
+    }
+
+    private fun startRawMode() {
+        val output = processRunner.runAndCaptureOutput(listOf("stty", "raw"))
+
+        if (output.exitCode != 0) {
+            throw RuntimeException("Invoking 'stty raw' failed with exit code ${output.exitCode}: ${output.output.trim()}")
+        }
+    }
 }
 
 data class Dimensions(val height: Int, val width: Int)
+
+data class TerminalStateRestorer(private val oldState: String, private val processRunner: ProcessRunner) : AutoCloseable {
+    override fun close() {
+        val output = processRunner.runAndCaptureOutput(listOf("stty", oldState))
+
+        if (output.exitCode != 0) {
+            throw RuntimeException("Invoking 'stty $oldState' failed with exit code ${output.exitCode}: ${output.output.trim()}")
+        }
+    }
+}

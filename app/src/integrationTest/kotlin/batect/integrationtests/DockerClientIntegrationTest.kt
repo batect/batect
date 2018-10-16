@@ -73,7 +73,7 @@ object DockerClientIntegrationTest : Spek({
         val api = DockerAPI(httpConfig, logger)
         val posix = POSIXFactory.getNativePOSIX()
         val nativeMethods = NativeMethods(posix)
-        val consoleInfo = ConsoleInfo(posix, nativeMethods, logger)
+        val consoleInfo = ConsoleInfo(posix, nativeMethods, processRunner, logger)
         val credentialsConfigurationFile = DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger)
         val credentialsProvider = DockerRegistryCredentialsProvider(DockerRegistryDomainResolver(), DockerRegistryIndexResolver(), credentialsConfigurationFile)
         val ignoreParser = DockerIgnoreParser()

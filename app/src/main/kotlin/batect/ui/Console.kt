@@ -122,8 +122,6 @@ class Console(
     private val boldEscapeSequence = colorEscapeSequence(1)
 }
 
-typealias ConsolePrintStatements = Console.() -> Unit
-
 enum class ConsoleColor(val code: Int) {
     Black(30),
     Red(31),

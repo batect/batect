@@ -42,6 +42,35 @@ object ProcessRunnerSpec : Spek({
         val logger by createForEachTest { Logger("some.source", logSink) }
         val runner by createForEachTest { ProcessRunner(logger) }
 
+        on("running a process with stdin attached") {
+            val command = listOf("sh", "-c", "echo hello world && echo hello error world 1>&2 && echo more non-error output && exit 201")
+            val result = runner.runWithStdinAttached(command)
+
+            it("returns the exit code of the command") {
+                assertThat(result.exitCode, equalTo(201))
+            }
+
+            it("returns the combined standard output and standard error of the command") {
+                assertThat(result.output, equalTo("hello world\nhello error world\nmore non-error output\n"))
+            }
+
+            it("logs before running the command") {
+                assertThat(logSink, hasMessage(
+                    withSeverity(Severity.Debug) and
+                        withLogMessage("Starting process.") and
+                        withAdditionalData("command", command)))
+            }
+
+            it("logs the result of running the command") {
+                assertThat(logSink, hasMessage(
+                    withSeverity(Severity.Debug) and
+                        withLogMessage("Process exited.") and
+                        withAdditionalData("command", command) and
+                        withAdditionalData("exitCode", 201)
+                ))
+            }
+        }
+
         describe("running a process and capturing the output") {
             given("the executable exists") {
                 given("there is no input to pipe to stdin") {

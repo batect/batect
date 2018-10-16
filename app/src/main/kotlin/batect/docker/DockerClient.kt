@@ -97,12 +97,10 @@ class DockerClient(
     fun remove(container: DockerContainer) = api.removeContainer(container)
 
     fun run(container: DockerContainer): DockerContainerRunResult {
-        val attachStdin = consoleInfo.stdinIsTTY
-
         logger.info {
             message("Running container.")
             data("container", container)
-            data("attachStdin", attachStdin)
+            data("stdinIsTTY", consoleInfo.stdinIsTTY)
         }
 
         val exitCodeSource = waiter.startWaitingForContainerToExit(container)
@@ -111,7 +109,9 @@ class DockerClient(
             api.attachToContainerInput(container).use { inputStream ->
                 api.startContainer(container)
 
-                ioStreamer.stream(outputStream, inputStream)
+                enterRawMode(consoleInfo.stdinIsTTY).use {
+                    ioStreamer.stream(outputStream, inputStream)
+                }
             }
         }
 
@@ -123,6 +123,16 @@ class DockerClient(
         }
 
         return DockerContainerRunResult(exitCode)
+    }
+
+    private fun enterRawMode(stdinIsTTY: Boolean): AutoCloseable {
+        if (stdinIsTTY) {
+            return consoleInfo.enterRawMode()
+        }
+
+        return object : AutoCloseable {
+            override fun close() {}
+        }
     }
 
     fun waitForHealthStatus(container: DockerContainer): HealthStatus {

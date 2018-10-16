@@ -22,6 +22,39 @@ import java.io.InputStreamReader
 import java.nio.charset.Charset
 
 class ProcessRunner(private val logger: Logger) {
+    // NOTESTS (for input redirection)
+    // stty behaves differently if stdin is a TTY or not a TTY.
+    // So we have to make sure that we don't redirect it.
+    // However, while in theory we could use something like http://stackoverflow.com/a/911213/1668119
+    // to test this, JUnit, Gradle and a dozen other things redirect the output of our tests, which means
+    // that that method wouldn't work.
+    // I can't find a nice way to test this. Once we move to Kotlin/Native this whole method becomes
+    // unnecessary anyway, so I'm not too concerned about this.
+    fun runWithStdinAttached(command: Iterable<String>): ProcessOutput {
+        logger.debug {
+            message("Starting process.")
+            data("command", command)
+        }
+
+        val process = ProcessBuilder(command.toList())
+            .redirectErrorStream(true)
+            .redirectOutput(ProcessBuilder.Redirect.PIPE)
+            .redirectInput(ProcessBuilder.Redirect.INHERIT)
+            .start()
+
+        val exitCode = process.waitFor()
+        val output = InputStreamReader(process.inputStream).readText()
+
+        logger.debug {
+            message("Process exited.")
+            data("command", command)
+            data("exitCode", exitCode)
+            data("output", output)
+        }
+
+        return ProcessOutput(exitCode, output)
+    }
+
     fun runAndCaptureOutput(command: Iterable<String>, stdin: String = ""): ProcessOutput {
         logger.debug {
             message("Starting process.")

@@ -95,7 +95,7 @@ class ConsoleInfo(
     }
 
     private fun getExistingTerminalState(): String {
-        val output = processRunner.runAndCaptureOutput(listOf("stty", "-g"))
+        val output = processRunner.runWithStdinAttached(listOf("stty", "-g"))
 
         if (output.exitCode != 0) {
             throw RuntimeException("Invoking 'stty -g' failed with exit code ${output.exitCode}: ${output.output.trim()}")
@@ -105,7 +105,7 @@ class ConsoleInfo(
     }
 
     private fun startRawMode() {
-        val output = processRunner.runAndCaptureOutput(listOf("stty", "raw"))
+        val output = processRunner.runWithStdinAttached(listOf("stty", "raw"))
 
         if (output.exitCode != 0) {
             throw RuntimeException("Invoking 'stty raw' failed with exit code ${output.exitCode}: ${output.output.trim()}")
@@ -117,7 +117,7 @@ data class Dimensions(val height: Int, val width: Int)
 
 data class TerminalStateRestorer(private val oldState: String, private val processRunner: ProcessRunner) : AutoCloseable {
     override fun close() {
-        val output = processRunner.runAndCaptureOutput(listOf("stty", oldState))
+        val output = processRunner.runWithStdinAttached(listOf("stty", oldState))
 
         if (output.exitCode != 0) {
             throw RuntimeException("Invoking 'stty $oldState' failed with exit code ${output.exitCode}: ${output.output.trim()}")

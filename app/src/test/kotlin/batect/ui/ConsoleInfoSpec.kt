@@ -203,16 +203,16 @@ object ConsoleInfoSpec : Spek({
                     beforeEachTest { whenever(posix.isatty(FileDescriptor.`in`)).doReturn(true) }
 
                     given("invoking 'stty -g' succeeds") {
-                        beforeEachTest { whenever(processRunner.runAndCaptureOutput(listOf("stty", "-g"))).doReturn(ProcessOutput(0, "existing_terminal_state\n")) }
+                        beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "-g"))).doReturn(ProcessOutput(0, "existing_terminal_state\n")) }
 
                         given("invoking 'stty raw' succeeds") {
-                            beforeEachTest { whenever(processRunner.runAndCaptureOutput(listOf("stty", "raw"))).doReturn(ProcessOutput(0, "")) }
+                            beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "raw"))).doReturn(ProcessOutput(0, "")) }
 
                             on("entering raw mode") {
                                 val restorer = consoleInfo.enterRawMode()
 
                                 it("calls stty to enter raw mode") {
-                                    verify(processRunner).runAndCaptureOutput(listOf("stty", "raw"))
+                                    verify(processRunner).runWithStdinAttached(listOf("stty", "raw"))
                                 }
 
                                 it("returns an object that can be used to restore the terminal to its previous state") {
@@ -222,7 +222,7 @@ object ConsoleInfoSpec : Spek({
                         }
 
                         given("invoking 'stty raw' fails") {
-                            beforeEachTest { whenever(processRunner.runAndCaptureOutput(listOf("stty", "raw"))).doReturn(ProcessOutput(1, "Something went wrong.\n")) }
+                            beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "raw"))).doReturn(ProcessOutput(1, "Something went wrong.\n")) }
 
                             on("entering raw mode") {
                                 it("throws an appropriate exception") {
@@ -233,7 +233,7 @@ object ConsoleInfoSpec : Spek({
                     }
 
                     given("invoking 'stty -g' fails") {
-                        beforeEachTest { whenever(processRunner.runAndCaptureOutput(listOf("stty", "-g"))).doReturn(ProcessOutput(1, "Something went wrong.\n")) }
+                        beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "-g"))).doReturn(ProcessOutput(1, "Something went wrong.\n")) }
 
                         on("entering raw mode") {
                             it("throws an appropriate exception") {
@@ -258,19 +258,19 @@ object ConsoleInfoSpec : Spek({
                 val restorer by createForEachTest { TerminalStateRestorer("some_old_state", processRunner) }
 
                 given("invoking 'stty' succeeds'") {
-                    beforeEachTest { whenever(processRunner.runAndCaptureOutput(listOf("stty", "some_old_state"))).doReturn(ProcessOutput(0, "")) }
+                    beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "some_old_state"))).doReturn(ProcessOutput(0, "")) }
 
                     on("exiting raw mode") {
                         restorer.close()
 
                         it("calls stty to restore the previous state") {
-                            verify(processRunner).runAndCaptureOutput(listOf("stty", "some_old_state"))
+                            verify(processRunner).runWithStdinAttached(listOf("stty", "some_old_state"))
                         }
                     }
                 }
 
                 given("invoking 'stty' fails") {
-                    beforeEachTest { whenever(processRunner.runAndCaptureOutput(listOf("stty", "some_old_state"))).doReturn(ProcessOutput(1, "Something went wrong.\n")) }
+                    beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "some_old_state"))).doReturn(ProcessOutput(1, "Something went wrong.\n")) }
 
                     on("exiting raw mode") {
                         it("throws an appropriate exception") {

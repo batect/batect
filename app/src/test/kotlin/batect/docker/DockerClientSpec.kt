@@ -233,11 +233,13 @@ object DockerClientSpec : Spek({
                 val container = DockerContainer("the-container-id")
                 val outputStream by createForEachTest { mock<ContainerOutputStream>() }
                 val inputStream by createForEachTest { mock<ContainerInputStream>() }
+                val terminalRestorer by createForEachTest { mock<AutoCloseable>() }
 
                 beforeEachTest {
                     whenever(waiter.startWaitingForContainerToExit(container)).doReturn(CompletableFuture.completedFuture(123))
                     whenever(api.attachToContainerOutput(container)).doReturn(outputStream)
                     whenever(api.attachToContainerInput(container)).doReturn(inputStream)
+                    whenever(consoleInfo.enterRawMode()).doReturn(terminalRestorer)
                 }
 
                 given("the application is being run with a TTY connected to stdin") {
@@ -260,6 +262,10 @@ object DockerClientSpec : Spek({
                             assertThat(result.exitCode, equalTo(123))
                         }
 
+                        it("puts the terminal in raw mode") {
+                            verify(consoleInfo).enterRawMode()
+                        }
+
                         it("starts waiting for the container to exit before starting the container") {
                             inOrder(api, waiter) {
                                 verify(waiter).startWaitingForContainerToExit(container)
@@ -271,6 +277,20 @@ object DockerClientSpec : Spek({
                             inOrder(api, ioStreamer) {
                                 verify(api).startContainer(container)
                                 verify(ioStreamer).stream(outputStream, inputStream)
+                            }
+                        }
+
+                        it("starts streaming I/O after putting the terminal into raw mode") {
+                            inOrder(consoleInfo, ioStreamer) {
+                                verify(consoleInfo).enterRawMode()
+                                verify(ioStreamer).stream(outputStream, inputStream)
+                            }
+                        }
+
+                        it("restores the terminal state after streaming completes") {
+                            inOrder(ioStreamer, terminalRestorer) {
+                                verify(ioStreamer).stream(outputStream, inputStream)
+                                verify(terminalRestorer).close()
                             }
                         }
 
@@ -322,6 +342,10 @@ object DockerClientSpec : Spek({
 
                         it("returns the exit code from the container") {
                             assertThat(result.exitCode, equalTo(123))
+                        }
+
+                        it("does not set the terminal into raw mode") {
+                            verify(consoleInfo, never()).enterRawMode()
                         }
 
                         it("starts waiting for the container to exit before starting the container") {

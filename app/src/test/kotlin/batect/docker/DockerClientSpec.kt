@@ -254,24 +254,8 @@ object DockerClientSpec : Spek({
                     on("running the container") {
                         val result = client.run(container)
 
-                        it("starts the container") {
-                            verify(api).startContainer(container)
-                        }
-
-                        it("streams the input and output from the container") {
-                            verify(ioStreamer).stream(outputStream, inputStream)
-                        }
-
                         it("returns the exit code from the container") {
                             assertThat(result.exitCode, equalTo(123))
-                        }
-
-                        it("puts the terminal in raw mode") {
-                            verify(consoleInfo).enterRawMode()
-                        }
-
-                        it("configures killing the container when a SIGINT is received") {
-                            verify(killer).killContainerOnSigint(container)
                         }
 
                         it("starts waiting for the container to exit before starting the container") {
@@ -348,14 +332,6 @@ object DockerClientSpec : Spek({
 
                     on("running the container") {
                         val result = client.run(container)
-
-                        it("starts the container") {
-                            verify(api).startContainer(container)
-                        }
-
-                        it("streams the input and output from the container") {
-                            verify(ioStreamer).stream(outputStream, inputStream)
-                        }
 
                         it("returns the exit code from the container") {
                             assertThat(result.exitCode, equalTo(123))

@@ -38,6 +38,7 @@ import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.pull.DockerRegistryDomainResolver
 import batect.docker.pull.DockerRegistryIndexResolver
 import batect.docker.run.ContainerIOStreamer
+import batect.docker.run.ContainerKiller
 import batect.docker.run.ContainerWaiter
 import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerDependencyGraphProvider
@@ -146,9 +147,10 @@ private val configModule = Kodein.Module("config") {
 
 private val dockerModule = Kodein.Module("docker") {
     bind<ContainerIOStreamer>() with singleton { ContainerIOStreamer(instance(StreamType.Output), instance(StreamType.Input)) }
+    bind<ContainerKiller>() with singleton { ContainerKiller(instance(), instance()) }
     bind<ContainerWaiter>() with singleton { ContainerWaiter(instance()) }
     bind<DockerAPI>() with singletonWithLogger { logger -> DockerAPI(instance(), logger) }
-    bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), instance(), instance(), instance(), logger) }
+    bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(), logger) }
     bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
     bind<DockerfileParser>() with singleton { DockerfileParser() }
     bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }

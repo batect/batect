@@ -26,6 +26,7 @@ import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerInputStream
+import batect.docker.run.ContainerKiller
 import batect.docker.run.ContainerOutputStream
 import batect.docker.run.ContainerWaiter
 import batect.testutils.createForEachTest
@@ -70,10 +71,11 @@ object DockerClientSpec : Spek({
         val dockerfileParser by createForEachTest { mock<DockerfileParser>() }
         val waiter by createForEachTest { mock<ContainerWaiter>() }
         val ioStreamer by createForEachTest { mock<ContainerIOStreamer>() }
+        val killer by createForEachTest { mock<ContainerKiller>() }
         val logger by createLoggerForEachTest()
         val imagePullProgressReporter by createForEachTest { mock<DockerImagePullProgressReporter>() }
         val imagePullProgressReporterFactory = { imagePullProgressReporter }
-        val client by createForEachTest { DockerClient(api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, ioStreamer, logger, imagePullProgressReporterFactory) }
+        val client by createForEachTest { DockerClient(api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, ioStreamer, killer, logger, imagePullProgressReporterFactory) }
 
         describe("building an image") {
             val buildDirectory = "/path/to/build/dir"
@@ -234,12 +236,14 @@ object DockerClientSpec : Spek({
                 val outputStream by createForEachTest { mock<ContainerOutputStream>() }
                 val inputStream by createForEachTest { mock<ContainerInputStream>() }
                 val terminalRestorer by createForEachTest { mock<AutoCloseable>() }
+                val signalRestorer by createForEachTest { mock<AutoCloseable>() }
 
                 beforeEachTest {
                     whenever(waiter.startWaitingForContainerToExit(container)).doReturn(CompletableFuture.completedFuture(123))
                     whenever(api.attachToContainerOutput(container)).doReturn(outputStream)
                     whenever(api.attachToContainerInput(container)).doReturn(inputStream)
                     whenever(consoleInfo.enterRawMode()).doReturn(terminalRestorer)
+                    whenever(killer.killContainerOnSigint(container)).doReturn(signalRestorer)
                 }
 
                 given("the application is being run with a TTY connected to stdin") {
@@ -266,6 +270,10 @@ object DockerClientSpec : Spek({
                             verify(consoleInfo).enterRawMode()
                         }
 
+                        it("configures killing the container when a SIGINT is received") {
+                            verify(killer).killContainerOnSigint(container)
+                        }
+
                         it("starts waiting for the container to exit before starting the container") {
                             inOrder(api, waiter) {
                                 verify(waiter).startWaitingForContainerToExit(container)
@@ -287,10 +295,19 @@ object DockerClientSpec : Spek({
                             }
                         }
 
-                        it("restores the terminal state after streaming completes") {
-                            inOrder(ioStreamer, terminalRestorer) {
+                        it("configures killing the container when a SIGINT is received after starting the container but before entering raw mode") {
+                            inOrder(api, killer, consoleInfo) {
+                                verify(api).startContainer(container)
+                                verify(killer).killContainerOnSigint(container)
+                                verify(consoleInfo).enterRawMode()
+                            }
+                        }
+
+                        it("restores the terminal and signal handling state after streaming completes") {
+                            inOrder(ioStreamer, terminalRestorer, signalRestorer) {
                                 verify(ioStreamer).stream(outputStream, inputStream)
                                 verify(terminalRestorer).close()
+                                verify(signalRestorer).close()
                             }
                         }
 
@@ -373,6 +390,21 @@ object DockerClientSpec : Spek({
                             inOrder(api) {
                                 verify(api).attachToContainerInput(container)
                                 verify(api).startContainer(container)
+                            }
+                        }
+
+                        it("configures killing the container when a SIGINT is received after starting the container but before streaming any output") {
+                            inOrder(api, killer, ioStreamer) {
+                                verify(api).startContainer(container)
+                                verify(killer).killContainerOnSigint(container)
+                                verify(ioStreamer).stream(outputStream, inputStream)
+                            }
+                        }
+
+                        it("restores the signal handling state after streaming completes") {
+                            inOrder(ioStreamer, signalRestorer) {
+                                verify(ioStreamer).stream(outputStream, inputStream)
+                                verify(signalRestorer).close()
                             }
                         }
 

@@ -250,186 +250,90 @@ object DockerClientSpec : Spek({
                     whenever(ttyManager.monitorForSizeChanges(container)).doReturn(resizingRestorer)
                 }
 
-                given("the application is being run with a TTY connected to stdin") {
-                    beforeEachTest {
-                        whenever(consoleInfo.stdinIsTTY).thenReturn(true)
+                on("running the container") {
+                    val result = client.run(container)
+
+                    it("returns the exit code from the container") {
+                        assertThat(result.exitCode, equalTo(123))
                     }
 
-                    on("running the container") {
-                        val result = client.run(container)
-
-                        it("returns the exit code from the container") {
-                            assertThat(result.exitCode, equalTo(123))
-                        }
-
-                        it("starts waiting for the container to exit before starting the container") {
-                            inOrder(api, waiter) {
-                                verify(waiter).startWaitingForContainerToExit(container)
-                                verify(api).startContainer(container)
-                            }
-                        }
-
-                        it("starts streaming I/O after starting the container") {
-                            inOrder(api, ioStreamer) {
-                                verify(api).startContainer(container)
-                                verify(ioStreamer).stream(outputStream, inputStream)
-                            }
-                        }
-
-                        it("starts streaming I/O after putting the terminal into raw mode") {
-                            inOrder(consoleInfo, ioStreamer) {
-                                verify(consoleInfo).enterRawMode()
-                                verify(ioStreamer).stream(outputStream, inputStream)
-                            }
-                        }
-
-                        it("starts monitoring for terminal size changes after starting the container but before streaming I/O") {
-                            inOrder(api, ttyManager, ioStreamer) {
-                                verify(api).startContainer(container)
-                                verify(ttyManager).monitorForSizeChanges(container)
-                                verify(ioStreamer).stream(outputStream, inputStream)
-                            }
-                        }
-
-                        it("stops monitoring for terminal size changes after the streaming completes") {
-                            inOrder(ioStreamer, resizingRestorer) {
-                                verify(ioStreamer).stream(outputStream, inputStream)
-                                verify(resizingRestorer).close()
-                            }
-                        }
-
-                        it("configures killing the container when a SIGINT is received after starting the container but before entering raw mode") {
-                            inOrder(api, killer, consoleInfo) {
-                                verify(api).startContainer(container)
-                                verify(killer).killContainerOnSigint(container)
-                                verify(consoleInfo).enterRawMode()
-                            }
-                        }
-
-                        it("restores the terminal and signal handling state after streaming completes") {
-                            inOrder(ioStreamer, terminalRestorer, signalRestorer) {
-                                verify(ioStreamer).stream(outputStream, inputStream)
-                                verify(terminalRestorer).close()
-                                verify(signalRestorer).close()
-                            }
-                        }
-
-                        it("attaches to the container output before starting the container") {
-                            inOrder(api) {
-                                verify(api).attachToContainerOutput(container)
-                                verify(api).startContainer(container)
-                            }
-                        }
-
-                        it("attaches to the container input before starting the container") {
-                            inOrder(api) {
-                                verify(api).attachToContainerInput(container)
-                                verify(api).startContainer(container)
-                            }
-                        }
-
-                        it("closes the output stream after streaming the output completes") {
-                            inOrder(ioStreamer, outputStream) {
-                                verify(ioStreamer).stream(outputStream, inputStream)
-                                verify(outputStream).close()
-                            }
-                        }
-
-                        it("closes the input stream after streaming the output completes") {
-                            inOrder(ioStreamer, inputStream) {
-                                verify(ioStreamer).stream(outputStream, inputStream)
-                                verify(inputStream).close()
-                            }
+                    it("starts waiting for the container to exit before starting the container") {
+                        inOrder(api, waiter) {
+                            verify(waiter).startWaitingForContainerToExit(container)
+                            verify(api).startContainer(container)
                         }
                     }
-                }
 
-                given("the application is being run without a TTY connected to stdin") {
-                    beforeEachTest {
-                        whenever(consoleInfo.stdinIsTTY).thenReturn(false)
+                    it("starts streaming I/O after starting the container") {
+                        inOrder(api, ioStreamer) {
+                            verify(api).startContainer(container)
+                            verify(ioStreamer).stream(outputStream, inputStream)
+                        }
                     }
 
-                    on("running the container") {
-                        val result = client.run(container)
-
-                        it("returns the exit code from the container") {
-                            assertThat(result.exitCode, equalTo(123))
+                    it("starts streaming I/O after putting the terminal into raw mode") {
+                        inOrder(consoleInfo, ioStreamer) {
+                            verify(consoleInfo).enterRawMode()
+                            verify(ioStreamer).stream(outputStream, inputStream)
                         }
+                    }
 
-                        it("does not set the terminal into raw mode") {
-                            verify(consoleInfo, never()).enterRawMode()
+                    it("starts monitoring for terminal size changes after starting the container but before streaming I/O") {
+                        inOrder(api, ttyManager, ioStreamer) {
+                            verify(api).startContainer(container)
+                            verify(ttyManager).monitorForSizeChanges(container)
+                            verify(ioStreamer).stream(outputStream, inputStream)
                         }
+                    }
 
-                        it("starts waiting for the container to exit before starting the container") {
-                            inOrder(api, waiter) {
-                                verify(waiter).startWaitingForContainerToExit(container)
-                                verify(api).startContainer(container)
-                            }
+                    it("stops monitoring for terminal size changes after the streaming completes") {
+                        inOrder(ioStreamer, resizingRestorer) {
+                            verify(ioStreamer).stream(outputStream, inputStream)
+                            verify(resizingRestorer).close()
                         }
+                    }
 
-                        it("starts streaming I/O after starting the container") {
-                            inOrder(api, ioStreamer) {
-                                verify(api).startContainer(container)
-                                verify(ioStreamer).stream(outputStream, inputStream)
-                            }
+                    it("configures killing the container when a SIGINT is received after starting the container but before entering raw mode") {
+                        inOrder(api, killer, consoleInfo) {
+                            verify(api).startContainer(container)
+                            verify(killer).killContainerOnSigint(container)
+                            verify(consoleInfo).enterRawMode()
                         }
+                    }
 
-                        it("starts monitoring for terminal size changes after starting the container but before streaming I/O") {
-                            inOrder(api, ttyManager, ioStreamer) {
-                                verify(api).startContainer(container)
-                                verify(ttyManager).monitorForSizeChanges(container)
-                                verify(ioStreamer).stream(outputStream, inputStream)
-                            }
+                    it("restores the terminal and signal handling state after streaming completes") {
+                        inOrder(ioStreamer, terminalRestorer, signalRestorer) {
+                            verify(ioStreamer).stream(outputStream, inputStream)
+                            verify(terminalRestorer).close()
+                            verify(signalRestorer).close()
                         }
+                    }
 
-                        it("stops monitoring for terminal size changes after the streaming completes") {
-                            inOrder(ioStreamer, resizingRestorer) {
-                                verify(ioStreamer).stream(outputStream, inputStream)
-                                verify(resizingRestorer).close()
-                            }
+                    it("attaches to the container output before starting the container") {
+                        inOrder(api) {
+                            verify(api).attachToContainerOutput(container)
+                            verify(api).startContainer(container)
                         }
+                    }
 
-                        it("attaches to the container output before starting the container") {
-                            inOrder(api) {
-                                verify(api).attachToContainerOutput(container)
-                                verify(api).startContainer(container)
-                            }
+                    it("attaches to the container input before starting the container") {
+                        inOrder(api) {
+                            verify(api).attachToContainerInput(container)
+                            verify(api).startContainer(container)
                         }
+                    }
 
-                        it("attaches to the container input before starting the container") {
-                            inOrder(api) {
-                                verify(api).attachToContainerInput(container)
-                                verify(api).startContainer(container)
-                            }
+                    it("closes the output stream after streaming the output completes") {
+                        inOrder(ioStreamer, outputStream) {
+                            verify(ioStreamer).stream(outputStream, inputStream)
+                            verify(outputStream).close()
                         }
+                    }
 
-                        it("configures killing the container when a SIGINT is received after starting the container but before streaming any output") {
-                            inOrder(api, killer, ioStreamer) {
-                                verify(api).startContainer(container)
-                                verify(killer).killContainerOnSigint(container)
-                                verify(ioStreamer).stream(outputStream, inputStream)
-                            }
-                        }
-
-                        it("restores the signal handling state after streaming completes") {
-                            inOrder(ioStreamer, signalRestorer) {
-                                verify(ioStreamer).stream(outputStream, inputStream)
-                                verify(signalRestorer).close()
-                            }
-                        }
-
-                        it("closes the output stream after streaming the output completes") {
-                            inOrder(ioStreamer, outputStream) {
-                                verify(ioStreamer).stream(outputStream, inputStream)
-                                verify(outputStream).close()
-                            }
-                        }
-
-                        it("closes the input stream after streaming the output completes") {
-                            inOrder(ioStreamer, inputStream) {
-                                verify(ioStreamer).stream(outputStream, inputStream)
-                                verify(inputStream).close()
-                            }
+                    it("closes the input stream after streaming the output completes") {
+                        inOrder(ioStreamer, inputStream) {
+                            verify(ioStreamer).stream(outputStream, inputStream)
+                            verify(inputStream).close()
                         }
                     }
                 }

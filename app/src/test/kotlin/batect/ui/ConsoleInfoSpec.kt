@@ -27,9 +27,11 @@ import batect.testutils.withMessage
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
+import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.doThrow
 import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.never
 import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
 import jnr.constants.platform.Errno
@@ -198,10 +200,10 @@ object ConsoleInfoSpec : Spek({
             val processRunner by createForEachTest { mock<ProcessRunner>() }
             val consoleInfo by createForEachTest { ConsoleInfo(posix, nativeMethods, processRunner, logger) }
 
-            describe("entering raw mode") {
-                given("the terminal is a TTY") {
-                    beforeEachTest { whenever(posix.isatty(FileDescriptor.`in`)).doReturn(true) }
+            given("the terminal is a TTY") {
+                beforeEachTest { whenever(posix.isatty(FileDescriptor.`in`)).doReturn(true) }
 
+                describe("entering raw mode") {
                     given("invoking 'stty -g' succeeds") {
                         beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "-g"))).doReturn(ProcessOutput(0, "existing_terminal_state\n")) }
 
@@ -243,39 +245,49 @@ object ConsoleInfoSpec : Spek({
                     }
                 }
 
-                given("the terminal is not a TTY") {
-                    beforeEachTest { whenever(posix.isatty(FileDescriptor.`in`)).doReturn(false) }
+                describe("exiting raw mode") {
+                    val restorer by createForEachTest { TerminalStateRestorer("some_old_state", processRunner) }
 
-                    on("entering raw mode") {
-                        it("throws an appropriate exception") {
-                            assertThat({ consoleInfo.enterRawMode() }, throws<UnsupportedOperationException>(withMessage("Terminal is not a TTY.")))
+                    given("invoking 'stty' succeeds'") {
+                        beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "some_old_state"))).doReturn(ProcessOutput(0, "")) }
+
+                        on("exiting raw mode") {
+                            restorer.close()
+
+                            it("calls stty to restore the previous state") {
+                                verify(processRunner).runWithStdinAttached(listOf("stty", "some_old_state"))
+                            }
+                        }
+                    }
+
+                    given("invoking 'stty' fails") {
+                        beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "some_old_state"))).doReturn(ProcessOutput(1, "Something went wrong.\n")) }
+
+                        on("exiting raw mode") {
+                            it("throws an appropriate exception") {
+                                assertThat({ restorer.close() }, throws<RuntimeException>(withMessage("Invoking 'stty some_old_state' failed with exit code 1: Something went wrong.")))
+                            }
                         }
                     }
                 }
             }
 
-            describe("exiting raw mode") {
-                val restorer by createForEachTest { TerminalStateRestorer("some_old_state", processRunner) }
+            given("the terminal is not a TTY") {
+                beforeEachTest { whenever(posix.isatty(FileDescriptor.`in`)).doReturn(false) }
 
-                given("invoking 'stty' succeeds'") {
-                    beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "some_old_state"))).doReturn(ProcessOutput(0, "")) }
+                on("entering raw mode") {
+                    consoleInfo.enterRawMode()
 
-                    on("exiting raw mode") {
-                        restorer.close()
-
-                        it("calls stty to restore the previous state") {
-                            verify(processRunner).runWithStdinAttached(listOf("stty", "some_old_state"))
-                        }
+                    it("does not invoke any external processes") {
+                        verify(processRunner, never()).runWithStdinAttached(any())
                     }
                 }
 
-                given("invoking 'stty' fails") {
-                    beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "some_old_state"))).doReturn(ProcessOutput(1, "Something went wrong.\n")) }
+                on("exiting raw mode") {
+                    consoleInfo.enterRawMode().use { }
 
-                    on("exiting raw mode") {
-                        it("throws an appropriate exception") {
-                            assertThat({ restorer.close() }, throws<RuntimeException>(withMessage("Invoking 'stty some_old_state' failed with exit code 1: Something went wrong.")))
-                        }
+                    it("does not invoke any external processes") {
+                        verify(processRunner, never()).runWithStdinAttached(any())
                     }
                 }
             }

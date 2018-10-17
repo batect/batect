@@ -115,7 +115,7 @@ class DockerClient(
 
                 ttyManager.monitorForSizeChanges(container).use {
                     killer.killContainerOnSigint(container).use {
-                        enterRawMode(consoleInfo.stdinIsTTY).use {
+                        consoleInfo.enterRawMode().use {
                             ioStreamer.stream(outputStream, inputStream)
                         }
                     }
@@ -131,16 +131,6 @@ class DockerClient(
         }
 
         return DockerContainerRunResult(exitCode)
-    }
-
-    private fun enterRawMode(stdinIsTTY: Boolean): AutoCloseable {
-        if (stdinIsTTY) {
-            return consoleInfo.enterRawMode()
-        }
-
-        return object : AutoCloseable {
-            override fun close() {}
-        }
     }
 
     fun waitForHealthStatus(container: DockerContainer): HealthStatus {

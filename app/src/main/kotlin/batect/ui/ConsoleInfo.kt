@@ -85,7 +85,9 @@ class ConsoleInfo(
 
     fun enterRawMode(): AutoCloseable {
         if (!stdinIsTTY) {
-            throw UnsupportedOperationException("Terminal is not a TTY.")
+            return object : AutoCloseable {
+                override fun close() {}
+            }
         }
 
         val existingState = getExistingTerminalState()

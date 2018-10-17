@@ -24,6 +24,7 @@ import batect.docker.ContainerStopFailedException
 import batect.docker.DockerClient
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequestFactory
+import batect.docker.DockerException
 import batect.docker.DockerImageBuildProgress
 import batect.docker.HealthStatus
 import batect.docker.ImageBuildFailedException
@@ -38,6 +39,7 @@ import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
 import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRemovedEvent
+import batect.execution.model.events.ContainerRunFailedEvent
 import batect.execution.model.events.ContainerStartFailedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ContainerStopFailedEvent
@@ -156,8 +158,12 @@ class TaskStepRunner(
     }
 
     private fun handleRunContainerStep(step: RunContainerStep, eventSink: TaskEventSink) {
-        val result = dockerClient.run(step.dockerContainer)
-        eventSink.postEvent(RunningContainerExitedEvent(step.container, result.exitCode))
+        try {
+            val result = dockerClient.run(step.dockerContainer)
+            eventSink.postEvent(RunningContainerExitedEvent(step.container, result.exitCode))
+        } catch (e: DockerException) {
+            eventSink.postEvent(ContainerRunFailedEvent(step.container, e.message ?: ""))
+        }
     }
 
     private fun handleStartContainerStep(step: StartContainerStep, eventSink: TaskEventSink) {

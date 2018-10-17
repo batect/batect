@@ -43,7 +43,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * switch to Kotlin's built-in `Result` where appropriate
 * reintroduce image tagging
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
-* use Docker API directly rather than using Docker CLI (would allow for more detailed progress and error reporting)
 * use tmpfs for home directories? (https://docs.docker.com/engine/reference/run/#tmpfs-mount-tmpfs-filesystems)
 * documentation
   * add check for broken internal or external links

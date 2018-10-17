@@ -31,6 +31,7 @@ import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerContainerRunResult
+import batect.docker.DockerException
 import batect.docker.DockerHealthCheckResult
 import batect.docker.DockerImage
 import batect.docker.DockerImageBuildProgress
@@ -52,6 +53,7 @@ import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
 import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRemovedEvent
+import batect.execution.model.events.ContainerRunFailedEvent
 import batect.execution.model.events.ContainerStartFailedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ContainerStopFailedEvent
@@ -341,17 +343,29 @@ object TaskStepRunnerSpec : Spek({
                 }
             }
 
-            on("running a 'run container' step") {
+            describe("running a 'run container' step") {
                 val container = Container("some-container", imageSourceDoesNotMatter())
                 val dockerContainer = DockerContainer("some-id")
                 val step = RunContainerStep(container, dockerContainer)
 
-                whenever(dockerClient.run(dockerContainer)).doReturn(DockerContainerRunResult(200))
+                on("when running the container succeeds") {
+                    whenever(dockerClient.run(dockerContainer)).doReturn(DockerContainerRunResult(123))
 
-                runner.run(step, eventSink, runOptions)
+                    runner.run(step, eventSink, runOptions)
 
-                it("emits a 'running container exited' event") {
-                    verify(eventSink).postEvent(RunningContainerExitedEvent(container, 200))
+                    it("emits a 'running container exited' event") {
+                        verify(eventSink).postEvent(RunningContainerExitedEvent(container, 123))
+                    }
+                }
+
+                on("when running the container fails") {
+                    whenever(dockerClient.run(dockerContainer)).doThrow(DockerException("Something went wrong"))
+
+                    runner.run(step, eventSink, runOptions)
+
+                    it("emits a 'container run failed' event") {
+                        verify(eventSink).postEvent(ContainerRunFailedEvent(container, "Something went wrong"))
+                    }
                 }
             }
 

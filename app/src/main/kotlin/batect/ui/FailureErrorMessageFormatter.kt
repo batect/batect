@@ -43,7 +43,7 @@ class FailureErrorMessageFormatter {
         is ContainerCreationFailedEvent -> "Could not create container '${event.container.name}': ${event.message}"
         is ContainerStartFailedEvent -> "Could not start container '${event.container.name}': ${event.message}" + hintToReRunWithCleanupDisabled(runOptions)
         is ContainerDidNotBecomeHealthyEvent -> "Container '${event.container.name}' did not become healthy: ${event.message}" + hintToReRunWithCleanupDisabled(runOptions)
-        is ContainerRunFailedEvent -> "Could not run container '${event.container.name}': ${event.message}" + hintToReRunWithCleanupDisabled(runOptions)
+        is ContainerRunFailedEvent -> "Could not run container '${event.container.name}': ${event.message}"
         is ContainerStopFailedEvent -> "Could not stop container '${event.container.name}': ${event.message}"
         is ContainerRemovalFailedEvent -> "Could not remove container '${event.container.name}': ${event.message}"
         is TaskNetworkDeletionFailedEvent -> "Could not delete the task network: ${event.message}"

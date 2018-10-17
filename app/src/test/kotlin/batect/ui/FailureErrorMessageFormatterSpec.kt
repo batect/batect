@@ -68,6 +68,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                 Scenario("task network deletion failed", TaskNetworkDeletionFailedEvent("Something went wrong."), "Could not delete the task network: Something went wrong."),
                 Scenario("temporary file deletion failed", TemporaryFileDeletionFailedEvent(Paths.get("/tmp/some-file"), "Something went wrong."), "Could not delete temporary file '/tmp/some-file': Something went wrong."),
                 Scenario("temporary directory deletion failed", TemporaryDirectoryDeletionFailedEvent(Paths.get("/tmp/some-directory"), "Something went wrong."), "Could not delete temporary directory '/tmp/some-directory': Something went wrong."),
+                Scenario("container run failed", ContainerRunFailedEvent(container, "Something went wrong."), "Could not run container 'the-container': Something went wrong."),
                 Scenario("container stop failed", ContainerStopFailedEvent(container, "Something went wrong."), "Could not stop container 'the-container': Something went wrong."),
                 Scenario("container removal failed", ContainerRemovalFailedEvent(container, "Something went wrong."), "Could not remove container 'the-container': Something went wrong."),
                 Scenario("execution failed", ExecutionFailedEvent("Something went wrong."), "An unexpected exception occurred during execution: Something went wrong.")
@@ -85,8 +86,7 @@ object FailureErrorMessageFormatterSpec : Spek({
 
             setOf(
                 Scenario("container start failed", ContainerStartFailedEvent(container, "Something went wrong."), "Could not start container 'the-container': Something went wrong."),
-                Scenario("container did not become healthy", ContainerDidNotBecomeHealthyEvent(container, "Something went wrong."), "Container 'the-container' did not become healthy: Something went wrong."),
-                Scenario("container run failed", ContainerRunFailedEvent(container, "Something went wrong."), "Could not run container 'the-container': Something went wrong.")
+                Scenario("container did not become healthy", ContainerDidNotBecomeHealthyEvent(container, "Something went wrong."), "Container 'the-container' did not become healthy: Something went wrong.")
             ).forEach { (description, event, expectedMessage) ->
                 given("a '$description' event") {
                     given("cleanup after failure is disabled") {

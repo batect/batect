@@ -28,6 +28,7 @@ import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerKiller
 import batect.docker.run.ContainerOutputStream
+import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
@@ -72,10 +73,11 @@ object DockerClientSpec : Spek({
         val waiter by createForEachTest { mock<ContainerWaiter>() }
         val ioStreamer by createForEachTest { mock<ContainerIOStreamer>() }
         val killer by createForEachTest { mock<ContainerKiller>() }
+        val ttyManager by createForEachTest { mock<ContainerTTYManager>() }
         val logger by createLoggerForEachTest()
         val imagePullProgressReporter by createForEachTest { mock<DockerImagePullProgressReporter>() }
         val imagePullProgressReporterFactory = { imagePullProgressReporter }
-        val client by createForEachTest { DockerClient(api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, ioStreamer, killer, logger, imagePullProgressReporterFactory) }
+        val client by createForEachTest { DockerClient(api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, ioStreamer, killer, ttyManager, logger, imagePullProgressReporterFactory) }
 
         describe("building an image") {
             val buildDirectory = "/path/to/build/dir"
@@ -237,6 +239,7 @@ object DockerClientSpec : Spek({
                 val inputStream by createForEachTest { mock<ContainerInputStream>() }
                 val terminalRestorer by createForEachTest { mock<AutoCloseable>() }
                 val signalRestorer by createForEachTest { mock<AutoCloseable>() }
+                val resizingRestorer by createForEachTest { mock<AutoCloseable>() }
 
                 beforeEachTest {
                     whenever(waiter.startWaitingForContainerToExit(container)).doReturn(CompletableFuture.completedFuture(123))
@@ -244,6 +247,7 @@ object DockerClientSpec : Spek({
                     whenever(api.attachToContainerInput(container)).doReturn(inputStream)
                     whenever(consoleInfo.enterRawMode()).doReturn(terminalRestorer)
                     whenever(killer.killContainerOnSigint(container)).doReturn(signalRestorer)
+                    whenever(ttyManager.monitorForSizeChanges(container)).doReturn(resizingRestorer)
                 }
 
                 given("the application is being run with a TTY connected to stdin") {
@@ -276,6 +280,21 @@ object DockerClientSpec : Spek({
                             inOrder(consoleInfo, ioStreamer) {
                                 verify(consoleInfo).enterRawMode()
                                 verify(ioStreamer).stream(outputStream, inputStream)
+                            }
+                        }
+
+                        it("starts monitoring for terminal size changes after starting the container but before streaming I/O") {
+                            inOrder(api, ttyManager, ioStreamer) {
+                                verify(api).startContainer(container)
+                                verify(ttyManager).monitorForSizeChanges(container)
+                                verify(ioStreamer).stream(outputStream, inputStream)
+                            }
+                        }
+
+                        it("stops monitoring for terminal size changes after the streaming completes") {
+                            inOrder(ioStreamer, resizingRestorer) {
+                                verify(ioStreamer).stream(outputStream, inputStream)
+                                verify(resizingRestorer).close()
                             }
                         }
 
@@ -352,6 +371,21 @@ object DockerClientSpec : Spek({
                             inOrder(api, ioStreamer) {
                                 verify(api).startContainer(container)
                                 verify(ioStreamer).stream(outputStream, inputStream)
+                            }
+                        }
+
+                        it("starts monitoring for terminal size changes after starting the container but before streaming I/O") {
+                            inOrder(api, ttyManager, ioStreamer) {
+                                verify(api).startContainer(container)
+                                verify(ttyManager).monitorForSizeChanges(container)
+                                verify(ioStreamer).stream(outputStream, inputStream)
+                            }
+                        }
+
+                        it("stops monitoring for terminal size changes after the streaming completes") {
+                            inOrder(ioStreamer, resizingRestorer) {
+                                verify(ioStreamer).stream(outputStream, inputStream)
+                                verify(resizingRestorer).close()
                             }
                         }
 

@@ -23,6 +23,7 @@ import batect.docker.pull.DockerImagePullProgressReporter
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerKiller
+import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.logging.Logger
 import batect.ui.ConsoleInfo
@@ -43,6 +44,7 @@ class DockerClient(
     private val waiter: ContainerWaiter,
     private val ioStreamer: ContainerIOStreamer,
     private val killer: ContainerKiller,
+    private val ttyManager: ContainerTTYManager,
     private val logger: Logger,
     private val imagePullProgressReporterFactory: () -> DockerImagePullProgressReporter = ::DockerImagePullProgressReporter
 ) {
@@ -111,9 +113,11 @@ class DockerClient(
             api.attachToContainerInput(container).use { inputStream ->
                 api.startContainer(container)
 
-                killer.killContainerOnSigint(container).use {
-                    enterRawMode(consoleInfo.stdinIsTTY).use {
-                        ioStreamer.stream(outputStream, inputStream)
+                ttyManager.monitorForSizeChanges(container).use {
+                    killer.killContainerOnSigint(container).use {
+                        enterRawMode(consoleInfo.stdinIsTTY).use {
+                            ioStreamer.stream(outputStream, inputStream)
+                        }
                     }
                 }
             }

@@ -32,7 +32,7 @@ If there's something you're really keen to see, pull requests are always welcome
     * Local proxy needs to be listening on correct IP(s) - need to warn users about this and about exposing them to the outside world (and thus allowing other people to access their proxy)
 * 'did you mean...' suggestions when requested task doesn't exist (eg. user runs `./batect unittest`, suggests `unit-test` might be what they meant)
 * some way to clean up old images when they're no longer needed
-* handle the user pressing Ctrl-C during startup or cleanup
+* handle the user pressing Ctrl-C during startup or cleanup / receiving SIGINT at any point
 * allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
 
 ### Bugs
@@ -61,7 +61,10 @@ If there's something you're really keen to see, pull requests are always welcome
   * improve the getting started guide (it's way too wordy)
   * explain the task lifecycle (read config, construct graph, pull images / build images, start containers, wait for healthy etc.)
   * add note about increasing default CPU and memory limits when using Docker on OS X
+  * how to introduce batect to an existing project
 * make error message formatting (eg. image build failed, container could not start) prettier and match other output (eg. use of bold for container names)
+* switch to coroutines for parallel execution?
+* listen for `SIGWINCH` globally and update `ConsoleInfo.dimensions` only when required rather than calling `ioctl()` every time
 * test against a variety of Docker versions (eg. earliest supported version and latest)
 * use batect to build batect (self-hosting)
 * tool to visualise execution on a timeline
@@ -121,3 +124,9 @@ If there's something you're really keen to see, pull requests are always welcome
 * group display of options shown when running `batect --help`
 * add dependency relationship between containers and tasks (eg. running the app container requires running the build first - removes the need to specify
   build task as a prerequisite on every task that starts the app)
+* allow piping files into tasks (eg. `cat thefile.txt | ./batect the-task`)
+  * would require:
+     * creating container in non-TTY mode
+     * not putting input and output in raw mode
+     * not monitoring console size changes
+     * streaming I/O to container in multiplexed mode (see attach API documentation)

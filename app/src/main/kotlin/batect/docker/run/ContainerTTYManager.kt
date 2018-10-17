@@ -51,7 +51,7 @@ class ContainerTTYManager(
         val currentDimensions = consoleInfo.dimensions
 
         if (currentDimensions != null) {
-            api.resizeContainerTTY(container, currentDimensions.height, currentDimensions.width)
+            api.resizeContainerTTY(container, currentDimensions)
         }
     }
 }

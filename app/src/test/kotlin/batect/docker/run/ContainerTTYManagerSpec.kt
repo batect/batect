@@ -63,13 +63,13 @@ object ContainerTTYManagerSpec : Spek({
                         }
 
                         it("sends the current dimensions to the container") {
-                            verify(api).resizeContainerTTY(container, 123, 456)
+                            verify(api).resizeContainerTTY(container, Dimensions(123, 456))
                         }
 
                         it("registers the signal handler before sending the current dimensions") {
                             inOrder(posix, api) {
                                 verify(posix).signal(eq(Signal.SIGWINCH), any())
-                                verify(api).resizeContainerTTY(container, 123, 456)
+                                verify(api).resizeContainerTTY(container, Dimensions(123, 456))
                             }
                         }
                     }
@@ -84,7 +84,7 @@ object ContainerTTYManagerSpec : Spek({
                         }
 
                         it("does not send any dimensions to the container") {
-                            verify(api, never()).resizeContainerTTY(any(), any(), any())
+                            verify(api, never()).resizeContainerTTY(any(), any())
                         }
                     }
                 }
@@ -103,7 +103,7 @@ object ContainerTTYManagerSpec : Spek({
                         handlerCaptor.firstValue.handle(Signal.SIGWINCH.value())
 
                         it("sends the current dimensions to the container") {
-                            verify(api).resizeContainerTTY(container, 789, 1234)
+                            verify(api).resizeContainerTTY(container, Dimensions(789, 1234))
                         }
                     }
 
@@ -113,7 +113,7 @@ object ContainerTTYManagerSpec : Spek({
                         handlerCaptor.firstValue.handle(Signal.SIGWINCH.value())
 
                         it("does not send any dimensions to the container") {
-                            verify(api, never()).resizeContainerTTY(any(), any(), any())
+                            verify(api, never()).resizeContainerTTY(any(), any())
                         }
                     }
                 }
@@ -137,7 +137,7 @@ object ContainerTTYManagerSpec : Spek({
                     manager.monitorForSizeChanges(container)
 
                     it("does not send dimensions to the container") {
-                        verify(api, never()).resizeContainerTTY(any(), any(), any())
+                        verify(api, never()).resizeContainerTTY(any(), any())
                     }
 
                     it("does not install a signal handler") {

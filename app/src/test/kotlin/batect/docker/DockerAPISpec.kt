@@ -31,6 +31,7 @@ import batect.testutils.mockDelete
 import batect.testutils.mockGet
 import batect.testutils.mockPost
 import batect.testutils.withMessage
+import batect.ui.Dimensions
 import batect.utils.Version
 import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
@@ -553,13 +554,12 @@ object DockerAPISpec : Spek({
         describe("resizing a container TTY") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
-                val height = 123
-                val width = 456
+                val dimensions = Dimensions(123, 456)
                 val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/resize?h=123&w=456"
 
                 on("the API call succeeding") {
                     val call = httpClient.mockPost(expectedUrl, "", 200)
-                    api.resizeContainerTTY(container, height, width)
+                    api.resizeContainerTTY(container, dimensions)
 
                     it("sends a request to the Docker daemon to resize the TTY") {
                         verify(call).execute()
@@ -570,7 +570,7 @@ object DockerAPISpec : Spek({
                     httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
 
                     it("throws an appropriate exception") {
-                        assertThat({ api.resizeContainerTTY(container, height, width) }, throws<DockerException>(withMessage("Resizing TTY for container 'the-container-id' failed: Something went wrong.")))
+                        assertThat({ api.resizeContainerTTY(container, dimensions) }, throws<DockerException>(withMessage("Resizing TTY for container 'the-container-id' failed: Something went wrong.")))
                     }
                 }
             }

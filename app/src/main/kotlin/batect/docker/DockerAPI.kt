@@ -23,6 +23,7 @@ import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputStream
 import batect.logging.Logger
+import batect.ui.Dimensions
 import batect.utils.Version
 import jnr.constants.platform.Signal
 import kotlinx.serialization.json.JSON
@@ -428,18 +429,18 @@ class DockerAPI(
         }
     }
 
-    fun resizeContainerTTY(container: DockerContainer, height: Int, width: Int) {
+    fun resizeContainerTTY(container: DockerContainer, dimensions: Dimensions) {
         logger.info {
             message("Resizing container TTY.")
             data("container", container)
-            data("height", height)
-            data("width", width)
+            data("height", dimensions.height)
+            data("width", dimensions.width)
         }
 
         val url = urlForContainer(container).newBuilder()
             .addPathSegment("resize")
-            .addQueryParameter("h", height.toString())
-            .addQueryParameter("w", width.toString())
+            .addQueryParameter("h", dimensions.height.toString())
+            .addQueryParameter("w", dimensions.width.toString())
             .build()
 
         val request = Request.Builder()

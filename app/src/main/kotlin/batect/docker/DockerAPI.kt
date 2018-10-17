@@ -189,6 +189,7 @@ class DockerAPI(
 
         val url = urlForContainer(container).newBuilder()
             .addQueryParameter("v", "true")
+            .addQueryParameter("force", "true")
             .build()
 
         val request = Request.Builder()

@@ -292,7 +292,7 @@ object DockerAPISpec : Spek({
         describe("removing a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
-                val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id?v=true"
+                val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id?v=true&force=true"
 
                 on("a successful removal") {
                     val call = httpClient.mockDelete(expectedUrl, "", 204)

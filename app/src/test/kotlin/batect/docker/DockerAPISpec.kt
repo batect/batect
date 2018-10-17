@@ -550,6 +550,32 @@ object DockerAPISpec : Spek({
             }
         }
 
+        describe("resizing a container TTY") {
+            given("a Docker container") {
+                val container = DockerContainer("the-container-id")
+                val height = 123
+                val width = 456
+                val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/resize?h=123&w=456"
+
+                on("the API call succeeding") {
+                    val call = httpClient.mockPost(expectedUrl, "", 200)
+                    api.resizeContainerTTY(container, height, width)
+
+                    it("sends a request to the Docker daemon to resize the TTY") {
+                        verify(call).execute()
+                    }
+                }
+
+                on("the API call failing") {
+                    httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+
+                    it("throws an appropriate exception") {
+                        assertThat({ api.resizeContainerTTY(container, height, width) }, throws<DockerException>(withMessage("Resizing TTY for container 'the-container-id' failed: Something went wrong.")))
+                    }
+                }
+            }
+        }
+
         describe("creating a network") {
             val expectedUrl = "$dockerBaseUrl/v1.30/networks/create"
 

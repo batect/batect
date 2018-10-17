@@ -428,6 +428,41 @@ class DockerAPI(
         }
     }
 
+    fun resizeContainerTTY(container: DockerContainer, height: Int, width: Int) {
+        logger.info {
+            message("Resizing container TTY.")
+            data("container", container)
+            data("height", height)
+            data("width", width)
+        }
+
+        val url = urlForContainer(container).newBuilder()
+            .addPathSegment("resize")
+            .addQueryParameter("h", height.toString())
+            .addQueryParameter("w", width.toString())
+            .build()
+
+        val request = Request.Builder()
+            .post(emptyRequestBody())
+            .url(url)
+            .build()
+
+        httpConfig.client.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Could not resize container TTY.")
+                    data("error", error)
+                }
+
+                throw DockerException("Resizing TTY for container '${container.id}' failed: ${error.message}")
+            }
+        }
+
+        logger.info {
+            message("Container TTY resized.")
+        }
+    }
+
     fun createNetwork(): DockerNetwork {
         logger.info {
             message("Creating new network.")

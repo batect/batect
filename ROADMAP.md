@@ -66,6 +66,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * switch to coroutines for parallel execution?
 * listen for `SIGWINCH` globally and update `ConsoleInfo.dimensions` only when required rather than calling `ioctl()` every time
 * test against a variety of Docker versions (eg. earliest supported version and latest)
+* analytics / metrics
 * use batect to build batect (self-hosting)
 * tool to visualise execution on a timeline
   * tab to show configuration as parsed
@@ -130,3 +131,4 @@ If there's something you're really keen to see, pull requests are always welcome
      * not putting input and output in raw mode
      * not monitoring console size changes
      * streaming I/O to container in multiplexed mode (see attach API documentation)
+* some way to check for outdated base images (eg. using `postgres:10.0` and suggests updating to `postgres:10.5`)

@@ -46,7 +46,7 @@ tests. This example is for a Java project that uses Gradle, and assumes that you
     ```
 
     There's a bit going on here, so let's break it down:
- 
+
     * `project_name`: the name of your project.
     * `containers`: here we define the different containers that your application needs.
       At the moment, we just have our one build environment container, `build-env`.
@@ -64,11 +64,11 @@ tests. This example is for a Java project that uses Gradle, and assumes that you
            owned by you, and not `root`.
     * `tasks`: we define our two tasks, one for building the application, and another for running the unit tests.
       These just run the existing Gradle tasks within the build environment we just defined.
- 
+
       You can define whatever tasks you want - common other tasks you might like to add include one that starts a
       shell in the build environment (eg. one with `command: bash`) and another that automatically runs the unit
       tests whenever the code is changed (eg. `command: ./gradlew --continuous test`).
- 
+
     For more information on `batect.yml`, consult the [documentation](config/Overview.md).
 
 2. Run `./batect --list-tasks`, and you'll see the tasks that we just defined:

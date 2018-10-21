@@ -7,7 +7,7 @@ echo "Linting..."
 echo
 
 echo "Building..."
-./gradlew build
+./gradlew build --info
 echo
 
 echo "Running unit tests..."

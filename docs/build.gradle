@@ -14,23 +14,11 @@
    limitations under the License.
 */
 
-task installYarnDependencies(type: Exec) {
-    commandLine 'yarn', 'install'
-}
+def outputDir = getBuildDir().toPath().resolve("docs")
+def imageName = 'squidfunk/mkdocs-material:3.0.4'
 
-task installGitBookPlugins(type: Exec) {
-    dependsOn installYarnDependencies
-
-    commandLine 'yarn', 'exec', 'gitbook', 'install'
-}
-
-def outputDir = getBuildDir().toPath().resolve("book")
-
-task buildGitBook(type: Exec) {
-    dependsOn installYarnDependencies
-    dependsOn installGitBookPlugins
-
-    commandLine 'yarn', 'exec', 'gitbook', 'build', '.', outputDir
+task buildDocs(type: Exec) {
+    commandLine 'docker', 'run', '--rm', '-v', "${project.projectDir}:/docs", imageName, 'build'
 }
 
 task copyConfigSchema(type: Copy) {
@@ -42,7 +30,7 @@ task build {
     description 'Build the documentation.'
     group 'Build'
 
-    dependsOn buildGitBook
+    dependsOn buildDocs
     dependsOn copyConfigSchema
 }
 
@@ -50,25 +38,9 @@ task serve(type: Exec) {
     description 'Serve the documentation from a local web server and rebuild it when the source changes.'
     group 'Build'
 
-    dependsOn installYarnDependencies
-    dependsOn installGitBookPlugins
-
-    commandLine 'yarn', 'exec', 'gitbook', 'serve', '.', outputDir
+    commandLine 'docker', 'run', '--rm', '-i', '-p', '8000:8000', '-v', "${project.projectDir}:/docs", imageName
 }
 
-task spellcheck(type: Exec) {
-    description 'Check for spelling mistakes in the documentation.'
-    group 'Verification'
-
-    dependsOn installYarnDependencies
-
-    def filesToCheck = fileTree(
-        dir: '.',
-        includes: ['**/*.md'],
-        excludes: ['**/node_modules/*']
-    )
-
-    def args = [ 'yarn', 'exec', 'mdspell', '--en-au', '--ignore-numbers', '--report', '--no-suggestions' ] + filesToCheck.files
-
-    commandLine args
+task clean(type: Delete) {
+    delete outputDir
 }

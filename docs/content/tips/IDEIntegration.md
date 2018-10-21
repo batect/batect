@@ -2,9 +2,8 @@
 
 ## Coding assistance
 
-{% hint style='tip' %}
-**tl;dr**: some IDEs can't provide their advanced features (eg. code completion) when using batect, but there are solutions
-{% endhint %}
+!!! tip "tl;dr"
+    Some IDEs can't provide their advanced features (eg. code completion) when using batect, but there are solutions
 
 Many IDEs rely on having the development environment installed locally in order to provide features like code completion,
 analysis and tool integration. (For example, a Ruby IDE might need access to a Ruby runtime, and a Java IDE might need
@@ -25,10 +24,9 @@ container? Please [submit a PR](https://github.com/charleskorn/batect/pulls) to 
 
 ## Editing `batect.yml`
 
-{% hint style='tip' %}
-**tl;dr**: if your editor supports [schemastore.org](http://schemastore.org/json/) for YAML files, you'll get code completion
-and other nice features when editing `batect.yml`
-{% endhint %}
+!!! tip "tl;dr"
+    If your editor supports [schemastore.org](http://schemastore.org/json/) for YAML files, you'll get code completion
+    and other nice features when editing `batect.yml`
 
 batect has a schema published on [schemastore.org](http://schemastore.org/json/), which means that if your editor supports
 schemastore.org for YAML files, you'll get code completion, validation and other nice features automatically.

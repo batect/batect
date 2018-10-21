@@ -2,13 +2,11 @@
 
 ## I/O performance
 
-{% hint style='tip' %}
-**tl;dr**: if you're seeing slow build times under batect on OS X, volume mount options such as `cached` might help
-{% endhint %}
+!!! tip "tl;dr"
+    If you're seeing slow build times under batect on OS X, volume mount options such as `cached` might help
 
-{% hint style='info' %}
-This section only applies to OS X-based hosts, and is only supported by Docker version 17.04 and higher.
-{% endhint %}
+!!! info
+    This section only applies to OS X-based hosts, and is only supported by Docker version 17.04 and higher.
 
 Docker requires features only found in the Linux kernel, and so on OS X, Docker for Mac runs a lightweight virtual machine
 to host Docker. However, while this works perfectly fine for most situations, there is some overhead involved in operations
@@ -57,9 +55,8 @@ OS X and others use Linux.
 
 ## Database schema and test data
 
-{% hint style='tip' %}
-**tl;dr**: try to do as much work as possible at image build time, rather than doing it every time the container starts
-{% endhint %}
+!!! tip "tl;dr"
+    Try to do as much work as possible at image build time, rather than doing it every time the container starts
 
 A significant amount of time during integration or journey testing with a database can be taken up by preparing the database for
 use - setting up the schema (usually with some kind of migrations system) and adding the initial test data can take quite some time,
@@ -76,23 +73,26 @@ vary depending on the database system you're using, but the general steps that w
 
 ## Shutdown time
 
-{% hint style='tip' %}
-**tl;dr**: make sure signals such as SIGTERM and SIGKILL are being passed to the main process
-{% endhint %}
+!!! tip "tl;dr"
+    Make sure signals such as SIGTERM and SIGKILL are being passed to the main process
 
 If you notice that post-task cleanup for a container is taking longer than expected, and that container starts the main process from a
-Bash script, make sure that signals such as SIGTERM and SIGKILL are being forwarded to the process. (Otherwise Docker will wait 10
+shell script, make sure that signals such as SIGTERM and SIGKILL are being forwarded to the process. (Otherwise Docker will wait 10
 seconds for the application to respond to the signal before just terminating the process.)
 
 For example, instead of using:
 
 ```bash
+#! /usr/bin/env bash
+
 /app/my-really-cool-app --do-stuff
 ```
 
 use this:
 
 ```bash
+#! /usr/bin/env bash
+
 exec /app/my-really-cool-app --do-stuff
 ```
 

@@ -1,8 +1,7 @@
 # CI setup
 
-{% hint style='tip' %}
-**tl;dr**: set up a Cron job to run `docker image prune -f` regularly on CI agents
-{% endhint %}
+!!! tip "tl;dr"
+    Set up a Cron job to run `docker image prune -f` regularly on CI agents
 
 If you are using Dockerfiles to define your containers (as opposed to taking a pre-existing image), this can generate a
 large number of orphaned images (and their associated image layers) over time. While batect goes to great lengths to

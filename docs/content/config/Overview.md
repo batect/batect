@@ -28,6 +28,6 @@ Definitions for each of your tasks, the actions you launch through batect.
 
 ## Examples
 
-Examples are provided in the reference for [`containers`](Containers.md) and [`tasks`](Tasks.md).
+Examples are provided in the reference for [`containers`](Containers.md#examples) and [`tasks`](Tasks.md#examples).
 
 For further examples and real-world scenarios, take a look at the [sample projects](../SampleProjects.md).

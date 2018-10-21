@@ -1,8 +1,7 @@
 # Proxies, Docker and batect
 
-{% hint style='tip' %}
-**tl;dr**: batect will do its best to make things just work with proxies, but you'll need to configure proxies for pulling images yourself
-{% endhint %}
+!!! tip "tl;dr"
+    batect will do its best to make things just work with proxies, but you'll need to configure proxies for pulling images yourself
 
 Most applications expect to find proxy configuration in a number of environment variables. The most common are:
 

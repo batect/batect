@@ -5,8 +5,9 @@ Each container definition is made up of:
 ## `image`
 Image name (in standard Docker image reference format) to use for this container. **One of `image` or `build_directory` is required.**
 
-It is highly recommended that you specify a specific image version, and not use `latest`, to ensure that the same image is used
-everywhere. For example, use `alpine:3.7`, not `alpine` or `alpine:latest`.
+!!! tip
+    It is highly recommended that you specify a specific image version, and not use `latest`, to ensure that the same image is used
+    everywhere. For example, use `alpine:3.7`, not `alpine` or `alpine:latest`.
 
 ## `build_directory`
 Path (relative to the configuration file's directory) to a directory containing a Dockerfile to build and use as an image for this container.
@@ -31,11 +32,11 @@ You can pass environment variables from the host (ie. where you run batect) to t
 
 * `$<name>` or `${<name>}`: use the value of `<name>` from the host as the value inside the container.
 
-  If the referenced host variable is not present, batect will show an error message and not start the task.
+    If the referenced host variable is not present, batect will show an error message and not start the task.
 
 * `${<name>:-<default>}`: use the value of `<name>` from the host as the value inside the container.
 
-  If the referenced host variable is not present, `<default>` is used instead.
+    If the referenced host variable is not present, `<default>` is used instead.
 
 For example, to set `SUPER_SECRET_PASSWORD` in the container to the value of the `MY_PASSWORD` variable on the host, use
 `SUPER_SECRET_PASSWORD: $MY_PASSWORD` or `SUPER_SECRET_PASSWORD: ${MY_PASSWORD}`. Or, to default it to `insecure` if
@@ -43,10 +44,9 @@ For example, to set `SUPER_SECRET_PASSWORD` in the container to the value of the
 
 Substitutions in the middle of values is not supported (eg. `SUPER_SECRET_PASSWORD: My password is $MY_PASSWORD` will not work).
 
-{% hint style='danger' %}
-Be careful when using this - by relying on the host's environment variables, you are introducing inconsistency to how the container
-runs between hosts, which is something you generally want to avoid.
-{% endhint %}
+!!! warning
+    Be careful when using this - by relying on the host's environment variables, you are introducing inconsistency to how the container
+    runs between hosts, which is something you generally want to avoid.
 
 The curly brace syntax for environment variables, including the ability to specify default values for environment variables,
 was added in v0.21.
@@ -149,9 +149,8 @@ by that user, so this is less of an issue. However, for consistency, the same co
 
   This directory is automatically created by batect with the correct owner and group.
 
-  {% hint style='danger' %}
-**Warning**: if the directory given by `home_directory` already exists inside the image for this container, it is overwritten.
-  {% endhint %}
+!!! warning
+    If the directory given by `home_directory` already exists inside the image for this container, it is overwritten.
 
 See [this page](../tips/BuildArtifactsOwnedByRoot.md) for more information on the effects of this option and why it is necessary.
 
@@ -213,11 +212,11 @@ Running the container `build-env` will launch a container that uses the `ruby:2.
 * The environment variables `SUPER_SECRET_VALUE` and `ANOTHER_SECRET_VALUE` will have the value of the `SECRET_PASSWORD` environment variable on
   the host. (So, for example, if `SECRET_PASSWORD` is `abc123` on the host, then `SUPER_SECRET_VALUE` will have the value `abc123` in the container.)
 
-  If `SECRET_PASSWORD` is not set on the host, batect will show an error message and not start the task.
+    If `SECRET_PASSWORD` is not set on the host, batect will show an error message and not start the task.
 
 * The environment variable `OPTIMISATION_LEVEL` will have the value of the `HOST_OPTIMISATION_LEVEL` environment variable on the host.
 
-  If `HOST_OPTIMISATION_LEVEL` is not set on the host, then `OPTIMISATION_LEVEL` will have the value `none` in the container.
+    If `HOST_OPTIMISATION_LEVEL` is not set on the host, then `OPTIMISATION_LEVEL` will have the value `none` in the container.
 
 These environment variables could be overridden (and added to) with [`environment` at the task level](Tasks.md#run).
 

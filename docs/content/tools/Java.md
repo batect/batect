@@ -6,10 +6,9 @@ You can see an example of configuring and using Java and Gradle with batect in t
 
 ### Caching dependencies
 
-{% hint style='tip' %}
-**tl;dr**: mount a local directory as the `~/.gradle` directory within the container, otherwise you'll have to download your dependencies every time the build
-runs
-{% endhint %}
+!!! tip "tl;dr"
+    Mount a local directory as the `~/.gradle` directory within the container, otherwise you'll have to download your dependencies every time the build
+    runs
 
 By default, Gradle downloads all of your application's dependencies to the `~/.gradle` directory. However, because batect destroys all of your containers once
 the task finishes, this directory is lost at the end of every task run - which means that Gradle will have to download all of your dependencies again,
@@ -20,19 +19,17 @@ persisted between builds.
 
 Note that you can't use `~` in the container path for a volume mount:
 
-* If you're using [run as current user mode](../tips/BuildArtifactsOwnedByRoot.md), use the home directory you specified for [`home_directory`](../config/Containers.md#runascurrentuser).
+* If you're using [run as current user mode](../tips/BuildArtifactsOwnedByRoot.md), use the home directory you specified for [`home_directory`](../config/Containers.md#run_as_current_user).
 * If you're not using [run as current user mode](../tips/BuildArtifactsOwnedByRoot.md), use `/root` as the home directory, as the vast majority of containers
   default to the root user and use this as the root user's home directory.
 
-{% hint style='danger' %}
-With this configuration, you will not be able to run more than one task at a time. This is due to [a well-known issue with Gradle](https://github.com/gradle/gradle/issues/851).
-{% endhint %}
+!!! warning
+    With this configuration, you will not be able to run more than one task at a time. This is due to [a well-known issue with Gradle](https://github.com/gradle/gradle/issues/851).
 
 ### Disabling the Gradle daemon
 
-{% hint style='tip' %}
-**tl;dr**: set the environment variable `GRADLE_OPTS` to `-Dorg.gradle.daemon=false`
-{% endhint %}
+!!! tip "tl;dr"
+    Set the environment variable `GRADLE_OPTS` to `-Dorg.gradle.daemon=false`
 
 When Gradle starts, it has to load itself and then compile and load your build script so that it can execute it. This can take a noticeable amount of time for
 larger projects, so, by default, it starts a daemon that remains running and ready to start your build without having to load or compile anything.

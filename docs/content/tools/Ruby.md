@@ -6,10 +6,9 @@ You can see an example of configuring and using Ruby and Bundler with batect in 
 
 ### Caching dependencies
 
-{% hint style='tip' %}
-**tl;dr**: set the `BUNDLE_PATH` environment variable to a directory within your mounted code directory, otherwise you'll have to download your dependencies every
-time the build runs
-{% endhint %}
+!!! tip "tl;dr"
+    Set the `BUNDLE_PATH` environment variable to a directory within your mounted code directory, otherwise you'll have to download your dependencies every
+    time the build runs
 
 By default, Bundler downloads all of your application's dependencies to the `~/.bundle` directory. However, because batect destroys all of your containers once
 the task finishes, this directory is lost at the end of every task run - which means that Bundler will have to download all of your dependencies again,

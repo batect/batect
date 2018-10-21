@@ -1,4 +1,4 @@
-# Installation
+# Quick start
 
 The `batect` script is designed to be committed alongside your project, and not installed globally. It will
 automatically pull down the correct version of batect for your operating system.
@@ -6,7 +6,7 @@ automatically pull down the correct version of batect for your operating system.
 1. Download the latest version of `batect` from the [releases page](https://github.com/charleskorn/batect/releases),
    and copy it into your project.
 
-   Note that you only need the file named `batect` - you don't need to download `batect.jar`.
+    Note that you only need the file named `batect` - you don't need to download `batect.jar`.
 
 2. Make sure it's executable (run `chmod +x batect`).
 3. Run `./batect --version` and if you see some version information, you're good to go!

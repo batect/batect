@@ -1,0 +1,67 @@
+site_name: batect documentation
+site_url: https://batect.charleskorn.com
+site_description: Documentation for batect, the build and testing environments as code tool
+site_author: Charles Korn
+copyright: Copyright &copy; 2017-2018 Charles Korn.
+
+repo_name: charleskorn/batect
+repo_url: https://github.com/charleskorn/batect
+edit_uri: edit/master/docs/content
+
+docs_dir: content
+site_dir: build/docs
+strict: true
+use_directory_urls: false
+
+theme:
+  name: 'material'
+  palette:
+    primary: 'blue'
+    accent: 'blue'
+
+extra:
+  social:
+  - type: 'github'
+    link: 'https://github.com/charleskorn/batect'
+
+markdown_extensions:
+  - admonition
+  - codehilite:
+      guess_lang: false
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+
+nav:
+  - Introduction: "index.md"
+  - Quick start: "QuickStart.md"
+  - Getting started tutorial: "GettingStarted.md"
+  - Comparison with other tools: "Comparison.md"
+
+  - Configuration file reference:
+    - Overview: "config/Overview.md"
+    - Containers: "config/Containers.md"
+    - Tasks: "config/Tasks.md"
+
+  - Language and tool-specific information:
+    - Java: "tools/Java.md"
+    - Ruby: "tools/Ruby.md"
+    - Docker: "tools/Docker.md"
+
+  - Tips and tricks:
+    - CI setup: "tips/CISetup.md"
+    - IDE integration: "tips/IDEIntegration.md"
+    - Performance: "tips/Performance.md"
+    - Build artifacts are owned by root: "tips/BuildArtifactsOwnedByRoot.md"
+    - Waiting for dependencies to be ready: "tips/WaitingForDependenciesToBeReady.md"
+    - Proxies: "tips/Proxies.md"
+
+  - Sample projects: "SampleProjects.md"
+  - Release notes: "https://github.com/charleskorn/batect/releases"
+  - Roadmap: "https://github.com/charleskorn/batect/blob/master/ROADMAP.md"
+
+google_analytics:
+  - 'UA-63947227-2'
+  - 'auto'
+
+

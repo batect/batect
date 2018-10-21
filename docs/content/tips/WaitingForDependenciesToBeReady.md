@@ -1,8 +1,7 @@
 # Waiting for dependencies to be ready
 
-{% hint style='tip' %}
-**tl;dr**: make sure your image has a health check defined, and batect will take care of the rest
-{% endhint %}
+!!! tip "tl;dr"
+    Make sure your image has a health check defined, and batect will take care of the rest
 
 When running integration or end-to-end tests, you might need to start a number of external dependencies for your application, such as databases or
 fakes for external services.

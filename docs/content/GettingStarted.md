@@ -4,7 +4,7 @@ The samples shown below are taken from the [Java sample project](https://github.
 
 ## Installation
 
-Before you begin, follow the [installation steps](Installation.md) to setup batect.
+Before you begin, follow the [installation steps](QuickStart.md) to setup batect.
 
 ## First steps: build environment
 
@@ -22,11 +22,14 @@ tests. This example is for a Java project that uses Gradle, and assumes that you
             container: /code
             options: cached
           - local: .gradle-cache
-            container: /root/.gradle
+            container: /home/container-user/.gradle
             options: cached
         working_directory: /code
         environment:
-          - GRADLE_OPTS=-Dorg.gradle.daemon=false
+          GRADLE_OPTS: -Dorg.gradle.daemon=false
+        run_as_current_user:
+          enabled: true
+          home_directory: /home/container-user
 
     tasks:
       build:
@@ -42,29 +45,31 @@ tests. This example is for a Java project that uses Gradle, and assumes that you
           command: ./gradlew test
     ```
 
-   There's a bit going on here, so let's break it down:
-
-   * `project_name`: the name of your project.
-   * `containers`: here we define the different containers that your application needs.
-     At the moment, we just have our one build environment container, `build-env`.
-        * We tell batect which Docker image to use (`image`).
-        * We tell it to mount the project (`.`, the current directory) into the container at `/code`, and to start
-          the container in that directory (`working_directory`).
-        * We also mount `.gradle-cache` into the container as `/root/.gradle` - this allows Gradle to cache
-          dependencies between builds, rather than downloading them on every single run. (You probably want to
-          add this directory to your `.gitignore`.)
-        * We use `:cached` mode for the mounts to improve performance on OS X (see
-          [this page](tips/Performance.md#io-performance) for more information). This has no effect on other operating systems.
-        * We disable the [Gradle daemon](https://docs.gradle.org/current/userguide/gradle_daemon.html), as running
-          it is pointless given that we create a new container for every run.
-   * `tasks`: we define our two tasks, one for building the application, and another for running the unit tests.
-     These just run the existing Gradle tasks within the build environment we just defined.
-
-     You can define whatever tasks you want - common other tasks you might like to add include one that starts a
-     shell in the build environment (eg. one with `command: bash`) and another that automatically runs the unit
-     tests whenever the code is changed (eg. `command: ./gradlew --continuous test`).
-
-   For more information on `batect.yml`, consult the [documentation](config/Overview.md).
+    There's a bit going on here, so let's break it down:
+ 
+    * `project_name`: the name of your project.
+    * `containers`: here we define the different containers that your application needs.
+      At the moment, we just have our one build environment container, `build-env`.
+         * We tell batect which Docker image to use (`image`).
+         * We tell it to mount the project (`.`, the current directory) into the container at `/code`, and to start
+           the container in that directory (`working_directory`).
+         * We also mount `.gradle-cache` into the container as `/root/.gradle` - this allows Gradle to cache
+           dependencies between builds, rather than downloading them on every single run. (You probably want to
+           add this directory to your `.gitignore`.)
+         * We use `:cached` mode for the mounts to improve performance on OS X (see
+           [this page](tips/Performance.md#io-performance) for more information). This has no effect on other operating systems.
+         * We disable the [Gradle daemon](https://docs.gradle.org/current/userguide/gradle_daemon.html), as running
+           it is pointless given that we create a new container for every run.
+         * We enable [run as current user mode](config/Containers.md#run_as_current_user) to ensure that any build artifacts are
+           owned by you, and not `root`.
+    * `tasks`: we define our two tasks, one for building the application, and another for running the unit tests.
+      These just run the existing Gradle tasks within the build environment we just defined.
+ 
+      You can define whatever tasks you want - common other tasks you might like to add include one that starts a
+      shell in the build environment (eg. one with `command: bash`) and another that automatically runs the unit
+      tests whenever the code is changed (eg. `command: ./gradlew --continuous test`).
+ 
+    For more information on `batect.yml`, consult the [documentation](config/Overview.md).
 
 2. Run `./batect --list-tasks`, and you'll see the tasks that we just defined:
 

@@ -24,6 +24,8 @@ task buildDocs(type: Exec) {
 task copyConfigSchema(type: Copy) {
     from "${rootProject.rootDir}/tools/schema/configSchema.json"
     into outputDir
+
+    mustRunAfter buildDocs
 }
 
 task build {

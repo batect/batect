@@ -92,3 +92,5 @@ data class TextRun(val text: List<Text>) {
     operator fun plus(other: Text) = TextRun(this.text + other)
     operator fun plus(other: TextRun) = TextRun(this.text + other.text)
 }
+
+fun Iterable<TextRun>.join(): TextRun = this.fold(TextRun()) { acc, current -> acc + current }

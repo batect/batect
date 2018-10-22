@@ -29,6 +29,7 @@ import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
 import batect.ui.EventLogger
 import batect.ui.EventLoggerProvider
+import batect.ui.text.TextRun
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
@@ -117,7 +118,7 @@ object TaskRunnerSpec : Spek({
             given("the task fails") {
                 beforeEachTest {
                     whenever(stateMachine.taskHasFailed).thenReturn(true)
-                    whenever(stateMachine.manualCleanupInstructions).thenReturn("Do this to clean up")
+                    whenever(stateMachine.manualCleanupInstructions).thenReturn(TextRun("Do this to clean up"))
                 }
 
                 on("running the task") {
@@ -132,14 +133,14 @@ object TaskRunnerSpec : Spek({
                     }
 
                     it("logs that the task failed") {
-                        verify(eventLogger).onTaskFailed("some-task", "Do this to clean up")
+                        verify(eventLogger).onTaskFailed("some-task", TextRun("Do this to clean up"))
                     }
 
                     it("logs that the task is starting before running the task and then logs that the task failed") {
                         inOrder(eventLogger, executionManager) {
                             verify(eventLogger).onTaskStarting("some-task")
                             verify(executionManager).run()
-                            verify(eventLogger).onTaskFailed("some-task", "Do this to clean up")
+                            verify(eventLogger).onTaskFailed("some-task", TextRun("Do this to clean up"))
                         }
                     }
 

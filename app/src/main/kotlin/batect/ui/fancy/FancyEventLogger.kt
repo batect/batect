@@ -27,6 +27,7 @@ import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
 import batect.ui.text.Text
+import batect.ui.text.TextRun
 
 class FancyEventLogger(
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
@@ -107,10 +108,10 @@ class FancyEventLogger(
         }
     }
 
-    override fun onTaskFailed(taskName: String, manualCleanupInstructions: String) {
-        if (manualCleanupInstructions != "") {
+    override fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun) {
+        if (manualCleanupInstructions != TextRun()) {
             errorConsole.println()
-            errorConsole.println(Text.red(manualCleanupInstructions))
+            errorConsole.println(manualCleanupInstructions)
         }
 
         errorConsole.println()

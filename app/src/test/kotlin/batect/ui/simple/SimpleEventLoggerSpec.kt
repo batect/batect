@@ -238,10 +238,8 @@ object SimpleEventLoggerSpec : Spek({
 
         describe("when the task fails") {
             given("there are no cleanup instructions") {
-                val cleanupInstructions = ""
-
                 on("when logging that the task has failed") {
-                    logger.onTaskFailed("some-task", cleanupInstructions)
+                    logger.onTaskFailed("some-task", TextRun())
 
                     it("prints a message to the output") {
                         inOrder(errorConsole) {
@@ -253,15 +251,13 @@ object SimpleEventLoggerSpec : Spek({
             }
 
             given("there are some cleanup instructions") {
-                val cleanupInstructions = "Do this to clean up."
-
                 on("when logging that the task has failed") {
-                    logger.onTaskFailed("some-task", cleanupInstructions)
+                    logger.onTaskFailed("some-task", TextRun("Do this to clean up."))
 
                     it("prints a message to the output, including the instructions") {
                         inOrder(errorConsole) {
                             verify(errorConsole).println()
-                            verify(errorConsole).println(Text.red(cleanupInstructions))
+                            verify(errorConsole).println(TextRun("Do this to clean up."))
                             verify(errorConsole).println()
                             verify(errorConsole).println(Text.red(Text("The task ") + Text.bold("some-task") + Text(" failed. See above for details.")))
                         }

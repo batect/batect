@@ -37,6 +37,7 @@ import batect.testutils.equalTo
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
 import batect.ui.FailureErrorMessageFormatter
+import batect.ui.text.TextRun
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isEmpty
@@ -345,7 +346,7 @@ object TaskStateMachineSpec : Spek({
                                     stateMachine.postEvent(event1)
                                     stateMachine.postEvent(event2)
 
-                                    whenever(failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events, cleanupCommands)).doReturn("Do this to clean up")
+                                    whenever(failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events, cleanupCommands)).doReturn(TextRun("Do this to clean up"))
                                 }
 
                                 on("getting the next steps to execute") {
@@ -367,7 +368,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     it("sets the cleanup instruction to that provided by the error message formatter") {
-                                        assertThat(stateMachine.manualCleanupInstructions, equalTo("Do this to clean up"))
+                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(TextRun("Do this to clean up")))
                                     }
 
                                     it("indicates that the task has failed") {
@@ -459,7 +460,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     it("does not provide any cleanup instructions") {
-                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(""))
+                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(TextRun()))
                                     }
 
                                     it("indicates that the task has failed") {
@@ -479,7 +480,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     it("does not provide any cleanup instructions") {
-                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(""))
+                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(TextRun()))
                                     }
 
                                     it("indicates that the task has succeeded") {
@@ -495,7 +496,7 @@ object TaskStateMachineSpec : Spek({
                         val previousEventsWithFailureEvent = previousEvents + event
 
                         beforeEachTest {
-                            whenever(failureErrorMessageFormatter.formatManualCleanupMessageAfterCleanupFailure(cleanupCommands)).doReturn("Do this to clean up")
+                            whenever(failureErrorMessageFormatter.formatManualCleanupMessageAfterCleanupFailure(cleanupCommands)).doReturn(TextRun("Do this to clean up"))
 
                             stateMachine.postEvent(event)
                         }
@@ -570,7 +571,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     it("sets the cleanup instruction to that provided by the error message formatter") {
-                                        assertThat(stateMachine.manualCleanupInstructions, equalTo("Do this to clean up"))
+                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(TextRun("Do this to clean up")))
                                     }
                                 }
                             }
@@ -588,7 +589,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     it("sets the cleanup instruction to that provided by the error message formatter") {
-                                        assertThat(stateMachine.manualCleanupInstructions, equalTo("Do this to clean up"))
+                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(TextRun("Do this to clean up")))
                                     }
 
                                     it("indicates that the task has failed") {
@@ -629,7 +630,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     it("does not provide any cleanup instructions") {
-                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(""))
+                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(TextRun()))
                                     }
 
                                     it("indicates that the task has failed") {
@@ -645,7 +646,7 @@ object TaskStateMachineSpec : Spek({
                         val events = previousEvents + otherEvent
 
                         beforeEachTest {
-                            whenever(failureErrorMessageFormatter.formatManualCleanupMessageAfterCleanupFailure(cleanupCommands)).doReturn("Do this to clean up")
+                            whenever(failureErrorMessageFormatter.formatManualCleanupMessageAfterCleanupFailure(cleanupCommands)).doReturn(TextRun("Do this to clean up"))
 
                             stateMachine.postEvent(otherEvent)
                         }
@@ -666,7 +667,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     it("sets the cleanup instruction to that provided by the error message formatter") {
-                                        assertThat(stateMachine.manualCleanupInstructions, equalTo("Do this to clean up"))
+                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(TextRun("Do this to clean up")))
                                     }
 
                                     it("indicates that the task has failed") {

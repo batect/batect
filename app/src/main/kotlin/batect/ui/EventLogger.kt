@@ -18,9 +18,10 @@ package batect.ui
 
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.TaskStep
+import batect.ui.text.TextRun
 
 abstract class EventLogger : TaskEventSink {
     abstract fun onStartingTaskStep(step: TaskStep)
-    abstract fun onTaskFailed(taskName: String, manualCleanupInstructions: String)
+    abstract fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun)
     abstract fun onTaskStarting(taskName: String)
 }

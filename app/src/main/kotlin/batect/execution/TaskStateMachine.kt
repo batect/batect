@@ -31,6 +31,7 @@ import batect.execution.model.stages.StepReady
 import batect.execution.model.steps.TaskStep
 import batect.logging.Logger
 import batect.ui.FailureErrorMessageFormatter
+import batect.ui.text.TextRun
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -45,7 +46,7 @@ class TaskStateMachine(
     var taskHasFailed: Boolean = false
         private set
 
-    var manualCleanupInstructions: String = ""
+    var manualCleanupInstructions: TextRun = TextRun()
         private set
 
     private val events: MutableSet<TaskEvent> = mutableSetOf()

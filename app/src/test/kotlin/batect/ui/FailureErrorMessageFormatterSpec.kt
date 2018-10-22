@@ -43,7 +43,6 @@ import batect.testutils.withMessage
 import batect.ui.text.Text
 import batect.ui.text.TextRun
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
@@ -169,13 +168,13 @@ object FailureErrorMessageFormatterSpec : Spek({
                         val message = formatter.formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events, cleanupCommands)
 
                         it("returns an appropriate message") {
-                            assertThat(message, equalTo("""
-                                |As the task was run with --no-cleanup-after-failure, the created containers will not be cleaned up.
-                                |For container 'http-server': view its output by running 'docker logs http-server-container-id', or run a command in the container with 'docker exec -it http-server-container-id <command>'.
-                                |
-                                |Once you have finished investigating the issue, you can clean up all temporary resources created by batect by running:
-                                |docker network rm some-network
-                            """.trimMargin()))
+                            assertThat(message, equivalentTo(
+                                Text.red(Text("As the task was run with ") + Text.bold("--no-cleanup-after-failure") + Text(", the created containers will not be cleaned up.\n")) +
+                                    Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") + Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-id <command>") + Text("'.\n") +
+                                    Text("\n") +
+                                    Text("Once you have finished investigating the issue, clean up all temporary resources created by batect by running:\n") +
+                                    Text.bold("docker network rm some-network")
+                            ))
                         }
                     }
                 }
@@ -190,14 +189,14 @@ object FailureErrorMessageFormatterSpec : Spek({
                         val message = formatter.formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events, cleanupCommands)
 
                         it("returns an appropriate message") {
-                            assertThat(message, equalTo("""
-                                |As the task was run with --no-cleanup-after-failure, the created containers will not be cleaned up.
-                                |For container 'http-server': view its output by running 'docker logs http-server-container-id', or run a command in the container with 'docker exec -it http-server-container-id <command>'.
-                                |
-                                |Once you have finished investigating the issue, you can clean up all temporary resources created by batect by running:
-                                |docker rm some-container
-                                |docker network rm some-network
-                            """.trimMargin()))
+                            assertThat(message, equivalentTo(
+                                Text.red(Text("As the task was run with ") + Text.bold("--no-cleanup-after-failure") + Text(", the created containers will not be cleaned up.\n")) +
+                                    Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") + Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-id <command>") + Text("'.\n") +
+                                    Text("\n") +
+                                    Text("Once you have finished investigating the issue, clean up all temporary resources created by batect by running:\n") +
+                                    Text.bold("docker rm some-container\n") +
+                                    Text.bold("docker network rm some-network")
+                            ))
                         }
                     }
                 }
@@ -229,14 +228,14 @@ object FailureErrorMessageFormatterSpec : Spek({
                         val message = formatter.formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events, cleanupCommands)
 
                         it("returns an appropriate message") {
-                            assertThat(message, equalTo("""
-                                |As the task was run with --no-cleanup-after-failure, the created containers will not be cleaned up.
-                                |For container 'database': view its output by running 'docker logs database-container-id', or run a command in the container with 'docker exec -it database-container-id <command>'.
-                                |For container 'http-server': view its output by running 'docker logs http-server-container-id', or run a command in the container with 'docker exec -it http-server-container-id <command>'.
-                                |
-                                |Once you have finished investigating the issue, you can clean up all temporary resources created by batect by running:
-                                |docker network rm some-network
-                            """.trimMargin()))
+                            assertThat(message, equivalentTo(
+                                Text.red(Text("As the task was run with ") + Text.bold("--no-cleanup-after-failure") + Text(", the created containers will not be cleaned up.\n")) +
+                                    Text("For container ") + Text.bold("database") + Text(", view its output by running '") + Text.bold("docker logs database-container-id") + Text("', or run a command in the container with '") + Text.bold("docker exec -it database-container-id <command>") + Text("'.\n") +
+                                    Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") + Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-id <command>") + Text("'.\n") +
+                                    Text("\n") +
+                                    Text("Once you have finished investigating the issue, clean up all temporary resources created by batect by running:\n") +
+                                    Text.bold("docker network rm some-network")
+                            ))
                         }
                     }
                 }
@@ -251,15 +250,15 @@ object FailureErrorMessageFormatterSpec : Spek({
                         val message = formatter.formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events, cleanupCommands)
 
                         it("returns an appropriate message") {
-                            assertThat(message, equalTo("""
-                                |As the task was run with --no-cleanup-after-failure, the created containers will not be cleaned up.
-                                |For container 'database': view its output by running 'docker logs database-container-id', or run a command in the container with 'docker exec -it database-container-id <command>'.
-                                |For container 'http-server': view its output by running 'docker logs http-server-container-id', or run a command in the container with 'docker exec -it http-server-container-id <command>'.
-                                |
-                                |Once you have finished investigating the issue, you can clean up all temporary resources created by batect by running:
-                                |docker rm some-container
-                                |docker network rm some-network
-                            """.trimMargin()))
+                            assertThat(message, equivalentTo(
+                                Text.red(Text("As the task was run with ") + Text.bold("--no-cleanup-after-failure") + Text(", the created containers will not be cleaned up.\n")) +
+                                    Text("For container ") + Text.bold("database") + Text(", view its output by running '") + Text.bold("docker logs database-container-id") + Text("', or run a command in the container with '") + Text.bold("docker exec -it database-container-id <command>") + Text("'.\n") +
+                                    Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") + Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-id <command>") + Text("'.\n") +
+                                    Text("\n") +
+                                    Text("Once you have finished investigating the issue, clean up all temporary resources created by batect by running:\n") +
+                                    Text.bold("docker rm some-container\n") +
+                                    Text.bold("docker network rm some-network")
+                            ))
                         }
                     }
                 }
@@ -273,8 +272,8 @@ object FailureErrorMessageFormatterSpec : Spek({
                 on("formatting the message") {
                     val message = formatter.formatManualCleanupMessageAfterCleanupFailure(cleanupCommands)
 
-                    it("returns an empty string") {
-                        assertThat(message, equalTo(""))
+                    it("returns an empty set of text") {
+                        assertThat(message, equivalentTo(TextRun()))
                     }
                 }
             }
@@ -288,12 +287,11 @@ object FailureErrorMessageFormatterSpec : Spek({
                     val message = formatter.formatManualCleanupMessageAfterCleanupFailure(cleanupCommands)
 
                     it("returns an appropriate message") {
-                        assertThat(message, equalTo("""
-                            |Clean up has failed, and batect cannot guarantee that all temporary resources created have been completely cleaned up.
-                            |You may need to run the following command to clean up any remaining resources:
-                            |
-                            |docker network rm some-network
-                        """.trimMargin()))
+                        assertThat(message, equivalentTo(
+                            Text.red("Clean up has failed, and batect cannot guarantee that all temporary resources created have been completely cleaned up.\n") +
+                                Text("You may need to run the following command to clean up any remaining resources:\n") +
+                                Text.bold("docker network rm some-network")
+                        ))
                     }
                 }
             }
@@ -309,14 +307,13 @@ object FailureErrorMessageFormatterSpec : Spek({
                     val message = formatter.formatManualCleanupMessageAfterCleanupFailure(cleanupCommands)
 
                     it("returns an appropriate message") {
-                        assertThat(message, equalTo("""
-                            |Clean up has failed, and batect cannot guarantee that all temporary resources created have been completely cleaned up.
-                            |You may need to run some or all of the following commands to clean up any remaining resources:
-                            |
-                            |rm -rf /tmp/the-thing
-                            |docker rm some-container
-                            |docker network rm some-network
-                        """.trimMargin()))
+                        assertThat(message, equivalentTo(
+                            Text.red("Clean up has failed, and batect cannot guarantee that all temporary resources created have been completely cleaned up.\n") +
+                                Text("You may need to run some or all of the following commands to clean up any remaining resources:\n") +
+                                Text.bold("rm -rf /tmp/the-thing\n") +
+                                Text.bold("docker rm some-container\n") +
+                                Text.bold("docker network rm some-network")
+                        ))
                     }
                 }
             }

@@ -36,6 +36,7 @@ import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 import batect.ui.text.Text
 import batect.ui.text.TextRun
+import batect.ui.text.join
 
 class FailureErrorMessageFormatter {
     fun formatErrorMessage(event: TaskFailedEvent, runOptions: RunOptions): TextRun = when (event) {
@@ -62,8 +63,7 @@ class FailureErrorMessageFormatter {
         BehaviourAfterFailure.DontCleanup -> TextRun("")
     }
 
-    // TODO
-    fun formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events: Set<TaskEvent>, cleanupCommands: List<String>): String {
+    fun formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events: Set<TaskEvent>, cleanupCommands: List<String>): TextRun {
         val containerCreationEvents = events.filterIsInstance<ContainerCreatedEvent>()
 
         if (containerCreationEvents.isEmpty()) {
@@ -76,23 +76,21 @@ class FailureErrorMessageFormatter {
 
         val containerMessages = containerCreationEvents
             .sortedBy { it.container.name }
-            .map { event -> "For container '${event.container.name}': view its output by running 'docker logs ${event.dockerContainer.id}', or run a command in the container with 'docker exec -it ${event.dockerContainer.id} <command>'." }
-            .joinToString("\n")
+            .map { event -> Text("For container ") + Text.bold(event.container.name) + Text(", view its output by running '") + Text.bold("docker logs ${event.dockerContainer.id}") + Text("', or run a command in the container with '") + Text.bold("docker exec -it ${event.dockerContainer.id} <command>") + Text("'.\n") }
+            .join()
 
         val formattedCommands = cleanupCommands.joinToString("\n")
 
-        return "As the task was run with --no-cleanup-after-failure, the created containers will not be cleaned up.\n" +
+        return Text.red(Text("As the task was run with ") + Text.bold("--no-cleanup-after-failure") + Text(", the created containers will not be cleaned up.\n")) +
             containerMessages +
-            "\n" +
-            "\n" +
-            "Once you have finished investigating the issue, you can clean up all temporary resources created by batect by running:\n" +
-            formattedCommands
+            Text("\n") +
+            Text("Once you have finished investigating the issue, clean up all temporary resources created by batect by running:\n") +
+            Text.bold(formattedCommands)
     }
 
-    // TODO
-    fun formatManualCleanupMessageAfterCleanupFailure(cleanupCommands: List<String>): String {
+    fun formatManualCleanupMessageAfterCleanupFailure(cleanupCommands: List<String>): TextRun {
         if (cleanupCommands.isEmpty()) {
-            return ""
+            return TextRun()
         }
 
         val instruction = if (cleanupCommands.size == 1) {
@@ -103,9 +101,8 @@ class FailureErrorMessageFormatter {
 
         val formattedCommands = cleanupCommands.joinToString("\n")
 
-        return """
-                Clean up has failed, and batect cannot guarantee that all temporary resources created have been completely cleaned up.
-                $instruction
-            """.trimIndent() + "\n\n" + formattedCommands
+        return Text.red("Clean up has failed, and batect cannot guarantee that all temporary resources created have been completely cleaned up.\n") +
+            Text(instruction) + Text("\n") +
+            Text.bold(formattedCommands)
     }
 }

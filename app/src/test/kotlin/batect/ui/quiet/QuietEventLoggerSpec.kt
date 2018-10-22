@@ -55,7 +55,7 @@ object QuietEventLoggerSpec : Spek({
         }
 
         on("when a task fails") {
-            logger.onTaskFailed("some-task", "Some cleanup instructions")
+            logger.onTaskFailed("some-task", TextRun("Some cleanup instructions"))
 
             it("does not print anything to the console") {
                 verifyZeroInteractions(errorConsole)

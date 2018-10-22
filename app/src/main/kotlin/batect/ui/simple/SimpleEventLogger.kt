@@ -137,10 +137,10 @@ class SimpleEventLogger(
         haveStartedCleanUp = true
     }
 
-    override fun onTaskFailed(taskName: String, manualCleanupInstructions: String) {
-        if (manualCleanupInstructions != "") {
+    override fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun) {
+        if (manualCleanupInstructions != TextRun()) {
             errorConsole.println()
-            errorConsole.println(Text.red(manualCleanupInstructions))
+            errorConsole.println(manualCleanupInstructions)
         }
 
         errorConsole.println()

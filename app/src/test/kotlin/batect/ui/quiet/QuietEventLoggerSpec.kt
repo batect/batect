@@ -21,7 +21,7 @@ import batect.execution.model.events.TaskFailedEvent
 import batect.testutils.createForEachTest
 import batect.ui.Console
 import batect.ui.FailureErrorMessageFormatter
-import batect.ui.text.Text
+import batect.ui.text.TextRun
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
@@ -42,14 +42,14 @@ object QuietEventLoggerSpec : Spek({
 
         on("when a 'task failed' event is posted") {
             val event = mock<TaskFailedEvent>()
-            whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn("Something went wrong.")
+            whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn(TextRun("Something went wrong."))
 
             logger.postEvent(event)
 
             it("prints the message to the console") {
                 inOrder(errorConsole) {
                     verify(errorConsole).println()
-                    verify(errorConsole).println(Text.red("Something went wrong."))
+                    verify(errorConsole).println(TextRun("Something went wrong."))
                 }
             }
         }

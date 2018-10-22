@@ -37,8 +37,11 @@ import batect.execution.model.events.TaskNetworkDeletedEvent
 import batect.execution.model.events.TaskNetworkDeletionFailedEvent
 import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
+import batect.testutils.equivalentTo
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
+import batect.ui.text.Text
+import batect.ui.text.TextRun
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
@@ -58,35 +61,35 @@ object FailureErrorMessageFormatterSpec : Spek({
         describe("formatting a message to display after a failure event occurs") {
             val container = Container("the-container", imageSourceDoesNotMatter())
 
-            data class Scenario(val description: String, val event: TaskFailedEvent, val expectedMessage: String)
+            data class Scenario(val description: String, val event: TaskFailedEvent, val expectedMessage: TextRun)
 
             setOf(
-                Scenario("task network creation failed", TaskNetworkCreationFailedEvent("Something went wrong."), "Could not create network for task: Something went wrong."),
-                Scenario("image build failed", ImageBuildFailedEvent("/some-build-dir", "Something went wrong."), "Could not build image from directory '/some-build-dir': Something went wrong."),
-                Scenario("image pull failed", ImagePullFailedEvent("the-image", "Something went wrong."), "Could not pull image 'the-image': Something went wrong."),
-                Scenario("container creation failed", ContainerCreationFailedEvent(container, "Something went wrong."), "Could not create container 'the-container': Something went wrong."),
-                Scenario("task network deletion failed", TaskNetworkDeletionFailedEvent("Something went wrong."), "Could not delete the task network: Something went wrong."),
-                Scenario("temporary file deletion failed", TemporaryFileDeletionFailedEvent(Paths.get("/tmp/some-file"), "Something went wrong."), "Could not delete temporary file '/tmp/some-file': Something went wrong."),
-                Scenario("temporary directory deletion failed", TemporaryDirectoryDeletionFailedEvent(Paths.get("/tmp/some-directory"), "Something went wrong."), "Could not delete temporary directory '/tmp/some-directory': Something went wrong."),
-                Scenario("container run failed", ContainerRunFailedEvent(container, "Something went wrong."), "Could not run container 'the-container': Something went wrong."),
-                Scenario("container stop failed", ContainerStopFailedEvent(container, "Something went wrong."), "Could not stop container 'the-container': Something went wrong."),
-                Scenario("container removal failed", ContainerRemovalFailedEvent(container, "Something went wrong."), "Could not remove container 'the-container': Something went wrong."),
-                Scenario("execution failed", ExecutionFailedEvent("Something went wrong."), "An unexpected exception occurred during execution: Something went wrong.")
+                Scenario("task network creation failed", TaskNetworkCreationFailedEvent("Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not create network for task.\n")) + Text("Something went wrong.")),
+                Scenario("image build failed", ImageBuildFailedEvent("/some-build-dir", "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not build image from directory '/some-build-dir'.\n")) + Text("Something went wrong.")),
+                Scenario("image pull failed", ImagePullFailedEvent("the-image", "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not pull image ") + Text.bold("the-image") + Text(".\n")) + Text("Something went wrong.")),
+                Scenario("container creation failed", ContainerCreationFailedEvent(container, "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not create container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")),
+                Scenario("task network deletion failed", TaskNetworkDeletionFailedEvent("Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not delete the task network.\n")) + Text("Something went wrong.")),
+                Scenario("temporary file deletion failed", TemporaryFileDeletionFailedEvent(Paths.get("/tmp/some-file"), "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not delete temporary file '/tmp/some-file'.\n")) + Text("Something went wrong.")),
+                Scenario("temporary directory deletion failed", TemporaryDirectoryDeletionFailedEvent(Paths.get("/tmp/some-directory"), "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not delete temporary directory '/tmp/some-directory'.\n")) + Text("Something went wrong.")),
+                Scenario("container run failed", ContainerRunFailedEvent(container, "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not run container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")),
+                Scenario("container stop failed", ContainerStopFailedEvent(container, "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not stop container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")),
+                Scenario("container removal failed", ContainerRemovalFailedEvent(container, "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not remove container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")),
+                Scenario("execution failed", ExecutionFailedEvent("Something went wrong."), Text.red(Text.bold("Error: ") + Text("An unexpected exception occurred during execution.\n")) + Text("Something went wrong."))
             ).forEach { (description, event, expectedMessage) ->
                 given("a '$description' event") {
                     on("getting the message for that event") {
                         val message = formatter.formatErrorMessage(event, mock())
 
                         it("returns an appropriate error message") {
-                            assertThat(message, equalTo(expectedMessage))
+                            assertThat(message, equivalentTo(expectedMessage))
                         }
                     }
                 }
             }
 
             setOf(
-                Scenario("container start failed", ContainerStartFailedEvent(container, "Something went wrong."), "Could not start container 'the-container': Something went wrong."),
-                Scenario("container did not become healthy", ContainerDidNotBecomeHealthyEvent(container, "Something went wrong."), "Container 'the-container' did not become healthy: Something went wrong.")
+                Scenario("container start failed", ContainerStartFailedEvent(container, "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not start container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")),
+                Scenario("container did not become healthy", ContainerDidNotBecomeHealthyEvent(container, "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Container ") + Text.bold("the-container") + Text(" did not become healthy.\n")) + Text("Something went wrong."))
             ).forEach { (description, event, expectedMessage) ->
                 given("a '$description' event") {
                     given("cleanup after failure is disabled") {
@@ -98,7 +101,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                             val message = formatter.formatErrorMessage(event, runOptions)
 
                             it("returns an appropriate error message") {
-                                assertThat(message, equalTo(expectedMessage))
+                                assertThat(message, equivalentTo(expectedMessage))
                             }
                         }
                     }
@@ -112,7 +115,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                             val message = formatter.formatErrorMessage(event, runOptions)
 
                             it("returns an appropriate error message with a message mentioning that the task can be re-run with cleanup disabled") {
-                                assertThat(message, equalTo(expectedMessage + "\n\nYou can re-run the task with --no-cleanup-after-failure to leave the created containers running to diagnose the issue."))
+                                assertThat(message, equivalentTo(expectedMessage + Text("\n\nYou can re-run the task with ") + Text.bold("--no-cleanup-after-failure") + Text(" to leave the created containers running to diagnose the issue.")))
                             }
                         }
                     }

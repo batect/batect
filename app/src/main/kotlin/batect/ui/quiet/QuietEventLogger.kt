@@ -23,7 +23,6 @@ import batect.execution.model.steps.TaskStep
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
-import batect.ui.text.Text
 
 class QuietEventLogger(
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
@@ -33,7 +32,7 @@ class QuietEventLogger(
     override fun postEvent(event: TaskEvent) {
         if (event is TaskFailedEvent) {
             errorConsole.println()
-            errorConsole.println(Text.red(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)))
+            errorConsole.println(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
         }
     }
 

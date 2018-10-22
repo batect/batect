@@ -62,9 +62,9 @@ class SimpleEventLogger(
         }
     }
 
-    private fun logTaskFailure(message: String) {
+    private fun logTaskFailure(message: TextRun) {
         errorConsole.println()
-        errorConsole.println(Text.red(message))
+        errorConsole.println(message)
     }
 
     override fun onStartingTaskStep(step: TaskStep) {

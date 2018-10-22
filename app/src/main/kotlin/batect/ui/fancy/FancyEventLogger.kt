@@ -99,7 +99,7 @@ class FancyEventLogger(
             console.println()
         }
 
-        errorConsole.println(Text.red(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)))
+        errorConsole.println(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
 
         if (haveStartedCleanup) {
             console.println()

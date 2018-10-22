@@ -33,6 +33,7 @@ import batect.testutils.imageSourceDoesNotMatter
 import batect.ui.Console
 import batect.ui.FailureErrorMessageFormatter
 import batect.ui.text.Text
+import batect.ui.text.TextRun
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.inOrder
@@ -272,7 +273,7 @@ object FancyEventLoggerSpec : Spek({
                 val event by createForEachTest { mock<TaskFailedEvent>() }
 
                 given("clean up has not started yet") {
-                    beforeEachTest { whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn("Something went wrong.") }
+                    beforeEachTest { whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn(TextRun("Something went wrong.")) }
 
                     on("posting the event") {
                         logger.postEvent(event)
@@ -280,7 +281,7 @@ object FancyEventLoggerSpec : Spek({
                         it("prints the message to the output") {
                             inOrder(console, errorConsole) {
                                 verify(console).println()
-                                verify(errorConsole).println(Text.red("Something went wrong."))
+                                verify(errorConsole).println(TextRun("Something went wrong."))
                             }
                         }
 
@@ -305,14 +306,14 @@ object FancyEventLoggerSpec : Spek({
                         reset(console)
                         reset(cleanupProgressDisplay)
 
-                        whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn("Something went wrong for a second time.")
+                        whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn(TextRun("Something went wrong for a second time."))
                     }
 
                     on("posting the event") {
                         logger.postEvent(event)
 
                         it("prints the message to the output") {
-                            verify(errorConsole).println(Text.red("Something went wrong for a second time."))
+                            verify(errorConsole).println(TextRun("Something went wrong for a second time."))
                         }
 
                         it("prints the cleanup progress to the console") {
@@ -322,7 +323,7 @@ object FancyEventLoggerSpec : Spek({
                         it("clears the existing cleanup progress before printing the error message and reprinting the cleanup progress") {
                             inOrder(console, errorConsole, cleanupProgressDisplay) {
                                 verify(cleanupProgressDisplay).clear(console)
-                                verify(errorConsole).println(Text.red("Something went wrong for a second time."))
+                                verify(errorConsole).println(TextRun("Something went wrong for a second time."))
                                 verify(console).println()
                                 verify(cleanupProgressDisplay).print(console)
                             }

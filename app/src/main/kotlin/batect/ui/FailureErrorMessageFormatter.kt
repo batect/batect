@@ -34,29 +34,35 @@ import batect.execution.model.events.TaskNetworkCreationFailedEvent
 import batect.execution.model.events.TaskNetworkDeletionFailedEvent
 import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
+import batect.ui.text.Text
+import batect.ui.text.TextRun
 
 class FailureErrorMessageFormatter {
-    fun formatErrorMessage(event: TaskFailedEvent, runOptions: RunOptions): String = when (event) {
-        is TaskNetworkCreationFailedEvent -> "Could not create network for task: ${event.message}"
-        is ImageBuildFailedEvent -> "Could not build image from directory '${event.buildDirectory}': ${event.message}"
-        is ImagePullFailedEvent -> "Could not pull image '${event.imageName}': ${event.message}"
-        is ContainerCreationFailedEvent -> "Could not create container '${event.container.name}': ${event.message}"
-        is ContainerStartFailedEvent -> "Could not start container '${event.container.name}': ${event.message}" + hintToReRunWithCleanupDisabled(runOptions)
-        is ContainerDidNotBecomeHealthyEvent -> "Container '${event.container.name}' did not become healthy: ${event.message}" + hintToReRunWithCleanupDisabled(runOptions)
-        is ContainerRunFailedEvent -> "Could not run container '${event.container.name}': ${event.message}"
-        is ContainerStopFailedEvent -> "Could not stop container '${event.container.name}': ${event.message}"
-        is ContainerRemovalFailedEvent -> "Could not remove container '${event.container.name}': ${event.message}"
-        is TaskNetworkDeletionFailedEvent -> "Could not delete the task network: ${event.message}"
-        is TemporaryFileDeletionFailedEvent -> "Could not delete temporary file '${event.filePath}': ${event.message}"
-        is TemporaryDirectoryDeletionFailedEvent -> "Could not delete temporary directory '${event.directoryPath}': ${event.message}"
-        is ExecutionFailedEvent -> "An unexpected exception occurred during execution: ${event.message}"
+    fun formatErrorMessage(event: TaskFailedEvent, runOptions: RunOptions): TextRun = when (event) {
+        is TaskNetworkCreationFailedEvent -> formatErrorMessage("Could not create network for task", event.message)
+        is ImageBuildFailedEvent -> formatErrorMessage("Could not build image from directory '${event.buildDirectory}'", event.message)
+        is ImagePullFailedEvent -> formatErrorMessage(Text("Could not pull image ") + Text.bold(event.imageName), event.message)
+        is ContainerCreationFailedEvent -> formatErrorMessage(Text("Could not create container ") + Text.bold(event.container.name), event.message)
+        is ContainerStartFailedEvent -> formatErrorMessage(Text("Could not start container ") + Text.bold(event.container.name), event.message) + hintToReRunWithCleanupDisabled(runOptions)
+        is ContainerDidNotBecomeHealthyEvent -> formatErrorMessage(Text("Container ") + Text.bold(event.container.name) + Text(" did not become healthy"), event.message) + hintToReRunWithCleanupDisabled(runOptions)
+        is ContainerRunFailedEvent -> formatErrorMessage(Text("Could not run container ") + Text.bold(event.container.name), event.message)
+        is ContainerStopFailedEvent -> formatErrorMessage(Text("Could not stop container ") + Text.bold(event.container.name), event.message)
+        is ContainerRemovalFailedEvent -> formatErrorMessage(Text("Could not remove container ") + Text.bold(event.container.name), event.message)
+        is TaskNetworkDeletionFailedEvent -> formatErrorMessage("Could not delete the task network", event.message)
+        is TemporaryFileDeletionFailedEvent -> formatErrorMessage("Could not delete temporary file '${event.filePath}'", event.message)
+        is TemporaryDirectoryDeletionFailedEvent -> formatErrorMessage("Could not delete temporary directory '${event.directoryPath}'", event.message)
+        is ExecutionFailedEvent -> formatErrorMessage("An unexpected exception occurred during execution", event.message)
     }
 
-    private fun hintToReRunWithCleanupDisabled(runOptions: RunOptions): String = when (runOptions.behaviourAfterFailure) {
-        BehaviourAfterFailure.Cleanup -> "\n\nYou can re-run the task with --no-cleanup-after-failure to leave the created containers running to diagnose the issue."
-        BehaviourAfterFailure.DontCleanup -> ""
+    private fun formatErrorMessage(headline: String, body: String) = formatErrorMessage(TextRun(headline), body)
+    private fun formatErrorMessage(headline: TextRun, body: String) = Text.red(Text.bold("Error: ") + headline + Text(".\n")) + Text(body)
+
+    private fun hintToReRunWithCleanupDisabled(runOptions: RunOptions): TextRun = when (runOptions.behaviourAfterFailure) {
+        BehaviourAfterFailure.Cleanup -> Text("\n\nYou can re-run the task with ") + Text.bold("--no-cleanup-after-failure") + Text(" to leave the created containers running to diagnose the issue.")
+        BehaviourAfterFailure.DontCleanup -> TextRun("")
     }
 
+    // TODO
     fun formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events: Set<TaskEvent>, cleanupCommands: List<String>): String {
         val containerCreationEvents = events.filterIsInstance<ContainerCreatedEvent>()
 
@@ -83,6 +89,7 @@ class FailureErrorMessageFormatter {
             formattedCommands
     }
 
+    // TODO
     fun formatManualCleanupMessageAfterCleanupFailure(cleanupCommands: List<String>): String {
         if (cleanupCommands.isEmpty()) {
             return ""

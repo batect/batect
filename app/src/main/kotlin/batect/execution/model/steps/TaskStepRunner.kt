@@ -198,7 +198,7 @@ class TaskStepRunner(
         val message = when {
             lastHealthCheckResult.exitCode == 0 -> "The most recent health check exited with code 0, which usually indicates that the container became healthy just after the timeout period expired."
             lastHealthCheckResult.output.isEmpty() -> "The last health check exited with code ${lastHealthCheckResult.exitCode} but did not produce any output."
-            else -> "The last health check exited with code ${lastHealthCheckResult.exitCode} and output: ${lastHealthCheckResult.output.trim()}"
+            else -> "The last health check exited with code ${lastHealthCheckResult.exitCode} and output:\n${lastHealthCheckResult.output.trim()}"
         }
 
         return "The configured health check did not indicate that the container was healthy within the timeout period. $message"

@@ -561,7 +561,7 @@ object TaskStepRunnerSpec : Spek({
 
                             it("emits a 'container did not become healthy' event with details of the last health check") {
                                 verify(eventSink).postEvent(ContainerDidNotBecomeHealthyEvent(container,
-                                    "The configured health check did not indicate that the container was healthy within the timeout period. The last health check exited with code 2 and output: Something's not ready yet."))
+                                    "The configured health check did not indicate that the container was healthy within the timeout period. The last health check exited with code 2 and output:\nSomething's not ready yet."))
                             }
                         }
                     }

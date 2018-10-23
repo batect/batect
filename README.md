@@ -47,6 +47,7 @@ Thank you to the following people for their bug reports, pull requests, suggesti
 * [@Letitia-May](https://github.com/Letitia-May)
 * [@minnn-minnn](https://github.com/minnn-minnn)
 * [@pameck](https://github.com/pameck)
+* [@safiranugroho](https://github.com/safiranugroho)
 * ...and everyone else who has used the tool and provided feedback offline
 
 Thank you to YourKit for providing a complimentary copy of the [YourKit profiler](https://www.yourkit.com/java/profiler).

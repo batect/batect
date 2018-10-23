@@ -34,6 +34,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * some way to clean up old images when they're no longer needed
 * handle the user pressing Ctrl-C during startup or cleanup / receiving SIGINT at any point
 * allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
+* allow overriding working directory at the task level
 
 ### Bugs
 * ensure prerequisite order is respected, even with multiple dependencies

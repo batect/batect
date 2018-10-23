@@ -72,3 +72,7 @@ data class TemporaryFileDeletionFailedEvent(val filePath: Path, val message: Str
 data class TemporaryDirectoryDeletionFailedEvent(val directoryPath: Path, val message: String) : TaskFailedEvent() {
     override fun toString() = "${this::class.simpleName}(directory path: '$directoryPath', message: '$message')"
 }
+
+object UserInterruptedExecutionEvent : TaskFailedEvent() {
+    override fun toString() = this::class.simpleName!!
+}

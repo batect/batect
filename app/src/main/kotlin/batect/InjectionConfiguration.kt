@@ -43,6 +43,7 @@ import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerDependencyGraphProvider
+import batect.execution.InterruptionTrap
 import batect.execution.ParallelExecutionManagerProvider
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
@@ -169,11 +170,12 @@ private val executionModule = Kodein.Module("execution") {
     bind<CleanupStagePlanner>() with singletonWithLogger { logger -> CleanupStagePlanner(logger) }
     bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance()) }
     bind<ContainerDependencyGraphProvider>() with singletonWithLogger { logger -> ContainerDependencyGraphProvider(instance(), logger) }
+    bind<InterruptionTrap>() with singleton { InterruptionTrap(instance()) }
     bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance(), instance()) }
     bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance()) }
     bind<RunOptions>() with singleton { RunOptions(commandLineOptions()) }
     bind<RunStagePlanner>() with singletonWithLogger { logger -> RunStagePlanner(logger) }
-    bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(), instance(), logger) }
+    bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(), instance(), instance(), logger) }
     bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(logger) }
     bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance(), instance(), instance(), instance()) }
     bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), instance(), instance(), instance(), logger) }

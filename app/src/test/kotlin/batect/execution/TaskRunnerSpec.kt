@@ -33,6 +33,7 @@ import batect.ui.text.TextRun
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
+import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
@@ -79,8 +80,15 @@ object TaskRunnerSpec : Spek({
             }
         }
 
+        val interruptionTrapCleanup by createForEachTest { mock<AutoCloseable>() }
+        val interruptionTrap by createForEachTest {
+            mock<InterruptionTrap> {
+                on { trapInterruptions(any()) } doReturn interruptionTrapCleanup
+            }
+        }
+
         val logger by createLoggerForEachTest()
-        val taskRunner by createForEachTest { TaskRunner(eventLoggerProvider, graphProvider, stateMachineProvider, executionManagerProvider, logger) }
+        val taskRunner by createForEachTest { TaskRunner(eventLoggerProvider, graphProvider, stateMachineProvider, executionManagerProvider, interruptionTrap, logger) }
 
         describe("running a task") {
             given("the task succeeds") {
@@ -106,6 +114,14 @@ object TaskRunnerSpec : Spek({
                         inOrder(eventLogger, executionManager) {
                             verify(eventLogger).onTaskStarting("some-task")
                             verify(executionManager).run()
+                        }
+                    }
+
+                    it("starts listening for interrupts before running the task, and stops listening after the task has finished") {
+                        inOrder(interruptionTrap, executionManager, interruptionTrapCleanup) {
+                            verify(interruptionTrap).trapInterruptions(executionManager)
+                            verify(executionManager).run()
+                            verify(interruptionTrapCleanup).close()
                         }
                     }
 

@@ -28,6 +28,7 @@ data class TaskRunner(
     private val graphProvider: ContainerDependencyGraphProvider,
     private val stateMachineProvider: TaskStateMachineProvider,
     private val executionManagerProvider: ParallelExecutionManagerProvider,
+    private val interruptionTrap: InterruptionTrap,
     private val logger: Logger
 ) {
     fun run(config: Configuration, task: Task, runOptions: RunOptions): Int {
@@ -48,7 +49,9 @@ data class TaskRunner(
             data("taskName", task.name)
         }
 
-        executionManager.run()
+        interruptionTrap.trapInterruptions(executionManager).use {
+            executionManager.run()
+        }
 
         logger.info {
             message("Task execution completed.")

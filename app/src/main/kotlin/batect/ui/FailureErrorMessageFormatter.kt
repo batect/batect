@@ -34,6 +34,7 @@ import batect.execution.model.events.TaskNetworkCreationFailedEvent
 import batect.execution.model.events.TaskNetworkDeletionFailedEvent
 import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
+import batect.execution.model.events.UserInterruptedExecutionEvent
 import batect.ui.text.Text
 import batect.ui.text.TextRun
 import batect.ui.text.join
@@ -53,6 +54,7 @@ class FailureErrorMessageFormatter {
         is TemporaryFileDeletionFailedEvent -> formatErrorMessage("Could not delete temporary file '${event.filePath}'", event.message)
         is TemporaryDirectoryDeletionFailedEvent -> formatErrorMessage("Could not delete temporary directory '${event.directoryPath}'", event.message)
         is ExecutionFailedEvent -> formatErrorMessage("An unexpected exception occurred during execution", event.message)
+        is UserInterruptedExecutionEvent -> formatErrorMessage("Interrupt received during execution", "User interrupted execution.")
     }
 
     private fun formatErrorMessage(headline: String, body: String) = formatErrorMessage(TextRun(headline), body)

@@ -32,7 +32,6 @@ If there's something you're really keen to see, pull requests are always welcome
     * Local proxy needs to be listening on correct IP(s) - need to warn users about this and about exposing them to the outside world (and thus allowing other people to access their proxy)
 * 'did you mean...' suggestions when requested task doesn't exist (eg. user runs `./batect unittest`, suggests `unit-test` might be what they meant)
 * some way to clean up old images when they're no longer needed
-* handle the user pressing Ctrl-C during startup or cleanup / receiving SIGINT at any point
 * allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
 * allow overriding working directory at the task level
 
@@ -67,6 +66,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * listen for `SIGWINCH` globally and update `ConsoleInfo.dimensions` only when required rather than calling `ioctl()` every time
 * test against a variety of Docker versions (eg. earliest supported version and latest)
 * analytics / metrics
+* refactor signal handlers (eg. `ContainerKiller` and `InterruptionTrap`) to extend a common base
 * use batect to build batect (self-hosting)
 * tool to visualise execution on a timeline
   * tab to show configuration as parsed

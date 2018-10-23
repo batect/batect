@@ -37,6 +37,7 @@ import batect.execution.model.events.TaskNetworkDeletedEvent
 import batect.execution.model.events.TaskNetworkDeletionFailedEvent
 import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
+import batect.execution.model.events.UserInterruptedExecutionEvent
 import batect.testutils.equivalentTo
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
@@ -73,7 +74,8 @@ object FailureErrorMessageFormatterSpec : Spek({
                 Scenario("container run failed", ContainerRunFailedEvent(container, "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not run container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")),
                 Scenario("container stop failed", ContainerStopFailedEvent(container, "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not stop container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")),
                 Scenario("container removal failed", ContainerRemovalFailedEvent(container, "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not remove container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")),
-                Scenario("execution failed", ExecutionFailedEvent("Something went wrong."), Text.red(Text.bold("Error: ") + Text("An unexpected exception occurred during execution.\n")) + Text("Something went wrong."))
+                Scenario("execution failed", ExecutionFailedEvent("Something went wrong."), Text.red(Text.bold("Error: ") + Text("An unexpected exception occurred during execution.\n")) + Text("Something went wrong.")),
+                Scenario("user interupted execution", UserInterruptedExecutionEvent, Text.red(Text.bold("Error: ") + Text("Interrupt received during execution.\n")) + Text("User interrupted execution."))
             ).forEach { (description, event, expectedMessage) ->
                 given("a '$description' event") {
                     on("getting the message for that event") {

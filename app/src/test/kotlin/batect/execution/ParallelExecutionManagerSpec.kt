@@ -280,5 +280,17 @@ object ParallelExecutionManagerSpec : Spek({
                 verify(taskStepRunner).run(eq(step3), any(), eq(runOptions))
             }
         }
+
+        on("being sent an event") {
+            val eventToPost = mock<TaskEvent>()
+            executionManager.postEvent(eventToPost)
+
+            it("logs the posted event to the event logger before forwarding it to the state machine") {
+                inOrder(eventLogger, stateMachine) {
+                    verify(eventLogger).postEvent(eventToPost)
+                    verify(stateMachine).postEvent(eventToPost)
+                }
+            }
+        }
     }
 })

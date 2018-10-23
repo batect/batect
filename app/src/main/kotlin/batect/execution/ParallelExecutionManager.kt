@@ -40,8 +40,7 @@ class ParallelExecutionManager(
     private val stateMachine: TaskStateMachine,
     private val runOptions: RunOptions,
     private val logger: Logger
-) {
-    private val eventSink = createEventSink()
+) : TaskEventSink {
     private val threadPool = createThreadPool()
 
     private val startNewWorkLockObject = Object()
@@ -74,16 +73,10 @@ class ParallelExecutionManager(
             }
         }
 
-    private fun createEventSink() = object : TaskEventSink {
-        override fun postEvent(event: TaskEvent) {
-            this@ParallelExecutionManager.postEvent(event)
-            startNewWorkIfPossible()
-        }
-    }
-
-    private fun postEvent(event: TaskEvent) {
+    override fun postEvent(event: TaskEvent) {
         eventLogger.postEvent(event)
         stateMachine.postEvent(event)
+        startNewWorkIfPossible()
     }
 
     private fun startNewWorkIfPossible(justCompletedStep: Boolean = false) {
@@ -102,7 +95,7 @@ class ParallelExecutionManager(
                     }
 
                     runningSteps++
-                    runStep(step, threadPool, eventSink)
+                    runStep(step, threadPool, this)
                 }
             } catch (e: Throwable) {
                 logger.error {

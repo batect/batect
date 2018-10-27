@@ -16,11 +16,11 @@
 
 package batect.config
 
+import batect.testutils.withMessage
+import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
-import batect.testutils.withMessage
-import com.natpryce.hamkrest.absent
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -76,13 +76,13 @@ object VolumeMountSpec : Spek({
             }
 
             listOf(
-                    "thing:",
-                    ":thing",
-                    "thing",
-                    " ",
-                    ":",
-                    "thing:thing:",
-                    "thing:thing:options:"
+                "thing:",
+                ":thing",
+                "thing",
+                " ",
+                ":",
+                "thing:thing:",
+                "thing:thing:options:"
             ).map {
                 on("parsing the invalid volume mount definition '$it'") {
                     it("fails with an appropriate error message") {

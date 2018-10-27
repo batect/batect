@@ -16,9 +16,9 @@
 
 package batect.execution
 
-import batect.logging.LoggerFactory
 import batect.execution.model.stages.CleanupStagePlanner
 import batect.execution.model.stages.RunStagePlanner
+import batect.logging.LoggerFactory
 import batect.ui.FailureErrorMessageFormatter
 
 class TaskStateMachineProvider(

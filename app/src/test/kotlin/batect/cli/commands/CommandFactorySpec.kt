@@ -17,7 +17,6 @@
 package batect.cli.commands
 
 import batect.cli.CommandLineOptions
-import org.kodein.di.Kodein
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockito_kotlin.mock
@@ -26,6 +25,7 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
 

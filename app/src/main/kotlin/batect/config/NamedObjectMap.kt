@@ -19,9 +19,9 @@ package batect.config
 abstract class NamedObjectMap<E>(contentName: String, contents: Iterable<E>) : Map<String, E>, Set<E> {
     init {
         val duplicates = contents
-                .groupBy { nameFor(it) }
-                .filter { it.value.size > 1 }
-                .map { it.key }
+            .groupBy { nameFor(it) }
+            .filter { it.value.size > 1 }
+            .map { it.key }
 
         if (duplicates.isNotEmpty()) {
             throw IllegalArgumentException("Cannot create a ${this.javaClass.simpleName} where a $contentName name is used more than once. Duplicated $contentName names: ${duplicates.joinToString(", ")}")
@@ -48,7 +48,6 @@ abstract class NamedObjectMap<E>(contentName: String, contents: Iterable<E>) : M
     override fun get(key: String): E? = implementation[key]
     override fun isEmpty(): Boolean = implementation.isEmpty()
 
-    // Set members
     override fun contains(element: E): Boolean = containsValue(element)
     override fun containsAll(elements: Collection<E>): Boolean = values.containsAll(elements)
     override fun iterator(): Iterator<E> = values.iterator()

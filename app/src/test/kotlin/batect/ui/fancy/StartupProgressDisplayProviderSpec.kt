@@ -59,7 +59,7 @@ object StartupProgressDisplayProviderSpec : Spek({
 
             it("returns progress lines for each node in the graph") {
                 assertThat(display.containerLines.map { it.container }.toSet(),
-                        equalTo(setOf(container1, container2)))
+                    equalTo(setOf(container1, container2)))
             }
 
             it("returns a progress line for the first node with its dependencies") {

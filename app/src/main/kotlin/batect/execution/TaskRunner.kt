@@ -78,8 +78,8 @@ data class TaskRunner(
 
     private fun findTaskContainerExitCode(stateMachine: TaskStateMachine, task: Task): Int {
         val containerExitedEvent = stateMachine.getAllEvents()
-                .filterIsInstance<RunningContainerExitedEvent>()
-                .singleOrNull()
+            .filterIsInstance<RunningContainerExitedEvent>()
+            .singleOrNull()
 
         if (containerExitedEvent == null) {
             throw IllegalStateException("The task neither failed nor succeeded.")

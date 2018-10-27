@@ -16,10 +16,10 @@
 
 package batect.config
 
+import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
-import batect.testutils.withMessage
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -47,20 +47,20 @@ object PortMappingSpec : Spek({
             }
 
             listOf(
-                    "thing:",
-                    "12:",
-                    ":thing",
-                    ":12",
-                    "thing",
-                    "12",
-                    "thing:12",
-                    "12:thing",
-                    "-1:12",
-                    "12:-1",
-                    "0:12",
-                    "12:0",
-                    " ",
-                    ":"
+                "thing:",
+                "12:",
+                ":thing",
+                ":12",
+                "thing",
+                "12",
+                "thing:12",
+                "12:thing",
+                "-1:12",
+                "12:-1",
+                "0:12",
+                "12:0",
+                " ",
+                ":"
             ).map {
                 on("parsing the invalid port mapping definition '$it'") {
                     it("fails with an appropriate error message") {

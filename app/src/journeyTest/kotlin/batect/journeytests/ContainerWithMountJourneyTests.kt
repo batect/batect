@@ -29,8 +29,8 @@ import org.jetbrains.spek.api.dsl.on
 
 object ContainerWithMountJourneyTests : Spek({
     mapOf(
-            "container-with-mount" to "a simple task with a volume mount",
-            "container-with-cached-mount" to "a simple task with a cached volume mount"
+        "container-with-mount" to "a simple task with a volume mount",
+        "container-with-cached-mount" to "a simple task with a cached volume mount"
     ).forEach { testName, description ->
         given(description) {
             val runner = ApplicationRunner(testName)

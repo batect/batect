@@ -33,7 +33,8 @@ data class VolumeMount(
     }
 
     companion object {
-        @JvmStatic @JsonCreator
+        @JvmStatic
+        @JsonCreator
         fun parse(value: String): VolumeMount {
             if (value == "") {
                 throw IllegalArgumentException("Volume mount definition cannot be empty.")

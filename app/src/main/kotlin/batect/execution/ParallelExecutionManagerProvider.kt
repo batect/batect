@@ -16,8 +16,8 @@
 
 package batect.execution
 
-import batect.logging.LoggerFactory
 import batect.execution.model.steps.TaskStepRunner
+import batect.logging.LoggerFactory
 import batect.ui.EventLogger
 
 class ParallelExecutionManagerProvider(private val taskStepRunner: TaskStepRunner, private val loggerFactory: LoggerFactory) {

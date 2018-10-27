@@ -38,7 +38,8 @@ data class PortMapping(
     }
 
     companion object {
-        @JvmStatic @JsonCreator
+        @JvmStatic
+        @JsonCreator
         fun parse(value: String): PortMapping {
             if (value == "") {
                 throw IllegalArgumentException("Port mapping definition cannot be empty.")

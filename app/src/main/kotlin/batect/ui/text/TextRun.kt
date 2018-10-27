@@ -18,7 +18,7 @@ package batect.ui.text
 
 data class TextRun(val text: List<Text>) {
     constructor(vararg text: Text) : this(text.toList())
-    constructor(text: String): this(Text(text))
+    constructor(text: String) : this(Text(text))
 
     fun simplify(): TextRun {
         val simplified = this.text.fold(emptyList<Text>()) { acc, text ->

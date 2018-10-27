@@ -57,7 +57,7 @@ object CommandSpec : Spek({
             }
 
             on("adding a list of arguments where an argument contains a single quote") {
-                    it("formats the resulting command as if the single quote was escaped with a slash") {
+                it("formats the resulting command as if the single quote was escaped with a slash") {
                     assertThat(command + listOf("""some'arg"""), equalTo(Command.parse("some-command some\\'arg")))
                 }
             }

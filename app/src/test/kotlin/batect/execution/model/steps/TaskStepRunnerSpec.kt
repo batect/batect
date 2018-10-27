@@ -35,7 +35,6 @@ import batect.docker.DockerException
 import batect.docker.DockerHealthCheckResult
 import batect.docker.DockerImage
 import batect.docker.DockerImageBuildProgress
-import batect.docker.pull.DockerImagePullProgress
 import batect.docker.DockerNetwork
 import batect.docker.HealthStatus
 import batect.docker.ImageBuildFailedException
@@ -43,6 +42,7 @@ import batect.docker.ImagePullFailedException
 import batect.docker.NetworkCreationFailedException
 import batect.docker.NetworkDeletionFailedException
 import batect.docker.UserAndGroup
+import batect.docker.pull.DockerImagePullProgress
 import batect.execution.BehaviourAfterFailure
 import batect.execution.RunAsCurrentUserConfiguration
 import batect.execution.RunAsCurrentUserConfigurationProvider

@@ -21,7 +21,7 @@ repositories {
 }
 
 dependencies {
-    compile localGroovy()
-    compile gradleApi()
-    compile 'com.github.oshi:oshi-core:3.9.1'
+    implementation localGroovy()
+    implementation gradleApi()
+    implementation 'com.github.oshi:oshi-core:3.9.1'
 }

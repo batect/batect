@@ -19,8 +19,8 @@ sourceSets {
 }
 
 configurations {
-    journeyTestCompile.extendsFrom testCompile
-    journeyTestRuntime.extendsFrom testRuntime
+    journeyTestImplementation.extendsFrom testImplementation
+    journeyTestRuntimeOnly.extendsFrom testRuntimeOnly
 }
 
 task journeyTest(type: Test) {

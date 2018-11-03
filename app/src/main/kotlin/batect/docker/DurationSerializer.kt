@@ -16,12 +16,13 @@
 
 package batect.docker
 
-import kotlinx.serialization.KInput
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializer
+import kotlinx.serialization.*
+import kotlinx.serialization.internal.LongDescriptor
 import java.time.Duration
 
 @Serializer(forClass = Duration::class)
 object DurationSerializer : KSerializer<Duration> {
-    override fun load(input: KInput): Duration = Duration.ofNanos(input.readLongValue())
+    override val descriptor: SerialDescriptor = LongDescriptor
+    override fun deserialize(input: Decoder): Duration = Duration.ofNanos(input.decodeLong())
+    override fun serialize(output: Encoder, obj: Duration) = throw UnsupportedOperationException()
 }

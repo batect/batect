@@ -223,7 +223,7 @@ object DockerRegistryCredentialsSourceSpec : Spek({
             on("loading the credentials") {
                 it("throws an appropriate exception") {
                     assertThat({ credentialsSource.load() }, throws<DockerRegistryCredentialsException>(
-                        withMessage("The credentials returned for 'someserver.com' by the credential helper executable 'docker-credentials-secretstore' are invalid: JSON at 1: Expected end of object")
+                        withMessage("The credentials returned for 'someserver.com' by the credential helper executable 'docker-credentials-secretstore' are invalid: Invalid JSON at 1: Expected end of object")
                     ))
                 }
             }

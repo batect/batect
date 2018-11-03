@@ -139,7 +139,7 @@ class DockerAPI(
                 throw ContainerInspectionFailedException("Could not inspect container '${container.id}': ${error.message}")
             }
 
-            return JSON.nonstrict.parse(response.body()!!.string())
+            return JSON.nonstrict.parse(DockerContainerInfo.serializer(), response.body()!!.string())
         }
     }
 

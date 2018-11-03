@@ -20,6 +20,7 @@ import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
+import kotlinx.serialization.Decoder
 import kotlinx.serialization.KInput
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -31,12 +32,12 @@ import java.time.Duration
 object DurationSerializerSpec : Spek({
     describe("a duration serializer") {
         given("an integer value") {
-            val input = mock<KInput> {
-                on { readLongValue() } doReturn 100
+            val input = mock<Decoder> {
+                on { decodeLong() } doReturn 100
             }
 
             on("deserializing that value") {
-                val result = DurationSerializer.load(input)
+                val result = DurationSerializer.deserialize(input)
 
                 it("returns that value as a duration in nanoseconds") {
                     assertThat(result, equalTo(Duration.ofNanos(100)))

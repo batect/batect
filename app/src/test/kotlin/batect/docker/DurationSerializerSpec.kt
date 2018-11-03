@@ -21,7 +21,6 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import kotlinx.serialization.Decoder
-import kotlinx.serialization.KInput
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given

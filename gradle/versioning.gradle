@@ -44,8 +44,6 @@ task validateIsReleaseBuild {
     }
 }
 
-
-
 task validateRelease {
     description 'Validates that the current commit is ready to be released.'
     group 'Verification'

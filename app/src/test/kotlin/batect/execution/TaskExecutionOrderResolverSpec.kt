@@ -78,7 +78,7 @@ object TaskExecutionOrderResolverSpec : Spek({
 
         on("resolving the execution order for a task that has a single dependency") {
             val dependencyTask = Task("dependency-task", taskRunConfiguration)
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = setOf(dependencyTask.name))
+            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTask.name))
             val config = Configuration("some-project", TaskMap(mainTask, dependencyTask), ContainerMap())
 
             val executionOrder = resolver.resolveExecutionOrder(config, mainTask.name)
@@ -89,7 +89,7 @@ object TaskExecutionOrderResolverSpec : Spek({
         }
 
         on("resolving the execution order for a task that has a dependency that does not exist") {
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = setOf("dependency-task"))
+            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("dependency-task"))
             val config = Configuration("some-project", TaskMap(mainTask), ContainerMap())
 
             it("throws an appropriate exception") {
@@ -101,7 +101,7 @@ object TaskExecutionOrderResolverSpec : Spek({
         on("resolving the execution order for a task that has multiple dependencies") {
             val dependencyTask1 = Task("dependency-task-1", taskRunConfiguration)
             val dependencyTask2 = Task("dependency-task-2", taskRunConfiguration)
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = setOf(dependencyTask1.name, dependencyTask2.name))
+            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTask1.name, dependencyTask2.name))
             val config = Configuration("some-project", TaskMap(mainTask, dependencyTask1, dependencyTask2), ContainerMap())
 
             val executionOrder = resolver.resolveExecutionOrder(config, mainTask.name)
@@ -117,7 +117,7 @@ object TaskExecutionOrderResolverSpec : Spek({
         }
 
         on("resolving the execution order for a task that depends on itself") {
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = setOf("main-task"))
+            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("main-task"))
             val config = Configuration("some-project", TaskMap(mainTask), ContainerMap())
 
             it("throws an appropriate exception") {
@@ -128,8 +128,8 @@ object TaskExecutionOrderResolverSpec : Spek({
 
         on("resolving the execution order for a task that depends on a task A, which then depends on a task B") {
             val dependencyTaskB = Task("dependency-task-b", taskRunConfiguration)
-            val dependencyTaskA = Task("dependency-task-a", taskRunConfiguration, prerequisiteTasks = setOf(dependencyTaskB.name))
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = setOf(dependencyTaskA.name))
+            val dependencyTaskA = Task("dependency-task-a", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskB.name))
+            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name))
             val config = Configuration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
 
             val executionOrder = resolver.resolveExecutionOrder(config, mainTask.name)
@@ -145,8 +145,25 @@ object TaskExecutionOrderResolverSpec : Spek({
 
         on("resolving the execution order for a task that depends on tasks A and B, where B also depends on A") {
             val dependencyTaskA = Task("dependency-task-a", taskRunConfiguration)
-            val dependencyTaskB = Task("dependency-task-b", taskRunConfiguration, prerequisiteTasks = setOf(dependencyTaskA.name))
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = setOf(dependencyTaskA.name, dependencyTaskB.name))
+            val dependencyTaskB = Task("dependency-task-b", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name))
+            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name, dependencyTaskB.name))
+            val config = Configuration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
+
+            val executionOrder = resolver.resolveExecutionOrder(config, mainTask.name)
+
+            it("schedules task B to execute before the main task") {
+                assertThat(executionOrder, dependencyTaskB executesBefore mainTask)
+            }
+
+            it("schedules task A to execute before task B") {
+                assertThat(executionOrder, dependencyTaskA executesBefore dependencyTaskB)
+            }
+        }
+
+        on("resolving the execution order for a task that depends on tasks A and B, where B also depends on A and B is listed first in the main task's list of prerequisites") {
+            val dependencyTaskA = Task("dependency-task-a", taskRunConfiguration)
+            val dependencyTaskB = Task("dependency-task-b", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name))
+            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskB.name, dependencyTaskA.name))
             val config = Configuration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
 
             val executionOrder = resolver.resolveExecutionOrder(config, mainTask.name)
@@ -161,8 +178,8 @@ object TaskExecutionOrderResolverSpec : Spek({
         }
 
         on("resolving the execution order for a task that depends on a second task that depends on the first task") {
-            val otherTask = Task("other-task", taskRunConfiguration, prerequisiteTasks = setOf("main-task"))
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = setOf("other-task"))
+            val otherTask = Task("other-task", taskRunConfiguration, prerequisiteTasks = listOf("main-task"))
+            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("other-task"))
             val config = Configuration("some-project", TaskMap(mainTask, otherTask), ContainerMap())
 
             it("throws an appropriate exception") {
@@ -172,9 +189,9 @@ object TaskExecutionOrderResolverSpec : Spek({
         }
 
         on("resolving the execution order for a task that depends on task A, which depends on task B, which depends on the main task") {
-            val taskA = Task("task-A", taskRunConfiguration, prerequisiteTasks = setOf("task-B"))
-            val taskB = Task("task-B", taskRunConfiguration, prerequisiteTasks = setOf("main-task"))
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = setOf("task-A"))
+            val taskA = Task("task-A", taskRunConfiguration, prerequisiteTasks = listOf("task-B"))
+            val taskB = Task("task-B", taskRunConfiguration, prerequisiteTasks = listOf("main-task"))
+            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("task-A"))
             val config = Configuration("some-project", TaskMap(mainTask, taskA, taskB), ContainerMap())
 
             it("throws an appropriate exception") {
@@ -184,9 +201,9 @@ object TaskExecutionOrderResolverSpec : Spek({
         }
 
         on("resolving the execution order for a task that depends on task A, which depends on task B, which depends on task A") {
-            val taskA = Task("task-A", taskRunConfiguration, prerequisiteTasks = setOf("task-B"))
-            val taskB = Task("task-B", taskRunConfiguration, prerequisiteTasks = setOf("task-A"))
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = setOf("task-A"))
+            val taskA = Task("task-A", taskRunConfiguration, prerequisiteTasks = listOf("task-B"))
+            val taskB = Task("task-B", taskRunConfiguration, prerequisiteTasks = listOf("task-A"))
+            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("task-A"))
             val config = Configuration("some-project", TaskMap(mainTask, taskA, taskB), ContainerMap())
 
             it("throws an appropriate exception") {

@@ -35,9 +35,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
 * allow overriding working directory at the task level
 
-### Bugs
-* ensure prerequisite order is respected, even with multiple dependencies
-
 ### Other
 * replace factories with references to constructors
 * switch to Kotlin's built-in `Result` where appropriate

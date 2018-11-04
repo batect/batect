@@ -27,7 +27,7 @@ data class TaskFromFile(
     @JsonProperty("run") val runConfiguration: TaskRunConfiguration,
     val description: String = "",
     @JsonProperty("dependencies") @JsonDeserialize(using = DependencySetDeserializer::class) val dependsOnContainers: Set<String> = emptySet(),
-    @JsonProperty("prerequisites") @JsonDeserialize(using = PrerequisiteSetDeserializer::class) val prerequisiteTasks: Set<String> = emptySet()
+    @JsonProperty("prerequisites") @JsonDeserialize(using = PrerequisiteSetDeserializer::class) val prerequisiteTasks: List<String> = emptyList()
 ) {
     fun toTask(name: String): Task = Task(name, runConfiguration, description, dependsOnContainers, prerequisiteTasks)
 }

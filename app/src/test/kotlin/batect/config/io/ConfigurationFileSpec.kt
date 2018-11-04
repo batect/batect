@@ -65,7 +65,7 @@ object ConfigurationFileSpec : Spek({
 
             on("converting a configuration file with a task") {
                 val runConfiguration = TaskRunConfiguration("some_container", Command.parse("some_command"), mapOf("SOME_VAR" to LiteralValue("some value")), setOf(PortMapping(123, 456)))
-                val task = TaskFromFile(runConfiguration, "Some description", setOf("dependency-1"), setOf("other-task"))
+                val task = TaskFromFile(runConfiguration, "Some description", setOf("dependency-1"), listOf("other-task"))
                 val taskName = "the_task_name"
                 val configFile = ConfigurationFile("the_project_name", mapOf(taskName to task))
                 val pathResolver = mock<PathResolver>()

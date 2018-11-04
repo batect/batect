@@ -333,7 +333,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, equalTo(Command.parse("./gradlew doStuff")))
                 assertThat(task.dependsOnContainers, isEmpty)
-                assertThat(task.prerequisiteTasks, equalTo(setOf("other-task", "another-task")))
+                assertThat(task.prerequisiteTasks, equalTo(listOf("other-task", "another-task")))
                 assertThat(task.description, isEmptyString)
             }
         }

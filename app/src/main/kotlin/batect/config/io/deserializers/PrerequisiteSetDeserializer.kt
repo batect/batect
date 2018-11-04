@@ -16,6 +16,21 @@
 
 package batect.config.io.deserializers
 
-internal class PrerequisiteSetDeserializer : StringSetDeserializer() {
-    override fun getDuplicateValueMessage(value: String) = "The prerequisite '$value' is given more than once"
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonMappingException
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer
+
+internal class PrerequisiteSetDeserializer : StdDeserializer<List<String>>(List::class.java) {
+    override fun deserialize(p: JsonParser?, context: DeserializationContext?): List<String> {
+        return deserializeCollection(p, context, emptyList()) { value, result ->
+            if (result.contains(value)) {
+                throw JsonMappingException.from(p, getDuplicateValueMessage(value))
+            }
+
+            result + value
+        }
+    }
+
+    private fun getDuplicateValueMessage(value: String) = "The prerequisite '$value' is given more than once"
 }

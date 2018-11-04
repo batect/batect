@@ -30,9 +30,7 @@ data class DockerImageBuildIgnoreEntry(val pattern: String, val inverted: Boolea
         val builder = StringBuilder("^")
 
         while (currentIndex < patternToUse.length) {
-            val nextChar = patternToUse[currentIndex]
-
-            when (nextChar) {
+            when (val nextChar = patternToUse[currentIndex]) {
                 '?' -> {
                     builder.append(anythingExceptPathSeparator)
                 }

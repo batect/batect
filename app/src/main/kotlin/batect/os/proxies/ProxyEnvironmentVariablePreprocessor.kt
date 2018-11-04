@@ -23,9 +23,7 @@ import okhttp3.HttpUrl
 
 class ProxyEnvironmentVariablePreprocessor(private val hostNameResolver: DockerHostNameResolver, private val logger: Logger) {
     fun process(value: String): String {
-        val hostNameResolutionResult = hostNameResolver.resolveNameOfDockerHost()
-
-        when (hostNameResolutionResult) {
+        when (val hostNameResolutionResult = hostNameResolver.resolveNameOfDockerHost()) {
             is DockerHostNameResolutionResult.NotSupported -> {
                 logger.info {
                     message("Not attempting to preprocess proxy environment variable value because getting the local Docker hostname is not supported.")

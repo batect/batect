@@ -177,9 +177,7 @@ class TaskStepRunner(
 
     private fun handleWaitForContainerToBecomeHealthyStep(step: WaitForContainerToBecomeHealthyStep, eventSink: TaskEventSink) {
         try {
-            val result = dockerClient.waitForHealthStatus(step.dockerContainer)
-
-            val event = when (result) {
+            val event = when (dockerClient.waitForHealthStatus(step.dockerContainer)) {
                 HealthStatus.NoHealthCheck -> ContainerBecameHealthyEvent(step.container)
                 HealthStatus.BecameHealthy -> ContainerBecameHealthyEvent(step.container)
                 HealthStatus.BecameUnhealthy -> ContainerDidNotBecomeHealthyEvent(step.container, containerBecameUnhealthyMessage(step.dockerContainer))

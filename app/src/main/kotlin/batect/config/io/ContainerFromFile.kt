@@ -82,9 +82,7 @@ data class ContainerFromFile(
     }
 
     private fun resolveBuildDirectory(containerName: String, pathResolver: PathResolver, buildDirectory: String): String {
-        val result = pathResolver.resolve(buildDirectory)
-
-        when (result) {
+        when (val result = pathResolver.resolve(buildDirectory)) {
             is PathResolutionResult.Resolved -> when (result.pathType) {
                 PathType.Directory -> return result.absolutePath.toString()
                 PathType.DoesNotExist -> throw ConfigurationException("Build directory '$buildDirectory' (resolved to '${result.absolutePath}') for container '$containerName' does not exist.")
@@ -95,9 +93,7 @@ data class ContainerFromFile(
     }
 
     private fun resolveVolumeMount(volumeMount: VolumeMount, containerName: String, pathResolver: PathResolver): VolumeMount {
-        val result = pathResolver.resolve(volumeMount.localPath)
-
-        val resolvedLocalPath = when (result) {
+        val resolvedLocalPath = when (val result = pathResolver.resolve(volumeMount.localPath)) {
             is PathResolutionResult.Resolved -> result.absolutePath.toString()
             is PathResolutionResult.InvalidPath -> throw ConfigurationException("Local path '${volumeMount.localPath}' for volume mount in container '$containerName' is not a valid path.")
         }

@@ -66,9 +66,7 @@ class TaskStateMachine(
                 return handleDrainingWorkAfterRunFailure(stepsStillRunning)
             }
 
-            val result = currentStage.popNextStep(events)
-
-            return when (result) {
+            return when (val result = currentStage.popNextStep(events)) {
                 is StepReady -> handleNextStepReady(result)
                 is NoStepsReady -> handleNoStepsReady(stepsStillRunning)
                 is NoStepsRemaining -> handleNoStepsRemaining(stepsStillRunning)

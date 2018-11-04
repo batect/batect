@@ -76,9 +76,7 @@ class CommandLineOptionsParser(pathResolverFactory: PathResolverFactory) : Optio
     private val dontPropagateProxyEnvironmentVariables: Boolean by flagOption("no-proxy-vars", "Don't propagate proxy-related environment variables such as http_proxy and no_proxy to image builds or containers.")
 
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {
-        val result = optionParser.parseOptions(args)
-
-        when (result) {
+        when (val result = optionParser.parseOptions(args)) {
             is OptionsParsingResult.InvalidOptions -> return CommandLineOptionsParsingResult.Failed(result.message)
             is OptionsParsingResult.ReadOptions -> return parseTaskName(args.drop(result.argumentsConsumed))
         }

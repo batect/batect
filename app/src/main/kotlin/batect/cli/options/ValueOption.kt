@@ -49,9 +49,7 @@ class ValueOption<StorageType, ValueType : StorageType>(
             value
         }
 
-        val conversionResult = valueConverter(argValue)
-
-        return when (conversionResult) {
+        return when (val conversionResult = valueConverter(argValue)) {
             is ValueConversionResult.ConversionFailed -> OptionParsingResult.InvalidOption("The value '$argValue' for option '$arg' is invalid: ${conversionResult.message}")
             is ValueConversionResult.ConversionSucceeded -> {
                 value = conversionResult.value

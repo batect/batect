@@ -64,9 +64,7 @@ object ValueConverters {
         val resolver = pathResolverFactory.createResolverForCurrentDirectory()
 
         return { value ->
-            val result = resolver.resolve(value)
-
-            when (result) {
+            when (val result = resolver.resolve(value)) {
                 is PathResolutionResult.Resolved -> when (result.pathType) {
                     PathType.File, PathType.DoesNotExist -> ValueConversionResult.ConversionSucceeded(result.absolutePath)
                     PathType.Directory -> ValueConversionResult.ConversionFailed("The path '$value' refers to a directory.")

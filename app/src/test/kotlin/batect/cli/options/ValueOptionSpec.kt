@@ -43,7 +43,7 @@ object ValueOptionSpec : Spek({
                 val valueConverter = { value: String ->
                     when (value) {
                         "invalid-thing" -> ValueConversionResult.ConversionFailed<String>("that's not allowed")
-                        else -> ValueConversionResult.ConversionSucceeded<String>(value)
+                        else -> ValueConversionResult.ConversionSucceeded(value)
                     }
                 }
 

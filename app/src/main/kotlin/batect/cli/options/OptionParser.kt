@@ -27,9 +27,7 @@ class OptionParser {
         var argIndex = 0
 
         while (argIndex < args.count()) {
-            val optionParsingResult = parseOption(args, argIndex)
-
-            when (optionParsingResult) {
+            when (val optionParsingResult = parseOption(args, argIndex)) {
                 is OptionParsingResult.ReadOption -> argIndex += optionParsingResult.argumentsConsumed
                 is OptionParsingResult.InvalidOption -> return OptionsParsingResult.InvalidOptions(optionParsingResult.message)
                 is OptionParsingResult.NoOption -> return OptionsParsingResult.ReadOptions(argIndex)

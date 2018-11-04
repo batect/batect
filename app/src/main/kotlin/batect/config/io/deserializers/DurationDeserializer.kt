@@ -61,9 +61,8 @@ class DurationDeserializer : StdScalarDeserializer<Duration>(Duration::class.jav
 
     private fun convertValue(value: MatchResult): Duration {
         val numericPart = value.groupValues[1].toBigDecimal()
-        val unitPart = value.groupValues[5]
 
-        val unit = when (unitPart) {
+        val unit = when (val unitPart = value.groupValues[5]) {
             "h" -> ChronoUnit.HOURS
             "m" -> ChronoUnit.MINUTES
             "s" -> ChronoUnit.SECONDS

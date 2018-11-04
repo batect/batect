@@ -51,9 +51,7 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
     private val commandFactory: CommandFactory = instance()
 
     fun run(args: Iterable<String>): Int {
-        val result = commandLineOptionsParser.parse(args)
-
-        return when (result) {
+        return when (val result = commandLineOptionsParser.parse(args)) {
             is CommandLineOptionsParsingResult.Succeeded -> runCommand(result.options, args)
             is CommandLineOptionsParsingResult.Failed -> handleOptionsParsingFailed(result)
         }

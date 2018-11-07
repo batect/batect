@@ -566,6 +566,14 @@ object DockerAPISpec : Spek({
                     }
                 }
 
+                on("the container being stopped") {
+                    httpClient.mockPost(expectedUrl, """{"message": "cannot resize a stopped container: unknown"}""", 418)
+
+                    it("throws an appropriate exception") {
+                        assertThat({ api.resizeContainerTTY(container, dimensions) }, throws<ContainerStoppedException>(withMessage("Resizing TTY for container 'the-container-id' failed: cannot resize a stopped container: unknown")))
+                    }
+                }
+
                 on("the API call failing") {
                     httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
 

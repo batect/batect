@@ -84,7 +84,7 @@ object DockerClientIntegrationTest : Spek({
         val waiter = ContainerWaiter(api)
         val streamer = ContainerIOStreamer(System.out, System.`in`)
         val killer = ContainerKiller(api, posix)
-        val ttyManager = ContainerTTYManager(api, consoleInfo, posix)
+        val ttyManager = ContainerTTYManager(api, consoleInfo, posix, logger)
         val client = DockerClient(api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, streamer, killer, ttyManager, logger)
 
         fun creationRequestForContainer(image: DockerImage, network: DockerNetwork, command: Iterable<String>, volumeMounts: Set<VolumeMount> = emptySet(), portMappings: Set<PortMapping> = emptySet(), userAndGroup: UserAndGroup? = null): DockerContainerCreationRequest {

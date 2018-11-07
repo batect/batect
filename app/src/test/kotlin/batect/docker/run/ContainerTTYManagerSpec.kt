@@ -16,14 +16,19 @@
 
 package batect.docker.run
 
+import batect.docker.ContainerStoppedException
 import batect.docker.DockerAPI
 import batect.docker.DockerContainer
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.ui.ConsoleInfo
 import batect.ui.Dimensions
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.throws
 import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.argumentCaptor
 import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.doThrow
 import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
@@ -44,7 +49,8 @@ object ContainerTTYManagerSpec : Spek({
         val api by createForEachTest { mock<DockerAPI>() }
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
         val posix by createForEachTest { mock<POSIX>() }
-        val manager by createForEachTest { ContainerTTYManager(api, consoleInfo, posix) }
+        val logger by createLoggerForEachTest()
+        val manager by createForEachTest { ContainerTTYManager(api, consoleInfo, posix, logger) }
 
         given("a container") {
             val container = DockerContainer("the-container-id")
@@ -53,23 +59,37 @@ object ContainerTTYManagerSpec : Spek({
                 beforeEachTest { whenever(consoleInfo.stdinIsTTY).doReturn(true) }
 
                 describe("monitoring for terminal size changes") {
-                    on("being able to retrieve the current terminal dimensions") {
-                        whenever(consoleInfo.dimensions).doReturn(Dimensions(123, 456))
+                    given("retrieving the current terminal dimensions succeeds") {
+                        beforeEachTest { whenever(consoleInfo.dimensions).doReturn(Dimensions(123, 456)) }
 
-                        manager.monitorForSizeChanges(container)
+                        given("the container is still running") {
+                            on("starting to monitor for terminal size changes") {
+                                manager.monitorForSizeChanges(container)
 
-                        it("registers a signal handler for the SIGWINCH signal") {
-                            verify(posix).signal(eq(Signal.SIGWINCH), any())
+                                it("registers a signal handler for the SIGWINCH signal") {
+                                    verify(posix).signal(eq(Signal.SIGWINCH), any())
+                                }
+
+                                it("sends the current dimensions to the container") {
+                                    verify(api).resizeContainerTTY(container, Dimensions(123, 456))
+                                }
+
+                                it("registers the signal handler before sending the current dimensions") {
+                                    inOrder(posix, api) {
+                                        verify(posix).signal(eq(Signal.SIGWINCH), any())
+                                        verify(api).resizeContainerTTY(container, Dimensions(123, 456))
+                                    }
+                                }
+                            }
                         }
 
-                        it("sends the current dimensions to the container") {
-                            verify(api).resizeContainerTTY(container, Dimensions(123, 456))
-                        }
+                        given("the container is not still running") {
+                            beforeEachTest { whenever(api.resizeContainerTTY(any(), any())).doThrow(ContainerStoppedException("The container is stopped")) }
 
-                        it("registers the signal handler before sending the current dimensions") {
-                            inOrder(posix, api) {
-                                verify(posix).signal(eq(Signal.SIGWINCH), any())
-                                verify(api).resizeContainerTTY(container, Dimensions(123, 456))
+                            on("starting to monitor for terminal size changes") {
+                                it("does not throw an exception") {
+                                    assertThat({ manager.monitorForSizeChanges(container) }, !throws<Throwable>())
+                                }
                             }
                         }
                     }
@@ -97,13 +117,27 @@ object ContainerTTYManagerSpec : Spek({
                         verify(posix).signal(eq(Signal.SIGWINCH), handlerCaptor.capture())
                     }
 
-                    on("being able to retrieve the current terminal dimensions") {
-                        whenever(consoleInfo.dimensions).doReturn(Dimensions(789, 1234))
+                    given("retrieving the current terminal dimensions succeeds") {
+                        beforeEachTest { whenever(consoleInfo.dimensions).doReturn(Dimensions(789, 1234)) }
 
-                        handlerCaptor.firstValue.handle(Signal.SIGWINCH.value())
+                        given("the container is still running") {
+                            on("invoking the signal handler") {
+                                handlerCaptor.firstValue.handle(Signal.SIGWINCH.value())
 
-                        it("sends the current dimensions to the container") {
-                            verify(api).resizeContainerTTY(container, Dimensions(789, 1234))
+                                it("sends the current dimensions to the container") {
+                                    verify(api).resizeContainerTTY(container, Dimensions(789, 1234))
+                                }
+                            }
+                        }
+
+                        given("the container is not still running") {
+                            beforeEachTest { whenever(api.resizeContainerTTY(any(), any())).doThrow(ContainerStoppedException("The container is stopped")) }
+
+                            on("invoking the signal handler") {
+                                it("does not throw an exception") {
+                                    assertThat({ handlerCaptor.firstValue.handle(Signal.SIGWINCH.value()) }, !throws<Throwable>())
+                                }
+                            }
                         }
                     }
 

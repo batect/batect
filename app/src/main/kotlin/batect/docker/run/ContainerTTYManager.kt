@@ -16,8 +16,10 @@
 
 package batect.docker.run
 
+import batect.docker.ContainerStoppedException
 import batect.docker.DockerAPI
 import batect.docker.DockerContainer
+import batect.logging.Logger
 import batect.ui.ConsoleInfo
 import jnr.constants.platform.Signal
 import jnr.posix.POSIX
@@ -25,7 +27,8 @@ import jnr.posix.POSIX
 class ContainerTTYManager(
     private val api: DockerAPI,
     private val consoleInfo: ConsoleInfo,
-    private val posix: POSIX
+    private val posix: POSIX,
+    private val logger: Logger
 ) {
     fun monitorForSizeChanges(container: DockerContainer): AutoCloseable {
         if (!consoleInfo.stdinIsTTY) {
@@ -51,7 +54,14 @@ class ContainerTTYManager(
         val currentDimensions = consoleInfo.dimensions
 
         if (currentDimensions != null) {
-            api.resizeContainerTTY(container, currentDimensions)
+            try {
+                api.resizeContainerTTY(container, currentDimensions)
+            } catch (e: ContainerStoppedException) {
+                logger.warn {
+                    message("Resizing container failed because the container is stopped.")
+                    exception(e)
+                }
+            }
         }
     }
 }

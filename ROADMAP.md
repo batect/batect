@@ -38,6 +38,9 @@ If there's something you're really keen to see, pull requests are always welcome
 ### Other
 * replace factories with references to constructors
 * switch to Kotlin's built-in `Result` where appropriate
+* use Detekt for static analysis
+* fail CI build on warnings
+* fail CI build on pending tests
 * reintroduce image tagging
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * use tmpfs for home directories? (https://docs.docker.com/engine/reference/run/#tmpfs-mount-tmpfs-filesystems)

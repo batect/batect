@@ -22,7 +22,7 @@ import org.kodein.di.bindings.NoArgSimpleBindingKodein
 import org.kodein.di.generic.instance
 import org.kodein.di.generic.singleton
 
-inline fun <EC, BC, reified T : Any> Kodein.BindBuilder.WithScope<EC, BC, Unit>.singletonWithLogger(noinline creator: NoArgSimpleBindingKodein<BC>.(Logger) -> T) = singleton {
+inline fun <C, reified T : Any> Kodein.BindBuilder.WithScope<C>.singletonWithLogger(noinline creator: NoArgSimpleBindingKodein<C>.(Logger) -> T) = singleton {
     creator(logger<T>())
 }
 

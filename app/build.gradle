@@ -52,7 +52,7 @@ dependencies {
     // but if we don't reference it here, the version that jackson-module-kotlin refers to
     // is used.
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.9.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.9.1"
 
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.7'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.7'

@@ -62,7 +62,7 @@ dependencies {
     implementation 'org.kodein.di:kodein-di-generic-jvm:6.0.0'
     implementation 'com.squareup.okhttp3:okhttp:3.12.0'
     implementation 'com.github.jnr:jnr-unixsocket:0.20'
-    implementation 'com.github.jnr:jnr-posix:3.0.46'
+    implementation 'com.github.jnr:jnr-posix:3.0.47'
     implementation 'org.apache.commons:commons-compress:1.18'
 
     testImplementation 'com.natpryce:hamkrest:1.6.0.0'

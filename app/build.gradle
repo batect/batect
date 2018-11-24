@@ -97,6 +97,12 @@ shadowJar {
     classifier = null
 }
 
+// See https://github.com/johnrengelman/shadow/issues/389#issuecomment-440431318 for an explanation of this.
+tasks.withType(AbstractArchiveTask) {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 

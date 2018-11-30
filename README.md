@@ -44,6 +44,7 @@ Thank you to the following people for their bug reports, pull requests, suggesti
 * [@assafw](https://github.com/assafw)
 * [@Byron-TW](https://github.com/Byron-TW)
 * [@ekamara](https://github.com/ekamara)
+* [@ieffyble](https://github.com/ineffyble)
 * [@Letitia-May](https://github.com/Letitia-May)
 * [@minnn-minnn](https://github.com/minnn-minnn)
 * [@pameck](https://github.com/pameck)

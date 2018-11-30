@@ -205,16 +205,19 @@ object ConsoleInfoSpec : Spek({
 
                 describe("entering raw mode") {
                     given("invoking 'stty -g' succeeds") {
+                        val rawCommand = listOf("stty", "-ignbrk", "-brkint", "-parmrk", "-istrip", "-inlcr", "-igncr", "-icrnl", "-ixon", "-opost", "-echo", "-echonl",
+                            "-icanon", "-isig", "-iexten", "-parenb", "cs8", "min", "1", "time", "0")
+
                         beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "-g"))).doReturn(ProcessOutput(0, "existing_terminal_state\n")) }
 
                         given("invoking 'stty raw' succeeds") {
-                            beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "raw"))).doReturn(ProcessOutput(0, "")) }
+                            beforeEachTest { whenever(processRunner.runWithStdinAttached(rawCommand)).doReturn(ProcessOutput(0, "")) }
 
                             on("entering raw mode") {
                                 val restorer = consoleInfo.enterRawMode()
 
                                 it("calls stty to enter raw mode") {
-                                    verify(processRunner).runWithStdinAttached(listOf("stty", "raw"))
+                                    verify(processRunner).runWithStdinAttached(rawCommand)
                                 }
 
                                 it("returns an object that can be used to restore the terminal to its previous state") {
@@ -224,11 +227,11 @@ object ConsoleInfoSpec : Spek({
                         }
 
                         given("invoking 'stty raw' fails") {
-                            beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "raw"))).doReturn(ProcessOutput(1, "Something went wrong.\n")) }
+                            beforeEachTest { whenever(processRunner.runWithStdinAttached(rawCommand)).doReturn(ProcessOutput(1, "Something went wrong.\n")) }
 
                             on("entering raw mode") {
                                 it("throws an appropriate exception") {
-                                    assertThat({ consoleInfo.enterRawMode() }, throws<RuntimeException>(withMessage("Invoking 'stty raw' failed with exit code 1: Something went wrong.")))
+                                    assertThat({ consoleInfo.enterRawMode() }, throws<RuntimeException>(withMessage("Invoking '${rawCommand.joinToString(" ")}' failed with exit code 1: Something went wrong.")))
                                 }
                             }
                         }

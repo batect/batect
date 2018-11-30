@@ -107,10 +107,13 @@ class ConsoleInfo(
     }
 
     private fun startRawMode() {
-        val output = processRunner.runWithStdinAttached(listOf("stty", "raw"))
+        val command = listOf("stty", "-ignbrk", "-brkint", "-parmrk", "-istrip", "-inlcr", "-igncr", "-icrnl", "-ixon", "-opost", "-echo", "-echonl",
+            "-icanon", "-isig", "-iexten", "-parenb", "cs8", "min", "1", "time", "0")
+
+        val output = processRunner.runWithStdinAttached(command)
 
         if (output.exitCode != 0) {
-            throw RuntimeException("Invoking 'stty raw' failed with exit code ${output.exitCode}: ${output.output.trim()}")
+            throw RuntimeException("Invoking '${command.joinToString(" ")}' failed with exit code ${output.exitCode}: ${output.output.trim()}")
         }
     }
 }

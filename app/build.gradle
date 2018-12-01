@@ -47,11 +47,9 @@ repositories {
 
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    // Override the version of kotlin-reflect used by jackson-module-kotlin.
-    // We don't have to specify a version ourselves (the Kotlin plugin will do that for us),
-    // but if we don't reference it here, the version that jackson-module-kotlin refers to
-    // is used.
-    implementation 'org.jetbrains.kotlin:kotlin-reflect'
+    // We don't use kotlin-reflect directly, but jackson-module-kotlin does refer to it, so
+    // override it to match the version of Kotlin used.
+    implementation 'org.jetbrains.kotlin:kotlin-reflect:1.3.10'
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.9.1"
 
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.7'

@@ -57,7 +57,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.7'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.7'
     implementation 'org.kodein.di:kodein-di-core-jvm:6.0.1'
-    implementation 'org.kodein.di:kodein-di-generic-jvm:6.0.0'
+    implementation 'org.kodein.di:kodein-di-generic-jvm:6.0.1'
     implementation 'com.squareup.okhttp3:okhttp:3.12.0'
     implementation 'com.github.jnr:jnr-unixsocket:0.21'
     implementation 'com.github.jnr:jnr-posix:3.0.47'

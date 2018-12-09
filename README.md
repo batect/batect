@@ -1,6 +1,7 @@
 # batect
 [![Build Status](https://travis-ci.org/charleskorn/batect.svg?branch=master)](https://travis-ci.org/charleskorn/batect)
 [![codecov](https://codecov.io/gh/charleskorn/batect/branch/master/graph/badge.svg)](https://codecov.io/gh/charleskorn/batect)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 **b**uild **a**nd **t**esting **e**nvironments as **c**ode **t**ool
 

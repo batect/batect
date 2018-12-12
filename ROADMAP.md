@@ -34,6 +34,8 @@ If there's something you're really keen to see, pull requests are always welcome
 * some way to clean up old images when they're no longer needed
 * allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
 * allow overriding working directory at the task level
+* support build arguments
+* some way to set variables once for the whole project (eg. Google Cloud SDK version, shared path) and reference these in environment variables or build args
 
 ### Other
 * replace factories with references to constructors

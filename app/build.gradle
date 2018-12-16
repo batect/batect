@@ -40,9 +40,9 @@ archivesBaseName = 'batect'
 mainClassName = 'batect.ApplicationKt'
 
 repositories {
-    jcenter()
     mavenCentral()
     maven { url "https://kotlin.bintray.com/kotlinx" }
+    jcenter()
 }
 
 dependencies {

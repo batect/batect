@@ -130,7 +130,15 @@ data class PortMapping(
                 }
             }
 
-            return PortMapping(localPort!!, containerPort!!)
+            if (localPort == null) {
+                throw ConfigurationException("Field '${descriptor.getElementName(localPortFieldIndex)}' is required but it is missing.", null, input.node.location.line, input.node.location.column)
+            }
+
+            if (containerPort == null) {
+                throw ConfigurationException("Field '${descriptor.getElementName(containerPortFieldIndex)}' is required but it is missing.", null, input.node.location.line, input.node.location.column)
+            }
+
+            return PortMapping(localPort, containerPort)
         }
     }
 }

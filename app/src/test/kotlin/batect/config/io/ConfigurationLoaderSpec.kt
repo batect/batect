@@ -987,5 +987,91 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat({ loadConfiguration(config) }, throws(withMessage("Command `'` is invalid: it contains an unbalanced single quote") and withLineNumber(6) and withFileName(testFileName)))
             }
         }
+
+        on("loading a configuration file with a volume mount in expanded format missing the container path") {
+            val configString = """
+                |containers:
+                |  container-1:
+                |    build_directory: container-1
+                |    volumes:
+                |      - local: thing
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Field 'container' is required but it is missing.") and withLineNumber(5) and withFileName(testFileName)))
+            }
+        }
+
+        on("loading a configuration file with a volume mount in expanded format missing the local path") {
+            val configString = """
+                |containers:
+                |  container-1:
+                |    build_directory: container-1
+                |    volumes:
+                |      - container: thing
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Field 'local' is required but it is missing.") and withLineNumber(5) and withFileName(testFileName)))
+            }
+        }
+
+        on("loading a configuration file with a port mapping for a container in expanded format missing the container port") {
+            val configString = """
+                |containers:
+                |  container-1:
+                |    build_directory: container-1
+                |    ports:
+                |      - local: 1234
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Field 'container' is required but it is missing.") and withLineNumber(5) and withFileName(testFileName)))
+            }
+        }
+
+        on("loading a configuration file with a port mapping for a container in expanded format missing the local port") {
+            val configString = """
+                |containers:
+                |  container-1:
+                |    build_directory: container-1
+                |    ports:
+                |      - container: 1234
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Field 'local' is required but it is missing.") and withLineNumber(5) and withFileName(testFileName)))
+            }
+        }
+
+        on("loading a configuration file with a port mapping for a task in expanded format missing the container port") {
+            val configString = """
+                |tasks:
+                |  task-1:
+                |    run:
+                |      container: container-1
+                |      ports:
+                |        - local: 1234
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Field 'container' is required but it is missing.") and withLineNumber(6) and withFileName(testFileName)))
+            }
+        }
+
+        on("loading a configuration file with a port mapping for a task in expanded format missing the local port") {
+            val configString = """
+                |tasks:
+                |  task-1:
+                |    run:
+                |      container: container-1
+                |      ports:
+                |        - container: 1234
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Field 'local' is required but it is missing.") and withLineNumber(6) and withFileName(testFileName)))
+            }
+        }
     }
 })

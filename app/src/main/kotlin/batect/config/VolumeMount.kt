@@ -121,7 +121,15 @@ data class VolumeMount(
                 }
             }
 
-            return VolumeMount(localPath!!, containerPath!!, options)
+            if (localPath == null) {
+                throw ConfigurationException("Field '${descriptor.getElementName(localPathFieldIndex)}' is required but it is missing.", null, input.node.location.line, input.node.location.column)
+            }
+
+            if (containerPath == null) {
+                throw ConfigurationException("Field '${descriptor.getElementName(containerPathFieldIndex)}' is required but it is missing.", null, input.node.location.line, input.node.location.column)
+            }
+
+            return VolumeMount(localPath, containerPath, options)
         }
     }
 }

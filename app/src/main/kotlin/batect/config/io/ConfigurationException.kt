@@ -21,7 +21,7 @@ data class ConfigurationException(
     val fileName: String?,
     val lineNumber: Int?,
     val column: Int?,
-    override val cause: Throwable?
+    override val cause: Throwable? = null
 ) : RuntimeException(message, cause) {
 
     constructor(message: String) : this(message, null, null, null, null)

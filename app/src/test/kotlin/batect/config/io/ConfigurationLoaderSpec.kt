@@ -1016,6 +1016,22 @@ object ConfigurationLoaderSpec : Spek({
             }
         }
 
+        on("loading a configuration file with a volume mount in expanded format with an unknown field") {
+            val configString = """
+                |containers:
+                |  container-1:
+                |    build_directory: container-1
+                |    volumes:
+                |      - local: here
+                |        container: there
+                |        something_else: value
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Unknown property 'something_else'. Known properties are: container, local, options") and withLineNumber(7) and withFileName(testFileName)))
+            }
+        }
+
         on("loading a configuration file with a port mapping for a container in expanded format missing the container port") {
             val configString = """
                 |containers:
@@ -1041,6 +1057,22 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should fail with an error message") {
                 assertThat({ loadConfiguration(configString) }, throws(withMessage("Field 'local' is required but it is missing.") and withLineNumber(5) and withFileName(testFileName)))
+            }
+        }
+
+        on("loading a configuration file with a port mapping for a container in expanded format with an unknown field") {
+            val configString = """
+                |containers:
+                |  container-1:
+                |    build_directory: container-1
+                |    ports:
+                |      - local: 1234
+                |        container: 5678
+                |        something_else: value
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Unknown property 'something_else'. Known properties are: container, local") and withLineNumber(7) and withFileName(testFileName)))
             }
         }
 
@@ -1071,6 +1103,23 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should fail with an error message") {
                 assertThat({ loadConfiguration(configString) }, throws(withMessage("Field 'local' is required but it is missing.") and withLineNumber(6) and withFileName(testFileName)))
+            }
+        }
+
+        on("loading a configuration file with a port mapping for a task in expanded format with an unknown field") {
+            val configString = """
+                |tasks:
+                |  task-1:
+                |    run:
+                |      container: container-1
+                |      ports:
+                |        - local: 1234
+                |          container: 5678
+                |          something_else: value
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Unknown property 'something_else'. Known properties are: container, local") and withLineNumber(8) and withFileName(testFileName)))
             }
         }
     }

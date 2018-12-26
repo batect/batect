@@ -19,21 +19,23 @@ package batect.config.io.deserializers
 import batect.config.io.ConfigurationException
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.CompositeDecoder
+import kotlinx.serialization.CompositeDecoder.Companion.READ_ALL
+import kotlinx.serialization.CompositeDecoder.Companion.READ_DONE
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.HashSetClassDesc
+import kotlinx.serialization.internal.ArrayListClassDesc
 import kotlinx.serialization.internal.StringSerializer
 
-@Serializer(forClass = Set::class)
-internal object DependencySetDeserializer : KSerializer<Set<String>> {
+@Serializer(forClass = List::class)
+internal object PrerequisiteListDeserializer : KSerializer<List<String>> {
     val elementSerializer = StringSerializer
 
-    override val descriptor: SerialDescriptor = HashSetClassDesc(elementSerializer.descriptor)
+    override val descriptor: SerialDescriptor = ArrayListClassDesc(elementSerializer.descriptor)
 
-    override fun deserialize(input: Decoder): Set<String> {
+    override fun deserialize(input: Decoder): List<String> {
         val structureInput = input.beginStructure(descriptor, elementSerializer)
         val result = read(structureInput)
 
@@ -42,20 +44,20 @@ internal object DependencySetDeserializer : KSerializer<Set<String>> {
         return result
     }
 
-    private fun read(input: CompositeDecoder): Set<String> {
+    private fun read(input: CompositeDecoder): List<String> {
         val size = input.decodeCollectionSize(descriptor)
 
         while (true) {
             when (val index = input.decodeElementIndex(descriptor)) {
-                CompositeDecoder.READ_ALL -> return readAll(input, size)
-                CompositeDecoder.READ_DONE -> return emptySet()
+                READ_ALL -> return readAll(input, size)
+                READ_DONE -> return emptyList()
                 else -> return readUntilDone(input, index)
             }
         }
     }
 
-    private fun readAll(input: CompositeDecoder, size: Int): Set<String> {
-        val soFar = mutableSetOf<String>()
+    private fun readAll(input: CompositeDecoder, size: Int): List<String> {
+        val soFar = mutableListOf<String>()
 
         for (currentIndex in 0..size) {
             soFar.add(readSingle(input, currentIndex, soFar))
@@ -64,20 +66,20 @@ internal object DependencySetDeserializer : KSerializer<Set<String>> {
         return soFar
     }
 
-    private fun readUntilDone(input: CompositeDecoder, firstIndex: Int): Set<String> {
+    private fun readUntilDone(input: CompositeDecoder, firstIndex: Int): List<String> {
         var currentIndex = firstIndex
-        val soFar = mutableSetOf<String>()
+        val soFar = mutableListOf<String>()
 
         do {
-            soFar.add(readSingle(input, currentIndex, soFar))
+            soFar.add(currentIndex, readSingle(input, currentIndex, soFar))
 
             currentIndex = input.decodeElementIndex(descriptor)
-        } while (currentIndex != CompositeDecoder.READ_DONE)
+        } while (currentIndex != READ_DONE)
 
         return soFar
     }
 
-    private fun readSingle(input: CompositeDecoder, index: Int, soFar: Set<String>): String {
+    private fun readSingle(input: CompositeDecoder, index: Int, soFar: List<String>): String {
         val value = input.decodeSerializableElement(descriptor, index, elementSerializer)
 
         if (value in soFar) {
@@ -89,7 +91,7 @@ internal object DependencySetDeserializer : KSerializer<Set<String>> {
         return value
     }
 
-    private fun getDuplicateValueMessage(value: String) = "The dependency '$value' is given more than once"
+    private fun getDuplicateValueMessage(value: String) = "The prerequisite '$value' is given more than once"
 
-    override fun serialize(output: Encoder, obj: Set<String>) = throw UnsupportedOperationException()
+    override fun serialize(output: Encoder, obj: List<String>) = throw UnsupportedOperationException()
 }

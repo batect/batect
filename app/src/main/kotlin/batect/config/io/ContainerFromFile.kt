@@ -31,20 +31,22 @@ import batect.os.Command
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
 import batect.os.PathType
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import kotlinx.serialization.Optional
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class ContainerFromFile(
-    val buildDirectory: String? = null,
-    @JsonProperty("image") val imageName: String? = null,
-    val command: Command? = null,
-    @JsonDeserialize(using = EnvironmentDeserializer::class) val environment: Map<String, EnvironmentVariableExpression> = emptyMap(),
-    val workingDirectory: String? = null,
-    @JsonProperty("volumes") val volumeMounts: Set<VolumeMount> = emptySet(),
-    @JsonProperty("ports") val portMappings: Set<PortMapping> = emptySet(),
-    @JsonDeserialize(using = DependencySetDeserializer::class) val dependencies: Set<String> = emptySet(),
-    @JsonProperty("health_check") val healthCheckConfig: HealthCheckConfig = HealthCheckConfig(),
-    @JsonProperty("run_as_current_user") val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig()
+    @SerialName("build_directory") @Optional val buildDirectory: String? = null,
+    @SerialName("image") @Optional val imageName: String? = null,
+    @Optional val command: Command? = null,
+    @Serializable(with = EnvironmentDeserializer::class) @Optional val environment: Map<String, EnvironmentVariableExpression> = emptyMap(),
+    @SerialName("working_directory") @Optional val workingDirectory: String? = null,
+    @SerialName("volumes") @Optional val volumeMounts: Set<VolumeMount> = emptySet(),
+    @SerialName("ports") @Optional val portMappings: Set<PortMapping> = emptySet(),
+    @Serializable(with = DependencySetDeserializer::class) @Optional val dependencies: Set<String> = emptySet(),
+    @SerialName("health_check") @Optional val healthCheckConfig: HealthCheckConfig = HealthCheckConfig(),
+    @SerialName("run_as_current_user") @Optional val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig()
 ) {
 
     fun toContainer(name: String, pathResolver: PathResolver): Container {

@@ -30,7 +30,7 @@ import org.jetbrains.spek.api.dsl.on
 object CommandSpec : Spek({
     describe("a command") {
         describe("adding arguments to a command") {
-            val command = Command.parse("some-command")!!
+            val command = Command.parse("some-command")
 
             on("adding an empty list of arguments") {
                 it("returns the original command") {
@@ -92,11 +92,11 @@ object CommandSpec : Spek({
                         }
 
                         it("generates the correct command line") {
-                            assertThat(command!!.parsedCommand, equalTo(expectedSplit.asIterable()))
+                            assertThat(command.parsedCommand, equalTo(expectedSplit.asIterable()))
                         }
 
                         it("includes the original command line") {
-                            assertThat(command!!.originalCommand, equalTo(originalCommand))
+                            assertThat(command.originalCommand, equalTo(originalCommand))
                         }
                     }
                 }

@@ -19,21 +19,23 @@ package batect.config.io
 import batect.config.Configuration
 import batect.config.ContainerMap
 import batect.config.TaskMap
-import batect.config.io.deserializers.ContainerListDeserializer
-import batect.config.io.deserializers.TaskListDeserializer
 import batect.os.PathResolver
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import kotlinx.serialization.Optional
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class ConfigurationFile(
-    val projectName: String?,
-    @JsonDeserialize(using = TaskListDeserializer::class) val tasks: Map<String, TaskFromFile> = emptyMap(),
-    @JsonDeserialize(using = ContainerListDeserializer::class) val containers: Map<String, ContainerFromFile> = emptyMap()
+    @SerialName("project_name") @Optional val projectName: String? = null,
+    @Optional val tasks: Map<String, TaskFromFile> = emptyMap(),
+    @Optional val containers: Map<String, ContainerFromFile> = emptyMap()
 ) {
     fun toConfiguration(pathResolver: PathResolver): Configuration {
         return Configuration(
             resolveProjectName(pathResolver),
             TaskMap(tasks.map { (name, task) -> task.toTask(name) }),
-            ContainerMap(containers.map { (name, container) -> container.toContainer(name, pathResolver) }))
+            ContainerMap(containers.map { (name, container) -> container.toContainer(name, pathResolver) })
+        )
     }
 
     private fun resolveProjectName(pathResolver: PathResolver): String {

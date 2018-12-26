@@ -28,7 +28,7 @@ import org.jetbrains.spek.api.dsl.on
 
 object EnvironmentVariableExpressionSpec : Spek({
     describe("an environment variable expression") {
-        describe("parsing it from a string") {
+        describe("parsing from a string") {
             mapOf(
                 "some literal value" to LiteralValue("some literal value"),
                 "a" to LiteralValue("a"),
@@ -65,30 +65,6 @@ object EnvironmentVariableExpressionSpec : Spek({
                     it("throws an appropriate exception") {
                         assertThat({ EnvironmentVariableExpression.parse(source) }, throws<IllegalArgumentException>(withMessage("Invalid environment variable expression '$source'")))
                     }
-                }
-            }
-        }
-
-        describe("parsing it from an integer") {
-            val source = 12
-
-            on("parsing the value") {
-                val expression = EnvironmentVariableExpression.parse(source)
-
-                it("returns a literal value expression") {
-                    assertThat(expression, equalTo(LiteralValue("12")))
-                }
-            }
-        }
-
-        describe("parsing it from a long") {
-            val source = 12L
-
-            on("parsing the value") {
-                val expression = EnvironmentVariableExpression.parse(source)
-
-                it("returns a literal value expression") {
-                    assertThat(expression, equalTo(LiteralValue("12")))
                 }
             }
         }

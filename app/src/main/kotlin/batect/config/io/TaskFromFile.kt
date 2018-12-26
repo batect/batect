@@ -19,15 +19,17 @@ package batect.config.io
 import batect.config.Task
 import batect.config.TaskRunConfiguration
 import batect.config.io.deserializers.DependencySetDeserializer
-import batect.config.io.deserializers.PrerequisiteSetDeserializer
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import batect.config.io.deserializers.PrerequisiteListDeserializer
+import kotlinx.serialization.Optional
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class TaskFromFile(
-    @JsonProperty("run") val runConfiguration: TaskRunConfiguration,
-    val description: String = "",
-    @JsonProperty("dependencies") @JsonDeserialize(using = DependencySetDeserializer::class) val dependsOnContainers: Set<String> = emptySet(),
-    @JsonProperty("prerequisites") @JsonDeserialize(using = PrerequisiteSetDeserializer::class) val prerequisiteTasks: List<String> = emptyList()
+    @SerialName("run") val runConfiguration: TaskRunConfiguration,
+    @Optional val description: String = "",
+    @SerialName("dependencies") @Serializable(with = DependencySetDeserializer::class) @Optional val dependsOnContainers: Set<String> = emptySet(),
+    @SerialName("prerequisites") @Serializable(with = PrerequisiteListDeserializer::class) @Optional val prerequisiteTasks: List<String> = emptyList()
 ) {
     fun toTask(name: String): Task = Task(name, runConfiguration, description, dependsOnContainers, prerequisiteTasks)
 }

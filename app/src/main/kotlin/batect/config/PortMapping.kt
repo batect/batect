@@ -16,12 +16,23 @@
 
 package batect.config
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
+import batect.config.io.ConfigurationException
+import com.charleskorn.kaml.YamlInput
+import com.charleskorn.kaml.YamlScalar
+import kotlinx.serialization.CompositeDecoder
+import kotlinx.serialization.Decoder
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialDescriptor
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.Serializer
+import kotlinx.serialization.internal.SerialClassDescImpl
 
+@Serializable
 data class PortMapping(
-    @JsonProperty("local") val localPort: Int,
-    @JsonProperty("container") val containerPort: Int
+    @SerialName("local") val localPort: Int,
+    @SerialName("container") val containerPort: Int
 ) {
     init {
         if (localPort <= 0) {
@@ -37,12 +48,11 @@ data class PortMapping(
         return "$localPort:$containerPort"
     }
 
-    companion object {
-        @JvmStatic
-        @JsonCreator
+    @Serializer(forClass = PortMapping::class)
+    companion object : KSerializer<PortMapping> {
         fun parse(value: String): PortMapping {
             if (value == "") {
-                throw IllegalArgumentException("Port mapping definition cannot be empty.")
+                throw InvalidPortMappingException("Port mapping definition cannot be empty.")
             }
 
             val separator = ':'
@@ -72,7 +82,57 @@ data class PortMapping(
         }
 
         private fun invalidMappingDefinitionException(value: String, cause: Throwable? = null): Throwable = InvalidPortMappingException("Port mapping definition '$value' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.", cause)
+
+        override val descriptor: SerialDescriptor = object : SerialClassDescImpl("PortMapping") {
+            init {
+                addElement("local")
+                addElement("container")
+            }
+        }
+
+        private val localPortFieldIndex = descriptor.getElementIndex("local")
+        private val containerPortFieldIndex = descriptor.getElementIndex("container")
+
+        override fun deserialize(input: Decoder): PortMapping = when (input) {
+            is YamlInput -> {
+                val inp = input.beginStructure(descriptor) as YamlInput
+
+                when (inp.node) {
+                    is YamlScalar -> deserializeFromString(inp)
+                    else -> deserializeFromObject(inp)
+                }.also {
+                    inp.endStructure(descriptor)
+                }
+            }
+            else -> throw UnsupportedOperationException("Can only deserialize from YAML source.")
+        }
+
+        private fun deserializeFromString(input: Decoder): PortMapping = try {
+            parse(input.decodeString())
+        } catch (e: InvalidPortMappingException) {
+            if (input is YamlInput) {
+                throw ConfigurationException(e.message ?: "", null, input.node.location.line, input.node.location.column, e)
+            } else {
+                throw e
+            }
+        }
+
+        private fun deserializeFromObject(input: YamlInput): PortMapping {
+            var localPort: Int? = null
+            var containerPort: Int? = null
+
+            loop@ while (true) {
+                when (val i = input.decodeElementIndex(descriptor)) {
+                    CompositeDecoder.READ_DONE -> break@loop
+                    localPortFieldIndex -> localPort = input.decodeIntElement(descriptor, i)
+                    containerPortFieldIndex -> containerPort = input.decodeIntElement(descriptor, i)
+                    else -> throw SerializationException("Unknown index $i")
+                }
+            }
+
+            return PortMapping(localPort!!, containerPort!!)
+        }
     }
 }
 
-class InvalidPortMappingException(message: String, cause: Throwable? = null) : Exception(message, cause)
+class InvalidPortMappingException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

@@ -16,8 +16,17 @@
 
 package batect.os
 
-import com.fasterxml.jackson.annotation.JsonCreator
+import batect.config.io.ConfigurationException
+import com.charleskorn.kaml.YamlInput
+import kotlinx.serialization.Decoder
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialDescriptor
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Serializer
+import kotlinx.serialization.internal.StringDescriptor
+import kotlinx.serialization.withName
 
+@Serializable
 data class Command private constructor(val originalCommand: String, val parsedCommand: Iterable<String>) {
     operator fun plus(newArguments: Iterable<String>): Command {
         val formattedCommand = originalCommand + formatNewArguments(newArguments)
@@ -36,14 +45,9 @@ data class Command private constructor(val originalCommand: String, val parsedCo
         }
     }
 
-    companion object {
-        @JvmStatic
-        @JsonCreator
-        fun parse(command: String?): Command? {
-            if (command == null) {
-                return null
-            }
-
+    @Serializer(forClass = Command::class)
+    companion object : KSerializer<Command> {
+        fun parse(command: String): Command {
             val arguments = arrayListOf<String>()
             val currentArgument = StringBuilder()
             var currentMode = CommandParsingState.Normal
@@ -107,15 +111,38 @@ data class Command private constructor(val originalCommand: String, val parsedCo
         private val singleQuote: Char = '\''
         private val doubleQuote: Char = '"'
 
-        private fun invalidCommandLine(command: String, message: String): Throwable = InvalidCommandLineException("Command `$command` is invalid: $message")
-        private fun unbalancedDoubleQuote(command: String): Throwable = invalidCommandLine(command, "it contains an unbalanced double quote")
-        private fun unbalancedSingleQuote(command: String): Throwable = invalidCommandLine(command, "it contains an unbalanced single quote")
-        private fun danglingBackslash(command: String): Throwable = invalidCommandLine(command, """it ends with a backslash (backslashes always escape the following character, for a literal backslash, use '\\')""")
+        private fun invalidCommandLine(command: String, message: String): Throwable =
+            InvalidCommandLineException("Command `$command` is invalid: $message")
+
+        private fun unbalancedDoubleQuote(command: String): Throwable =
+            invalidCommandLine(command, "it contains an unbalanced double quote")
+
+        private fun unbalancedSingleQuote(command: String): Throwable =
+            invalidCommandLine(command, "it contains an unbalanced single quote")
+
+        private fun danglingBackslash(command: String): Throwable = invalidCommandLine(
+            command,
+            """it ends with a backslash (backslashes always escape the following character, for a literal backslash, use '\\')"""
+        )
 
         private enum class CommandParsingState {
             Normal,
             SingleQuote,
             DoubleQuote
+        }
+
+        override val descriptor: SerialDescriptor = StringDescriptor.withName("command")
+
+        override fun deserialize(input: Decoder): Command = try {
+            parse(input.decodeString())
+        } catch (e: InvalidCommandLineException) {
+            if (input is YamlInput) {
+                val location = input.getCurrentLocation()
+
+                throw ConfigurationException(e.message ?: "", null, location.line, location.column, e)
+            } else {
+                throw e
+            }
         }
     }
 }

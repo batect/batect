@@ -22,7 +22,6 @@ import batect.logging.Severity
 import batect.ui.text.Text
 import batect.ui.text.TextRun
 import batect.utils.toDetailedString
-import com.fasterxml.jackson.core.JsonProcessingException
 import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.describe
@@ -45,16 +44,16 @@ fun withMessage(message: String): Matcher<Throwable> {
     return has(Throwable::message, equalTo(message))
 }
 
-fun withOriginalMessage(message: String): Matcher<JsonProcessingException> {
-    return has(JsonProcessingException::getOriginalMessage, equalTo(message))
-}
-
 fun withCause(cause: Throwable): Matcher<Throwable> {
     return has(Throwable::cause, equalTo(cause))
 }
 
 fun withLineNumber(lineNumber: Int): Matcher<ConfigurationException> {
     return has(ConfigurationException::lineNumber, equalTo(lineNumber))
+}
+
+fun withColumn(column: Int): Matcher<ConfigurationException> {
+    return has(ConfigurationException::column, equalTo(column))
 }
 
 fun hasKeyWithValue(key: String, value: Any?): Matcher<Map<String, Any?>> = object : Matcher.Primitive<Map<String, Any?>>() {

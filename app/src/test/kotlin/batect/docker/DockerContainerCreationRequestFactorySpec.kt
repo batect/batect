@@ -96,7 +96,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                                 }
 
                                 it("populates the command on the request") {
-                                    assertThat(request.command, equalTo(command!!.parsedCommand))
+                                    assertThat(request.command, equalTo(command.parsedCommand))
                                 }
 
                                 it("populates the hostname and network alias on the request with the name of the container") {

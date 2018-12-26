@@ -18,8 +18,9 @@ package batect.config
 
 import batect.config.io.deserializers.EnvironmentDeserializer
 import batect.os.Command
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import kotlinx.serialization.Optional
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 data class Task(
     val name: String,
@@ -29,9 +30,10 @@ data class Task(
     val prerequisiteTasks: List<String> = emptyList()
 )
 
+@Serializable
 data class TaskRunConfiguration(
     val container: String,
-    val command: Command? = null,
-    @JsonDeserialize(using = EnvironmentDeserializer::class) @JsonProperty("environment") val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression> = emptyMap(),
-    @JsonProperty("ports") val additionalPortMappings: Set<PortMapping> = emptySet()
+    @Optional val command: Command? = null,
+    @SerialName("environment") @Serializable(with = EnvironmentDeserializer::class) @Optional val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression> = emptyMap(),
+    @SerialName("ports") @Optional val additionalPortMappings: Set<PortMapping> = emptySet()
 )

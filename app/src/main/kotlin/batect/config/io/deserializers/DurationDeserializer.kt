@@ -16,28 +16,33 @@
 
 package batect.config.io.deserializers
 
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.core.JsonToken
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer
+import batect.config.io.ConfigurationException
+import com.charleskorn.kaml.YamlInput
+import kotlinx.serialization.Decoder
+import kotlinx.serialization.Encoder
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialDescriptor
+import kotlinx.serialization.Serializer
+import kotlinx.serialization.internal.StringDescriptor
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 
-class DurationDeserializer : StdScalarDeserializer<Duration>(Duration::class.java) {
+@Serializer(forClass = Duration::class)
+object DurationDeserializer : KSerializer<Duration> {
+    override val descriptor: SerialDescriptor = StringDescriptor
+
     private val valueRegexString = """((\d+)|(\d+\.\d*)|(\d*\.\d+))(ns|\u00b5s|\u03bcs|us|ms|s|m|h)"""
     private val fullRegex = "^([+-])?(0|($valueRegexString)+)\$".toRegex()
     private val valueRegex = valueRegexString.toRegex()
 
-    override fun deserialize(p: JsonParser?, ctxt: DeserializationContext?): Duration {
-        if (p!!.currentToken != JsonToken.VALUE_STRING) {
-            return ctxt!!.handleUnexpectedToken(handledType(), p.currentToken, p, "Cannot deserialize duration value from %s.", p.currentToken) as Duration
-        }
-
-        val text = p.text.trim()
+    override fun deserialize(input: Decoder): Duration {
+        val text = input.decodeString()
         val match = fullRegex.matchEntire(text)
 
         if (match == null) {
-            return ctxt!!.handleWeirdStringValue(handledType(), text, "The value '$text' is not a valid duration.") as Duration
+            val location = (input as YamlInput).getCurrentLocation()
+
+            throw ConfigurationException("The value '$text' is not a valid duration.", null, location.line, location.column, null)
         }
 
         val sign = match.groupValues[1]
@@ -78,4 +83,6 @@ class DurationDeserializer : StdScalarDeserializer<Duration>(Duration::class.jav
     }
 
     private fun Sequence<Duration>.sum(): Duration = this.reduce { acc, item -> acc + item }
+
+    override fun serialize(output: Encoder, obj: Duration) = throw UnsupportedOperationException()
 }

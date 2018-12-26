@@ -17,13 +17,16 @@
 package batect.config.io.deserializers
 
 import batect.testutils.equalTo
-import batect.testutils.withOriginalMessage
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.exc.InvalidFormatException
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
-import com.fasterxml.jackson.databind.module.SimpleModule
+import batect.testutils.withColumn
+import batect.testutils.withLineNumber
+import batect.testutils.withMessage
+import com.charleskorn.kaml.Location
+import com.charleskorn.kaml.YamlInput
+import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.mock
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -33,15 +36,7 @@ import java.time.temporal.ChronoUnit
 
 object DurationDeserializerSpec : Spek({
     describe("a duration deserializer") {
-        val deserializer = DurationDeserializer()
-        val mapper = ObjectMapper()
-            .registerModule(object : SimpleModule() {
-                init {
-                    addDeserializer(Duration::class.java, deserializer)
-                }
-            })
-
-        val reader = mapper.readerFor(Duration::class.java)
+        val deserializer = DurationDeserializer
 
         // These test cases are all taken from the test cases for Golang's ParseDuration.
         // See: https://golang.org/src/time/time_test.go#L850
@@ -81,17 +76,15 @@ object DurationDeserializerSpec : Spek({
             "0.830103483285477580700h" to Duration.ofMinutes(49) + Duration.ofSeconds(48) + Duration.ofNanos(372539827)
         ).forEach { input, expectedOutput ->
             given("the string '$input'") {
-                val parsed = reader.readValue<Duration>('"' + input + '"')
+                val decoder = mock<YamlInput> {
+                    on { decodeString() } doReturn input
+                }
+
+                val parsed = deserializer.deserialize(decoder)
 
                 it("returns the expected duration value") {
                     assertThat(parsed, equalTo(expectedOutput))
                 }
-            }
-        }
-
-        given("a non-string value") {
-            it("throws an appropriate exception") {
-                assertThat({ reader.readValue<Duration>("1") }, throws<MismatchedInputException>(withOriginalMessage("Cannot deserialize duration value from VALUE_NUMBER_INT.")))
             }
         }
 
@@ -106,10 +99,18 @@ object DurationDeserializerSpec : Spek({
             "+.s"
         ).forEach { input ->
             given("the invalid string '$input'") {
+                val decoder = mock<YamlInput> {
+                    on { decodeString() } doReturn input
+                    on { getCurrentLocation() } doReturn Location(3, 4)
+                }
+
                 it("throws an appropriate exception") {
-                    assertThat({ reader.readValue<Duration>('"' + input + '"') }, throws<InvalidFormatException>(
-                        withOriginalMessage("Cannot deserialize value of type `java.time.Duration` from String \"$input\": The value '$input' is not a valid duration.")
-                    ))
+                    assertThat({ deserializer.deserialize(decoder) }, throws(
+                            withMessage("The value '$input' is not a valid duration.") and
+                                withLineNumber(3) and
+                                withColumn(4)
+                        )
+                    )
                 }
             }
         }

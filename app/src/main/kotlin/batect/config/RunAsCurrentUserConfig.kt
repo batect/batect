@@ -16,7 +16,12 @@
 
 package batect.config
 
+import kotlinx.serialization.Optional
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class RunAsCurrentUserConfig(
-    val enabled: Boolean = false,
-    val homeDirectory: String? = null
+    @Optional val enabled: Boolean = false,
+    @SerialName("home_directory") @Optional val homeDirectory: String? = null
 )

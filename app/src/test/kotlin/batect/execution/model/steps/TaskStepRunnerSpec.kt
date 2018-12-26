@@ -300,7 +300,7 @@ object TaskStepRunnerSpec : Spek({
                 val network = DockerNetwork("some-network")
 
                 val step = CreateContainerStep(container, command, additionalEnvironmentVariables, additionalPortMappings, setOf(container, otherContainer), image, network)
-                val request = DockerContainerCreationRequest(image, network, command!!.parsedCommand, "some-container", "some-container", emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig(), null)
+                val request = DockerContainerCreationRequest(image, network, command.parsedCommand, "some-container", "some-container", emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig(), null)
 
                 beforeEachTest {
                     whenever(creationRequestFactory.create(

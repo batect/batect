@@ -98,7 +98,7 @@ object ConfigurationLoaderSpec : Spek({
 
         on("loading an empty configuration file") {
             it("should fail with an error message") {
-                assertThat({ loadConfiguration("") }, throws(withMessage("File '$testFileName' is empty")))
+                assertThat({ loadConfiguration("") }, throws(withMessage("File '$testFileName' contains no configuration.")))
             }
         }
 
@@ -114,7 +114,7 @@ object ConfigurationLoaderSpec : Spek({
                 val path = "/config.yml"
 
                 it("should fail with an error message") {
-                    assertThat({ loadConfiguration(configString, path) }, throws(withMessage("Could not load configuration file: No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.")))
+                    assertThat({ loadConfiguration(configString, path) }, throws(withMessage("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.")))
                 }
             }
 
@@ -157,6 +157,8 @@ object ConfigurationLoaderSpec : Spek({
                 |      environment:
                 |        OPTS: -Dthing
                 |        INT_VALUE: 1
+                |        FLOAT_VALUE: 12.6000
+                |        BOOL_VALUE: true
                 |        OTHER_VALUE: "the value"
                 |      ports:
                 |        - 123:456
@@ -179,7 +181,13 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.name, equalTo("first_task"))
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, equalTo(Command.parse("./gradlew doStuff")))
-                assertThat(task.runConfiguration.additionalEnvironmentVariables, equalTo(mapOf("OPTS" to LiteralValue("-Dthing"), "INT_VALUE" to LiteralValue("1"), "OTHER_VALUE" to LiteralValue("the value"))))
+                assertThat(task.runConfiguration.additionalEnvironmentVariables, equalTo(mapOf(
+                    "OPTS" to LiteralValue("-Dthing"),
+                    "INT_VALUE" to LiteralValue("1"),
+                    "FLOAT_VALUE" to LiteralValue("12.6000"),
+                    "BOOL_VALUE" to LiteralValue("true"),
+                    "OTHER_VALUE" to LiteralValue("the value")
+                )))
                 assertThat(task.runConfiguration.additionalPortMappings, equalTo(setOf(PortMapping(123, 456), PortMapping(1000, 2000))))
                 assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.prerequisiteTasks, isEmpty)
@@ -418,7 +426,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Could not load configuration file: Container 'container-1' is invalid: either build_directory or image must be specified.")))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: either build_directory or image must be specified.")))
             }
         }
 
@@ -433,7 +441,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Could not load configuration file: Container 'container-1' is invalid: only one of build_directory or image can be specified, but both have been provided.")))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: only one of build_directory or image can be specified, but both have been provided.")))
             }
         }
 
@@ -448,6 +456,8 @@ object ConfigurationLoaderSpec : Spek({
                     |    environment:
                     |      OPTS: -Dthing
                     |      INT_VALUE: 1
+                    |      FLOAT_VALUE: 12.6000
+                    |      BOOL_VALUE: true
                     |      OTHER_VALUE: "the value"
                     |    working_directory: /here
                     |    volumes:
@@ -480,7 +490,13 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.name, equalTo("container-1"))
                 assertThat(container.imageSource, equalTo(BuildImage("/resolved/container-1-build-dir")))
                 assertThat(container.command, equalTo(Command.parse("do-the-thing.sh some-param")))
-                assertThat(container.environment, equalTo(mapOf("OPTS" to LiteralValue("-Dthing"), "INT_VALUE" to LiteralValue("1"), "OTHER_VALUE" to LiteralValue("the value"))))
+                assertThat(container.environment, equalTo(mapOf(
+                    "OPTS" to LiteralValue("-Dthing"),
+                    "INT_VALUE" to LiteralValue("1"),
+                    "FLOAT_VALUE" to LiteralValue("12.6000"),
+                    "BOOL_VALUE" to LiteralValue("true"),
+                    "OTHER_VALUE" to LiteralValue("the value")
+                )))
                 assertThat(container.workingDirectory, equalTo("/here"))
                 assertThat(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
                 assertThat(container.healthCheckConfig, equalTo(HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(1))))
@@ -611,7 +627,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate field 'project_name'") and withLineNumber(2)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'project_name'. It was previously given at line 1, column 1.") and withLineNumber(2)))
             }
         }
 
@@ -622,7 +638,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Unknown field 'thing' (fields permitted here: containers, project_name, tasks)") and withLineNumber(2)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Unknown property 'thing'. Known properties are: containers, project_name, tasks") and withLineNumber(2)))
             }
         }
 
@@ -661,7 +677,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate task 'first_task'") and withLineNumber(7)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'first_task'. It was previously given at line 4, column 3.") and withLineNumber(7)))
             }
         }
 
@@ -677,7 +693,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate container 'container-1'") and withLineNumber(6)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'container-1'. It was previously given at line 4, column 3.") and withLineNumber(6)))
             }
         }
 
@@ -694,7 +710,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate environment variable 'THING'") and withLineNumber(8)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'THING'. It was previously given at line 7, column 7.") and withLineNumber(8)))
             }
         }
 
@@ -712,7 +728,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate environment variable 'THING'") and withLineNumber(9)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'THING'. It was previously given at line 8, column 9.") and withLineNumber(9)))
             }
         }
 
@@ -728,7 +744,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Environment variable 'THING' has no value") and withLineNumber(7)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'THING' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(7)))
             }
         }
 
@@ -745,7 +761,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Environment variable 'THING' has no value") and withLineNumber(8)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'THING' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(8)))
             }
         }
 
@@ -762,7 +778,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Could not load configuration file: Container 'container-1' is invalid: running as the current user has not been enabled, but a home directory for that user has been provided.")))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: running as the current user has not been enabled, but a home directory for that user has been provided.")))
             }
         }
 
@@ -778,7 +794,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Could not load configuration file: Container 'container-1' is invalid: running as the current user has been enabled, but a home directory for that user has not been provided.")))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: running as the current user has been enabled, but a home directory for that user has not been provided.")))
             }
         }
 
@@ -794,7 +810,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Could not load configuration file: Container 'container-1' is invalid: running as the current user has not been enabled, but a home directory for that user has been provided.")))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: running as the current user has not been enabled, but a home directory for that user has been provided.")))
             }
         }
 
@@ -816,7 +832,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Expected at least one field for container 'container-2'. At least one of 'image' or 'build_directory' is required.") and withLineNumber(6)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'container-2' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(6)))
             }
         }
 
@@ -833,7 +849,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Expected at least one field for task 'task-1'. At least 'run' is required.") and withLineNumber(7)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'task-1' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(7)))
             }
         }
 
@@ -850,7 +866,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value 'abc123' for field 'local' is invalid: not a valid Integer value") and withLineNumber(7)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'local' is invalid: Value 'abc123' is not a valid integer value.") and withLineNumber(7)))
             }
         }
 
@@ -867,7 +883,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value 'abc123' for field 'container' is invalid: not a valid Integer value") and withLineNumber(8)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'container' is invalid: Value 'abc123' is not a valid integer value.") and withLineNumber(8)))
             }
         }
 
@@ -901,7 +917,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value 'abc123' for field 'local' is invalid: not a valid Integer value") and withLineNumber(8)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'local' is invalid: Value 'abc123' is not a valid integer value.") and withLineNumber(8)))
             }
         }
 
@@ -919,7 +935,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value 'abc123' for field 'container' is invalid: not a valid Integer value") and withLineNumber(9)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'container' is invalid: Value 'abc123' is not a valid integer value.") and withLineNumber(9)))
             }
         }
 
@@ -937,72 +953,6 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should fail with an error message") {
                 assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.") and withLineNumber(8)))
-            }
-        }
-
-        on("loading a configuration file with a task with an environment variable defined with a floating point number") {
-            val config = """
-                |project_name: the_cool_project
-                |
-                |tasks:
-                |  the-task:
-                |    run:
-                |      container: the-container
-                |      environment:
-                |        THING: 12.3456000
-                """.trimMargin()
-
-            it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)") and withLineNumber(8)))
-            }
-        }
-
-        on("loading a configuration file with a container with an environment variable with a floating point number") {
-            val config = """
-                |project_name: the_cool_project
-                |
-                |containers:
-                |  container-1:
-                |    build_directory: container-1
-                |    environment:
-                |      THING: 12.3456000
-                """.trimMargin()
-
-            it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)") and withLineNumber(7)))
-            }
-        }
-
-        on("loading a configuration file with a task with an environment variable defined with a boolean value") {
-            val config = """
-                |project_name: the_cool_project
-                |
-                |tasks:
-                |  the-task:
-                |    run:
-                |      container: the-container
-                |      environment:
-                |        THING: true
-                """.trimMargin()
-
-            it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)") and withLineNumber(8)))
-            }
-        }
-
-        on("loading a configuration file with a container with an environment variable with a boolean value") {
-            val config = """
-                |project_name: the_cool_project
-                |
-                |containers:
-                |  container-1:
-                |    build_directory: container-1
-                |    environment:
-                |      THING: true
-                """.trimMargin()
-
-            it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)") and withLineNumber(7)))
             }
         }
 

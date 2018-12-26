@@ -16,10 +16,15 @@
 
 package batect.config
 
+import batect.config.io.deserializers.DurationDeserializer
+import kotlinx.serialization.Optional
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import java.time.Duration
 
+@Serializable
 data class HealthCheckConfig(
-    val interval: Duration? = null,
-    val retries: Int? = null,
-    val startPeriod: Duration? = null
+    @Serializable(with = DurationDeserializer::class) @Optional val interval: Duration? = null,
+    @Optional val retries: Int? = null,
+    @SerialName("start_period") @Serializable(with = DurationDeserializer::class) @Optional val startPeriod: Duration? = null
 )

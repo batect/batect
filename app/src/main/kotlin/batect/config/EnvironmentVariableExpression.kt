@@ -16,12 +16,22 @@
 
 package batect.config
 
-import com.fasterxml.jackson.annotation.JsonCreator
+import batect.config.io.ConfigurationException
+import com.charleskorn.kaml.YamlInput
+import kotlinx.serialization.Decoder
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialDescriptor
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Serializer
+import kotlinx.serialization.internal.StringDescriptor
+import kotlinx.serialization.withName
 
+@Serializable
 sealed class EnvironmentVariableExpression {
     abstract fun evaluate(hostEnvironmentVariables: Map<String, String>): String
 
-    companion object {
+    @Serializer(forClass = EnvironmentVariableExpression::class)
+    companion object : KSerializer<EnvironmentVariableExpression> {
         private val patterns = listOf(
             Regex("\\$\\{(.+):-(.*)}") to { match: MatchResult -> ReferenceValue(match.groupValues[1], match.groupValues[2]) },
             Regex("\\$\\{([^:]+)}") to { match: MatchResult -> ReferenceValue(match.groupValues[1]) },
@@ -35,8 +45,6 @@ sealed class EnvironmentVariableExpression {
             }
         )
 
-        @JvmStatic
-        @JsonCreator
         fun parse(source: String): EnvironmentVariableExpression {
             patterns.forEach { (pattern, generator) ->
                 val result = pattern.matchEntire(source)
@@ -49,23 +57,17 @@ sealed class EnvironmentVariableExpression {
             throw IllegalArgumentException("Invalid environment variable expression '$source'")
         }
 
-        @JvmStatic
-        @JsonCreator
-        fun parse(source: Int): EnvironmentVariableExpression = LiteralValue(source.toString())
+        override val descriptor: SerialDescriptor = StringDescriptor.withName("expression")
 
-        @JvmStatic
-        @JsonCreator
-        fun parse(source: Long): EnvironmentVariableExpression = LiteralValue(source.toString())
-
-        // We can't reliably convert booleans or doubles back to strings that are exactly as the user specified them, so just give up.
-        // These methods exist to give the user a nicer error message in this case.
-        @JvmStatic
-        @JsonCreator
-        fun parse(@Suppress("UNUSED_PARAMETER") source: Boolean): EnvironmentVariableExpression = throw UnsupportedOperationException("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)")
-
-        @JvmStatic
-        @JsonCreator
-        fun parse(@Suppress("UNUSED_PARAMETER") source: Double): EnvironmentVariableExpression = throw UnsupportedOperationException("Environment variable value is not a recognised type. (Try wrapping the value in double quotes.)")
+        override fun deserialize(input: Decoder): EnvironmentVariableExpression = try {
+            parse(input.decodeString())
+        } catch (e: IllegalArgumentException) {
+            if (input is YamlInput) {
+                throw ConfigurationException(e.message ?: "", null, input.node.location.line, input.node.location.column, e)
+            } else {
+                throw e
+            }
+        }
     }
 }
 

@@ -17,8 +17,9 @@
 package batect.config.io.deserializers
 
 import batect.config.EnvironmentVariableExpression
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.internal.StringSerializer
+import kotlinx.serialization.map
 
-internal class EnvironmentDeserializer : MapDeserializer<EnvironmentVariableExpression>(EnvironmentVariableExpression::class.java) {
-    override fun getDuplicateEntryErrorMessage(name: String) = "Duplicate environment variable $name"
-    override fun getNullEntryErrorMessage(name: String) = "Environment variable '$name' has no value"
-}
+internal object EnvironmentDeserializer :
+    KSerializer<Map<String, EnvironmentVariableExpression>> by (StringSerializer to EnvironmentVariableExpression.serializer()).map

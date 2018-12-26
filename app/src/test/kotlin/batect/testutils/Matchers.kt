@@ -56,6 +56,10 @@ fun withColumn(column: Int): Matcher<ConfigurationException> {
     return has(ConfigurationException::column, equalTo(column))
 }
 
+fun withFileName(fileName: String): Matcher<ConfigurationException> {
+    return has(ConfigurationException::fileName, equalTo(fileName))
+}
+
 fun hasKeyWithValue(key: String, value: Any?): Matcher<Map<String, Any?>> = object : Matcher.Primitive<Map<String, Any?>>() {
     override fun invoke(actual: Map<String, Any?>): MatchResult {
         if (actual.containsKey(key) && actual.get(key) == value) {

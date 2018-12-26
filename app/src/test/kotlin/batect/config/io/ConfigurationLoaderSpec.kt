@@ -31,6 +31,7 @@ import batect.os.PathType
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
+import batect.testutils.withFileName
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
 import com.google.common.jimfs.Jimfs
@@ -98,7 +99,7 @@ object ConfigurationLoaderSpec : Spek({
 
         on("loading an empty configuration file") {
             it("should fail with an error message") {
-                assertThat({ loadConfiguration("") }, throws(withMessage("File '$testFileName' contains no configuration.")))
+                assertThat({ loadConfiguration("") }, throws(withMessage("File '$testFileName' contains no configuration.") and withFileName(testFileName)))
             }
         }
 
@@ -114,7 +115,7 @@ object ConfigurationLoaderSpec : Spek({
                 val path = "/config.yml"
 
                 it("should fail with an error message") {
-                    assertThat({ loadConfiguration(configString, path) }, throws(withMessage("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.")))
+                    assertThat({ loadConfiguration(configString, path) }, throws(withMessage("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.") and withFileName(path)))
                 }
             }
 
@@ -307,7 +308,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("The dependency 'dependency-1' is given more than once") and withLineNumber(9)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("The dependency 'dependency-1' is given more than once") and withLineNumber(9) and withFileName(testFileName)))
             }
         }
 
@@ -360,7 +361,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("The prerequisite 'dependency-1' is given more than once") and withLineNumber(9)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("The prerequisite 'dependency-1' is given more than once") and withLineNumber(9) and withFileName(testFileName)))
             }
         }
 
@@ -426,7 +427,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: either build_directory or image must be specified.")))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: either build_directory or image must be specified.") and withFileName(testFileName)))
             }
         }
 
@@ -441,7 +442,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: only one of build_directory or image can be specified, but both have been provided.")))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: only one of build_directory or image can be specified, but both have been provided.") and withFileName(testFileName)))
             }
         }
 
@@ -616,7 +617,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("The dependency 'container-2' is given more than once") and withLineNumber(8)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("The dependency 'container-2' is given more than once") and withLineNumber(8) and withFileName(testFileName)))
             }
         }
 
@@ -627,7 +628,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'project_name'. It was previously given at line 1, column 1.") and withLineNumber(2)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'project_name'. It was previously given at line 1, column 1.") and withLineNumber(2) and withFileName(testFileName)))
             }
         }
 
@@ -638,7 +639,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Unknown property 'thing'. Known properties are: containers, project_name, tasks") and withLineNumber(2)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Unknown property 'thing'. Known properties are: containers, project_name, tasks") and withLineNumber(2) and withFileName(testFileName)))
             }
         }
 
@@ -677,7 +678,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'first_task'. It was previously given at line 4, column 3.") and withLineNumber(7)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'first_task'. It was previously given at line 4, column 3.") and withLineNumber(7) and withFileName(testFileName)))
             }
         }
 
@@ -693,7 +694,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'container-1'. It was previously given at line 4, column 3.") and withLineNumber(6)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'container-1'. It was previously given at line 4, column 3.") and withLineNumber(6) and withFileName(testFileName)))
             }
         }
 
@@ -710,7 +711,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'THING'. It was previously given at line 7, column 7.") and withLineNumber(8)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'THING'. It was previously given at line 7, column 7.") and withLineNumber(8) and withFileName(testFileName)))
             }
         }
 
@@ -728,7 +729,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'THING'. It was previously given at line 8, column 9.") and withLineNumber(9)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'THING'. It was previously given at line 8, column 9.") and withLineNumber(9) and withFileName(testFileName)))
             }
         }
 
@@ -744,7 +745,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'THING' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(7)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'THING' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(7) and withFileName(testFileName)))
             }
         }
 
@@ -761,7 +762,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'THING' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(8)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'THING' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(8) and withFileName(testFileName)))
             }
         }
 
@@ -778,7 +779,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: running as the current user has not been enabled, but a home directory for that user has been provided.")))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: running as the current user has not been enabled, but a home directory for that user has been provided.") and withFileName(testFileName)))
             }
         }
 
@@ -794,7 +795,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: running as the current user has been enabled, but a home directory for that user has not been provided.")))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: running as the current user has been enabled, but a home directory for that user has not been provided.") and withFileName(testFileName)))
             }
         }
 
@@ -810,7 +811,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: running as the current user has not been enabled, but a home directory for that user has been provided.")))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: running as the current user has not been enabled, but a home directory for that user has been provided.") and withFileName(testFileName)))
             }
         }
 
@@ -832,7 +833,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'container-2' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(6)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'container-2' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(6) and withFileName(testFileName)))
             }
         }
 
@@ -849,7 +850,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'task-1' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(7)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'task-1' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(7) and withFileName(testFileName)))
             }
         }
 
@@ -866,7 +867,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'local' is invalid: Value 'abc123' is not a valid integer value.") and withLineNumber(7)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'local' is invalid: Value 'abc123' is not a valid integer value.") and withLineNumber(7) and withFileName(testFileName)))
             }
         }
 
@@ -883,7 +884,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'container' is invalid: Value 'abc123' is not a valid integer value.") and withLineNumber(8)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'container' is invalid: Value 'abc123' is not a valid integer value.") and withLineNumber(8) and withFileName(testFileName)))
             }
         }
 
@@ -899,7 +900,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.") and withLineNumber(7)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.") and withLineNumber(7) and withFileName(testFileName)))
             }
         }
 
@@ -917,7 +918,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'local' is invalid: Value 'abc123' is not a valid integer value.") and withLineNumber(8)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'local' is invalid: Value 'abc123' is not a valid integer value.") and withLineNumber(8) and withFileName(testFileName)))
             }
         }
 
@@ -935,7 +936,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'container' is invalid: Value 'abc123' is not a valid integer value.") and withLineNumber(9)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'container' is invalid: Value 'abc123' is not a valid integer value.") and withLineNumber(9) and withFileName(testFileName)))
             }
         }
 
@@ -952,7 +953,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.") and withLineNumber(8)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.") and withLineNumber(8) and withFileName(testFileName)))
             }
         }
 
@@ -968,7 +969,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Command `'` is invalid: it contains an unbalanced single quote") and withLineNumber(7)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Command `'` is invalid: it contains an unbalanced single quote") and withLineNumber(7) and withFileName(testFileName)))
             }
         }
 
@@ -983,7 +984,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Command `'` is invalid: it contains an unbalanced single quote") and withLineNumber(6)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Command `'` is invalid: it contains an unbalanced single quote") and withLineNumber(6) and withFileName(testFileName)))
             }
         }
     }

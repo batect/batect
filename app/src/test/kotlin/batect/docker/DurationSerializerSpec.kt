@@ -18,8 +18,8 @@ package batect.docker
 
 import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
 import kotlinx.serialization.Decoder
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe

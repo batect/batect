@@ -29,8 +29,8 @@ import batect.ui.simple.SimpleEventLogger
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isA
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.TestContainer
 import org.jetbrains.spek.api.dsl.describe

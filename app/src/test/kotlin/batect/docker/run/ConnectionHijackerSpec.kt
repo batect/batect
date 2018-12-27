@@ -18,8 +18,8 @@ package batect.docker.run
 
 import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
 import okhttp3.Connection
 import okhttp3.Interceptor
 import okhttp3.Request

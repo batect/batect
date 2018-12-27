@@ -19,7 +19,7 @@ package batect.docker.run
 import batect.testutils.CloseableByteArrayOutputStream
 import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
-import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockitokotlin2.mock
 import okhttp3.Response
 import okio.Okio
 import org.jetbrains.spek.api.Spek

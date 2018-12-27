@@ -18,8 +18,8 @@ package batect.logging
 
 import batect.testutils.hasKeyWithValue
 import com.natpryce.hamkrest.assertion.assertThat
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
 import jnr.posix.POSIX
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe

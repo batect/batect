@@ -17,6 +17,6 @@
 package batect.testutils
 
 import batect.config.ImageSource
-import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockitokotlin2.mock
 
 fun imageSourceDoesNotMatter(): ImageSource = mock<ImageSource>()

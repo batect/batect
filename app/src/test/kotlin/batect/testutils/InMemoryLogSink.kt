@@ -23,8 +23,8 @@ import batect.logging.LogSink
 import batect.logging.Logger
 import batect.logging.Severity
 import batect.logging.StandardAdditionalDataSource
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
 import org.jetbrains.spek.api.dsl.SpecBody
 import java.io.ByteArrayOutputStream
 import java.time.ZoneOffset

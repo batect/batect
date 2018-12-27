@@ -51,7 +51,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
-import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockitokotlin2.mock
 import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
 import okhttp3.Request

@@ -19,10 +19,10 @@ package batect.testutils
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.whenever
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
 import okhttp3.Call
 import okhttp3.Headers
 import okhttp3.HttpUrl

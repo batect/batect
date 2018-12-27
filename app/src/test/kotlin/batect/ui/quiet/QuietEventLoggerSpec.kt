@@ -22,11 +22,11 @@ import batect.testutils.createForEachTest
 import batect.ui.Console
 import batect.ui.FailureErrorMessageFormatter
 import batect.ui.text.TextRun
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.inOrder
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.verifyZeroInteractions
-import com.nhaarman.mockito_kotlin.whenever
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.inOrder
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.verifyZeroInteractions
+import com.nhaarman.mockitokotlin2.whenever
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it

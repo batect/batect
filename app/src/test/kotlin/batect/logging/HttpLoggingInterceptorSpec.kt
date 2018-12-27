@@ -25,8 +25,8 @@ import batect.testutils.withLogMessage
 import batect.testutils.withSeverity
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
 import okhttp3.Interceptor
 import okhttp3.MediaType
 import okhttp3.Protocol

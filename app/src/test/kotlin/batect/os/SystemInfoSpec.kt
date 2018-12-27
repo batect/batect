@@ -19,8 +19,8 @@ package batect.os
 import batect.testutils.createForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
 import jnr.posix.Group
 import jnr.posix.POSIX
 import jnr.posix.Passwd

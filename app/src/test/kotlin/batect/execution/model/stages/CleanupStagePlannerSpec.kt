@@ -48,9 +48,9 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.hasElement
 import com.natpryce.hamkrest.hasSize
 import com.natpryce.hamkrest.isEmpty
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.TestContainer
 import org.jetbrains.spek.api.dsl.describe

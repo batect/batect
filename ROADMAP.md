@@ -78,6 +78,7 @@ If there's something you're really keen to see, pull requests are always welcome
 #### Things that would have to be changed when moving to Kotlin/Native
 * file I/O and path resolution logic
 * process creation / monitoring
+* HTTP communication
 
 #### Things blocking move to Kotlin/Native
 * unit testing support and associated library

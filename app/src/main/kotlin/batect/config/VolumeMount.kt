@@ -46,30 +46,6 @@ data class VolumeMount(
 
     @Serializer(forClass = VolumeMount::class)
     companion object : KSerializer<VolumeMount> {
-        fun parse(value: String): VolumeMount {
-            if (value == "") {
-                throw InvalidVolumeMountException("Volume mount definition cannot be empty.")
-            }
-
-            val parts = value.split(':')
-
-            if (parts.size < 2 || parts.size > 3) {
-                throw invalidMountDefinitionException(value)
-            }
-
-            val local = parts[0]
-            val container = parts[1]
-            val options = parts.getOrNull(2)
-
-            if (local == "" || container == "" || options == "") {
-                throw invalidMountDefinitionException(value)
-            }
-
-            return VolumeMount(local, container, options)
-        }
-
-        fun invalidMountDefinitionException(value: String): Throwable = InvalidVolumeMountException("Volume mount definition '$value' is not valid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.")
-
         override val descriptor: SerialDescriptor = object : SerialClassDescImpl("VolumeMount") {
             init {
                 addElement("local")
@@ -96,15 +72,37 @@ data class VolumeMount(
             else -> throw UnsupportedOperationException("Can only deserialize from YAML source.")
         }
 
-        private fun deserializeFromString(input: Decoder): VolumeMount = try {
-            VolumeMount.parse(input.decodeString())
-        } catch (e: InvalidVolumeMountException) {
-            if (input is YamlInput) {
-                throw ConfigurationException(e.message ?: "", null, input.node.location.line, input.node.location.column, e)
-            } else {
-                throw e
+        private fun deserializeFromString(input: YamlInput): VolumeMount {
+            val value = input.decodeString()
+
+            if (value == "") {
+                throw ConfigurationException("Volume mount definition cannot be empty.", null, input.node.location.line, input.node.location.column)
             }
+
+            val parts = value.split(':')
+
+            if (parts.size < 2 || parts.size > 3) {
+                throw invalidMountDefinitionException(value, input)
+            }
+
+            val local = parts[0]
+            val container = parts[1]
+            val options = parts.getOrNull(2)
+
+            if (local == "" || container == "" || options == "") {
+                throw invalidMountDefinitionException(value, input)
+            }
+
+            return VolumeMount(local, container, options)
         }
+
+        private fun invalidMountDefinitionException(value: String, input: YamlInput) =
+            ConfigurationException(
+                "Volume mount definition '$value' is not valid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.",
+                null,
+                input.node.location.line,
+                input.node.location.column
+            )
 
         private fun deserializeFromObject(input: YamlInput): VolumeMount {
             var localPath: String? = null
@@ -133,5 +131,3 @@ data class VolumeMount(
         }
     }
 }
-
-class InvalidVolumeMountException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

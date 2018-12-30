@@ -45,7 +45,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * fail CI build on pending tests
 * reintroduce image tagging
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
-* use tmpfs for home directories? (https://docs.docker.com/engine/reference/run/#tmpfs-mount-tmpfs-filesystems)
 * documentation
   * add check for broken internal or external links
   * examples for common languages and scenarios

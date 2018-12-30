@@ -50,43 +50,13 @@ data class PortMapping(
 
     @Serializer(forClass = PortMapping::class)
     companion object : KSerializer<PortMapping> {
-        fun parse(value: String): PortMapping {
-            if (value == "") {
-                throw InvalidPortMappingException("Port mapping definition cannot be empty.")
-            }
-
-            val separator = ':'
-            val separatorIndex = value.indexOf(separator)
-
-            if (separatorIndex == -1) {
-                throw invalidMappingDefinitionException(value)
-            }
-
-            val localString = value.substring(0, separatorIndex)
-            val containerString = value.substring(separatorIndex + 1)
-
-            if (localString == "" || containerString == "") {
-                throw invalidMappingDefinitionException(value)
-            }
-
-            try {
-                val localPort = localString.toInt()
-                val containerPort = containerString.toInt()
-
-                return PortMapping(localPort, containerPort)
-            } catch (e: NumberFormatException) {
-                throw invalidMappingDefinitionException(value, e)
-            } catch (e: InvalidPortMappingException) {
-                throw invalidMappingDefinitionException(value, e)
-            }
-        }
-
-        private fun invalidMappingDefinitionException(value: String, cause: Throwable? = null): Throwable = InvalidPortMappingException("Port mapping definition '$value' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.", cause)
+        private val localPortFieldName = "local"
+        private val containerPortFieldName = "container"
 
         override val descriptor: SerialDescriptor = object : SerialClassDescImpl("PortMapping") {
             init {
-                addElement("local")
-                addElement("container")
+                addElement(localPortFieldName)
+                addElement(containerPortFieldName)
             }
         }
 
@@ -107,15 +77,47 @@ data class PortMapping(
             else -> throw UnsupportedOperationException("Can only deserialize from YAML source.")
         }
 
-        private fun deserializeFromString(input: Decoder): PortMapping = try {
-            parse(input.decodeString())
-        } catch (e: InvalidPortMappingException) {
-            if (input is YamlInput) {
-                throw ConfigurationException(e.message ?: "", null, input.node.location.line, input.node.location.column, e)
-            } else {
-                throw e
+        private fun deserializeFromString(input: YamlInput): PortMapping {
+            val value = input.decodeString()
+
+            if (value == "") {
+                throw ConfigurationException("Port mapping definition cannot be empty.", null, input.node.location.line, input.node.location.column)
+            }
+
+            val separator = ':'
+            val separatorIndex = value.indexOf(separator)
+
+            if (separatorIndex == -1) {
+                throw invalidMappingDefinitionException(value, input)
+            }
+
+            val localString = value.substring(0, separatorIndex)
+            val containerString = value.substring(separatorIndex + 1)
+
+            if (localString == "" || containerString == "") {
+                throw invalidMappingDefinitionException(value, input)
+            }
+
+            try {
+                val localPort = localString.toInt()
+                val containerPort = containerString.toInt()
+
+                return PortMapping(localPort, containerPort)
+            } catch (e: NumberFormatException) {
+                throw invalidMappingDefinitionException(value, input, e)
+            } catch (e: InvalidPortMappingException) {
+                throw invalidMappingDefinitionException(value, input, e)
             }
         }
+
+        private fun invalidMappingDefinitionException(value: String, input: YamlInput, cause: Throwable? = null) =
+            ConfigurationException(
+                "Port mapping definition '$value' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.",
+                null,
+                input.node.location.line,
+                input.node.location.column,
+                cause
+            )
 
         private fun deserializeFromObject(input: YamlInput): PortMapping {
             var localPort: Int? = null
@@ -124,18 +126,30 @@ data class PortMapping(
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
                     CompositeDecoder.READ_DONE -> break@loop
-                    localPortFieldIndex -> localPort = input.decodeIntElement(descriptor, i)
-                    containerPortFieldIndex -> containerPort = input.decodeIntElement(descriptor, i)
+                    localPortFieldIndex -> {
+                        localPort = input.decodeIntElement(descriptor, i)
+
+                        if (localPort <= 0) {
+                            throw ConfigurationException("Field '$localPortFieldName' is invalid: it must be a positive integer.", null, input.getCurrentLocation().line, input.getCurrentLocation().column)
+                        }
+                    }
+                    containerPortFieldIndex -> {
+                        containerPort = input.decodeIntElement(descriptor, i)
+
+                        if (containerPort <= 0) {
+                            throw ConfigurationException("Field '$containerPortFieldName' is invalid: it must be a positive integer.", null, input.getCurrentLocation().line, input.getCurrentLocation().column)
+                        }
+                    }
                     else -> throw SerializationException("Unknown index $i")
                 }
             }
 
             if (localPort == null) {
-                throw ConfigurationException("Field '${descriptor.getElementName(localPortFieldIndex)}' is required but it is missing.", null, input.node.location.line, input.node.location.column)
+                throw ConfigurationException("Field '$localPortFieldName' is required but it is missing.", null, input.node.location.line, input.node.location.column)
             }
 
             if (containerPort == null) {
-                throw ConfigurationException("Field '${descriptor.getElementName(containerPortFieldIndex)}' is required but it is missing.", null, input.node.location.line, input.node.location.column)
+                throw ConfigurationException("Field '$containerPortFieldName' is required but it is missing.", null, input.node.location.line, input.node.location.column)
             }
 
             return PortMapping(localPort, containerPort)

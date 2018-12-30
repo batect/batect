@@ -14,18 +14,21 @@
    limitations under the License.
 */
 
-package batect.docker.run
+package batect.os
 
-import batect.docker.DockerAPI
-import batect.docker.DockerContainer
-import batect.os.SignalListener
 import jnr.constants.platform.Signal
+import jnr.posix.POSIX
 
-class ContainerKiller(
-    private val api: DockerAPI,
-    private val listener: SignalListener
-) {
-    fun killContainerOnSigint(container: DockerContainer): AutoCloseable = listener.start(Signal.SIGINT) {
-        api.sendSignalToContainer(container, Signal.SIGINT)
+class SignalListener(private val posix: POSIX) {
+    fun start(signal: Signal, handler: () -> Unit): AutoCloseable {
+        val originalHandler = posix.signal(signal) {
+            handler()
+        }
+
+        return object : AutoCloseable {
+            override fun close() {
+                posix.signal(signal, originalHandler)
+            }
+        }
     }
 }

@@ -18,7 +18,10 @@ package batect.execution
 
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.UserInterruptedExecutionEvent
+import batect.os.SignalListener
 import batect.testutils.createForEachTest
+import batect.testutils.equalTo
+import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.doReturn
@@ -27,8 +30,6 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import jnr.constants.platform.Signal
-import jnr.posix.POSIX
-import jnr.posix.SignalHandler
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -36,41 +37,37 @@ import org.jetbrains.spek.api.dsl.on
 
 object InterruptionTrapSpec : Spek({
     describe("an interruption trap") {
-        val posix by createForEachTest { mock<POSIX>() }
-        val trap by createForEachTest { InterruptionTrap(posix) }
+        val listener by createForEachTest { mock<SignalListener>() }
+        val trap by createForEachTest { InterruptionTrap(listener) }
 
         describe("stopping execution when a SIGINT is received") {
             val eventSink by createForEachTest { mock<TaskEventSink>() }
 
             on("starting monitoring") {
-                trap.trapInterruptions(eventSink)
+                val cleanup = mock<AutoCloseable>()
+                whenever(listener.start(any(), any())).doReturn(cleanup)
+
+                val returnedCleanup = trap.trapInterruptions(eventSink)
 
                 it("registers a signal handler for the SIGINT signal") {
-                    verify(posix).signal(eq(Signal.SIGINT), any())
+                    verify(listener).start(eq(Signal.SIGINT), any())
+                }
+
+                it("returns the cleanup handler from the signal listener") {
+                    assertThat(returnedCleanup, equalTo(cleanup))
                 }
             }
 
             on("a SIGINT being received") {
-                val handlerCaptor = argumentCaptor<SignalHandler>()
+                val handlerCaptor = argumentCaptor<() -> Unit>()
 
                 trap.trapInterruptions(eventSink)
 
-                verify(posix).signal(eq(Signal.SIGINT), handlerCaptor.capture())
-                handlerCaptor.firstValue.handle(Signal.SIGINT.value())
+                verify(listener).start(eq(Signal.SIGINT), handlerCaptor.capture())
+                handlerCaptor.firstValue.invoke()
 
                 it("sends a 'user interrupted execution' event to the event sink") {
                     verify(eventSink).postEvent(UserInterruptedExecutionEvent)
-                }
-            }
-
-            on("stopping monitoring") {
-                val originalHandler = mock<SignalHandler>()
-                whenever(posix.signal(eq(Signal.SIGINT), any())).doReturn(originalHandler)
-
-                trap.trapInterruptions(eventSink).use { }
-
-                it("restores the previous SIGINT signal handler") {
-                    verify(posix).signal(Signal.SIGINT, originalHandler)
                 }
             }
         }

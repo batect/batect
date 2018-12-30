@@ -20,14 +20,14 @@ import batect.docker.ContainerStoppedException
 import batect.docker.DockerAPI
 import batect.docker.DockerContainer
 import batect.logging.Logger
+import batect.os.SignalListener
 import batect.ui.ConsoleInfo
 import jnr.constants.platform.Signal
-import jnr.posix.POSIX
 
 class ContainerTTYManager(
     private val api: DockerAPI,
     private val consoleInfo: ConsoleInfo,
-    private val posix: POSIX,
+    private val signalListener: SignalListener,
     private val logger: Logger
 ) {
     fun monitorForSizeChanges(container: DockerContainer): AutoCloseable {
@@ -37,17 +37,13 @@ class ContainerTTYManager(
             }
         }
 
-        val originalHandler = posix.signal(Signal.SIGWINCH) {
+        val cleanup = signalListener.start(Signal.SIGWINCH) {
             sendCurrentDimensionsToContainer(container)
         }
 
         sendCurrentDimensionsToContainer(container)
 
-        return object : AutoCloseable {
-            override fun close() {
-                posix.signal(Signal.SIGWINCH, originalHandler)
-            }
-        }
+        return cleanup
     }
 
     private fun sendCurrentDimensionsToContainer(container: DockerContainer) {

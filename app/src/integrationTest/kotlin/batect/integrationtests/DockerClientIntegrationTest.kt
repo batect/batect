@@ -45,6 +45,7 @@ import batect.docker.run.ContainerWaiter
 import batect.logging.Logger
 import batect.os.NativeMethods
 import batect.os.ProcessRunner
+import batect.os.SignalListener
 import batect.os.SystemInfo
 import batect.ui.ConsoleInfo
 import com.natpryce.hamkrest.assertion.assertThat
@@ -83,8 +84,9 @@ object DockerClientIntegrationTest : Spek({
         val dockerfileParser = DockerfileParser()
         val waiter = ContainerWaiter(api)
         val streamer = ContainerIOStreamer(System.out, System.`in`)
-        val killer = ContainerKiller(api, posix)
-        val ttyManager = ContainerTTYManager(api, consoleInfo, posix, logger)
+        val signalListner = SignalListener(posix)
+        val killer = ContainerKiller(api, signalListner)
+        val ttyManager = ContainerTTYManager(api, consoleInfo, signalListner, logger)
         val client = DockerClient(api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, streamer, killer, ttyManager, logger)
 
         fun creationRequestForContainer(image: DockerImage, network: DockerNetwork, command: Iterable<String>, volumeMounts: Set<VolumeMount> = emptySet(), portMappings: Set<PortMapping> = emptySet(), userAndGroup: UserAndGroup? = null): DockerContainerCreationRequest {

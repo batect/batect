@@ -62,6 +62,7 @@ import batect.logging.singletonWithLogger
 import batect.os.NativeMethods
 import batect.os.PathResolverFactory
 import batect.os.ProcessRunner
+import batect.os.SignalListener
 import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablePreprocessor
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
@@ -194,6 +195,7 @@ private val osModule = Kodein.Module("os") {
     bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }
     bind<ProxyEnvironmentVariablePreprocessor>() with singletonWithLogger { logger -> ProxyEnvironmentVariablePreprocessor(instance(), logger) }
     bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider(instance()) }
+    bind<SignalListener>() with singleton { SignalListener(instance()) }
     bind<SystemInfo>() with singleton { SystemInfo(instance()) }
 }
 

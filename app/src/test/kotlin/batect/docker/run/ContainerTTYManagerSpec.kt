@@ -19,8 +19,10 @@ package batect.docker.run
 import batect.docker.ContainerStoppedException
 import batect.docker.DockerAPI
 import batect.docker.DockerContainer
+import batect.os.SignalListener
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
+import batect.testutils.equalTo
 import batect.ui.ConsoleInfo
 import batect.ui.Dimensions
 import com.natpryce.hamkrest.assertion.assertThat
@@ -36,8 +38,6 @@ import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import jnr.constants.platform.Signal
-import jnr.posix.POSIX
-import jnr.posix.SignalHandler
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -48,9 +48,15 @@ object ContainerTTYManagerSpec : Spek({
     describe("a container TTY manager") {
         val api by createForEachTest { mock<DockerAPI>() }
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
-        val posix by createForEachTest { mock<POSIX>() }
+        val signalCleanup by createForEachTest { mock<AutoCloseable>() }
+        val signalListener by createForEachTest {
+            mock<SignalListener> {
+                on { start(any(), any()) } doReturn signalCleanup
+            }
+        }
+
         val logger by createLoggerForEachTest()
-        val manager by createForEachTest { ContainerTTYManager(api, consoleInfo, posix, logger) }
+        val manager by createForEachTest { ContainerTTYManager(api, consoleInfo, signalListener, logger) }
 
         given("a container") {
             val container = DockerContainer("the-container-id")
@@ -64,10 +70,10 @@ object ContainerTTYManagerSpec : Spek({
 
                         given("the container is still running") {
                             on("starting to monitor for terminal size changes") {
-                                manager.monitorForSizeChanges(container)
+                                val returnedCleanup = manager.monitorForSizeChanges(container)
 
                                 it("registers a signal handler for the SIGWINCH signal") {
-                                    verify(posix).signal(eq(Signal.SIGWINCH), any())
+                                    verify(signalListener).start(eq(Signal.SIGWINCH), any())
                                 }
 
                                 it("sends the current dimensions to the container") {
@@ -75,10 +81,14 @@ object ContainerTTYManagerSpec : Spek({
                                 }
 
                                 it("registers the signal handler before sending the current dimensions") {
-                                    inOrder(posix, api) {
-                                        verify(posix).signal(eq(Signal.SIGWINCH), any())
+                                    inOrder(signalListener, api) {
+                                        verify(signalListener).start(eq(Signal.SIGWINCH), any())
                                         verify(api).resizeContainerTTY(container, Dimensions(123, 456))
                                     }
+                                }
+
+                                it("returns the cleanup handler from the signal listener") {
+                                    assertThat(returnedCleanup, equalTo(signalCleanup))
                                 }
                             }
                         }
@@ -97,24 +107,28 @@ object ContainerTTYManagerSpec : Spek({
                     on("not being able to retrieve the current terminal dimensions") {
                         whenever(consoleInfo.dimensions).doReturn(null as Dimensions?)
 
-                        manager.monitorForSizeChanges(container)
+                        val returnedCleanup = manager.monitorForSizeChanges(container)
 
                         it("registers a signal handler for the SIGWINCH signal") {
-                            verify(posix).signal(eq(Signal.SIGWINCH), any())
+                            verify(signalListener).start(eq(Signal.SIGWINCH), any())
                         }
 
                         it("does not send any dimensions to the container") {
                             verify(api, never()).resizeContainerTTY(any(), any())
                         }
+
+                        it("returns the cleanup handler from the signal listener") {
+                            assertThat(returnedCleanup, equalTo(signalCleanup))
+                        }
                     }
                 }
 
                 describe("receiving a SIGWINCH signal") {
-                    val handlerCaptor by createForEachTest { argumentCaptor<SignalHandler>() }
+                    val handlerCaptor by createForEachTest { argumentCaptor<() -> Unit>() }
 
                     beforeEachTest {
                         manager.monitorForSizeChanges(container)
-                        verify(posix).signal(eq(Signal.SIGWINCH), handlerCaptor.capture())
+                        verify(signalListener).start(eq(Signal.SIGWINCH), handlerCaptor.capture())
                     }
 
                     given("retrieving the current terminal dimensions succeeds") {
@@ -122,7 +136,7 @@ object ContainerTTYManagerSpec : Spek({
 
                         given("the container is still running") {
                             on("invoking the signal handler") {
-                                handlerCaptor.firstValue.handle(Signal.SIGWINCH.value())
+                                handlerCaptor.firstValue.invoke()
 
                                 it("sends the current dimensions to the container") {
                                     verify(api).resizeContainerTTY(container, Dimensions(789, 1234))
@@ -135,7 +149,7 @@ object ContainerTTYManagerSpec : Spek({
 
                             on("invoking the signal handler") {
                                 it("does not throw an exception") {
-                                    assertThat({ handlerCaptor.firstValue.handle(Signal.SIGWINCH.value()) }, !throws<Throwable>())
+                                    assertThat({ handlerCaptor.firstValue.invoke() }, !throws<Throwable>())
                                 }
                             }
                         }
@@ -144,22 +158,11 @@ object ContainerTTYManagerSpec : Spek({
                     on("not being able to retrieve the current terminal dimensions") {
                         whenever(consoleInfo.dimensions).doReturn(null as Dimensions?)
 
-                        handlerCaptor.firstValue.handle(Signal.SIGWINCH.value())
+                        handlerCaptor.firstValue.invoke()
 
                         it("does not send any dimensions to the container") {
                             verify(api, never()).resizeContainerTTY(any(), any())
                         }
-                    }
-                }
-
-                on("stopping monitoring for terminal size changes") {
-                    val originalHandler = mock<SignalHandler>()
-                    whenever(posix.signal(eq(Signal.SIGWINCH), any())).doReturn(originalHandler)
-
-                    manager.monitorForSizeChanges(container).use { }
-
-                    it("restores the previous SIGINT signal handler") {
-                        verify(posix).signal(Signal.SIGWINCH, originalHandler)
                     }
                 }
             }
@@ -175,15 +178,7 @@ object ContainerTTYManagerSpec : Spek({
                     }
 
                     it("does not install a signal handler") {
-                        verify(posix, never()).signal(any(), any())
-                    }
-                }
-
-                on("stopping monitoring for terminal size changes") {
-                    manager.monitorForSizeChanges(container).use { }
-
-                    it("does not modify any signal handlers") {
-                        verify(posix, never()).signal(any(), any())
+                        verify(signalListener, never()).start(any(), any())
                     }
                 }
             }

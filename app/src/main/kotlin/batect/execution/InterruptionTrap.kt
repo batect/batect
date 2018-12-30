@@ -18,21 +18,13 @@ package batect.execution
 
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.UserInterruptedExecutionEvent
+import batect.os.SignalListener
 import jnr.constants.platform.Signal
-import jnr.posix.POSIX
 
 class InterruptionTrap(
-    val posix: POSIX
+    val signalListener: SignalListener
 ) {
-    fun trapInterruptions(eventSink: TaskEventSink): AutoCloseable {
-        val originalHandler = posix.signal(Signal.SIGINT) {
-            eventSink.postEvent(UserInterruptedExecutionEvent)
-        }
-
-        return object : AutoCloseable {
-            override fun close() {
-                posix.signal(Signal.SIGINT, originalHandler)
-            }
-        }
+    fun trapInterruptions(eventSink: TaskEventSink): AutoCloseable = signalListener.start(Signal.SIGINT) {
+        eventSink.postEvent(UserInterruptedExecutionEvent)
     }
 }

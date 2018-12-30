@@ -77,31 +77,43 @@ object SystemInfoSpec : Spek({
             }
         }
 
-        describe("getting the operating system") {
+        describe("getting the operating system and whether that OS is supported") {
             on("when running on OS X") {
                 systemProperties.setProperty("os.name", "Mac OS X")
-                val operatingSystem = SystemInfo(posix, systemProperties).operatingSystem
+                val systemInfo = SystemInfo(posix, systemProperties)
 
                 it("returns that the operating system is Mac OS X") {
-                    assertThat(operatingSystem, equalTo(OperatingSystem.Mac))
+                    assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Mac))
+                }
+
+                it("returns that the operating system is supported") {
+                    assertThat(systemInfo.isSupportedOperatingSystem, equalTo(true))
                 }
             }
 
             on("when running on Linux") {
                 systemProperties.setProperty("os.name", "Linux")
-                val operatingSystem = SystemInfo(posix, systemProperties).operatingSystem
+                val systemInfo = SystemInfo(posix, systemProperties)
 
                 it("returns that the operating system is Linux") {
-                    assertThat(operatingSystem, equalTo(OperatingSystem.Linux))
+                    assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Linux))
+                }
+
+                it("returns that the operating system is supported") {
+                    assertThat(systemInfo.isSupportedOperatingSystem, equalTo(true))
                 }
             }
 
             on("when running on another operating system") {
                 systemProperties.setProperty("os.name", "Something else")
-                val operatingSystem = SystemInfo(posix, systemProperties).operatingSystem
+                val systemInfo = SystemInfo(posix, systemProperties)
 
                 it("returns that the operating system is unknown") {
-                    assertThat(operatingSystem, equalTo(OperatingSystem.Other))
+                    assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Other))
+                }
+
+                it("returns that the operating system is not supported") {
+                    assertThat(systemInfo.isSupportedOperatingSystem, equalTo(false))
                 }
             }
         }

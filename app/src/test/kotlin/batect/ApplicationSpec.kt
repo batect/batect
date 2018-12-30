@@ -25,6 +25,7 @@ import batect.logging.ApplicationInfoLogger
 import batect.logging.Logger
 import batect.logging.LoggerFactory
 import batect.logging.Severity
+import batect.os.SystemInfo
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.hasMessage
@@ -57,96 +58,120 @@ object ApplicationSpec : Spek({
         val errorStream by createForEachTest { ByteArrayOutputStream() }
         val commandLineOptionsParser by createForEachTest { mock<CommandLineOptionsParser>() }
         val commandFactory by createForEachTest { mock<CommandFactory>() }
+        val systemInfo by createForEachTest { mock<SystemInfo>() }
 
         val dependencies by createForEachTest {
             Kodein.direct {
                 bind<PrintStream>(StreamType.Error) with instance(PrintStream(errorStream))
                 bind<CommandLineOptionsParser>() with instance(commandLineOptionsParser)
                 bind<CommandFactory>() with instance(commandFactory)
+                bind<SystemInfo>() with instance(systemInfo)
             }
         }
 
         val application by createForEachTest { Application(dependencies) }
         val args = listOf("some-command", "some-param")
 
-        given("parsing the command line arguments succeeds") {
-            val applicationInfoLogger by createForEachTest { mock<ApplicationInfoLogger>() }
-            val logSink by createForEachTest { InMemoryLogSink() }
+        given("the application is running on a supported operating system") {
+            beforeEachTest { whenever(systemInfo.isSupportedOperatingSystem).thenReturn(true) }
 
-            val loggerFactory by createForEachTest {
-                mock<LoggerFactory> {
-                    on { createLoggerForClass(Application::class) } doReturn Logger("application", logSink)
+            given("parsing the command line arguments succeeds") {
+                val applicationInfoLogger by createForEachTest { mock<ApplicationInfoLogger>() }
+                val logSink by createForEachTest { InMemoryLogSink() }
+
+                val loggerFactory by createForEachTest {
+                    mock<LoggerFactory> {
+                        on { createLoggerForClass(Application::class) } doReturn Logger("application", logSink)
+                    }
                 }
-            }
 
-            val errorConsole by createForEachTest { mock<Console>() }
+                val errorConsole by createForEachTest { mock<Console>() }
 
-            val extendedDependencies by createForEachTest {
-                Kodein.direct {
-                    bind<ApplicationInfoLogger>() with instance(applicationInfoLogger)
-                    bind<LoggerFactory>() with instance(loggerFactory)
-                    bind<Console>(StreamType.Error) with instance(errorConsole)
+                val extendedDependencies by createForEachTest {
+                    Kodein.direct {
+                        bind<ApplicationInfoLogger>() with instance(applicationInfoLogger)
+                        bind<LoggerFactory>() with instance(loggerFactory)
+                        bind<Console>(StreamType.Error) with instance(errorConsole)
+                    }
                 }
-            }
 
-            val options by createForEachTest {
-                mock<CommandLineOptions> {
-                    on { extend(dependencies) } doReturn extendedDependencies
-                }
-            }
-
-            beforeEachTest {
-                whenever(commandLineOptionsParser.parse(args)).thenReturn(CommandLineOptionsParsingResult.Succeeded(options))
-            }
-
-            given("the command executes normally") {
-                val command = mock<Command> {
-                    on { run() } doReturn 123
+                val options by createForEachTest {
+                    mock<CommandLineOptions> {
+                        on { extend(dependencies) } doReturn extendedDependencies
+                    }
                 }
 
                 beforeEachTest {
-                    whenever(commandFactory.createCommand(options, extendedDependencies)).thenReturn(command)
+                    whenever(commandLineOptionsParser.parse(args)).thenReturn(CommandLineOptionsParsingResult.Succeeded(options))
                 }
 
-                on("running the application") {
-                    val exitCode = application.run(args)
-
-                    it("does not print anything to the error stream") {
-                        assertThat(errorStream.toString(), equalTo(""))
+                given("the command executes normally") {
+                    val command = mock<Command> {
+                        on { run() } doReturn 123
                     }
 
-                    it("returns the exit code from the command") {
-                        assertThat(exitCode, equalTo(123))
+                    beforeEachTest {
+                        whenever(commandFactory.createCommand(options, extendedDependencies)).thenReturn(command)
                     }
 
-                    it("logs information about the application before running the command") {
-                        inOrder(command, applicationInfoLogger) {
-                            verify(applicationInfoLogger).logApplicationInfo(args)
-                            verify(command).run()
+                    on("running the application") {
+                        val exitCode = application.run(args)
+
+                        it("does not print anything to the error stream") {
+                            assertThat(errorStream.toString(), equalTo(""))
+                        }
+
+                        it("returns the exit code from the command") {
+                            assertThat(exitCode, equalTo(123))
+                        }
+
+                        it("logs information about the application before running the command") {
+                            inOrder(command, applicationInfoLogger) {
+                                verify(applicationInfoLogger).logApplicationInfo(args)
+                                verify(command).run()
+                            }
+                        }
+                    }
+                }
+
+                given("the command throws an exception") {
+                    val exception = RuntimeException("Everything is broken")
+                    val command = mock<Command> {
+                        on { run() } doThrow exception
+                    }
+
+                    beforeEachTest {
+                        whenever(commandFactory.createCommand(options, extendedDependencies)).thenReturn(command)
+                    }
+
+                    on("running the application") {
+                        val exitCode = application.run(args)
+
+                        it("prints the exception message to the error console in red") {
+                            verify(errorConsole).println(Text.red("java.lang.RuntimeException: Everything is broken"))
+                        }
+
+                        it("logs the exception to the log") {
+                            assertThat(logSink, hasMessage(withSeverity(Severity.Error) and withException(exception)))
+                        }
+
+                        it("returns a non-zero exit code") {
+                            assertThat(exitCode, !equalTo(0))
                         }
                     }
                 }
             }
 
-            given("the command throws an exception") {
-                val exception = RuntimeException("Everything is broken")
-                val command = mock<Command> {
-                    on { run() } doThrow exception
-                }
-
+            given("parsing the command line arguments fails") {
                 beforeEachTest {
-                    whenever(commandFactory.createCommand(options, extendedDependencies)).thenReturn(command)
+                    whenever(commandLineOptionsParser.parse(args)).thenReturn(CommandLineOptionsParsingResult.Failed("Everything is broken"))
                 }
 
                 on("running the application") {
                     val exitCode = application.run(args)
 
-                    it("prints the exception message to the error console in red") {
-                        verify(errorConsole).println(Text.red("java.lang.RuntimeException: Everything is broken"))
-                    }
-
-                    it("logs the exception to the log") {
-                        assertThat(logSink, hasMessage(withSeverity(Severity.Error) and withException(exception)))
+                    it("prints the error message to the error stream") {
+                        assertThat(errorStream.toString(), equalTo("Everything is broken\n"))
                     }
 
                     it("returns a non-zero exit code") {
@@ -156,16 +181,14 @@ object ApplicationSpec : Spek({
             }
         }
 
-        given("parsing the command line arguments fails") {
-            beforeEachTest {
-                whenever(commandLineOptionsParser.parse(args)).thenReturn(CommandLineOptionsParsingResult.Failed("Everything is broken"))
-            }
+        given("the application is running on an unsupported operating system") {
+            beforeEachTest { whenever(systemInfo.isSupportedOperatingSystem).thenReturn(false) }
 
             on("running the application") {
                 val exitCode = application.run(args)
 
-                it("prints the error message to the error stream") {
-                    assertThat(errorStream.toString(), equalTo("Everything is broken\n"))
+                it("prints an error message to the error stream") {
+                    assertThat(errorStream.toString(), equalTo("batect only supports OS X and Linux.\n"))
                 }
 
                 it("returns a non-zero exit code") {

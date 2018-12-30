@@ -38,6 +38,8 @@ class SystemInfo(private val posix: POSIX, private val systemProperties: Propert
         else -> OperatingSystem.Other
     }
 
+    val isSupportedOperatingSystem = operatingSystem in setOf(OperatingSystem.Mac, OperatingSystem.Linux)
+
     val userId: Int by lazy { posix.geteuid() }
     val userName: String by lazy { posix.getpwuid(userId).loginName }
     val groupId: Int by lazy { posix.getegid() }

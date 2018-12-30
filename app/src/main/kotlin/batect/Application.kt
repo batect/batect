@@ -22,6 +22,7 @@ import batect.cli.CommandLineOptionsParsingResult
 import batect.cli.commands.CommandFactory
 import batect.logging.ApplicationInfoLogger
 import batect.logging.logger
+import batect.os.SystemInfo
 import batect.ui.Console
 import batect.ui.text.Text
 import org.kodein.di.DKodein
@@ -49,8 +50,14 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
     private val errorStream: PrintStream = instance(StreamType.Error)
     private val commandLineOptionsParser: CommandLineOptionsParser = instance()
     private val commandFactory: CommandFactory = instance()
+    private val systemInfo: SystemInfo = instance()
 
     fun run(args: Iterable<String>): Int {
+        if (!systemInfo.isSupportedOperatingSystem) {
+            errorStream.println("batect only supports OS X and Linux.")
+            return -1
+        }
+
         return when (val result = commandLineOptionsParser.parse(args)) {
             is CommandLineOptionsParsingResult.Succeeded -> runCommand(result.options, args)
             is CommandLineOptionsParsingResult.Failed -> handleOptionsParsingFailed(result)

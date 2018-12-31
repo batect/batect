@@ -14,6 +14,10 @@
    limitations under the License.
 */
 
+plugins {
+    id 'com.diffplug.gradle.spotless'
+}
+
 apply plugin: 'java'
 apply plugin: 'application'
 
@@ -31,3 +35,16 @@ jar {
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
+
+ext.javaLicenseHeader = "/*$licenseText*/\n\n"
+
+spotless {
+    java {
+        licenseHeader javaLicenseHeader
+
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        indentWithSpaces()
+        endWithNewline()
+    }
+}

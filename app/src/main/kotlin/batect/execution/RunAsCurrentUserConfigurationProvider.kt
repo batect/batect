@@ -17,6 +17,7 @@
 package batect.execution
 
 import batect.config.Container
+import batect.config.RunAsCurrentUserConfig
 import batect.config.VolumeMount
 import batect.docker.UserAndGroup
 import batect.execution.model.events.TaskEventSink
@@ -35,19 +36,18 @@ class RunAsCurrentUserConfigurationProvider(
 ) {
     private val temporaryDirectory = fileSystem.getPath("/tmp")
 
-    fun generateConfiguration(container: Container, eventSink: TaskEventSink): RunAsCurrentUserConfiguration {
-        if (container.runAsCurrentUserConfig.enabled) {
-            val volumeMounts = createMounts(container, eventSink)
+    fun generateConfiguration(container: Container, eventSink: TaskEventSink): RunAsCurrentUserConfiguration = when (container.runAsCurrentUserConfig) {
+        is RunAsCurrentUserConfig.RunAsCurrentUser -> {
+            val volumeMounts = createMounts(container, container.runAsCurrentUserConfig, eventSink)
             createMissingVolumeMountDirectories(container)
 
-            return RunAsCurrentUserConfiguration(volumeMounts, UserAndGroup(systemInfo.userId, systemInfo.groupId))
-        } else {
-            return RunAsCurrentUserConfiguration(emptySet(), null)
+            RunAsCurrentUserConfiguration(volumeMounts, UserAndGroup(systemInfo.userId, systemInfo.groupId))
         }
+        is RunAsCurrentUserConfig.RunAsDefaultContainerUser -> RunAsCurrentUserConfiguration(emptySet(), null)
     }
 
-    private fun createMounts(container: Container, eventSink: TaskEventSink): Set<VolumeMount> {
-        val passwdFile = createPasswdFile(container)
+    private fun createMounts(container: Container, runAsCurrentUserConfig: RunAsCurrentUserConfig.RunAsCurrentUser, eventSink: TaskEventSink): Set<VolumeMount> {
+        val passwdFile = createPasswdFile(runAsCurrentUserConfig)
         eventSink.postEvent(TemporaryFileCreatedEvent(container, passwdFile))
 
         val groupFile = createGroupFile()
@@ -59,13 +59,13 @@ class RunAsCurrentUserConfigurationProvider(
         return setOf(
             VolumeMount(passwdFile.toString(), "/etc/passwd", "ro"),
             VolumeMount(groupFile.toString(), "/etc/group", "ro"),
-            VolumeMount(homeDirectory.toString(), container.runAsCurrentUserConfig.homeDirectory!!, "delegated")
+            VolumeMount(homeDirectory.toString(), runAsCurrentUserConfig.homeDirectory, "delegated")
         )
     }
 
-    private fun createPasswdFile(container: Container): Path {
+    private fun createPasswdFile(runAsCurrentUserConfig: RunAsCurrentUserConfig.RunAsCurrentUser): Path {
         val path = createTempFile("passwd")
-        val homeDirectory = container.runAsCurrentUserConfig.homeDirectory!!
+        val homeDirectory = runAsCurrentUserConfig.homeDirectory
 
         val lines = if (systemInfo.userId == 0) {
             listOf("root:x:0:0:root:$homeDirectory:/bin/sh")

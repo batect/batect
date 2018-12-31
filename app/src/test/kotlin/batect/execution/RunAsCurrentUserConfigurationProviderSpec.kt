@@ -76,7 +76,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 "some-container",
                 imageSourceDoesNotMatter(),
                 volumeMounts = containerMounts,
-                runAsCurrentUserConfig = RunAsCurrentUserConfig(enabled = false)
+                runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
             )
 
             val systemInfo = mock<SystemInfo>()
@@ -104,11 +104,13 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
         }
 
         given("the container has 'run as current user' enabled") {
+            val homeDirectory = "/home/some-user"
+
             val container = Container(
                 "some-container",
                 imageSourceDoesNotMatter(),
                 volumeMounts = containerMounts,
-                runAsCurrentUserConfig = RunAsCurrentUserConfig(enabled = true, homeDirectory = "/home/some-user")
+                runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsCurrentUser(homeDirectory)
             )
 
             given("the current user is not root") {
@@ -128,7 +130,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         assertThat(configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(setOf(
                             "/etc/passwd",
                             "/etc/group",
-                            container.runAsCurrentUserConfig.homeDirectory!!
+                            homeDirectory
                         )))
                     }
 
@@ -141,7 +143,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     it("returns a set of volume mounts with the home directory mounted in delegated mode") {
-                        assertThat(configuration.volumeMounts, hasDelegatedVolumeMount(container.runAsCurrentUserConfig.homeDirectory!!))
+                        assertThat(configuration.volumeMounts, hasDelegatedVolumeMount(homeDirectory))
                     }
 
                     it("creates a passwd file with both root and the current user") {
@@ -173,7 +175,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     it("emits a 'temporary directory created' event for the home directory") {
-                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, container.runAsCurrentUserConfig.homeDirectory!!, fileSystem)
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
                         verify(eventSink).postEvent(TemporaryDirectoryCreatedEvent(container, homeDirectoryPath))
                     }
 
@@ -186,18 +188,18 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     it("creates a directory for the home directory") {
-                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, container.runAsCurrentUserConfig.homeDirectory!!, fileSystem)
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
                         assertThat(Files.exists(homeDirectoryPath), equalTo(true))
                     }
 
                     it("sets the user for the created home directory to the current user") {
-                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, container.runAsCurrentUserConfig.homeDirectory!!, fileSystem)
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
                         val owner = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).owner()
                         assertThat(owner.name, equalTo("the-user"))
                     }
 
                     it("sets the group for the created home directory to the current user's primary group") {
-                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, container.runAsCurrentUserConfig.homeDirectory!!, fileSystem)
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
                         val group = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).group()
                         assertThat(group.name, equalTo("the-user's-group"))
                     }
@@ -221,7 +223,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         assertThat(configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(setOf(
                             "/etc/passwd",
                             "/etc/group",
-                            container.runAsCurrentUserConfig.homeDirectory!!
+                            homeDirectory
                         )))
                     }
 
@@ -234,7 +236,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     it("returns a set of volume mounts with the home directory mounted in delegated mode") {
-                        assertThat(configuration.volumeMounts, hasDelegatedVolumeMount(container.runAsCurrentUserConfig.homeDirectory!!))
+                        assertThat(configuration.volumeMounts, hasDelegatedVolumeMount(homeDirectory))
                     }
 
                     it("creates a passwd file with just root listed") {
@@ -264,7 +266,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     it("emits a 'temporary directory created' event for the home directory") {
-                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, container.runAsCurrentUserConfig.homeDirectory!!, fileSystem)
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
                         verify(eventSink).postEvent(TemporaryDirectoryCreatedEvent(container, homeDirectoryPath))
                     }
 
@@ -277,18 +279,18 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     it("creates a directory for the home directory") {
-                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, container.runAsCurrentUserConfig.homeDirectory!!, fileSystem)
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
                         assertThat(Files.exists(homeDirectoryPath), equalTo(true))
                     }
 
                     it("sets the user for the created home directory to the current user") {
-                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, container.runAsCurrentUserConfig.homeDirectory!!, fileSystem)
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
                         val owner = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).owner()
                         assertThat(owner.name, equalTo("root"))
                     }
 
                     it("sets the group for the created home directory to the current user's primary group") {
-                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, container.runAsCurrentUserConfig.homeDirectory!!, fileSystem)
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
                         val group = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).group()
                         assertThat(group.name, equalTo("root"))
                     }

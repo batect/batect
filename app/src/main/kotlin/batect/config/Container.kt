@@ -28,5 +28,5 @@ data class Container(
     val portMappings: Set<PortMapping> = emptySet(),
     val dependencies: Set<String> = emptySet(),
     val healthCheckConfig: HealthCheckConfig = HealthCheckConfig(),
-    val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig()
+    val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
 )

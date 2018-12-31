@@ -46,7 +46,7 @@ data class ContainerFromFile(
     @SerialName("ports") @Optional val portMappings: Set<PortMapping> = emptySet(),
     @Serializable(with = DependencySetDeserializer::class) @Optional val dependencies: Set<String> = emptySet(),
     @SerialName("health_check") @Optional val healthCheckConfig: HealthCheckConfig = HealthCheckConfig(),
-    @SerialName("run_as_current_user") @Optional val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig()
+    @SerialName("run_as_current_user") @Optional @Serializable(with = RunAsCurrentUserConfig.Companion::class) val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
 ) {
 
     fun toContainer(name: String, pathResolver: PathResolver): Container {

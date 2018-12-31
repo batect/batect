@@ -501,7 +501,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.workingDirectory, equalTo("/here"))
                 assertThat(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
                 assertThat(container.healthCheckConfig, equalTo(HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(1))))
-                assertThat(container.runAsCurrentUserConfig, equalTo(RunAsCurrentUserConfig(true, "/home/something")))
+                assertThat(container.runAsCurrentUserConfig, equalTo(RunAsCurrentUserConfig.RunAsCurrentUser("/home/something")))
                 assertThat(container.volumeMounts, equalTo(setOf(
                     VolumeMount("/resolved/..", "/here", null),
                     VolumeMount("/resolved/somewhere", "/else", "ro")

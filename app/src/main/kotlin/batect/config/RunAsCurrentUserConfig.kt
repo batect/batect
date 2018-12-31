@@ -29,10 +29,7 @@ import kotlinx.serialization.Serializer
 import kotlinx.serialization.internal.SerialClassDescImpl
 
 @Serializable
-data class RunAsCurrentUserConfig(
-    val enabled: Boolean = false,
-    val homeDirectory: String? = null
-) {
+sealed class RunAsCurrentUserConfig() {
     @Serializer(forClass = RunAsCurrentUserConfig::class)
     companion object : KSerializer<RunAsCurrentUserConfig> {
         override val descriptor: SerialDescriptor = object : SerialClassDescImpl("RunAsCurrentUserConfig") {
@@ -69,17 +66,24 @@ data class RunAsCurrentUserConfig(
                 }
             }
 
-            if (enabled && homeDirectory == null) {
-                throw ConfigurationException("Running as the current user has been enabled, but a home directory for that user has not been provided.", null, input.node.location.line, input.node.location.column)
-            }
+            if (enabled) {
+                if (homeDirectory == null) {
+                    throw ConfigurationException("Running as the current user has been enabled, but a home directory for that user has not been provided.", null, input.node.location.line, input.node.location.column)
+                }
 
-            if (!enabled && homeDirectory != null) {
-                throw ConfigurationException("Running as the current user has not been enabled, but a home directory for that user has been provided.", null, input.node.location.line, input.node.location.column)
-            }
+                return RunAsCurrentUser(homeDirectory)
+            } else {
+                if (homeDirectory != null) {
+                    throw ConfigurationException("Running as the current user has not been enabled, but a home directory for that user has been provided.", null, input.node.location.line, input.node.location.column)
+                }
 
-            return RunAsCurrentUserConfig(enabled, homeDirectory)
+                return RunAsDefaultContainerUser
+            }
         }
 
         override fun serialize(output: Encoder, obj: RunAsCurrentUserConfig) = throw UnsupportedOperationException()
     }
+
+    object RunAsDefaultContainerUser : RunAsCurrentUserConfig()
+    data class RunAsCurrentUser(val homeDirectory: String) : RunAsCurrentUserConfig()
 }

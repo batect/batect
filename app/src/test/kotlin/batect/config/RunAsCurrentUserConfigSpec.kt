@@ -20,10 +20,10 @@ import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
 import com.charleskorn.kaml.Yaml
-import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.throws
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
@@ -41,12 +41,12 @@ object RunAsCurrentUserConfigSpec : Spek({
                     """.trimIndent()
                 )
 
-                it("returns that 'run as current user' is enabled") {
-                    assertThat(config.enabled, equalTo(true))
+                it("returns a configuration that runs as the current user") {
+                    assertThat(config, isA<RunAsCurrentUserConfig.RunAsCurrentUser>())
                 }
 
                 it("returns the correct home directory") {
-                    assertThat(config.homeDirectory, equalTo("/home/the_user"))
+                    assertThat((config as RunAsCurrentUserConfig.RunAsCurrentUser).homeDirectory, equalTo("/home/the_user"))
                 }
             }
 
@@ -57,12 +57,8 @@ object RunAsCurrentUserConfigSpec : Spek({
                     """.trimIndent()
                 )
 
-                it("returns that 'run as current user' is disabled") {
-                    assertThat(config.enabled, equalTo(false))
-                }
-
-                it("returns an empty home directory") {
-                    assertThat(config.homeDirectory, absent())
+                it("returns a configuration that runs as the default container user") {
+                    assertThat(config, isA<RunAsCurrentUserConfig.RunAsDefaultContainerUser>())
                 }
             }
 

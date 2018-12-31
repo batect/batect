@@ -22,9 +22,7 @@ import com.charleskorn.kaml.YamlScalar
 import kotlinx.serialization.CompositeDecoder
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Optional
 import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
@@ -32,9 +30,9 @@ import kotlinx.serialization.internal.SerialClassDescImpl
 
 @Serializable
 data class VolumeMount(
-    @SerialName("local") val localPath: String,
-    @SerialName("container") val containerPath: String,
-    @Optional val options: String? = null
+    val localPath: String,
+    val containerPath: String,
+    val options: String? = null
 ) {
     override fun toString(): String {
         if (options == null) {

@@ -23,7 +23,6 @@ import kotlinx.serialization.CompositeDecoder
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
@@ -31,8 +30,8 @@ import kotlinx.serialization.internal.SerialClassDescImpl
 
 @Serializable
 data class PortMapping(
-    @SerialName("local") val localPort: Int,
-    @SerialName("container") val containerPort: Int
+    val localPort: Int,
+    val containerPort: Int
 ) {
     init {
         if (localPort <= 0) {

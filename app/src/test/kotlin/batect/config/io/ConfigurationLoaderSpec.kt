@@ -779,7 +779,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: running as the current user has not been enabled, but a home directory for that user has been provided.") and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Running as the current user has not been enabled, but a home directory for that user has been provided.") and withFileName(testFileName) and withLineNumber(7)))
             }
         }
 
@@ -795,7 +795,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: running as the current user has been enabled, but a home directory for that user has not been provided.") and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Running as the current user has been enabled, but a home directory for that user has not been provided.") and withFileName(testFileName) and withLineNumber(7)))
             }
         }
 
@@ -811,7 +811,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: running as the current user has not been enabled, but a home directory for that user has been provided.") and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Running as the current user has not been enabled, but a home directory for that user has been provided.") and withFileName(testFileName) and withLineNumber(7)))
             }
         }
 

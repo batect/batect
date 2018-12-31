@@ -56,14 +56,6 @@ data class ContainerFromFile(
             resolveVolumeMount(it, name, pathResolver)
         }.toSet()
 
-        if (!runAsCurrentUserConfig.enabled && runAsCurrentUserConfig.homeDirectory != null) {
-            throw ConfigurationException("Container '$name' is invalid: running as the current user has not been enabled, but a home directory for that user has been provided.")
-        }
-
-        if (runAsCurrentUserConfig.enabled && runAsCurrentUserConfig.homeDirectory == null) {
-            throw ConfigurationException("Container '$name' is invalid: running as the current user has been enabled, but a home directory for that user has not been provided.")
-        }
-
         return Container(name, imageSource, command, environment, workingDirectory, resolvedVolumeMounts, portMappings, dependencies, healthCheckConfig, runAsCurrentUserConfig)
     }
 

@@ -51,7 +51,7 @@ object VolumeMountSpec : Spek({
 
                         when (originalPath) {
                             "/invalid" -> PathResolutionResult.InvalidPath(originalPath)
-                            else -> PathResolutionResult.Resolved(Paths.get("/resolved" + originalPath), PathType.Other)
+                            else -> PathResolutionResult.Resolved(originalPath, Paths.get("/resolved" + originalPath), PathType.Other)
                         }
                     }
                 }

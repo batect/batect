@@ -67,7 +67,7 @@ object ConfigurationLoaderSpec : Spek({
                     mock {
                         on { resolve(anyString()) } doAnswer { invocation ->
                             val path = invocation.arguments[0] as String
-                            PathResolutionResult.Resolved(fileSystem.getPath("/resolved/$path"), PathType.Directory)
+                            PathResolutionResult.Resolved(path, fileSystem.getPath("/resolved/$path"), PathType.Directory)
                         }
 
                         on { relativeTo } doReturn rootPath
@@ -427,7 +427,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: either build_directory or image must be specified.") and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("One of either build_directory or image must be specified for each container, but neither have been provided for this container.") and withFileName(testFileName) and withLineNumber(5)))
             }
         }
 
@@ -442,7 +442,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Container 'container-1' is invalid: only one of build_directory or image can be specified, but both have been provided.") and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Only one of build_directory or image can be specified for a container, but both have been provided for this container.") and withFileName(testFileName) and withLineNumber(5)))
             }
         }
 

@@ -34,7 +34,7 @@ data class ConfigurationFile(
         return Configuration(
             resolveProjectName(pathResolver),
             TaskMap(tasks.map { (name, task) -> task.toTask(name) }),
-            ContainerMap(containers.map { (name, container) -> container.toContainer(name, pathResolver) })
+            ContainerMap(containers.map { (name, container) -> container.toContainer(name) })
         )
     }
 

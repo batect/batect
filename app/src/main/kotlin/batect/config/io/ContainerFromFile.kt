@@ -29,56 +29,156 @@ import batect.config.io.deserializers.DependencySetDeserializer
 import batect.config.io.deserializers.EnvironmentDeserializer
 import batect.os.Command
 import batect.os.PathResolutionResult
-import batect.os.PathResolver
 import batect.os.PathType
-import kotlinx.serialization.Optional
-import kotlinx.serialization.SerialName
+import com.charleskorn.kaml.Location
+import com.charleskorn.kaml.YamlInput
+import kotlinx.serialization.CompositeDecoder
+import kotlinx.serialization.Decoder
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.Serializer
+import kotlinx.serialization.decode
+import kotlinx.serialization.internal.SerialClassDescImpl
+import kotlinx.serialization.set
 
 @Serializable
 data class ContainerFromFile(
-    @SerialName("build_directory") @Optional val buildDirectory: String? = null,
-    @SerialName("image") @Optional val imageName: String? = null,
-    @Optional val command: Command? = null,
-    @Serializable(with = EnvironmentDeserializer::class) @Optional val environment: Map<String, EnvironmentVariableExpression> = emptyMap(),
-    @SerialName("working_directory") @Optional val workingDirectory: String? = null,
-    @SerialName("volumes") @Optional val volumeMounts: Set<VolumeMount> = emptySet(),
-    @SerialName("ports") @Optional val portMappings: Set<PortMapping> = emptySet(),
-    @Serializable(with = DependencySetDeserializer::class) @Optional val dependencies: Set<String> = emptySet(),
-    @SerialName("health_check") @Optional val healthCheckConfig: HealthCheckConfig = HealthCheckConfig(),
-    @SerialName("run_as_current_user") @Optional @Serializable(with = RunAsCurrentUserConfig.Companion::class) val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
+    val imageSource: ImageSource,
+    val command: Command? = null,
+    val environment: Map<String, EnvironmentVariableExpression> = emptyMap(),
+    val workingDirectory: String? = null,
+    val volumeMounts: Set<VolumeMount> = emptySet(),
+    val portMappings: Set<PortMapping> = emptySet(),
+    val dependencies: Set<String> = emptySet(),
+    val healthCheckConfig: HealthCheckConfig = HealthCheckConfig(),
+    val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
 ) {
 
-    fun toContainer(name: String, pathResolver: PathResolver): Container {
-        val imageSource = resolveImageSource(name, pathResolver)
-
+    fun toContainer(name: String): Container {
         return Container(name, imageSource, command, environment, workingDirectory, volumeMounts, portMappings, dependencies, healthCheckConfig, runAsCurrentUserConfig)
     }
 
-    private fun resolveImageSource(containerName: String, pathResolver: PathResolver): ImageSource {
-        if (buildDirectory == null && imageName == null) {
-            throw ConfigurationException("Container '$containerName' is invalid: either build_directory or image must be specified.")
-        }
+    @Serializer(forClass = ContainerFromFile::class)
+    companion object : KSerializer<ContainerFromFile> {
+        private val buildDirectoryFieldName = "build_directory"
+        private val imageNameFieldName = "image"
+        private val commandFieldName = "command"
+        private val environmentFieldName = "environment"
+        private val workingDirectoryFieldName = "working_directory"
+        private val volumeMountsFieldName = "volumes"
+        private val portMappingsFieldName = "ports"
+        private val dependenciesFieldName = "dependencies"
+        private val healthCheckConfigFieldName = "health_check"
+        private val runAsCurrentUserConfigFieldName = "run_as_current_user"
 
-        if (buildDirectory != null && imageName != null) {
-            throw ConfigurationException("Container '$containerName' is invalid: only one of build_directory or image can be specified, but both have been provided.")
-        }
-
-        if (buildDirectory != null) {
-            return BuildImage(resolveBuildDirectory(containerName, pathResolver, buildDirectory))
-        } else {
-            return PullImage(imageName!!)
-        }
-    }
-
-    private fun resolveBuildDirectory(containerName: String, pathResolver: PathResolver, buildDirectory: String): String {
-        when (val result = pathResolver.resolve(buildDirectory)) {
-            is PathResolutionResult.Resolved -> when (result.pathType) {
-                PathType.Directory -> return result.absolutePath.toString()
-                PathType.DoesNotExist -> throw ConfigurationException("Build directory '$buildDirectory' (resolved to '${result.absolutePath}') for container '$containerName' does not exist.")
-                else -> throw ConfigurationException("Build directory '$buildDirectory' (resolved to '${result.absolutePath}') for container '$containerName' is not a directory.")
+        override val descriptor: SerialDescriptor = object : SerialClassDescImpl("ContainerFromFile") {
+            init {
+                addElement(buildDirectoryFieldName, isOptional = true)
+                addElement(imageNameFieldName, isOptional = true)
+                addElement(commandFieldName, isOptional = true)
+                addElement(environmentFieldName, isOptional = true)
+                addElement(workingDirectoryFieldName, isOptional = true)
+                addElement(volumeMountsFieldName, isOptional = true)
+                addElement(portMappingsFieldName, isOptional = true)
+                addElement(dependenciesFieldName, isOptional = true)
+                addElement(healthCheckConfigFieldName, isOptional = true)
+                addElement(runAsCurrentUserConfigFieldName, isOptional = true)
             }
-            is PathResolutionResult.InvalidPath -> throw ConfigurationException("Build directory '$buildDirectory' for container '$containerName' is not a valid path.")
+        }
+
+        private val buildDirectoryFieldIndex = descriptor.getElementIndex(buildDirectoryFieldName)
+        private val imageNameFieldIndex = descriptor.getElementIndex(imageNameFieldName)
+        private val commandFieldIndex = descriptor.getElementIndex(commandFieldName)
+        private val environmentFieldIndex = descriptor.getElementIndex(environmentFieldName)
+        private val workingDirectoryFieldIndex = descriptor.getElementIndex(workingDirectoryFieldName)
+        private val volumeMountsFieldIndex = descriptor.getElementIndex(volumeMountsFieldName)
+        private val portMappingsFieldIndex = descriptor.getElementIndex(portMappingsFieldName)
+        private val dependenciesFieldIndex = descriptor.getElementIndex(dependenciesFieldName)
+        private val healthCheckConfigFieldIndex = descriptor.getElementIndex(healthCheckConfigFieldName)
+        private val runAsCurrentUserConfigFieldIndex = descriptor.getElementIndex(runAsCurrentUserConfigFieldName)
+
+        override fun deserialize(input: Decoder): ContainerFromFile {
+            val inp = input.beginStructure(descriptor) as YamlInput
+
+            return deserializeFromObject(inp).also { inp.endStructure(descriptor) }
+        }
+
+        private fun deserializeFromObject(input: YamlInput): ContainerFromFile {
+            var buildDirectory: String? = null
+            var imageName: String? = null
+            var command: Command? = null
+            var environment = emptyMap<String, EnvironmentVariableExpression>()
+            var workingDirectory: String? = null
+            var volumeMounts = emptySet<VolumeMount>()
+            var portMappings = emptySet<PortMapping>()
+            var dependencies = emptySet<String>()
+            var healthCheckConfig = HealthCheckConfig()
+            var runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
+
+            loop@ while (true) {
+                when (val i = input.decodeElementIndex(descriptor)) {
+                    CompositeDecoder.READ_DONE -> break@loop
+                    buildDirectoryFieldIndex -> {
+                        val loader = input.context.get(PathResolutionResult::class)!!
+                        val resolutionResult = input.decode(loader)
+                        val location = input.getCurrentLocation()
+
+                        buildDirectory = resolveBuildDirectory(resolutionResult, location)
+                    }
+                    imageNameFieldIndex -> imageName = input.decodeStringElement(descriptor, i)
+                    commandFieldIndex -> command = input.decode(Command.serializer())
+                    environmentFieldIndex -> environment = input.decode(EnvironmentDeserializer)
+                    workingDirectoryFieldIndex -> workingDirectory = input.decodeStringElement(descriptor, i)
+                    volumeMountsFieldIndex -> volumeMounts = input.decode(VolumeMount.serializer().set)
+                    portMappingsFieldIndex -> portMappings = input.decode(PortMapping.serializer().set)
+                    dependenciesFieldIndex -> dependencies = input.decode(DependencySetDeserializer)
+                    healthCheckConfigFieldIndex -> healthCheckConfig = input.decode(HealthCheckConfig.serializer())
+                    runAsCurrentUserConfigFieldIndex -> runAsCurrentUserConfig = input.decode(RunAsCurrentUserConfig.serializer())
+
+                    else -> throw SerializationException("Unknown index $i")
+                }
+            }
+
+            return ContainerFromFile(
+                resolveImageSource(buildDirectory, imageName, input.node.location),
+                command,
+                environment,
+                workingDirectory,
+                volumeMounts,
+                portMappings,
+                dependencies,
+                healthCheckConfig,
+                runAsCurrentUserConfig
+            )
+        }
+
+        private fun resolveImageSource(buildDirectory: String?, imageName: String?, location: Location): ImageSource {
+            if (buildDirectory == null && imageName == null) {
+                throw ConfigurationException("One of either build_directory or image must be specified for each container, but neither have been provided for this container.", null, location.line, location.column)
+            }
+
+            if (buildDirectory != null && imageName != null) {
+                throw ConfigurationException("Only one of build_directory or image can be specified for a container, but both have been provided for this container.", null, location.line, location.column)
+            }
+
+            if (buildDirectory != null) {
+                return BuildImage(buildDirectory)
+            } else {
+                return PullImage(imageName!!)
+            }
+        }
+
+        private fun resolveBuildDirectory(buildDirectory: PathResolutionResult, location: Location): String {
+            when (buildDirectory) {
+                is PathResolutionResult.Resolved -> when (buildDirectory.pathType) {
+                    PathType.Directory -> return buildDirectory.absolutePath.toString()
+                    PathType.DoesNotExist -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') does not exist.", null, location.line, location.line)
+                    else -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') is not a directory.", null, location.line, location.line)
+                }
+                is PathResolutionResult.InvalidPath -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' is not a valid path.", null, location.line, location.line)
+            }
         }
     }
 }

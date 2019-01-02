@@ -38,8 +38,8 @@ object CommandLineOptionsParserSpec : Spek({
         val fileSystem = Jimfs.newFileSystem(Configuration.unix())
 
         val pathResolver = mock<PathResolver> {
-            on { resolve("somefile.log") } doReturn PathResolutionResult.Resolved(fileSystem.getPath("/resolved/somefile.log"), PathType.File)
-            on { resolve("somefile.yml") } doReturn PathResolutionResult.Resolved(fileSystem.getPath("/resolved/somefile.yml"), PathType.File)
+            on { resolve("somefile.log") } doReturn PathResolutionResult.Resolved("somefile.log", fileSystem.getPath("/resolved/somefile.log"), PathType.File)
+            on { resolve("somefile.yml") } doReturn PathResolutionResult.Resolved("somefile.yml", fileSystem.getPath("/resolved/somefile.yml"), PathType.File)
         }
 
         val pathResolverFactory = mock<PathResolverFactory> {

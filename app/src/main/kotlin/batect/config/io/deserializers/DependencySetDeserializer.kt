@@ -48,7 +48,6 @@ internal object DependencySetDeserializer : KSerializer<Set<String>> {
         while (true) {
             when (val index = input.decodeElementIndex(descriptor)) {
                 CompositeDecoder.READ_ALL -> return readAll(input, size)
-                CompositeDecoder.READ_DONE -> return emptySet()
                 else -> return readUntilDone(input, index)
             }
         }
@@ -68,11 +67,11 @@ internal object DependencySetDeserializer : KSerializer<Set<String>> {
         var currentIndex = firstIndex
         val soFar = mutableSetOf<String>()
 
-        do {
+        while (currentIndex != CompositeDecoder.READ_DONE) {
             soFar.add(readSingle(input, currentIndex, soFar))
 
             currentIndex = input.decodeElementIndex(descriptor)
-        } while (currentIndex != CompositeDecoder.READ_DONE)
+        }
 
         return soFar
     }

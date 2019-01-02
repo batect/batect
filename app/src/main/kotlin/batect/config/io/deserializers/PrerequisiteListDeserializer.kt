@@ -50,7 +50,6 @@ internal object PrerequisiteListDeserializer : KSerializer<List<String>> {
         while (true) {
             when (val index = input.decodeElementIndex(descriptor)) {
                 READ_ALL -> return readAll(input, size)
-                READ_DONE -> return emptyList()
                 else -> return readUntilDone(input, index)
             }
         }
@@ -70,11 +69,11 @@ internal object PrerequisiteListDeserializer : KSerializer<List<String>> {
         var currentIndex = firstIndex
         val soFar = mutableListOf<String>()
 
-        do {
+        while (currentIndex != READ_DONE) {
             soFar.add(currentIndex, readSingle(input, currentIndex, soFar))
 
             currentIndex = input.decodeElementIndex(descriptor)
-        } while (currentIndex != READ_DONE)
+        }
 
         return soFar
     }

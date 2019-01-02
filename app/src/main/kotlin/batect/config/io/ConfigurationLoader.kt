@@ -17,11 +17,14 @@
 package batect.config.io
 
 import batect.config.Configuration
+import batect.config.io.deserializers.PathDeserializer
 import batect.logging.Logger
+import batect.os.PathResolutionResult
 import batect.os.PathResolverFactory
 import com.charleskorn.kaml.EmptyYamlDocumentException
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlException
+import kotlinx.serialization.context.SimpleModule
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
@@ -60,9 +63,12 @@ class ConfigurationLoader(
 
     private fun loadConfig(configFileContent: String, filePath: Path): Configuration {
         val pathResolver = pathResolverFactory.createResolver(filePath.parent)
+        val pathDeserializer = PathDeserializer(pathResolver)
+        val parser = Yaml()
+        parser.install(SimpleModule(PathResolutionResult::class, pathDeserializer))
 
         try {
-            return Yaml.default.parse(ConfigurationFile.serializer(), configFileContent).toConfiguration(pathResolver)
+            return parser.parse(ConfigurationFile.serializer(), configFileContent).toConfiguration(pathResolver)
         } catch (e: Throwable) {
             logger.error {
                 message("Exception thrown while loading configuration.")

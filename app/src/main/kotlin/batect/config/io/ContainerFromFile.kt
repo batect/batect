@@ -52,11 +52,7 @@ data class ContainerFromFile(
     fun toContainer(name: String, pathResolver: PathResolver): Container {
         val imageSource = resolveImageSource(name, pathResolver)
 
-        val resolvedVolumeMounts = volumeMounts.map {
-            resolveVolumeMount(it, name, pathResolver)
-        }.toSet()
-
-        return Container(name, imageSource, command, environment, workingDirectory, resolvedVolumeMounts, portMappings, dependencies, healthCheckConfig, runAsCurrentUserConfig)
+        return Container(name, imageSource, command, environment, workingDirectory, volumeMounts, portMappings, dependencies, healthCheckConfig, runAsCurrentUserConfig)
     }
 
     private fun resolveImageSource(containerName: String, pathResolver: PathResolver): ImageSource {
@@ -84,15 +80,5 @@ data class ContainerFromFile(
             }
             is PathResolutionResult.InvalidPath -> throw ConfigurationException("Build directory '$buildDirectory' for container '$containerName' is not a valid path.")
         }
-    }
-
-    // Move this to VolumeMount's serializer
-    private fun resolveVolumeMount(volumeMount: VolumeMount, containerName: String, pathResolver: PathResolver): VolumeMount {
-        val resolvedLocalPath = when (val result = pathResolver.resolve(volumeMount.localPath)) {
-            is PathResolutionResult.Resolved -> result.absolutePath.toString()
-            is PathResolutionResult.InvalidPath -> throw ConfigurationException("Local path '${volumeMount.localPath}' for volume mount in container '$containerName' is not a valid path.")
-        }
-
-        return VolumeMount(resolvedLocalPath, volumeMount.containerPath, volumeMount.options)
     }
 }

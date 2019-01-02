@@ -16,10 +16,10 @@
 
 package batect.os
 
+import batect.testutils.equalTo
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -46,7 +46,7 @@ object PathResolverSpec : Spek({
             val path = ""
 
             it("resolves to the original directory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/thing/place"), PathType.Directory) as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/thing/place"), PathType.Directory)))
             }
         }
 
@@ -54,7 +54,7 @@ object PathResolverSpec : Spek({
             val path = "."
 
             it("resolves to the original directory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/thing/place"), PathType.Directory) as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/thing/place"), PathType.Directory)))
             }
         }
 
@@ -66,7 +66,7 @@ object PathResolverSpec : Spek({
             }
 
             it("resolves to the subdirectory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/thing/place/stuff"), PathType.Directory) as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/thing/place/stuff"), PathType.Directory)))
             }
         }
 
@@ -74,7 +74,7 @@ object PathResolverSpec : Spek({
             val path = ".."
 
             it("resolves to the parent directory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/thing"), PathType.Directory) as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/thing"), PathType.Directory)))
             }
         }
 
@@ -86,7 +86,7 @@ object PathResolverSpec : Spek({
             }
 
             it("resolves to the parent directory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/thing/something"), PathType.Directory) as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/thing/something"), PathType.Directory)))
             }
         }
 
@@ -98,7 +98,7 @@ object PathResolverSpec : Spek({
             }
 
             it("resolves to the absolute path") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/other"), PathType.Directory) as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/other"), PathType.Directory)))
             }
         }
 
@@ -106,7 +106,7 @@ object PathResolverSpec : Spek({
             val path = "doesnotexist"
 
             it("reports that the path does not exist") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/thing/place/doesnotexist"), PathType.DoesNotExist) as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/thing/place/doesnotexist"), PathType.DoesNotExist)))
             }
         }
 
@@ -118,7 +118,7 @@ object PathResolverSpec : Spek({
             }
 
             it("resolves to the file") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/thing/place/thefile.txt"), PathType.File) as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/thing/place/thefile.txt"), PathType.File)))
             }
         }
 
@@ -126,7 +126,7 @@ object PathResolverSpec : Spek({
             val path = "~"
 
             it("resolves to the user's home directory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/home/username"), PathType.Directory) as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/home/username"), PathType.Directory)))
             }
         }
 
@@ -138,7 +138,7 @@ object PathResolverSpec : Spek({
             }
 
             it("resolves to the full path to the file") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/home/username/somefile.txt"), PathType.File) as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(fileSystem.getPath("/home/username/somefile.txt"), PathType.File)))
             }
         }
 
@@ -146,7 +146,7 @@ object PathResolverSpec : Spek({
             val path = "\u0000"
 
             it("reports that the path is invalid") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.InvalidPath as PathResolutionResult))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.InvalidPath("\u0000")))
             }
         }
     }

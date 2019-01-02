@@ -115,7 +115,7 @@ object ValueConvertersSpec : Spek({
                 on { resolve("directory") } doReturn PathResolutionResult.Resolved(fileSystem.getPath("/resolved/directory"), PathType.Directory)
                 on { resolve("other") } doReturn PathResolutionResult.Resolved(fileSystem.getPath("/resolved/other"), PathType.Other)
                 on { resolve("does-not-exist") } doReturn PathResolutionResult.Resolved(fileSystem.getPath("/resolved/does-not-exist"), PathType.DoesNotExist)
-                on { resolve("invalid") } doReturn PathResolutionResult.InvalidPath
+                on { resolve("invalid") } doReturn PathResolutionResult.InvalidPath("invalid")
             }
 
             val pathResolverFactory = mock<PathResolverFactory> {

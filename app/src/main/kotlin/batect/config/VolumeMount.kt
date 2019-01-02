@@ -17,15 +17,20 @@
 package batect.config
 
 import batect.config.io.ConfigurationException
+import batect.os.PathResolutionResult
+import com.charleskorn.kaml.Location
 import com.charleskorn.kaml.YamlInput
 import com.charleskorn.kaml.YamlScalar
 import kotlinx.serialization.CompositeDecoder
 import kotlinx.serialization.Decoder
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.ElementValueDecoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
+import kotlinx.serialization.decode
 import kotlinx.serialization.internal.SerialClassDescImpl
 
 @Serializable
@@ -91,7 +96,17 @@ data class VolumeMount(
                 throw invalidMountDefinitionException(value, input)
             }
 
-            return VolumeMount(local, container, options)
+            val resolvedLocal = resolveLocalPathFromString(local, input)
+
+            return VolumeMount(resolvedLocal, container, options)
+        }
+
+        private fun resolveLocalPathFromString(localPart: String, input: YamlInput): String {
+            val dummyInput = object : ElementValueDecoder() {
+                override fun decodeString() = localPart
+            }
+
+            return resolveLocalPath(dummyInput.decode(input.localPathDeserializer), input.getCurrentLocation())
         }
 
         private fun invalidMountDefinitionException(value: String, input: YamlInput) =
@@ -110,7 +125,10 @@ data class VolumeMount(
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
                     CompositeDecoder.READ_DONE -> break@loop
-                    localPathFieldIndex -> localPath = input.decodeStringElement(descriptor, i)
+                    localPathFieldIndex -> {
+                        val resolutionResult = input.decodeSerializableElement(descriptor, i, input.localPathDeserializer)
+                        localPath = resolveLocalPath(resolutionResult, input.getCurrentLocation())
+                    }
                     containerPathFieldIndex -> containerPath = input.decodeStringElement(descriptor, i)
                     optionsFieldIndex -> options = input.decodeStringElement(descriptor, i)
                     else -> throw SerializationException("Unknown index $i")
@@ -127,5 +145,15 @@ data class VolumeMount(
 
             return VolumeMount(localPath, containerPath, options)
         }
+
+        private fun resolveLocalPath(pathResolutionResult: PathResolutionResult, location: Location): String {
+            when (pathResolutionResult) {
+                is PathResolutionResult.Resolved -> return pathResolutionResult.absolutePath.toString()
+                is PathResolutionResult.InvalidPath -> throw ConfigurationException("'${pathResolutionResult.originalPath}' is not a valid path.", null, location.line, location.column)
+            }
+        }
+
+        private val YamlInput.localPathDeserializer: DeserializationStrategy<PathResolutionResult>
+            get() = context.get(PathResolutionResult::class)!!
     }
 }

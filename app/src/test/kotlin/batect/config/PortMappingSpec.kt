@@ -159,4 +159,4 @@ object PortMappingSpec : Spek({
     }
 })
 
-private fun fromYaml(yaml: String): PortMapping = Yaml.parse(PortMapping.Companion, yaml)
+private fun fromYaml(yaml: String): PortMapping = Yaml.default.parse(PortMapping.Companion, yaml)

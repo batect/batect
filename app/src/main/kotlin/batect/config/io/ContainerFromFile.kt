@@ -86,6 +86,7 @@ data class ContainerFromFile(
         }
     }
 
+    // Move this to VolumeMount's serializer
     private fun resolveVolumeMount(volumeMount: VolumeMount, containerName: String, pathResolver: PathResolver): VolumeMount {
         val resolvedLocalPath = when (val result = pathResolver.resolve(volumeMount.localPath)) {
             is PathResolutionResult.Resolved -> result.absolutePath.toString()

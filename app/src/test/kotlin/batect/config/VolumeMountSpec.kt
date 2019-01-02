@@ -187,4 +187,4 @@ object VolumeMountSpec : Spek({
     }
 })
 
-private fun fromYaml(yaml: String): VolumeMount = Yaml.parse(VolumeMount.Companion, yaml)
+private fun fromYaml(yaml: String): VolumeMount = Yaml.default.parse(VolumeMount.Companion, yaml)

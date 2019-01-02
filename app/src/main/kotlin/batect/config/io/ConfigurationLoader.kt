@@ -62,7 +62,7 @@ class ConfigurationLoader(
         val pathResolver = pathResolverFactory.createResolver(filePath.parent)
 
         try {
-            return Yaml.parse(ConfigurationFile.serializer(), configFileContent).toConfiguration(pathResolver)
+            return Yaml.default.parse(ConfigurationFile.serializer(), configFileContent).toConfiguration(pathResolver)
         } catch (e: Throwable) {
             logger.error {
                 message("Exception thrown while loading configuration.")

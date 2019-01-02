@@ -139,7 +139,7 @@ data class Command private constructor(val originalCommand: String, val parsedCo
             if (input is YamlInput) {
                 val location = input.getCurrentLocation()
 
-                throw ConfigurationException(e.message ?: "", null, location.line, location.column, e)
+                throw ConfigurationException(e.message ?: "", location.line, location.column, e)
             } else {
                 throw e
             }

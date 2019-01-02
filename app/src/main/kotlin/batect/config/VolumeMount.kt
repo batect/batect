@@ -79,7 +79,7 @@ data class VolumeMount(
             val value = input.decodeString()
 
             if (value == "") {
-                throw ConfigurationException("Volume mount definition cannot be empty.", null, input.node.location.line, input.node.location.column)
+                throw ConfigurationException("Volume mount definition cannot be empty.", input.node.location.line, input.node.location.column)
             }
 
             val parts = value.split(':')
@@ -112,7 +112,6 @@ data class VolumeMount(
         private fun invalidMountDefinitionException(value: String, input: YamlInput) =
             ConfigurationException(
                 "Volume mount definition '$value' is not valid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.",
-                null,
                 input.node.location.line,
                 input.node.location.column
             )
@@ -136,11 +135,11 @@ data class VolumeMount(
             }
 
             if (localPath == null) {
-                throw ConfigurationException("Field '${descriptor.getElementName(localPathFieldIndex)}' is required but it is missing.", null, input.node.location.line, input.node.location.column)
+                throw ConfigurationException("Field '${descriptor.getElementName(localPathFieldIndex)}' is required but it is missing.", input.node.location.line, input.node.location.column)
             }
 
             if (containerPath == null) {
-                throw ConfigurationException("Field '${descriptor.getElementName(containerPathFieldIndex)}' is required but it is missing.", null, input.node.location.line, input.node.location.column)
+                throw ConfigurationException("Field '${descriptor.getElementName(containerPathFieldIndex)}' is required but it is missing.", input.node.location.line, input.node.location.column)
             }
 
             return VolumeMount(localPath, containerPath, options)
@@ -149,7 +148,7 @@ data class VolumeMount(
         private fun resolveLocalPath(pathResolutionResult: PathResolutionResult, location: Location): String {
             when (pathResolutionResult) {
                 is PathResolutionResult.Resolved -> return pathResolutionResult.absolutePath.toString()
-                is PathResolutionResult.InvalidPath -> throw ConfigurationException("'${pathResolutionResult.originalPath}' is not a valid path.", null, location.line, location.column)
+                is PathResolutionResult.InvalidPath -> throw ConfigurationException("'${pathResolutionResult.originalPath}' is not a valid path.", location.line, location.column)
             }
         }
 

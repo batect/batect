@@ -80,7 +80,7 @@ data class PortMapping(
             val value = input.decodeString()
 
             if (value == "") {
-                throw ConfigurationException("Port mapping definition cannot be empty.", null, input.node.location.line, input.node.location.column)
+                throw ConfigurationException("Port mapping definition cannot be empty.", input.node.location.line, input.node.location.column)
             }
 
             val separator = ':'
@@ -112,7 +112,6 @@ data class PortMapping(
         private fun invalidMappingDefinitionException(value: String, input: YamlInput, cause: Throwable? = null) =
             ConfigurationException(
                 "Port mapping definition '$value' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.",
-                null,
                 input.node.location.line,
                 input.node.location.column,
                 cause
@@ -129,14 +128,14 @@ data class PortMapping(
                         localPort = input.decodeIntElement(descriptor, i)
 
                         if (localPort <= 0) {
-                            throw ConfigurationException("Field '$localPortFieldName' is invalid: it must be a positive integer.", null, input.getCurrentLocation().line, input.getCurrentLocation().column)
+                            throw ConfigurationException("Field '$localPortFieldName' is invalid: it must be a positive integer.", input.getCurrentLocation().line, input.getCurrentLocation().column)
                         }
                     }
                     containerPortFieldIndex -> {
                         containerPort = input.decodeIntElement(descriptor, i)
 
                         if (containerPort <= 0) {
-                            throw ConfigurationException("Field '$containerPortFieldName' is invalid: it must be a positive integer.", null, input.getCurrentLocation().line, input.getCurrentLocation().column)
+                            throw ConfigurationException("Field '$containerPortFieldName' is invalid: it must be a positive integer.", input.getCurrentLocation().line, input.getCurrentLocation().column)
                         }
                     }
                     else -> throw SerializationException("Unknown index $i")
@@ -144,11 +143,11 @@ data class PortMapping(
             }
 
             if (localPort == null) {
-                throw ConfigurationException("Field '$localPortFieldName' is required but it is missing.", null, input.node.location.line, input.node.location.column)
+                throw ConfigurationException("Field '$localPortFieldName' is required but it is missing.", input.node.location.line, input.node.location.column)
             }
 
             if (containerPort == null) {
-                throw ConfigurationException("Field '$containerPortFieldName' is required but it is missing.", null, input.node.location.line, input.node.location.column)
+                throw ConfigurationException("Field '$containerPortFieldName' is required but it is missing.", input.node.location.line, input.node.location.column)
             }
 
             return PortMapping(localPort, containerPort)

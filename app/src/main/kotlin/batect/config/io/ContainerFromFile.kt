@@ -156,11 +156,11 @@ data class ContainerFromFile(
 
         private fun resolveImageSource(buildDirectory: String?, imageName: String?, location: Location): ImageSource {
             if (buildDirectory == null && imageName == null) {
-                throw ConfigurationException("One of either build_directory or image must be specified for each container, but neither have been provided for this container.", null, location.line, location.column)
+                throw ConfigurationException("One of either build_directory or image must be specified for each container, but neither have been provided for this container.", location.line, location.column)
             }
 
             if (buildDirectory != null && imageName != null) {
-                throw ConfigurationException("Only one of build_directory or image can be specified for a container, but both have been provided for this container.", null, location.line, location.column)
+                throw ConfigurationException("Only one of build_directory or image can be specified for a container, but both have been provided for this container.", location.line, location.column)
             }
 
             if (buildDirectory != null) {
@@ -174,10 +174,10 @@ data class ContainerFromFile(
             when (buildDirectory) {
                 is PathResolutionResult.Resolved -> when (buildDirectory.pathType) {
                     PathType.Directory -> return buildDirectory.absolutePath.toString()
-                    PathType.DoesNotExist -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') does not exist.", null, location.line, location.line)
-                    else -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') is not a directory.", null, location.line, location.line)
+                    PathType.DoesNotExist -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') does not exist.", location.line, location.line)
+                    else -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') is not a directory.", location.line, location.line)
                 }
-                is PathResolutionResult.InvalidPath -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' is not a valid path.", null, location.line, location.line)
+                is PathResolutionResult.InvalidPath -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' is not a valid path.", location.line, location.line)
             }
         }
     }

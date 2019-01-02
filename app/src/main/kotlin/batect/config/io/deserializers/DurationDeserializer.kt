@@ -42,7 +42,7 @@ object DurationDeserializer : KSerializer<Duration> {
         if (match == null) {
             val location = (input as YamlInput).getCurrentLocation()
 
-            throw ConfigurationException("The value '$text' is not a valid duration.", null, location.line, location.column, null)
+            throw ConfigurationException("The value '$text' is not a valid duration.", location.line, location.column)
         }
 
         val sign = match.groupValues[1]

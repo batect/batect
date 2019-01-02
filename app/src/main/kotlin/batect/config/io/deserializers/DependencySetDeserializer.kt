@@ -82,7 +82,7 @@ internal object DependencySetDeserializer : KSerializer<Set<String>> {
         if (value in soFar) {
             val location = (input as YamlInput).getCurrentLocation()
 
-            throw ConfigurationException(getDuplicateValueMessage(value), null, location.line, location.column, null)
+            throw ConfigurationException(getDuplicateValueMessage(value), location.line, location.column)
         }
 
         return value

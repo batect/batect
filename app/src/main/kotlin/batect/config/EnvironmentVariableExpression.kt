@@ -63,7 +63,7 @@ sealed class EnvironmentVariableExpression {
             parse(input.decodeString())
         } catch (e: IllegalArgumentException) {
             if (input is YamlInput) {
-                throw ConfigurationException(e.message ?: "", null, input.node.location.line, input.node.location.column, e)
+                throw ConfigurationException(e.message ?: "", input.node.location.line, input.node.location.column, e)
             } else {
                 throw e
             }

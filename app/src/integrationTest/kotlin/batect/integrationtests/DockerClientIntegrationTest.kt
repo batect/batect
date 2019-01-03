@@ -235,7 +235,7 @@ object DockerClientIntegrationTest : Spek({
 
         describe("running a container that exposes a port") {
             on("the image having an EXPOSE instruction for the port to be exposed") {
-                val image = client.pullImage("nginx:1.15.3", {})
+                val image = client.pullImage("nginx:1.15.8", {})
 
                 val response = withNetwork { network ->
                     withContainer(creationRequestForContainer(image, network, emptyList(), portMappings = setOf(PortMapping(8080, 80)))) { container ->
@@ -254,7 +254,7 @@ object DockerClientIntegrationTest : Spek({
             }
 
             on("the image not having an EXPOSE instruction for the port to be exposed") {
-                val image = client.pullImage("busybox:1.29.2", {})
+                val image = client.pullImage("busybox:1.30.0", {})
                 val command = listOf("busybox", "httpd", "-f", "-p", "80")
 
                 val response = withNetwork { network ->

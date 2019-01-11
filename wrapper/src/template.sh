@@ -37,12 +37,20 @@
     function runApplication() {
         checkForJava
 
+        java_version=$(getJavaVersion)
+        java_version_major=$(extractJavaMajorVersion "$java_version")
+
+        if (( java_version_major >= 9 )); then
+            JAVA_OPTS="--add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED"
+        else
+            JAVA_OPTS=""
+        fi
+
         BATECT_WRAPPER_SCRIPT_PATH="$SCRIPT_PATH" \
         HOSTNAME="$HOSTNAME" \
             java \
             -Djava.net.useSystemProxies=true \
-            --add-opens java.base/sun.nio.ch=ALL-UNNAMED \
-            --add-opens java.base/java.io=ALL-UNNAMED \
+            $JAVA_OPTS \
             -jar "$JAR_PATH" \
             "$@"
     }
@@ -60,16 +68,32 @@
             exit -1
         fi
 
-        java_version=$(java -version 2>&1 | head -n1 | sed -En ';s/.* version "([0-9]+)(\.([0-9]+))?.*".*/\1.\3/p;')
-        java_version_major="${java_version%.*}"
-        java_version_minor="${java_version#*.}"
-        java_version_minor="${java_version_minor:-0}"
+        java_version=$(getJavaVersion)
+        java_version_major=$(extractJavaMajorVersion "$java_version")
+        java_version_minor=$(extractJavaMinorVersion "$java_version")
 
         if (( java_version_major < 1 || ( java_version_major == 1 && java_version_minor <= 7 ) )); then
             echo "The version of Java that is available on your PATH is version $java_version, but version 1.8 or greater is required."
             echo "If you have a newer version of Java installed, please make sure your PATH is set correctly."
             exit -1
         fi
+    }
+
+    function getJavaVersion() {
+        java -version 2>&1 | head -n1 | sed -En ';s/.* version "([0-9]+)(\.([0-9]+))?.*".*/\1.\3/p;'
+    }
+
+    function extractJavaMajorVersion() {
+        java_version=$1
+
+        echo "${java_version%.*}"
+    }
+
+    function extractJavaMinorVersion() {
+        java_version=$1
+        java_version_minor="${java_version#*.}"
+
+        echo "${java_version_minor:-0}"
     }
 
     main "$@"

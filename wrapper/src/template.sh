@@ -39,7 +39,12 @@
 
         BATECT_WRAPPER_SCRIPT_PATH="$SCRIPT_PATH" \
         HOSTNAME="$HOSTNAME" \
-        java -Djava.net.useSystemProxies=true -jar "$JAR_PATH" "$@"
+            java \
+            -Djava.net.useSystemProxies=true \
+            --add-opens java.base/sun.nio.ch=ALL-UNNAMED \
+            --add-opens java.base/java.io=ALL-UNNAMED \
+            -jar "$JAR_PATH" \
+            "$@"
     }
 
     function checkForCurl() {

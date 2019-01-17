@@ -177,6 +177,28 @@ object TaskExecutionOrderResolverSpec : Spek({
             }
         }
 
+        on("resolving the execution order for a complex set of tasks from issue 53 (https://github.com/charleskorn/batect/issues/53)") {
+            val getSandwichContentsTask = Task("getSandwichContents", taskRunConfiguration)
+            val putContentsInBreadTask = Task("putContentsInBread", taskRunConfiguration, prerequisiteTasks = listOf("getSandwichContents"))
+            val prepareTheTableTask = Task("prepareTheTable", taskRunConfiguration)
+            val makeTheSandwichTask = Task("makeTheSandwich", taskRunConfiguration, prerequisiteTasks = listOf("putContentsInBread", "prepareTheTable"))
+            val takeABiteOfTheSandwichTask = Task("takeABiteOfTheSandwich", taskRunConfiguration, prerequisiteTasks = listOf("prepareTheTable"))
+            val eatTheSandwichTask = Task("eatTheSandwich", taskRunConfiguration, prerequisiteTasks = listOf("takeABiteOfTheSandwich"))
+            val sandwichHasBeenEatenTask = Task("sandwichHasBeenEaten", taskRunConfiguration, prerequisiteTasks = listOf("makeTheSandwich", "eatTheSandwich"))
+            val config = Configuration("some-project", TaskMap(getSandwichContentsTask, putContentsInBreadTask, prepareTheTableTask, makeTheSandwichTask, takeABiteOfTheSandwichTask, eatTheSandwichTask, sandwichHasBeenEatenTask), ContainerMap())
+
+            val executionOrder = resolver.resolveExecutionOrder(config, sandwichHasBeenEatenTask.name)
+
+            it("schedules the tasks to run in an order that respects the relative ordering of each prerequisite list") {
+                assertThat(executionOrder, getSandwichContentsTask executesBefore putContentsInBreadTask)
+                assertThat(executionOrder, putContentsInBreadTask executesBefore prepareTheTableTask)
+                assertThat(executionOrder, prepareTheTableTask executesBefore makeTheSandwichTask)
+                assertThat(executionOrder, makeTheSandwichTask executesBefore takeABiteOfTheSandwichTask)
+                assertThat(executionOrder, takeABiteOfTheSandwichTask executesBefore eatTheSandwichTask)
+                assertThat(executionOrder, eatTheSandwichTask executesBefore sandwichHasBeenEatenTask)
+            }
+        }
+
         on("resolving the execution order for a task that depends on a second task that depends on the first task") {
             val otherTask = Task("other-task", taskRunConfiguration, prerequisiteTasks = listOf("main-task"))
             val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("other-task"))

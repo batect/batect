@@ -19,8 +19,6 @@ package batect.execution
 import batect.config.Configuration
 import batect.config.Task
 import batect.logging.Logger
-import batect.utils.flatMapToSet
-import batect.utils.mapToSet
 
 class TaskExecutionOrderResolver(private val logger: Logger) {
     fun resolveExecutionOrder(config: Configuration, taskName: String): List<Task> {
@@ -30,38 +28,29 @@ class TaskExecutionOrderResolver(private val logger: Logger) {
             throw TaskExecutionOrderResolutionException("The task '$taskName' does not exist.")
         }
 
-        val allTasksToSchedule = resolvePrerequisitesForTask(config, task, listOf(task)) + task
-        var remainingTasksToSchedule = allTasksToSchedule
-        var scheduledTasks = emptyList<Task>()
-
-        while (remainingTasksToSchedule.isNotEmpty()) {
-            val tasksThatCanBeScheduled = remainingTasksToSchedule
-                .filter { canBeScheduled(it, scheduledTasks) }
-
-            if (tasksThatCanBeScheduled.isEmpty()) {
-                throw RuntimeException("No tasks can be scheduled. (This should never happen, this should be caught earlier.)")
-            }
-
-            scheduledTasks += tasksThatCanBeScheduled
-            remainingTasksToSchedule -= tasksThatCanBeScheduled
-        }
+        val executionOrder = resolvePrerequisitesForTask(config, task, listOf(task), emptyList())
 
         logger.info {
             message("Resolved task execution order.")
-            data("executionOrder", scheduledTasks.map { it.name })
+            data("executionOrder", executionOrder.map { it.name })
         }
 
-        return scheduledTasks
+        return executionOrder
     }
 
-    private fun resolvePrerequisitesForTask(config: Configuration, parentTask: Task, path: List<Task>): Set<Task> {
-        val prerequisites = parentTask.prerequisiteTasks
-            .mapToSet { prerequisiteTaskName -> resolvePrerequisiteForTask(config, parentTask, prerequisiteTaskName, path) }
+    private fun resolvePrerequisitesForTask(config: Configuration, task: Task, path: List<Task>, executionOrderSoFar: List<Task>): List<Task> {
+        val prerequisites = task.prerequisiteTasks
+            .map { prerequisiteTaskName -> resolvePrerequisiteForTask(config, task, prerequisiteTaskName, path) }
 
-        val childPrerequisites = prerequisites
-            .flatMapToSet { prerequisite -> resolvePrerequisitesForTask(config, prerequisite, path + prerequisite) }
+        var executionOrder = executionOrderSoFar
 
-        return prerequisites + childPrerequisites
+        prerequisites.forEach { prerequisite ->
+            if (prerequisite !in executionOrder) {
+                executionOrder = resolvePrerequisitesForTask(config, prerequisite, path + prerequisite, executionOrder)
+            }
+        }
+
+        return executionOrder + task
     }
 
     private fun resolvePrerequisiteForTask(config: Configuration, parentTask: Task, prerequisiteTaskName: String, path: List<Task>): Task {

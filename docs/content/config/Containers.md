@@ -73,7 +73,8 @@ The curly brace syntax for environment variables, including the ability to speci
 was added in v0.21.
 
 ### `TERM`
-The `TERM` environment variable, if set on the host, is always automatically passed through to the container.
+The `TERM` environment variable, if set on the host, is always automatically passed through to the container. This ensures that features such as
+coloured output continue to work correctly inside the container.
 
 ### Proxy-related environment variables
 Proxy-related environment variables, if set on the host, are passed through to the container at build and run time, but are not used for image pulls.

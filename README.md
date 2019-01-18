@@ -43,6 +43,7 @@ Thank you to the following people for their bug reports, pull requests, suggesti
 
 * [@andeemarks](https://github.com/andeemarks)
 * [@assafw](https://github.com/assafw)
+* [@binkley](https://github.com/binkley)
 * [@Byron-TW](https://github.com/Byron-TW)
 * [@ekamara](https://github.com/ekamara)
 * [@ieffyble](https://github.com/ineffyble)

@@ -20,6 +20,27 @@ If not provided, the default command for the image will be run.
 
 Both of these can be overridden for an individual task by specifying a [`command` at the task level](Tasks.md#run).
 
+<a name="command-entrypoint-note"></a>
+
+!!! note
+    Keep in mind that this command is passed to the image's `ENTRYPOINT`, just like it would when using `docker run <image> <command>`
+    directly.
+
+    This means that if the entrypoint is not set or is not a shell, standard shell syntax features like `&&` might not work.
+
+    See the Docker docs for [`CMD`](https://docs.docker.com/engine/reference/builder/#cmd) and
+    [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint) for more details.
+
+    If you would like to use shell syntax features in your command, you have two options:
+
+    1. Set the entrypoint in the image to a shell. For example:
+       ```dockerfile
+       ENTRYPOINT ["/bin/sh", "-c"]
+       ```
+    2. Wrap your command in a shell invocation.
+
+        For example, if your command is `echo hello && echo world`, set `command` to `sh -c 'echo hello && echo world'`.
+
 ## `environment`
 List of environment variables (in `name: value` format) for the container.
 

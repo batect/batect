@@ -12,8 +12,12 @@ Specifies what to do when this task starts:
 
 * `command` Command to run for this task.
 
-    Overrides any command specified on the container definition and the default image command. If no command is provided here, the command
-    specified on the container definition is used if there is one, otherwise the image's default command is used.
+    Overrides any command specified on the container definition and the image's default command. If no command is provided here,
+    [the command specified on the container definition](Containers.md#command) is used if there is one, otherwise the image's default command is used.
+
+    Just like when specifying a command for a container, this command is passed to the image's `ENTRYPOINT`, if there is one. This can prevent
+    shell syntax features like `&&` from working. See the [note about entrypoints in the documentation for containers](Containers.md#command-entrypoint-note)
+    for more information.
 
 * `environment` List of environment variables (in `name: value` format) to pass to the container, in addition to those defined on the
   container itself.

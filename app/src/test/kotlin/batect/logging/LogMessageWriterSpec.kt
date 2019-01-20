@@ -62,6 +62,10 @@ object LogMessageWriterSpec : Spek({
             it("appends a new line after the end of the message") {
                 assertThat(output.toString().last(), equalTo('\n'))
             }
+
+            it("writes the log message as a single line of text") {
+                assertThat(output.toString().trim().lines().size, equalTo(1))
+            }
         }
 
         on("writing a message with extra data") {
@@ -107,6 +111,10 @@ object LogMessageWriterSpec : Spek({
 
             it("appends a new line after the end of the message") {
                 assertThat(output.toString().last(), equalTo('\n'))
+            }
+
+            it("writes the log message as a single line of text") {
+                assertThat(output.toString().trim().lines().size, equalTo(1))
             }
         }
     }

@@ -310,14 +310,34 @@ private fun removeImage(imageName: String) {
 }
 
 private fun httpGet(url: String): Response {
-    val client = OkHttpClient.Builder().build()
-    val request = Request.Builder()
-        .url(url)
-        .header("Connection", "close")
-        .build()
+    retry(3) {
+        val client = OkHttpClient.Builder().build()
+        val request = Request.Builder()
+            .url(url)
+            .header("Connection", "close")
+            .build()
 
-    val response = client.newCall(request).execute()
-    response.close() // We don't use the body.
+        val response = client.newCall(request).execute()
+        response.close() // We don't use the body.
 
-    return response
+        return response
+    }
+}
+
+private inline fun <T> retry(retries: Int, operation: () -> T): T {
+    val exceptions = mutableListOf<Throwable>()
+
+    for (retry in 1..retries) {
+        try {
+            return operation()
+        } catch (e: Throwable) {
+            exceptions.add(e)
+        }
+    }
+
+    val exceptionDetails = exceptions
+        .mapIndexed { i, e -> "Attempt ${i + 1}: $e\n" }
+        .joinToString("\n")
+
+    throw RuntimeException("Could not execute operation after $retries attempts. Exceptions were:\n$exceptionDetails")
 }

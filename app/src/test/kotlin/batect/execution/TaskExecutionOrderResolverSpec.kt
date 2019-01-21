@@ -24,6 +24,7 @@ import batect.config.TaskRunConfiguration
 import batect.logging.Logger
 import batect.logging.Severity
 import batect.testutils.InMemoryLogSink
+import batect.testutils.createForEachTest
 import batect.testutils.hasMessage
 import batect.testutils.withAdditionalData
 import batect.testutils.withLogMessage
@@ -35,18 +36,23 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
+import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 
 object TaskExecutionOrderResolverSpec : Spek({
     describe("a task execution order resolver") {
-        val logSink = InMemoryLogSink()
-        val logger = Logger("some.source", logSink)
+        val suggester by createForEachTest { mock<TaskSuggester>() }
+        val logSink by createForEachTest { InMemoryLogSink() }
+        val logger by createForEachTest { Logger("some.source", logSink) }
         val taskRunConfiguration = TaskRunConfiguration("some-container")
 
-        val resolver = TaskExecutionOrderResolver(logger)
+        val resolver by createForEachTest { TaskExecutionOrderResolver(suggester, logger) }
 
         on("resolving the execution order for a task that does not depend on any tasks") {
             val task = Task("some-task", taskRunConfiguration)
@@ -67,12 +73,43 @@ object TaskExecutionOrderResolverSpec : Spek({
             }
         }
 
-        on("resolving the execution order for a task that does not exist") {
+        describe("resolving the execution order for a task that does not exist") {
             val config = Configuration("some-project", TaskMap(), ContainerMap())
 
-            it("throws an appropriate exception") {
-                assertThat({ resolver.resolveExecutionOrder(config, "some-task") },
-                    throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist.")))
+            given("there are no suggested task name corrections") {
+                beforeEachTest { whenever(suggester.suggestCorrections(config, "some-task")).doReturn(emptyList()) }
+
+                it("throws an appropriate exception without any correction suggestions") {
+                    assertThat({ resolver.resolveExecutionOrder(config, "some-task") },
+                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist.")))
+                }
+            }
+
+            given("there is one suggested task name correction") {
+                beforeEachTest { whenever(suggester.suggestCorrections(config, "some-task")).doReturn(listOf("some-other-task")) }
+
+                it("throws an appropriate exception without any correction suggestions") {
+                    assertThat({ resolver.resolveExecutionOrder(config, "some-task") },
+                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task'?")))
+                }
+            }
+
+            given("there are two suggested task name corrections") {
+                beforeEachTest { whenever(suggester.suggestCorrections(config, "some-task")).doReturn(listOf("some-other-task", "some-other-task-2")) }
+
+                it("throws an appropriate exception without any correction suggestions") {
+                    assertThat({ resolver.resolveExecutionOrder(config, "some-task") },
+                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'?")))
+                }
+            }
+
+            given("there are three suggested task name corrections") {
+                beforeEachTest { whenever(suggester.suggestCorrections(config, "some-task")).doReturn(listOf("some-other-task", "some-other-task-2", "some-other-task-3")) }
+
+                it("throws an appropriate exception without any correction suggestions") {
+                    assertThat({ resolver.resolveExecutionOrder(config, "some-task") },
+                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'?")))
+                }
             }
         }
 
@@ -88,13 +125,44 @@ object TaskExecutionOrderResolverSpec : Spek({
             }
         }
 
-        on("resolving the execution order for a task that has a dependency that does not exist") {
+        describe("resolving the execution order for a task that has a dependency that does not exist") {
             val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("dependency-task"))
             val config = Configuration("some-project", TaskMap(mainTask), ContainerMap())
 
-            it("throws an appropriate exception") {
-                assertThat({ resolver.resolveExecutionOrder(config, mainTask.name) },
-                    throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist.")))
+            given("there are no suggested task name corrections") {
+                beforeEachTest { whenever(suggester.suggestCorrections(config, "dependency-task")).doReturn(emptyList()) }
+
+                it("throws an appropriate exception without any correction suggestions") {
+                    assertThat({ resolver.resolveExecutionOrder(config, mainTask.name) },
+                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist.")))
+                }
+            }
+
+            given("there is one suggested task name correction") {
+                beforeEachTest { whenever(suggester.suggestCorrections(config, "dependency-task")).doReturn(listOf("some-other-task")) }
+
+                it("throws an appropriate exception without any correction suggestions") {
+                    assertThat({ resolver.resolveExecutionOrder(config, mainTask.name) },
+                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task'?")))
+                }
+            }
+
+            given("there are two suggested task name corrections") {
+                beforeEachTest { whenever(suggester.suggestCorrections(config, "dependency-task")).doReturn(listOf("some-other-task", "some-other-task-2")) }
+
+                it("throws an appropriate exception without any correction suggestions") {
+                    assertThat({ resolver.resolveExecutionOrder(config, mainTask.name) },
+                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'?")))
+                }
+            }
+
+            given("there are three suggested task name corrections") {
+                beforeEachTest { whenever(suggester.suggestCorrections(config, "dependency-task")).doReturn(listOf("some-other-task", "some-other-task-2", "some-other-task-3")) }
+
+                it("throws an appropriate exception without any correction suggestions") {
+                    assertThat({ resolver.resolveExecutionOrder(config, mainTask.name) },
+                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'?")))
+                }
             }
         }
 

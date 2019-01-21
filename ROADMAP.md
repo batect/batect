@@ -30,7 +30,6 @@ If there's something you're really keen to see, pull requests are always welcome
     * Need to run `sudo iptables -I INPUT -i docker0 -j ACCEPT` to allow containers to access host on Linux (but non-default networks don't use `docker0`,
       they use a different interface, so this command needs to be adjusted to match)
     * Local proxy needs to be listening on correct IP(s) - need to warn users about this and about exposing them to the outside world (and thus allowing other people to access their proxy)
-* 'did you mean...' suggestions when requested task doesn't exist (eg. user runs `./batect unittest`, suggests `unit-test` might be what they meant)
 * some way to clean up old images when they're no longer needed
 * allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
 * allow overriding working directory at the task level

@@ -20,12 +20,15 @@ import batect.config.Configuration
 import batect.config.Task
 import batect.logging.Logger
 
-class TaskExecutionOrderResolver(private val logger: Logger) {
+class TaskExecutionOrderResolver(
+    private val suggester: TaskSuggester,
+    private val logger: Logger
+) {
     fun resolveExecutionOrder(config: Configuration, taskName: String): List<Task> {
         val task = config.tasks[taskName]
 
         if (task == null) {
-            throw TaskExecutionOrderResolutionException("The task '$taskName' does not exist.")
+            throw TaskExecutionOrderResolutionException("The task '$taskName' does not exist." + formatTaskSuggestions(config, taskName))
         }
 
         val executionOrder = resolvePrerequisitesForTask(config, task, listOf(task), emptyList())
@@ -57,7 +60,8 @@ class TaskExecutionOrderResolver(private val logger: Logger) {
         val prerequisite = config.tasks[prerequisiteTaskName]
 
         if (prerequisite == null) {
-            throw TaskExecutionOrderResolutionException("The task '$prerequisiteTaskName' given as a prerequisite of '${parentTask.name}' does not exist.")
+            val message = "The task '$prerequisiteTaskName' given as a prerequisite of '${parentTask.name}' does not exist." + formatTaskSuggestions(config, prerequisiteTaskName)
+            throw TaskExecutionOrderResolutionException(message)
         }
 
         if (path.contains(prerequisite)) {
@@ -76,6 +80,24 @@ class TaskExecutionOrderResolver(private val logger: Logger) {
         val remainingPart = remainingNames.map { ", which has $it as a prerequisite" }.joinToString("")
 
         return firstPart + remainingPart
+    }
+
+    private fun formatTaskSuggestions(config: Configuration, originalTaskName: String): String {
+        val suggestions = suggester
+            .suggestCorrections(config, originalTaskName)
+            .map { "'$it'" }
+
+        if (suggestions.isEmpty()) {
+            return ""
+        }
+
+        if (suggestions.size == 1) {
+            return " Did you mean ${suggestions.first()}?"
+        }
+
+        val allButLast = suggestions.dropLast(1)
+
+        return " Did you mean " + allButLast.joinToString(", ") + " or " + suggestions.last() + "?"
     }
 }
 

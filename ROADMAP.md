@@ -84,12 +84,12 @@ If there's something you're really keen to see, pull requests are always welcome
 * file I/O and path resolution logic
 * process creation / monitoring
 * HTTP communication
+* logging - need to switch from Jackson to kotlinx.serialization
 
 #### Things blocking move to Kotlin/Native
 * unit testing support and associated library
 * file I/O support
 * process creation / monitoring support
-* YAML parsing library
 
 ## Future improvements
 * warn if dependency exits before task finishes (include exit code)

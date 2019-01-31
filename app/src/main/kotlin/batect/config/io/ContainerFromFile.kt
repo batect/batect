@@ -128,7 +128,7 @@ data class ContainerFromFile(
                         buildDirectory = resolveBuildDirectory(resolutionResult, location)
                     }
                     imageNameFieldIndex -> imageName = input.decodeStringElement(descriptor, i)
-                    commandFieldIndex -> command = input.decode(Command.serializer())
+                    commandFieldIndex -> command = input.decode(Command.Companion)
                     environmentFieldIndex -> environment = input.decode(EnvironmentDeserializer)
                     workingDirectoryFieldIndex -> workingDirectory = input.decodeStringElement(descriptor, i)
                     volumeMountsFieldIndex -> volumeMounts = input.decode(VolumeMount.serializer().set)

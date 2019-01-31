@@ -19,6 +19,7 @@ package batect.os
 import batect.config.io.ConfigurationException
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.Decoder
+import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
@@ -144,6 +145,8 @@ data class Command private constructor(val originalCommand: String, val parsedCo
                 throw e
             }
         }
+
+        override fun serialize(output: Encoder, obj: Command) = throw UnsupportedOperationException()
     }
 }
 

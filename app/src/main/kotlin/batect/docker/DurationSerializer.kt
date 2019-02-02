@@ -27,6 +27,6 @@ import java.time.Duration
 @Serializer(forClass = Duration::class)
 object DurationSerializer : KSerializer<Duration> {
     override val descriptor: SerialDescriptor = LongDescriptor
-    override fun deserialize(input: Decoder): Duration = Duration.ofNanos(input.decodeLong())
-    override fun serialize(output: Encoder, obj: Duration) = throw UnsupportedOperationException()
+    override fun deserialize(decoder: Decoder): Duration = Duration.ofNanos(decoder.decodeLong())
+    override fun serialize(encoder: Encoder, obj: Duration) = throw UnsupportedOperationException()
 }

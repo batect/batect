@@ -27,7 +27,7 @@ import kotlinx.serialization.internal.StringDescriptor
 class PathDeserializer(private val pathResolver: PathResolver) : KSerializer<PathResolutionResult> {
     override val descriptor: SerialDescriptor = StringDescriptor
 
-    override fun deserialize(input: Decoder): PathResolutionResult = pathResolver.resolve(input.decodeString())
+    override fun deserialize(decoder: Decoder): PathResolutionResult = pathResolver.resolve(decoder.decodeString())
 
-    override fun serialize(output: Encoder, obj: PathResolutionResult) = throw UnsupportedOperationException()
+    override fun serialize(encoder: Encoder, obj: PathResolutionResult) = throw UnsupportedOperationException()
 }

@@ -42,12 +42,12 @@ sealed class RunAsCurrentUserConfig() {
         private val enabledFieldIndex = descriptor.getElementIndex("enabled")
         private val homeDirectoryFieldIndex = descriptor.getElementIndex("home_directory")
 
-        override fun deserialize(input: Decoder): RunAsCurrentUserConfig = when (input) {
+        override fun deserialize(decoder: Decoder): RunAsCurrentUserConfig = when (decoder) {
             is YamlInput -> {
-                val inp = input.beginStructure(descriptor) as YamlInput
+                val input = decoder.beginStructure(descriptor) as YamlInput
 
-                deserializeFromObject(inp).also {
-                    inp.endStructure(descriptor)
+                deserializeFromObject(input).also {
+                    input.endStructure(descriptor)
                 }
             }
             else -> throw UnsupportedOperationException("Can only deserialize from YAML source.")
@@ -81,7 +81,7 @@ sealed class RunAsCurrentUserConfig() {
             }
         }
 
-        override fun serialize(output: Encoder, obj: RunAsCurrentUserConfig) = throw UnsupportedOperationException()
+        override fun serialize(encoder: Encoder, obj: RunAsCurrentUserConfig) = throw UnsupportedOperationException()
     }
 
     object RunAsDefaultContainerUser : RunAsCurrentUserConfig()

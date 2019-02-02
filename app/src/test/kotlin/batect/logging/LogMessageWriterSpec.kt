@@ -19,7 +19,7 @@ package batect.logging
 import batect.testutils.CloseableByteArrayOutputStream
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import kotlinx.serialization.json.JsonTreeParser
+import kotlinx.serialization.json.Json
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
@@ -37,7 +37,7 @@ object LogMessageWriterSpec : Spek({
             val output = CloseableByteArrayOutputStream()
             writer.writeTo(message, output)
 
-            val parsed = JsonTreeParser(output.toString()).read().jsonObject
+            val parsed = Json.plain.parseJson(output.toString()).jsonObject
 
             it("includes the timestamp") {
                 assertThat(parsed.getPrimitive("@timestamp").content, equalTo("2017-09-25T11:55:13.001234Z"))
@@ -82,7 +82,7 @@ object LogMessageWriterSpec : Spek({
             val output = CloseableByteArrayOutputStream()
             writer.writeTo(message, output)
 
-            val parsed = JsonTreeParser(output.toString()).read().jsonObject
+            val parsed = Json.plain.parseJson(output.toString()).jsonObject
 
             it("includes the timestamp") {
                 assertThat(parsed.getPrimitive("@timestamp").content, equalTo("2017-09-25T11:55:13.001234Z"))

@@ -41,6 +41,7 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doThrow
@@ -50,8 +51,8 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonTreeParser
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -630,8 +631,8 @@ object DockerClientSpec : Spek({
                     }
 
                     on("pulling the image") {
-                        val firstProgressUpdate = JsonTreeParser("""{"thing": "value"}""").readFully().jsonObject
-                        val secondProgressUpdate = JsonTreeParser("""{"thing": "other value"}""").readFully().jsonObject
+                        val firstProgressUpdate = Json.plain.parseJson("""{"thing": "value"}""").jsonObject
+                        val secondProgressUpdate = Json.plain.parseJson("""{"thing": "other value"}""").jsonObject
 
                         whenever(imagePullProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(DockerImagePullProgress("Doing something", 10, 20))
                         whenever(imagePullProgressReporter.processProgressUpdate(secondProgressUpdate)).thenReturn(null)
@@ -726,8 +727,10 @@ object DockerClientSpec : Spek({
 })
 
 private fun stubProgressUpdate(reporter: DockerImagePullProgressReporter, input: String, update: DockerImagePullProgress) {
-    val json = JsonTreeParser(input).readFully().jsonObject
-    whenever(reporter.processProgressUpdate(json)).thenReturn(update)
+    val json = Json.plain.parseJson(input).jsonObject
+
+    // We use the wacky condition below to work around https://github.com/Kotlin/kotlinx.serialization/issues/358.
+    whenever(reporter.processProgressUpdate(argThat { this.keys.equals(json.keys) && this.equals(json) })).thenReturn(update)
 }
 
 private fun sendProgressAndReturnImage(progressUpdates: String, image: DockerImage) = { invocation: InvocationOnMock ->
@@ -735,7 +738,7 @@ private fun sendProgressAndReturnImage(progressUpdates: String, image: DockerIma
     val onProgressUpdate = invocation.arguments.last() as (JsonObject) -> Unit
 
     progressUpdates.lines().forEach { line ->
-        onProgressUpdate(JsonTreeParser(line).readFully().jsonObject)
+        onProgressUpdate(Json.plain.parseJson(line).jsonObject)
     }
 
     image

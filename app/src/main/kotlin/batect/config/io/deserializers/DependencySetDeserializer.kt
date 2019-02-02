@@ -33,11 +33,11 @@ internal object DependencySetDeserializer : KSerializer<Set<String>> {
 
     override val descriptor: SerialDescriptor = HashSetClassDesc(elementSerializer.descriptor)
 
-    override fun deserialize(input: Decoder): Set<String> {
-        val structureInput = input.beginStructure(descriptor, elementSerializer)
-        val result = read(structureInput)
+    override fun deserialize(decoder: Decoder): Set<String> {
+        val input = decoder.beginStructure(descriptor, elementSerializer)
+        val result = read(input)
 
-        structureInput.endStructure(descriptor)
+        input.endStructure(descriptor)
 
         return result
     }
@@ -90,5 +90,5 @@ internal object DependencySetDeserializer : KSerializer<Set<String>> {
 
     private fun getDuplicateValueMessage(value: String) = "The dependency '$value' is given more than once"
 
-    override fun serialize(output: Encoder, obj: Set<String>) = throw UnsupportedOperationException()
+    override fun serialize(encoder: Encoder, obj: Set<String>) = throw UnsupportedOperationException()
 }

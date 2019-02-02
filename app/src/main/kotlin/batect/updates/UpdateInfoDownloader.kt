@@ -21,7 +21,7 @@ import batect.utils.Version
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import kotlinx.serialization.json.JSON
+import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.time.ZoneOffset
@@ -54,7 +54,7 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
                     throw UpdateInfoDownloadException("The server returned HTTP ${response.code()}.")
                 }
 
-                val releaseInfo = JSON.nonstrict.parse(GitHubReleaseInfo.serializer(), response.body()!!.string())
+                val releaseInfo = Json.nonstrict.parse(GitHubReleaseInfo.serializer(), response.body()!!.string())
                 val updateInfo = UpdateInfo(Version.parse(releaseInfo.tagName), releaseInfo.htmlUrl, dateTimeProvider(), releaseInfo.scriptDownloadUrl)
 
                 logger.info {

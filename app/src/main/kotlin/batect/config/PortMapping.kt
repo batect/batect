@@ -62,15 +62,15 @@ data class PortMapping(
         private val localPortFieldIndex = descriptor.getElementIndex("local")
         private val containerPortFieldIndex = descriptor.getElementIndex("container")
 
-        override fun deserialize(input: Decoder): PortMapping = when (input) {
+        override fun deserialize(decoder: Decoder): PortMapping = when (decoder) {
             is YamlInput -> {
-                val inp = input.beginStructure(descriptor) as YamlInput
+                val input = decoder.beginStructure(descriptor) as YamlInput
 
-                when (inp.node) {
-                    is YamlScalar -> deserializeFromString(inp)
-                    else -> deserializeFromObject(inp)
+                when (input.node) {
+                    is YamlScalar -> deserializeFromString(input)
+                    else -> deserializeFromObject(input)
                 }.also {
-                    inp.endStructure(descriptor)
+                    input.endStructure(descriptor)
                 }
             }
             else -> throw UnsupportedOperationException("Can only deserialize from YAML source.")

@@ -35,11 +35,11 @@ internal object PrerequisiteListDeserializer : KSerializer<List<String>> {
 
     override val descriptor: SerialDescriptor = ArrayListClassDesc(elementSerializer.descriptor)
 
-    override fun deserialize(input: Decoder): List<String> {
-        val structureInput = input.beginStructure(descriptor, elementSerializer)
-        val result = read(structureInput)
+    override fun deserialize(decoder: Decoder): List<String> {
+        val input = decoder.beginStructure(descriptor, elementSerializer)
+        val result = read(input)
 
-        structureInput.endStructure(descriptor)
+        input.endStructure(descriptor)
 
         return result
     }
@@ -92,5 +92,5 @@ internal object PrerequisiteListDeserializer : KSerializer<List<String>> {
 
     private fun getDuplicateValueMessage(value: String) = "The prerequisite '$value' is given more than once"
 
-    override fun serialize(output: Encoder, obj: List<String>) = throw UnsupportedOperationException()
+    override fun serialize(encoder: Encoder, obj: List<String>) = throw UnsupportedOperationException()
 }

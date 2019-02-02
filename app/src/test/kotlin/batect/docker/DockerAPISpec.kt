@@ -48,8 +48,8 @@ import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import jnr.constants.platform.Signal
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonTreeParser
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.content
 import okhttp3.Headers
@@ -106,7 +106,7 @@ object DockerAPISpec : Spek({
 
                     it("creates the container with the expected settings") {
                         verify(httpClient).newCall(requestWithJsonBody { body ->
-                            assertThat(body, equalTo(JsonTreeParser(request.toJson()).readFully()))
+                            assertThat(body, equalTo(Json.plain.parseJson(request.toJson())))
                         })
                     }
 
@@ -322,7 +322,7 @@ object DockerAPISpec : Spek({
                     hasHost(dockerHost) and
                     hasPath("/v1.30/events") and
                     hasQueryParameter("since", "0") and
-                    hasQueryParameter("filters", """{"event": ["die", "health_status"], "container": ["the-container-id"]}""")
+                    hasQueryParameter("filters", """{"event":["die","health_status"],"container":["the-container-id"]}""")
 
                 val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
                 val longTimeoutClientBuilder by createForEachTest {
@@ -655,7 +655,7 @@ object DockerAPISpec : Spek({
             val expectedUrl = hasScheme("http") and
                 hasHost(dockerHost) and
                 hasPath("/v1.30/build") and
-                hasQueryParameter("buildargs", """{"someArg": "someValue"}""")
+                hasQueryParameter("buildargs", """{"someArg":"someValue"}""")
 
             val context = DockerImageBuildContext(emptySet())
             val buildArgs = mapOf("someArg" to "someValue")
@@ -893,7 +893,7 @@ object DockerAPISpec : Spek({
             val expectedUrl = hasScheme("http") and
                 hasHost(dockerHost) and
                 hasPath("/v1.30/images/json") and
-                hasQueryParameter("filters", """{"reference": ["some:image"]}""")
+                hasQueryParameter("filters", """{"reference":["some:image"]}""")
 
             on("the image already having been pulled") {
                 httpClient.mock("GET", expectedUrl, """[{"Id": "abc123"}]""")
@@ -1024,7 +1024,7 @@ private fun requestWithJsonBody(predicate: (JsonObject) -> Unit) = check<Request
 
     val buffer = Buffer()
     request.body()!!.writeTo(buffer)
-    val parsedBody = JsonTreeParser(buffer.readUtf8()).readFully() as JsonObject
+    val parsedBody = Json.plain.parseJson(buffer.readUtf8()).jsonObject
     predicate(parsedBody)
 }
 
@@ -1043,7 +1043,7 @@ class ProgressReceiver {
 private fun receivedAllUpdatesFrom(response: String): Matcher<ProgressReceiver> = receivedAllUpdatesFrom(response.lines())
 
 private fun receivedAllUpdatesFrom(lines: Iterable<String>): Matcher<ProgressReceiver> {
-    val expectedUpdates = lines.map { JsonTreeParser(it).readFully().jsonObject }
+    val expectedUpdates = lines.map { Json.plain.parseJson(it).jsonObject }
 
     return has(ProgressReceiver::updatesReceived, equalTo(expectedUpdates))
 }

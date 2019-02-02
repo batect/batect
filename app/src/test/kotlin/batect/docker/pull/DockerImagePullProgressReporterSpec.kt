@@ -20,7 +20,7 @@ import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
-import kotlinx.serialization.json.JsonTreeParser
+import kotlinx.serialization.json.Json
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
@@ -222,7 +222,7 @@ object DockerImagePullProgressReporterSpec : Spek({
 })
 
 private fun DockerImagePullProgressReporter.processRawProgressUpdate(json: String): DockerImagePullProgress? {
-    val parsedJson = JsonTreeParser(json).readFully().jsonObject
+    val parsedJson = Json.plain.parseJson(json).jsonObject
 
     return this.processProgressUpdate(parsedJson)
 }

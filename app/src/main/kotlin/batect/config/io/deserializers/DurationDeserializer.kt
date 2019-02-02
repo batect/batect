@@ -35,12 +35,12 @@ object DurationDeserializer : KSerializer<Duration> {
     private val fullRegex = "^([+-])?(0|($valueRegexString)+)\$".toRegex()
     private val valueRegex = valueRegexString.toRegex()
 
-    override fun deserialize(input: Decoder): Duration {
-        val text = input.decodeString()
+    override fun deserialize(decoder: Decoder): Duration {
+        val text = decoder.decodeString()
         val match = fullRegex.matchEntire(text)
 
         if (match == null) {
-            val location = (input as YamlInput).getCurrentLocation()
+            val location = (decoder as YamlInput).getCurrentLocation()
 
             throw ConfigurationException("The value '$text' is not a valid duration.", location.line, location.column)
         }
@@ -84,5 +84,5 @@ object DurationDeserializer : KSerializer<Duration> {
 
     private fun Sequence<Duration>.sum(): Duration = this.reduce { acc, item -> acc + item }
 
-    override fun serialize(output: Encoder, obj: Duration) = throw UnsupportedOperationException()
+    override fun serialize(encoder: Encoder, obj: Duration) = throw UnsupportedOperationException()
 }

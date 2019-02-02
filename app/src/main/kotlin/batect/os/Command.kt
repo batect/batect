@@ -136,11 +136,11 @@ data class Command private constructor(val originalCommand: String, val parsedCo
 
         override val descriptor: SerialDescriptor = StringDescriptor.withName("command")
 
-        override fun deserialize(input: Decoder): Command = try {
-            parse(input.decodeString())
+        override fun deserialize(decoder: Decoder): Command = try {
+            parse(decoder.decodeString())
         } catch (e: InvalidCommandLineException) {
-            if (input is YamlInput) {
-                val location = input.getCurrentLocation()
+            if (decoder is YamlInput) {
+                val location = decoder.getCurrentLocation()
 
                 throw ConfigurationException(e.message ?: "", location.line, location.column, e)
             } else {
@@ -148,7 +148,7 @@ data class Command private constructor(val originalCommand: String, val parsedCo
             }
         }
 
-        override fun serialize(output: Encoder, obj: Command) = throw UnsupportedOperationException()
+        override fun serialize(encoder: Encoder, obj: Command) = throw UnsupportedOperationException()
     }
 }
 

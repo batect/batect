@@ -99,10 +99,10 @@ data class ContainerFromFile(
         private val healthCheckConfigFieldIndex = descriptor.getElementIndex(healthCheckConfigFieldName)
         private val runAsCurrentUserConfigFieldIndex = descriptor.getElementIndex(runAsCurrentUserConfigFieldName)
 
-        override fun deserialize(input: Decoder): ContainerFromFile {
-            val inp = input.beginStructure(descriptor) as YamlInput
+        override fun deserialize(decoder: Decoder): ContainerFromFile {
+            val input = decoder.beginStructure(descriptor) as YamlInput
 
-            return deserializeFromObject(inp).also { inp.endStructure(descriptor) }
+            return deserializeFromObject(input).also { input.endStructure(descriptor) }
         }
 
         private fun deserializeFromObject(input: YamlInput): ContainerFromFile {

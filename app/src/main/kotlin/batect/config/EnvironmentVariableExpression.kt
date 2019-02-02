@@ -59,11 +59,11 @@ sealed class EnvironmentVariableExpression {
 
         override val descriptor: SerialDescriptor = StringDescriptor.withName("expression")
 
-        override fun deserialize(input: Decoder): EnvironmentVariableExpression = try {
-            parse(input.decodeString())
+        override fun deserialize(decoder: Decoder): EnvironmentVariableExpression = try {
+            parse(decoder.decodeString())
         } catch (e: IllegalArgumentException) {
-            if (input is YamlInput) {
-                throw ConfigurationException(e.message ?: "", input.node.location.line, input.node.location.column, e)
+            if (decoder is YamlInput) {
+                throw ConfigurationException(e.message ?: "", decoder.node.location.line, decoder.node.location.column, e)
             } else {
                 throw e
             }

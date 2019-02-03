@@ -125,6 +125,7 @@ abstract class NamedObjectMapDeserializer<TCollection, TElement>(val elementSeri
         return addName(name, unnamed)
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun serialize(encoder: Encoder, obj: TCollection): Unit = throw UnsupportedOperationException()
 
     protected abstract fun addName(name: String, element: TElement): TElement

@@ -16,8 +16,27 @@
 
 package batect.config
 
+import batect.config.io.ConfigurationException
+import batect.os.PathResolver
+import kotlinx.serialization.Optional
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Configuration(
-    val projectName: String,
-    val tasks: TaskMap,
-    val containers: ContainerMap
-)
+    @SerialName("project_name") @Optional val projectName: String? = null,
+    @Optional @Serializable(with = TaskMap.Companion::class) val tasks: TaskMap = TaskMap(),
+    @Optional @Serializable(with = ContainerMap.Companion::class) val containers: ContainerMap = ContainerMap()
+) {
+    fun withResolvedProjectName(pathResolver: PathResolver): Configuration {
+        if (projectName != null) {
+            return this
+        }
+
+        if (pathResolver.relativeTo.root == pathResolver.relativeTo) {
+            throw ConfigurationException("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.")
+        }
+
+        return this.copy(projectName = pathResolver.relativeTo.fileName.toString())
+    }
+}

@@ -68,7 +68,9 @@ class ConfigurationLoader(
         parser.install(SimpleModule(PathResolutionResult::class, pathDeserializer))
 
         try {
-            return parser.parse(ConfigurationFile.serializer(), configFileContent).toConfiguration(pathResolver)
+            return parser
+                .parse(Configuration.serializer(), configFileContent)
+                .withResolvedProjectName(pathResolver)
         } catch (e: Throwable) {
             logger.error {
                 message("Exception thrown while loading configuration.")

@@ -69,7 +69,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * Move common stuff when parsing a string (eg. EnvironmentVariableExpression, Command, Duration) out to a common class
   * Move common stuff when parsing a string or object (eg. port mapping or volume mount) out to a common class
   * Move common stuff when reading a list out to a common class (DependencySetDeserializer and PrerequisiteListDeserializer)
-  * Remove config file-specific classes (eg. ConfigurationFile, ContainerFromFile, TaskFromFile)
 * analytics / metrics
 * use batect to build batect (self-hosting)
 * tool to visualise execution on a timeline

@@ -18,7 +18,6 @@ package batect.config.io
 
 import batect.config.Configuration
 import batect.config.ContainerMap
-import batect.config.Task
 import batect.config.TaskMap
 import batect.os.PathResolver
 import kotlinx.serialization.Optional

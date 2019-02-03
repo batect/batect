@@ -16,7 +16,6 @@
 
 package batect.config
 
-import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.CompositeDecoder
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder

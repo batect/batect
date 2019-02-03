@@ -59,9 +59,8 @@ object ConfigurationFileSpec : Spek({
 
             on("converting a configuration file with a task") {
                 val runConfiguration = TaskRunConfiguration("some_container", Command.parse("some_command"), mapOf("SOME_VAR" to LiteralValue("some value")), setOf(PortMapping(123, 456)))
-                val task = TaskFromFile(runConfiguration, "Some description", setOf("dependency-1"), listOf("other-task"))
-                val taskName = "the_task_name"
-                val configFile = ConfigurationFile("the_project_name", mapOf(taskName to task))
+                val task = Task("the_task_name", runConfiguration, "Some description", setOf("dependency-1"), listOf("other-task"))
+                val configFile = ConfigurationFile("the_project_name", TaskMap(task))
                 val pathResolver = mock<PathResolver>()
                 val resultingConfig = configFile.toConfiguration(pathResolver)
 
@@ -70,15 +69,7 @@ object ConfigurationFileSpec : Spek({
                 }
 
                 it("returns a configuration object with the task") {
-                    assertThat(resultingConfig.tasks, equalTo(TaskMap(
-                        Task(
-                            taskName,
-                            TaskRunConfiguration(runConfiguration.container, runConfiguration.command, runConfiguration.additionalEnvironmentVariables, runConfiguration.additionalPortMappings),
-                            "Some description",
-                            task.dependsOnContainers,
-                            task.prerequisiteTasks
-                        )
-                    )))
+                    assertThat(resultingConfig.tasks, equalTo(TaskMap(task)))
                 }
 
                 it("returns a configuration object with no containers") {

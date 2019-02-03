@@ -18,6 +18,7 @@ package batect.config.io
 
 import batect.config.Configuration
 import batect.config.ContainerMap
+import batect.config.Task
 import batect.config.TaskMap
 import batect.os.PathResolver
 import kotlinx.serialization.Optional
@@ -27,13 +28,13 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ConfigurationFile(
     @SerialName("project_name") @Optional val projectName: String? = null,
-    @Optional val tasks: Map<String, TaskFromFile> = emptyMap(),
+    @Optional val tasks: TaskMap = TaskMap(),
     @Optional val containers: Map<String, ContainerFromFile> = emptyMap()
 ) {
     fun toConfiguration(pathResolver: PathResolver): Configuration {
         return Configuration(
             resolveProjectName(pathResolver),
-            TaskMap(tasks.map { (name, task) -> task.toTask(name) }),
+            tasks,
             ContainerMap(containers.map { (name, container) -> container.toContainer(name) })
         )
     }

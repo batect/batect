@@ -16,18 +16,22 @@
 
 package batect.config
 
+import batect.config.io.deserializers.DependencySetDeserializer
 import batect.config.io.deserializers.EnvironmentDeserializer
+import batect.config.io.deserializers.PrerequisiteListDeserializer
 import batect.os.Command
 import kotlinx.serialization.Optional
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
+@Serializable
 data class Task(
-    val name: String,
-    val runConfiguration: TaskRunConfiguration,
-    val description: String = "",
-    val dependsOnContainers: Set<String> = emptySet(),
-    val prerequisiteTasks: List<String> = emptyList()
+    @Transient val name: String = "",
+    @SerialName("run") val runConfiguration: TaskRunConfiguration,
+    @Optional val description: String = "",
+    @SerialName("dependencies") @Serializable(with = DependencySetDeserializer::class) @Optional val dependsOnContainers: Set<String> = emptySet(),
+    @SerialName("prerequisites") @Serializable(with = PrerequisiteListDeserializer::class) @Optional val prerequisiteTasks: List<String> = emptyList()
 )
 
 @Serializable

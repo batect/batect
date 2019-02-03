@@ -65,8 +65,8 @@ abstract class NamedObjectMap<E>(contentName: String, contents: Iterable<E>) : M
     override fun hashCode(): Int = implementation.hashCode()
 }
 
-abstract class NamedObjectMapDeserializer<TCollection, TElement>(private val elementSerializer: KSerializer<TElement>) {
-    private val keySerializer = StringSerializer
+abstract class NamedObjectMapDeserializer<TCollection, TElement>(val elementSerializer: KSerializer<TElement>) {
+    val keySerializer = StringSerializer
 
     // We can't just declare the value of this here due to https://github.com/Kotlin/kotlinx.serialization/issues/315#issuecomment-460015206
     abstract val descriptor: SerialDescriptor

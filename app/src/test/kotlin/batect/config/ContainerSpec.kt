@@ -14,15 +14,8 @@
    limitations under the License.
 */
 
-package batect.config.io
+package batect.config
 
-import batect.config.BuildImage
-import batect.config.HealthCheckConfig
-import batect.config.LiteralValue
-import batect.config.PortMapping
-import batect.config.PullImage
-import batect.config.RunAsCurrentUserConfig
-import batect.config.VolumeMount
 import batect.config.io.deserializers.PathDeserializer
 import batect.os.Command
 import batect.os.PathResolutionResult
@@ -49,8 +42,8 @@ import org.jetbrains.spek.api.dsl.on
 import java.nio.file.Paths
 import java.time.Duration
 
-object ContainerFromFileSpec : Spek({
-    describe("a container read from a configuration file") {
+object ContainerSpec : Spek({
+    describe("a container") {
         val pathDeserializer by createForEachTest {
             mock<PathDeserializer> {
                 on { deserialize(any()) } doAnswer { invocation ->
@@ -76,10 +69,10 @@ object ContainerFromFileSpec : Spek({
                 val yaml = "build_directory: /some_build_dir"
 
                 on("loading the configuration from the config file") {
-                    val result = parser.parse(ContainerFromFile.Companion, yaml)
+                    val result = parser.parse(Container.Companion, yaml)
 
                     it("returns the expected container configuration, with the build directory resolved to an absolute path") {
-                        assertThat(result, equalTo(ContainerFromFile(BuildImage("/resolved/some_build_dir"))))
+                        assertThat(result, equalTo(Container("UNNAMED-FROM-CONFIG-FILE", BuildImage("/resolved/some_build_dir"))))
                     }
                 }
             }
@@ -114,7 +107,7 @@ object ContainerFromFileSpec : Spek({
                     on("loading the configuration from the config file") {
                         it("throws an appropriate exception") {
                             assertThat(
-                                { parser.parse(ContainerFromFile.Companion, yaml) },
+                                { parser.parse(Container.Companion, yaml) },
                                 throws(withMessage(expectedMessage) and withLineNumber(1) and withColumn(1))
                             )
                         }
@@ -127,10 +120,10 @@ object ContainerFromFileSpec : Spek({
             val yaml = "image: some_image"
 
             on("loading the configuration from the config file") {
-                val result = parser.parse(ContainerFromFile.Companion, yaml)
+                val result = parser.parse(Container.Companion, yaml)
 
                 it("returns the expected container configuration") {
-                    assertThat(result, equalTo(ContainerFromFile(PullImage("some_image"))))
+                    assertThat(result, equalTo(Container("UNNAMED-FROM-CONFIG-FILE", PullImage("some_image"))))
                 }
             }
         }
@@ -144,7 +137,7 @@ object ContainerFromFileSpec : Spek({
             on("loading the configuration from the config file") {
                 it("throws an appropriate exception") {
                     assertThat(
-                        { parser.parse(ContainerFromFile.Companion, yaml) },
+                        { parser.parse(Container.Companion, yaml) },
                         throws(withMessage("Only one of build_directory or image can be specified for a container, but both have been provided for this container.") and withLineNumber(1) and withColumn(1))
                     )
                 }
@@ -159,7 +152,7 @@ object ContainerFromFileSpec : Spek({
             on("loading the configuration from the config file") {
                 it("throws an appropriate exception") {
                     assertThat(
-                        { parser.parse(ContainerFromFile.Companion, yaml) },
+                        { parser.parse(Container.Companion, yaml) },
                         throws(withMessage("One of either build_directory or image must be specified for each container, but neither have been provided for this container.") and withLineNumber(1) and withColumn(1))
                     )
                 }
@@ -193,7 +186,7 @@ object ContainerFromFileSpec : Spek({
             """.trimIndent()
 
             on("loading the configuration from the config file") {
-                val result = parser.parse(ContainerFromFile.Companion, yaml)
+                val result = parser.parse(Container.Companion, yaml)
 
                 it("returns the expected container configuration") {
                     assertThat(result.imageSource, equalTo(BuildImage("/resolved/container-1-build-dir")))

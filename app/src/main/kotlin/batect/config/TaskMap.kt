@@ -20,7 +20,6 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
 import kotlinx.serialization.internal.HashMapClassDesc
-import kotlinx.serialization.internal.StringSerializer
 
 class TaskMap(contents: Iterable<Task>) : NamedObjectMap<Task>("task", contents) {
     constructor(vararg contents: Task) : this(contents.asIterable())
@@ -32,6 +31,6 @@ class TaskMap(contents: Iterable<Task>) : NamedObjectMap<Task>("task", contents)
         override fun addName(name: String, element: Task): Task = element.copy(name = name)
         override fun createCollection(elements: Set<Task>): TaskMap = TaskMap(elements)
 
-        override val descriptor: SerialDescriptor = HashMapClassDesc(StringSerializer.descriptor, Task.serializer().descriptor)
+        override val descriptor: SerialDescriptor = HashMapClassDesc(keySerializer.descriptor, elementSerializer.descriptor)
     }
 }

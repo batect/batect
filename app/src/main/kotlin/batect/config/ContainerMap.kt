@@ -16,8 +16,21 @@
 
 package batect.config
 
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialDescriptor
+import kotlinx.serialization.Serializer
+import kotlinx.serialization.internal.HashMapClassDesc
+
 class ContainerMap(contents: Iterable<Container>) : NamedObjectMap<Container>("container", contents) {
     constructor(vararg contents: Container) : this(contents.asIterable())
 
     override fun nameFor(value: Container): String = value.name
+
+    @Serializer(forClass = ContainerMap::class)
+    companion object : NamedObjectMapDeserializer<ContainerMap, Container>(Container.serializer()), KSerializer<ContainerMap> {
+        override fun addName(name: String, element: Container): Container = element.copy(name = name)
+        override fun createCollection(elements: Set<Container>): ContainerMap = ContainerMap(elements)
+
+        override val descriptor: SerialDescriptor = HashMapClassDesc(keySerializer.descriptor, elementSerializer.descriptor)
+    }
 }

@@ -16,6 +16,13 @@
 
 package batect.config
 
+import kotlinx.serialization.CompositeDecoder
+import kotlinx.serialization.Decoder
+import kotlinx.serialization.Encoder
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialDescriptor
+import kotlinx.serialization.internal.StringSerializer
+
 abstract class NamedObjectMap<E>(contentName: String, contents: Iterable<E>) : Map<String, E>, Set<E> {
     init {
         val duplicates = contents
@@ -56,4 +63,70 @@ abstract class NamedObjectMap<E>(contentName: String, contents: Iterable<E>) : M
 
     override fun equals(other: Any?): Boolean = implementation == other
     override fun hashCode(): Int = implementation.hashCode()
+}
+
+abstract class NamedObjectMapDeserializer<TCollection, TElement>(private val elementSerializer: KSerializer<TElement>) {
+    private val keySerializer = StringSerializer
+
+    // We can't just declare the value of this here due to https://github.com/Kotlin/kotlinx.serialization/issues/315#issuecomment-460015206
+    abstract val descriptor: SerialDescriptor
+
+    fun deserialize(decoder: Decoder): TCollection {
+        val input = decoder.beginStructure(descriptor)
+
+        return read(input).also { input.endStructure(descriptor) }
+    }
+
+    private fun read(input: CompositeDecoder): TCollection {
+        val size = input.decodeCollectionSize(descriptor)
+
+        while (true) {
+            when (val index = input.decodeElementIndex(descriptor)) {
+                CompositeDecoder.READ_ALL -> return readAll(input, size)
+                else -> return readUntilDone(input, index)
+            }
+        }
+    }
+
+    private fun readAll(input: CompositeDecoder, size: Int): TCollection {
+        val soFar = mutableSetOf<TElement>()
+
+        for (currentIndex in 0..size) {
+            soFar.add(readSingle(input, currentIndex, false))
+        }
+
+        return createCollection(soFar)
+    }
+
+    private fun readUntilDone(input: CompositeDecoder, firstIndex: Int): TCollection {
+        var currentIndex = firstIndex
+        val soFar = mutableSetOf<TElement>()
+
+        while (currentIndex != CompositeDecoder.READ_DONE) {
+            soFar.add(readSingle(input, currentIndex, true))
+
+            currentIndex = input.decodeElementIndex(descriptor)
+        }
+
+        return createCollection(soFar)
+    }
+
+    private fun readSingle(input: CompositeDecoder, index: Int, checkIndex: Boolean): TElement {
+        val name = input.decodeSerializableElement(descriptor, index, keySerializer)
+
+        val valueIndex = if (checkIndex) {
+            input.decodeElementIndex(descriptor)
+        } else {
+            index + 1
+        }
+
+        val unnamed = input.decodeSerializableElement(descriptor, valueIndex, elementSerializer)
+
+        return addName(name, unnamed)
+    }
+
+    fun serialize(encoder: Encoder, obj: TCollection): Unit = throw UnsupportedOperationException()
+
+    protected abstract fun addName(name: String, element: TElement): TElement
+    protected abstract fun createCollection(elements: Set<TElement>): TCollection
 }

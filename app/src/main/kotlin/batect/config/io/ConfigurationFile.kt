@@ -27,7 +27,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ConfigurationFile(
     @SerialName("project_name") @Optional val projectName: String? = null,
-    @Optional val tasks: TaskMap = TaskMap(),
+    @Optional @Serializable(with = TaskMap.Companion::class) val tasks: TaskMap = TaskMap(),
     @Optional val containers: Map<String, ContainerFromFile> = emptyMap()
 ) {
     fun toConfiguration(pathResolver: PathResolver): Configuration {

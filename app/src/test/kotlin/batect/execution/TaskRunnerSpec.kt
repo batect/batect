@@ -34,7 +34,9 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
@@ -44,6 +46,7 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import java.time.Duration
 
 object TaskRunnerSpec : Spek({
     describe("a task runner") {
@@ -97,6 +100,7 @@ object TaskRunnerSpec : Spek({
                     whenever(stateMachine.getAllEvents()).thenReturn(setOf(
                         RunningContainerExitedEvent(container, 100)
                     ))
+                    whenever(executionManager.run()).then { Thread.sleep(50) }
                 }
 
                 on("running the task") {
@@ -128,7 +132,7 @@ object TaskRunnerSpec : Spek({
                     it("logs that the task finished after running the task") {
                         inOrder(eventLogger, executionManager) {
                             verify(executionManager).run()
-                            verify(eventLogger).onTaskFinished("some-task", 100)
+                            verify(eventLogger).onTaskFinished(eq("some-task"), eq(100), argThat { this >= Duration.ofMillis(50) })
                         }
                     }
 

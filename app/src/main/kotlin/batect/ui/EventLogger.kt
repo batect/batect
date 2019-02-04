@@ -19,10 +19,11 @@ package batect.ui
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.TaskStep
 import batect.ui.text.TextRun
+import java.time.Duration
 
 abstract class EventLogger : TaskEventSink {
     abstract fun onStartingTaskStep(step: TaskStep)
     abstract fun onTaskStarting(taskName: String)
-    abstract fun onTaskFinished(taskName: String, exitCode: Int)
+    abstract fun onTaskFinished(taskName: String, exitCode: Int, duration: Duration)
     abstract fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun)
 }

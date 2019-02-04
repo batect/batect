@@ -22,6 +22,8 @@ import batect.execution.model.events.RunningContainerExitedEvent
 import batect.logging.Logger
 import batect.ui.EventLogger
 import batect.ui.EventLoggerProvider
+import java.time.Duration
+import java.time.Instant
 
 data class TaskRunner(
     private val eventLoggerProvider: EventLoggerProvider,
@@ -37,6 +39,7 @@ data class TaskRunner(
             data("taskName", task.name)
         }
 
+        val startTime = Instant.now()
         val graph = graphProvider.createGraph(config, task)
         val eventLogger = eventLoggerProvider.getEventLogger(graph, runOptions)
         eventLogger.onTaskStarting(task.name)
@@ -53,6 +56,8 @@ data class TaskRunner(
             executionManager.run()
         }
 
+        val finishTime = Instant.now()
+
         logger.info {
             message("Task execution completed.")
             data("taskName", task.name)
@@ -62,7 +67,9 @@ data class TaskRunner(
             return onTaskFailed(eventLogger, task, stateMachine)
         }
 
-        return findTaskContainerExitCode(eventLogger, task, stateMachine)
+        val duration = Duration.between(startTime, finishTime)
+
+        return findTaskContainerExitCode(eventLogger, task, stateMachine, duration)
     }
 
     private fun onTaskFailed(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine): Int {
@@ -76,7 +83,7 @@ data class TaskRunner(
         return -1
     }
 
-    private fun findTaskContainerExitCode(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine): Int {
+    private fun findTaskContainerExitCode(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine, duration: Duration): Int {
         val containerExitedEvent = stateMachine.getAllEvents()
             .filterIsInstance<RunningContainerExitedEvent>()
             .singleOrNull()
@@ -85,7 +92,7 @@ data class TaskRunner(
             throw IllegalStateException("The task neither failed nor succeeded.")
         }
 
-        eventLogger.onTaskFinished(task.name, containerExitedEvent.exitCode)
+        eventLogger.onTaskFinished(task.name, containerExitedEvent.exitCode, duration)
 
         logger.info {
             message("Task execution completed normally.")

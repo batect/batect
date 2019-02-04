@@ -28,6 +28,9 @@ import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
 import batect.ui.text.Text
 import batect.ui.text.TextRun
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.time.Duration
 
 class FancyEventLogger(
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
@@ -122,8 +125,13 @@ class FancyEventLogger(
         console.println(Text.white(Text("Running ") + Text.bold(taskName) + Text("...")))
     }
 
-    override fun onTaskFinished(taskName: String, exitCode: Int) {
+    override fun onTaskFinished(taskName: String, exitCode: Int, duration: Duration) {
         cleanupProgressDisplay.clear(console)
-        console.println(Text.white(Text.bold(taskName) + Text(" finished with exit code $exitCode.")))
+
+        val durationDisplay = BigDecimal.valueOf(duration.seconds)
+            .add(BigDecimal.valueOf(duration.nano.toLong(), 9))
+            .setScale(1, RoundingMode.HALF_UP)
+
+        console.println(Text.white(Text.bold(taskName) + Text(" finished with exit code $exitCode in $durationDisplay seconds.")))
     }
 }

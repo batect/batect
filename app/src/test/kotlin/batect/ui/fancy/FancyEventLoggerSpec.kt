@@ -47,6 +47,7 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import java.time.Duration
 
 object FancyEventLoggerSpec : Spek({
     describe("a fancy event logger") {
@@ -342,12 +343,12 @@ object FancyEventLoggerSpec : Spek({
         }
 
         on("when the task finishes") {
-            logger.onTaskFinished("some-task", 234)
+            logger.onTaskFinished("some-task", 234, Duration.ofMillis(2500))
 
             it("prints a message to the output") {
                 inOrder(console, cleanupProgressDisplay) {
                     verify(cleanupProgressDisplay).clear(console)
-                    verify(console).println(Text.white(Text.bold("some-task") + Text(" finished with exit code 234.")))
+                    verify(console).println(Text.white(Text.bold("some-task") + Text(" finished with exit code 234 in 2.5 seconds.")))
                 }
             }
         }

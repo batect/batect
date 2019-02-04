@@ -31,6 +31,7 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import java.time.Duration
 
 object QuietEventLoggerSpec : Spek({
     describe("a quiet event logger") {
@@ -71,7 +72,7 @@ object QuietEventLoggerSpec : Spek({
         }
 
         on("when a task finishes") {
-            logger.onTaskFinished("some-task", 123)
+            logger.onTaskFinished("some-task", 123, Duration.ofNanos(456))
 
             it("does not print anything to the console") {
                 verifyZeroInteractions(errorConsole)

@@ -69,5 +69,13 @@ object QuietEventLoggerSpec : Spek({
                 verifyZeroInteractions(errorConsole)
             }
         }
+
+        on("when a task finishes") {
+            logger.onTaskFinished("some-task", 123)
+
+            it("does not print anything to the console") {
+                verifyZeroInteractions(errorConsole)
+            }
+        }
     }
 })

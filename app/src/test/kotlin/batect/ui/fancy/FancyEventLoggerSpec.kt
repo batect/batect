@@ -341,6 +341,17 @@ object FancyEventLoggerSpec : Spek({
             }
         }
 
+        on("when the task finishes") {
+            logger.onTaskFinished("some-task", 234)
+
+            it("prints a message to the output") {
+                inOrder(console) {
+                    verify(console).println()
+                    verify(console).println(Text.white(Text.bold("some-task") + Text(" finished with exit code 234.")))
+                }
+            }
+        }
+
         describe("when the task fails") {
             given("there are no cleanup instructions") {
                 on("when logging that the task has failed") {

@@ -62,7 +62,7 @@ data class TaskRunner(
             return onTaskFailed(eventLogger, task, stateMachine)
         }
 
-        return findTaskContainerExitCode(stateMachine, task)
+        return findTaskContainerExitCode(eventLogger, task, stateMachine)
     }
 
     private fun onTaskFailed(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine): Int {
@@ -76,7 +76,7 @@ data class TaskRunner(
         return -1
     }
 
-    private fun findTaskContainerExitCode(stateMachine: TaskStateMachine, task: Task): Int {
+    private fun findTaskContainerExitCode(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine): Int {
         val containerExitedEvent = stateMachine.getAllEvents()
             .filterIsInstance<RunningContainerExitedEvent>()
             .singleOrNull()
@@ -84,6 +84,8 @@ data class TaskRunner(
         if (containerExitedEvent == null) {
             throw IllegalStateException("The task neither failed nor succeeded.")
         }
+
+        eventLogger.onTaskFinished(task.name, containerExitedEvent.exitCode)
 
         logger.info {
             message("Task execution completed normally.")

@@ -150,4 +150,9 @@ class SimpleEventLogger(
     override fun onTaskStarting(taskName: String) {
         console.println(Text.white(Text("Running ") + Text.bold(taskName) + Text("...")))
     }
+
+    override fun onTaskFinished(taskName: String, exitCode: Int) {
+        console.println()
+        console.println(Text.white(Text.bold(taskName) + Text(" finished with exit code $exitCode.")))
+    }
 }

@@ -125,6 +125,13 @@ object TaskRunnerSpec : Spek({
                         }
                     }
 
+                    it("logs that the task finished after running the task") {
+                        inOrder(eventLogger, executionManager) {
+                            verify(executionManager).run()
+                            verify(eventLogger).onTaskFinished("some-task", 100)
+                        }
+                    }
+
                     it("returns the exit code from the task") {
                         assertThat(exitCode, equalTo(100))
                     }

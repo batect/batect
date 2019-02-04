@@ -23,7 +23,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * warn when proxy settings for daemon don't match local environment (can get this through API)
 * show a short summary after a task finishes (eg. `build finished with exit code X in 2.3 seconds`)
 * support for Windows
-* show progress information when cleaning up temporary files or directories in fancy output mode
 * fix #10 (proxies that refer to localhost)
   * Linux:
     * Can get IP of host from `[0].IPAM.Config.Gateway` value from running `docker network inspect <network ID>`

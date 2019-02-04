@@ -22,14 +22,23 @@ import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TaskNetworkDeletedEvent
+import batect.execution.model.events.TemporaryDirectoryCreatedEvent
+import batect.execution.model.events.TemporaryDirectoryDeletedEvent
+import batect.execution.model.events.TemporaryFileCreatedEvent
+import batect.execution.model.events.TemporaryFileDeletedEvent
 import batect.ui.text.Text
 import batect.ui.text.TextRun
+import java.nio.file.Path
 
 class CleanupProgressDisplayLine {
     private var networkHasBeenCreated = false
     private var networkHasBeenDeleted = false
     private val containersCreated = mutableSetOf<Container>()
     private val containersRemoved = mutableSetOf<Container>()
+    private val temporaryFilesCreated = mutableSetOf<Path>()
+    private val temporaryFilesDeleted = mutableSetOf<Path>()
+    private val temporaryDirectoriesCreated = mutableSetOf<Path>()
+    private val temporaryDirectoriesDeleted = mutableSetOf<Path>()
 
     fun onEventPosted(event: TaskEvent) {
         when (event) {
@@ -37,30 +46,56 @@ class CleanupProgressDisplayLine {
             is ContainerRemovedEvent -> containersRemoved.add(event.container)
             is TaskNetworkCreatedEvent -> networkHasBeenCreated = true
             is TaskNetworkDeletedEvent -> networkHasBeenDeleted = true
+            is TemporaryFileCreatedEvent -> temporaryFilesCreated.add(event.filePath)
+            is TemporaryFileDeletedEvent -> temporaryFilesDeleted.add(event.filePath)
+            is TemporaryDirectoryCreatedEvent -> temporaryDirectoriesCreated.add(event.directoryPath)
+            is TemporaryDirectoryDeletedEvent -> temporaryDirectoriesDeleted.add(event.directoryPath)
         }
     }
 
     fun print(): TextRun {
         val text = when {
-            containersStillToCleanUp().isNotEmpty() -> printContainerCleanupStatus()
-            networkHasBeenCreated && !networkHasBeenDeleted -> TextRun("Cleaning up: removing task network...")
+            containersStillToCleanUp.isNotEmpty() -> printContainerCleanupStatus()
+            stillNeedToCleanUpNetwork || filesStillToCleanUp > 0 || directoriesStillToCleanUp > 0 -> printOtherCleanupStatus()
             else -> TextRun("Clean up: done")
         }
 
         return Text.white(text)
     }
 
-    private fun containersStillToCleanUp(): Set<Container> = containersCreated - containersRemoved
+    private val containersStillToCleanUp: Set<Container>
+        get() = containersCreated - containersRemoved
+
+    private val filesStillToCleanUp: Int
+        get() = (temporaryFilesCreated - temporaryFilesDeleted).size
+
+    private val directoriesStillToCleanUp: Int
+        get() = (temporaryDirectoriesCreated - temporaryDirectoriesDeleted).size
+
+    private val stillNeedToCleanUpNetwork: Boolean
+        get() = networkHasBeenCreated && !networkHasBeenDeleted
 
     private fun printContainerCleanupStatus(): TextRun {
-        val containers = containersStillToCleanUp().map { it.name }.sorted().map { Text.bold(it) }
+        val containers = containersStillToCleanUp.map { it.name }.sorted().map { Text.bold(it) }
 
-        val noun = if (containers.size == 1) {
-            "container"
-        } else {
-            "containers"
+        return Text("Cleaning up: ${pluralize(containers.size, "container")} (") + humanReadableList(containers) + Text(") left to remove...")
+    }
+
+    private fun printOtherCleanupStatus(): TextRun {
+        val steps = mutableListOf<Text>()
+
+        if (stillNeedToCleanUpNetwork) {
+            steps.add(Text("task network"))
         }
 
-        return Text("Cleaning up: ${containers.size} $noun (") + humanReadableList(containers) + Text(") left to remove...")
+        if (filesStillToCleanUp > 0) {
+            steps.add(Text(pluralize(filesStillToCleanUp, "temporary file")))
+        }
+
+        if (directoriesStillToCleanUp > 0) {
+            steps.add(Text(pluralize(directoriesStillToCleanUp, "temporary directory", "temporary directories")))
+        }
+
+        return Text("Cleaning up: removing ") + humanReadableList(steps) + Text("...")
     }
 }

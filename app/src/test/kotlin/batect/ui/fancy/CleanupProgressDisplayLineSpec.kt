@@ -23,6 +23,10 @@ import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TaskNetworkDeletedEvent
+import batect.execution.model.events.TemporaryDirectoryCreatedEvent
+import batect.execution.model.events.TemporaryDirectoryDeletedEvent
+import batect.execution.model.events.TemporaryFileCreatedEvent
+import batect.execution.model.events.TemporaryFileDeletedEvent
 import batect.testutils.createForEachTest
 import batect.testutils.equivalentTo
 import batect.testutils.imageSourceDoesNotMatter
@@ -32,6 +36,7 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import java.nio.file.Paths
 
 object CleanupProgressDisplayLineSpec : Spek({
     describe("a cleanup progress display line") {
@@ -98,6 +103,381 @@ object CleanupProgressDisplayLineSpec : Spek({
 
                 on("and the network has been removed") {
                     cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that clean up is complete") {
+                        assertThat(output, equivalentTo(Text.white("Clean up: done")))
+                    }
+                }
+            }
+
+            describe("when there is a container, a temporary file and the network to clean up") {
+                val container = Container("some-container", imageSourceDoesNotMatter())
+                val filePath = Paths.get("some-file")
+
+                beforeEachTest {
+                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
+                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container, DockerContainer("some-container-id")))
+                    cleanupDisplay.onEventPosted(TemporaryFileCreatedEvent(container, filePath))
+                }
+
+                on("and the container hasn't been removed yet") {
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the container still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white(Text("Cleaning up: 1 container (") + Text.bold("some-container") + Text(") left to remove..."))))
+                    }
+                }
+
+                on("and the container has been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the network and file still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network and 1 temporary file...")))
+                    }
+                }
+
+                on("and the network has been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the file still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing 1 temporary file...")))
+                    }
+                }
+
+                on("and the temporary file has been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(filePath))
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the network still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network...")))
+                    }
+                }
+
+                on("and both the network and the temporary file has been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(filePath))
+                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that clean up is complete") {
+                        assertThat(output, equivalentTo(Text.white("Clean up: done")))
+                    }
+                }
+            }
+
+            describe("when there is a container, a temporary directory and the network to clean up") {
+                val container = Container("some-container", imageSourceDoesNotMatter())
+                val directoryPath = Paths.get("some-directory")
+
+                beforeEachTest {
+                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
+                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container, DockerContainer("some-container-id")))
+                    cleanupDisplay.onEventPosted(TemporaryDirectoryCreatedEvent(container, directoryPath))
+                }
+
+                on("and the container hasn't been removed yet") {
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the container still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white(Text("Cleaning up: 1 container (") + Text.bold("some-container") + Text(") left to remove..."))))
+                    }
+                }
+
+                on("and the container has been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the network and directory still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network and 1 temporary directory...")))
+                    }
+                }
+
+                on("and the network has been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the directory still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing 1 temporary directory...")))
+                    }
+                }
+
+                on("and the temporary directory has been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directoryPath))
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the network still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network...")))
+                    }
+                }
+
+                on("and both the network and the temporary directory has been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directoryPath))
+                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that clean up is complete") {
+                        assertThat(output, equivalentTo(Text.white("Clean up: done")))
+                    }
+                }
+            }
+
+            describe("when there is a container, two temporary files and the network to clean up") {
+                val container = Container("some-container", imageSourceDoesNotMatter())
+                val file1Path = Paths.get("file-1")
+                val file2Path = Paths.get("file-2")
+
+                beforeEachTest {
+                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
+                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container, DockerContainer("some-container-id")))
+                    cleanupDisplay.onEventPosted(TemporaryFileCreatedEvent(container, file1Path))
+                    cleanupDisplay.onEventPosted(TemporaryFileCreatedEvent(container, file2Path))
+                }
+
+                on("and the container hasn't been removed yet") {
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the container still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white(Text("Cleaning up: 1 container (") + Text.bold("some-container") + Text(") left to remove..."))))
+                    }
+                }
+
+                on("and the container has been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the network and both files still need to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network and 2 temporary files...")))
+                    }
+                }
+
+                on("and the network has been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the files still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing 2 temporary files...")))
+                    }
+                }
+
+                on("and the network and one of the temporary files have been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(file1Path))
+                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the files still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing 1 temporary file...")))
+                    }
+                }
+
+                on("and the both temporary files have been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(file1Path))
+                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(file2Path))
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the network still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network...")))
+                    }
+                }
+
+                on("and both the network and the temporary files has been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(file1Path))
+                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(file2Path))
+                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that clean up is complete") {
+                        assertThat(output, equivalentTo(Text.white("Clean up: done")))
+                    }
+                }
+            }
+
+            describe("when there is a container, two temporary directories and the network to clean up") {
+                val container = Container("some-container", imageSourceDoesNotMatter())
+                val directory1Path = Paths.get("directory-1")
+                val directory2Path = Paths.get("directory-2")
+
+                beforeEachTest {
+                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
+                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container, DockerContainer("some-container-id")))
+                    cleanupDisplay.onEventPosted(TemporaryDirectoryCreatedEvent(container, directory1Path))
+                    cleanupDisplay.onEventPosted(TemporaryDirectoryCreatedEvent(container, directory2Path))
+                }
+
+                on("and the container hasn't been removed yet") {
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the container still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white(Text("Cleaning up: 1 container (") + Text.bold("some-container") + Text(") left to remove..."))))
+                    }
+                }
+
+                on("and the container has been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the network and both directories still need to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network and 2 temporary directories...")))
+                    }
+                }
+
+                on("and the network has been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the directories still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing 2 temporary directories...")))
+                    }
+                }
+
+                on("and the network and one of the temporary directories have been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directory1Path))
+                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the directories still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing 1 temporary directory...")))
+                    }
+                }
+
+                on("and both temporary directories have been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directory1Path))
+                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directory2Path))
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the network still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network...")))
+                    }
+                }
+
+                on("and both the network and the temporary directories have been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directory1Path))
+                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directory2Path))
+                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that clean up is complete") {
+                        assertThat(output, equivalentTo(Text.white("Clean up: done")))
+                    }
+                }
+            }
+
+            describe("when there is a container, a temporary file, a temporary directory and the network to clean up") {
+                val container = Container("some-container", imageSourceDoesNotMatter())
+                val filePath = Paths.get("some-file")
+                val directoryPath = Paths.get("some-directory")
+
+                beforeEachTest {
+                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
+                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container, DockerContainer("some-container-id")))
+                    cleanupDisplay.onEventPosted(TemporaryFileCreatedEvent(container, filePath))
+                    cleanupDisplay.onEventPosted(TemporaryDirectoryCreatedEvent(container, directoryPath))
+                }
+
+                on("and the container hasn't been removed yet") {
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the container still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white(Text("Cleaning up: 1 container (") + Text.bold("some-container") + Text(") left to remove..."))))
+                    }
+                }
+
+                on("and the container has been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the network and both directories still need to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network, 1 temporary file and 1 temporary directory...")))
+                    }
+                }
+
+                on("and the network has been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the directories still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing 1 temporary file and 1 temporary directory...")))
+                    }
+                }
+
+                on("and the network and the temporary file have been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(filePath))
+                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the directory still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing 1 temporary directory...")))
+                    }
+                }
+
+                on("and the network and the temporary directory have been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directoryPath))
+                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the file still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing 1 temporary file...")))
+                    }
+                }
+
+                on("and the temporary file and temporary directory have been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(filePath))
+                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directoryPath))
+
+                    val output = cleanupDisplay.print()
+
+                    it("prints that the network still needs to be cleaned up") {
+                        assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network...")))
+                    }
+                }
+
+                on("and both the network, the temporary file and the temporary directory have been removed") {
+                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(filePath))
+                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directoryPath))
                     cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
 
                     val output = cleanupDisplay.print()
@@ -188,7 +568,10 @@ object CleanupProgressDisplayLineSpec : Spek({
                     val output = cleanupDisplay.print()
 
                     it("prints that all of the containers still need to be cleaned up") {
-                        assertThat(output, equivalentTo(Text.white(Text("Cleaning up: 4 containers (") + Text.bold("container-1") + Text(", ") + Text.bold("container-2") + Text(", ") + Text.bold("container-3") + Text(" and ") + Text.bold("container-4") + Text(") left to remove..."))))
+                        assertThat(
+                            output,
+                            equivalentTo(Text.white(Text("Cleaning up: 4 containers (") + Text.bold("container-1") + Text(", ") + Text.bold("container-2") + Text(", ") + Text.bold("container-3") + Text(" and ") + Text.bold("container-4") + Text(") left to remove...")))
+                        )
                     }
                 }
             }

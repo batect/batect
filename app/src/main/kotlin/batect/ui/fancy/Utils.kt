@@ -35,3 +35,10 @@ internal fun humanReadableList(list: Collection<Text>): TextRun {
         acc + current + separator
     }
 }
+
+internal fun pluralize(count: Int, singular: String, plural: String = singular + "s"): String =
+    if (count == 1) {
+        "$count $singular"
+    } else {
+        "$count $plural"
+    }

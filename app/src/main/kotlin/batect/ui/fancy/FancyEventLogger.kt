@@ -123,7 +123,7 @@ class FancyEventLogger(
     }
 
     override fun onTaskFinished(taskName: String, exitCode: Int) {
-        console.println()
+        cleanupProgressDisplay.clear(console)
         console.println(Text.white(Text.bold(taskName) + Text(" finished with exit code $exitCode.")))
     }
 }

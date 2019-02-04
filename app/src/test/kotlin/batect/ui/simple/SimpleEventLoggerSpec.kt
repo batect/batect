@@ -240,10 +240,7 @@ object SimpleEventLoggerSpec : Spek({
             logger.onTaskFinished("some-task", 234)
 
             it("prints a message to the output") {
-                inOrder(console) {
-                    verify(console).println()
-                    verify(console).println(Text.white(Text.bold("some-task") + Text(" finished with exit code 234.")))
-                }
+                verify(console).println(Text.white(Text.bold("some-task") + Text(" finished with exit code 234.")))
             }
         }
 

@@ -65,7 +65,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * switch to coroutines for parallel execution?
 * listen for `SIGWINCH` globally and update `ConsoleInfo.dimensions` only when required rather than calling `ioctl()` every time
 * test against a variety of Docker versions (eg. earliest supported version and latest)
-* finish configuration code simplification (first three need https://github.com/Kotlin/kotlinx.serialization/issues/315 to be fixed, last one is blocked by https://github.com/JetBrains/kotlin/commit/5f2cea917f7ec74b2bdab2818ebc700a80b6e43f not being released)
+* finish configuration code simplification (first three need https://github.com/Kotlin/kotlinx.serialization/issues/315 to be fixed)
   * Move common stuff when parsing a string (eg. EnvironmentVariableExpression, Command, Duration) out to a common class
   * Move common stuff when parsing a string or object (eg. port mapping or volume mount) out to a common class
   * Move common stuff when reading a list out to a common class (DependencySetDeserializer and PrerequisiteListDeserializer)

@@ -3,7 +3,7 @@
 [![Coverage](https://img.shields.io/codecov/c/github/charleskorn/batect.svg)](https://codecov.io/gh/charleskorn/batect)
 [![License](https://img.shields.io/github/license/charleskorn/batect.svg)](https://opensource.org/licenses/Apache-2.0)
 
-**b**uild **a**nd **t**esting **e**nvironments as **c**ode **t**ool
+**b**uild **a**nd **t**esting **e**nvironments as **c**ode **t**ool: Dockerised build and testing environments made easy
 
 ## The sales pitch
 

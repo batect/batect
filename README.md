@@ -15,7 +15,7 @@
 
 \* at the moment, a JVM is also required, but this requirement will be removed before v1.0
 
-[![asciicast](https://asciinema.org/a/IUh0F8WS0M0NTTKhpY1DdiRr0.png)](https://asciinema.org/a/IUh0F8WS0M0NTTKhpY1DdiRr0)
+[![asciicast](https://asciinema.org/a/714gRQsQW1VDHQMuWzwRuAdU4.svg)](https://asciinema.org/a/714gRQsQW1VDHQMuWzwRuAdU4)
 
 ## Documentation
 

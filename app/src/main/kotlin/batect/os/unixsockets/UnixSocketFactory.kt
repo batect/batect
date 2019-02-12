@@ -42,7 +42,7 @@ class UnixSocketFactory() : SocketFactory() {
                 val socketPath = UnixSocketDns.decodePath(encodedHostName)
 
                 try {
-                    super.connect(UnixSocketAddress(socketPath), timeout as Int?)
+                    super.connect(UnixSocketAddress(socketPath), timeout)
                     connected = true
                 } catch (e: IOException) {
                     throw IOException("Cannot connect to '$socketPath': ${e.message}", e)

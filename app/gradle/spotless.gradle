@@ -18,7 +18,7 @@ ext.kotlinLicenseHeader = "/*$licenseText*/\n\n"
 
 spotless {
     kotlin {
-        ktlint("0.29.0")
+        ktlint("0.30.0")
 
         licenseHeader kotlinLicenseHeader
 

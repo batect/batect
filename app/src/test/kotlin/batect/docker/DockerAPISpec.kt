@@ -574,6 +574,14 @@ object DockerAPISpec : Spek({
                     }
                 }
 
+                on("the container being stopped and the daemon returning a 'bad file descriptor' error") {
+                    httpClient.mockPost(expectedUrl, """{"message": "bad file descriptor: unknown"}""", 500)
+
+                    it("throws an appropriate exception") {
+                        assertThat({ api.resizeContainerTTY(container, dimensions) }, throws<ContainerStoppedException>(withMessage("Resizing TTY for container 'the-container-id' failed: bad file descriptor: unknown (the container may have stopped quickly after starting)")))
+                    }
+                }
+
                 on("the API call failing") {
                     httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
 

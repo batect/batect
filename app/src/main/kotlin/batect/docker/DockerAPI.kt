@@ -460,6 +460,10 @@ class DockerAPI(
                     throw ContainerStoppedException(message)
                 }
 
+                if (error.statusCode == 500 && error.message.trim() == "bad file descriptor: unknown") {
+                    throw ContainerStoppedException("$message (the container may have stopped quickly after starting)")
+                }
+
                 throw DockerException(message)
             }
         }

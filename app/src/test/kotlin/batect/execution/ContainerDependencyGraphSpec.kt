@@ -52,49 +52,99 @@ object ContainerDependencyGraphSpec : Spek({
         }
 
         given("a task with no dependencies") {
-            val container = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("some-container-command"))
-            val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)))
-            val task = Task("the-task", runConfig, dependsOnContainers = emptySet())
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
-            val graph = ContainerDependencyGraph(config, task, commandResolver)
+            given("the task does not override the container's working directory") {
+                val container = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("some-container-command"), workingDirectory = "task-working-dir-that-wont-be-used")
+                val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)), "some-task-specific-working-dir")
+                val task = Task("the-task", runConfig, dependsOnContainers = emptySet())
+                val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
+                val graph = ContainerDependencyGraph(config, task, commandResolver)
 
-            on("getting the task container node") {
-                val node = graph.taskContainerNode
+                on("getting the task container node") {
+                    val node = graph.taskContainerNode
 
-                it("depends on nothing") {
-                    assertThat(node.dependsOn, isEmpty)
+                    it("depends on nothing") {
+                        assertThat(node.dependsOn, isEmpty)
+                    }
+
+                    it("is depended on by nothing") {
+                        assertThat(node.dependedOnBy, isEmpty)
+                    }
+
+                    it("takes its command from the command resolver") {
+                        assertThat(node.command, equalTo(commandResolver.resolveCommand(container, task)))
+                    }
+
+                    it("takes its working directory from the task") {
+                        assertThat(node.workingDirectory, equalTo(runConfig.workingDiretory))
+                    }
+
+                    it("takes the additional environment variables from the task") {
+                        assertThat(node.additionalEnvironmentVariables, equalTo(runConfig.additionalEnvironmentVariables))
+                    }
+
+                    it("takes the additional port mappings from the task") {
+                        assertThat(node.additionalPortMappings, equalTo(runConfig.additionalPortMappings))
+                    }
+
+                    it("indicates that it is the root node of the graph") {
+                        assertThat(node.isRootNode, equalTo(true))
+                    }
+
+                    it("is the same node as the node for the task container") {
+                        assertThat(graph.nodeFor(container), equalTo(node))
+                    }
                 }
 
-                it("is depended on by nothing") {
-                    assertThat(node.dependedOnBy, isEmpty)
-                }
+                on("getting the node for a container not part of the graph") {
+                    val otherContainer = Container("the-other-container", imageSourceDoesNotMatter())
 
-                it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(container, task)))
-                }
-
-                it("takes the additional environment variables from the task") {
-                    assertThat(node.additionalEnvironmentVariables, equalTo(runConfig.additionalEnvironmentVariables))
-                }
-
-                it("takes the additional port mappings from the task") {
-                    assertThat(node.additionalPortMappings, equalTo(runConfig.additionalPortMappings))
-                }
-
-                it("indicates that it is the root node of the graph") {
-                    assertThat(node.isRootNode, equalTo(true))
-                }
-
-                it("is the same node as the node for the task container") {
-                    assertThat(graph.nodeFor(container), equalTo(node))
+                    it("throws an exception") {
+                        assertThat({ graph.nodeFor(otherContainer) }, throws<IllegalArgumentException>(withMessage("Container 'the-other-container' is not part of this dependency graph.")))
+                    }
                 }
             }
 
-            on("getting the node for a container not part of the graph") {
-                val otherContainer = Container("the-other-container", imageSourceDoesNotMatter())
+            given("the task overrides the container's working directory") {
+                val container = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("some-container-command"), workingDirectory = "task-working-dir")
+                val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)))
+                val task = Task("the-task", runConfig, dependsOnContainers = emptySet())
+                val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
+                val graph = ContainerDependencyGraph(config, task, commandResolver)
 
-                it("throws an exception") {
-                    assertThat({ graph.nodeFor(otherContainer) }, throws<IllegalArgumentException>(withMessage("Container 'the-other-container' is not part of this dependency graph.")))
+                on("getting the task container node") {
+                    val node = graph.taskContainerNode
+
+                    it("depends on nothing") {
+                        assertThat(node.dependsOn, isEmpty)
+                    }
+
+                    it("is depended on by nothing") {
+                        assertThat(node.dependedOnBy, isEmpty)
+                    }
+
+                    it("takes its command from the command resolver") {
+                        assertThat(node.command, equalTo(commandResolver.resolveCommand(container, task)))
+                    }
+
+                    it("takes its working directory from the container") {
+                        assertThat(node.workingDirectory, equalTo(container.workingDirectory))
+                    }
+
+                    it("takes the additional environment variables from the task") {
+                        assertThat(node.additionalEnvironmentVariables, equalTo(runConfig.additionalEnvironmentVariables))
+                    }
+
+                    it("takes the additional port mappings from the task") {
+                        assertThat(node.additionalPortMappings, equalTo(runConfig.additionalPortMappings))
+                    }
+
+                    it("indicates that it is the root node of the graph") {
+                        assertThat(node.isRootNode, equalTo(true))
+                    }
+
+                    it("is the same node as the node for the task container") {
+                        assertThat(graph.nodeFor(container), equalTo(node))
+                    }
                 }
             }
         }
@@ -112,9 +162,9 @@ object ContainerDependencyGraphSpec : Spek({
         }
 
         given("a task with a dependency") {
-            val taskContainer = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("task-command-that-wont-be-used"))
-            val dependencyContainer = Container("dependency-container", imageSourceDoesNotMatter(), command = Command.parse("dependency-command"))
-            val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)))
+            val taskContainer = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("task-command-that-wont-be-used"), workingDirectory = "task-working-dir-that-wont-be-used")
+            val dependencyContainer = Container("dependency-container", imageSourceDoesNotMatter(), command = Command.parse("dependency-command"), workingDirectory = "dependency-working-dir")
+            val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)), "some-task-specific-working-dir")
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(dependencyContainer.name))
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
             val graph = ContainerDependencyGraph(config, task, commandResolver)
@@ -132,6 +182,10 @@ object ContainerDependencyGraphSpec : Spek({
 
                 it("takes its command from the command resolver") {
                     assertThat(node.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                }
+
+                it("takes its working directory from the task") {
+                    assertThat(node.workingDirectory, equalTo(runConfig.workingDiretory))
                 }
 
                 it("takes the additional environment variables from the task") {
@@ -164,6 +218,10 @@ object ContainerDependencyGraphSpec : Spek({
 
                 it("takes its command from the command resolver") {
                     assertThat(node.command, equalTo(commandResolver.resolveCommand(dependencyContainer, task)))
+                }
+
+                it("takes its working directory from the container configuration") {
+                    assertThat(node.workingDirectory, equalTo(dependencyContainer.workingDirectory))
                 }
 
                 it("does not take the additional environment variables from the task") {

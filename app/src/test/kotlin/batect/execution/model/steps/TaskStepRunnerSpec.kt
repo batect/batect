@@ -294,12 +294,13 @@ object TaskStepRunnerSpec : Spek({
                 val container = Container("some-container", imageSourceDoesNotMatter())
                 val otherContainer = Container("some-other-container", imageSourceDoesNotMatter())
                 val command = Command.parse("do-stuff")
+                val workingDirectory = "some-dir"
                 val additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value"))
                 val additionalPortMappings = setOf(PortMapping(123, 456))
                 val image = DockerImage("some-image")
                 val network = DockerNetwork("some-network")
 
-                val step = CreateContainerStep(container, command, additionalEnvironmentVariables, additionalPortMappings, setOf(container, otherContainer), image, network)
+                val step = CreateContainerStep(container, command, workingDirectory, additionalEnvironmentVariables, additionalPortMappings, setOf(container, otherContainer), image, network)
                 val request = DockerContainerCreationRequest(image, network, command.parsedCommand, "some-container", "some-container", emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig(), null)
 
                 beforeEachTest {
@@ -308,6 +309,7 @@ object TaskStepRunnerSpec : Spek({
                         image,
                         network,
                         command,
+                        workingDirectory,
                         additionalEnvironmentVariables,
                         runAsCurrentUserConfiguration.volumeMounts,
                         additionalPortMappings,

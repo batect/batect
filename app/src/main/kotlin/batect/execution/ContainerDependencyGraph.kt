@@ -72,10 +72,20 @@ data class ContainerDependencyGraph(val config: Configuration, val task: Task, v
 
             val dependencyNodes = resolveDependencies(dependencies, nodesAlreadyCreated, newPath)
             val command = containerCommandResolver.resolveCommand(container, task)
+            val workingDirectory = workingDirectory(isRootNode, container, task)
             val additionalEnvironmentVariables = additionalEnvironmentVariables(isRootNode)
             val additionalPortMappings = additionalPortMappings(isRootNode)
 
-            ContainerDependencyGraphNode(container, command, additionalEnvironmentVariables, additionalPortMappings, isRootNode, dependencyNodes, this)
+            ContainerDependencyGraphNode(
+                container,
+                command,
+                workingDirectory,
+                additionalEnvironmentVariables,
+                additionalPortMappings,
+                isRootNode,
+                dependencyNodes,
+                this
+            )
         }
     }
 
@@ -143,11 +153,18 @@ data class ContainerDependencyGraph(val config: Configuration, val task: Task, v
         } else {
             emptySet()
         }
+
+    private fun workingDirectory(isRootNode: Boolean, container: Container, task: Task): String? = if (isRootNode) {
+        task.runConfiguration.workingDiretory ?: container.workingDirectory
+    } else {
+        container.workingDirectory
+    }
 }
 
 data class ContainerDependencyGraphNode(
     val container: Container,
     val command: Command?,
+    val workingDirectory: String?,
     val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression>,
     val additionalPortMappings: Set<PortMapping>,
     val isRootNode: Boolean,

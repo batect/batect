@@ -142,6 +142,7 @@ class TaskStepRunner(
                 step.image,
                 step.network,
                 step.command,
+                step.workingDirectory,
                 step.additionalEnvironmentVariables,
                 runAsCurrentUserConfiguration.volumeMounts,
                 step.additionalPortMappings,

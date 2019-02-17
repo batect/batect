@@ -37,6 +37,14 @@ Specifies what to do when this task starts:
 
     Available since v0.13.
 
+* `working_directory` Working directory to use for this task's container.
+
+    Overrides any working directory on the container definition and the image's default working directory. If no working directory is provided here,
+    [the working directory specified on the container definition](Containers.md#working_directory) is used if there is one, otherwise the image's default
+    working directory is used.
+
+    Available since v0.26.
+
 ## `dependencies`
 List of other containers that should be started and healthy before starting the task container given in `run`.
 

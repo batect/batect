@@ -149,6 +149,11 @@
         "ports": {
           "description": "List of port mappings to create for the container, in addition to those defined on the container itself",
           "$ref": "#/definitions/portMappingList"
+        },
+        "working_directory": {
+          "type": "string",
+          "description": "Working directory to start the container in",
+          "minLength": 1
         }
       },
       "required": [

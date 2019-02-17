@@ -51,7 +51,14 @@ class RunStagePlanner(private val logger: Logger) {
     private fun stepsFor(node: ContainerDependencyGraphNode, allContainersInNetwork: Set<Container>): Set<TaskStepRule> {
         return startupRulesFor(node) +
             imageCreationRuleFor(node.container) +
-            CreateContainerStepRule(node.container, node.command, node.additionalEnvironmentVariables, node.additionalPortMappings, allContainersInNetwork)
+            CreateContainerStepRule(
+                node.container,
+                node.command,
+                node.workingDirectory,
+                node.additionalEnvironmentVariables,
+                node.additionalPortMappings,
+                allContainersInNetwork
+            )
     }
 
     private fun imageCreationRuleFor(container: Container): TaskStepRule {

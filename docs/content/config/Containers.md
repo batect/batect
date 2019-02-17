@@ -88,6 +88,8 @@ Working directory to start the container in.
 
 If not provided, the default working directory for the image will be used.
 
+Both of these can be overridden for an individual task by specifying a [`working_directory` at the task level](Tasks.md#run).
+
 ## `volumes`
 List of volume mounts to create for the container.
 

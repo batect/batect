@@ -47,10 +47,11 @@ object CreateContainerStepRuleSpec : Spek({
             val container = Container("the-container", PullImage(imageName))
             val otherContainer = Container("the-other-container", imageSourceDoesNotMatter())
             val command = Command.parse("the-command")
+            val workingDirectory = "some-working-dir"
             val additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value"))
             val additionalPortMappings = setOf(PortMapping(123, 456))
             val allContainersInNetwork = setOf(container, otherContainer)
-            val rule = CreateContainerStepRule(container, command, additionalEnvironmentVariables, additionalPortMappings, allContainersInNetwork)
+            val rule = CreateContainerStepRule(container, command, workingDirectory, additionalEnvironmentVariables, additionalPortMappings, allContainersInNetwork)
             val events by createForEachTest { mutableSetOf<TaskEvent>() }
 
             given("the task network has been created") {
@@ -68,6 +69,7 @@ object CreateContainerStepRuleSpec : Spek({
                             assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(
                                 container,
                                 command,
+                                workingDirectory,
                                 additionalEnvironmentVariables,
                                 additionalPortMappings,
                                 allContainersInNetwork,
@@ -116,10 +118,11 @@ object CreateContainerStepRuleSpec : Spek({
             val container = Container("the-container", BuildImage("/some-image-directory"))
             val otherContainerInNetwork = Container("the-other-container", imageSourceDoesNotMatter())
             val command = Command.parse("the-command")
+            val workingDirectory = "some-working-dir"
             val additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value"))
             val additionalPortMappings = setOf(PortMapping(123, 456))
             val allContainersInNetwork = setOf(container, otherContainerInNetwork)
-            val rule = CreateContainerStepRule(container, command, additionalEnvironmentVariables, additionalPortMappings, allContainersInNetwork)
+            val rule = CreateContainerStepRule(container, command, workingDirectory, additionalEnvironmentVariables, additionalPortMappings, allContainersInNetwork)
             val events by createForEachTest { mutableSetOf<TaskEvent>() }
 
             given("the task network has been created") {
@@ -137,6 +140,7 @@ object CreateContainerStepRuleSpec : Spek({
                             assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(
                                 container,
                                 command,
+                                workingDirectory,
                                 additionalEnvironmentVariables,
                                 additionalPortMappings,
                                 allContainersInNetwork,
@@ -184,26 +188,27 @@ object CreateContainerStepRuleSpec : Spek({
         describe("toString()") {
             val container = Container("the-container", imageSourceDoesNotMatter())
             val otherContainer = Container("the-other-container", imageSourceDoesNotMatter())
+            val workingDirectory = "some-working-dir"
             val additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value"))
             val additionalPortMappings = setOf(PortMapping(123, 456))
             val allContainersInNetwork = setOf(container, otherContainer)
 
             given("an explicit command is provided") {
                 val command = Command.parse("the-command some-arg")
-                val rule = CreateContainerStepRule(container, command, additionalEnvironmentVariables, additionalPortMappings, allContainersInNetwork)
+                val rule = CreateContainerStepRule(container, command, workingDirectory, additionalEnvironmentVariables, additionalPortMappings, allContainersInNetwork)
 
                 it("returns a human-readable representation of itself") {
-                    assertThat(rule.toString(), equalTo("CreateContainerStepRule(container: 'the-container', command: [the-command, some-arg], " +
+                    assertThat(rule.toString(), equalTo("CreateContainerStepRule(container: 'the-container', command: [the-command, some-arg], working directory: some-working-dir, " +
                         "additional environment variables: [SOME_VAR=LiteralValue(value: 'some value')], additional port mappings: [123:456], all containers in network: ['the-container', 'the-other-container'])"))
                 }
             }
 
             given("an explicit command is not provided") {
                 val command = null
-                val rule = CreateContainerStepRule(container, command, additionalEnvironmentVariables, additionalPortMappings, allContainersInNetwork)
+                val rule = CreateContainerStepRule(container, command, workingDirectory, additionalEnvironmentVariables, additionalPortMappings, allContainersInNetwork)
 
                 it("returns a human-readable representation of itself") {
-                    assertThat(rule.toString(), equalTo("CreateContainerStepRule(container: 'the-container', command: null, " +
+                    assertThat(rule.toString(), equalTo("CreateContainerStepRule(container: 'the-container', command: null, working directory: some-working-dir, " +
                         "additional environment variables: [SOME_VAR=LiteralValue(value: 'some value')], additional port mappings: [123:456], all containers in network: ['the-container', 'the-other-container'])"))
                 }
             }

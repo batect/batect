@@ -165,6 +165,7 @@ object ConfigurationLoaderSpec : Spek({
                 |        - 123:456
                 |        - local: 1000
                 |          container: 2000
+                |      working_directory: /some/dir
                 """.trimMargin()
 
             val config = loadConfiguration(configString)
@@ -190,6 +191,7 @@ object ConfigurationLoaderSpec : Spek({
                     "OTHER_VALUE" to LiteralValue("the value")
                 )))
                 assertThat(task.runConfiguration.additionalPortMappings, equalTo(setOf(PortMapping(123, 456), PortMapping(1000, 2000))))
+                assertThat(task.runConfiguration.workingDiretory, equalTo("/some/dir"))
                 assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, isEmptyString)
@@ -221,6 +223,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.name, equalTo("first_task"))
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, absent())
+                assertThat(task.runConfiguration.workingDiretory, absent())
                 assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, isEmptyString)

@@ -42,6 +42,7 @@ object CreateTaskNetworkStep : TaskStep() {
 data class CreateContainerStep(
     val container: Container,
     val command: Command?,
+    val workingDirectory: String?,
     val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression>,
     val additionalPortMappings: Set<PortMapping>,
     val allContainersInNetwork: Set<Container>,
@@ -50,6 +51,7 @@ data class CreateContainerStep(
 ) : TaskStep() {
     override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', " +
         "command: ${command?.parsedCommand ?: "null"}, " +
+        "working directory: ${workingDirectory ?: "null"}, " +
         "additional environment variables: [${additionalEnvironmentVariables.map { "${it.key}=${it.value}" }.joinToString(", ")}], " +
         "additional port mappings: $additionalPortMappings, " +
         "all containers in network: ${allContainersInNetwork.map { "'${it.name}'" }}, " +

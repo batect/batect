@@ -47,8 +47,8 @@ object EventLoggerProviderSpec : Spek({
         val container2 = Container("container-2", imageSourceDoesNotMatter())
         val graph = mock<ContainerDependencyGraph> {
             on { allNodes } doReturn setOf(
-                ContainerDependencyGraphNode(container1, null, emptyMap(), emptySet(), false, emptySet(), mock()),
-                ContainerDependencyGraphNode(container2, null, emptyMap(), emptySet(), false, emptySet(), mock())
+                ContainerDependencyGraphNode(container1, null, null, emptyMap(), emptySet(), false, emptySet(), mock()),
+                ContainerDependencyGraphNode(container2, null, null, emptyMap(), emptySet(), false, emptySet(), mock())
             )
         }
 

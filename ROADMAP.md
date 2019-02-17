@@ -33,7 +33,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * allow overriding working directory at the task level
 * support build arguments
 * some way to set variables once for the whole project (eg. Google Cloud SDK version, shared path) and reference these in environment variables or build args
-* improve the formatting of the duration shown at the end of a task (eg. 600.0s -> 10m 0s)
 
 ### Other
 * replace factories with references to constructors

@@ -241,7 +241,7 @@ object SimpleEventLoggerSpec : Spek({
             logger.onTaskFinished("some-task", 234, Duration.ofMillis(2500))
 
             it("prints a message to the output") {
-                verify(console).println(Text.white(Text.bold("some-task") + Text(" finished with exit code 234 in 2.5 seconds.")))
+                verify(console).println(Text.white(Text.bold("some-task") + Text(" finished with exit code 234 in 2.5s.")))
             }
         }
 

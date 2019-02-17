@@ -348,7 +348,7 @@ object FancyEventLoggerSpec : Spek({
             it("prints a message to the output") {
                 inOrder(console, cleanupProgressDisplay) {
                     verify(cleanupProgressDisplay).clear(console)
-                    verify(console).println(Text.white(Text.bold("some-task") + Text(" finished with exit code 234 in 2.5 seconds.")))
+                    verify(console).println(Text.white(Text.bold("some-task") + Text(" finished with exit code 234 in 2.5s.")))
                 }
             }
         }

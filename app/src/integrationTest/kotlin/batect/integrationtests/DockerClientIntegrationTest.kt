@@ -72,7 +72,7 @@ object DockerClientIntegrationTest : Spek({
 
         val logger = mock<Logger>()
         val processRunner = ProcessRunner(logger)
-        val httpConfig = DockerHttpConfig(OkHttpClient())
+        val httpConfig = DockerHttpConfig(OkHttpClient(), DockerHttpConfig.defaultDockerHost)
         val api = DockerAPI(httpConfig, logger)
         val posix = POSIXFactory.getNativePOSIX()
         val nativeMethods = NativeMethods(posix)

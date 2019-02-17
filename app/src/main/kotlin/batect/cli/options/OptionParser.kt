@@ -88,6 +88,9 @@ interface OptionParserContainer {
     fun <V> valueOption(longName: String, description: String, defaultValue: V, valueConverter: (String) -> ValueConversionResult<V>, shortName: Char? = null) =
         ValueOption(longName, description, StaticDefaultValueProvider(defaultValue), valueConverter, shortName)
 
+    fun valueOption(longName: String, description: String, defaultValueProvider: DefaultValueProvider<String>, shortName: Char? = null) =
+        ValueOption(longName, description, defaultValueProvider, ValueConverters::string, shortName)
+
     fun valueOption(longName: String, description: String, defaultValueProvider: DefaultValueProvider<Int>, valueConverter: (String) -> ValueConversionResult<Int>, shortName: Char? = null) =
         ValueOption(longName, description, defaultValueProvider, valueConverter, shortName)
 

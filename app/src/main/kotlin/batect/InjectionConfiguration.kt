@@ -24,6 +24,7 @@ import batect.cli.commands.ListTasksCommand
 import batect.cli.commands.RunTaskCommand
 import batect.cli.commands.UpgradeCommand
 import batect.cli.commands.VersionInfoCommand
+import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.config.io.ConfigurationLoader
 import batect.docker.DockerAPI
 import batect.docker.DockerClient
@@ -121,7 +122,8 @@ enum class StreamType {
 
 private val cliModule = Kodein.Module("cli") {
     bind<CommandFactory>() with singleton { CommandFactory() }
-    bind<CommandLineOptionsParser>() with singleton { CommandLineOptionsParser(instance()) }
+    bind<CommandLineOptionsParser>() with singleton { CommandLineOptionsParser(instance(), instance()) }
+    bind<EnvironmentVariableDefaultValueProviderFactory>() with singleton { EnvironmentVariableDefaultValueProviderFactory() }
 
     bind<RunTaskCommand>() with singletonWithLogger { logger ->
         RunTaskCommand(
@@ -161,7 +163,7 @@ private val dockerModule = Kodein.Module("docker") {
     bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
     bind<DockerImageBuildContextFactory>() with singleton { DockerImageBuildContextFactory(instance()) }
     bind<DockerHostNameResolver>() with singleton { DockerHostNameResolver(instance(), instance()) }
-    bind<DockerHttpConfig>() with singleton { DockerHttpConfig(instance()) }
+    bind<DockerHttpConfig>() with singleton { DockerHttpConfig(instance(), commandLineOptions().dockerHost) }
     bind<DockerRegistryCredentialsConfigurationFile>() with singletonWithLogger { logger -> DockerRegistryCredentialsConfigurationFile(instance(), instance(), logger) }
     bind<DockerRegistryCredentialsProvider>() with singleton { DockerRegistryCredentialsProvider(instance(), instance(), instance()) }
     bind<DockerRegistryDomainResolver>() with singleton { DockerRegistryDomainResolver() }

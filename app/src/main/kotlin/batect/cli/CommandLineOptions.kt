@@ -17,6 +17,7 @@
 package batect.cli
 
 import batect.cli.options.defaultvalues.LevelOfParallelismDefaultValueProvider
+import batect.docker.DockerHttpConfig
 import batect.logging.FileLogSink
 import batect.logging.LogSink
 import batect.logging.NullLogSink
@@ -44,7 +45,8 @@ data class CommandLineOptions(
     val disableCleanupAfterFailure: Boolean = false,
     val dontPropagateProxyEnvironmentVariables: Boolean = false,
     val taskName: String? = null,
-    val additionalTaskCommandArguments: Iterable<String> = emptyList()
+    val additionalTaskCommandArguments: Iterable<String> = emptyList(),
+    val dockerHost: String = DockerHttpConfig.defaultDockerHost
 ) {
     fun extend(originalKodein: DKodein): DKodein = Kodein.direct {
         extend(originalKodein, copy = Copy.All)

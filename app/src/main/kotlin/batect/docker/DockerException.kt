@@ -33,3 +33,4 @@ class NetworkCreationFailedException(val outputFromDocker: String) : DockerExcep
 class NetworkDeletionFailedException(val networkId: String, val outputFromDocker: String) : DockerException("Deletion of network '$networkId' failed: $outputFromDocker")
 class DockerRegistryCredentialsException(message: String, cause: Throwable? = null) : DockerException(message, cause)
 class ContainerStoppedException(message: String) : DockerException(message)
+class InvalidDockerConfigurationException(message: String) : DockerException(message)

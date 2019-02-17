@@ -16,6 +16,7 @@
 
 package batect.cli
 
+import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
 import batect.os.PathResolverFactory
@@ -46,9 +47,11 @@ object CommandLineOptionsParserSpec : Spek({
             on { createResolverForCurrentDirectory() } doReturn pathResolver
         }
 
+        val environmentVariableDefaultValueProviderFactory = EnvironmentVariableDefaultValueProviderFactory(emptyMap())
+
         given("no arguments") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory).parse(emptyList())
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory).parse(emptyList())
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("No task name provided.")))
@@ -58,7 +61,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a single argument for the task name") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory).parse(listOf("some-task"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory).parse(listOf("some-task"))
 
                 it("returns a set of options with just the task name populated") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
@@ -70,7 +73,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("multiple arguments without a '--' prefix") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory).parse(listOf("some-task", "some-extra-arg"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory).parse(listOf("some-task", "some-extra-arg"))
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed(
@@ -83,7 +86,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("multiple arguments with a '--' prefix") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory).parse(listOf("some-task", "--", "some-extra-arg"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory).parse(listOf("some-task", "--", "some-extra-arg"))
 
                 it("returns a set of options with the task name and additional arguments populated") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
@@ -96,7 +99,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a flag followed by a single argument") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory).parse(listOf("--no-color", "some-task"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory).parse(listOf("--no-color", "some-task"))
 
                 it("returns a set of options with the task name populated and the flag set") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
@@ -109,7 +112,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a flag followed by multiple arguments") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory).parse(listOf("--no-color", "some-task", "some-extra-arg"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory).parse(listOf("--no-color", "some-task", "some-extra-arg"))
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed(
@@ -122,7 +125,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("colour output has been disabled and fancy output mode has been selected") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory).parse(listOf("--no-color", "--output=fancy", "some-task", "some-extra-arg"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory).parse(listOf("--no-color", "--output=fancy", "some-task", "some-extra-arg"))
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("Fancy output mode cannot be used when colored output has been disabled.")))
@@ -150,11 +153,12 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--level-of-parallelism=900", "some-task") to CommandLineOptions(levelOfParallelism = 900, taskName = "some-task"),
             listOf("-p=900", "some-task") to CommandLineOptions(levelOfParallelism = 900, taskName = "some-task"),
             listOf("--no-cleanup-after-failure", "some-task") to CommandLineOptions(disableCleanupAfterFailure = true, taskName = "some-task"),
-            listOf("--no-proxy-vars", "some-task") to CommandLineOptions(dontPropagateProxyEnvironmentVariables = true, taskName = "some-task")
+            listOf("--no-proxy-vars", "some-task") to CommandLineOptions(dontPropagateProxyEnvironmentVariables = true, taskName = "some-task"),
+            listOf("--docker-host=some-host", "some-task") to CommandLineOptions(dockerHost = "some-host", taskName = "some-task")
         ).forEach { args, expectedResult ->
             given("the arguments $args") {
                 on("parsing the command line") {
-                    val result = CommandLineOptionsParser(pathResolverFactory).parse(args)
+                    val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory).parse(args)
 
                     it("returns a set of options with the expected options populated") {
                         assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(expectedResult)))

@@ -22,15 +22,66 @@ import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import java.net.Proxy
 
-class DockerHttpConfig(baseClient: OkHttpClient) {
-    val client: OkHttpClient = baseClient.newBuilder()
-        .proxy(Proxy.NO_PROXY)
-        .socketFactory(UnixSocketFactory())
-        .dns(UnixSocketDns())
-        .build()
+class DockerHttpConfig(
+    private val baseClient: OkHttpClient,
+    private val dockerHost: String
+) {
+    private val isUnixSocket = dockerHost.startsWith("unix://")
+    val client: OkHttpClient = buildClient()
+    val baseUrl: HttpUrl = buildBaseUrl()
 
-    val baseUrl: HttpUrl = HttpUrl.Builder()
-        .scheme("http")
-        .host(UnixSocketDns.encodePath("/var/run/docker.sock"))
-        .build()
+    private fun buildClient(): OkHttpClient {
+        if (isUnixSocket) {
+            return buildUnixSocketClient()
+        }
+
+        return baseClient
+    }
+
+    private fun buildUnixSocketClient(): OkHttpClient {
+        return baseClient.newBuilder()
+            .proxy(Proxy.NO_PROXY)
+            .socketFactory(UnixSocketFactory())
+            .dns(UnixSocketDns())
+            .build()
+    }
+
+    private fun buildBaseUrl(): HttpUrl {
+        if (isUnixSocket) {
+            return buildUnixSocketBaseUrl()
+        }
+
+        return HttpUrl.get(cleanUrl())
+    }
+
+    private fun buildUnixSocketBaseUrl(): HttpUrl {
+        val socketPath = dockerHost.replace("^unix://".toRegex(), "")
+
+        return HttpUrl.Builder()
+            .scheme("http")
+            .host(UnixSocketDns.encodePath(socketPath))
+            .build()
+    }
+
+    private fun cleanUrl(): String {
+        if (dockerHost.contains("://")) {
+            val scheme = dockerHost.substringBefore("://")
+
+            if (scheme !in setOf("tcp", "http")) {
+                throw InvalidDockerConfigurationException("The scheme '$scheme' in '$dockerHost' is not a valid Docker host scheme.")
+            }
+
+            return dockerHost.replace("^tcp://".toRegex(), "http://")
+        }
+
+        if (dockerHost.matches(""":\d+""".toRegex())) {
+            return "http://0.0.0.0$dockerHost"
+        }
+
+        return "http://$dockerHost"
+    }
+
+    companion object {
+        const val defaultDockerHost = "unix:///var/run/docker.sock"
+    }
 }

@@ -20,13 +20,18 @@ import batect.cli.options.OptionParser
 import batect.cli.options.OptionParserContainer
 import batect.cli.options.OptionsParsingResult
 import batect.cli.options.ValueConverters
+import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.cli.options.defaultvalues.LevelOfParallelismDefaultValueProvider
+import batect.docker.DockerHttpConfig
 import batect.os.PathResolverFactory
 import batect.ui.OutputStyle
 import java.nio.file.Path
 import java.nio.file.Paths
 
-class CommandLineOptionsParser(pathResolverFactory: PathResolverFactory) : OptionParserContainer {
+class CommandLineOptionsParser(
+    pathResolverFactory: PathResolverFactory,
+    environmentVariableDefaultValueProviderFactory: EnvironmentVariableDefaultValueProviderFactory
+) : OptionParserContainer {
     override val optionParser: OptionParser = OptionParser()
 
     companion object {
@@ -74,6 +79,12 @@ class CommandLineOptionsParser(pathResolverFactory: PathResolverFactory) : Optio
 
     private val disableCleanupAfterFailure: Boolean by flagOption(disableCleanupAfterFailureFlagName, "If an error occurs before the task runs, leave created containers running so that the issue can be investigated.")
     private val dontPropagateProxyEnvironmentVariables: Boolean by flagOption("no-proxy-vars", "Don't propagate proxy-related environment variables such as http_proxy and no_proxy to image builds or containers.")
+
+    private val dockerHost: String by valueOption(
+        "docker-host",
+        "Docker host to use, in the format 'unix:///var/run/docker.sock', 'tcp://1.2.3.4:5678' or 'http://1.2.3.4:5678'.",
+        environmentVariableDefaultValueProviderFactory.create("DOCKER_HOST", DockerHttpConfig.defaultDockerHost)
+    )
 
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {
         when (val result = optionParser.parseOptions(args)) {
@@ -127,7 +138,8 @@ class CommandLineOptionsParser(pathResolverFactory: PathResolverFactory) : Optio
         disableCleanupAfterFailure = disableCleanupAfterFailure,
         dontPropagateProxyEnvironmentVariables = dontPropagateProxyEnvironmentVariables,
         taskName = taskName,
-        additionalTaskCommandArguments = additionalTaskCommandArguments
+        additionalTaskCommandArguments = additionalTaskCommandArguments,
+        dockerHost = dockerHost
     )
 }
 

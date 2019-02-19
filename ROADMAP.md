@@ -56,7 +56,7 @@ If there's something you're really keen to see, pull requests are always welcome
     * how to run something when the container starts, regardless of the task's command line (eg. `ENTRYPOINT` with shell script and `exec`, similar to the example in [the docs](https://docs.docker.com/engine/reference/builder/#entrypoint))
   * importance of idempotency
   * improve the getting started guide (it's way too wordy)
-  * explain the task lifecycle (read config, construct graph, pull images / build images, start containers, wait for healthy etc.)
+  * "what's going on beneath the hood?" - explain the task lifecycle (read config, construct graph, pull images / build images, create network, start containers, wait for healthy etc.)
   * add note about increasing default CPU and memory limits when using Docker on OS X
   * how to introduce batect to an existing project
 * switch to coroutines for parallel execution?

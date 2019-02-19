@@ -21,6 +21,8 @@ developer has to remember to re-run the provisioning step if the configuration c
 ## ...using shell scripts to drive Docker?
 
 While it's certainly possible, it quickly gets unwieldy and is difficult to effectively parallelise tasks that can run in parallel.
+It is also difficult to ensure that all resources created during the task, such as containers and networks, are always correctly
+cleaned up once the task completes, especially if the task fails.
 
 ## ...Docker Compose?
 

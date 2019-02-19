@@ -1,5 +1,12 @@
 # Comparison with other tools
 
+!!! question "Feedback wanted"
+
+    Are you wondering about how batect compares to other tools? Do you have your own reasons for or against batect compared
+    to one of the tools mentioned below?
+
+    Please [file an issue](https://github.com/charleskorn/batect/issues) with your questions, comments and feedback.
+
 How does batect compare to...
 
 ## ...Vagrant?

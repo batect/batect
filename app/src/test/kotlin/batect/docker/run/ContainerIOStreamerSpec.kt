@@ -18,14 +18,13 @@ package batect.docker.run
 
 import batect.testutils.CloseableByteArrayOutputStream
 import batect.testutils.equalTo
+import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.mock
 import okhttp3.Response
 import okio.Okio
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream

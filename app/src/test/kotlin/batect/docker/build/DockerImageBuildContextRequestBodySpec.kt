@@ -18,6 +18,9 @@ package batect.docker.build
 
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.hasSize
@@ -26,11 +29,8 @@ import com.natpryce.hamkrest.isEmptyString
 import okhttp3.MediaType
 import okio.Okio
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.nio.charset.Charset
@@ -96,11 +96,11 @@ object DockerImageBuildContextRequestBodySpec : Spek({
                 val requestBody by createForEachTest { DockerImageBuildContextRequestBody(context) }
 
                 on("writing the request body") {
-                    val outputStream = ByteArrayOutputStream()
-                    val sink = Okio.buffer(Okio.sink(outputStream))
-                    requestBody.writeTo(sink)
+                    val outputStream by createForEachTest { ByteArrayOutputStream() }
+                    val sink by createForEachTest { Okio.buffer(Okio.sink(outputStream)) }
+                    beforeEachTest { requestBody.writeTo(sink) }
 
-                    val entries = readAllTarEntries(outputStream)
+                    val entries by runForEachTest { readAllTarEntries(outputStream) }
 
                     it("writes a single entry to the output stream") {
                         assertThat(entries, hasSize(equalTo(1)))
@@ -146,11 +146,11 @@ object DockerImageBuildContextRequestBodySpec : Spek({
                 val requestBody by createForEachTest { DockerImageBuildContextRequestBody(context) }
 
                 on("writing the request body") {
-                    val outputStream = ByteArrayOutputStream()
-                    val sink = Okio.buffer(Okio.sink(outputStream))
-                    requestBody.writeTo(sink)
+                    val outputStream by createForEachTest { ByteArrayOutputStream() }
+                    val sink by createForEachTest { Okio.buffer(Okio.sink(outputStream)) }
+                    beforeEachTest { requestBody.writeTo(sink) }
 
-                    val entries = readAllTarEntries(outputStream)
+                    val entries by runForEachTest { readAllTarEntries(outputStream) }
 
                     it("writes a single entry to the output stream") {
                         assertThat(entries, hasSize(equalTo(1)))
@@ -179,11 +179,11 @@ object DockerImageBuildContextRequestBodySpec : Spek({
                 val requestBody by createForEachTest { DockerImageBuildContextRequestBody(context) }
 
                 on("writing the request body") {
-                    val outputStream = ByteArrayOutputStream()
-                    val sink = Okio.buffer(Okio.sink(outputStream))
-                    requestBody.writeTo(sink)
+                    val outputStream by createForEachTest { ByteArrayOutputStream() }
+                    val sink by createForEachTest { Okio.buffer(Okio.sink(outputStream)) }
+                    beforeEachTest { requestBody.writeTo(sink) }
 
-                    val entries = readAllTarEntries(outputStream)
+                    val entries by runForEachTest { readAllTarEntries(outputStream) }
 
                     it("writes a single entry to the output stream") {
                         assertThat(entries, hasSize(equalTo(1)))
@@ -226,11 +226,11 @@ object DockerImageBuildContextRequestBodySpec : Spek({
                 val requestBody by createForEachTest { DockerImageBuildContextRequestBody(context) }
 
                 on("writing the request body") {
-                    val outputStream = ByteArrayOutputStream()
-                    val sink = Okio.buffer(Okio.sink(outputStream))
-                    requestBody.writeTo(sink)
+                    val outputStream by createForEachTest { ByteArrayOutputStream() }
+                    val sink by createForEachTest { Okio.buffer(Okio.sink(outputStream)) }
+                    beforeEachTest { requestBody.writeTo(sink) }
 
-                    val entries = readAllTarEntries(outputStream)
+                    val entries by runForEachTest { readAllTarEntries(outputStream) }
 
                     it("writes both the directory and file to the output stream") {
                         assertThat(entries.map { it.name }, equalTo(listOf(
@@ -259,11 +259,11 @@ object DockerImageBuildContextRequestBodySpec : Spek({
                 val requestBody by createForEachTest { DockerImageBuildContextRequestBody(context) }
 
                 on("writing the request body") {
-                    val outputStream = ByteArrayOutputStream()
-                    val sink = Okio.buffer(Okio.sink(outputStream))
-                    requestBody.writeTo(sink)
+                    val outputStream by createForEachTest { ByteArrayOutputStream() }
+                    val sink by createForEachTest { Okio.buffer(Okio.sink(outputStream)) }
+                    beforeEachTest { requestBody.writeTo(sink) }
 
-                    val entries = readAllTarEntries(outputStream)
+                    val entries by runForEachTest { readAllTarEntries(outputStream) }
 
                     it("writes a single entry to the output stream") {
                         assertThat(entries, hasSize(equalTo(1)))

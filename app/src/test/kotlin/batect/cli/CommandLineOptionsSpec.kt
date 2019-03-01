@@ -21,20 +21,19 @@ import batect.logging.LogMessageWriter
 import batect.logging.LogSink
 import batect.logging.NullLogSink
 import batect.logging.StandardAdditionalDataSource
+import batect.testutils.given
+import batect.testutils.on
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockitokotlin2.mock
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
 import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object CommandLineOptionsSpec : Spek({
     describe("a set of command line options") {

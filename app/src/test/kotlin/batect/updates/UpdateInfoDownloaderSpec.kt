@@ -19,6 +19,8 @@ package batect.updates
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.mockGet
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withCause
 import batect.testutils.withMessage
 import batect.utils.Version
@@ -33,10 +35,8 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import okhttp3.Call
 import okhttp3.OkHttpClient
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.io.IOException
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -52,7 +52,8 @@ object UpdateInfoDownloaderSpec : Spek({
         val downloader by createForEachTest { UpdateInfoDownloader(client, logger, dateTimeProvider) }
 
         on("when the latest release information can be retrieved successfully") {
-            val responseBody = """{
+            beforeEachTest {
+                val responseBody = """{
                       "url": "https://api.github.com/repos/charleskorn/batect/releases/7936494",
                       "html_url": "https://github.com/charleskorn/batect/releases/tag/0.3",
                       "id": 7936494,
@@ -66,9 +67,10 @@ object UpdateInfoDownloaderSpec : Spek({
                       ]
                   }""".trimIndent()
 
-            client.mockGet(downloadUrl, responseBody)
+                client.mockGet(downloadUrl, responseBody)
+            }
 
-            val updateInfo = downloader.getLatestVersionInfo()
+            val updateInfo by runForEachTest { downloader.getLatestVersionInfo() }
 
             it("returns the version number of the latest version") {
                 assertThat(updateInfo.version, equalTo(Version(0, 3, 0)))
@@ -88,7 +90,8 @@ object UpdateInfoDownloaderSpec : Spek({
         }
 
         on("when the latest release information does not include any assets") {
-            val responseBody = """{
+            beforeEachTest {
+                val responseBody = """{
                       "url": "https://api.github.com/repos/charleskorn/batect/releases/7936494",
                       "html_url": "https://github.com/charleskorn/batect/releases/tag/0.3",
                       "id": 7936494,
@@ -96,9 +99,10 @@ object UpdateInfoDownloaderSpec : Spek({
                       "assets": []
                   }""".trimIndent()
 
-            client.mockGet(downloadUrl, responseBody)
+                client.mockGet(downloadUrl, responseBody)
+            }
 
-            val updateInfo = downloader.getLatestVersionInfo()
+            val updateInfo by runForEachTest { downloader.getLatestVersionInfo() }
 
             it("returns no script download URL") {
                 assertThat(updateInfo.scriptDownloadUrl, absent())
@@ -106,7 +110,8 @@ object UpdateInfoDownloaderSpec : Spek({
         }
 
         on("when the latest release information does not an asset with the script name") {
-            val responseBody = """{
+            beforeEachTest {
+                val responseBody = """{
                       "url": "https://api.github.com/repos/charleskorn/batect/releases/7936494",
                       "html_url": "https://github.com/charleskorn/batect/releases/tag/0.3",
                       "id": 7936494,
@@ -120,9 +125,10 @@ object UpdateInfoDownloaderSpec : Spek({
                       ]
                   }""".trimIndent()
 
-            client.mockGet(downloadUrl, responseBody)
+                client.mockGet(downloadUrl, responseBody)
+            }
 
-            val updateInfo = downloader.getLatestVersionInfo()
+            val updateInfo by runForEachTest { downloader.getLatestVersionInfo() }
 
             it("returns no script download URL") {
                 assertThat(updateInfo.scriptDownloadUrl, absent())
@@ -130,7 +136,8 @@ object UpdateInfoDownloaderSpec : Spek({
         }
 
         on("when the latest release information does not an asset with the expected script content type") {
-            val responseBody = """{
+            beforeEachTest {
+                val responseBody = """{
                       "url": "https://api.github.com/repos/charleskorn/batect/releases/7936494",
                       "html_url": "https://github.com/charleskorn/batect/releases/tag/0.3",
                       "id": 7936494,
@@ -144,9 +151,10 @@ object UpdateInfoDownloaderSpec : Spek({
                       ]
                   }""".trimIndent()
 
-            client.mockGet(downloadUrl, responseBody)
+                client.mockGet(downloadUrl, responseBody)
+            }
 
-            val updateInfo = downloader.getLatestVersionInfo()
+            val updateInfo by runForEachTest { downloader.getLatestVersionInfo() }
 
             it("returns no script download URL") {
                 assertThat(updateInfo.scriptDownloadUrl, absent())
@@ -154,7 +162,7 @@ object UpdateInfoDownloaderSpec : Spek({
         }
 
         on("when the latest release information endpoint returns a HTTP error") {
-            client.mockGet(downloadUrl, "", 404)
+            beforeEachTest { client.mockGet(downloadUrl, "", 404) }
 
             it("throws an appropriate exception") {
                 assertThat({ downloader.getLatestVersionInfo() },
@@ -165,9 +173,11 @@ object UpdateInfoDownloaderSpec : Spek({
         on("when getting the latest release information fails") {
             val exception = IOException("Could not do what you asked because stuff happened.")
 
-            whenever(client.newCall(any())).then {
-                mock<Call> {
-                    on { execute() } doThrow exception
+            beforeEachTest {
+                whenever(client.newCall(any())).then {
+                    mock<Call> {
+                        on { execute() } doThrow exception
+                    }
                 }
             }
 

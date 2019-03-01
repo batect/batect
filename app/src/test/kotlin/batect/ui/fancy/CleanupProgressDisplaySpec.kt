@@ -18,16 +18,15 @@ package batect.ui.fancy
 
 import batect.execution.model.events.TaskEvent
 import batect.testutils.createForEachTest
+import batect.testutils.on
 import batect.ui.Console
 import batect.ui.text.TextRun
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object CleanupProgressDisplaySpec : Spek({
     describe("a cleanup progress display") {
@@ -43,7 +42,9 @@ object CleanupProgressDisplaySpec : Spek({
         val cleanupDisplay by createForEachTest { CleanupProgressDisplay(line) }
 
         on("printing progress information") {
-            cleanupDisplay.print(console)
+            beforeEachTest {
+                cleanupDisplay.print(console)
+            }
 
             it("prints the information from the progress line") {
                 verify(console).printLineLimitedToConsoleWidth(lineText)
@@ -51,7 +52,9 @@ object CleanupProgressDisplaySpec : Spek({
         }
 
         on("clearing progress previously printed to the console") {
-            cleanupDisplay.clear(console)
+            beforeEachTest {
+                cleanupDisplay.clear(console)
+            }
 
             it("moves back up to the text previously printed and clears that line") {
                 inOrder(console) {
@@ -64,7 +67,9 @@ object CleanupProgressDisplaySpec : Spek({
         on("receiving an event") {
             val event = mock<TaskEvent>()
 
-            cleanupDisplay.onEventPosted(event)
+            beforeEachTest {
+                cleanupDisplay.onEventPosted(event)
+            }
 
             it("passes the event to the progress line") {
                 verify(line).onEventPosted(event)

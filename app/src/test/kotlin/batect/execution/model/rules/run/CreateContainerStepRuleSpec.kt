@@ -32,13 +32,13 @@ import batect.execution.model.steps.CreateContainerStep
 import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object CreateContainerStepRuleSpec : Spek({
     describe("a create container step rule") {
@@ -63,7 +63,7 @@ object CreateContainerStepRuleSpec : Spek({
                     beforeEachTest { events.add(ImagePulledEvent(image)) }
 
                     on("evaluating the rule") {
-                        val result = rule.evaluate(events)
+                        val result by runForEachTest { rule.evaluate(events) }
 
                         it("returns a 'create container' step") {
                             assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(
@@ -84,7 +84,7 @@ object CreateContainerStepRuleSpec : Spek({
                     beforeEachTest { events.add(ImagePulledEvent(DockerImage("some-other-image"))) }
 
                     on("evaluating the rule") {
-                        val result = rule.evaluate(events)
+                        val result by runForEachTest { rule.evaluate(events) }
 
                         it("indicates that the step is not yet ready") {
                             assertThat(result, equalTo(TaskStepRuleEvaluationResult.NotReady))
@@ -94,7 +94,7 @@ object CreateContainerStepRuleSpec : Spek({
 
                 given("no images have been pulled") {
                     on("evaluating the rule") {
-                        val result = rule.evaluate(events)
+                        val result by runForEachTest { rule.evaluate(events) }
 
                         it("indicates that the step is not yet ready") {
                             assertThat(result, equalTo(TaskStepRuleEvaluationResult.NotReady))
@@ -105,7 +105,7 @@ object CreateContainerStepRuleSpec : Spek({
 
             given("the task network has not been created") {
                 on("evaluating the rule") {
-                    val result = rule.evaluate(events)
+                    val result by runForEachTest { rule.evaluate(events) }
 
                     it("indicates that the step is not yet ready") {
                         assertThat(result, equalTo(TaskStepRuleEvaluationResult.NotReady))
@@ -134,7 +134,7 @@ object CreateContainerStepRuleSpec : Spek({
                     beforeEachTest { events.add(ImageBuiltEvent("/some-image-directory", image)) }
 
                     on("evaluating the rule") {
-                        val result = rule.evaluate(events)
+                        val result by runForEachTest { rule.evaluate(events) }
 
                         it("returns a 'create container' step") {
                             assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(
@@ -155,7 +155,7 @@ object CreateContainerStepRuleSpec : Spek({
                     beforeEachTest { events.add(ImageBuiltEvent("/some-other-image-directory", DockerImage("some-other-image"))) }
 
                     on("evaluating the rule") {
-                        val result = rule.evaluate(events)
+                        val result by runForEachTest { rule.evaluate(events) }
 
                         it("indicates that the step is not yet ready") {
                             assertThat(result, equalTo(TaskStepRuleEvaluationResult.NotReady))
@@ -165,7 +165,7 @@ object CreateContainerStepRuleSpec : Spek({
 
                 given("no images have been built") {
                     on("evaluating the rule") {
-                        val result = rule.evaluate(events)
+                        val result by runForEachTest { rule.evaluate(events) }
 
                         it("indicates that the step is not yet ready") {
                             assertThat(result, equalTo(TaskStepRuleEvaluationResult.NotReady))
@@ -176,7 +176,7 @@ object CreateContainerStepRuleSpec : Spek({
 
             given("the task network has not been created") {
                 on("evaluating the rule") {
-                    val result = rule.evaluate(events)
+                    val result by runForEachTest { rule.evaluate(events) }
 
                     it("indicates that the step is not yet ready") {
                         assertThat(result, equalTo(TaskStepRuleEvaluationResult.NotReady))

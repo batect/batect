@@ -17,6 +17,8 @@
 package batect.ui
 
 import batect.testutils.createForEachTest
+import batect.testutils.given
+import batect.testutils.on
 import batect.testutils.withMessage
 import batect.ui.text.Text
 import batect.ui.text.TextRun
@@ -25,11 +27,8 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 
@@ -46,7 +45,7 @@ object ConsoleSpec : Spek({
             val console by createForEachTest { Console(PrintStream(output), enableComplexOutput = true, consoleInfo = mock()) }
 
             on("printing text") {
-                console.print("This is some text")
+                beforeEachTest { console.print("This is some text") }
 
                 it("writes the text directly to the output") {
                     assertThat(output.toString(), equalTo("This is some text"))
@@ -54,7 +53,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing a line of text") {
-                console.println("This is some text")
+                beforeEachTest { console.println("This is some text") }
 
                 it("writes the text directly to the output") {
                     assertThat(output.toString(), equalTo("This is some text\n"))
@@ -62,7 +61,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing a blank line of text") {
-                console.println()
+                beforeEachTest { console.println() }
 
                 it("writes a blank line directly to the output") {
                     assertThat(output.toString(), equalTo("\n"))
@@ -70,7 +69,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing unformatted text") {
-                console.print(Text("Hello"))
+                beforeEachTest { console.print(Text("Hello")) }
 
                 it("writes that text directly to the output") {
                     assertThat(output.toString(), equalTo("Hello"))
@@ -78,7 +77,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing unformatted text, ending with a new line") {
-                console.println(Text("Hello"))
+                beforeEachTest { console.println(Text("Hello")) }
 
                 it("writes that text directly to the output") {
                     assertThat(output.toString(), equalTo("Hello\n"))
@@ -86,7 +85,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing some coloured text") {
-                console.print(Text.white("the white text"))
+                beforeEachTest { console.print(Text.white("the white text")) }
 
                 it("writes the text to the output with the appropriate escape codes") {
                     assertThat(output.toString(), equalTo("${whiteText}the white text$reset"))
@@ -94,7 +93,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing some coloured text, ending with a new line") {
-                console.println(Text.white("the white text"))
+                beforeEachTest { console.println(Text.white("the white text")) }
 
                 it("writes the text to the output with the appropriate escape codes") {
                     assertThat(output.toString(), equalTo("${whiteText}the white text$reset\n"))
@@ -102,7 +101,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing some bold text") {
-                console.print(Text.bold("the bold text"))
+                beforeEachTest { console.print(Text.bold("the bold text")) }
 
                 it("writes the text to the output with the appropriate escape codes") {
                     assertThat(output.toString(), equalTo("${boldText}the bold text$reset"))
@@ -110,7 +109,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing some bold text, ending with a new line") {
-                console.println(Text.bold("the bold text"))
+                beforeEachTest { console.println(Text.bold("the bold text")) }
 
                 it("writes the text to the output with the appropriate escape codes") {
                     assertThat(output.toString(), equalTo("${boldText}the bold text$reset\n"))
@@ -118,7 +117,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing bold and coloured text") {
-                console.print(Text("bold and red", ConsoleColor.Red, true))
+                beforeEachTest { console.print(Text("bold and red", ConsoleColor.Red, true)) }
 
                 it("writes the text to the output with the appropriate escape codes") {
                     assertThat(output.toString(), equalTo("${redText}${boldText}bold and red$reset"))
@@ -126,7 +125,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing bold and coloured text, ending with a new line") {
-                console.println(Text("bold and red", ConsoleColor.Red, true))
+                beforeEachTest { console.println(Text("bold and red", ConsoleColor.Red, true)) }
 
                 it("writes the text to the output with the appropriate escape codes") {
                     assertThat(output.toString(), equalTo("${redText}${boldText}bold and red$reset\n"))
@@ -134,7 +133,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing a series of unformatted text elements") {
-                console.print(Text("Hello") + Text(" World"))
+                beforeEachTest { console.print(Text("Hello") + Text(" World")) }
 
                 it("writes that text directly to the output") {
                     assertThat(output.toString(), equalTo("Hello World"))
@@ -142,7 +141,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing a series of unformatted text elements, ending with a new line") {
-                console.println(Text("Hello") + Text(" World"))
+                beforeEachTest { console.println(Text("Hello") + Text(" World")) }
 
                 it("writes that text directly to the output") {
                     assertThat(output.toString(), equalTo("Hello World\n"))
@@ -150,7 +149,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing a series of coloured text elements") {
-                console.print(Text.red("red") + Text.white("white"))
+                beforeEachTest { console.print(Text.red("red") + Text.white("white")) }
 
                 it("writes the text to the output with the appropriate escape codes") {
                     assertThat(output.toString(), equalTo("${redText}red${reset}${whiteText}white$reset"))
@@ -158,7 +157,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing a series of coloured text elements, ending with a new line") {
-                console.println(Text.red("red") + Text.white("white"))
+                beforeEachTest { console.println(Text.red("red") + Text.white("white")) }
 
                 it("writes the text to the output with the appropriate escape codes") {
                     assertThat(output.toString(), equalTo("${redText}red${reset}${whiteText}white$reset\n"))
@@ -166,7 +165,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing a series of bold and non-bold text elements") {
-                console.print(Text.bold("bold") + Text("not"))
+                beforeEachTest { console.print(Text.bold("bold") + Text("not")) }
 
                 it("writes the text to the output with the appropriate escape codes") {
                     assertThat(output.toString(), equalTo("${boldText}bold${reset}not"))
@@ -174,7 +173,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing a series of bold and non-bold text elements, ending with a new line") {
-                console.println(Text.bold("bold") + Text("not"))
+                beforeEachTest { console.println(Text.bold("bold") + Text("not")) }
 
                 it("writes the text to the output with the appropriate escape codes") {
                     assertThat(output.toString(), equalTo("${boldText}bold${reset}not\n"))
@@ -182,7 +181,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing some bold and coloured text elements") {
-                console.print(Text.bold(Text.red("red") + Text.white("white")))
+                beforeEachTest { console.print(Text.bold(Text.red("red") + Text.white("white"))) }
 
                 it("writes the text to the output with the appropriate escape codes") {
                     assertThat(output.toString(), equalTo("${redText}${boldText}red${reset}${whiteText}${boldText}white$reset"))
@@ -190,7 +189,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing some bold and coloured text elements, ending with a new line") {
-                console.println(Text.bold(Text.red("red") + Text.white("white")))
+                beforeEachTest { console.println(Text.bold(Text.red("red") + Text.white("white"))) }
 
                 it("writes the text to the output with the appropriate escape codes") {
                     assertThat(output.toString(), equalTo("${redText}${boldText}red${reset}${whiteText}${boldText}white$reset\n"))
@@ -199,7 +198,7 @@ object ConsoleSpec : Spek({
 
             describe("moving the cursor up") {
                 on("moving the cursor up one line") {
-                    console.moveCursorUp()
+                    beforeEachTest { console.moveCursorUp() }
 
                     it("writes the appropriate escape code to the output") {
                         assertThat(output.toString(), equalTo("$ESC[1A"))
@@ -207,7 +206,7 @@ object ConsoleSpec : Spek({
                 }
 
                 on("moving the cursor up multiple lines") {
-                    console.moveCursorUp(23)
+                    beforeEachTest { console.moveCursorUp(23) }
 
                     it("writes the appropriate escape code to the output") {
                         assertThat(output.toString(), equalTo("$ESC[23A"))
@@ -229,7 +228,7 @@ object ConsoleSpec : Spek({
 
             describe("moving the cursor down") {
                 on("moving the cursor down one line") {
-                    console.moveCursorDown()
+                    beforeEachTest { console.moveCursorDown() }
 
                     it("writes the appropriate escape code to the output") {
                         assertThat(output.toString(), equalTo("$ESC[1B"))
@@ -237,7 +236,7 @@ object ConsoleSpec : Spek({
                 }
 
                 on("moving the cursor down multiple lines") {
-                    console.moveCursorDown(23)
+                    beforeEachTest { console.moveCursorDown(23) }
 
                     it("writes the appropriate escape code to the output") {
                         assertThat(output.toString(), equalTo("$ESC[23B"))
@@ -258,7 +257,7 @@ object ConsoleSpec : Spek({
             }
 
             on("clearing the current line") {
-                console.clearCurrentLine()
+                beforeEachTest { console.clearCurrentLine() }
 
                 it("writes the appropriate escape code sequence to the output") {
                     assertThat(output.toString(), equalTo("\r$ESC[K"))
@@ -266,7 +265,7 @@ object ConsoleSpec : Spek({
             }
 
             on("moving to the start of the current line") {
-                console.moveCursorToStartOfLine()
+                beforeEachTest { console.moveCursorToStartOfLine() }
 
                 it("writes the appropriate escape code to the output") {
                     assertThat(output.toString(), equalTo("\r"))
@@ -279,7 +278,7 @@ object ConsoleSpec : Spek({
             val console by createForEachTest { Console(PrintStream(output), enableComplexOutput = false, consoleInfo = mock()) }
 
             on("printing text") {
-                console.print("This is some text")
+                beforeEachTest { console.print("This is some text") }
 
                 it("writes the text directly to the output") {
                     assertThat(output.toString(), equalTo("This is some text"))
@@ -287,7 +286,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing a line of text") {
-                console.println("This is some text")
+                beforeEachTest { console.println("This is some text") }
 
                 it("writes the text directly to the output") {
                     assertThat(output.toString(), equalTo("This is some text\n"))
@@ -295,7 +294,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing a blank line of text") {
-                console.println()
+                beforeEachTest { console.println() }
 
                 it("writes a blank line directly to the output") {
                     assertThat(output.toString(), equalTo("\n"))
@@ -303,7 +302,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing coloured text") {
-                console.print(Text.white("the white text"))
+                beforeEachTest { console.print(Text.white("the white text")) }
 
                 it("writes the text to the output without any escape codes") {
                     assertThat(output.toString(), equalTo("the white text"))
@@ -311,7 +310,7 @@ object ConsoleSpec : Spek({
             }
 
             on("printing bold text") {
-                console.print(Text.bold("the bold text"))
+                beforeEachTest { console.print(Text.bold("the bold text")) }
 
                 it("writes the text to the output without any escape codes") {
                     assertThat(output.toString(), equalTo("the bold text"))
@@ -355,7 +354,7 @@ object ConsoleSpec : Spek({
                 val console by createForEachTest { Console(PrintStream(output), true, consoleInfo) }
 
                 on("printing text") {
-                    console.printLineLimitedToConsoleWidth(TextRun("This is some text"))
+                    beforeEachTest { console.printLineLimitedToConsoleWidth(TextRun("This is some text")) }
 
                     it("prints all text") {
                         assertThat(output.toString(), equalTo("This is some text\n"))
@@ -378,7 +377,7 @@ object ConsoleSpec : Spek({
                         on { limitToLength(10) } doReturn TextRun("This is some shortened text")
                     }
 
-                    console.printLineLimitedToConsoleWidth(text)
+                    beforeEachTest { console.printLineLimitedToConsoleWidth(text) }
 
                     it("prints the shortened text") {
                         assertThat(output.toString(), equalTo("This is some shortened text\n"))

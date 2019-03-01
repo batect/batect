@@ -25,7 +25,7 @@ import batect.logging.Severity
 import batect.logging.StandardAdditionalDataSource
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import org.jetbrains.spek.api.dsl.SpecBody
+import org.spekframework.spek2.dsl.LifecycleAware
 import java.io.ByteArrayOutputStream
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -54,4 +54,4 @@ class InMemoryLogSink : LogSink {
     }
 }
 
-fun SpecBody.createLoggerForEachTest() = createForEachTest { Logger("test logger", InMemoryLogSink()) }
+fun LifecycleAware.createLoggerForEachTest() = createForEachTest { Logger("test logger", InMemoryLogSink()) }

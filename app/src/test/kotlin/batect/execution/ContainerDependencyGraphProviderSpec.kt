@@ -27,16 +27,15 @@ import batect.logging.Severity
 import batect.testutils.InMemoryLogSink
 import batect.testutils.hasMessage
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.on
 import batect.testutils.withAdditionalData
 import batect.testutils.withLogMessage
 import batect.testutils.withSeverity
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.mock
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object ContainerDependencyGraphProviderSpec : Spek({
     describe("a container dependency graph provider") {

@@ -17,16 +17,15 @@
 package batect.os.proxies
 
 import batect.testutils.equalTo
+import batect.testutils.given
 import batect.testutils.isEmptyMap
+import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.mock
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object ProxyEnvironmentVariablesProviderSpec : Spek({
     describe("a proxy environment variables provider") {

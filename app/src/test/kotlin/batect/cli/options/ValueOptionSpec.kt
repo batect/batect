@@ -20,14 +20,14 @@ import batect.cli.options.defaultvalues.DefaultValueProvider
 import batect.cli.options.defaultvalues.StaticDefaultValueProvider
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object ValueOptionSpec : Spek({
     describe("a value option") {
@@ -51,7 +51,7 @@ object ValueOptionSpec : Spek({
 
                 listOf("--value", "-v").forEach { format ->
                     on("parsing a list of arguments where the option is specified in the form '$format thing'") {
-                        val result = option.parse(listOf(format, "thing", "do-stuff"))
+                        val result by runForEachTest { option.parse(listOf(format, "thing", "do-stuff")) }
 
                         it("indicates that parsing succeeded and that two arguments were consumed") {
                             assertThat(result, equalTo(OptionParsingResult.ReadOption(2)))
@@ -63,7 +63,7 @@ object ValueOptionSpec : Spek({
                     }
 
                     on("parsing a list of arguments where the option is specified in the form '$format=thing'") {
-                        val result = option.parse(listOf("$format=thing", "do-stuff"))
+                        val result by runForEachTest { option.parse(listOf("$format=thing", "do-stuff")) }
 
                         it("indicates that parsing succeeded and that one argument was consumed") {
                             assertThat(result, equalTo(OptionParsingResult.ReadOption(1)))
@@ -75,7 +75,7 @@ object ValueOptionSpec : Spek({
                     }
 
                     on("parsing a list of arguments where the option is specified in a valid form but the value is not valid") {
-                        val result = option.parse(listOf(format, "invalid-thing", "do-stuff"))
+                        val result by runForEachTest { option.parse(listOf(format, "invalid-thing", "do-stuff")) }
 
                         it("indicates that parsing failed") {
                             assertThat(result, equalTo(OptionParsingResult.InvalidOption("The value 'invalid-thing' for option '$format' is invalid: that's not allowed")))
@@ -83,7 +83,7 @@ object ValueOptionSpec : Spek({
                     }
 
                     on("parsing a list of arguments where the option is given in the form '$format=thing' but no value is provided after the equals sign") {
-                        val result = option.parse(listOf("$format=", "do-stuff"))
+                        val result by runForEachTest { option.parse(listOf("$format=", "do-stuff")) }
 
                         it("indicates that parsing failed") {
                             assertThat(result, equalTo(OptionParsingResult.InvalidOption("Option '$format=' is in an invalid format, you must provide a value after '='.")))
@@ -91,7 +91,7 @@ object ValueOptionSpec : Spek({
                     }
 
                     on("parsing a list of arguments where the option is given in the form '$format thing' but no second argument is provided") {
-                        val result = option.parse(listOf(format))
+                        val result by runForEachTest { option.parse(listOf(format)) }
 
                         it("indicates that parsing failed") {
                             assertThat(result, equalTo(OptionParsingResult.InvalidOption("Option '$format' requires a value to be provided, either in the form '$format=<value>' or '$format <value>'.")))

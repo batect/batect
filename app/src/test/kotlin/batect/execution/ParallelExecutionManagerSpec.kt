@@ -23,7 +23,10 @@ import batect.execution.model.steps.TaskStep
 import batect.execution.model.steps.TaskStepRunner
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
+import batect.testutils.given
+import batect.testutils.on
 import batect.ui.EventLogger
+import com.natpryce.hamkrest.allElements
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.any
@@ -32,14 +35,10 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.reset
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
@@ -53,12 +52,6 @@ object ParallelExecutionManagerSpec : Spek({
         val logger by createLoggerForEachTest()
         val executionManager by createForEachTest {
             ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, runOptions, logger)
-        }
-
-        beforeEachTest {
-            reset(eventLogger)
-            reset(taskStepRunner)
-            reset(stateMachine)
         }
 
         given("a single step is provided by the state machine") {
@@ -78,7 +71,7 @@ object ParallelExecutionManagerSpec : Spek({
                 }
 
                 on("running the task") {
-                    executionManager.run()
+                    beforeEachTest { executionManager.run() }
 
                     it("logs the step to the event logger") {
                         verify(eventLogger).onStartingTaskStep(step)
@@ -118,7 +111,7 @@ object ParallelExecutionManagerSpec : Spek({
                 }
 
                 on("running the task") {
-                    executionManager.run()
+                    beforeEachTest { executionManager.run() }
 
                     it("logs a task failure event to the event logger") {
                         verify(eventLogger).postEvent(ExecutionFailedEvent("java.lang.RuntimeException: Something went wrong."))
@@ -134,29 +127,36 @@ object ParallelExecutionManagerSpec : Spek({
         on("two steps being provided by the state machine initially") {
             val step1 = mock<TaskStep>()
             val step2 = mock<TaskStep>()
-            whenever(stateMachine.popNextStep(false)).doReturn(step1, null)
-            whenever(stateMachine.popNextStep(true)).doReturn(step2, null)
 
             var step1SawStep2 = false
             var step2SawStep1 = false
-            val waitForStep1 = Semaphore(1)
-            val waitForStep2 = Semaphore(1)
-            waitForStep1.acquire()
-            waitForStep2.acquire()
 
-            whenever(taskStepRunner.run(eq(step1), any(), eq(runOptions))).doAnswer {
-                waitForStep1.release()
-                step1SawStep2 = waitForStep2.tryAcquire(100, TimeUnit.MILLISECONDS)
-                null
+            beforeEachTest {
+                step1SawStep2 = false
+                step2SawStep1 = false
+
+                whenever(stateMachine.popNextStep(false)).doReturn(step1, null)
+                whenever(stateMachine.popNextStep(true)).doReturn(step2, null)
+
+                val waitForStep1 = Semaphore(1)
+                val waitForStep2 = Semaphore(1)
+                waitForStep1.acquire()
+                waitForStep2.acquire()
+
+                whenever(taskStepRunner.run(eq(step1), any(), eq(runOptions))).doAnswer {
+                    waitForStep1.release()
+                    step1SawStep2 = waitForStep2.tryAcquire(100, TimeUnit.MILLISECONDS)
+                    null
+                }
+
+                whenever(taskStepRunner.run(eq(step2), any(), eq(runOptions))).doAnswer {
+                    waitForStep2.release()
+                    step2SawStep1 = waitForStep1.tryAcquire(100, TimeUnit.MILLISECONDS)
+                    null
+                }
+
+                executionManager.run()
             }
-
-            whenever(taskStepRunner.run(eq(step2), any(), eq(runOptions))).doAnswer {
-                waitForStep2.release()
-                step2SawStep1 = waitForStep1.tryAcquire(100, TimeUnit.MILLISECONDS)
-                null
-            }
-
-            executionManager.run()
 
             it("logs the first step to the event logger") {
                 verify(eventLogger).onStartingTaskStep(step1)
@@ -183,32 +183,38 @@ object ParallelExecutionManagerSpec : Spek({
         on("one step being provided by the state machine initially and then another added as a result of the first step") {
             val step1 = mock<TaskStep>()
             val step2 = mock<TaskStep>()
-            val step2TriggerEvent = mock<TaskEvent>()
-            whenever(stateMachine.popNextStep(false)).doReturn(step1, null)
 
             var step2StartedBeforeStep1Ended = false
-            val waitForStep2 = Semaphore(1)
-            waitForStep2.acquire()
 
-            whenever(taskStepRunner.run(eq(step1), any(), eq(runOptions))).doAnswer { invocation ->
-                val eventSink = invocation.arguments[1] as TaskEventSink
-                eventSink.postEvent(step2TriggerEvent)
+            beforeEachTest {
+                step2StartedBeforeStep1Ended = false
 
-                step2StartedBeforeStep1Ended = waitForStep2.tryAcquire(100, TimeUnit.MILLISECONDS)
-                null
+                val step2TriggerEvent = mock<TaskEvent>()
+                whenever(stateMachine.popNextStep(false)).doReturn(step1, null)
+
+                val waitForStep2 = Semaphore(1)
+                waitForStep2.acquire()
+
+                whenever(taskStepRunner.run(eq(step1), any(), eq(runOptions))).doAnswer { invocation ->
+                    val eventSink = invocation.arguments[1] as TaskEventSink
+                    eventSink.postEvent(step2TriggerEvent)
+
+                    step2StartedBeforeStep1Ended = waitForStep2.tryAcquire(100, TimeUnit.MILLISECONDS)
+                    null
+                }
+
+                whenever(stateMachine.postEvent(step2TriggerEvent)).doAnswer {
+                    whenever(stateMachine.popNextStep(true)).doReturn(step2, null)
+                    null
+                }
+
+                whenever(taskStepRunner.run(eq(step2), any(), eq(runOptions))).doAnswer {
+                    waitForStep2.release()
+                    null
+                }
+
+                executionManager.run()
             }
-
-            whenever(stateMachine.postEvent(step2TriggerEvent)).doAnswer {
-                whenever(stateMachine.popNextStep(true)).doReturn(step2, null)
-                null
-            }
-
-            whenever(taskStepRunner.run(eq(step2), any(), eq(runOptions))).doAnswer {
-                waitForStep2.release()
-                null
-            }
-
-            executionManager.run()
 
             it("logs the first step to the event logger") {
                 verify(eventLogger).onStartingTaskStep(step1)
@@ -235,26 +241,30 @@ object ParallelExecutionManagerSpec : Spek({
             val step1 = mock<TaskStep>()
             val step2 = mock<TaskStep>()
             val step3 = mock<TaskStep>()
-            whenever(stateMachine.popNextStep(any())).doReturn(step1, step2, step3, null)
 
-            val counter = Semaphore(2)
-            val noMoreThanTwoTasksRunningAtTimeOfInvocation = ConcurrentHashMap<TaskStep, Boolean>()
+            val noMoreThanTwoTasksRunningAtTimeOfInvocation by createForEachTest { ConcurrentHashMap<TaskStep, Boolean>() }
 
-            whenever(taskStepRunner.run(any(), any(), eq(runOptions))).doAnswer { invocation ->
-                val step = invocation.arguments[0] as TaskStep
-                val acquired = counter.tryAcquire()
+            beforeEachTest {
+                whenever(stateMachine.popNextStep(any())).doReturn(step1, step2, step3, null)
 
-                noMoreThanTwoTasksRunningAtTimeOfInvocation[step] = acquired
-                Thread.sleep(50)
+                val counter = Semaphore(2)
 
-                if (acquired) {
-                    counter.release()
+                whenever(taskStepRunner.run(any(), any(), eq(runOptions))).doAnswer { invocation ->
+                    val step = invocation.arguments[0] as TaskStep
+                    val acquired = counter.tryAcquire()
+
+                    noMoreThanTwoTasksRunningAtTimeOfInvocation[step] = acquired
+                    Thread.sleep(50)
+
+                    if (acquired) {
+                        counter.release()
+                    }
+
+                    null
                 }
 
-                null
+                executionManager.run()
             }
-
-            executionManager.run()
 
             it("logs the first step to the event logger") {
                 verify(eventLogger).onStartingTaskStep(step1)
@@ -279,11 +289,16 @@ object ParallelExecutionManagerSpec : Spek({
             it("runs the third step") {
                 verify(taskStepRunner).run(eq(step3), any(), eq(runOptions))
             }
+
+            it("does not run more than two steps at the same time") {
+                assertThat(noMoreThanTwoTasksRunningAtTimeOfInvocation.values, allElements(equalTo(true)))
+            }
         }
 
         on("being sent an event") {
             val eventToPost = mock<TaskEvent>()
-            executionManager.postEvent(eventToPost)
+
+            beforeEachTest { executionManager.postEvent(eventToPost) }
 
             it("logs the posted event to the event logger before forwarding it to the state machine") {
                 inOrder(eventLogger, stateMachine) {

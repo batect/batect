@@ -25,7 +25,10 @@ import batect.config.TaskRunConfiguration
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
+import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import batect.ui.EventLogger
 import batect.ui.EventLoggerProvider
@@ -41,11 +44,8 @@ import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.time.Duration
 
 object TaskRunnerSpec : Spek({
@@ -104,7 +104,7 @@ object TaskRunnerSpec : Spek({
                 }
 
                 on("running the task") {
-                    val exitCode = taskRunner.run(config, task, runOptions)
+                    val exitCode by runForEachTest { taskRunner.run(config, task, runOptions) }
 
                     it("logs that the task is starting") {
                         verify(eventLogger).onTaskStarting("some-task")
@@ -149,7 +149,7 @@ object TaskRunnerSpec : Spek({
                 }
 
                 on("running the task") {
-                    val exitCode = taskRunner.run(config, task, runOptions)
+                    val exitCode by runForEachTest { taskRunner.run(config, task, runOptions) }
 
                     it("logs that the task is starting") {
                         verify(eventLogger).onTaskStarting("some-task")

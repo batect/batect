@@ -19,11 +19,10 @@ package batect.execution.model.rules.run
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.CreateTaskNetworkStep
 import batect.testutils.equalTo
+import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object CreateTaskNetworkStepRuleSpec : Spek({
     describe("a create task network step rule") {

@@ -30,12 +30,12 @@ import batect.execution.model.events.TemporaryFileDeletedEvent
 import batect.testutils.createForEachTest
 import batect.testutils.equivalentTo
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.ui.text.Text
 import com.natpryce.hamkrest.assertion.assertThat
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Paths
 
 object CleanupProgressDisplayLineSpec : Spek({
@@ -44,7 +44,7 @@ object CleanupProgressDisplayLineSpec : Spek({
 
         describe("printing cleanup progress to the console") {
             on("when there is nothing to clean up") {
-                val output = cleanupDisplay.print()
+                val output by runForEachTest { cleanupDisplay.print() }
 
                 it("prints that clean up is complete") {
                     assertThat(output, equivalentTo(Text.white("Clean up: done")))
@@ -57,7 +57,7 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the network hasn't been removed yet") {
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the network still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network...")))
@@ -65,9 +65,9 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the network has been removed") {
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest { cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent) }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that clean up is complete") {
                         assertThat(output, equivalentTo(Text.white("Clean up: done")))
@@ -84,7 +84,7 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the container hasn't been removed yet") {
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the container still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white(Text("Cleaning up: 1 container (") + Text.bold("some-container") + Text(") left to remove..."))))
@@ -92,9 +92,9 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the container has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    beforeEachTest { cleanupDisplay.onEventPosted(ContainerRemovedEvent(container)) }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the network still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network...")))
@@ -102,10 +102,12 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the network has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that clean up is complete") {
                         assertThat(output, equivalentTo(Text.white("Clean up: done")))
@@ -124,7 +126,7 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the container hasn't been removed yet") {
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the container still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white(Text("Cleaning up: 1 container (") + Text.bold("some-container") + Text(") left to remove..."))))
@@ -132,9 +134,9 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the container has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    beforeEachTest { cleanupDisplay.onEventPosted(ContainerRemovedEvent(container)) }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the network and file still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network and 1 temporary file...")))
@@ -142,10 +144,12 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the network has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the file still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing 1 temporary file...")))
@@ -153,10 +157,12 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the temporary file has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(filePath))
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(filePath))
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the network still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network...")))
@@ -164,11 +170,13 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and both the network and the temporary file has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(filePath))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(filePath))
+                        cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that clean up is complete") {
                         assertThat(output, equivalentTo(Text.white("Clean up: done")))
@@ -187,7 +195,7 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the container hasn't been removed yet") {
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the container still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white(Text("Cleaning up: 1 container (") + Text.bold("some-container") + Text(") left to remove..."))))
@@ -195,9 +203,9 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the container has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    beforeEachTest { cleanupDisplay.onEventPosted(ContainerRemovedEvent(container)) }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the network and directory still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network and 1 temporary directory...")))
@@ -205,10 +213,12 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the network has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the directory still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing 1 temporary directory...")))
@@ -216,10 +226,12 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the temporary directory has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directoryPath))
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directoryPath))
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the network still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network...")))
@@ -227,11 +239,13 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and both the network and the temporary directory has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directoryPath))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directoryPath))
+                        cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that clean up is complete") {
                         assertThat(output, equivalentTo(Text.white("Clean up: done")))
@@ -252,7 +266,7 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the container hasn't been removed yet") {
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the container still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white(Text("Cleaning up: 1 container (") + Text.bold("some-container") + Text(") left to remove..."))))
@@ -260,9 +274,11 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the container has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the network and both files still need to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network and 2 temporary files...")))
@@ -270,10 +286,12 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the network has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the files still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing 2 temporary files...")))
@@ -281,11 +299,13 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the network and one of the temporary files have been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(file1Path))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(file1Path))
+                        cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the files still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing 1 temporary file...")))
@@ -293,11 +313,13 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the both temporary files have been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(file1Path))
-                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(file2Path))
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(file1Path))
+                        cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(file2Path))
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the network still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network...")))
@@ -305,12 +327,14 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and both the network and the temporary files has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(file1Path))
-                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(file2Path))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(file1Path))
+                        cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(file2Path))
+                        cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that clean up is complete") {
                         assertThat(output, equivalentTo(Text.white("Clean up: done")))
@@ -331,7 +355,7 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the container hasn't been removed yet") {
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the container still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white(Text("Cleaning up: 1 container (") + Text.bold("some-container") + Text(") left to remove..."))))
@@ -339,9 +363,9 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the container has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    beforeEachTest { cleanupDisplay.onEventPosted(ContainerRemovedEvent(container)) }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the network and both directories still need to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network and 2 temporary directories...")))
@@ -349,10 +373,12 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the network has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the directories still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing 2 temporary directories...")))
@@ -360,11 +386,13 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the network and one of the temporary directories have been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directory1Path))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directory1Path))
+                        cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the directories still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing 1 temporary directory...")))
@@ -372,11 +400,13 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and both temporary directories have been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directory1Path))
-                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directory2Path))
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directory1Path))
+                        cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directory2Path))
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the network still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network...")))
@@ -384,12 +414,14 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and both the network and the temporary directories have been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directory1Path))
-                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directory2Path))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directory1Path))
+                        cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directory2Path))
+                        cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that clean up is complete") {
                         assertThat(output, equivalentTo(Text.white("Clean up: done")))
@@ -410,7 +442,7 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the container hasn't been removed yet") {
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the container still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white(Text("Cleaning up: 1 container (") + Text.bold("some-container") + Text(") left to remove..."))))
@@ -418,9 +450,11 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the container has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the network and both directories still need to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network, 1 temporary file and 1 temporary directory...")))
@@ -428,10 +462,12 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the network has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the directories still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing 1 temporary file and 1 temporary directory...")))
@@ -439,11 +475,13 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the network and the temporary file have been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(filePath))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(filePath))
+                        cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the directory still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing 1 temporary directory...")))
@@ -451,11 +489,13 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the network and the temporary directory have been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directoryPath))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directoryPath))
+                        cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the file still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing 1 temporary file...")))
@@ -463,11 +503,13 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the temporary file and temporary directory have been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(filePath))
-                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directoryPath))
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(filePath))
+                        cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directoryPath))
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the network still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white("Cleaning up: removing task network...")))
@@ -475,12 +517,14 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and both the network, the temporary file and the temporary directory have been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
-                    cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(filePath))
-                    cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directoryPath))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container))
+                        cleanupDisplay.onEventPosted(TemporaryFileDeletedEvent(filePath))
+                        cleanupDisplay.onEventPosted(TemporaryDirectoryDeletedEvent(directoryPath))
+                        cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that clean up is complete") {
                         assertThat(output, equivalentTo(Text.white("Clean up: done")))
@@ -499,7 +543,7 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and neither container has been removed yet") {
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that both of the containers still need to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white(Text("Cleaning up: 2 containers (") + Text.bold("container-1") + Text(" and ") + Text.bold("container-2") + Text(") left to remove..."))))
@@ -507,9 +551,9 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and one container has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container1))
+                    beforeEachTest { cleanupDisplay.onEventPosted(ContainerRemovedEvent(container1)) }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that the other container still needs to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white(Text("Cleaning up: 1 container (") + Text.bold("container-2") + Text(") left to remove..."))))
@@ -517,11 +561,13 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and the network has been removed") {
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container1))
-                    cleanupDisplay.onEventPosted(ContainerRemovedEvent(container2))
-                    cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    beforeEachTest {
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container1))
+                        cleanupDisplay.onEventPosted(ContainerRemovedEvent(container2))
+                        cleanupDisplay.onEventPosted(TaskNetworkDeletedEvent)
+                    }
 
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that clean up is complete") {
                         assertThat(output, equivalentTo(Text.white("Clean up: done")))
@@ -542,7 +588,7 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and none of the containers have been removed yet") {
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that all of the containers still need to be cleaned up") {
                         assertThat(output, equivalentTo(Text.white(Text("Cleaning up: 3 containers (") + Text.bold("container-1") + Text(", ") + Text.bold("container-2") + Text(" and ") + Text.bold("container-3") + Text(") left to remove..."))))
@@ -565,7 +611,7 @@ object CleanupProgressDisplayLineSpec : Spek({
                 }
 
                 on("and none of the containers have been removed yet") {
-                    val output = cleanupDisplay.print()
+                    val output by runForEachTest { cleanupDisplay.print() }
 
                     it("prints that all of the containers still need to be cleaned up") {
                         assertThat(

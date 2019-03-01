@@ -20,6 +20,8 @@ import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.hasMessage
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withAdditionalData
 import batect.testutils.withLogMessage
 import batect.testutils.withSeverity
@@ -34,10 +36,8 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
 import okhttp3.ResponseBody
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object HttpLoggingInterceptorSpec : Spek({
     describe("a HTTP logging interceptor") {
@@ -46,23 +46,29 @@ object HttpLoggingInterceptorSpec : Spek({
         val interceptor by createForEachTest { HttpLoggingInterceptor(logger) }
 
         on("receiving a request with no body that results in a response with no body") {
-            val request = Request.Builder()
-                .url("http://www.awesomestuff.com/thing")
-                .build()
-
-            val expectedResponse = Response.Builder()
-                .request(request)
-                .protocol(Protocol.HTTP_1_1)
-                .code(418)
-                .message("I'm a teapot")
-                .build()
-
-            val chain = mock<Interceptor.Chain> {
-                on { request() } doReturn request
-                on { proceed(request) } doReturn expectedResponse
+            val request by runForEachTest {
+                Request.Builder()
+                    .url("http://www.awesomestuff.com/thing")
+                    .build()
             }
 
-            val response = interceptor.intercept(chain)
+            val expectedResponse by runForEachTest {
+                Response.Builder()
+                    .request(request)
+                    .protocol(Protocol.HTTP_1_1)
+                    .code(418)
+                    .message("I'm a teapot")
+                    .build()
+            }
+
+            val chain by runForEachTest {
+                mock<Interceptor.Chain> {
+                    on { request() } doReturn request
+                    on { proceed(request) } doReturn expectedResponse
+                }
+            }
+
+            val response by runForEachTest { interceptor.intercept(chain) }
 
             it("returns the response from the rest of the chain") {
                 assertThat(response, equalTo(expectedResponse))
@@ -94,24 +100,26 @@ object HttpLoggingInterceptorSpec : Spek({
         }
 
         on("receiving a request with a body") {
-            val request = Request.Builder()
-                .url("http://www.awesomestuff.com/thing")
-                .post(RequestBody.create(MediaType.get("text/plain; charset=utf-8"), "Some body content"))
-                .build()
+            beforeEachTest {
+                val request = Request.Builder()
+                    .url("http://www.awesomestuff.com/thing")
+                    .post(RequestBody.create(MediaType.get("text/plain; charset=utf-8"), "Some body content"))
+                    .build()
 
-            val expectedResponse = Response.Builder()
-                .request(request)
-                .protocol(Protocol.HTTP_1_1)
-                .code(418)
-                .message("I'm a teapot")
-                .build()
+                val expectedResponse = Response.Builder()
+                    .request(request)
+                    .protocol(Protocol.HTTP_1_1)
+                    .code(418)
+                    .message("I'm a teapot")
+                    .build()
 
-            val chain = mock<Interceptor.Chain> {
-                on { request() } doReturn request
-                on { proceed(request) } doReturn expectedResponse
+                val chain = mock<Interceptor.Chain> {
+                    on { request() } doReturn request
+                    on { proceed(request) } doReturn expectedResponse
+                }
+
+                interceptor.intercept(chain)
             }
-
-            interceptor.intercept(chain)
 
             it("logs details of the request body before it starts") {
                 assertThat(logSink, hasMessage(
@@ -123,24 +131,26 @@ object HttpLoggingInterceptorSpec : Spek({
         }
 
         on("receiving a response with a body") {
-            val request = Request.Builder()
-                .url("http://www.awesomestuff.com/thing")
-                .build()
+            beforeEachTest {
+                val request = Request.Builder()
+                    .url("http://www.awesomestuff.com/thing")
+                    .build()
 
-            val expectedResponse = Response.Builder()
-                .request(request)
-                .protocol(Protocol.HTTP_1_1)
-                .code(418)
-                .message("I'm a teapot")
-                .body(ResponseBody.create(MediaType.get("text/plain; charset=utf-8"), "Some body content"))
-                .build()
+                val expectedResponse = Response.Builder()
+                    .request(request)
+                    .protocol(Protocol.HTTP_1_1)
+                    .code(418)
+                    .message("I'm a teapot")
+                    .body(ResponseBody.create(MediaType.get("text/plain; charset=utf-8"), "Some body content"))
+                    .build()
 
-            val chain = mock<Interceptor.Chain> {
-                on { request() } doReturn request
-                on { proceed(request) } doReturn expectedResponse
+                val chain = mock<Interceptor.Chain> {
+                    on { request() } doReturn request
+                    on { proceed(request) } doReturn expectedResponse
+                }
+
+                interceptor.intercept(chain)
             }
-
-            interceptor.intercept(chain)
 
             it("logs details of the response body") {
                 assertThat(logSink, hasMessage(

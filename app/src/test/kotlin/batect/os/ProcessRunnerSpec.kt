@@ -20,7 +20,10 @@ import batect.logging.Logger
 import batect.logging.Severity
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
+import batect.testutils.given
 import batect.testutils.hasMessage
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withAdditionalData
 import batect.testutils.withLogMessage
 import batect.testutils.withMessage
@@ -29,11 +32,8 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.io.IOException
 
 object ProcessRunnerSpec : Spek({
@@ -44,7 +44,7 @@ object ProcessRunnerSpec : Spek({
 
         on("running a process with stdin attached") {
             val command = listOf("sh", "-c", "echo hello world && echo hello error world 1>&2 && echo more non-error output && exit 201")
-            val result = runner.runWithStdinAttached(command)
+            val result by runForEachTest { runner.runWithStdinAttached(command) }
 
             it("returns the exit code of the command") {
                 assertThat(result.exitCode, equalTo(201))
@@ -76,7 +76,7 @@ object ProcessRunnerSpec : Spek({
                 given("there is no input to pipe to stdin") {
                     on("running it") {
                         val command = listOf("sh", "-c", "echo hello world && echo hello error world 1>&2 && echo more non-error output && exit 201")
-                        val result = runner.runAndCaptureOutput(command)
+                        val result by runForEachTest { runner.runAndCaptureOutput(command) }
 
                         it("returns the exit code of the command") {
                             assertThat(result.exitCode, equalTo(201))
@@ -108,7 +108,7 @@ object ProcessRunnerSpec : Spek({
                     on("running it") {
                         val command = listOf("tee")
                         val stdin = "This is some input to stdin that will be returned by tee as output"
-                        val result = runner.runAndCaptureOutput(command, stdin)
+                        val result by runForEachTest { runner.runAndCaptureOutput(command, stdin) }
 
                         it("returns the exit code of the command") {
                             assertThat(result.exitCode, equalTo(0))

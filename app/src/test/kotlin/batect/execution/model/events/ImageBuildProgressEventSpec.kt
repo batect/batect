@@ -18,12 +18,11 @@ package batect.execution.model.events
 
 import batect.docker.DockerImageBuildProgress
 import batect.docker.pull.DockerImagePullProgress
+import batect.testutils.given
+import batect.testutils.on
 import com.natpryce.hamkrest.equalTo
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object ImageBuildProgressEventSpec : Spek({
     describe("an 'image build progress' event") {

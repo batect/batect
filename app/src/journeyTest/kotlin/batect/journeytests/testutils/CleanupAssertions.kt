@@ -18,17 +18,16 @@ package batect.journeytests.testutils
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isEmpty
-import org.jetbrains.spek.api.dsl.TestContainer
-import org.jetbrains.spek.api.dsl.it
+import org.spekframework.spek2.style.specification.Suite
 
-fun TestContainer.itCleansUpAllContainersItCreates(result: ApplicationResult) {
+fun Suite.itCleansUpAllContainersItCreates(resultProvider: () -> ApplicationResult) {
     it("cleans up all containers it creates") {
-        assertThat(result.potentiallyOrphanedContainers, isEmpty)
+        assertThat(resultProvider().potentiallyOrphanedContainers, isEmpty)
     }
 }
 
-fun TestContainer.itCleansUpAllNetworksItCreates(result: ApplicationResult) {
+fun Suite.itCleansUpAllNetworksItCreates(resultProvider: () -> ApplicationResult) {
     it("cleans up all networks it creates") {
-        assertThat(result.potentiallyOrphanedNetworks, isEmpty)
+        assertThat(resultProvider().potentiallyOrphanedNetworks, isEmpty)
     }
 }

@@ -22,16 +22,16 @@ import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.TaskStep
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.or
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object StageSpec : Spek({
     describe("a stage") {
@@ -58,7 +58,7 @@ object StageSpec : Spek({
                 beforeEachTest { whenever(rule.evaluate(events)).doReturn(TaskStepRuleEvaluationResult.NotReady) }
 
                 on("getting the next step") {
-                    val result = stage.popNextStep(events)
+                    val result by runForEachTest { stage.popNextStep(events) }
 
                     it("returns that there are no steps ready") {
                         assertThat(result, equalTo(NoStepsReady))
@@ -71,7 +71,7 @@ object StageSpec : Spek({
                 beforeEachTest { whenever(rule.evaluate(events)).doReturn(TaskStepRuleEvaluationResult.Ready(step)) }
 
                 on("getting the next step") {
-                    val result = stage.popNextStep(events)
+                    val result by runForEachTest { stage.popNextStep(events) }
 
                     it("returns that there is a step ready") {
                         assertThat(result, equalTo(StepReady(step)))
@@ -79,8 +79,8 @@ object StageSpec : Spek({
                 }
 
                 on("getting the next two steps") {
-                    val firstResult = stage.popNextStep(events)
-                    val secondResult = stage.popNextStep(events)
+                    val firstResult by runForEachTest { stage.popNextStep(events) }
+                    val secondResult by runForEachTest { stage.popNextStep(events) }
 
                     it("returns that there is a step ready for the first request") {
                         assertThat(firstResult, equalTo(StepReady(step)))
@@ -106,7 +106,7 @@ object StageSpec : Spek({
                 }
 
                 on("getting the next step") {
-                    val result = stage.popNextStep(events)
+                    val result by runForEachTest { stage.popNextStep(events) }
 
                     it("returns that there are no steps ready") {
                         assertThat(result, equalTo(NoStepsReady))
@@ -123,8 +123,8 @@ object StageSpec : Spek({
                 }
 
                 on("getting the next two steps") {
-                    val firstResult = stage.popNextStep(events)
-                    val secondResult = stage.popNextStep(events)
+                    val firstResult by runForEachTest { stage.popNextStep(events) }
+                    val secondResult by runForEachTest { stage.popNextStep(events) }
 
                     it("returns that there is a step ready for the first request") {
                         assertThat(firstResult, equalTo(StepReady(step)))
@@ -146,9 +146,9 @@ object StageSpec : Spek({
                 }
 
                 on("getting the next three steps") {
-                    val firstResult = stage.popNextStep(events)
-                    val secondResult = stage.popNextStep(events)
-                    val thirdResult = stage.popNextStep(events)
+                    val firstResult by runForEachTest { stage.popNextStep(events) }
+                    val secondResult by runForEachTest { stage.popNextStep(events) }
+                    val thirdResult by runForEachTest { stage.popNextStep(events) }
 
                     it("returns that there is a step ready for the first request") {
                         assertThat(firstResult, equalTo<NextStepResult, NextStepResult>(StepReady(step1)) or equalTo(StepReady(step2)))

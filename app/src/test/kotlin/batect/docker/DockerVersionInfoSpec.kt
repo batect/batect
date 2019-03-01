@@ -19,16 +19,14 @@ package batect.docker
 import batect.testutils.equalTo
 import batect.utils.Version
 import com.natpryce.hamkrest.assertion.assertThat
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object DockerVersionInfoSpec : Spek({
-    given("a set of Docker version information") {
+    describe("a set of Docker version information") {
         val info = DockerVersionInfo(Version(17, 9, 1, "ce"), "serverApi", "serverMinApi", "serverCommit")
 
-        on("converting it to a string") {
+        describe("converting it to a string") {
             val result = info.toString()
 
             it("returns a human-readable representation of itself") {

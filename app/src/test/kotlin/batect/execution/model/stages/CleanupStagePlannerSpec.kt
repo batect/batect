@@ -43,6 +43,9 @@ import batect.execution.model.rules.cleanup.StopContainerStepRule
 import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
+import batect.testutils.given
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.hasElement
@@ -51,12 +54,9 @@ import com.natpryce.hamkrest.isEmpty
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.TestContainer
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.Suite
+import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Paths
 
 object CleanupStagePlannerSpec : Spek({
@@ -77,7 +77,7 @@ object CleanupStagePlannerSpec : Spek({
 
         given("no events were posted") {
             on("creating the stage") {
-                val stage = planner.createStage(graph, events)
+                val stage by runForEachTest { planner.createStage(graph, events) }
 
                 it("has no rules") {
                     assertThat(stage.rules, isEmpty)
@@ -93,11 +93,12 @@ object CleanupStagePlannerSpec : Spek({
             given("no containers were created") {
                 given("no temporary files or directories were created") {
                     on("creating the stage") {
-                        val stage = planner.createStage(graph, events)
-
-                        itHasExactlyTheRules(stage, mapOf(
-                            "delete the task network" to DeleteTaskNetworkStepRule(network, emptySet())
-                        ))
+                        itHasExactlyTheRules(
+                            { planner.createStage(graph, events) },
+                            mapOf(
+                                "delete the task network" to DeleteTaskNetworkStepRule(network, emptySet())
+                            )
+                        )
                     }
                 }
 
@@ -113,14 +114,15 @@ object CleanupStagePlannerSpec : Spek({
                     }
 
                     on("creating the stage") {
-                        val stage = planner.createStage(graph, events)
-
-                        itHasExactlyTheRules(stage, mapOf(
-                            "delete the task network" to DeleteTaskNetworkStepRule(network, emptySet()),
-                            "delete the first file" to DeleteTemporaryFileStepRule(file1, null),
-                            "delete the second file" to DeleteTemporaryFileStepRule(file2, null),
-                            "delete the directory" to DeleteTemporaryDirectoryStepRule(directory, null)
-                        ))
+                        itHasExactlyTheRules(
+                            { planner.createStage(graph, events) },
+                            mapOf(
+                                "delete the task network" to DeleteTaskNetworkStepRule(network, emptySet()),
+                                "delete the first file" to DeleteTemporaryFileStepRule(file1, null),
+                                "delete the second file" to DeleteTemporaryFileStepRule(file2, null),
+                                "delete the directory" to DeleteTemporaryDirectoryStepRule(directory, null)
+                            )
+                        )
                     }
                 }
             }
@@ -133,12 +135,13 @@ object CleanupStagePlannerSpec : Spek({
                 given("the container was not started") {
                     given("no temporary files or directories were created") {
                         on("creating the stage") {
-                            val stage = planner.createStage(graph, events)
-
-                            itHasExactlyTheRules(stage, mapOf(
-                                "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
-                                "remove the container" to RemoveContainerStepRule(taskContainer, dockerContainer, false)
-                            ))
+                            itHasExactlyTheRules(
+                                { planner.createStage(graph, events) },
+                                mapOf(
+                                    "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
+                                    "remove the container" to RemoveContainerStepRule(taskContainer, dockerContainer, false)
+                                )
+                            )
                         }
                     }
 
@@ -156,16 +159,17 @@ object CleanupStagePlannerSpec : Spek({
                         }
 
                         on("creating the stage") {
-                            val stage = planner.createStage(graph, events)
-
-                            itHasExactlyTheRules(stage, mapOf(
-                                "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
-                                "remove the container" to RemoveContainerStepRule(taskContainer, dockerContainer, false),
-                                "delete the first file after the container is removed" to DeleteTemporaryFileStepRule(file1, taskContainer),
-                                "delete the second file" to DeleteTemporaryFileStepRule(file2, null),
-                                "delete the first directory after the container is removed" to DeleteTemporaryDirectoryStepRule(directory1, taskContainer),
-                                "delete the second directory" to DeleteTemporaryDirectoryStepRule(directory2, null)
-                            ))
+                            itHasExactlyTheRules(
+                                { planner.createStage(graph, events) },
+                                mapOf(
+                                    "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
+                                    "remove the container" to RemoveContainerStepRule(taskContainer, dockerContainer, false),
+                                    "delete the first file after the container is removed" to DeleteTemporaryFileStepRule(file1, taskContainer),
+                                    "delete the second file" to DeleteTemporaryFileStepRule(file2, null),
+                                    "delete the first directory after the container is removed" to DeleteTemporaryDirectoryStepRule(directory1, taskContainer),
+                                    "delete the second directory" to DeleteTemporaryDirectoryStepRule(directory2, null)
+                                )
+                            )
                         }
                     }
                 }
@@ -175,13 +179,14 @@ object CleanupStagePlannerSpec : Spek({
 
                     given("no temporary files or directories were created") {
                         on("creating the stage") {
-                            val stage = planner.createStage(graph, events)
-
-                            itHasExactlyTheRules(stage, mapOf(
-                                "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
-                                "stop the container" to StopContainerStepRule(taskContainer, dockerContainer, emptySet()),
-                                "remove the container after it is stopped" to RemoveContainerStepRule(taskContainer, dockerContainer, true)
-                            ))
+                            itHasExactlyTheRules(
+                                { planner.createStage(graph, events) },
+                                mapOf(
+                                    "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
+                                    "stop the container" to StopContainerStepRule(taskContainer, dockerContainer, emptySet()),
+                                    "remove the container after it is stopped" to RemoveContainerStepRule(taskContainer, dockerContainer, true)
+                                )
+                            )
                         }
                     }
 
@@ -199,17 +204,18 @@ object CleanupStagePlannerSpec : Spek({
                         }
 
                         on("creating the stage") {
-                            val stage = planner.createStage(graph, events)
-
-                            itHasExactlyTheRules(stage, mapOf(
-                                "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
-                                "stop the container" to StopContainerStepRule(taskContainer, dockerContainer, emptySet()),
-                                "remove the container after it is stopped" to RemoveContainerStepRule(taskContainer, dockerContainer, true),
-                                "delete the first file after the container is removed" to DeleteTemporaryFileStepRule(file1, taskContainer),
-                                "delete the second file" to DeleteTemporaryFileStepRule(file2, null),
-                                "delete the first directory after the container is removed" to DeleteTemporaryDirectoryStepRule(directory1, taskContainer),
-                                "delete the second directory" to DeleteTemporaryDirectoryStepRule(directory2, null)
-                            ))
+                            itHasExactlyTheRules(
+                                { planner.createStage(graph, events) },
+                                mapOf(
+                                    "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
+                                    "stop the container" to StopContainerStepRule(taskContainer, dockerContainer, emptySet()),
+                                    "remove the container after it is stopped" to RemoveContainerStepRule(taskContainer, dockerContainer, true),
+                                    "delete the first file after the container is removed" to DeleteTemporaryFileStepRule(file1, taskContainer),
+                                    "delete the second file" to DeleteTemporaryFileStepRule(file2, null),
+                                    "delete the first directory after the container is removed" to DeleteTemporaryDirectoryStepRule(directory1, taskContainer),
+                                    "delete the second directory" to DeleteTemporaryDirectoryStepRule(directory2, null)
+                                )
+                            )
                         }
                     }
                 }
@@ -229,14 +235,15 @@ object CleanupStagePlannerSpec : Spek({
                 given("none of the containers were started") {
                     given("no temporary files or directories were created") {
                         on("creating the stage") {
-                            val stage = planner.createStage(graph, events)
-
-                            itHasExactlyTheRules(stage, mapOf(
-                                "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
-                                "remove the task container" to RemoveContainerStepRule(taskContainer, taskDockerContainer, false),
-                                "remove the first dependency container" to RemoveContainerStepRule(container1, container1DockerContainer, false),
-                                "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false)
-                            ))
+                            itHasExactlyTheRules(
+                                { planner.createStage(graph, events) },
+                                mapOf(
+                                    "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
+                                    "remove the task container" to RemoveContainerStepRule(taskContainer, taskDockerContainer, false),
+                                    "remove the first dependency container" to RemoveContainerStepRule(container1, container1DockerContainer, false),
+                                    "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false)
+                                )
+                            )
                         }
                     }
 
@@ -254,18 +261,19 @@ object CleanupStagePlannerSpec : Spek({
                         }
 
                         on("creating the stage") {
-                            val stage = planner.createStage(graph, events)
-
-                            itHasExactlyTheRules(stage, mapOf(
-                                "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
-                                "remove the task container" to RemoveContainerStepRule(taskContainer, taskDockerContainer, false),
-                                "remove the first dependency container" to RemoveContainerStepRule(container1, container1DockerContainer, false),
-                                "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false),
-                                "delete the first file after the task container is removed" to DeleteTemporaryFileStepRule(file1, taskContainer),
-                                "delete the second file after the associated container is removed" to DeleteTemporaryFileStepRule(file2, container1),
-                                "delete the first directory after the container is removed" to DeleteTemporaryDirectoryStepRule(directory1, taskContainer),
-                                "delete the second directory after the associated container is removed" to DeleteTemporaryDirectoryStepRule(directory2, container1)
-                            ))
+                            itHasExactlyTheRules(
+                                { planner.createStage(graph, events) },
+                                mapOf(
+                                    "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
+                                    "remove the task container" to RemoveContainerStepRule(taskContainer, taskDockerContainer, false),
+                                    "remove the first dependency container" to RemoveContainerStepRule(container1, container1DockerContainer, false),
+                                    "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false),
+                                    "delete the first file after the task container is removed" to DeleteTemporaryFileStepRule(file1, taskContainer),
+                                    "delete the second file after the associated container is removed" to DeleteTemporaryFileStepRule(file2, container1),
+                                    "delete the first directory after the container is removed" to DeleteTemporaryDirectoryStepRule(directory1, taskContainer),
+                                    "delete the second directory after the associated container is removed" to DeleteTemporaryDirectoryStepRule(directory2, container1)
+                                )
+                            )
                         }
                     }
                 }
@@ -277,15 +285,16 @@ object CleanupStagePlannerSpec : Spek({
 
                     given("no temporary files or directories were created") {
                         on("creating the stage") {
-                            val stage = planner.createStage(graph, events)
-
-                            itHasExactlyTheRules(stage, mapOf(
-                                "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
-                                "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, emptySet()),
-                                "remove the task container" to RemoveContainerStepRule(taskContainer, taskDockerContainer, false),
-                                "remove the first dependency container after it is stopped" to RemoveContainerStepRule(container1, container1DockerContainer, true),
-                                "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false)
-                            ))
+                            itHasExactlyTheRules(
+                                { planner.createStage(graph, events) },
+                                mapOf(
+                                    "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
+                                    "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, emptySet()),
+                                    "remove the task container" to RemoveContainerStepRule(taskContainer, taskDockerContainer, false),
+                                    "remove the first dependency container after it is stopped" to RemoveContainerStepRule(container1, container1DockerContainer, true),
+                                    "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false)
+                                )
+                            )
                         }
                     }
 
@@ -303,19 +312,20 @@ object CleanupStagePlannerSpec : Spek({
                         }
 
                         on("creating the stage") {
-                            val stage = planner.createStage(graph, events)
-
-                            itHasExactlyTheRules(stage, mapOf(
-                                "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
-                                "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, emptySet()),
-                                "remove the task container" to RemoveContainerStepRule(taskContainer, taskDockerContainer, false),
-                                "remove the first dependency container after it is stopped" to RemoveContainerStepRule(container1, container1DockerContainer, true),
-                                "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false),
-                                "delete the first file after the task container is removed" to DeleteTemporaryFileStepRule(file1, taskContainer),
-                                "delete the second file after the associated container is removed" to DeleteTemporaryFileStepRule(file2, container1),
-                                "delete the first directory after the container is removed" to DeleteTemporaryDirectoryStepRule(directory1, taskContainer),
-                                "delete the second directory after the associated container is removed" to DeleteTemporaryDirectoryStepRule(directory2, container1)
-                            ))
+                            itHasExactlyTheRules(
+                                { planner.createStage(graph, events) },
+                                mapOf(
+                                    "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
+                                    "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, emptySet()),
+                                    "remove the task container" to RemoveContainerStepRule(taskContainer, taskDockerContainer, false),
+                                    "remove the first dependency container after it is stopped" to RemoveContainerStepRule(container1, container1DockerContainer, true),
+                                    "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false),
+                                    "delete the first file after the task container is removed" to DeleteTemporaryFileStepRule(file1, taskContainer),
+                                    "delete the second file after the associated container is removed" to DeleteTemporaryFileStepRule(file2, container1),
+                                    "delete the first directory after the container is removed" to DeleteTemporaryDirectoryStepRule(directory1, taskContainer),
+                                    "delete the second directory after the associated container is removed" to DeleteTemporaryDirectoryStepRule(directory2, container1)
+                                )
+                            )
                         }
                     }
                 }
@@ -329,17 +339,18 @@ object CleanupStagePlannerSpec : Spek({
 
                     given("no temporary files or directories were created") {
                         on("creating the stage") {
-                            val stage = planner.createStage(graph, events)
-
-                            itHasExactlyTheRules(stage, mapOf(
-                                "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
-                                "stop the task container" to StopContainerStepRule(taskContainer, taskDockerContainer, emptySet()),
-                                "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, setOf(container2, taskContainer)),
-                                "stop the second dependency container" to StopContainerStepRule(container2, container2DockerContainer, setOf(taskContainer)),
-                                "remove the task container after it is stopped" to RemoveContainerStepRule(taskContainer, taskDockerContainer, true),
-                                "remove the first dependency container after it is stopped" to RemoveContainerStepRule(container1, container1DockerContainer, true),
-                                "remove the second dependency container after it is stopped" to RemoveContainerStepRule(container2, container2DockerContainer, true)
-                            ))
+                            itHasExactlyTheRules(
+                                { planner.createStage(graph, events) },
+                                mapOf(
+                                    "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
+                                    "stop the task container" to StopContainerStepRule(taskContainer, taskDockerContainer, emptySet()),
+                                    "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, setOf(container2, taskContainer)),
+                                    "stop the second dependency container" to StopContainerStepRule(container2, container2DockerContainer, setOf(taskContainer)),
+                                    "remove the task container after it is stopped" to RemoveContainerStepRule(taskContainer, taskDockerContainer, true),
+                                    "remove the first dependency container after it is stopped" to RemoveContainerStepRule(container1, container1DockerContainer, true),
+                                    "remove the second dependency container after it is stopped" to RemoveContainerStepRule(container2, container2DockerContainer, true)
+                                )
+                            )
                         }
                     }
 
@@ -357,21 +368,22 @@ object CleanupStagePlannerSpec : Spek({
                         }
 
                         on("creating the stage") {
-                            val stage = planner.createStage(graph, events)
-
-                            itHasExactlyTheRules(stage, mapOf(
-                                "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
-                                "stop the task container" to StopContainerStepRule(taskContainer, taskDockerContainer, emptySet()),
-                                "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, setOf(container2, taskContainer)),
-                                "stop the second dependency container" to StopContainerStepRule(container2, container2DockerContainer, setOf(taskContainer)),
-                                "remove the task container after it is stopped" to RemoveContainerStepRule(taskContainer, taskDockerContainer, true),
-                                "remove the first dependency container after it is stopped" to RemoveContainerStepRule(container1, container1DockerContainer, true),
-                                "remove the second dependency container after it is stopped" to RemoveContainerStepRule(container2, container2DockerContainer, true),
-                                "delete the first file after the task container is removed" to DeleteTemporaryFileStepRule(file1, taskContainer),
-                                "delete the second file after the associated container is removed" to DeleteTemporaryFileStepRule(file2, container1),
-                                "delete the first directory after the container is removed" to DeleteTemporaryDirectoryStepRule(directory1, taskContainer),
-                                "delete the second directory after the associated container is removed" to DeleteTemporaryDirectoryStepRule(directory2, container1)
-                            ))
+                            itHasExactlyTheRules(
+                                { planner.createStage(graph, events) },
+                                mapOf(
+                                    "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
+                                    "stop the task container" to StopContainerStepRule(taskContainer, taskDockerContainer, emptySet()),
+                                    "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, setOf(container2, taskContainer)),
+                                    "stop the second dependency container" to StopContainerStepRule(container2, container2DockerContainer, setOf(taskContainer)),
+                                    "remove the task container after it is stopped" to RemoveContainerStepRule(taskContainer, taskDockerContainer, true),
+                                    "remove the first dependency container after it is stopped" to RemoveContainerStepRule(container1, container1DockerContainer, true),
+                                    "remove the second dependency container after it is stopped" to RemoveContainerStepRule(container2, container2DockerContainer, true),
+                                    "delete the first file after the task container is removed" to DeleteTemporaryFileStepRule(file1, taskContainer),
+                                    "delete the second file after the associated container is removed" to DeleteTemporaryFileStepRule(file2, container1),
+                                    "delete the first directory after the container is removed" to DeleteTemporaryDirectoryStepRule(directory1, taskContainer),
+                                    "delete the second directory after the associated container is removed" to DeleteTemporaryDirectoryStepRule(directory2, container1)
+                                )
+                            )
                         }
                     }
                 }
@@ -380,7 +392,9 @@ object CleanupStagePlannerSpec : Spek({
     }
 })
 
-private fun TestContainer.itHasExactlyTheRules(stage: CleanupStage, expectedRules: Map<String, CleanupTaskStepRule>) {
+private fun Suite.itHasExactlyTheRules(stageCreator: () -> CleanupStage, expectedRules: Map<String, CleanupTaskStepRule>) {
+    val stage by runForEachTest(stageCreator)
+
     expectedRules.forEach { description, expectedRule ->
         it("includes a rule to $description") {
             assertThat(stage.rules, hasElement(expectedRule))

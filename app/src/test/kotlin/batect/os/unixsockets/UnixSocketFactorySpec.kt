@@ -18,16 +18,16 @@ package batect.os.unixsockets
 
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import jnr.enxio.channels.NativeSelectorProvider
 import jnr.unixsocket.UnixServerSocketChannel
 import jnr.unixsocket.UnixSocketAddress
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -47,17 +47,21 @@ object UnixSocketFactorySpec : Spek({
             afterEachTest { socket.close() }
 
             on("using that socket to connect to a Unix socket") {
-                val socketPath = getTemporarySocketFileName()
-                val serverChannel = createSocketServer(socketPath)
+                val dataRead by runForEachTest {
+                    val socketPath = getTemporarySocketFileName()
+                    val serverChannel = createSocketServer(socketPath)
 
-                val port = 1234
-                val encodedPath = UnixSocketDns.encodePath(socketPath.toString())
-                val address = InetSocketAddress.createUnresolved(encodedPath, port)
-                socket.connect(address)
-                socket.soTimeout = 1000
+                    val port = 1234
+                    val encodedPath = UnixSocketDns.encodePath(socketPath.toString())
+                    val address = InetSocketAddress.createUnresolved(encodedPath, port)
+                    socket.connect(address)
+                    socket.soTimeout = 1000
 
-                val dataRead = socket.getInputStream().bufferedReader().readLine()
-                serverChannel.close()
+                    val dataRead = socket.getInputStream().bufferedReader().readLine()
+                    serverChannel.close()
+
+                    dataRead
+                }
 
                 it("connects to the socket and can receive data") {
                     assertThat(dataRead, equalTo("Hello from the other side"))

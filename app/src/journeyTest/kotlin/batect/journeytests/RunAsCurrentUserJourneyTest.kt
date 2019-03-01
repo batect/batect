@@ -19,13 +19,14 @@ package batect.journeytests
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.itCleansUpAllContainersItCreates
 import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
+import batect.testutils.createForGroup
+import batect.testutils.on
+import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Path
@@ -36,17 +37,20 @@ object RunAsCurrentUserJourneyTest : Spek({
         "run-as-current-user" to "a task with 'run as current user' enabled",
         "run-as-current-user-with-mount" to "a task with 'run as current user' enabled that has a mount inside the home directory"
     ).forEach { name, description ->
-        given(description) {
-            val runner = ApplicationRunner(name)
+        describe(description) {
+            val runner by createForGroup { ApplicationRunner(name) }
 
             on("running that task") {
-                val outputDirectory = Paths.get("build/test-results/journey-tests/$name").toAbsolutePath()
-                Files.createDirectories(outputDirectory)
-                deleteDirectoryContents(outputDirectory)
+                val outputDirectory by createForGroup { Paths.get("build/test-results/journey-tests/$name").toAbsolutePath() }
 
-                val result = runner.runApplication(listOf("the-task"))
-                val userName = System.getProperty("user.name")
-                val groupName = getGroupName()
+                beforeGroup {
+                    Files.createDirectories(outputDirectory)
+                    deleteDirectoryContents(outputDirectory)
+                }
+
+                val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
+                val userName by runBeforeGroup { System.getProperty("user.name") }
+                val groupName by runBeforeGroup { getGroupName() }
 
                 it("prints the output from that task") {
                     val expectedOutput = listOf(
@@ -71,8 +75,8 @@ object RunAsCurrentUserJourneyTest : Spek({
                     assertThat(result.exitCode, equalTo(0))
                 }
 
-                itCleansUpAllContainersItCreates(result)
-                itCleansUpAllNetworksItCreates(result)
+                itCleansUpAllContainersItCreates { result }
+                itCleansUpAllNetworksItCreates { result }
             }
         }
     }

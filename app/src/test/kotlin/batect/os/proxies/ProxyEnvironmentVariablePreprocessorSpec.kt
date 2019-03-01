@@ -23,7 +23,10 @@ import batect.logging.Severity
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
 import batect.testutils.hasMessage
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withAdditionalData
 import batect.testutils.withLogMessage
 import batect.testutils.withSeverity
@@ -32,11 +35,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object ProxyEnvironmentVariablePreprocessorSpec : Spek({
     describe("a proxy environment variable preprocessor") {
@@ -49,7 +49,7 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
             beforeEachTest { whenever(hostNameResolver.resolveNameOfDockerHost()).doReturn(DockerHostNameResolutionResult.NotSupported) }
 
             on("processing a variable that does not refer to the local machine") {
-                val result = preprocessor.process("http://proxy.mycompany.com")
+                val result by runForEachTest { preprocessor.process("http://proxy.mycompany.com") }
 
                 it("returns the original value unchanged") {
                     assertThat(result, equalTo("http://proxy.mycompany.com"))
@@ -65,7 +65,7 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
             }
 
             on("processing a variable that refers to the local machine") {
-                val result = preprocessor.process("http://localhost")
+                val result by runForEachTest { preprocessor.process("http://localhost") }
 
                 it("returns the original value unchanged") {
                     assertThat(result, equalTo("http://localhost"))
@@ -85,7 +85,7 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
             beforeEachTest { whenever(hostNameResolver.resolveNameOfDockerHost()).doReturn(DockerHostNameResolutionResult.Resolved("local.docker")) }
 
             on("processing a variable that does not refer to the local machine") {
-                val result = preprocessor.process("http://proxy.mycompany.com")
+                val result by runForEachTest { preprocessor.process("http://proxy.mycompany.com") }
 
                 it("returns the original value unchanged") {
                     assertThat(result, equalTo("http://proxy.mycompany.com"))
@@ -115,7 +115,7 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
                     "http://user:password@$localhostAddress" to "http://user:password@local.docker/"
                 ).forEach { originalValue, expectedValue ->
                     on("processing a variable that refers to the local machine through '$originalValue'") {
-                        val result = preprocessor.process(originalValue)
+                        val result by runForEachTest { preprocessor.process(originalValue) }
 
                         it("returns the original value with the hostname replaced by the hostname of the Docker host") {
                             assertThat(result, equalTo(expectedValue))
@@ -142,7 +142,7 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
                 "http://::1"
             ).forEach { address ->
                 on("processing a variable that is in the invalid format '$address'") {
-                    val result = preprocessor.process(address)
+                    val result by runForEachTest { preprocessor.process(address) }
 
                     it("returns the original value unchanged") {
                         assertThat(result, equalTo(address))

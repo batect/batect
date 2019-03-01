@@ -19,19 +19,20 @@ package batect.journeytests
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.itCleansUpAllContainersItCreates
 import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
+import batect.testutils.createForGroup
+import batect.testutils.on
+import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object NonStandardConfigurationFileNameTest : Spek({
-    given("a configuration file with a non-standard name") {
+    describe("a configuration file with a non-standard name") {
         on("listing available tasks") {
-            val runner = ApplicationRunner("non-standard-name")
-            val result = runner.runApplication(listOf("-f", "another-name.yml", "--list-tasks"))
+            val runner by createForGroup { ApplicationRunner("non-standard-name") }
+            val result by runBeforeGroup { runner.runApplication(listOf("-f", "another-name.yml", "--list-tasks")) }
 
             it("prints a list of all available tasks") {
                 assertThat(result.output, containsSubstring("""
@@ -46,8 +47,8 @@ object NonStandardConfigurationFileNameTest : Spek({
         }
 
         on("running a task") {
-            val runner = ApplicationRunner("non-standard-name")
-            val result = runner.runApplication(listOf("-f", "another-name.yml", "task-1"))
+            val runner by createForGroup { ApplicationRunner("non-standard-name") }
+            val result by runBeforeGroup { runner.runApplication(listOf("-f", "another-name.yml", "task-1")) }
 
             it("prints the output of the task ") {
                 assertThat(result.output, containsSubstring("This is some output from task 1\r\n"))
@@ -57,8 +58,8 @@ object NonStandardConfigurationFileNameTest : Spek({
                 assertThat(result.exitCode, equalTo(123))
             }
 
-            itCleansUpAllContainersItCreates(result)
-            itCleansUpAllNetworksItCreates(result)
+            itCleansUpAllContainersItCreates { result }
+            itCleansUpAllNetworksItCreates { result }
         }
     }
 })

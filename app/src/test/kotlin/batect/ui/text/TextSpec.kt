@@ -17,6 +17,7 @@
 package batect.ui.text
 
 import batect.testutils.equalTo
+import batect.testutils.on
 import batect.ui.ConsoleColor
 import batect.ui.text.Text.Companion.black
 import batect.ui.text.Text.Companion.blue
@@ -27,10 +28,8 @@ import batect.ui.text.Text.Companion.red
 import batect.ui.text.Text.Companion.white
 import batect.ui.text.Text.Companion.yellow
 import com.natpryce.hamkrest.assertion.assertThat
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object TextSpec : Spek({
     describe("some formatted text") {

@@ -17,6 +17,8 @@
 package batect.os
 
 import batect.testutils.createForEachTest
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.doReturn
@@ -24,10 +26,8 @@ import com.nhaarman.mockitokotlin2.mock
 import jnr.posix.Group
 import jnr.posix.POSIX
 import jnr.posix.Passwd
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.util.Properties
 
 object SystemInfoSpec : Spek({
@@ -62,7 +62,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the JVM version") {
-            val jvmVersion = SystemInfo(posix, systemProperties).jvmVersion
+            val jvmVersion by runForEachTest { SystemInfo(posix, systemProperties).jvmVersion }
 
             it("returns a formatted string containing the details of the JVM") {
                 assertThat(jvmVersion, equalTo("Awesome JVMs, Inc. Best JVM Ever 1.2.3"))
@@ -70,7 +70,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the OS version") {
-            val osVersion = SystemInfo(posix, systemProperties).osVersion
+            val osVersion by runForEachTest { SystemInfo(posix, systemProperties).osVersion }
 
             it("returns a formatted string containing the details of the OS") {
                 assertThat(osVersion, equalTo("Best OS Ever 4.5.6 (x86)"))
@@ -79,8 +79,9 @@ object SystemInfoSpec : Spek({
 
         describe("getting the operating system and whether that OS is supported") {
             on("when running on OS X") {
-                systemProperties.setProperty("os.name", "Mac OS X")
-                val systemInfo = SystemInfo(posix, systemProperties)
+                beforeEachTest { systemProperties.setProperty("os.name", "Mac OS X") }
+
+                val systemInfo by runForEachTest { SystemInfo(posix, systemProperties) }
 
                 it("returns that the operating system is Mac OS X") {
                     assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Mac))
@@ -92,8 +93,9 @@ object SystemInfoSpec : Spek({
             }
 
             on("when running on Linux") {
-                systemProperties.setProperty("os.name", "Linux")
-                val systemInfo = SystemInfo(posix, systemProperties)
+                beforeEachTest { systemProperties.setProperty("os.name", "Linux") }
+
+                val systemInfo by runForEachTest { SystemInfo(posix, systemProperties) }
 
                 it("returns that the operating system is Linux") {
                     assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Linux))
@@ -105,8 +107,9 @@ object SystemInfoSpec : Spek({
             }
 
             on("when running on another operating system") {
-                systemProperties.setProperty("os.name", "Something else")
-                val systemInfo = SystemInfo(posix, systemProperties)
+                beforeEachTest { systemProperties.setProperty("os.name", "Something else") }
+
+                val systemInfo by runForEachTest { SystemInfo(posix, systemProperties) }
 
                 it("returns that the operating system is unknown") {
                     assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Other))
@@ -119,7 +122,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the home directory") {
-            val homeDir = SystemInfo(posix, systemProperties).homeDirectory
+            val homeDir by runForEachTest { SystemInfo(posix, systemProperties).homeDirectory }
 
             it("returns the user's home directory") {
                 assertThat(homeDir, equalTo("/some/home/dir"))
@@ -127,7 +130,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the current user ID") {
-            val userID = SystemInfo(posix, systemProperties).userId
+            val userID by runForEachTest { SystemInfo(posix, systemProperties).userId }
 
             it("returns the ID given by the `id -u` command") {
                 assertThat(userID, equalTo(123))
@@ -135,7 +138,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the current user name") {
-            val userName = SystemInfo(posix, systemProperties).userName
+            val userName by runForEachTest { SystemInfo(posix, systemProperties).userName }
 
             it("returns the ID given by the `id -un` command") {
                 assertThat(userName, equalTo("awesome-user"))
@@ -143,7 +146,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the current group ID") {
-            val groupID = SystemInfo(posix, systemProperties).groupId
+            val groupID by runForEachTest { SystemInfo(posix, systemProperties).groupId }
 
             it("returns the ID given by the `id -g` command") {
                 assertThat(groupID, equalTo(777))
@@ -151,7 +154,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the current group name") {
-            val groupName = SystemInfo(posix, systemProperties).groupName
+            val groupName by runForEachTest { SystemInfo(posix, systemProperties).groupName }
 
             it("returns the ID given by the `id -gn` command") {
                 assertThat(groupName, equalTo("awesome-group"))

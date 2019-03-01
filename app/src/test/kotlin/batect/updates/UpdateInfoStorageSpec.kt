@@ -19,6 +19,8 @@ package batect.updates
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
+import batect.testutils.on
+import batect.testutils.runNullableForEachTest
 import batect.utils.Version
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
@@ -28,10 +30,8 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -54,7 +54,7 @@ object UpdateInfoStorageSpec : Spek({
 
         describe("reading update information from disk") {
             on("when no update information has been written to disk") {
-                val updateInfo = storage.read()
+                val updateInfo by runNullableForEachTest { storage.read() }
 
                 it("returns no update information") {
                     assertThat(updateInfo, absent())
@@ -62,39 +62,47 @@ object UpdateInfoStorageSpec : Spek({
             }
 
             on("when some update information has been written to disk already in the pre-v0.12 format") {
-                Files.createDirectories(fileSystem.getPath(expectedUpdateInfoDirectory))
-                Files.write(fileSystem.getPath(expectedUpdateInfoPath), listOf(
-                    "version=1.2.3",
-                    "url=https://www.something.com/batect-updates/abc",
-                    "lastUpdated=2017-10-03T11:31:12Z"
-                ))
+                beforeEachTest {
+                    Files.createDirectories(fileSystem.getPath(expectedUpdateInfoDirectory))
+                    Files.write(
+                        fileSystem.getPath(expectedUpdateInfoPath), listOf(
+                            "version=1.2.3",
+                            "url=https://www.something.com/batect-updates/abc",
+                            "lastUpdated=2017-10-03T11:31:12Z"
+                        )
+                    )
+                }
 
-                val updateInfo = storage.read()
+                val updateInfo by runNullableForEachTest { storage.read() }
 
                 it("returns the update information from the file and no script download URL") {
                     assertThat(updateInfo!!, has(UpdateInfo::version, equalTo(Version(1, 2, 3))))
-                    assertThat(updateInfo, has(UpdateInfo::url, equalTo("https://www.something.com/batect-updates/abc")))
-                    assertThat(updateInfo, has(UpdateInfo::lastUpdated, equalTo(ZonedDateTime.of(2017, 10, 3, 11, 31, 12, 0, ZoneOffset.UTC))))
-                    assertThat(updateInfo, has(UpdateInfo::scriptDownloadUrl, absent()))
+                    assertThat(updateInfo!!, has(UpdateInfo::url, equalTo("https://www.something.com/batect-updates/abc")))
+                    assertThat(updateInfo!!, has(UpdateInfo::lastUpdated, equalTo(ZonedDateTime.of(2017, 10, 3, 11, 31, 12, 0, ZoneOffset.UTC))))
+                    assertThat(updateInfo!!, has(UpdateInfo::scriptDownloadUrl, absent()))
                 }
             }
 
             on("when some update information has been written to disk already in the post-v0.12 format") {
-                Files.createDirectories(fileSystem.getPath(expectedUpdateInfoDirectory))
-                Files.write(fileSystem.getPath(expectedUpdateInfoPath), listOf(
-                    "version=1.2.3",
-                    "url=https://www.something.com/batect-updates/abc",
-                    "lastUpdated=2017-10-03T11:31:12Z",
-                    "scriptDownloadUrl=https://www.something.com/batect-updates/abc/wrapper"
-                ))
+                beforeEachTest {
+                    Files.createDirectories(fileSystem.getPath(expectedUpdateInfoDirectory))
+                    Files.write(
+                        fileSystem.getPath(expectedUpdateInfoPath), listOf(
+                            "version=1.2.3",
+                            "url=https://www.something.com/batect-updates/abc",
+                            "lastUpdated=2017-10-03T11:31:12Z",
+                            "scriptDownloadUrl=https://www.something.com/batect-updates/abc/wrapper"
+                        )
+                    )
+                }
 
-                val updateInfo = storage.read()
+                val updateInfo by runNullableForEachTest { storage.read() }
 
                 it("returns the update information from the file") {
                     assertThat(updateInfo!!, has(UpdateInfo::version, equalTo(Version(1, 2, 3))))
-                    assertThat(updateInfo, has(UpdateInfo::url, equalTo("https://www.something.com/batect-updates/abc")))
-                    assertThat(updateInfo, has(UpdateInfo::lastUpdated, equalTo(ZonedDateTime.of(2017, 10, 3, 11, 31, 12, 0, ZoneOffset.UTC))))
-                    assertThat(updateInfo, has(UpdateInfo::scriptDownloadUrl, equalTo("https://www.something.com/batect-updates/abc/wrapper")))
+                    assertThat(updateInfo!!, has(UpdateInfo::url, equalTo("https://www.something.com/batect-updates/abc")))
+                    assertThat(updateInfo!!, has(UpdateInfo::lastUpdated, equalTo(ZonedDateTime.of(2017, 10, 3, 11, 31, 12, 0, ZoneOffset.UTC))))
+                    assertThat(updateInfo!!, has(UpdateInfo::scriptDownloadUrl, equalTo("https://www.something.com/batect-updates/abc/wrapper")))
                 }
             }
         }
@@ -109,7 +117,7 @@ object UpdateInfoStorageSpec : Spek({
             )
 
             on("when the update information directory does not exist") {
-                storage.write(updateInfo)
+                beforeEachTest { storage.write(updateInfo) }
 
                 it("writes the update information to disk") {
                     val fileContents = Files.readAllLines(fileSystem.getPath(expectedUpdateInfoPath))
@@ -119,8 +127,10 @@ object UpdateInfoStorageSpec : Spek({
             }
 
             on("when the update information directory does exist but is empty") {
-                Files.createDirectories(fileSystem.getPath(expectedUpdateInfoDirectory))
-                storage.write(updateInfo)
+                beforeEachTest {
+                    Files.createDirectories(fileSystem.getPath(expectedUpdateInfoDirectory))
+                    storage.write(updateInfo)
+                }
 
                 it("writes the update information to disk") {
                     val fileContents = Files.readAllLines(fileSystem.getPath(expectedUpdateInfoPath))
@@ -130,9 +140,11 @@ object UpdateInfoStorageSpec : Spek({
             }
 
             on("when the update information file has been written previously") {
-                Files.createDirectories(fileSystem.getPath(expectedUpdateInfoDirectory))
-                Files.write(fileSystem.getPath(expectedUpdateInfoPath), listOf("Some old file content"))
-                storage.write(updateInfo)
+                beforeEachTest {
+                    Files.createDirectories(fileSystem.getPath(expectedUpdateInfoDirectory))
+                    Files.write(fileSystem.getPath(expectedUpdateInfoPath), listOf("Some old file content"))
+                    storage.write(updateInfo)
+                }
 
                 it("overwrites the contents of the file") {
                     val fileContents = Files.readAllLines(fileSystem.getPath(expectedUpdateInfoPath))

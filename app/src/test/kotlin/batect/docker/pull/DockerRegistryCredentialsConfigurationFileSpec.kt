@@ -20,16 +20,16 @@ import batect.os.ProcessRunner
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
+import batect.testutils.on
+import batect.testutils.runNullableForEachTest
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.mock
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 import java.util.Properties
 
@@ -52,7 +52,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
 
         given("the configuration file does not exist") {
             on("getting credentials for a registry") {
-                val credentials = configFile.getCredentialsForRegistry("someregistry.com")
+                val credentials by runNullableForEachTest { configFile.getCredentialsForRegistry("someregistry.com") }
 
                 it("returns no credentials") {
                     assertThat(credentials, absent())
@@ -66,7 +66,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
             }
 
             on("getting credentials for a registry") {
-                val credentials = configFile.getCredentialsForRegistry("someregistry.com")
+                val credentials by runNullableForEachTest { configFile.getCredentialsForRegistry("someregistry.com") }
 
                 it("returns no credentials") {
                     assertThat(credentials, absent())
@@ -87,7 +87,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
                     }
 
                     on("getting credentials for a registry") {
-                        val credentials = configFile.getCredentialsForRegistry("someregistry.com")
+                        val credentials by runNullableForEachTest { configFile.getCredentialsForRegistry("someregistry.com") }
 
                         it("returns credentials from the credential store") {
                             assertThat(credentials, equalTo(HelperBasedCredentialsSource("docker-credential-awesomesauce", "someregistry.com", processRunner)))
@@ -105,7 +105,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
                     }
 
                     on("getting credentials for a registry") {
-                        val credentials = configFile.getCredentialsForRegistry("someregistry.com")
+                        val credentials by runNullableForEachTest { configFile.getCredentialsForRegistry("someregistry.com") }
 
                         it("returns no credentials") {
                             assertThat(credentials, absent())
@@ -129,7 +129,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
                     }
 
                     on("getting credentials for a registry") {
-                        val credentials = configFile.getCredentialsForRegistry("someregistry.com")
+                        val credentials by runNullableForEachTest { configFile.getCredentialsForRegistry("someregistry.com") }
 
                         it("returns credentials from the credential store for the registry") {
                             assertThat(credentials, equalTo(HelperBasedCredentialsSource("docker-credential-specialsauce", "someregistry.com", processRunner)))
@@ -150,7 +150,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
                     }
 
                     on("getting credentials for a registry") {
-                        val credentials = configFile.getCredentialsForRegistry("someregistry.com")
+                        val credentials by runNullableForEachTest { configFile.getCredentialsForRegistry("someregistry.com") }
 
                         it("returns credentials from the credential store for the registry") {
                             assertThat(credentials, equalTo(HelperBasedCredentialsSource("docker-credential-specialsauce", "someregistry.com", processRunner)))
@@ -174,7 +174,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
                     }
 
                     on("getting credentials for a registry") {
-                        val credentials = configFile.getCredentialsForRegistry("someregistry.com")
+                        val credentials by runNullableForEachTest { configFile.getCredentialsForRegistry("someregistry.com") }
 
                         it("returns credentials from the credential store") {
                             assertThat(credentials, equalTo(HelperBasedCredentialsSource("docker-credential-awesomesauce", "someregistry.com", processRunner)))
@@ -195,7 +195,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
                     }
 
                     on("getting credentials for the registry") {
-                        val credentials = configFile.getCredentialsForRegistry("someregistry.com")
+                        val credentials by runNullableForEachTest { configFile.getCredentialsForRegistry("someregistry.com") }
 
                         it("returns no credentials") {
                             assertThat(credentials, absent())
@@ -222,7 +222,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
                     }
 
                     on("getting credentials for a registry") {
-                        val credentials = configFile.getCredentialsForRegistry("someregistry.com")
+                        val credentials by runNullableForEachTest { configFile.getCredentialsForRegistry("someregistry.com") }
 
                         it("returns credentials from the credential store") {
                             assertThat(credentials, equalTo(HelperBasedCredentialsSource("docker-credential-awesomesauce", "someregistry.com", processRunner)))
@@ -246,7 +246,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
                     }
 
                     on("getting credentials for a registry with credentials specified") {
-                        val credentials = configFile.getCredentialsForRegistry("someregistry.com")
+                        val credentials by runNullableForEachTest { configFile.getCredentialsForRegistry("someregistry.com") }
 
                         it("returns those credentials") {
                             assertThat(credentials, equalTo(BasicCredentialsSource("somecreds", "someregistry.com")))
@@ -254,7 +254,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
                     }
 
                     on("getting credentials for a registry with credentials specified but no 'auth' value") {
-                        val credentials = configFile.getCredentialsForRegistry("someregistrywithnoauth.com")
+                        val credentials by runNullableForEachTest { configFile.getCredentialsForRegistry("someregistrywithnoauth.com") }
 
                         it("returns no credentials") {
                             assertThat(credentials, absent())
@@ -262,7 +262,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
                     }
 
                     on("getting credentials for a registry with no credentials specified") {
-                        val credentials = configFile.getCredentialsForRegistry("someotherregistry.com")
+                        val credentials by runNullableForEachTest { configFile.getCredentialsForRegistry("someotherregistry.com") }
 
                         it("returns no credentials") {
                             assertThat(credentials, absent())
@@ -290,7 +290,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
                     }
 
                     on("getting credentials for a registry") {
-                        val credentials = configFile.getCredentialsForRegistry("someregistry.com")
+                        val credentials by runNullableForEachTest { configFile.getCredentialsForRegistry("someregistry.com") }
 
                         it("returns credentials from the credential store for the registry") {
                             assertThat(credentials, equalTo(HelperBasedCredentialsSource("docker-credential-specialsauce", "someregistry.com", processRunner)))
@@ -315,7 +315,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
                     }
 
                     on("getting credentials for a registry") {
-                        val credentials = configFile.getCredentialsForRegistry("someregistry.com")
+                        val credentials by runNullableForEachTest { configFile.getCredentialsForRegistry("someregistry.com") }
 
                         it("returns credentials from the credential store for the registry") {
                             assertThat(credentials, equalTo(HelperBasedCredentialsSource("docker-credential-specialsauce", "someregistry.com", processRunner)))
@@ -343,7 +343,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
                     }
 
                     on("getting credentials for a registry") {
-                        val credentials = configFile.getCredentialsForRegistry("someregistry.com")
+                        val credentials by runNullableForEachTest { configFile.getCredentialsForRegistry("someregistry.com") }
 
                         it("returns credentials from the credential store") {
                             assertThat(credentials, equalTo(HelperBasedCredentialsSource("docker-credential-awesomesauce", "someregistry.com", processRunner)))
@@ -368,7 +368,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
                     }
 
                     on("getting credentials for the registry") {
-                        val credentials = configFile.getCredentialsForRegistry("someregistry.com")
+                        val credentials by runNullableForEachTest { configFile.getCredentialsForRegistry("someregistry.com") }
 
                         it("returns the provided credentials") {
                             assertThat(credentials, equalTo(BasicCredentialsSource("somecreds", "someregistry.com")))

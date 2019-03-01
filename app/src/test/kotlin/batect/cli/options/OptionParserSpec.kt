@@ -17,7 +17,11 @@
 package batect.cli.options
 
 import batect.cli.options.defaultvalues.StaticDefaultValueProvider
+import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
@@ -25,23 +29,19 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
-import com.nhaarman.mockitokotlin2.reset
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object OptionParserSpec : Spek({
     describe("an option parser") {
         describe("parsing") {
             given("a parser with no options") {
-                val parser = OptionParser()
+                val parser by createForEachTest { OptionParser() }
 
                 on("parsing an empty list of arguments") {
-                    val result = parser.parseOptions(emptyList())
+                    val result by runForEachTest { parser.parseOptions(emptyList()) }
 
                     it("indicates that parsing succeeded and that no arguments were consumed") {
                         assertThat(result, equalTo(OptionsParsingResult.ReadOptions(0)))
@@ -49,7 +49,7 @@ object OptionParserSpec : Spek({
                 }
 
                 on("parsing a non-empty list of arguments") {
-                    val result = parser.parseOptions(listOf("some-argument"))
+                    val result by runForEachTest { parser.parseOptions(listOf("some-argument")) }
 
                     it("indicates that parsing succeeded and that no arguments were consumed") {
                         assertThat(result, equalTo(OptionsParsingResult.ReadOptions(0)))
@@ -58,22 +58,22 @@ object OptionParserSpec : Spek({
             }
 
             given("a parser with a single value option with a short name") {
-                val parser = OptionParser()
-                val option = mock<OptionDefinition> {
-                    on { longName } doReturn "value"
-                    on { longOption } doReturn "--value"
-                    on { shortName } doReturn 'v'
-                    on { shortOption } doReturn "-v"
+                val parser by createForEachTest { OptionParser() }
+                val option by createForEachTest {
+                    mock<OptionDefinition> {
+                        on { longName } doReturn "value"
+                        on { longOption } doReturn "--value"
+                        on { shortName } doReturn 'v'
+                        on { shortOption } doReturn "-v"
+                    }
                 }
 
-                parser.addOption(option)
-
                 beforeEachTest {
-                    reset(option)
+                    parser.addOption(option)
                 }
 
                 on("parsing an empty list of arguments") {
-                    val result = parser.parseOptions(emptyList())
+                    val result by runForEachTest { parser.parseOptions(emptyList()) }
 
                     it("indicates that parsing succeeded and that no arguments were consumed") {
                         assertThat(result, equalTo(OptionsParsingResult.ReadOptions(0)))
@@ -85,7 +85,7 @@ object OptionParserSpec : Spek({
                 }
 
                 on("parsing a list of arguments where the option is not specified") {
-                    val result = parser.parseOptions(listOf("do-stuff"))
+                    val result by runForEachTest { parser.parseOptions(listOf("do-stuff")) }
 
                     it("indicates that parsing succeeded and that no arguments were consumed") {
                         assertThat(result, equalTo(OptionsParsingResult.ReadOptions(0)))
@@ -97,7 +97,7 @@ object OptionParserSpec : Spek({
                 }
 
                 on("parsing a list of arguments where an unknown argument is specified") {
-                    val result = parser.parseOptions(listOf("--something-else"))
+                    val result by runForEachTest { parser.parseOptions(listOf("--something-else")) }
 
                     it("indicates that parsing succeeded and that no arguments were consumed") {
                         assertThat(result, equalTo(OptionsParsingResult.InvalidOptions("Invalid option '--something-else'. Run './batect --help' for a list of valid options.")))
@@ -111,8 +111,9 @@ object OptionParserSpec : Spek({
                 listOf("--value", "-v").forEach { format ->
                     describe("parsing a list of arguments where the argument is specified in the form '$format'") {
                         on("when the option indicates that parsing succeeded and a single argument was consumed") {
-                            whenever(option.parse(any())).doReturn(OptionParsingResult.ReadOption(1))
-                            val result = parser.parseOptions(listOf(format))
+                            beforeEachTest { whenever(option.parse(any())).doReturn(OptionParsingResult.ReadOption(1)) }
+
+                            val result by runForEachTest { parser.parseOptions(listOf(format)) }
 
                             it("indicates that parsing succeeded and that one argument was consumed") {
                                 assertThat(result, equalTo(OptionsParsingResult.ReadOptions(1)))
@@ -124,8 +125,9 @@ object OptionParserSpec : Spek({
                         }
 
                         on("when the option indicates that parsing succeeded and two arguments were consumed") {
-                            whenever(option.parse(any())).doReturn(OptionParsingResult.ReadOption(2))
-                            val result = parser.parseOptions(listOf(format, "some-other-arg"))
+                            beforeEachTest { whenever(option.parse(any())).doReturn(OptionParsingResult.ReadOption(2)) }
+
+                            val result by runForEachTest { parser.parseOptions(listOf(format, "some-other-arg")) }
 
                             it("indicates that parsing succeeded and that two arguments were consumed") {
                                 assertThat(result, equalTo(OptionsParsingResult.ReadOptions(2)))
@@ -137,8 +139,9 @@ object OptionParserSpec : Spek({
                         }
 
                         on("when the option indicates that parsing failed") {
-                            whenever(option.parse(any())).doReturn(OptionParsingResult.InvalidOption("That's not allowed"))
-                            val result = parser.parseOptions(listOf(format))
+                            beforeEachTest { whenever(option.parse(any())).doReturn(OptionParsingResult.InvalidOption("That's not allowed")) }
+
+                            val result by runForEachTest { parser.parseOptions(listOf(format)) }
 
                             it("indicates that parsing failed") {
                                 assertThat(result, equalTo(OptionsParsingResult.InvalidOptions("That's not allowed")))
@@ -150,11 +153,13 @@ object OptionParserSpec : Spek({
                         }
 
                         on("when the option is specified multiple times") {
-                            whenever(option.parse(listOf(format, "something", format, format, "some-other-arg"))).doReturn(OptionParsingResult.ReadOption(2))
-                            whenever(option.parse(listOf(format, format, "some-other-arg"))).doReturn(OptionParsingResult.ReadOption(1))
-                            whenever(option.parse(listOf(format, "some-other-arg"))).doReturn(OptionParsingResult.ReadOption(1))
+                            beforeEachTest {
+                                whenever(option.parse(listOf(format, "something", format, format, "some-other-arg"))).doReturn(OptionParsingResult.ReadOption(2))
+                                whenever(option.parse(listOf(format, format, "some-other-arg"))).doReturn(OptionParsingResult.ReadOption(1))
+                                whenever(option.parse(listOf(format, "some-other-arg"))).doReturn(OptionParsingResult.ReadOption(1))
+                            }
 
-                            val result = parser.parseOptions(listOf(format, "something", format, format, "some-other-arg"))
+                            val result by runForEachTest { parser.parseOptions(listOf(format, "something", format, format, "some-other-arg")) }
 
                             it("indicates that parsing succeeded and that four arguments were consumed") {
                                 assertThat(result, equalTo(OptionsParsingResult.ReadOptions(4)))
@@ -173,13 +178,13 @@ object OptionParserSpec : Spek({
 
         describe("adding options") {
             given("a parser with a single value option with a short name") {
-                val parser = OptionParser()
+                val parser by createForEachTest { OptionParser() }
                 val defaultValueProvider = StaticDefaultValueProvider<String?>(null)
                 val option = ValueOption("value", "The value", defaultValueProvider, ValueConverters::string, 'v')
-                parser.addOption(option)
+                beforeEachTest { parser.addOption(option) }
 
                 on("getting the list of all options") {
-                    val options = parser.getOptions()
+                    val options by runForEachTest { parser.getOptions() }
 
                     it("returns a list with that single option") {
                         assertThat(options, equalTo(setOf<OptionDefinition>(option)))

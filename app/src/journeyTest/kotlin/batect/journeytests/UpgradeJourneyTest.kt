@@ -17,13 +17,14 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
+import batect.testutils.createForGroup
+import batect.testutils.on
+import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 // What's the point of this test?
 // We assume that the unit tests are enough to ensure that the upgrade process works correctly.
@@ -32,10 +33,10 @@ import org.jetbrains.spek.api.dsl.on
 // This test just ensures that Kodein is configured correctly for the upgrade command, which can't be (easily)
 // checked with a unit test.
 object UpgradeJourneyTest : Spek({
-    given("the application") {
+    describe("the application") {
         on("running an upgrade for the application") {
-            val runner = ApplicationRunner("")
-            val result = runner.runApplication(listOf("--upgrade"))
+            val runner by createForGroup { ApplicationRunner("") }
+            val result by runBeforeGroup { runner.runApplication(listOf("--upgrade")) }
 
             it("prints a message indicating that the upgrade can only be performed if the wrapper script is used") {
                 assertThat(result.output, containsSubstring("batect was started without using the wrapper script and so cannot upgrade it."))

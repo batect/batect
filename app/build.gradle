@@ -15,8 +15,6 @@
 */
 
 buildscript {
-    ext.spek_version = '1.2.1'
-
     repositories {
         jcenter()
     }
@@ -66,28 +64,6 @@ dependencies {
     testImplementation 'org.araqnid:hamkrest-json:1.0.3'
     testImplementation 'com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0'
     testImplementation 'com.google.jimfs:jimfs:1.1'
-    testImplementation "org.jetbrains.spek:spek-api:$spek_version"
-
-    testRuntimeOnly "org.jetbrains.spek:spek-junit-platform-engine:$spek_version"
-    testRuntimeOnly 'org.junit.platform:junit-platform-engine:1.4.0'
-}
-
-tasks.withType(Test) {
-    useJUnitPlatform {
-        includeEngines 'spek'
-    }
-
-    testLogging {
-        events "failed"
-        events "skipped"
-        events "standard_out"
-        events "standard_error"
-
-        showExceptions true
-        showStackTraces true
-        showCauses true
-        exceptionFormat "full"
-    }
 }
 
 shadowJar {
@@ -110,10 +86,12 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     }
 }
 
+apply from: 'gradle/testCommon.gradle'
 apply from: 'gradle/integrationTest.gradle'
 apply from: 'gradle/jacoco.gradle'
 apply from: 'gradle/journeyTest.gradle'
 apply from: 'gradle/performanceTest.gradle'
 apply from: 'gradle/profiling.gradle'
 apply from: 'gradle/spotless.gradle'
+apply from: 'gradle/unitTest.gradle'
 apply from: 'gradle/versionInfo.gradle'

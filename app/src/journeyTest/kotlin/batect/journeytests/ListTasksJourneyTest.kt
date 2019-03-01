@@ -17,20 +17,21 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
+import batect.testutils.createForGroup
+import batect.testutils.on
+import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object ListTasksJourneyTest : Spek({
-    given("a configuration file with multiple tasks") {
-        val runner = ApplicationRunner("many-tasks")
+    describe("a configuration file with multiple tasks") {
+        val runner by createForGroup { ApplicationRunner("many-tasks") }
 
         on("listing available tasks") {
-            val result = runner.runApplication(listOf("--list-tasks"))
+            val result by runBeforeGroup { runner.runApplication(listOf("--list-tasks")) }
 
             it("prints a list of all available tasks") {
                 assertThat(result.output, containsSubstring("""

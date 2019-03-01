@@ -31,6 +31,9 @@ import batect.os.PathType
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withFileName
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
@@ -45,12 +48,9 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
 import org.mockito.ArgumentMatchers.anyString
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -121,7 +121,7 @@ object ConfigurationLoaderSpec : Spek({
 
             on("loading that file from a directory in the root directory") {
                 val path = "/project/config.yml"
-                val config = loadConfiguration(configString, path)
+                val config by runForEachTest { loadConfiguration(configString, path) }
 
                 it("should use the parent directory's name as the project name") {
                     assertThat(config.projectName, equalTo("project"))
@@ -130,7 +130,7 @@ object ConfigurationLoaderSpec : Spek({
 
             on("loading that file from a subdirectory") {
                 val path = "/code/project/config.yml"
-                val config = loadConfiguration(configString, path)
+                val config by runForEachTest { loadConfiguration(configString, path) }
 
                 it("should use the parent directory's name as the project name") {
                     assertThat(config.projectName, equalTo("project"))
@@ -139,7 +139,7 @@ object ConfigurationLoaderSpec : Spek({
         }
 
         on("loading a valid configuration file with no containers or tasks defined") {
-            val config = loadConfiguration("project_name: the_cool_project")
+            val config by runForEachTest { loadConfiguration("project_name: the_cool_project") }
 
             it("should return a populated configuration object with the project name specified") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -168,7 +168,7 @@ object ConfigurationLoaderSpec : Spek({
                 |      working_directory: /some/dir
                 """.trimMargin()
 
-            val config = loadConfiguration(configString)
+            val config by runForEachTest { loadConfiguration(configString) }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -208,7 +208,7 @@ object ConfigurationLoaderSpec : Spek({
                 |      container: build-env
                 """.trimMargin()
 
-            val config = loadConfiguration(configString)
+            val config by runForEachTest { loadConfiguration(configString) }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -241,7 +241,7 @@ object ConfigurationLoaderSpec : Spek({
                 |      container: build-env
                 """.trimMargin()
 
-            val config = loadConfiguration(configString)
+            val config by runForEachTest { loadConfiguration(configString) }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -276,7 +276,7 @@ object ConfigurationLoaderSpec : Spek({
                 |      - dependency-2
                 """.trimMargin()
 
-            val config = loadConfiguration(configString)
+            val config by runForEachTest { loadConfiguration(configString) }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -329,7 +329,7 @@ object ConfigurationLoaderSpec : Spek({
                 |      - another-task
                 """.trimMargin()
 
-            val config = loadConfiguration(configString)
+            val config by runForEachTest { loadConfiguration(configString) }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -377,7 +377,7 @@ object ConfigurationLoaderSpec : Spek({
                     |    build_directory: container-1-build-dir
                     """.trimMargin()
 
-            val config = loadConfiguration(configString)
+            val config by runForEachTest { loadConfiguration(configString) }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -403,7 +403,7 @@ object ConfigurationLoaderSpec : Spek({
                     |    image: some-image:1.2.3
                     """.trimMargin()
 
-            val config = loadConfiguration(configString)
+            val config by runForEachTest { loadConfiguration(configString) }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -479,7 +479,7 @@ object ConfigurationLoaderSpec : Spek({
                     |      home_directory: /home/something
                     """.trimMargin()
 
-            val config = loadConfiguration(configString)
+            val config by runForEachTest { loadConfiguration(configString) }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -527,7 +527,7 @@ object ConfigurationLoaderSpec : Spek({
                     |        options: ro
                     """.trimMargin()
 
-            val config = loadConfiguration(configString)
+            val config by runForEachTest { loadConfiguration(configString) }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -562,7 +562,7 @@ object ConfigurationLoaderSpec : Spek({
                     |        container: 3456
                     """.trimMargin()
 
-            val config = loadConfiguration(configString)
+            val config by runForEachTest { loadConfiguration(configString) }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -591,7 +591,7 @@ object ConfigurationLoaderSpec : Spek({
                     |      - container-2
                     """.trimMargin()
 
-            val config = loadConfiguration(configString)
+            val config by runForEachTest { loadConfiguration(configString) }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -652,7 +652,7 @@ object ConfigurationLoaderSpec : Spek({
                 |project_name: the_cool_project
                 """.trimMargin()
 
-            val config = loadConfiguration(configString)
+            val config by runForEachTest { loadConfiguration(configString) }
 
             it("should ignore the comment") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -660,7 +660,7 @@ object ConfigurationLoaderSpec : Spek({
         }
 
         on("loading a configuration file with an end-of-line comment") {
-            val config = loadConfiguration("project_name: the_cool_project # This is a comment")
+            val config by runForEachTest { loadConfiguration("project_name: the_cool_project # This is a comment") }
 
             it("should ignore the comment") {
                 assertThat(config.projectName, equalTo("the_cool_project"))

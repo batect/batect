@@ -17,6 +17,7 @@
 package batect.config.io.deserializers
 
 import batect.testutils.equalTo
+import batect.testutils.given
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
@@ -27,10 +28,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 

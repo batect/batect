@@ -20,7 +20,9 @@ import batect.config.Container
 import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerDependencyGraphNode
 import batect.execution.RunOptions
+import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.on
 import batect.ui.fancy.FancyEventLogger
 import batect.ui.fancy.StartupProgressDisplay
 import batect.ui.fancy.StartupProgressDisplayProvider
@@ -31,12 +33,9 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.TestContainer
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.Suite
+import org.spekframework.spek2.style.specification.describe
 
 object EventLoggerProviderSpec : Spek({
     describe("an event logger provider") {
@@ -59,7 +58,7 @@ object EventLoggerProviderSpec : Spek({
 
         val runOptions = mock<RunOptions>()
 
-        fun TestContainer.itReturnsAQuietEventLogger(logger: EventLogger) {
+        fun Suite.itReturnsAQuietEventLogger(logger: EventLogger) {
             it("returns a quiet event logger") {
                 assertThat(logger, isA<QuietEventLogger>())
             }
@@ -77,7 +76,7 @@ object EventLoggerProviderSpec : Spek({
             }
         }
 
-        fun TestContainer.itReturnsASimpleEventLogger(logger: EventLogger) {
+        fun Suite.itReturnsASimpleEventLogger(logger: EventLogger) {
             it("returns a simple event logger") {
                 assertThat(logger, isA<SimpleEventLogger>())
             }
@@ -103,7 +102,7 @@ object EventLoggerProviderSpec : Spek({
             }
         }
 
-        fun TestContainer.itReturnsAFancyEventLogger(logger: EventLogger, startupProgressDisplay: StartupProgressDisplay) {
+        fun Suite.itReturnsAFancyEventLogger(logger: EventLogger, startupProgressDisplay: StartupProgressDisplay) {
             it("returns a fancy event logger") {
                 assertThat(logger, isA<FancyEventLogger>())
             }

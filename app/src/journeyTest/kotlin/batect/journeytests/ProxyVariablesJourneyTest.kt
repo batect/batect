@@ -19,17 +19,18 @@ package batect.journeytests
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.itCleansUpAllContainersItCreates
 import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
+import batect.testutils.createForGroup
+import batect.testutils.on
+import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object ProxyVariablesJourneyTest : Spek({
-    given("a task that uses proxy environment variables") {
-        val runner = ApplicationRunner("proxy-variables")
+    describe("a task that uses proxy environment variables") {
+        val runner by createForGroup { ApplicationRunner("proxy-variables") }
 
         on("running that task") {
             val httpProxy = "some-http-proxy"
@@ -37,15 +38,21 @@ object ProxyVariablesJourneyTest : Spek({
             val ftpProxy = "some-ftp-proxy"
             val noProxy = "bypass-proxy"
 
-            val result = runner.runApplication(listOf("the-task"), mapOf(
-                "http_proxy" to httpProxy,
-                "https_proxy" to httpsProxy,
-                "ftp_proxy" to ftpProxy,
-                "no_proxy" to noProxy
-            ))
+            val result by runBeforeGroup {
+                runner.runApplication(
+                    listOf("the-task"), mapOf(
+                        "http_proxy" to httpProxy,
+                        "https_proxy" to httpsProxy,
+                        "ftp_proxy" to ftpProxy,
+                        "no_proxy" to noProxy
+                    )
+                )
+            }
 
             it("prints the output from that task, which shows that the proxy environment variables were set at both build and run time") {
-                assertThat(result.output, containsSubstring("""
+                assertThat(
+                    result.output, containsSubstring(
+                        """
                     At build time, environment variables were:
                     http_proxy: $httpProxy
                     https_proxy: $httpsProxy
@@ -57,15 +64,17 @@ object ProxyVariablesJourneyTest : Spek({
                     https_proxy: $httpsProxy
                     ftp_proxy: $ftpProxy
                     no_proxy: $noProxy,build-env
-                """.trimIndent().replace("\n", "\r\n")))
+                """.trimIndent().replace("\n", "\r\n")
+                    )
+                )
             }
 
             it("returns the exit code from that task") {
                 assertThat(result.exitCode, equalTo(0))
             }
 
-            itCleansUpAllContainersItCreates(result)
-            itCleansUpAllNetworksItCreates(result)
+            itCleansUpAllContainersItCreates { result }
+            itCleansUpAllNetworksItCreates { result }
         }
     }
 })

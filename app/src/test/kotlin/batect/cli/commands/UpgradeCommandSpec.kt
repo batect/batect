@@ -19,7 +19,10 @@ package batect.cli.commands
 import batect.VersionInfo
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
+import batect.testutils.given
 import batect.testutils.mockGet
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.ui.Console
 import batect.ui.text.Text
 import batect.updates.UpdateInfo
@@ -40,11 +43,8 @@ import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
 import okhttp3.Call
 import okhttp3.OkHttpClient
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.io.IOException
 import java.nio.file.Files
 import java.time.ZonedDateTime
@@ -64,8 +64,8 @@ object UpgradeCommandSpec : Spek({
             val environmentVariables = emptyMap<String, String>()
 
             on("running the command") {
-                val command = UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables)
-                val exitCode = command.run()
+                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                val exitCode by runForEachTest { command.run() }
 
                 it("returns a non-zero exit code") {
                     assertThat(exitCode, !equalTo(0))
@@ -111,8 +111,8 @@ object UpgradeCommandSpec : Spek({
                             }
 
                             on("running the command") {
-                                val command = UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables)
-                                val exitCode = command.run()
+                                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                                val exitCode by runForEachTest { command.run() }
 
                                 it("returns a zero exit code") {
                                     assertThat(exitCode, equalTo(0))
@@ -147,8 +147,8 @@ object UpgradeCommandSpec : Spek({
                             }
 
                             on("running the command") {
-                                val command = UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables)
-                                val exitCode = command.run()
+                                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                                val exitCode by runForEachTest { command.run() }
 
                                 it("returns a non-zero exit code") {
                                     assertThat(exitCode, !equalTo(0))
@@ -183,8 +183,8 @@ object UpgradeCommandSpec : Spek({
                             }
 
                             on("running the command") {
-                                val command = UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables)
-                                val exitCode = command.run()
+                                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                                val exitCode by runForEachTest { command.run() }
 
                                 it("returns a non-zero exit code") {
                                     assertThat(exitCode, !equalTo(0))
@@ -214,8 +214,8 @@ object UpgradeCommandSpec : Spek({
                         }
 
                         on("running the command") {
-                            val command = UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables)
-                            val exitCode = command.run()
+                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                            val exitCode by runForEachTest { command.run() }
 
                             it("returns a zero exit code") {
                                 assertThat(exitCode, equalTo(0))
@@ -237,8 +237,8 @@ object UpgradeCommandSpec : Spek({
                         }
 
                         on("running the command") {
-                            val command = UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables)
-                            val exitCode = command.run()
+                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                            val exitCode by runForEachTest { command.run() }
 
                             it("returns a zero exit code") {
                                 assertThat(exitCode, equalTo(0))
@@ -268,8 +268,8 @@ object UpgradeCommandSpec : Spek({
                         }
 
                         on("running the command") {
-                            val command = UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables)
-                            val exitCode = command.run()
+                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                            val exitCode by runForEachTest { command.run() }
 
                             it("returns a non-zero exit code") {
                                 assertThat(exitCode, !equalTo(0))
@@ -293,8 +293,8 @@ object UpgradeCommandSpec : Spek({
                         }
 
                         on("running the command") {
-                            val command = UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables)
-                            val exitCode = command.run()
+                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                            val exitCode by runForEachTest { command.run() }
 
                             it("returns a zero exit code") {
                                 assertThat(exitCode, equalTo(0))
@@ -316,8 +316,8 @@ object UpgradeCommandSpec : Spek({
                         }
 
                         on("running the command") {
-                            val command = UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables)
-                            val exitCode = command.run()
+                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                            val exitCode by runForEachTest { command.run() }
 
                             it("returns a zero exit code") {
                                 assertThat(exitCode, equalTo(0))
@@ -344,8 +344,8 @@ object UpgradeCommandSpec : Spek({
                 val versionInfo = mock<VersionInfo>()
 
                 on("running the command") {
-                    val command = UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables)
-                    val exitCode = command.run()
+                    val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                    val exitCode by runForEachTest { command.run() }
 
                     it("returns a non-zero exit code") {
                         assertThat(exitCode, !equalTo(0))

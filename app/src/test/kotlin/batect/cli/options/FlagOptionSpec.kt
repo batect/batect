@@ -18,11 +18,11 @@ package batect.cli.options
 
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object FlagOptionSpec : Spek({
     describe("a flag option") {
@@ -36,7 +36,7 @@ object FlagOptionSpec : Spek({
 
         listOf("--enable-extra-awesomeness", "-a").forEach { format ->
             on("the option being provided in the format $format") {
-                val result = option.parseValue(listOf(format))
+                val result by runForEachTest { option.parseValue(listOf(format)) }
 
                 it("gives the value as true") {
                     assertThat(option.value, equalTo(true))
@@ -48,7 +48,7 @@ object FlagOptionSpec : Spek({
             }
 
             on("the option being provided with a value in the format $format=something") {
-                val result = option.parseValue(listOf("$format=something"))
+                val result by runForEachTest { option.parseValue(listOf("$format=something")) }
 
                 it("returns that the argument is invalid") {
                     assertThat(result, equalTo(OptionParsingResult.InvalidOption("The option '$format' does not take a value.")))

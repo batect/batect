@@ -33,6 +33,9 @@ import batect.docker.run.ContainerWaiter
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withCause
 import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
@@ -53,12 +56,9 @@ import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
 import org.mockito.invocation.InvocationOnMock
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.io.IOException
 import java.nio.file.Paths
 import java.time.Duration
@@ -127,17 +127,19 @@ object DockerClientSpec : Spek({
                     """.trimMargin()
 
                     val imagePullProgress = DockerImagePullProgress("Doing something", 10, 20)
-                    stubProgressUpdate(imagePullProgressReporter, output.lines()[0], imagePullProgress)
 
-                    whenever(api.buildImage(any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
+                    beforeEachTest {
+                        stubProgressUpdate(imagePullProgressReporter, output.lines()[0], imagePullProgress)
+                        whenever(api.buildImage(any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
+                    }
 
-                    val statusUpdates = mutableListOf<DockerImageBuildProgress>()
+                    val statusUpdates by createForEachTest { mutableListOf<DockerImageBuildProgress>() }
 
                     val onStatusUpdate = fun(p: DockerImageBuildProgress) {
                         statusUpdates.add(p)
                     }
 
-                    val result = client.build(buildDirectory, buildArgs, onStatusUpdate)
+                    val result by runForEachTest { client.build(buildDirectory, buildArgs, onStatusUpdate) }
 
                     it("builds the image") {
                         verify(api).buildImage(eq(context), eq(buildArgs), eq(credentials), any())
@@ -170,17 +172,18 @@ object DockerClientSpec : Spek({
                     """.trimMargin()
 
                     val imagePullProgress = DockerImagePullProgress("Doing something", 10, 20)
-                    stubProgressUpdate(imagePullProgressReporter, output.lines()[0], imagePullProgress)
+                    val statusUpdates by createForEachTest { mutableListOf<DockerImageBuildProgress>() }
 
-                    whenever(api.buildImage(any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
+                    beforeEachTest {
+                        stubProgressUpdate(imagePullProgressReporter, output.lines()[0], imagePullProgress)
+                        whenever(api.buildImage(any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
 
-                    val statusUpdates = mutableListOf<DockerImageBuildProgress>()
+                        val onStatusUpdate = fun(p: DockerImageBuildProgress) {
+                            statusUpdates.add(p)
+                        }
 
-                    val onStatusUpdate = fun(p: DockerImageBuildProgress) {
-                        statusUpdates.add(p)
+                        client.build(buildDirectory, buildArgs, onStatusUpdate)
                     }
-
-                    client.build(buildDirectory, buildArgs, onStatusUpdate)
 
                     it("sends status updates only once the first step is started") {
                         assertThat(statusUpdates, equalTo(listOf(
@@ -218,9 +221,9 @@ object DockerClientSpec : Spek({
                 val request = DockerContainerCreationRequest(image, network, command, "some-host", "some-host", emptyMap(), "/some-dir", emptySet(), emptySet(), HealthCheckConfig(), null)
 
                 on("creating the container") {
-                    whenever(api.createContainer(request)).doReturn(DockerContainer("abc123"))
+                    beforeEachTest { whenever(api.createContainer(request)).doReturn(DockerContainer("abc123")) }
 
-                    val result = client.create(request)
+                    val result by runForEachTest { client.create(request) }
 
                     it("sends a request to the Docker daemon to create the container") {
                         verify(api).createContainer(request)
@@ -252,7 +255,7 @@ object DockerClientSpec : Spek({
                 }
 
                 on("running the container") {
-                    val result = client.run(container)
+                    val result by runForEachTest { client.run(container) }
 
                     it("returns the exit code from the container") {
                         assertThat(result.exitCode, equalTo(123))
@@ -346,7 +349,7 @@ object DockerClientSpec : Spek({
                 val container = DockerContainer("the-container-id")
 
                 on("starting that container") {
-                    client.start(container)
+                    beforeEachTest { client.start(container) }
 
                     it("sends a request to the Docker daemon to start the container") {
                         verify(api).startContainer(container)
@@ -360,7 +363,7 @@ object DockerClientSpec : Spek({
                 val container = DockerContainer("the-container-id")
 
                 on("stopping that container") {
-                    client.stop(container)
+                    beforeEachTest { client.stop(container) }
 
                     it("sends a request to the Docker daemon to stop the container") {
                         verify(api).stopContainer(container)
@@ -383,7 +386,7 @@ object DockerClientSpec : Spek({
                 }
 
                 on("waiting for that container to become healthy") {
-                    val result = client.waitForHealthStatus(container)
+                    val result by runForEachTest { client.waitForHealthStatus(container) }
 
                     it("reports that the container does not have a health check") {
                         assertThat(result, equalTo(HealthStatus.NoHealthCheck))
@@ -430,7 +433,7 @@ object DockerClientSpec : Spek({
                     }
 
                     on("waiting for that container to become healthy") {
-                        val result = client.waitForHealthStatus(container)
+                        val result by runForEachTest { client.waitForHealthStatus(container) }
 
                         it("waits with a timeout that allows the container time to start and become healthy") {
                             verify(api).waitForNextEventForContainer(any(), any(), eq(Duration.ofSeconds(10 + (3 * 4) + 1)))
@@ -449,7 +452,7 @@ object DockerClientSpec : Spek({
                     }
 
                     on("waiting for that container to become healthy") {
-                        val result = client.waitForHealthStatus(container)
+                        val result by runForEachTest { client.waitForHealthStatus(container) }
 
                         it("reports that the container became unhealthy") {
                             assertThat(result, equalTo(HealthStatus.BecameUnhealthy))
@@ -464,7 +467,7 @@ object DockerClientSpec : Spek({
                     }
 
                     on("waiting for that container to become healthy") {
-                        val result = client.waitForHealthStatus(container)
+                        val result by runForEachTest { client.waitForHealthStatus(container) }
 
                         it("reports that the container exited") {
                             assertThat(result, equalTo(HealthStatus.Exited))
@@ -500,9 +503,9 @@ object DockerClientSpec : Spek({
                     DockerContainerConfiguration(DockerContainerHealthCheckConfig())
                 )
 
-                whenever(api.inspectContainer(container)).doReturn(info)
+                beforeEachTest { whenever(api.inspectContainer(container)).doReturn(info) }
 
-                val details = client.getLastHealthCheckResult(container)
+                val details by runForEachTest { client.getLastHealthCheckResult(container) }
 
                 it("returns the details of the last health check result") {
                     assertThat(details, equalTo(DockerHealthCheckResult(1, "something went wrong")))
@@ -523,9 +526,9 @@ object DockerClientSpec : Spek({
                     DockerContainerConfiguration(DockerContainerHealthCheckConfig())
                 )
 
-                whenever(api.inspectContainer(container)).doReturn(info)
+                beforeEachTest { whenever(api.inspectContainer(container)).doReturn(info) }
 
-                val details = client.getLastHealthCheckResult(container)
+                val details by runForEachTest { client.getLastHealthCheckResult(container) }
 
                 it("returns the details of the last health check result") {
                     assertThat(details, equalTo(DockerHealthCheckResult(1, "this is the most recent health check")))
@@ -538,7 +541,7 @@ object DockerClientSpec : Spek({
                     DockerContainerConfiguration(DockerContainerHealthCheckConfig())
                 )
 
-                whenever(api.inspectContainer(container)).doReturn(info)
+                beforeEachTest { whenever(api.inspectContainer(container)).doReturn(info) }
 
                 it("throws an appropriate exception") {
                     assertThat({ client.getLastHealthCheckResult(container) },
@@ -547,7 +550,7 @@ object DockerClientSpec : Spek({
             }
 
             on("getting the container's details failing") {
-                whenever(api.inspectContainer(container)).doThrow(ContainerInspectionFailedException("Something went wrong."))
+                beforeEachTest { whenever(api.inspectContainer(container)).doThrow(ContainerInspectionFailedException("Something went wrong.")) }
 
                 it("throws an appropriate exception") {
                     assertThat({ client.getLastHealthCheckResult(container) },
@@ -557,9 +560,9 @@ object DockerClientSpec : Spek({
         }
 
         on("creating a new bridge network") {
-            whenever(api.createNetwork()).doReturn(DockerNetwork("the-network-id"))
+            beforeEachTest { whenever(api.createNetwork()).doReturn(DockerNetwork("the-network-id")) }
 
-            val result = client.createNewBridgeNetwork()
+            val result by runForEachTest { client.createNewBridgeNetwork() }
 
             it("creates the network") {
                 verify(api).createNetwork()
@@ -575,7 +578,7 @@ object DockerClientSpec : Spek({
                 val network = DockerNetwork("abc123")
 
                 on("deleting that network") {
-                    client.deleteNetwork(network)
+                    beforeEachTest { client.deleteNetwork(network) }
 
                     it("sends a request to the Docker daemon to delete the network") {
                         verify(api).deleteNetwork(network)
@@ -589,7 +592,7 @@ object DockerClientSpec : Spek({
                 val container = DockerContainer("the-container-id")
 
                 on("removing that container") {
-                    client.remove(container)
+                    beforeEachTest { client.remove(container) }
 
                     it("sends a request to the Docker daemon to remove the container") {
                         verify(api).removeContainer(container)
@@ -601,7 +604,8 @@ object DockerClientSpec : Spek({
         describe("getting Docker version information") {
             on("the Docker version command invocation succeeding") {
                 val versionInfo = DockerVersionInfo(Version(17, 4, 0), "1.27", "1.12", "deadbee")
-                whenever(api.getServerVersionInfo()).doReturn(versionInfo)
+
+                beforeEachTest { whenever(api.getServerVersionInfo()).doReturn(versionInfo) }
 
                 it("returns the version information from Docker") {
                     assertThat(client.getDockerVersionInfo(), equalTo(DockerVersionInfoRetrievalResult.Succeeded(versionInfo)))
@@ -609,7 +613,7 @@ object DockerClientSpec : Spek({
             }
 
             on("running the Docker version command throwing an exception (for example, because Docker is not installed)") {
-                whenever(api.getServerVersionInfo()).doThrow(RuntimeException("Something went wrong"))
+                beforeEachTest { whenever(api.getServerVersionInfo()).doThrow(RuntimeException("Something went wrong")) }
 
                 it("returns an appropriate message") {
                     assertThat(client.getDockerVersionInfo(), equalTo(DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because RuntimeException was thrown: Something went wrong")))
@@ -634,20 +638,22 @@ object DockerClientSpec : Spek({
                         val firstProgressUpdate = Json.plain.parseJson("""{"thing": "value"}""").jsonObject
                         val secondProgressUpdate = Json.plain.parseJson("""{"thing": "other value"}""").jsonObject
 
-                        whenever(imagePullProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(DockerImagePullProgress("Doing something", 10, 20))
-                        whenever(imagePullProgressReporter.processProgressUpdate(secondProgressUpdate)).thenReturn(null)
+                        beforeEachTest {
+                            whenever(imagePullProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(DockerImagePullProgress("Doing something", 10, 20))
+                            whenever(imagePullProgressReporter.processProgressUpdate(secondProgressUpdate)).thenReturn(null)
 
-                        whenever(api.pullImage(any(), any(), any())).then { invocation ->
-                            @Suppress("UNCHECKED_CAST")
-                            val onProgressUpdate = invocation.arguments[2] as (JsonObject) -> Unit
-                            onProgressUpdate(firstProgressUpdate)
-                            onProgressUpdate(secondProgressUpdate)
+                            whenever(api.pullImage(any(), any(), any())).then { invocation ->
+                                @Suppress("UNCHECKED_CAST")
+                                val onProgressUpdate = invocation.arguments[2] as (JsonObject) -> Unit
+                                onProgressUpdate(firstProgressUpdate)
+                                onProgressUpdate(secondProgressUpdate)
 
-                            null
+                                null
+                            }
                         }
 
-                        val progressUpdatesReceived = mutableListOf<DockerImagePullProgress>()
-                        val image = client.pullImage("some-image") { progressUpdatesReceived.add(it) }
+                        val progressUpdatesReceived by createForEachTest { mutableListOf<DockerImagePullProgress>() }
+                        val image by runForEachTest { client.pullImage("some-image") { progressUpdatesReceived.add(it) } }
 
                         it("calls the Docker CLI to pull the image") {
                             verify(api).pullImage(eq("some-image"), eq(credentials), any())
@@ -682,9 +688,9 @@ object DockerClientSpec : Spek({
             }
 
             on("when the image already exists locally") {
-                whenever(api.hasImage("some-image")).thenReturn(true)
+                beforeEachTest { whenever(api.hasImage("some-image")).thenReturn(true) }
 
-                val image = client.pullImage("some-image", {})
+                val image by runForEachTest { client.pullImage("some-image", {}) }
 
                 it("does not call the Docker CLI to pull the image again") {
                     verify(api, never()).pullImage(any(), any(), any())

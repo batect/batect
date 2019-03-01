@@ -19,20 +19,21 @@ package batect.journeytests
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.itCleansUpAllContainersItCreates
 import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
+import batect.testutils.createForGroup
+import batect.testutils.on
+import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object WorkingDirectoryOverrideTest : Spek({
     describe("when a task overrides the container's working directory") {
-        val runner = ApplicationRunner("working-directory-override")
+        val runner by createForGroup { ApplicationRunner("working-directory-override") }
 
         on("running the task") {
-            val result = runner.runApplication(listOf("the-task"))
+            val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
             it("runs the container with the task's working directory, not the container's default") {
                 assertThat(result.output, containsSubstring("/usr/bin\r\n"))
@@ -42,8 +43,8 @@ object WorkingDirectoryOverrideTest : Spek({
                 assertThat(result.exitCode, equalTo(0))
             }
 
-            itCleansUpAllContainersItCreates(result)
-            itCleansUpAllNetworksItCreates(result)
+            itCleansUpAllContainersItCreates { result }
+            itCleansUpAllNetworksItCreates { result }
         }
     }
 })

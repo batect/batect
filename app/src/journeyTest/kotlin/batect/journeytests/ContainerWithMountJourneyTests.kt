@@ -19,24 +19,25 @@ package batect.journeytests
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.itCleansUpAllContainersItCreates
 import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
+import batect.testutils.createForGroup
+import batect.testutils.on
+import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object ContainerWithMountJourneyTests : Spek({
     mapOf(
         "container-with-mount" to "a simple task with a volume mount",
         "container-with-cached-mount" to "a simple task with a cached volume mount"
     ).forEach { testName, description ->
-        given(description) {
-            val runner = ApplicationRunner(testName)
+        describe(description) {
+            val runner by createForGroup { ApplicationRunner(testName) }
 
             on("running that task") {
-                val result = runner.runApplication(listOf("the-task"))
+                val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
                 it("prints the output from that task") {
                     assertThat(result.output, containsSubstring("This is some output from the script"))
@@ -46,8 +47,8 @@ object ContainerWithMountJourneyTests : Spek({
                     assertThat(result.exitCode, equalTo(123))
                 }
 
-                itCleansUpAllContainersItCreates(result)
-                itCleansUpAllNetworksItCreates(result)
+                itCleansUpAllContainersItCreates { result }
+                itCleansUpAllNetworksItCreates { result }
             }
         }
     }

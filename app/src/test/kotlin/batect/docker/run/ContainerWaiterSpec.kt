@@ -20,14 +20,14 @@ import batect.docker.DockerAPI
 import batect.docker.DockerContainer
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.util.concurrent.TimeUnit
 
 object ContainerWaiterSpec : Spek({
@@ -38,10 +38,10 @@ object ContainerWaiterSpec : Spek({
         on("starting to wait for a container to exit") {
             val container = DockerContainer("the-container")
 
-            whenever(api.waitForExit(container)).doReturn(123)
+            beforeEachTest { whenever(api.waitForExit(container)).doReturn(123) }
 
-            val future = waiter.startWaitingForContainerToExit(container)
-            val exitCode = future.get(1, TimeUnit.SECONDS)
+            val future by runForEachTest { waiter.startWaitingForContainerToExit(container) }
+            val exitCode by runForEachTest { future.get(1, TimeUnit.SECONDS) }
 
             it("returns a future that returns the exit code of the container on completion") {
                 assertThat(exitCode, equalTo(123))

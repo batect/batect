@@ -28,7 +28,10 @@ import batect.logging.Severity
 import batect.os.SystemInfo
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
+import batect.testutils.given
 import batect.testutils.hasMessage
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withException
 import batect.testutils.withSeverity
 import batect.ui.Console
@@ -42,14 +45,11 @@ import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
 import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 
@@ -115,7 +115,7 @@ object ApplicationSpec : Spek({
                     }
 
                     on("running the application") {
-                        val exitCode = application.run(args)
+                        val exitCode by runForEachTest { application.run(args) }
 
                         it("does not print anything to the error stream") {
                             assertThat(errorStream.toString(), equalTo(""))
@@ -145,7 +145,7 @@ object ApplicationSpec : Spek({
                     }
 
                     on("running the application") {
-                        val exitCode = application.run(args)
+                        val exitCode by runForEachTest { application.run(args) }
 
                         it("prints the exception message to the error console in red") {
                             verify(errorConsole).println(Text.red("java.lang.RuntimeException: Everything is broken"))
@@ -168,7 +168,7 @@ object ApplicationSpec : Spek({
                 }
 
                 on("running the application") {
-                    val exitCode = application.run(args)
+                    val exitCode by runForEachTest { application.run(args) }
 
                     it("prints the error message to the error stream") {
                         assertThat(errorStream.toString(), equalTo("Everything is broken\n"))
@@ -185,7 +185,7 @@ object ApplicationSpec : Spek({
             beforeEachTest { whenever(systemInfo.isSupportedOperatingSystem).thenReturn(false) }
 
             on("running the application") {
-                val exitCode = application.run(args)
+                val exitCode by runForEachTest { application.run(args) }
 
                 it("prints an error message to the error stream") {
                     assertThat(errorStream.toString(), equalTo("batect only supports OS X and Linux.\n"))

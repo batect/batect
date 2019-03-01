@@ -21,6 +21,8 @@ import batect.docker.DockerContainer
 import batect.os.SignalListener
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
@@ -30,10 +32,8 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import jnr.constants.platform.Signal
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object ContainerKillerSpec : Spek({
     describe("a container killer") {
@@ -46,9 +46,10 @@ object ContainerKillerSpec : Spek({
 
             on("starting monitoring") {
                 val cleanup = mock<AutoCloseable>()
-                whenever(listener.start(any(), any())).doReturn(cleanup)
 
-                val returnedCleanup = killer.killContainerOnSigint(container)
+                beforeEachTest { whenever(listener.start(any(), any())).doReturn(cleanup) }
+
+                val returnedCleanup by runForEachTest { killer.killContainerOnSigint(container) }
 
                 it("registers a signal handler for the SIGINT signal") {
                     verify(listener).start(eq(Signal.SIGINT), any())
@@ -60,12 +61,14 @@ object ContainerKillerSpec : Spek({
             }
 
             on("a SIGINT being received") {
-                val handlerCaptor = argumentCaptor<() -> Unit>()
+                beforeEachTest {
+                    val handlerCaptor = argumentCaptor<() -> Unit>()
 
-                killer.killContainerOnSigint(container)
+                    killer.killContainerOnSigint(container)
 
-                verify(listener).start(eq(Signal.SIGINT), handlerCaptor.capture())
-                handlerCaptor.firstValue.invoke()
+                    verify(listener).start(eq(Signal.SIGINT), handlerCaptor.capture())
+                    handlerCaptor.firstValue.invoke()
+                }
 
                 it("sends a SIGINT to the container") {
                     verify(api).sendSignalToContainer(container, Signal.SIGINT)

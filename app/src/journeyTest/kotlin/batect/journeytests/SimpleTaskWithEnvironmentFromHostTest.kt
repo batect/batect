@@ -19,20 +19,21 @@ package batect.journeytests
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.itCleansUpAllContainersItCreates
 import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
+import batect.testutils.createForGroup
+import batect.testutils.on
+import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object SimpleTaskWithEnvironmentFromHostTest : Spek({
-    given("a simple task with a task-level environment variable") {
-        val runner = ApplicationRunner("simple-task-with-environment-from-host")
+    describe("a simple task with a task-level environment variable") {
+        val runner by createForGroup { ApplicationRunner("simple-task-with-environment-from-host") }
 
         on("running that task") {
-            val result = runner.runApplication(listOf("the-task"), mapOf("MESSAGE" to "This is some output from the environment variable"))
+            val result by runBeforeGroup { runner.runApplication(listOf("the-task"), mapOf("MESSAGE" to "This is some output from the environment variable")) }
 
             it("prints the output from that task") {
                 assertThat(result.output, containsSubstring("This is some output from the environment variable\r\nThis is the default message\r\n"))
@@ -42,8 +43,8 @@ object SimpleTaskWithEnvironmentFromHostTest : Spek({
                 assertThat(result.exitCode, equalTo(123))
             }
 
-            itCleansUpAllContainersItCreates(result)
-            itCleansUpAllNetworksItCreates(result)
+            itCleansUpAllContainersItCreates { result }
+            itCleansUpAllNetworksItCreates { result }
         }
     }
 })

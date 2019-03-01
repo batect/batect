@@ -20,6 +20,9 @@ import batect.os.unixsockets.UnixSocketDns
 import batect.os.unixsockets.UnixSocketFactory
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isA
@@ -27,11 +30,8 @@ import com.natpryce.hamkrest.throws
 import okhttp3.Dns
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.time.Duration
@@ -53,7 +53,7 @@ object DockerHttpConfigSpec : Spek({
             val config by createForEachTest { DockerHttpConfig(baseClient, "unix:///var/thing/some/docker.sock") }
 
             on("getting a HTTP client configured for use with the Docker API") {
-                val client = config.client
+                val client by runForEachTest { config.client }
 
                 it("overrides any existing proxy settings") {
                     assertThat(client.proxy(), equalTo(Proxy.NO_PROXY))
@@ -100,7 +100,7 @@ object DockerHttpConfigSpec : Spek({
                 val config by createForEachTest { DockerHttpConfig(baseClient, host) }
 
                 on("getting a HTTP client configured for use with the Docker API") {
-                    val client = config.client
+                    val client by runForEachTest { config.client }
 
                     it("does not override any existing proxy settings") {
                         assertThat(client.proxy(), equalTo(proxy))

@@ -21,6 +21,7 @@ import batect.logging.Severity
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.hasMessage
+import batect.testutils.on
 import batect.testutils.withException
 import batect.testutils.withLogMessage
 import batect.testutils.withSeverity
@@ -32,10 +33,8 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
@@ -70,7 +69,7 @@ object UpdateInfoUpdaterSpec : Spek({
             }
 
             on("on the background thread") {
-                backgroundProcess!!.invoke()
+                beforeEachTest { backgroundProcess!!.invoke() }
 
                 it("writes the downloaded release information to disk") {
                     verify(updateInfoStorage).write(updateInfo)
@@ -79,11 +78,14 @@ object UpdateInfoUpdaterSpec : Spek({
         }
 
         on("downloading release information failing") {
-            val exception = RuntimeException("Something went wrong")
-            whenever(updateInfoDownloader.getLatestVersionInfo()).thenThrow(exception)
+            val exception by createForEachTest { RuntimeException("Something went wrong") }
 
-            updateInfoUpdater.updateCachedInfo()
-            backgroundProcess!!.invoke()
+            beforeEachTest {
+                whenever(updateInfoDownloader.getLatestVersionInfo()).thenThrow(exception)
+
+                updateInfoUpdater.updateCachedInfo()
+                backgroundProcess!!.invoke()
+            }
 
             it("does not write anything to disk") {
                 verify(updateInfoStorage, never()).write(any())
@@ -99,12 +101,15 @@ object UpdateInfoUpdaterSpec : Spek({
         }
 
         on("writing the updated release information to disk failing") {
-            val exception = RuntimeException("Something went wrong")
-            whenever(updateInfoDownloader.getLatestVersionInfo()).thenReturn(updateInfo)
-            whenever(updateInfoStorage.write(updateInfo)).thenThrow(exception)
+            val exception by createForEachTest { RuntimeException("Something went wrong") }
 
-            updateInfoUpdater.updateCachedInfo()
-            backgroundProcess!!.invoke()
+            beforeEachTest {
+                whenever(updateInfoDownloader.getLatestVersionInfo()).thenReturn(updateInfo)
+                whenever(updateInfoStorage.write(updateInfo)).thenThrow(exception)
+
+                updateInfoUpdater.updateCachedInfo()
+                backgroundProcess!!.invoke()
+            }
 
             it("logs a warning") {
                 assertThat(logSink, hasMessage(

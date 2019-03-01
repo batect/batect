@@ -16,8 +16,8 @@
 
 sourceSets {
     integrationTest {
-        compileClasspath += main.output
-        runtimeClasspath += main.output
+        compileClasspath += main.output + testCommon.output
+        runtimeClasspath += main.output + testCommon.output
     }
 }
 

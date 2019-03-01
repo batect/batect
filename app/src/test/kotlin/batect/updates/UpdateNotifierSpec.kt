@@ -19,6 +19,7 @@ package batect.updates
 import batect.VersionInfo
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
+import batect.testutils.on
 import batect.ui.Console
 import batect.utils.Version
 import com.nhaarman.mockitokotlin2.inOrder
@@ -27,10 +28,8 @@ import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
@@ -48,8 +47,10 @@ object UpdateNotifierSpec : Spek({
         }
 
         on("when the update notification is disabled") {
-            val updateNotifier = UpdateNotifier(true, updateInfoStorage, updateInfoUpdater, versionInfo, console, logger, { currentTime })
-            updateNotifier.run()
+            beforeEachTest {
+                val updateNotifier = UpdateNotifier(true, updateInfoStorage, updateInfoUpdater, versionInfo, console, logger, { currentTime })
+                updateNotifier.run()
+            }
 
             it("does not attempt to load the cached update info") {
                 verify(updateInfoStorage, never()).read()
@@ -68,9 +69,10 @@ object UpdateNotifierSpec : Spek({
             val updateNotifier by createForEachTest { UpdateNotifier(false, updateInfoStorage, updateInfoUpdater, versionInfo, console, logger, { currentTime }) }
 
             on("when no cached update information is available") {
-                whenever(updateInfoStorage.read()).thenReturn(null)
-
-                updateNotifier.run()
+                beforeEachTest {
+                    whenever(updateInfoStorage.read()).thenReturn(null)
+                    updateNotifier.run()
+                }
 
                 it("does not print anything to the console") {
                     verifyZeroInteractions(console)
@@ -82,9 +84,10 @@ object UpdateNotifierSpec : Spek({
             }
 
             on("when the cached update information can't be read") {
-                whenever(updateInfoStorage.read()).thenThrow(RuntimeException("Something went wrong"))
-
-                updateNotifier.run()
+                beforeEachTest {
+                    whenever(updateInfoStorage.read()).thenThrow(RuntimeException("Something went wrong"))
+                    updateNotifier.run()
+                }
 
                 it("does not print anything to the console") {
                     verifyZeroInteractions(console)
@@ -109,8 +112,10 @@ object UpdateNotifierSpec : Spek({
                     }
 
                     on("and the version in the cached update information matches the current version") {
-                        whenever(versionInfo.version).thenReturn(Version(0, 3, 0))
-                        updateNotifier.run()
+                        beforeEachTest {
+                            whenever(versionInfo.version).thenReturn(Version(0, 3, 0))
+                            updateNotifier.run()
+                        }
 
                         it("does not print anything to the console") {
                             verifyZeroInteractions(console)
@@ -122,8 +127,10 @@ object UpdateNotifierSpec : Spek({
                     }
 
                     on("and the version in the cached update information is older than the current version") {
-                        whenever(versionInfo.version).thenReturn(Version(0, 4, 0))
-                        updateNotifier.run()
+                        beforeEachTest {
+                            whenever(versionInfo.version).thenReturn(Version(0, 4, 0))
+                            updateNotifier.run()
+                        }
 
                         it("does not print anything to the console") {
                             verifyZeroInteractions(console)
@@ -135,8 +142,10 @@ object UpdateNotifierSpec : Spek({
                     }
 
                     on("and the version in the cached update information is newer than the current version") {
-                        whenever(versionInfo.version).thenReturn(Version(0, 2, 0))
-                        updateNotifier.run()
+                        beforeEachTest {
+                            whenever(versionInfo.version).thenReturn(Version(0, 2, 0))
+                            updateNotifier.run()
+                        }
 
                         it("prints a message to the console") {
                             inOrder(console) {
@@ -159,8 +168,10 @@ object UpdateNotifierSpec : Spek({
                     }
 
                     on("and the version in the cached update information matches the current version") {
-                        whenever(versionInfo.version).thenReturn(Version(0, 3, 0))
-                        updateNotifier.run()
+                        beforeEachTest {
+                            whenever(versionInfo.version).thenReturn(Version(0, 3, 0))
+                            updateNotifier.run()
+                        }
 
                         it("does not print anything to the console") {
                             verifyZeroInteractions(console)
@@ -172,8 +183,10 @@ object UpdateNotifierSpec : Spek({
                     }
 
                     on("and the version in the cached update information is older than the current version") {
-                        whenever(versionInfo.version).thenReturn(Version(0, 4, 0))
-                        updateNotifier.run()
+                        beforeEachTest {
+                            whenever(versionInfo.version).thenReturn(Version(0, 4, 0))
+                            updateNotifier.run()
+                        }
 
                         it("does not print anything to the console") {
                             verifyZeroInteractions(console)
@@ -185,8 +198,10 @@ object UpdateNotifierSpec : Spek({
                     }
 
                     on("and the version in the cached update information is newer than the current version") {
-                        whenever(versionInfo.version).thenReturn(Version(0, 2, 0))
-                        updateNotifier.run()
+                        beforeEachTest {
+                            whenever(versionInfo.version).thenReturn(Version(0, 2, 0))
+                            updateNotifier.run()
+                        }
 
                         it("prints a message to the console") {
                             inOrder(console) {

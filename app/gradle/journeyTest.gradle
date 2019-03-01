@@ -15,7 +15,10 @@
 */
 
 sourceSets {
-    journeyTest
+    journeyTest {
+        compileClasspath += testCommon.output
+        runtimeClasspath += testCommon.output
+    }
 }
 
 configurations {

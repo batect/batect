@@ -22,6 +22,10 @@ import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
+import batect.testutils.on
+import batect.testutils.runForEachTest
+import batect.testutils.runNullableForEachTest
 import batect.testutils.withCause
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.absent
@@ -30,11 +34,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object DockerRegistryCredentialsSourceSpec : Spek({
     describe("a basic credentials source") {
@@ -72,7 +73,7 @@ object DockerRegistryCredentialsSourceSpec : Spek({
             val credentialsSource = BasicCredentialsSource("c29tZXVzZXI6c29tZXBhc3M=", "someserver.com")
 
             on("loading the credentials") {
-                val credentials = credentialsSource.load()
+                val credentials by runForEachTest { credentialsSource.load() }
 
                 it("returns the decoded username and password") {
                     assertThat(credentials, equalTo(PasswordDockerRegistryCredentials("someuser", "somepass", "someserver.com")))
@@ -84,7 +85,7 @@ object DockerRegistryCredentialsSourceSpec : Spek({
             val credentialsSource = BasicCredentialsSource("PHRva2VuPjpzb21ldG9rZW4=", "someserver.com")
 
             on("loading the credentials") {
-                val credentials = credentialsSource.load()
+                val credentials by runForEachTest { credentialsSource.load() }
 
                 it("returns the decoded username and password") {
                     assertThat(credentials, equalTo(TokenDockerRegistryCredentials("sometoken")))
@@ -128,7 +129,7 @@ object DockerRegistryCredentialsSourceSpec : Spek({
             }
 
             on("loading the credentials") {
-                val credentials = credentialsSource.load()
+                val credentials by runNullableForEachTest { credentialsSource.load() }
 
                 it("returns those credentials") {
                     assertThat(credentials, equalTo(PasswordDockerRegistryCredentials("someuser", "somepass", "someotherserver.com")))
@@ -148,7 +149,7 @@ object DockerRegistryCredentialsSourceSpec : Spek({
             }
 
             on("loading the credentials") {
-                val credentials = credentialsSource.load()
+                val credentials by runNullableForEachTest { credentialsSource.load() }
 
                 it("returns those credentials") {
                     assertThat(credentials, equalTo(TokenDockerRegistryCredentials("sometoken")))
@@ -236,7 +237,7 @@ object DockerRegistryCredentialsSourceSpec : Spek({
             }
 
             on("loading the credentials") {
-                val credentials = credentialsSource.load()
+                val credentials by runNullableForEachTest { credentialsSource.load() }
 
                 // If the credentials can't be found, we continue with no credentials.
                 // This is the behaviour of the Docker client, so we have to mirror that.

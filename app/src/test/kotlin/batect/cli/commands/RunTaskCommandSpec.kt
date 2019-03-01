@@ -33,7 +33,10 @@ import batect.logging.Logger
 import batect.logging.Severity
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
+import batect.testutils.given
 import batect.testutils.hasMessage
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withException
 import batect.testutils.withSeverity
 import batect.ui.Console
@@ -52,11 +55,8 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object RunTaskCommandSpec : Spek({
     describe("a 'run task' command") {
@@ -91,12 +91,14 @@ object RunTaskCommandSpec : Spek({
                         }
 
                         on("and that task returns a non-zero exit code") {
-                            val taskRunner = mock<TaskRunner> {
-                                on { run(config, mainTask, runOptions) } doReturn expectedTaskExitCode
+                            val taskRunner by createForEachTest {
+                                mock<TaskRunner> {
+                                    on { run(config, mainTask, runOptions) } doReturn expectedTaskExitCode
+                                }
                             }
 
-                            val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger)
-                            val exitCode = command.run()
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger) }
+                            val exitCode by runForEachTest { command.run() }
 
                             it("runs the task") {
                                 verify(taskRunner).run(config, mainTask, runOptions)
@@ -123,12 +125,14 @@ object RunTaskCommandSpec : Spek({
                         }
 
                         on("and that task returns a zero exit code") {
-                            val taskRunner = mock<TaskRunner> {
-                                on { run(config, mainTask, runOptions) } doReturn 0
+                            val taskRunner by createForEachTest {
+                                mock<TaskRunner> {
+                                    on { run(config, mainTask, runOptions) } doReturn 0
+                                }
                             }
 
-                            val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger)
-                            val exitCode = command.run()
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger) }
+                            val exitCode by runForEachTest { command.run() }
 
                             it("runs the task") {
                                 verify(taskRunner).run(config, mainTask, runOptions)
@@ -163,13 +167,15 @@ object RunTaskCommandSpec : Spek({
                         }
 
                         on("and the dependency finishes with an exit code of 0") {
-                            val taskRunner = mock<TaskRunner> {
-                                on { run(config, otherTask, runOptions) } doReturn 0
-                                on { run(config, mainTask, runOptions) } doReturn expectedTaskExitCode
+                            val taskRunner by createForEachTest {
+                                mock<TaskRunner> {
+                                    on { run(config, otherTask, runOptions) } doReturn 0
+                                    on { run(config, mainTask, runOptions) } doReturn expectedTaskExitCode
+                                }
                             }
 
-                            val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger)
-                            val exitCode = command.run()
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger) }
+                            val exitCode by runForEachTest { command.run() }
 
                             it("runs the dependency task") {
                                 verify(taskRunner).run(config, otherTask, runOptions)
@@ -204,12 +210,14 @@ object RunTaskCommandSpec : Spek({
                         }
 
                         on("and the dependency finishes with a non-zero exit code") {
-                            val taskRunner = mock<TaskRunner> {
-                                on { run(config, otherTask, runOptions) } doReturn 1
+                            val taskRunner by createForEachTest {
+                                mock<TaskRunner> {
+                                    on { run(config, otherTask, runOptions) } doReturn 1
+                                }
                             }
 
-                            val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger)
-                            val exitCode = command.run()
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger) }
+                            val exitCode by runForEachTest { command.run() }
 
                             it("runs the dependency task") {
                                 verify(taskRunner).run(config, otherTask, runOptions)
@@ -242,10 +250,9 @@ object RunTaskCommandSpec : Spek({
                             on { resolveExecutionOrder(config, taskName) } doThrow exception
                         }
 
-                        val taskRunner = mock<TaskRunner>()
-
-                        val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger)
-                        val exitCode = command.run()
+                        val taskRunner by createForEachTest { mock<TaskRunner>() }
+                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger) }
+                        val exitCode by runForEachTest { command.run() }
 
                         it("prints a message to the output") {
                             verify(errorConsole).println(Text.red("Something went wrong."))
@@ -268,8 +275,8 @@ object RunTaskCommandSpec : Spek({
                         on { checkConnectivity() } doReturn DockerConnectivityCheckResult.Failed("Something went wrong.")
                     }
 
-                    val command = RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger)
-                    val exitCode = command.run()
+                    val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger) }
+                    val exitCode by runForEachTest { command.run() }
 
                     it("prints a message to the output") {
                         verify(errorConsole).println(Text.red("Docker is not installed, or not available: Something went wrong."))

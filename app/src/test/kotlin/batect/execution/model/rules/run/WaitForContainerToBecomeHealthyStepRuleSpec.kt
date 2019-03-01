@@ -23,13 +23,12 @@ import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.WaitForContainerToBecomeHealthyStep
 import batect.testutils.equalTo
+import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object WaitForContainerToBecomeHealthyStepRuleSpec : Spek({
     describe("a wait for container to become healthy step rule") {

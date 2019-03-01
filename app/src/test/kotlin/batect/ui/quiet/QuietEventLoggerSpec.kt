@@ -19,6 +19,7 @@ package batect.ui.quiet
 import batect.execution.RunOptions
 import batect.execution.model.events.TaskFailedEvent
 import batect.testutils.createForEachTest
+import batect.testutils.on
 import batect.ui.Console
 import batect.ui.FailureErrorMessageFormatter
 import batect.ui.text.TextRun
@@ -27,10 +28,8 @@ import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.time.Duration
 
 object QuietEventLoggerSpec : Spek({
@@ -42,10 +41,12 @@ object QuietEventLoggerSpec : Spek({
         val logger by createForEachTest { QuietEventLogger(failureErrorMessageFormatter, runOptions, errorConsole) }
 
         on("when a 'task failed' event is posted") {
-            val event = mock<TaskFailedEvent>()
-            whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn(TextRun("Something went wrong."))
+            beforeEachTest {
+                val event = mock<TaskFailedEvent>()
+                whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn(TextRun("Something went wrong."))
 
-            logger.postEvent(event)
+                logger.postEvent(event)
+            }
 
             it("prints the message to the console") {
                 inOrder(errorConsole) {
@@ -56,7 +57,7 @@ object QuietEventLoggerSpec : Spek({
         }
 
         on("when a task fails") {
-            logger.onTaskFailed("some-task", TextRun("Some cleanup instructions"))
+            beforeEachTest { logger.onTaskFailed("some-task", TextRun("Some cleanup instructions")) }
 
             it("does not print anything to the console") {
                 verifyZeroInteractions(errorConsole)
@@ -64,7 +65,7 @@ object QuietEventLoggerSpec : Spek({
         }
 
         on("when a task starts") {
-            logger.onTaskStarting("some-task")
+            beforeEachTest { logger.onTaskStarting("some-task") }
 
             it("does not print anything to the console") {
                 verifyZeroInteractions(errorConsole)
@@ -72,7 +73,7 @@ object QuietEventLoggerSpec : Spek({
         }
 
         on("when a task finishes") {
-            logger.onTaskFinished("some-task", 123, Duration.ofNanos(456))
+            beforeEachTest { logger.onTaskFinished("some-task", 123, Duration.ofNanos(456)) }
 
             it("does not print anything to the console") {
                 verifyZeroInteractions(errorConsole)

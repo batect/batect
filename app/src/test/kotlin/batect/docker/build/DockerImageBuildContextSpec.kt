@@ -18,6 +18,9 @@ package batect.docker.build
 
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
@@ -25,11 +28,8 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 
 object DockerImageBuildContextSpec : Spek({
@@ -57,7 +57,7 @@ object DockerImageBuildContextSpec : Spek({
 
         given("the context directory is empty") {
             on("creating the build context") {
-                val context = factory.createFromDirectory(contextDirectory)
+                val context by runForEachTest { factory.createFromDirectory(contextDirectory) }
 
                 it("returns an empty list of entries") {
                     assertThat(context, equalTo(DockerImageBuildContext(emptySet())))
@@ -73,7 +73,7 @@ object DockerImageBuildContextSpec : Spek({
             }
 
             on("creating the build context") {
-                val context = factory.createFromDirectory(contextDirectory)
+                val context by runForEachTest { factory.createFromDirectory(contextDirectory) }
 
                 it("returns a list of entries containing that Dockerfile") {
                     assertThat(context, equalTo(DockerImageBuildContext(setOf(
@@ -93,7 +93,7 @@ object DockerImageBuildContextSpec : Spek({
             }
 
             on("creating the build context") {
-                val context = factory.createFromDirectory(contextDirectory)
+                val context by runForEachTest { factory.createFromDirectory(contextDirectory) }
 
                 it("returns a list of entries containing both entries") {
                     assertThat(context, equalTo(DockerImageBuildContext(setOf(
@@ -116,7 +116,7 @@ object DockerImageBuildContextSpec : Spek({
             }
 
             on("creating the build context") {
-                val context = factory.createFromDirectory(contextDirectory)
+                val context by runForEachTest { factory.createFromDirectory(contextDirectory) }
 
                 it("returns a list of entries containing both entries and the directory") {
                     assertThat(context, equalTo(DockerImageBuildContext(setOf(
@@ -138,7 +138,7 @@ object DockerImageBuildContextSpec : Spek({
             }
 
             on("creating the build context") {
-                val context = factory.createFromDirectory(contextDirectory)
+                val context by runForEachTest { factory.createFromDirectory(contextDirectory) }
 
                 it("returns a list of entries containing both entries") {
                     assertThat(context, equalTo(DockerImageBuildContext(setOf(
@@ -159,7 +159,7 @@ object DockerImageBuildContextSpec : Spek({
             }
 
             on("creating the build context") {
-                val context = factory.createFromDirectory(contextDirectory)
+                val context by runForEachTest { factory.createFromDirectory(contextDirectory) }
 
                 it("returns a list of entries containing both directories") {
                     assertThat(context, equalTo(DockerImageBuildContext(setOf(
@@ -184,7 +184,7 @@ object DockerImageBuildContextSpec : Spek({
             }
 
             on("creating the build context") {
-                val context = factory.createFromDirectory(contextDirectory)
+                val context by runForEachTest { factory.createFromDirectory(contextDirectory) }
 
                 it("returns a list of entries containing only the entries permitted by the .dockerignore file") {
                     assertThat(context, equalTo(DockerImageBuildContext(setOf(

@@ -25,7 +25,10 @@ import batect.logging.Logger
 import batect.logging.Severity
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
+import batect.testutils.given
 import batect.testutils.hasMessage
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withAdditionalData
 import batect.testutils.withLogMessage
 import batect.testutils.withMessage
@@ -39,11 +42,8 @@ import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object TaskExecutionOrderResolverSpec : Spek({
     describe("a task execution order resolver") {
@@ -58,7 +58,7 @@ object TaskExecutionOrderResolverSpec : Spek({
             val task = Task("some-task", taskRunConfiguration)
             val config = Configuration("some-project", TaskMap(task), ContainerMap())
 
-            val executionOrder = resolver.resolveExecutionOrder(config, task.name)
+            val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, task.name) }
 
             it("returns just that task") {
                 assertThat(executionOrder, equalTo(listOf(task)))
@@ -118,7 +118,7 @@ object TaskExecutionOrderResolverSpec : Spek({
             val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTask.name))
             val config = Configuration("some-project", TaskMap(mainTask, dependencyTask), ContainerMap())
 
-            val executionOrder = resolver.resolveExecutionOrder(config, mainTask.name)
+            val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, mainTask.name) }
 
             it("schedules the dependency to execute before the main task") {
                 assertThat(executionOrder, dependencyTask executesBefore mainTask)
@@ -172,7 +172,7 @@ object TaskExecutionOrderResolverSpec : Spek({
             val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTask1.name, dependencyTask2.name))
             val config = Configuration("some-project", TaskMap(mainTask, dependencyTask1, dependencyTask2), ContainerMap())
 
-            val executionOrder = resolver.resolveExecutionOrder(config, mainTask.name)
+            val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, mainTask.name) }
 
             it("schedules the dependencies to execute before the main task") {
                 assertThat(executionOrder, dependencyTask1 executesBefore mainTask)
@@ -200,7 +200,7 @@ object TaskExecutionOrderResolverSpec : Spek({
             val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name))
             val config = Configuration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
 
-            val executionOrder = resolver.resolveExecutionOrder(config, mainTask.name)
+            val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, mainTask.name) }
 
             it("schedules task A to execute before the main task") {
                 assertThat(executionOrder, dependencyTaskA executesBefore mainTask)
@@ -217,7 +217,7 @@ object TaskExecutionOrderResolverSpec : Spek({
             val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name, dependencyTaskB.name))
             val config = Configuration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
 
-            val executionOrder = resolver.resolveExecutionOrder(config, mainTask.name)
+            val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, mainTask.name) }
 
             it("schedules task B to execute before the main task") {
                 assertThat(executionOrder, dependencyTaskB executesBefore mainTask)
@@ -234,7 +234,7 @@ object TaskExecutionOrderResolverSpec : Spek({
             val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskB.name, dependencyTaskA.name))
             val config = Configuration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
 
-            val executionOrder = resolver.resolveExecutionOrder(config, mainTask.name)
+            val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, mainTask.name) }
 
             it("schedules task B to execute before the main task") {
                 assertThat(executionOrder, dependencyTaskB executesBefore mainTask)
@@ -255,7 +255,7 @@ object TaskExecutionOrderResolverSpec : Spek({
             val sandwichHasBeenEatenTask = Task("sandwichHasBeenEaten", taskRunConfiguration, prerequisiteTasks = listOf("makeTheSandwich", "eatTheSandwich"))
             val config = Configuration("some-project", TaskMap(getSandwichContentsTask, putContentsInBreadTask, prepareTheTableTask, makeTheSandwichTask, takeABiteOfTheSandwichTask, eatTheSandwichTask, sandwichHasBeenEatenTask), ContainerMap())
 
-            val executionOrder = resolver.resolveExecutionOrder(config, sandwichHasBeenEatenTask.name)
+            val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, sandwichHasBeenEatenTask.name) }
 
             it("schedules the tasks to run in an order that respects the relative ordering of each prerequisite list") {
                 assertThat(executionOrder, getSandwichContentsTask executesBefore putContentsInBreadTask)

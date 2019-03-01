@@ -18,6 +18,8 @@ package batect.os
 
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
@@ -29,10 +31,8 @@ import com.nhaarman.mockitokotlin2.whenever
 import jnr.constants.platform.Signal
 import jnr.posix.POSIX
 import jnr.posix.SignalHandler
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object SignalListenerSpec : Spek({
     describe("a signal listener") {
@@ -41,7 +41,7 @@ object SignalListenerSpec : Spek({
         val signalListener by createForEachTest { SignalListener(posix) }
 
         on("starting to listen for the signal") {
-            signalListener.start(signal) {}
+            beforeEachTest { signalListener.start(signal) {} }
 
             it("registers a signal handler for the SIGINT signal") {
                 verify(posix).signal(eq(signal), any())
@@ -49,13 +49,17 @@ object SignalListenerSpec : Spek({
         }
 
         on("the desired signal being received") {
-            val handlerCaptor = argumentCaptor<SignalHandler>()
-            var signalHandlerCalled: Boolean = false
+            val signalHandlerCalled by runForEachTest {
+                var signalHandlerCalled = false
 
-            signalListener.start(signal) { signalHandlerCalled = true }
+                val handlerCaptor = argumentCaptor<SignalHandler>()
+                signalListener.start(signal) { signalHandlerCalled = true }
 
-            verify(posix).signal(eq(signal), handlerCaptor.capture())
-            handlerCaptor.firstValue.handle(signal.value())
+                verify(posix).signal(eq(signal), handlerCaptor.capture())
+                handlerCaptor.firstValue.handle(signal.value())
+
+                signalHandlerCalled
+            }
 
             it("calls the derived class' onSignalReceived() method") {
                 assertThat(signalHandlerCalled, equalTo(true))
@@ -63,10 +67,13 @@ object SignalListenerSpec : Spek({
         }
 
         on("stopping listening for the signal") {
-            val originalHandler = mock<SignalHandler>()
-            whenever(posix.signal(eq(signal), any())).doReturn(originalHandler)
+            val originalHandler by createForEachTest { mock<SignalHandler>() }
 
-            signalListener.start(signal, {}).use { }
+            beforeEachTest {
+                whenever(posix.signal(eq(signal), any())).doReturn(originalHandler)
+
+                signalListener.start(signal, {}).use { }
+            }
 
             it("restores the previous signal handler") {
                 verify(posix).signal(signal, originalHandler)

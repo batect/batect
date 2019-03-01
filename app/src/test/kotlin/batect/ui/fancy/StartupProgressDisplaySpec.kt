@@ -20,16 +20,15 @@ import batect.docker.DockerNetwork
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.testutils.createForEachTest
+import batect.testutils.on
 import batect.ui.Console
 import batect.ui.text.TextRun
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object StartupProgressDisplaySpec : Spek({
     describe("a startup progress display") {
@@ -51,7 +50,7 @@ object StartupProgressDisplaySpec : Spek({
 
         on("receiving an event") {
             val event = TaskNetworkCreatedEvent(DockerNetwork("some-id"))
-            display.onEventPosted(event)
+            beforeEachTest { display.onEventPosted(event) }
 
             it("forwards it to each progress line") {
                 verify(line1).onEventPosted(event)
@@ -61,7 +60,7 @@ object StartupProgressDisplaySpec : Spek({
 
         on("receiving notification that a step is about to start") {
             val step = BuildImageStep("/some-image-dir")
-            display.onStepStarting(step)
+            beforeEachTest { display.onStepStarting(step) }
 
             it("forwards it to each progress line") {
                 verify(line1).onStepStarting(step)
@@ -73,7 +72,7 @@ object StartupProgressDisplaySpec : Spek({
             val console by createForEachTest { mock<Console>() }
 
             on("when the progress has never been displayed before") {
-                display.print(console)
+                beforeEachTest { display.print(console) }
 
                 it("just prints each progress line, limited to the width of the console") {
                     inOrder(console) {
@@ -84,8 +83,10 @@ object StartupProgressDisplaySpec : Spek({
             }
 
             on("when the progress has been displayed before") {
-                display.print(mock())
-                display.print(console)
+                beforeEachTest {
+                    display.print(mock())
+                    display.print(console)
+                }
 
                 it("moves the cursor to the start of the progress block, and then clears each line and prints the corresponding progress line in a restricted width console") {
                     inOrder(console) {

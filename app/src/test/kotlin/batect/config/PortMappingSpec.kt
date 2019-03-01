@@ -16,6 +16,7 @@
 
 package batect.config
 
+import batect.testutils.on
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
@@ -24,10 +25,8 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object PortMappingSpec : Spek({
     describe("a port mapping") {

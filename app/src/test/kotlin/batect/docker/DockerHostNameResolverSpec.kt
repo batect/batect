@@ -20,16 +20,16 @@ import batect.os.OperatingSystem
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.utils.Version
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object DockerHostNameResolverSpec : Spek({
     describe("a Docker host name resolver") {
@@ -41,11 +41,15 @@ object DockerHostNameResolverSpec : Spek({
             beforeEachTest { whenever(systemInfo.operatingSystem).doReturn(OperatingSystem.Mac) }
 
             on("the Docker version being less than 17.06") {
-                whenever(dockerClient.getDockerVersionInfo()).doReturn(DockerVersionInfoRetrievalResult.Succeeded(
-                    createDockerVersionInfoWithServerVersion(Version(17, 5, 0))
-                ))
+                beforeEachTest {
+                    whenever(dockerClient.getDockerVersionInfo()).doReturn(
+                        DockerVersionInfoRetrievalResult.Succeeded(
+                            createDockerVersionInfoWithServerVersion(Version(17, 5, 0))
+                        )
+                    )
+                }
 
-                val result = resolver.resolveNameOfDockerHost()
+                val result by runForEachTest { resolver.resolveNameOfDockerHost() }
 
                 it("returns that getting the Docker host's name is not supported") {
                     assertThat(result, equalTo(DockerHostNameResolutionResult.NotSupported))
@@ -63,11 +67,15 @@ object DockerHostNameResolverSpec : Spek({
                 Scenario(Version(18, 3, 0, "mac3"), "host.docker.internal", "the Docker version being above 18.03")
             ).forEach { (dockerVersion, expectedHostName, description) ->
                 on(description) {
-                    whenever(dockerClient.getDockerVersionInfo()).doReturn(DockerVersionInfoRetrievalResult.Succeeded(
-                        createDockerVersionInfoWithServerVersion(dockerVersion)
-                    ))
+                    beforeEachTest {
+                        whenever(dockerClient.getDockerVersionInfo()).doReturn(
+                            DockerVersionInfoRetrievalResult.Succeeded(
+                                createDockerVersionInfoWithServerVersion(dockerVersion)
+                            )
+                        )
+                    }
 
-                    val result = resolver.resolveNameOfDockerHost()
+                    val result by runForEachTest { resolver.resolveNameOfDockerHost() }
 
                     it("returns that getting the Docker host's name is '$expectedHostName'") {
                         assertThat(result, equalTo(DockerHostNameResolutionResult.Resolved(expectedHostName)))
@@ -76,9 +84,11 @@ object DockerHostNameResolverSpec : Spek({
             }
 
             on("the Docker version not being able to be determined") {
-                whenever(dockerClient.getDockerVersionInfo()).doReturn(DockerVersionInfoRetrievalResult.Failed("Couldn't get version."))
+                beforeEachTest {
+                    whenever(dockerClient.getDockerVersionInfo()).doReturn(DockerVersionInfoRetrievalResult.Failed("Couldn't get version."))
+                }
 
-                val result = resolver.resolveNameOfDockerHost()
+                val result by runForEachTest { resolver.resolveNameOfDockerHost() }
 
                 it("returns that getting the Docker host's name is not supported") {
                     assertThat(result, equalTo(DockerHostNameResolutionResult.NotSupported))
@@ -87,9 +97,11 @@ object DockerHostNameResolverSpec : Spek({
         }
 
         on("the local system is running Linux") {
-            whenever(systemInfo.operatingSystem).thenReturn(OperatingSystem.Linux)
+            beforeEachTest {
+                whenever(systemInfo.operatingSystem).thenReturn(OperatingSystem.Linux)
+            }
 
-            val result = resolver.resolveNameOfDockerHost()
+            val result by runForEachTest { resolver.resolveNameOfDockerHost() }
 
             it("returns that getting the Docker host's name is not supported") {
                 assertThat(result, equalTo(DockerHostNameResolutionResult.NotSupported))
@@ -97,9 +109,11 @@ object DockerHostNameResolverSpec : Spek({
         }
 
         on("the local system is running another operating system") {
-            whenever(systemInfo.operatingSystem).thenReturn(OperatingSystem.Other)
+            beforeEachTest {
+                whenever(systemInfo.operatingSystem).thenReturn(OperatingSystem.Other)
+            }
 
-            val result = resolver.resolveNameOfDockerHost()
+            val result by runForEachTest { resolver.resolveNameOfDockerHost() }
 
             it("returns that getting the Docker host's name is not supported") {
                 assertThat(result, equalTo(DockerHostNameResolutionResult.NotSupported))

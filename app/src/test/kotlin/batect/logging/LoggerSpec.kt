@@ -17,12 +17,11 @@
 package batect.logging
 
 import batect.testutils.createForEachTest
+import batect.testutils.on
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object LoggerSpec : Spek({
     describe("a logger") {
@@ -32,7 +31,7 @@ object LoggerSpec : Spek({
         val buildFun: LogMessageBuilder.() -> LogMessageBuilder = { this }
 
         on("logging a debug-level message") {
-            logger.debug(buildFun)
+            beforeEachTest { logger.debug(buildFun) }
 
             it("forwards the message to the log sink with the name of the source") {
                 verify(sink).write(Severity.Debug, mapOf("@source" to "some.source"), buildFun)
@@ -40,7 +39,7 @@ object LoggerSpec : Spek({
         }
 
         on("logging a info-level message") {
-            logger.info(buildFun)
+            beforeEachTest { logger.info(buildFun) }
 
             it("forwards the message to the log sink with the name of the source") {
                 verify(sink).write(Severity.Info, mapOf("@source" to "some.source"), buildFun)
@@ -48,7 +47,7 @@ object LoggerSpec : Spek({
         }
 
         on("logging a warning-level message") {
-            logger.warn(buildFun)
+            beforeEachTest { logger.warn(buildFun) }
 
             it("forwards the message to the log sink with the name of the source") {
                 verify(sink).write(Severity.Warning, mapOf("@source" to "some.source"), buildFun)
@@ -56,7 +55,7 @@ object LoggerSpec : Spek({
         }
 
         on("logging a error-level message") {
-            logger.error(buildFun)
+            beforeEachTest { logger.error(buildFun) }
 
             it("forwards the message to the log sink with the name of the source") {
                 verify(sink).write(Severity.Error, mapOf("@source" to "some.source"), buildFun)

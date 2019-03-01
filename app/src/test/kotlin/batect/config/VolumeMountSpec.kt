@@ -20,6 +20,8 @@ import batect.config.io.deserializers.PathDeserializer
 import batect.os.PathResolutionResult
 import batect.os.PathType
 import batect.testutils.createForEachTest
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
@@ -34,10 +36,8 @@ import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.mock
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.context.SimpleModule
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Paths
 
 object VolumeMountSpec : Spek({
@@ -62,7 +62,7 @@ object VolumeMountSpec : Spek({
 
             describe("deserializing from compact form") {
                 on("parsing a valid volume mount definition") {
-                    val volumeMount = parser.parse(VolumeMount.Companion, "'/local:/container'")
+                    val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, "'/local:/container'") }
 
                     it("returns the correct local path, resolved to an absolute path") {
                         assertThat(volumeMount.localPath, equalTo("/resolved/local"))
@@ -82,7 +82,7 @@ object VolumeMountSpec : Spek({
                 }
 
                 on("parsing a valid volume mount definition with options") {
-                    val volumeMount = parser.parse(VolumeMount.Companion, "'/local:/container:some_options'")
+                    val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, "'/local:/container:some_options'") }
 
                     it("returns the correct local path, resolved to an absolute path") {
                         assertThat(volumeMount.localPath, equalTo("/resolved/local"))
@@ -138,13 +138,12 @@ object VolumeMountSpec : Spek({
 
             describe("deserializing from expanded form") {
                 on("parsing a valid volume mount definition") {
-                    val volumeMount = parser.parse(
-                        VolumeMount.Companion,
-                        """
+                    val yaml = """
                             local: /local
                             container: /container
                         """.trimIndent()
-                    )
+
+                    val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, yaml) }
 
                     it("returns the correct local path, resolved to an absolute path") {
                         assertThat(volumeMount.localPath, equalTo("/resolved/local"))
@@ -164,14 +163,13 @@ object VolumeMountSpec : Spek({
                 }
 
                 on("parsing a valid volume mount definition with options") {
-                    val volumeMount = parser.parse(
-                        VolumeMount.Companion,
-                        """
+                    val yaml = """
                             local: /local
                             container: /container
                             options: some_options
                         """.trimIndent()
-                    )
+
+                    val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, yaml) }
 
                     it("returns the correct local path, resolved to an absolute path") {
                         assertThat(volumeMount.localPath, equalTo("/resolved/local"))

@@ -26,7 +26,10 @@ import batect.execution.model.events.TemporaryFileCreatedEvent
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.absent
@@ -40,11 +43,8 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.LinkOption
@@ -83,7 +83,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
             val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, fileSystem) }
 
             on("generating the configuration") {
-                val configuration = provider.generateConfiguration(container, eventSink)
+                val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
 
                 it("does not emit any events") {
                     verify(eventSink, never()).postEvent(any())
@@ -124,7 +124,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, fileSystem) }
 
                 on("generating the configuration") {
-                    val configuration = provider.generateConfiguration(container, eventSink)
+                    val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
 
                     it("returns a set of volume mounts for the passwd and group file and home directory") {
                         assertThat(configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(setOf(
@@ -217,7 +217,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, fileSystem) }
 
                 on("generating the configuration") {
-                    val configuration = provider.generateConfiguration(container, eventSink)
+                    val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
 
                     it("returns a set of volume mounts for the passwd and group file") {
                         assertThat(configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(setOf(

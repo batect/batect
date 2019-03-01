@@ -26,10 +26,13 @@ import batect.docker.run.ContainerOutputStream
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
 import batect.testutils.mock
 import batect.testutils.mockDelete
 import batect.testutils.mockGet
 import batect.testutils.mockPost
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import batect.ui.Dimensions
 import batect.utils.Version
@@ -62,11 +65,8 @@ import okhttp3.Response
 import okio.Buffer
 import okio.BufferedSink
 import okio.BufferedSource
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.time.Duration
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -97,8 +97,8 @@ object DockerAPISpec : Spek({
                 val request = DockerContainerCreationRequest(image, network, command, "some-host", "some-host", emptyMap(), "/some-dir", emptySet(), emptySet(), HealthCheckConfig(), null)
 
                 on("a successful creation") {
-                    val call = httpClient.mockPost(expectedUrl, """{"Id": "abc123"}""", 201)
-                    val result = api.createContainer(request)
+                    val call by createForEachTest { httpClient.mockPost(expectedUrl, """{"Id": "abc123"}""", 201) }
+                    val result by runForEachTest { api.createContainer(request) }
 
                     it("creates the container") {
                         verify(call).execute()
@@ -116,7 +116,7 @@ object DockerAPISpec : Spek({
                 }
 
                 on("a failed creation") {
-                    httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                    beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                     it("raises an appropriate exception") {
                         assertThat({ api.createContainer(request) }, throws<ContainerCreationFailedException>(withMessage("Output from Docker was: Something went wrong.")))
@@ -131,8 +131,8 @@ object DockerAPISpec : Spek({
                 val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/start"
 
                 on("starting that container") {
-                    val call = httpClient.mockPost(expectedUrl, "", 204)
-                    api.startContainer(container)
+                    val call by createForEachTest { httpClient.mockPost(expectedUrl, "", 204) }
+                    beforeEachTest { api.startContainer(container) }
 
                     it("sends a request to the Docker daemon to start the container") {
                         verify(call).execute()
@@ -140,7 +140,7 @@ object DockerAPISpec : Spek({
                 }
 
                 on("an unsuccessful start attempt") {
-                    httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                    beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                     it("raises an appropriate exception") {
                         assertThat({ api.startContainer(container) }, throws<ContainerStartFailedException>(withMessage("Starting container 'the-container-id' failed: Something went wrong.")))
@@ -185,7 +185,7 @@ object DockerAPISpec : Spek({
                     beforeEachTest { httpClient.mockGet(expectedUrl, response, 200) }
 
                     on("getting the details of that container") {
-                        val details = api.inspectContainer(container)
+                        val details by runForEachTest { api.inspectContainer(container) }
 
                         it("returns the details of the container") {
                             assertThat(details, equalTo(DockerContainerInfo(
@@ -220,7 +220,7 @@ object DockerAPISpec : Spek({
                     beforeEachTest { httpClient.mockGet(expectedUrl, response, 200) }
 
                     on("getting the details of that container") {
-                        val details = api.inspectContainer(container)
+                        val details by runForEachTest { api.inspectContainer(container) }
 
                         it("returns the details of the container") {
                             assertThat(details, equalTo(DockerContainerInfo(
@@ -232,7 +232,7 @@ object DockerAPISpec : Spek({
                 }
 
                 on("getting the container's details failing") {
-                    httpClient.mockGet(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                    beforeEachTest { httpClient.mockGet(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                     it("throws an appropriate exception") {
                         assertThat({ api.inspectContainer(container) },
@@ -259,8 +259,8 @@ object DockerAPISpec : Spek({
                 }
 
                 on("stopping that container") {
-                    val call = clientWithLongTimeout.mockPost(expectedUrl, "", 204)
-                    api.stopContainer(container)
+                    val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, "", 204) }
+                    beforeEachTest { api.stopContainer(container) }
 
                     it("sends a request to the Docker daemon to stop the container") {
                         verify(call).execute()
@@ -272,8 +272,8 @@ object DockerAPISpec : Spek({
                 }
 
                 on("that container already being stopped") {
-                    val call = clientWithLongTimeout.mockPost(expectedUrl, "", 304)
-                    api.stopContainer(container)
+                    val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, "", 304) }
+                    beforeEachTest { api.stopContainer(container) }
 
                     it("sends a request to the Docker daemon to stop the container") {
                         verify(call).execute()
@@ -281,7 +281,7 @@ object DockerAPISpec : Spek({
                 }
 
                 on("an unsuccessful stop attempt") {
-                    clientWithLongTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                    beforeEachTest { clientWithLongTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                     it("raises an appropriate exception") {
                         assertThat({ api.stopContainer(container) }, throws<ContainerStopFailedException>(withMessage("Stopping container 'the-container-id' failed: Something went wrong.")))
@@ -296,8 +296,8 @@ object DockerAPISpec : Spek({
                 val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id?v=true&force=true"
 
                 on("a successful removal") {
-                    val call = httpClient.mockDelete(expectedUrl, "", 204)
-                    api.removeContainer(container)
+                    val call by createForEachTest { httpClient.mockDelete(expectedUrl, "", 204) }
+                    beforeEachTest { api.removeContainer(container) }
 
                     it("sends a request to the Docker daemon to remove the container") {
                         verify(call).execute()
@@ -305,7 +305,7 @@ object DockerAPISpec : Spek({
                 }
 
                 on("an unsuccessful deletion") {
-                    httpClient.mockDelete(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                    beforeEachTest { httpClient.mockDelete(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                     it("throws an appropriate exception") {
                         assertThat({ api.removeContainer(container) }, throws<ContainerRemovalFailedException>(withMessage("Removal of container 'the-container-id' failed: Something went wrong.")))
@@ -342,8 +342,9 @@ object DockerAPISpec : Spek({
                         |
                     """.trimMargin()
 
-                    clientWithLongTimeout.mock("GET", expectedUrl, responseBody, 200)
-                    val event = api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123))
+                    beforeEachTest { clientWithLongTimeout.mock("GET", expectedUrl, responseBody, 200) }
+
+                    val event by runForEachTest { api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123)) }
 
                     it("returns that event") {
                         assertThat(event, equalTo(DockerEvent("health_status: healthy")))
@@ -361,8 +362,9 @@ object DockerAPISpec : Spek({
                         |
                     """.trimMargin()
 
-                    clientWithLongTimeout.mock("GET", expectedUrl, responseBody, 200)
-                    val event = api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123))
+                    beforeEachTest { clientWithLongTimeout.mock("GET", expectedUrl, responseBody, 200) }
+
+                    val event by runForEachTest { api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123)) }
 
                     it("returns the first event") {
                         assertThat(event, equalTo(DockerEvent("die")))
@@ -370,7 +372,7 @@ object DockerAPISpec : Spek({
                 }
 
                 on("the API call failing") {
-                    clientWithLongTimeout.mock("GET", expectedUrl, """{"message": "Something went wrong."}""", 418)
+                    beforeEachTest { clientWithLongTimeout.mock("GET", expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                     it("throws an appropriate exception") {
                         assertThat({ api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123)) }, throws<DockerException>(withMessage("Getting events for container 'the-container-id' failed: Something went wrong.")))
@@ -399,8 +401,8 @@ object DockerAPISpec : Spek({
                 on("the wait succeeding") {
                     val responseBody = """{"StatusCode": 123, "Error": null}"""
 
-                    clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200)
-                    val exitCode = api.waitForExit(container)
+                    beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
+                    val exitCode by runForEachTest { api.waitForExit(container) }
 
                     it("returns the exit code from the container") {
                         assertThat(exitCode, equalTo(123))
@@ -414,7 +416,7 @@ object DockerAPISpec : Spek({
                 on("the wait returning an error in the body of the response") {
                     val responseBody = """{"StatusCode": 123, "Error": "Something might have gone wrong."}"""
 
-                    clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200)
+                    beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
 
                     it("throws an appropriate exception") {
                         assertThat({ api.waitForExit(container) }, throws<DockerException>(withMessage("Waiting for container 'the-container-id' to exit succeeded but returned an error: Something might have gone wrong.")))
@@ -422,7 +424,7 @@ object DockerAPISpec : Spek({
                 }
 
                 on("the API call failing") {
-                    clientWithNoTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                    beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                     it("throws an appropriate exception") {
                         assertThat({ api.waitForExit(container) }, throws<DockerException>(withMessage("Waiting for container 'the-container-id' to exit failed: Something went wrong.")))
@@ -464,9 +466,9 @@ object DockerAPISpec : Spek({
                             on { isSuccessful } doReturn true
                         }
 
-                        clientWithNoTimeout.mock("POST", expectedUrl, response)
+                        beforeEachTest { clientWithNoTimeout.mock("POST", expectedUrl, response) }
 
-                        val streams = api.attachToContainerOutput(container)
+                        val streams by runForEachTest { api.attachToContainerOutput(container) }
 
                         it("returns the stream from the underlying connection") {
                             assertThat(streams, equalTo(ContainerOutputStream(response, source)))
@@ -482,7 +484,7 @@ object DockerAPISpec : Spek({
                     }
 
                     on("an unsuccessful attach attempt") {
-                        clientWithNoTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                        beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                         it("raises an appropriate exception") {
                             assertThat({ api.attachToContainerOutput(container) }, throws<DockerException>(withMessage("Attaching to output from container 'the-container-id' failed: Something went wrong.")))
@@ -498,9 +500,9 @@ object DockerAPISpec : Spek({
                             on { isSuccessful } doReturn true
                         }
 
-                        clientWithNoTimeout.mock("POST", expectedUrl, response)
+                        beforeEachTest { clientWithNoTimeout.mock("POST", expectedUrl, response) }
 
-                        val streams = api.attachToContainerInput(container)
+                        val streams by runForEachTest { api.attachToContainerInput(container) }
 
                         it("returns the stream from the underlying connection") {
                             assertThat(streams, equalTo(ContainerInputStream(response, sink)))
@@ -516,7 +518,7 @@ object DockerAPISpec : Spek({
                     }
 
                     on("an unsuccessful attach attempt") {
-                        clientWithNoTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                        beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                         it("raises an appropriate exception") {
                             assertThat({ api.attachToContainerInput(container) }, throws<DockerException>(withMessage("Attaching to input for container 'the-container-id' failed: Something went wrong.")))
@@ -533,8 +535,8 @@ object DockerAPISpec : Spek({
                 val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/kill?signal=SIGINT"
 
                 on("the API call succeeding") {
-                    val call = httpClient.mockPost(expectedUrl, "", 204)
-                    api.sendSignalToContainer(container, signal)
+                    val call by createForEachTest { httpClient.mockPost(expectedUrl, "", 204) }
+                    beforeEachTest { api.sendSignalToContainer(container, signal) }
 
                     it("sends a request to the Docker daemon to send the signal to the container") {
                         verify(call).execute()
@@ -542,7 +544,7 @@ object DockerAPISpec : Spek({
                 }
 
                 on("the API call failing") {
-                    httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                    beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                     it("throws an appropriate exception") {
                         assertThat({ api.sendSignalToContainer(container, signal) }, throws<DockerException>(withMessage("Sending signal SIGINT to container 'the-container-id' failed: Something went wrong.")))
@@ -558,8 +560,8 @@ object DockerAPISpec : Spek({
                 val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/resize?h=123&w=456"
 
                 on("the API call succeeding") {
-                    val call = httpClient.mockPost(expectedUrl, "", 200)
-                    api.resizeContainerTTY(container, dimensions)
+                    val call by createForEachTest { httpClient.mockPost(expectedUrl, "", 200) }
+                    beforeEachTest { api.resizeContainerTTY(container, dimensions) }
 
                     it("sends a request to the Docker daemon to resize the TTY") {
                         verify(call).execute()
@@ -567,7 +569,7 @@ object DockerAPISpec : Spek({
                 }
 
                 on("the container being stopped") {
-                    httpClient.mockPost(expectedUrl, """{"message": "cannot resize a stopped container: unknown"}""", 418)
+                    beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "cannot resize a stopped container: unknown"}""", 418) }
 
                     it("throws an appropriate exception") {
                         assertThat({ api.resizeContainerTTY(container, dimensions) }, throws<ContainerStoppedException>(withMessage("Resizing TTY for container 'the-container-id' failed: cannot resize a stopped container: unknown")))
@@ -575,7 +577,7 @@ object DockerAPISpec : Spek({
                 }
 
                 on("the container being stopped and the daemon returning a 'bad file descriptor' error") {
-                    httpClient.mockPost(expectedUrl, """{"message": "bad file descriptor: unknown"}""", 500)
+                    beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "bad file descriptor: unknown"}""", 500) }
 
                     it("throws an appropriate exception") {
                         assertThat({ api.resizeContainerTTY(container, dimensions) }, throws<ContainerStoppedException>(withMessage("Resizing TTY for container 'the-container-id' failed: bad file descriptor: unknown (the container may have stopped quickly after starting)")))
@@ -583,7 +585,7 @@ object DockerAPISpec : Spek({
                 }
 
                 on("the API call failing") {
-                    httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                    beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                     it("throws an appropriate exception") {
                         assertThat({ api.resizeContainerTTY(container, dimensions) }, throws<DockerException>(withMessage("Resizing TTY for container 'the-container-id' failed: Something went wrong.")))
@@ -596,8 +598,8 @@ object DockerAPISpec : Spek({
             val expectedUrl = "$dockerBaseUrl/v1.30/networks/create"
 
             on("a successful creation") {
-                val call = httpClient.mockPost(expectedUrl, """{"Id": "the-network-ID"}""", 201)
-                val result = api.createNetwork()
+                val call by createForEachTest { httpClient.mockPost(expectedUrl, """{"Id": "the-network-ID"}""", 201) }
+                val result by runForEachTest { api.createNetwork() }
 
                 it("creates the network") {
                     verify(call).execute()
@@ -617,7 +619,7 @@ object DockerAPISpec : Spek({
             }
 
             on("an unsuccessful creation") {
-                httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                 it("throws an appropriate exception") {
                     assertThat({ api.createNetwork() }, throws<NetworkCreationFailedException>(withMessage("Creation of network failed: Something went wrong.")))
@@ -631,8 +633,8 @@ object DockerAPISpec : Spek({
                 val expectedUrl = "$dockerBaseUrl/v1.30/networks/abc123"
 
                 on("a successful deletion") {
-                    val call = httpClient.mockDelete(expectedUrl, "", 204)
-                    api.deleteNetwork(network)
+                    val call by createForEachTest { httpClient.mockDelete(expectedUrl, "", 204) }
+                    beforeEachTest { api.deleteNetwork(network) }
 
                     it("sends a request to the Docker daemon to delete the network") {
                         verify(call).execute()
@@ -640,7 +642,7 @@ object DockerAPISpec : Spek({
                 }
 
                 on("an unsuccessful deletion") {
-                    httpClient.mockDelete(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                    beforeEachTest { httpClient.mockDelete(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                     it("throws an appropriate exception") {
                         assertThat({ api.deleteNetwork(network) }, throws<NetworkDeletionFailedException>(withMessage("Deletion of network 'abc123' failed: Something went wrong.")))
@@ -650,10 +652,12 @@ object DockerAPISpec : Spek({
         }
 
         describe("building an image") {
-            val clientWithLongTimeout = mock<OkHttpClient>()
-            val longTimeoutClientBuilder = mock<OkHttpClient.Builder> { mock ->
-                on { readTimeout(any(), any()) } doReturn mock
-                on { build() } doReturn clientWithLongTimeout
+            val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
+            val longTimeoutClientBuilder by createForEachTest {
+                mock<OkHttpClient.Builder> { mock ->
+                    on { readTimeout(any(), any()) } doReturn mock
+                    on { build() } doReturn clientWithLongTimeout
+                }
             }
 
             beforeEachTest {
@@ -698,9 +702,9 @@ object DockerAPISpec : Spek({
             """.trimMargin()
 
             on("the build succeeding") {
-                val call = clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForAuthentication)
-                val progressReceiver = ProgressReceiver()
-                val image = api.buildImage(context, buildArgs, registryCredentials, progressReceiver::onProgressUpdate)
+                val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForAuthentication) }
+                val progressReceiver by createForEachTest { ProgressReceiver() }
+                val image by runForEachTest { api.buildImage(context, buildArgs, registryCredentials, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to build the image") {
                     verify(call).execute()
@@ -725,8 +729,8 @@ object DockerAPISpec : Spek({
 
             on("the build having no registry credentials") {
                 val expectedHeadersForNoAuthentication = Headers.Builder().build()
-                val call = clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForNoAuthentication)
-                api.buildImage(context, buildArgs, null, {})
+                val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForNoAuthentication) }
+                beforeEachTest { api.buildImage(context, buildArgs, null, {}) }
 
                 it("sends a request to the Docker daemon to build the image with no authentication header") {
                     verify(call).execute()
@@ -739,8 +743,8 @@ object DockerAPISpec : Spek({
                     hasPath("/v1.30/build") and
                     hasQueryParameter("buildargs", """{}""")
 
-                val call = clientWithLongTimeout.mock("POST", expectedUrlWithNoBuildArgs, successResponse, 200, expectedHeadersForAuthentication)
-                api.buildImage(context, emptyMap(), registryCredentials, {})
+                val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithNoBuildArgs, successResponse, 200, expectedHeadersForAuthentication) }
+                beforeEachTest { api.buildImage(context, emptyMap(), registryCredentials, {}) }
 
                 it("sends a request to the Docker daemon to build the image with an empty set of build args") {
                     verify(call).execute()
@@ -748,7 +752,9 @@ object DockerAPISpec : Spek({
             }
 
             on("the build failing immediately") {
-                clientWithLongTimeout.mock("POST", expectedUrl, """{"message": "Something went wrong."}""", 418, expectedHeadersForAuthentication)
+                beforeEachTest {
+                    clientWithLongTimeout.mock("POST", expectedUrl, """{"message": "Something went wrong."}""", 418, expectedHeadersForAuthentication)
+                }
 
                 it("throws an appropriate exception") {
                     assertThat({ api.buildImage(context, buildArgs, registryCredentials, {}) }, throws<ImageBuildFailedException>(
@@ -768,7 +774,7 @@ object DockerAPISpec : Spek({
                     |{"errorDetail":{"code":1,"message":"The command '/bin/sh -c exit 1' returned a non-zero code: 1"},"error":"The command '/bin/sh -c exit 1' returned a non-zero code: 1"}
                 """.trimMargin()
 
-                clientWithLongTimeout.mock("POST", expectedUrl, errorResponse, 200, expectedHeadersForAuthentication)
+                beforeEachTest { clientWithLongTimeout.mock("POST", expectedUrl, errorResponse, 200, expectedHeadersForAuthentication) }
 
                 it("throws an appropriate exception") {
                     assertThat({ api.buildImage(context, buildArgs, registryCredentials, {}) }, throws<ImageBuildFailedException>(
@@ -789,7 +795,9 @@ object DockerAPISpec : Spek({
                     |{"stream":"Step 1/6 : FROM nginx:1.13.0"}
                 """.trimMargin()
 
-                clientWithLongTimeout.mock("POST", expectedUrl, malformedResponse, 200, expectedHeadersForAuthentication)
+                beforeEachTest {
+                    clientWithLongTimeout.mock("POST", expectedUrl, malformedResponse, 200, expectedHeadersForAuthentication)
+                }
 
                 it("throws an appropriate exception") {
                     assertThat({ api.buildImage(context, buildArgs, registryCredentials, {}) }, throws<ImageBuildFailedException>(
@@ -815,9 +823,9 @@ object DockerAPISpec : Spek({
                     |{"status":"Status: Image is up to date for some-image"}
                 """.trimMargin()
 
-                val call = httpClient.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication)
-                val progressReceiver = ProgressReceiver()
-                api.pullImage(imageName, registryCredentials, progressReceiver::onProgressUpdate)
+                val call by createForEachTest { httpClient.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
+                val progressReceiver by createForEachTest { ProgressReceiver() }
+                beforeEachTest { api.pullImage(imageName, registryCredentials, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to pull the image") {
                     verify(call).execute()
@@ -838,9 +846,9 @@ object DockerAPISpec : Spek({
                     |{"status":"Status: Downloaded newer image for some-image:latest"}
                 """.trimMargin()
 
-                val call = httpClient.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication)
-                val progressReceiver = ProgressReceiver()
-                api.pullImage(imageName, registryCredentials, progressReceiver::onProgressUpdate)
+                val call by createForEachTest { httpClient.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
+                val progressReceiver by createForEachTest { ProgressReceiver() }
+                beforeEachTest { api.pullImage(imageName, registryCredentials, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to pull the image") {
                     verify(call).execute()
@@ -853,8 +861,8 @@ object DockerAPISpec : Spek({
 
             on("the pull request having no registry credentials") {
                 val expectedHeadersForNoAuthentication = Headers.Builder().build()
-                val call = httpClient.mockPost(expectedUrl, "", 200, expectedHeadersForNoAuthentication)
-                api.pullImage(imageName, null, {})
+                val call by createForEachTest { httpClient.mockPost(expectedUrl, "", 200, expectedHeadersForNoAuthentication) }
+                beforeEachTest { api.pullImage(imageName, null, {}) }
 
                 it("sends a request to the Docker daemon to pull the image with no authentication header") {
                     verify(call).execute()
@@ -862,7 +870,7 @@ object DockerAPISpec : Spek({
             }
 
             on("the pull failing immediately") {
-                httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418, expectedHeadersForAuthentication)
+                beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418, expectedHeadersForAuthentication) }
 
                 it("throws an appropriate exception") {
                     assertThat({ api.pullImage(imageName, registryCredentials, {}) }, throws<ImagePullFailedException>(
@@ -881,7 +889,7 @@ object DockerAPISpec : Spek({
                     |{"error":"Server error: 404 trying to fetch remote history for some-image","errorDetail":{"code":404,"message":"Server error: 404 trying to fetch remote history for some-image"}}
                 """.trimMargin()
 
-                httpClient.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication)
+                beforeEachTest { httpClient.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
                 val progressReceiver = ProgressReceiver()
 
                 it("throws an appropriate exception") {
@@ -904,8 +912,8 @@ object DockerAPISpec : Spek({
                 hasQueryParameter("filters", """{"reference":["some:image"]}""")
 
             on("the image already having been pulled") {
-                httpClient.mock("GET", expectedUrl, """[{"Id": "abc123"}]""")
-                val hasImage = api.hasImage(imageName)
+                beforeEachTest { httpClient.mock("GET", expectedUrl, """[{"Id": "abc123"}]""") }
+                val hasImage by runForEachTest { api.hasImage(imageName) }
 
                 it("returns true") {
                     assertThat(hasImage, equalTo(true))
@@ -913,8 +921,8 @@ object DockerAPISpec : Spek({
             }
 
             on("the image not having been pulled") {
-                httpClient.mock("GET", expectedUrl, """[]""")
-                val hasImage = api.hasImage(imageName)
+                beforeEachTest { httpClient.mock("GET", expectedUrl, """[]""") }
+                val hasImage by runForEachTest { api.hasImage(imageName) }
 
                 it("returns false") {
                     assertThat(hasImage, equalTo(false))
@@ -922,7 +930,7 @@ object DockerAPISpec : Spek({
             }
 
             on("the HTTP call failing") {
-                httpClient.mock("GET", expectedUrl, """{"message": "Something went wrong."}""", 418)
+                beforeEachTest { httpClient.mock("GET", expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                 it("throws an appropriate exception") {
                     assertThat({ api.hasImage(imageName) }, throws<ImagePullFailedException>(withMessage("Checking if image 'some:image' has already been pulled failed: Something went wrong.")))
@@ -934,19 +942,23 @@ object DockerAPISpec : Spek({
             val expectedUrl = "$dockerBaseUrl/v1.30/version"
 
             on("the Docker version command invocation succeeding") {
-                httpClient.mockGet(expectedUrl, """
-                    |{
-                    |  "Version": "17.04.0",
-                    |  "Os": "linux",
-                    |  "KernelVersion": "3.19.0-23-generic",
-                    |  "GoVersion": "go1.7.5",
-                    |  "GitCommit": "deadbee",
-                    |  "Arch": "amd64",
-                    |  "ApiVersion": "1.27",
-                    |  "MinAPIVersion": "1.12",
-                    |  "BuildTime": "2016-06-14T07:09:13.444803460+00:00",
-                    |  "Experimental": true
-                    |}""".trimMargin(), 200)
+                beforeEachTest {
+                    httpClient.mockGet(expectedUrl, """
+                        |{
+                        |  "Version": "17.04.0",
+                        |  "Os": "linux",
+                        |  "KernelVersion": "3.19.0-23-generic",
+                        |  "GoVersion": "go1.7.5",
+                        |  "GitCommit": "deadbee",
+                        |  "Arch": "amd64",
+                        |  "ApiVersion": "1.27",
+                        |  "MinAPIVersion": "1.12",
+                        |  "BuildTime": "2016-06-14T07:09:13.444803460+00:00",
+                        |  "Experimental": true
+                        |}""".trimMargin(),
+                        200
+                    )
+                }
 
                 it("returns the version information from Docker") {
                     assertThat(api.getServerVersionInfo(), equalTo(DockerVersionInfo(
@@ -956,7 +968,7 @@ object DockerAPISpec : Spek({
             }
 
             on("the Docker version command invocation failing") {
-                httpClient.mockGet(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                beforeEachTest { httpClient.mockGet(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                 it("throws an appropriate exception") {
                     assertThat({ api.getServerVersionInfo() }, throws<DockerVersionInfoRetrievalException>(withMessage("The request failed: Something went wrong.")))
@@ -968,7 +980,7 @@ object DockerAPISpec : Spek({
             val expectedUrl = "$dockerBaseUrl/_ping"
 
             on("the ping succeeding") {
-                httpClient.mockGet(expectedUrl, "OK")
+                beforeEachTest { httpClient.mockGet(expectedUrl, "OK") }
 
                 it("does not throw an exception") {
                     assertThat({ api.ping() }, !throws<Throwable>())
@@ -976,7 +988,7 @@ object DockerAPISpec : Spek({
             }
 
             on("the ping failing") {
-                httpClient.mockGet(expectedUrl, """{"message": "Something went wrong."}""", 418)
+                beforeEachTest { httpClient.mockGet(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                 it("throws an appropriate exception") {
                     assertThat({ api.ping() }, throws<DockerException>(withMessage("Could not ping Docker daemon, daemon responded with HTTP 418: Something went wrong.")))
@@ -984,7 +996,7 @@ object DockerAPISpec : Spek({
             }
 
             on("the ping returning an unexpected response") {
-                httpClient.mockGet(expectedUrl, "Something went wrong.", 200)
+                beforeEachTest { httpClient.mockGet(expectedUrl, "Something went wrong.", 200) }
 
                 it("throws an appropriate exception") {
                     assertThat({ api.ping() }, throws<DockerException>(withMessage("Could not ping Docker daemon, daemon responded with HTTP 200: Something went wrong.")))

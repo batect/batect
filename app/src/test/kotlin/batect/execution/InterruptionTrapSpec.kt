@@ -21,6 +21,8 @@ import batect.execution.model.events.UserInterruptedExecutionEvent
 import batect.os.SignalListener
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
@@ -30,10 +32,8 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import jnr.constants.platform.Signal
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object InterruptionTrapSpec : Spek({
     describe("an interruption trap") {
@@ -45,9 +45,10 @@ object InterruptionTrapSpec : Spek({
 
             on("starting monitoring") {
                 val cleanup = mock<AutoCloseable>()
-                whenever(listener.start(any(), any())).doReturn(cleanup)
 
-                val returnedCleanup = trap.trapInterruptions(eventSink)
+                beforeEachTest { whenever(listener.start(any(), any())).doReturn(cleanup) }
+
+                val returnedCleanup by runForEachTest { trap.trapInterruptions(eventSink) }
 
                 it("registers a signal handler for the SIGINT signal") {
                     verify(listener).start(eq(Signal.SIGINT), any())
@@ -59,12 +60,14 @@ object InterruptionTrapSpec : Spek({
             }
 
             on("a SIGINT being received") {
-                val handlerCaptor = argumentCaptor<() -> Unit>()
+                beforeEachTest {
+                    val handlerCaptor = argumentCaptor<() -> Unit>()
 
-                trap.trapInterruptions(eventSink)
+                    trap.trapInterruptions(eventSink)
 
-                verify(listener).start(eq(Signal.SIGINT), handlerCaptor.capture())
-                handlerCaptor.firstValue.invoke()
+                    verify(listener).start(eq(Signal.SIGINT), handlerCaptor.capture())
+                    handlerCaptor.firstValue.invoke()
+                }
 
                 it("sends a 'user interrupted execution' event to the event sink") {
                     verify(eventSink).postEvent(UserInterruptedExecutionEvent)

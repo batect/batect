@@ -17,6 +17,7 @@
 package batect.docker.run
 
 import batect.testutils.equalTo
+import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
@@ -29,10 +30,8 @@ import okhttp3.internal.connection.StreamAllocation
 import okhttp3.internal.ws.RealWebSocket
 import okio.BufferedSink
 import okio.BufferedSource
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.lang.ref.WeakReference
 
 object ConnectionHijackerSpec : Spek({

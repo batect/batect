@@ -18,16 +18,16 @@ package batect.docker.pull
 
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
+import batect.testutils.on
+import batect.testutils.runNullableForEachTest
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object DockerRegistryCredentialsProviderSpec : Spek({
     describe("a Docker registry credentials provider") {
@@ -58,7 +58,7 @@ object DockerRegistryCredentialsProviderSpec : Spek({
                     }
 
                     on("getting the credentials") {
-                        val credentials = provider.getCredentials("some-image")
+                        val credentials by runNullableForEachTest { provider.getCredentials("some-image") }
 
                         it("returns the credentials from the source") {
                             assertThat(credentials, equalTo(credentialsFromSource))
@@ -72,7 +72,7 @@ object DockerRegistryCredentialsProviderSpec : Spek({
                     }
 
                     on("getting the credentials") {
-                        val credentials = provider.getCredentials("some-image")
+                        val credentials by runNullableForEachTest { provider.getCredentials("some-image") }
 
                         it("returns no credentials") {
                             assertThat(credentials, absent())
@@ -87,7 +87,7 @@ object DockerRegistryCredentialsProviderSpec : Spek({
                 }
 
                 on("getting the credentials") {
-                    val credentials = provider.getCredentials("some-image")
+                    val credentials by runNullableForEachTest { provider.getCredentials("some-image") }
 
                     it("returns no credentials") {
                         assertThat(credentials, absent())

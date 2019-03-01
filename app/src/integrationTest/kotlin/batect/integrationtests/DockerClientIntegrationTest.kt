@@ -47,6 +47,8 @@ import batect.os.NativeMethods
 import batect.os.ProcessRunner
 import batect.os.SignalListener
 import batect.os.SystemInfo
+import batect.testutils.createForGroup
+import batect.testutils.runBeforeGroup
 import batect.ui.ConsoleInfo
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -57,10 +59,8 @@ import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
@@ -68,26 +68,26 @@ import java.nio.file.Paths
 
 object DockerClientIntegrationTest : Spek({
     describe("a Docker client") {
-        val testImagePath = Paths.get("./src/integrationTest/resources/test-image/").toAbsolutePath().toString()
+        val testImagePath by createForGroup { Paths.get("./src/integrationTest/resources/test-image/").toAbsolutePath().toString() }
 
-        val logger = mock<Logger>()
-        val processRunner = ProcessRunner(logger)
-        val httpConfig = DockerHttpConfig(OkHttpClient(), DockerHttpConfig.defaultDockerHost)
-        val api = DockerAPI(httpConfig, logger)
-        val posix = POSIXFactory.getNativePOSIX()
-        val nativeMethods = NativeMethods(posix)
-        val consoleInfo = ConsoleInfo(posix, nativeMethods, processRunner, logger)
-        val credentialsConfigurationFile = DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger)
-        val credentialsProvider = DockerRegistryCredentialsProvider(DockerRegistryDomainResolver(), DockerRegistryIndexResolver(), credentialsConfigurationFile)
-        val ignoreParser = DockerIgnoreParser()
-        val imageBuildContextFactory = DockerImageBuildContextFactory(ignoreParser)
-        val dockerfileParser = DockerfileParser()
-        val waiter = ContainerWaiter(api)
-        val streamer = ContainerIOStreamer(System.out, System.`in`)
-        val signalListner = SignalListener(posix)
-        val killer = ContainerKiller(api, signalListner)
-        val ttyManager = ContainerTTYManager(api, consoleInfo, signalListner, logger)
-        val client = DockerClient(api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, streamer, killer, ttyManager, logger)
+        val logger by createForGroup { mock<Logger>() }
+        val processRunner by createForGroup { ProcessRunner(logger) }
+        val httpConfig by createForGroup { DockerHttpConfig(OkHttpClient(), DockerHttpConfig.defaultDockerHost) }
+        val api by createForGroup { DockerAPI(httpConfig, logger) }
+        val posix by createForGroup { POSIXFactory.getNativePOSIX() }
+        val nativeMethods by createForGroup { NativeMethods(posix) }
+        val consoleInfo by createForGroup { ConsoleInfo(posix, nativeMethods, processRunner, logger) }
+        val credentialsConfigurationFile by createForGroup { DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger) }
+        val credentialsProvider by createForGroup { DockerRegistryCredentialsProvider(DockerRegistryDomainResolver(), DockerRegistryIndexResolver(), credentialsConfigurationFile) }
+        val ignoreParser by createForGroup { DockerIgnoreParser() }
+        val imageBuildContextFactory by createForGroup { DockerImageBuildContextFactory(ignoreParser) }
+        val dockerfileParser by createForGroup { DockerfileParser() }
+        val waiter by createForGroup { ContainerWaiter(api) }
+        val streamer by createForGroup { ContainerIOStreamer(System.out, System.`in`) }
+        val signalListner by createForGroup { SignalListener(posix) }
+        val killer by createForGroup { ContainerKiller(api, signalListner) }
+        val ttyManager by createForGroup { ContainerTTYManager(api, consoleInfo, signalListner, logger) }
+        val client by createForGroup { DockerClient(api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, streamer, killer, ttyManager, logger) }
 
         fun creationRequestForContainer(image: DockerImage, network: DockerNetwork, command: Iterable<String>, volumeMounts: Set<VolumeMount> = emptySet(), portMappings: Set<PortMapping> = emptySet(), userAndGroup: UserAndGroup? = null): DockerContainerCreationRequest {
             return DockerContainerCreationRequest(
@@ -148,14 +148,16 @@ object DockerClientIntegrationTest : Spek({
             }
         }
 
-        on("building, creating, starting, stopping and removing a container") {
-            val fileToCreate = getRandomTemporaryFilePath()
-            val image = client.build(testImagePath, emptyMap()) {}
+        describe("building, creating, starting, stopping and removing a container") {
+            val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
+            val image by runBeforeGroup { client.build(testImagePath, emptyMap()) {} }
 
-            withNetwork { network ->
-                withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
-                    client.start(container)
-                    client.stop(container)
+            beforeGroup {
+                withNetwork { network ->
+                    withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
+                        client.start(container)
+                        client.stop(container)
+                    }
                 }
             }
 
@@ -165,14 +167,16 @@ object DockerClientIntegrationTest : Spek({
             }
         }
 
-        on("pulling an image and then creating, starting, stopping and removing a container") {
-            val fileToCreate = getRandomTemporaryFilePath()
-            val image = client.pullImage("alpine:3.7", {})
+        describe("pulling an image and then creating, starting, stopping and removing a container") {
+            val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
+            val image by runBeforeGroup { client.pullImage("alpine:3.7", {}) }
 
-            withNetwork { network ->
-                withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
-                    client.start(container)
-                    client.stop(container)
+            beforeGroup {
+                withNetwork { network ->
+                    withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
+                        client.start(container)
+                        client.stop(container)
+                    }
                 }
             }
 
@@ -182,13 +186,15 @@ object DockerClientIntegrationTest : Spek({
             }
         }
 
-        on("creating, running and then removing a container") {
-            val fileToCreate = getRandomTemporaryFilePath()
-            val image = client.pullImage("alpine:3.7", {})
+        describe("creating, running and then removing a container") {
+            val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
+            val image by runBeforeGroup { client.pullImage("alpine:3.7", {}) }
 
-            withNetwork { network ->
-                withContainer(creationRequestForContainerThatExits(image, network, fileToCreate)) { container ->
-                    client.run(container)
+            beforeGroup {
+                withNetwork { network ->
+                    withContainer(creationRequestForContainerThatExits(image, network, fileToCreate)) { container ->
+                        client.run(container)
+                    }
                 }
             }
 
@@ -198,52 +204,57 @@ object DockerClientIntegrationTest : Spek({
             }
         }
 
-        on("pulling an image that has not been cached locally already") {
-            removeImage("hello-world:latest")
-            val image = client.pullImage("hello-world:latest", {})
+        describe("pulling an image that has not been cached locally already") {
+            beforeGroup { removeImage("hello-world:latest") }
+            val image by runBeforeGroup { client.pullImage("hello-world:latest", {}) }
 
             it("pulls the image successfully") {
                 assertThat(image, equalTo(DockerImage("hello-world:latest")))
             }
         }
 
-        on("waiting for a container to become healthy") {
-            val fileToCreate = getRandomTemporaryFilePath()
-            val image = client.build(testImagePath, emptyMap()) {}
+        describe("waiting for a container to become healthy") {
+            val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
+            val image by runBeforeGroup { client.build(testImagePath, emptyMap()) {} }
+            data class Result(val healthStatus: HealthStatus, val lastHealthCheckResult: DockerHealthCheckResult)
 
-            val (healthStatus, lastHealthCheckResult) = withNetwork { network ->
-                withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
-                    try {
-                        client.start(container)
-                        val healthStatus = client.waitForHealthStatus(container)
-                        val lastHealthCheckResult = client.getLastHealthCheckResult(container)
-                        Pair(healthStatus, lastHealthCheckResult)
-                    } finally {
-                        client.stop(container)
+            val result by runBeforeGroup {
+                withNetwork { network ->
+                    withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
+                        try {
+                            client.start(container)
+                            val healthStatus = client.waitForHealthStatus(container)
+                            val lastHealthCheckResult = client.getLastHealthCheckResult(container)
+                            Result(healthStatus, lastHealthCheckResult)
+                        } finally {
+                            client.stop(container)
+                        }
                     }
                 }
             }
 
             it("reports that the container became healthy") {
-                assertThat(healthStatus, equalTo(HealthStatus.BecameHealthy))
+                assertThat(result.healthStatus, equalTo(HealthStatus.BecameHealthy))
             }
 
             it("reports the result of the last health check") {
-                assertThat(lastHealthCheckResult, equalTo(DockerHealthCheckResult(0, "Hello from the healthcheck")))
+                assertThat(result.lastHealthCheckResult, equalTo(DockerHealthCheckResult(0, "Hello from the healthcheck")))
             }
         }
 
         describe("running a container that exposes a port") {
-            on("the image having an EXPOSE instruction for the port to be exposed") {
-                val image = client.pullImage("nginx:1.15.8", {})
+            describe("given the image has an EXPOSE instruction for the port to be exposed") {
+                val image by runBeforeGroup { client.pullImage("nginx:1.15.8", {}) }
 
-                val response = withNetwork { network ->
-                    withContainer(creationRequestForContainer(image, network, emptyList(), portMappings = setOf(PortMapping(8080, 80)))) { container ->
-                        try {
-                            client.start(container)
-                            httpGet("http://localhost:8080")
-                        } finally {
-                            client.stop(container)
+                val response by runBeforeGroup {
+                    withNetwork { network ->
+                        withContainer(creationRequestForContainer(image, network, emptyList(), portMappings = setOf(PortMapping(8080, 80)))) { container ->
+                            try {
+                                client.start(container)
+                                httpGet("http://localhost:8080")
+                            } finally {
+                                client.stop(container)
+                            }
                         }
                     }
                 }
@@ -253,17 +264,19 @@ object DockerClientIntegrationTest : Spek({
                 }
             }
 
-            on("the image not having an EXPOSE instruction for the port to be exposed") {
-                val image = client.pullImage("busybox:1.30.0", {})
+            describe("given the image does not have an EXPOSE instruction for the port to be exposed") {
+                val image by runBeforeGroup { client.pullImage("busybox:1.30.0", {}) }
                 val command = listOf("busybox", "httpd", "-f", "-p", "80")
 
-                val response = withNetwork { network ->
-                    withContainer(creationRequestForContainer(image, network, command, portMappings = setOf(PortMapping(8080, 80)))) { container ->
-                        try {
-                            client.start(container)
-                            httpGet("http://localhost:8080/.dockerenv")
-                        } finally {
-                            client.stop(container)
+                val response by runBeforeGroup {
+                    withNetwork { network ->
+                        withContainer(creationRequestForContainer(image, network, command, portMappings = setOf(PortMapping(8080, 80)))) { container ->
+                            try {
+                                client.start(container)
+                                httpGet("http://localhost:8080/.dockerenv")
+                            } finally {
+                                client.stop(container)
+                            }
                         }
                     }
                 }
@@ -274,16 +287,16 @@ object DockerClientIntegrationTest : Spek({
             }
         }
 
-        on("checking if Docker is available") {
-            val result = client.checkConnectivity()
+        describe("checking if Docker is available") {
+            val result by runBeforeGroup { client.checkConnectivity() }
 
             it("returns that Docker is available") {
                 assertThat(result, equalTo<DockerConnectivityCheckResult>(DockerConnectivityCheckResult.Succeeded))
             }
         }
 
-        on("getting Docker version info") {
-            val versionInfoRetrievalResult = client.getDockerVersionInfo()
+        describe("getting Docker version info") {
+            val versionInfoRetrievalResult by runBeforeGroup { client.getDockerVersionInfo() }
 
             it("succeeds") {
                 assertThat(versionInfoRetrievalResult, isA<DockerVersionInfoRetrievalResult.Succeeded>())

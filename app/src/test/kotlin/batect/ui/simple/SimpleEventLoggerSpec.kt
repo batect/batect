@@ -36,7 +36,9 @@ import batect.execution.model.steps.RunContainerStep
 import batect.execution.model.steps.StartContainerStep
 import batect.os.Command
 import batect.testutils.createForEachTest
+import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.on
 import batect.ui.Console
 import batect.ui.FailureErrorMessageFormatter
 import batect.ui.text.Text
@@ -48,11 +50,8 @@ import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.time.Duration
 
 object SimpleEventLoggerSpec : Spek({
@@ -72,8 +71,10 @@ object SimpleEventLoggerSpec : Spek({
 
         describe("handling when steps start") {
             on("when a 'build image' step is starting") {
-                val step = BuildImageStep("/some-image-dir")
-                logger.onStartingTaskStep(step)
+                beforeEachTest {
+                    val step = BuildImageStep("/some-image-dir")
+                    logger.onStartingTaskStep(step)
+                }
 
                 it("prints a message to the output for each container that uses that built image") {
                     verify(console).println(Text.white(Text("Building ") + Text.bold("container-1") + Text("...")))
@@ -82,8 +83,10 @@ object SimpleEventLoggerSpec : Spek({
             }
 
             on("when a 'pull image' step is starting") {
-                val step = PullImageStep("some-image:1.2.3")
-                logger.onStartingTaskStep(step)
+                beforeEachTest {
+                    val step = PullImageStep("some-image:1.2.3")
+                    logger.onStartingTaskStep(step)
+                }
 
                 it("prints a message to the output") {
                     verify(console).println(Text.white(Text("Pulling ") + Text.bold("some-image:1.2.3") + Text("...")))
@@ -91,8 +94,10 @@ object SimpleEventLoggerSpec : Spek({
             }
 
             on("when a 'start container' step is starting") {
-                val step = StartContainerStep(container, DockerContainer("not-important"))
-                logger.onStartingTaskStep(step)
+                beforeEachTest {
+                    val step = StartContainerStep(container, DockerContainer("not-important"))
+                    logger.onStartingTaskStep(step)
+                }
 
                 it("prints a message to the output") {
                     verify(console).println(Text.white(Text("Starting ") + Text.bold("the-cool-container") + Text("...")))
@@ -101,8 +106,10 @@ object SimpleEventLoggerSpec : Spek({
 
             describe("when a 'run container' step is starting") {
                 on("and no 'create container' step has been seen") {
-                    val step = RunContainerStep(container, DockerContainer("not-important"))
-                    logger.onStartingTaskStep(step)
+                    beforeEachTest {
+                        val step = RunContainerStep(container, DockerContainer("not-important"))
+                        logger.onStartingTaskStep(step)
+                    }
 
                     it("prints a message to the output without mentioning a command") {
                         verify(console).println(Text.white(Text("Running ") + Text.bold("the-cool-container") + Text("...")))
@@ -111,11 +118,13 @@ object SimpleEventLoggerSpec : Spek({
 
                 describe("and a 'create container' step has been seen") {
                     on("and that step did not contain a command") {
-                        val createContainerStep = CreateContainerStep(container, null, null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
-                        val runContainerStep = RunContainerStep(container, DockerContainer("not-important"))
+                        beforeEachTest {
+                            val createContainerStep = CreateContainerStep(container, null, null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
+                            val runContainerStep = RunContainerStep(container, DockerContainer("not-important"))
 
-                        logger.onStartingTaskStep(createContainerStep)
-                        logger.onStartingTaskStep(runContainerStep)
+                            logger.onStartingTaskStep(createContainerStep)
+                            logger.onStartingTaskStep(runContainerStep)
+                        }
 
                         it("prints a message to the output without mentioning a command") {
                             verify(console).println(Text.white(Text("Running ") + Text.bold("the-cool-container") + Text("...")))
@@ -123,11 +132,13 @@ object SimpleEventLoggerSpec : Spek({
                     }
 
                     on("and that step contained a command") {
-                        val createContainerStep = CreateContainerStep(container, Command.parse("do-stuff.sh"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
-                        val runContainerStep = RunContainerStep(container, DockerContainer("not-important"))
+                        beforeEachTest {
+                            val createContainerStep = CreateContainerStep(container, Command.parse("do-stuff.sh"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
+                            val runContainerStep = RunContainerStep(container, DockerContainer("not-important"))
 
-                        logger.onStartingTaskStep(createContainerStep)
-                        logger.onStartingTaskStep(runContainerStep)
+                            logger.onStartingTaskStep(createContainerStep)
+                            logger.onStartingTaskStep(runContainerStep)
+                        }
 
                         it("prints a message to the output including the original command") {
                             verify(console).println(Text.white(Text("Running ") + Text.bold("do-stuff.sh") + Text(" in ") + Text.bold("the-cool-container") + Text("...")))
@@ -141,7 +152,7 @@ object SimpleEventLoggerSpec : Spek({
 
                 given("no cleanup steps have run before") {
                     on("that step starting") {
-                        logger.onStartingTaskStep(cleanupStep)
+                        beforeEachTest { logger.onStartingTaskStep(cleanupStep) }
 
                         it("prints a blank line before then printing that clean up has started") {
                             inOrder(console) {
@@ -159,7 +170,7 @@ object SimpleEventLoggerSpec : Spek({
                     }
 
                     on("that step starting") {
-                        logger.onStartingTaskStep(cleanupStep)
+                        beforeEachTest { logger.onStartingTaskStep(cleanupStep) }
 
                         it("only prints one message to the output") {
                             verify(console, times(1)).println(Text.white("Cleaning up..."))
@@ -169,8 +180,10 @@ object SimpleEventLoggerSpec : Spek({
             }
 
             on("when another kind of step is starting") {
-                val step = CreateTaskNetworkStep
-                logger.onStartingTaskStep(step)
+                beforeEachTest {
+                    val step = CreateTaskNetworkStep
+                    logger.onStartingTaskStep(step)
+                }
 
                 it("does not print anything to the output") {
                     verifyZeroInteractions(console)
@@ -180,10 +193,12 @@ object SimpleEventLoggerSpec : Spek({
 
         describe("handling when events are posted") {
             on("when a 'task failed' event is posted") {
-                val event = mock<TaskFailedEvent>()
-                whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn(TextRun("Something went wrong."))
+                beforeEachTest {
+                    val event = mock<TaskFailedEvent>()
+                    whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn(TextRun("Something went wrong."))
 
-                logger.postEvent(event)
+                    logger.postEvent(event)
+                }
 
                 it("prints the message to the console") {
                     verify(errorConsole).println()
@@ -192,8 +207,10 @@ object SimpleEventLoggerSpec : Spek({
             }
 
             on("when an 'image built' event is posted") {
-                val event = ImageBuiltEvent("/some-image-dir", DockerImage("abc-123"))
-                logger.postEvent(event)
+                beforeEachTest {
+                    val event = ImageBuiltEvent("/some-image-dir", DockerImage("abc-123"))
+                    logger.postEvent(event)
+                }
 
                 it("prints a message to the output for each container that uses that built image") {
                     verify(console).println(Text.white(Text("Built ") + Text.bold("container-1") + Text(".")))
@@ -202,8 +219,10 @@ object SimpleEventLoggerSpec : Spek({
             }
 
             on("when an 'image pulled' event is posted") {
-                val event = ImagePulledEvent(DockerImage("the-cool-image:1.2.3"))
-                logger.postEvent(event)
+                beforeEachTest {
+                    val event = ImagePulledEvent(DockerImage("the-cool-image:1.2.3"))
+                    logger.postEvent(event)
+                }
 
                 it("prints a message to the output") {
                     verify(console).println(Text.white(Text("Pulled ") + Text.bold("the-cool-image:1.2.3") + Text(".")))
@@ -211,8 +230,10 @@ object SimpleEventLoggerSpec : Spek({
             }
 
             on("when a 'container started' event is posted") {
-                val event = ContainerStartedEvent(container)
-                logger.postEvent(event)
+                beforeEachTest {
+                    val event = ContainerStartedEvent(container)
+                    logger.postEvent(event)
+                }
 
                 it("prints a message to the output") {
                     verify(console).println(Text.white(Text("Started ") + Text.bold("the-cool-container") + Text(".")))
@@ -220,8 +241,10 @@ object SimpleEventLoggerSpec : Spek({
             }
 
             on("when a 'container became healthy' event is posted") {
-                val event = ContainerBecameHealthyEvent(container)
-                logger.postEvent(event)
+                beforeEachTest {
+                    val event = ContainerBecameHealthyEvent(container)
+                    logger.postEvent(event)
+                }
 
                 it("prints a message to the output") {
                     verify(console).println(Text.white(Text.bold("the-cool-container") + Text(" has become healthy.")))
@@ -230,7 +253,7 @@ object SimpleEventLoggerSpec : Spek({
         }
 
         on("when the task starts") {
-            logger.onTaskStarting("some-task")
+            beforeEachTest { logger.onTaskStarting("some-task") }
 
             it("prints a message to the output") {
                 verify(console).println(Text.white(Text("Running ") + Text.bold("some-task") + Text("...")))
@@ -238,7 +261,7 @@ object SimpleEventLoggerSpec : Spek({
         }
 
         on("when the task finishes") {
-            logger.onTaskFinished("some-task", 234, Duration.ofMillis(2500))
+            beforeEachTest { logger.onTaskFinished("some-task", 234, Duration.ofMillis(2500)) }
 
             it("prints a message to the output") {
                 verify(console).println(Text.white(Text.bold("some-task") + Text(" finished with exit code 234 in 2.5s.")))
@@ -248,7 +271,7 @@ object SimpleEventLoggerSpec : Spek({
         describe("when the task fails") {
             given("there are no cleanup instructions") {
                 on("when logging that the task has failed") {
-                    logger.onTaskFailed("some-task", TextRun())
+                    beforeEachTest { logger.onTaskFailed("some-task", TextRun()) }
 
                     it("prints a message to the output") {
                         inOrder(errorConsole) {
@@ -261,7 +284,7 @@ object SimpleEventLoggerSpec : Spek({
 
             given("there are some cleanup instructions") {
                 on("when logging that the task has failed") {
-                    logger.onTaskFailed("some-task", TextRun("Do this to clean up."))
+                    beforeEachTest { logger.onTaskFailed("some-task", TextRun("Do this to clean up.")) }
 
                     it("prints a message to the output, including the instructions") {
                         inOrder(errorConsole) {

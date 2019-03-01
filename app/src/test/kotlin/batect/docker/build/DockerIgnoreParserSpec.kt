@@ -19,16 +19,16 @@ package batect.docker.build
 import batect.docker.DockerException
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 
 object DockerIgnoreParserSpec : Spek({
@@ -43,7 +43,7 @@ object DockerIgnoreParserSpec : Spek({
 
         given("the file does not exist") {
             on("parsing the file") {
-                val ignoreList = parser.parse(path)
+                val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns an empty list") {
                     assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(emptyList())))
@@ -57,7 +57,7 @@ object DockerIgnoreParserSpec : Spek({
             }
 
             on("parsing the file") {
-                val ignoreList = parser.parse(path)
+                val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns an empty list") {
                     assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(emptyList())))
@@ -71,7 +71,7 @@ object DockerIgnoreParserSpec : Spek({
             }
 
             on("parsing the file") {
-                val ignoreList = parser.parse(path)
+                val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns an empty list") {
                     assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(emptyList())))
@@ -85,7 +85,7 @@ object DockerIgnoreParserSpec : Spek({
             }
 
             on("parsing the file") {
-                val ignoreList = parser.parse(path)
+                val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns an empty list") {
                     assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(emptyList())))
@@ -99,7 +99,7 @@ object DockerIgnoreParserSpec : Spek({
             }
 
             on("parsing the file") {
-                val ignoreList = parser.parse(path)
+                val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns a list with that pattern") {
                     assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
@@ -115,7 +115,7 @@ object DockerIgnoreParserSpec : Spek({
             }
 
             on("parsing the file") {
-                val ignoreList = parser.parse(path)
+                val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns a list with that pattern") {
                     assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
@@ -131,7 +131,7 @@ object DockerIgnoreParserSpec : Spek({
             }
 
             on("parsing the file") {
-                val ignoreList = parser.parse(path)
+                val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns a list with that pattern with the whitespace removed") {
                     assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
@@ -147,7 +147,7 @@ object DockerIgnoreParserSpec : Spek({
             }
 
             on("parsing the file") {
-                val ignoreList = parser.parse(path)
+                val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns a list with that pattern with the whitespace removed") {
                     assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
@@ -163,7 +163,7 @@ object DockerIgnoreParserSpec : Spek({
             }
 
             on("parsing the file") {
-                val ignoreList = parser.parse(path)
+                val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns an empty list") {
                     assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(emptyList())))
@@ -181,7 +181,7 @@ object DockerIgnoreParserSpec : Spek({
             }
 
             on("parsing the file") {
-                val ignoreList = parser.parse(path)
+                val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns a list with those patterns") {
                     assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
@@ -199,7 +199,7 @@ object DockerIgnoreParserSpec : Spek({
             }
 
             on("parsing the file") {
-                val ignoreList = parser.parse(path)
+                val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("ignores the pattern") {
                     assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(emptyList())))
@@ -225,7 +225,7 @@ object DockerIgnoreParserSpec : Spek({
             }
 
             on("parsing the file") {
-                val ignoreList = parser.parse(path)
+                val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns a list with that pattern with the whitespace removed") {
                     assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
@@ -244,7 +244,7 @@ object DockerIgnoreParserSpec : Spek({
             }
 
             on("parsing the file") {
-                val ignoreList = parser.parse(path)
+                val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns a list with those patterns with the slashes removed") {
                     assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
@@ -265,7 +265,7 @@ object DockerIgnoreParserSpec : Spek({
             }
 
             on("parsing the file") {
-                val ignoreList = parser.parse(path)
+                val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns a list with those patterns with the extra slashes removed") {
                     assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
@@ -299,7 +299,7 @@ object DockerIgnoreParserSpec : Spek({
                     }
 
                     on("parsing the file") {
-                        val ignoreList = parser.parse(path)
+                        val ignoreList by runForEachTest { parser.parse(path) }
 
                         it("returns a list with the pattern simplified where possible") {
                             assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
@@ -323,7 +323,7 @@ object DockerIgnoreParserSpec : Spek({
                     }
 
                     on("parsing the file") {
-                        val ignoreList = parser.parse(path)
+                        val ignoreList by runForEachTest { parser.parse(path) }
 
                         it("returns a list with the pattern simplified where possible") {
                             assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
@@ -347,7 +347,7 @@ object DockerIgnoreParserSpec : Spek({
                     }
 
                     on("parsing the file") {
-                        val ignoreList = parser.parse(path)
+                        val ignoreList by runForEachTest { parser.parse(path) }
 
                         it("returns a list with the pattern simplified where possible") {
                             assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(

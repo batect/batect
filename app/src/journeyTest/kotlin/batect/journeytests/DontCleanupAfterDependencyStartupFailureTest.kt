@@ -18,29 +18,25 @@ package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.DockerUtils
+import batect.testutils.createForGroup
+import batect.testutils.on
+import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.contains
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isEmpty
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.io.InputStreamReader
 
 object DontCleanupAfterDependencyStartupFailureTest : Spek({
-    given("a task with an unhealthy dependency") {
-        val runner = ApplicationRunner("task-with-unhealthy-dependency")
-        val cleanupCommands = mutableListOf<String>()
-        var containersBeforeTest = emptySet<String>()
-        var networksBeforeTest = emptySet<String>()
-
-        beforeGroup {
-            containersBeforeTest = DockerUtils.getAllCreatedContainers()
-            networksBeforeTest = DockerUtils.getAllNetworks()
-        }
+    describe("a task with an unhealthy dependency") {
+        val runner by createForGroup { ApplicationRunner("task-with-unhealthy-dependency") }
+        val cleanupCommands by createForGroup { mutableListOf<String>() }
+        val containersBeforeTest by runBeforeGroup { DockerUtils.getAllCreatedContainers() }
+        val networksBeforeTest by runBeforeGroup { DockerUtils.getAllNetworks() }
 
         afterGroup {
             cleanupCommands.forEach {
@@ -61,13 +57,16 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
         }
 
         on("running that task with the '--no-cleanup-on-failure' option") {
-            val result = runner.runApplication(listOf("--no-cleanup-after-failure", "--no-color", "the-task"))
+            val result by runBeforeGroup { runner.runApplication(listOf("--no-cleanup-after-failure", "--no-color", "the-task")) }
             val commandsRegex = """For container http-server, view its output by running '(?<logsCommand>docker logs (?<id>.*))', or run a command in the container with 'docker exec -it \2 <command>'\.""".toRegex()
             val cleanupRegex = """Once you have finished investigating the issue, clean up all temporary resources created by batect by running:\n(?<command>(.|\n)+)\n\n""".toRegex()
-            val cleanupCommand = cleanupRegex.find(result.output)?.groups?.get("command")?.value
 
-            if (cleanupCommand != null) {
-                cleanupCommands.addAll(cleanupCommand.split("\n"))
+            beforeGroup {
+                val cleanupCommand = cleanupRegex.find(result.output)?.groups?.get("command")?.value
+
+                if (cleanupCommand != null) {
+                    cleanupCommands.addAll(cleanupCommand.split("\n"))
+                }
             }
 
             it("does not execute the task") {

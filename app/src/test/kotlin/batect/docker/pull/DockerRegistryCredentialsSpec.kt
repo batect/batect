@@ -16,13 +16,12 @@
 
 package batect.docker.pull
 
+import batect.testutils.given
+import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import org.araqnid.hamkrest.json.equivalentTo
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object DockerRegistryCredentialsSpec : Spek({
     describe("a set of Docker registry credentials") {

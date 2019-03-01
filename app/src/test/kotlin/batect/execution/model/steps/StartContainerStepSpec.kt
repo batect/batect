@@ -19,12 +19,11 @@ package batect.execution.model.steps
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object StartContainerStepSpec : Spek({
     describe("a 'start container' step") {

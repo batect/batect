@@ -17,24 +17,25 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
+import batect.testutils.createForGroup
+import batect.testutils.on
+import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.greaterThan
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.io.File
 
 object LoggingJourneyTest : Spek({
-    given("the application") {
-        val runner = ApplicationRunner("")
+    describe("the application") {
+        val runner by createForGroup { ApplicationRunner("") }
 
         on("running with logging enabled") {
-            val logPath = File.createTempFile("batect-log-journey-tests", ".log")
-            logPath.deleteOnExit()
+            val logPath by createForGroup { File.createTempFile("batect-log-journey-tests", ".log") }
+            beforeGroup { logPath.deleteOnExit() }
 
-            val result = runner.runApplication(listOf("--log-file=$logPath", "--version"))
+            val result by runBeforeGroup { runner.runApplication(listOf("--log-file=$logPath", "--version")) }
 
             it("logs some information to the log file") {
                 assertThat(logPath.exists(), equalTo(true))

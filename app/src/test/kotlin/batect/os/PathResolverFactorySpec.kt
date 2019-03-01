@@ -18,13 +18,13 @@ package batect.os
 
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object PathResolverFactorySpec : Spek({
     describe("a path resolver factory") {
@@ -32,7 +32,7 @@ object PathResolverFactorySpec : Spek({
         val factory by createForEachTest { PathResolverFactory(fileSystem) }
 
         on("getting a resolver for a particular path") {
-            val resolver = factory.createResolver(fileSystem.getPath("some-path"))
+            val resolver by runForEachTest { factory.createResolver(fileSystem.getPath("some-path")) }
 
             it("returns a resolver relative to that path") {
                 assertThat(resolver, equalTo(PathResolver(fileSystem.getPath("some-path"))))
@@ -40,7 +40,7 @@ object PathResolverFactorySpec : Spek({
         }
 
         on("getting a resolver for the current directory") {
-            val resolver = factory.createResolverForCurrentDirectory()
+            val resolver by runForEachTest { factory.createResolverForCurrentDirectory() }
 
             it("returns a resolver relative to the current directory") {
                 assertThat(resolver, equalTo(PathResolver(fileSystem.getPath("."))))

@@ -23,6 +23,9 @@ import batect.os.ProcessRunner
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
@@ -36,11 +39,8 @@ import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import jnr.constants.platform.Errno
 import jnr.posix.POSIX
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.io.FileDescriptor
 
 object ConsoleInfoSpec : Spek({
@@ -56,7 +56,7 @@ object ConsoleInfoSpec : Spek({
                     on { isatty(FileDescriptor.`in`) } doReturn true
                 }
 
-                val consoleInfo = ConsoleInfo(posix, nativeMethods, processRunner, emptyMap(), logger)
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, nativeMethods, processRunner, emptyMap(), logger) }
 
                 it("returns true") {
                     assertThat(consoleInfo.stdinIsTTY, equalTo(true))
@@ -68,7 +68,7 @@ object ConsoleInfoSpec : Spek({
                     on { isatty(FileDescriptor.`in`) } doReturn false
                 }
 
-                val consoleInfo = ConsoleInfo(posix, nativeMethods, processRunner, emptyMap(), logger)
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, nativeMethods, processRunner, emptyMap(), logger) }
 
                 it("returns false") {
                     assertThat(consoleInfo.stdinIsTTY, equalTo(false))
@@ -86,7 +86,7 @@ object ConsoleInfoSpec : Spek({
                 }
 
                 on("the TERM environment variable being set to 'dumb'") {
-                    val consoleInfo = ConsoleInfo(posix, nativeMethods, processRunner, mapOf("TERM" to "dumb"), logger)
+                    val consoleInfo by createForEachTest { ConsoleInfo(posix, nativeMethods, processRunner, mapOf("TERM" to "dumb"), logger) }
 
                     it("returns false") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -94,7 +94,7 @@ object ConsoleInfoSpec : Spek({
                 }
 
                 on("the TERM environment variables not being set") {
-                    val consoleInfo = ConsoleInfo(posix, nativeMethods, processRunner, emptyMap(), logger)
+                    val consoleInfo by createForEachTest { ConsoleInfo(posix, nativeMethods, processRunner, emptyMap(), logger) }
 
                     it("returns false") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -102,7 +102,7 @@ object ConsoleInfoSpec : Spek({
                 }
 
                 on("the TERM environment variable being set to something other than 'dumb' and the TRAVIS environment variable not being set") {
-                    val consoleInfo = ConsoleInfo(posix, nativeMethods, processRunner, mapOf("TERM" to "other-terminal"), logger)
+                    val consoleInfo by createForEachTest { ConsoleInfo(posix, nativeMethods, processRunner, mapOf("TERM" to "other-terminal"), logger) }
 
                     it("returns true") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(true))
@@ -110,7 +110,7 @@ object ConsoleInfoSpec : Spek({
                 }
 
                 on("the TERM environment variable being set to something other than 'dumb' and the TRAVIS environment variable being set") {
-                    val consoleInfo = ConsoleInfo(posix, nativeMethods, processRunner, mapOf("TERM" to "other-terminal", "TRAVIS" to "true"), logger)
+                    val consoleInfo by createForEachTest { ConsoleInfo(posix, nativeMethods, processRunner, mapOf("TERM" to "other-terminal", "TRAVIS" to "true"), logger) }
 
                     it("returns false") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -123,7 +123,7 @@ object ConsoleInfoSpec : Spek({
                     on { isatty(FileDescriptor.`in`) } doReturn false
                 }
 
-                val consoleInfo = ConsoleInfo(posix, nativeMethods, processRunner, mapOf("TERM" to "other-terminal"), logger)
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, nativeMethods, processRunner, mapOf("TERM" to "other-terminal"), logger) }
 
                 it("returns false") {
                     assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -137,7 +137,7 @@ object ConsoleInfoSpec : Spek({
             val processRunner = mock<ProcessRunner>()
 
             on("when the TERM environment variable is not set") {
-                val consoleInfo = ConsoleInfo(posix, nativeMethods, processRunner, emptyMap(), logger)
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, nativeMethods, processRunner, emptyMap(), logger) }
 
                 it("returns null") {
                     assertThat(consoleInfo.terminalType, absent())
@@ -145,7 +145,7 @@ object ConsoleInfoSpec : Spek({
             }
 
             on("when the TERM environment variable is set") {
-                val consoleInfo = ConsoleInfo(posix, nativeMethods, processRunner, mapOf("TERM" to "some-terminal"), logger)
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, nativeMethods, processRunner, mapOf("TERM" to "some-terminal"), logger) }
 
                 it("returns its value") {
                     assertThat(consoleInfo.terminalType, equalTo("some-terminal"))
@@ -162,7 +162,7 @@ object ConsoleInfoSpec : Spek({
                     on { getConsoleDimensions() } doReturn Dimensions(51, 204)
                 }
 
-                val consoleInfo = ConsoleInfo(posix, nativeMethods, processRunner, emptyMap(), logger)
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, nativeMethods, processRunner, emptyMap(), logger) }
 
                 it("returns a parsed set of dimensions") {
                     assertThat(consoleInfo.dimensions, equalTo(Dimensions(51, 204)))
@@ -174,7 +174,7 @@ object ConsoleInfoSpec : Spek({
                     on { getConsoleDimensions() } doThrow NativeMethodException("ioctl", Errno.ENOTTY)
                 }
 
-                val consoleInfo = ConsoleInfo(posix, nativeMethods, processRunner, emptyMap(), logger)
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, nativeMethods, processRunner, emptyMap(), logger) }
 
                 it("returns a null set of dimensions") {
                     assertThat(consoleInfo.dimensions, absent())
@@ -186,7 +186,7 @@ object ConsoleInfoSpec : Spek({
                     on { getConsoleDimensions() } doThrow NativeMethodException("ioctl", Errno.EBUSY)
                 }
 
-                val consoleInfo = ConsoleInfo(posix, nativeMethods, processRunner, emptyMap(), logger)
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, nativeMethods, processRunner, emptyMap(), logger) }
 
                 it("propagates the exception") {
                     assertThat({ consoleInfo.dimensions }, throws<NativeMethodException>())
@@ -214,7 +214,7 @@ object ConsoleInfoSpec : Spek({
                             beforeEachTest { whenever(processRunner.runWithStdinAttached(rawCommand)).doReturn(ProcessOutput(0, "")) }
 
                             on("entering raw mode") {
-                                val restorer = consoleInfo.enterRawMode()
+                                val restorer by runForEachTest { consoleInfo.enterRawMode() }
 
                                 it("calls stty to enter raw mode") {
                                     verify(processRunner).runWithStdinAttached(rawCommand)
@@ -255,7 +255,7 @@ object ConsoleInfoSpec : Spek({
                         beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "some_old_state"))).doReturn(ProcessOutput(0, "")) }
 
                         on("exiting raw mode") {
-                            restorer.close()
+                            beforeEachTest { restorer.close() }
 
                             it("calls stty to restore the previous state") {
                                 verify(processRunner).runWithStdinAttached(listOf("stty", "some_old_state"))
@@ -279,7 +279,7 @@ object ConsoleInfoSpec : Spek({
                 beforeEachTest { whenever(posix.isatty(FileDescriptor.`in`)).doReturn(false) }
 
                 on("entering raw mode") {
-                    consoleInfo.enterRawMode()
+                    beforeEachTest { consoleInfo.enterRawMode() }
 
                     it("does not invoke any external processes") {
                         verify(processRunner, never()).runWithStdinAttached(any())
@@ -287,7 +287,7 @@ object ConsoleInfoSpec : Spek({
                 }
 
                 on("exiting raw mode") {
-                    consoleInfo.enterRawMode().use { }
+                    beforeEachTest { consoleInfo.enterRawMode().use { } }
 
                     it("does not invoke any external processes") {
                         verify(processRunner, never()).runWithStdinAttached(any())

@@ -19,21 +19,22 @@ package batect.journeytests
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.itCleansUpAllContainersItCreates
 import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
+import batect.testutils.createForGroup
+import batect.testutils.on
+import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object NoStdinJourneyTest : Spek({
     describe("when STDIN is not a TTY") {
-        val runner = ApplicationRunner("simple-task-using-image")
+        val runner by createForGroup { ApplicationRunner("simple-task-using-image") }
 
         on("running that task") {
-            val commandLine = runner.commandLineForApplication(listOf("the-task")).joinToString(" ")
-            val result = runner.runCommandLine(listOf("sh", "-c", "cat /dev/null | $commandLine"))
+            val commandLine by runBeforeGroup { runner.commandLineForApplication(listOf("the-task")).joinToString(" ") }
+            val result by runBeforeGroup { runner.runCommandLine(listOf("sh", "-c", "cat /dev/null | $commandLine")) }
 
             it("prints the output from that task") {
                 assertThat(result.output, containsSubstring("This is some output from the task\r\n"))
@@ -43,8 +44,8 @@ object NoStdinJourneyTest : Spek({
                 assertThat(result.exitCode, equalTo(123))
             }
 
-            itCleansUpAllContainersItCreates(result)
-            itCleansUpAllNetworksItCreates(result)
+            itCleansUpAllContainersItCreates { result }
+            itCleansUpAllNetworksItCreates { result }
         }
     }
 })

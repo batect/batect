@@ -18,6 +18,8 @@ package batect.os
 
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import batect.ui.Dimensions
 import com.natpryce.hamkrest.Matcher
@@ -34,10 +36,8 @@ import jnr.constants.platform.Errno
 import jnr.ffi.Platform
 import jnr.ffi.Runtime
 import jnr.posix.POSIX
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object NativeMethodsSpec : Spek({
     describe("native methods") {
@@ -55,16 +55,18 @@ object NativeMethodsSpec : Spek({
                     val expectedRows = 123
                     val expectedColumns = 456
 
-                    whenever(libc.ioctl(eq(0), any(), any())).thenAnswer { invocation ->
-                        val size = invocation.arguments[2] as NativeMethods.WindowSize
+                    beforeEachTest {
+                        whenever(libc.ioctl(eq(0), any(), any())).thenAnswer { invocation ->
+                            val size = invocation.arguments[2] as NativeMethods.WindowSize
 
-                        size.ws_row.set(expectedRows)
-                        size.ws_col.set(expectedColumns)
+                            size.ws_row.set(expectedRows)
+                            size.ws_col.set(expectedColumns)
 
-                        0
+                            0
+                        }
                     }
 
-                    val dimensions = nativeMethods.getConsoleDimensions()
+                    val dimensions by runForEachTest { nativeMethods.getConsoleDimensions() }
 
                     it("returns a set of dimensions with the expected values") {
                         assertThat(dimensions, equalTo(Dimensions(expectedRows, expectedColumns)))
@@ -72,8 +74,10 @@ object NativeMethodsSpec : Spek({
                 }
 
                 on("calling ioctl() failing") {
-                    whenever(libc.ioctl(any(), any(), any())).thenReturn(-1)
-                    whenever(posix.errno()).thenReturn(Errno.ENOTTY.intValue())
+                    beforeEachTest {
+                        whenever(libc.ioctl(any(), any(), any())).thenReturn(-1)
+                        whenever(posix.errno()).thenReturn(Errno.ENOTTY.intValue())
+                    }
 
                     it("throws an appropriate exception") {
                         assertThat({ nativeMethods.getConsoleDimensions() }, throws<NativeMethodException>(withMethod("ioctl") and withError(Errno.ENOTTY)))
@@ -85,7 +89,7 @@ object NativeMethodsSpec : Spek({
                 beforeEachTest { whenever(platform.os).thenReturn(Platform.OS.DARWIN) }
 
                 on("calling ioctl()") {
-                    nativeMethods.getConsoleDimensions()
+                    beforeEachTest { nativeMethods.getConsoleDimensions() }
 
                     it("invokes ioctl() with the OS X-specific value for TIOCGWINSZ") {
                         verify(libc).ioctl(any(), eq(0x40087468), any())
@@ -97,7 +101,7 @@ object NativeMethodsSpec : Spek({
                 beforeEachTest { whenever(platform.os).thenReturn(Platform.OS.LINUX) }
 
                 on("calling ioctl()") {
-                    nativeMethods.getConsoleDimensions()
+                    beforeEachTest { nativeMethods.getConsoleDimensions() }
 
                     it("invokes ioctl() with the Linux-specific value for TIOCGWINSZ") {
                         verify(libc).ioctl(any(), eq(0x00005413), any())

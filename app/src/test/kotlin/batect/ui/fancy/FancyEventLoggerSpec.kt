@@ -29,7 +29,9 @@ import batect.execution.model.steps.CreateTaskNetworkStep
 import batect.execution.model.steps.DeleteTaskNetworkStep
 import batect.execution.model.steps.RunContainerStep
 import batect.testutils.createForEachTest
+import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.on
 import batect.ui.Console
 import batect.ui.FailureErrorMessageFormatter
 import batect.ui.text.Text
@@ -42,11 +44,8 @@ import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.reset
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.given
-import org.jetbrains.spek.api.dsl.it
-import org.jetbrains.spek.api.dsl.on
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.time.Duration
 
 object FancyEventLoggerSpec : Spek({
@@ -68,7 +67,7 @@ object FancyEventLoggerSpec : Spek({
 
             on("while the task is starting up") {
                 val step = CreateTaskNetworkStep
-                logger.onStartingTaskStep(step)
+                beforeEachTest { logger.onStartingTaskStep(step) }
 
                 it("notifies the startup progress display of the step and then reprints it") {
                     inOrder(startupProgressDisplay) {
@@ -84,7 +83,7 @@ object FancyEventLoggerSpec : Spek({
 
             on("and that step is to run the task container") {
                 val step = RunContainerStep(container, dockerContainer)
-                logger.onStartingTaskStep(step)
+                beforeEachTest { logger.onStartingTaskStep(step) }
 
                 it("notifies the startup progress display of the step, reprints it and then prints a blank line") {
                     inOrder(startupProgressDisplay, console) {
@@ -103,7 +102,7 @@ object FancyEventLoggerSpec : Spek({
                 val cleanupStep = mock<CleanupStep>()
 
                 on("and clean up has not started yet") {
-                    logger.onStartingTaskStep(cleanupStep)
+                    beforeEachTest { logger.onStartingTaskStep(cleanupStep) }
 
                     it("prints a blank line before printing the cleanup progress") {
                         inOrder(console, cleanupProgressDisplay) {
@@ -126,11 +125,13 @@ object FancyEventLoggerSpec : Spek({
                 }
 
                 on("and clean up has already started") {
-                    val previousCleanupStep = mock<CleanupStep>()
-                    logger.onStartingTaskStep(previousCleanupStep)
-                    reset(cleanupProgressDisplay)
+                    beforeEachTest {
+                        val previousCleanupStep = mock<CleanupStep>()
+                        logger.onStartingTaskStep(previousCleanupStep)
+                        reset(cleanupProgressDisplay)
 
-                    logger.onStartingTaskStep(cleanupStep)
+                        logger.onStartingTaskStep(cleanupStep)
+                    }
 
                     it("clears the existing cleanup progress before reprinting the cleanup progress") {
                         inOrder(cleanupProgressDisplay) {
@@ -153,7 +154,7 @@ object FancyEventLoggerSpec : Spek({
         describe("when logging an event") {
             on("while the task is starting up") {
                 val event = ContainerBecameHealthyEvent(Container("some-container", imageSourceDoesNotMatter()))
-                logger.postEvent(event)
+                beforeEachTest { logger.postEvent(event) }
 
                 it("notifies the startup progress display of the event and then reprints it") {
                     inOrder(startupProgressDisplay) {
@@ -173,12 +174,15 @@ object FancyEventLoggerSpec : Spek({
 
             on("when the task finishes") {
                 val container = Container("task-container", imageSourceDoesNotMatter())
-                logger.onStartingTaskStep(RunContainerStep(container, DockerContainer("some-id")))
-                reset(startupProgressDisplay)
-                reset(cleanupProgressDisplay)
-
                 val event = RunningContainerExitedEvent(container, 123)
-                logger.postEvent(event)
+
+                beforeEachTest {
+                    logger.onStartingTaskStep(RunContainerStep(container, DockerContainer("some-id")))
+                    reset(startupProgressDisplay)
+                    reset(cleanupProgressDisplay)
+
+                    logger.postEvent(event)
+                }
 
                 it("does not reprint the startup progress display") {
                     verify(startupProgressDisplay, never()).print(any())
@@ -202,14 +206,17 @@ object FancyEventLoggerSpec : Spek({
             }
 
             on("after the task has finished") {
-                val container = Container("task-container", imageSourceDoesNotMatter())
-                logger.onStartingTaskStep(RunContainerStep(container, DockerContainer("some-id")))
-                logger.postEvent(RunningContainerExitedEvent(container, 123))
-                reset(startupProgressDisplay)
-                reset(cleanupProgressDisplay)
-
                 val event = ContainerRemovedEvent(Container("some-container", imageSourceDoesNotMatter()))
-                logger.postEvent(event)
+
+                beforeEachTest {
+                    val container = Container("task-container", imageSourceDoesNotMatter())
+                    logger.onStartingTaskStep(RunContainerStep(container, DockerContainer("some-id")))
+                    logger.postEvent(RunningContainerExitedEvent(container, 123))
+                    reset(startupProgressDisplay)
+                    reset(cleanupProgressDisplay)
+
+                    logger.postEvent(event)
+                }
 
                 it("does not reprint the startup progress display") {
                     verify(startupProgressDisplay, never()).print(any())
@@ -244,7 +251,7 @@ object FancyEventLoggerSpec : Spek({
 
                 on("posting an event") {
                     val event = ContainerBecameHealthyEvent(Container("some-container", imageSourceDoesNotMatter()))
-                    logger.postEvent(event)
+                    beforeEachTest { logger.postEvent(event) }
 
                     it("does not reprint the startup progress display") {
                         verify(startupProgressDisplay, never()).print(any())
@@ -277,7 +284,7 @@ object FancyEventLoggerSpec : Spek({
                     beforeEachTest { whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn(TextRun("Something went wrong.")) }
 
                     on("posting the event") {
-                        logger.postEvent(event)
+                        beforeEachTest { logger.postEvent(event) }
 
                         it("prints the message to the output") {
                             inOrder(console, errorConsole) {
@@ -311,7 +318,7 @@ object FancyEventLoggerSpec : Spek({
                     }
 
                     on("posting the event") {
-                        logger.postEvent(event)
+                        beforeEachTest { logger.postEvent(event) }
 
                         it("prints the message to the output") {
                             verify(errorConsole).println(TextRun("Something went wrong for a second time."))
@@ -335,7 +342,7 @@ object FancyEventLoggerSpec : Spek({
         }
 
         on("when the task starts") {
-            logger.onTaskStarting("some-task")
+            beforeEachTest { logger.onTaskStarting("some-task") }
 
             it("prints a message to the output") {
                 verify(console).println(Text.white(Text("Running ") + Text.bold("some-task") + Text("...")))
@@ -343,7 +350,7 @@ object FancyEventLoggerSpec : Spek({
         }
 
         on("when the task finishes") {
-            logger.onTaskFinished("some-task", 234, Duration.ofMillis(2500))
+            beforeEachTest { logger.onTaskFinished("some-task", 234, Duration.ofMillis(2500)) }
 
             it("prints a message to the output") {
                 inOrder(console, cleanupProgressDisplay) {
@@ -356,7 +363,7 @@ object FancyEventLoggerSpec : Spek({
         describe("when the task fails") {
             given("there are no cleanup instructions") {
                 on("when logging that the task has failed") {
-                    logger.onTaskFailed("some-task", TextRun())
+                    beforeEachTest { logger.onTaskFailed("some-task", TextRun()) }
 
                     it("prints a message to the output") {
                         inOrder(errorConsole) {
@@ -369,7 +376,7 @@ object FancyEventLoggerSpec : Spek({
 
             given("there are some cleanup instructions") {
                 on("when logging that the task has failed") {
-                    logger.onTaskFailed("some-task", TextRun("Do this to clean up."))
+                    beforeEachTest { logger.onTaskFailed("some-task", TextRun("Do this to clean up.")) }
 
                     it("prints a message to the output, including the instructions") {
                         inOrder(errorConsole) {

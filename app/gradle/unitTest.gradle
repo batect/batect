@@ -16,6 +16,14 @@
 
 sourceSets {
     test {
+        kotlin {
+            srcDirs = ['src/unitTest/kotlin']
+        }
+
+        resources {
+            srcDirs = ['src/unitTest/resources']
+        }
+
         compileClasspath += testCommon.output
         runtimeClasspath += testCommon.output
     }

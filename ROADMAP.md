@@ -42,6 +42,8 @@ If there's something you're really keen to see, pull requests are always welcome
 * reintroduce image tagging
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * documentation
+  * add page explaining basic concepts (eg. explain what a task and a container are)
+  * rename 'quick start' to 'setup'
   * add check for broken internal or external links
   * examples for common languages and scenarios
     * Golang
@@ -59,6 +61,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * "what's going on beneath the hood?" - explain the task lifecycle (read config, construct graph, pull images / build images, create network, start containers, wait for healthy etc.)
   * add note about increasing default CPU and memory limits when using Docker on OS X
   * how to introduce batect to an existing project
+  * how to use batect as the basis for a pipeline made up of reusable building blocks
 * switch to coroutines for parallel execution?
 * listen for `SIGWINCH` globally and update `ConsoleInfo.dimensions` only when required rather than calling `ioctl()` every time
 * test against a variety of Docker versions (eg. earliest supported version and latest)
@@ -132,3 +135,4 @@ If there's something you're really keen to see, pull requests are always welcome
      * not monitoring console size changes
      * streaming I/O to container in multiplexed mode (see attach API documentation)
 * some way to check for outdated base images (eg. using `postgres:10.0` and suggests updating to `postgres:10.5`)
+* make the last mile easier: pushing images and deploying applications

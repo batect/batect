@@ -30,6 +30,7 @@ data class Task(
     @Transient val name: String = "",
     @SerialName("run") val runConfiguration: TaskRunConfiguration,
     @Optional val description: String = "",
+    @Optional val group: String = "",
     @SerialName("dependencies") @Serializable(with = DependencySetDeserializer::class) @Optional val dependsOnContainers: Set<String> = emptySet(),
     @SerialName("prerequisites") @Serializable(with = PrerequisiteListDeserializer::class) @Optional val prerequisiteTasks: List<String> = emptyList()
 )

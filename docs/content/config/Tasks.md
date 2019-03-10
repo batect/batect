@@ -5,6 +5,11 @@ Each task definition is made up of:
 ## `description`
 Description shown when running `batect --list-tasks`.
 
+## `group`
+Group name used to group tasks when running `batect --list-tasks`.
+
+Available since v0.27.
+
 ## `run`
 Specifies what to do when this task starts:
 

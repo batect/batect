@@ -230,13 +230,14 @@ object ConfigurationLoaderSpec : Spek({
             }
         }
 
-        on("loading a valid configuration file with a task with a description") {
+        on("loading a valid configuration file with a task with a description and a group") {
             val configString = """
                 |project_name: the_cool_project
                 |
                 |tasks:
                 |  first_task:
                 |    description: The very first task.
+                |    group: Build tasks
                 |    run:
                 |      container: build-env
                 """.trimMargin()
@@ -259,6 +260,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, equalTo("The very first task."))
+                assertThat(task.group, equalTo("Build tasks"))
             }
         }
 

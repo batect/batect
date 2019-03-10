@@ -16,6 +16,7 @@
 
 package batect.cli.commands
 
+import batect.config.Task
 import batect.config.io.ConfigurationLoader
 import java.io.PrintStream
 import java.nio.file.Path
@@ -23,23 +24,55 @@ import java.nio.file.Path
 class ListTasksCommand(val configFile: Path, val configLoader: ConfigurationLoader, val outputStream: PrintStream) : Command {
     override fun run(): Int {
         val config = configLoader.loadConfig(configFile)
+        val groups = config.tasks.groupBy { it.group }
+        val allTasksHaveNoGroup = config.tasks.all { it: Task -> it.group == "" }
 
-        outputStream.println("Available tasks:")
-
-        config.tasks
-            .sortedBy { it.name }
-            .forEach {
-                outputStream.print("- ")
-                outputStream.print(it.name)
-
-                if (it.description.isNotBlank()) {
-                    outputStream.print(": ")
-                    outputStream.print(it.description)
+        groups.entries
+            .sortedWith(groupComparator)
+            .forEachIndexed { index, (groupName, tasks) ->
+                if (allTasksHaveNoGroup) {
+                    outputStream.println("Available tasks:")
+                } else if (groupName == "") {
+                    outputStream.println("Ungrouped tasks:")
+                } else {
+                    outputStream.println("$groupName:")
                 }
 
-                outputStream.println()
+                printGroup(tasks)
+
+                if (index < groups.count() - 1) {
+                    outputStream.println()
+                }
             }
 
         return 0
+    }
+
+    private val groupComparator = Comparator<Map.Entry<String, List<Task>>> { (a, _), (b, _) ->
+        if (a == b) {
+            0
+        } else if (a == "") {
+            1
+        } else if (b == "") {
+            -1
+        } else {
+            a.compareTo(b)
+        }
+    }
+
+    private fun printGroup(tasks: List<Task>) = tasks
+        .sortedBy { it.name }
+        .forEach { printTask(it) }
+
+    private fun printTask(task: Task) {
+        outputStream.print("- ")
+        outputStream.print(task.name)
+
+        if (task.description.isNotBlank()) {
+            outputStream.print(": ")
+            outputStream.print(task.description)
+        }
+
+        outputStream.println()
     }
 }

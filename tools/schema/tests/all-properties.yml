@@ -40,6 +40,7 @@ containers:
 tasks:
   task-1:
     description: do the first thing
+    group: First group
     prerequisites:
       - other-task
     dependencies:

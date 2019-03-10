@@ -113,6 +113,11 @@
           "description": "Description shown when running `batect --list-tasks`",
           "minLength": 1
         },
+        "group": {
+          "type": "string",
+          "description": "Name used to group tasks when running `batect --list-tasks`",
+          "minLength": 1
+        },
         "dependencies": {
           "description": "List of other containers that should be started and healthy before starting the task container given in `run`",
           "$ref": "#/definitions/containerDependencyList"

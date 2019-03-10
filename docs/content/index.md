@@ -8,9 +8,11 @@ The main benefits of batect are:
 
 * Consistent, fast, repeatable, isolated builds and test runs everywhere: your computer, your colleagues' computers and on CI
 * Manage dependencies for integration and end-to-end testing with ease
-* No installation required, only dependencies are Bash, Docker and `curl`* - onboard new team members in minutes
+* No installation required, only dependencies are Bash, Docker (v17.06+) and `curl`* - onboard new team members in minutes
 * Works with any language or framework, your existing CI system, and your chosen language's existing tooling
 * Take advantage of existing Docker images to get started quickly
+* Document and share common tasks within your team in a structured way - it's a
+  [go script](https://www.thoughtworks.com/insights/blog/praise-go-script-part-i) based on Docker
 
 \* at the moment, a JVM is also required, but this requirement will be removed before v1.0
 

@@ -32,6 +32,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
 * support build arguments
 * some way to set variables once for the whole project (eg. Google Cloud SDK version, shared path) and reference these in environment variables or build args
+* some way to reference another Dockerfile as the base image for a Dockerfile
 
 ### Other
 * replace factories with references to constructors
@@ -136,3 +137,4 @@ If there's something you're really keen to see, pull requests are always welcome
      * streaming I/O to container in multiplexed mode (see attach API documentation)
 * some way to check for outdated base images (eg. using `postgres:10.0` and suggests updating to `postgres:10.5`)
 * make the last mile easier: pushing images and deploying applications
+* init containers: containers that must start, run and complete before a container can start (eg. populating a database with data)

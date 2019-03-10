@@ -26,6 +26,63 @@ Definitions for each of your tasks, the actions you launch through batect.
 
 [Detailed reference for `tasks`](Tasks.md)
 
+## Anchors, aliases, extensions and merging
+
+Available since v0.27.
+
+batect supports YAML anchors and aliases. This allows you to specify a value in one place, and
+refer to it elsewhere. For example:
+
+```yaml
+somewhere: &value-used-multiple-times the-value
+
+# This is equivalent to somewhere-else: the-value
+somewhere-else: *value-used-multiple-times
+```
+
+Anchors (`&...`) must be defined before they are referenced with an alias (`*...`).
+
+batect also supports extensions, which behave in an identical way, but allow you to define values
+before you use it for the first time. The following is equivalent to the example above:
+
+```yaml
+.value-used-multiple-times: &value-used-multiple-times the-value
+
+somewhere: *value-used-multiple-times
+somewhere-else: *value-used-multiple-times
+```
+
+Extensions must be defined at the root level of your configuration file, and the key must start
+with a period (`.`).
+
+batect also supports the merge operator (`<<`) in maps. For example:
+
+```yaml
+.common-environment: &common-environment
+  ENABLE_COOL_FEATURE: true
+  DATABASE_HOST: postgres:1234
+
+tasks:
+  run-app:
+    run:
+      ...
+      environment: *common-environment # Just uses the values in common-environment as-is
+
+  run-app-without-cool-feature:
+    run:
+      ...
+      environment:
+        << : *common-environment # Use common-environment as the basis for the environment in this task...
+        ENABLE_COOL_FEATURE: false # ...but override the value of ENABLE_COOL_FEATURE
+```
+
+You can merge a single map with `<<: *other-map`, or multiple maps with `<<: [ *map-1, *map-2 ]`.
+
+Local values take precedence over values merged into a map (regardless of the position of the `<<` entry),
+and values from sources earlier in the list of maps take precedence over values from later sources.
+(For example, if both `map-1` and `map-2` define a value for `PORT` in the example earlier, the
+value in `map-1` is used.)
+
 ## Examples
 
 Examples are provided in the reference for [`containers`](Containers.md#examples) and [`tasks`](Tasks.md#examples).

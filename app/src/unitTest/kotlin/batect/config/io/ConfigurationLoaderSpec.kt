@@ -1125,5 +1125,19 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat({ loadConfiguration(configString) }, throws(withMessage("Unknown property 'something_else'. Known properties are: container, local") and withLineNumber(8) and withFileName(testFileName)))
             }
         }
+
+        on("loading a configuration file with an extension defined") {
+            val configString = """
+                .name: &name the_cool_project
+
+                project_name: *name
+            """.trimIndent()
+
+            val config by runForEachTest { loadConfiguration(configString) }
+
+            it("should return a populated configuration object with the extension value used where referenced") {
+                assertThat(config.projectName, equalTo("the_cool_project"))
+            }
+        }
     }
 })

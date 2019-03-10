@@ -21,6 +21,9 @@
       "minLength": 1
     }
   },
+  "patternProperties": {
+    "^\\.": { }
+  },
   "definitions": {
     "containers": {
       "type": "object",

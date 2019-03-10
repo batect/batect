@@ -1,10 +1,14 @@
 project_name: many-tasks-test
 
+.common-vars: &common-vars
+  X: 1
+
 containers:
   with-image:
     image: alpine:3.5
     command: do-the-thing
     environment:
+      <<: *common-vars
       THING: value
     volumes:
       - .:/code:cached

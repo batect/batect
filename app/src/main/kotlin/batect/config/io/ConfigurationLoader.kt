@@ -64,7 +64,7 @@ class ConfigurationLoader(
     private fun loadConfig(configFileContent: String, filePath: Path): Configuration {
         val pathResolver = pathResolverFactory.createResolver(filePath.parent)
         val pathDeserializer = PathDeserializer(pathResolver)
-        val parser = Yaml()
+        val parser = Yaml(extensionDefinitionPrefix = ".")
         parser.install(SimpleModule(PathResolutionResult::class, pathDeserializer))
 
         try {

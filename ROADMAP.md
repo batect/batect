@@ -31,7 +31,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * some way to clean up old images when they're no longer needed
 * allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
 * support build arguments
-* some way to set variables once for the whole project (eg. Google Cloud SDK version, shared path) and reference these in environment variables or build args
 * some way to reference another Dockerfile as the base image for a Dockerfile
 
 ### Other

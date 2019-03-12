@@ -19,6 +19,14 @@
 
 [![asciicast](https://asciinema.org/a/714gRQsQW1VDHQMuWzwRuAdU4.svg)](https://asciinema.org/a/714gRQsQW1VDHQMuWzwRuAdU4)
 
+## Getting started
+
+1. Drop the latest `batect` script from the [releases page](https://github.com/charleskorn/batect/releases)
+   into the root folder of your project.
+2. Make sure it's executable: run `chmod +x batect`.
+3. Create your `batect.yml`: take a look at the [sample projects](https://batect.charleskorn.com/SampleProjects.html)
+   for inspiration, or dive straight into [the configuration file reference](https://batect.charleskorn.com/config/Overview.html).
+
 ## Documentation
 
 All documentation is available on [the documentation site](https://batect.charleskorn.com). Highlights include:

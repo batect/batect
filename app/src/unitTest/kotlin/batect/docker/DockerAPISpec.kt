@@ -436,37 +436,42 @@ object DockerAPISpec : Spek({
         describe("attaching to a container") {
             val source by createForEachTest { mock<BufferedSource>() }
             val sink by createForEachTest { mock<BufferedSink>() }
-            val clientWithNoTimeout by createForEachTest { mock<OkHttpClient>() }
+            val attachHttpClient by createForEachTest { mock<OkHttpClient>() }
 
-            val noTimeoutClientBuilder by createForEachTest {
+            val clientBuilder by createForEachTest {
                 mock<OkHttpClient.Builder> { mock ->
                     on { readTimeout(any(), any()) } doReturn mock
+                    on { connectionPool(any()) } doReturn mock
                     on { addNetworkInterceptor(hijacker) } doAnswer {
                         whenever(hijacker.source).doReturn(source)
                         whenever(hijacker.sink).doReturn(sink)
 
                         mock
                     }
-                    on { build() } doReturn clientWithNoTimeout
+                    on { build() } doReturn attachHttpClient
                 }
             }
 
             beforeEachTest {
-                whenever(httpClient.newBuilder()).doReturn(noTimeoutClientBuilder)
+                whenever(httpClient.newBuilder()).doReturn(clientBuilder)
             }
 
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
+                val expectedHeaders = Headers.Builder()
+                    .add("Connection", "Upgrade")
+                    .add("Upgrade", "tcp")
+                    .build()
 
                 describe("attaching to output") {
                     val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/attach?logs=true&stream=true&stdout=true&stderr=true"
 
                     on("the attach succeeding") {
                         val response = mock<Response> {
-                            on { isSuccessful } doReturn true
+                            on { code() } doReturn 101
                         }
 
-                        beforeEachTest { clientWithNoTimeout.mock("POST", expectedUrl, response) }
+                        beforeEachTest { attachHttpClient.mock("POST", expectedUrl, response, expectedHeaders) }
 
                         val streams by runForEachTest { api.attachToContainerOutput(container) }
 
@@ -479,12 +484,16 @@ object DockerAPISpec : Spek({
                         }
 
                         it("configures the HTTP client with no timeout") {
-                            verify(noTimeoutClientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
+                            verify(clientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
+                        }
+
+                        it("configures the HTTP client with a separate connection pool (because the underlying connection cannot be reused)") {
+                            verify(clientBuilder).connectionPool(any())
                         }
                     }
 
                     on("an unsuccessful attach attempt") {
-                        beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418) }
+                        beforeEachTest { attachHttpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418, expectedHeaders) }
 
                         it("raises an appropriate exception") {
                             assertThat({ api.attachToContainerOutput(container) }, throws<DockerException>(withMessage("Attaching to output from container 'the-container-id' failed: Something went wrong.")))
@@ -497,10 +506,10 @@ object DockerAPISpec : Spek({
 
                     on("the attach succeeding") {
                         val response = mock<Response> {
-                            on { isSuccessful } doReturn true
+                            on { code() } doReturn 101
                         }
 
-                        beforeEachTest { clientWithNoTimeout.mock("POST", expectedUrl, response) }
+                        beforeEachTest { attachHttpClient.mock("POST", expectedUrl, response, expectedHeaders) }
 
                         val streams by runForEachTest { api.attachToContainerInput(container) }
 
@@ -513,12 +522,16 @@ object DockerAPISpec : Spek({
                         }
 
                         it("configures the HTTP client with no timeout") {
-                            verify(noTimeoutClientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
+                            verify(clientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
+                        }
+
+                        it("configures the HTTP client with a separate connection pool (because the underlying connection cannot be reused)") {
+                            verify(clientBuilder).connectionPool(any())
                         }
                     }
 
                     on("an unsuccessful attach attempt") {
-                        beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418) }
+                        beforeEachTest { attachHttpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418, expectedHeaders) }
 
                         it("raises an appropriate exception") {
                             assertThat({ api.attachToContainerInput(container) }, throws<DockerException>(withMessage("Attaching to input for container 'the-container-id' failed: Something went wrong.")))

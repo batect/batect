@@ -30,6 +30,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.json
+import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
 import okhttp3.MediaType
 import okhttp3.Request
@@ -333,12 +334,15 @@ class DockerAPI(
         val request = Request.Builder()
             .post(emptyRequestBody())
             .url(url)
+            .header("Connection", "Upgrade")
+            .header("Upgrade", "tcp")
             .build()
 
         val hijacker = hijackerFactory()
 
         val client = httpConfig.client.newBuilder()
             .readTimeout(0, TimeUnit.NANOSECONDS)
+            .connectionPool(ConnectionPool())
             .addNetworkInterceptor(hijacker)
             .build()
 
@@ -372,12 +376,15 @@ class DockerAPI(
         val request = Request.Builder()
             .post(emptyRequestBody())
             .url(url)
+            .header("Connection", "Upgrade")
+            .header("Upgrade", "tcp")
             .build()
 
         val hijacker = hijackerFactory()
 
         val client = httpConfig.client.newBuilder()
             .readTimeout(0, TimeUnit.NANOSECONDS)
+            .connectionPool(ConnectionPool())
             .addNetworkInterceptor(hijacker)
             .build()
 
@@ -810,7 +817,7 @@ class DockerAPI(
     private fun jsonRequestBody(json: String): RequestBody = RequestBody.create(jsonMediaType, json)
 
     private inline fun checkForFailure(response: Response, errorHandler: (DockerAPIError) -> Unit) {
-        if (response.isSuccessful) {
+        if (response.isSuccessful || response.code() == 101) {
             return
         }
 

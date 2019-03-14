@@ -54,7 +54,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8'
     implementation 'org.kodein.di:kodein-di-core-jvm:6.1.0'
     implementation 'org.kodein.di:kodein-di-generic-jvm:6.1.0'
-    implementation 'com.squareup.okhttp3:okhttp:3.13.1'
+    implementation 'com.squareup.okhttp3:okhttp:3.14.0'
     implementation 'com.github.jnr:jnr-unixsocket:0.22'
     implementation 'com.github.jnr:jnr-posix:3.0.49'
     implementation 'org.apache.commons:commons-compress:1.18'

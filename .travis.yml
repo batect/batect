@@ -1,18 +1,14 @@
+dist: xenial
+
 language: java
-sudo: required
+
+jdk:
+  - openjdk8
 
 services:
   - docker
 
-before_install:
-  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-  - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-  - sudo apt-get update
-  - sudo apt-get -y install docker-ce
-  - docker --version
-
-# Travis runs ./gradlew assemble by default as an install step, we don't need that (but we do need before_install, so we can't use 'skip' `below)
-install: true
+install: skip
 
 script: ./travis/build.sh
 

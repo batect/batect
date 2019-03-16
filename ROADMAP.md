@@ -21,6 +21,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * warn when mounting a directory in the same location as the home directory from `run_as_current_user`
   * warn when proxy environment variables aren't in URL format or don't have the `http` or `https` schemes
   * warn when proxy settings for daemon don't match local environment (can get this through API)
+  * warn when a container used as a dependency does not have a health check defined
 * support for Windows
 * fix #10 (proxies that refer to localhost)
   * Linux:
@@ -32,6 +33,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
 * support build arguments
 * some way to reference another Dockerfile as the base image for a Dockerfile
+* reintroduce image tagging
 
 ### Other
 * replace factories with references to constructors
@@ -39,7 +41,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * use Detekt for static analysis
 * fail CI build on warnings
 * fail CI build on pending tests
-* reintroduce image tagging
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * documentation
   * add page explaining basic concepts (eg. explain what a task and a container are)
@@ -120,10 +121,8 @@ If there's something you're really keen to see, pull requests are always welcome
   * would save some time
   * means user doesn't see irrelevant error messages
 * when starting up containers and displaying progress, show countdown to health check (eg. 'waiting for container to become healthy, next check in 3 seconds, will timeout after 2 more retries')
-* warn if a dependency does not have a health check defined
 * default to just terminating all containers at clean up time with option to gracefully shut down on individual containers
   (eg. database where data is shared between invocations and we don't want to corrupt it)
-* some way to group tasks shown when running `batect --list-tasks`
 * group display of options shown when running `batect --help`
 * add dependency relationship between containers and tasks (eg. running the app container requires running the build first - removes the need to specify
   build task as a prerequisite on every task that starts the app)

@@ -46,7 +46,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * rename 'quick start' to 'setup'
   * add check for broken internal or external links
   * examples for common languages and scenarios
-    * Golang
     * NodeJS
       * frontend
       * backend

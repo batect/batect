@@ -44,9 +44,11 @@ nav:
     - Tasks: "config/Tasks.md"
 
   - Language and tool-specific information:
+    - CircleCI: "tools/CircleCI.md"
+    - Docker: "tools/Docker.md"
     - Java: "tools/Java.md"
     - Ruby: "tools/Ruby.md"
-    - Docker: "tools/Docker.md"
+    - Travis CI: "tools/TravisCI.md"
 
   - Tips and tricks:
     - CI setup: "tips/CISetup.md"

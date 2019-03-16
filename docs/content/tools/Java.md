@@ -24,7 +24,7 @@ Note that you can't use `~` in the container path for a volume mount:
   default to the root user and use this as the root user's home directory.
 
 !!! warning
-    With this configuration, you will not be able to run more than one task at a time. This is due to [a well-known issue with Gradle](https://github.com/gradle/gradle/issues/851).
+    With this configuration, you will not be able to run more than one task at a time. This is due to [a known issue with Gradle](https://github.com/gradle/gradle/issues/851).
 
 ### Disabling the Gradle daemon
 

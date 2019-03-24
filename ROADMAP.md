@@ -135,3 +135,4 @@ If there's something you're really keen to see, pull requests are always welcome
 * some way to check for outdated base images (eg. using `postgres:10.0` and suggests updating to `postgres:10.5`)
 * make the last mile easier: pushing images and deploying applications
 * init containers: containers that must start, run and complete before a container can start (eg. populating a database with data)
+* some way to handle secrets easily

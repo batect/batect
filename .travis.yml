@@ -66,7 +66,9 @@ jobs:
           file_glob: true
           file: build/release/*
           on:
-            condition: true # We skip this whole stage if we don't want to deploy.
+            # We skip this whole stage if we don't want to deploy, so just disable the checks here.
+            condition: true
+            all_branches: true
 
         - provider: pages
           local-dir: docs/build/docs
@@ -76,7 +78,9 @@ jobs:
           target-branch: gh-pages
           keep-history: true
           on:
-            condition: true # We skip this whole stage if we don't want to deploy.
+            # We skip this whole stage if we don't want to deploy, so just disable the checks here.
+            condition: true
+            all_branches: true
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock

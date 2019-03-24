@@ -322,7 +322,7 @@ private fun removeImage(imageName: String) {
     val processRunner = ProcessRunner(mock())
     val result = processRunner.runAndCaptureOutput(listOf("docker", "rmi", "-f", imageName))
 
-    assertThat(result, has(ProcessOutput::exitCode, equalTo(0)) or has(ProcessOutput::output, startsWith("Error: No such image: $imageName")))
+    assertThat(result, has(ProcessOutput::output, startsWith("Error: No such image: $imageName")) or has(ProcessOutput::exitCode, equalTo(0)))
 }
 
 private fun httpGet(url: String): Response {

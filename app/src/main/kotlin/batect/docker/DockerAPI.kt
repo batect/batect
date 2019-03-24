@@ -301,8 +301,10 @@ class DockerAPI(
                 data("result", responseBody)
             }
 
-            if (!parsedResponse["Error"].isNull) {
-                throw DockerException("Waiting for container '${container.id}' to exit succeeded but returned an error: ${parsedResponse["Error"].primitive.content}")
+            if (parsedResponse.containsKey("Error") && !parsedResponse["Error"].isNull) {
+                val message = parsedResponse.getObject("Error").getPrimitive("Message").content
+
+                throw DockerException("Waiting for container '${container.id}' to exit succeeded but returned an error: $message")
             }
 
             return parsedResponse["StatusCode"].primitive.int

@@ -398,23 +398,40 @@ object DockerAPISpec : Spek({
                     whenever(httpClient.newBuilder()).doReturn(noTimeoutClientBuilder)
                 }
 
-                on("the wait succeeding") {
-                    val responseBody = """{"StatusCode": 123, "Error": null}"""
+                given("the wait succeeds") {
+                    on("the response not containing any error information") {
+                        val responseBody = """{"StatusCode": 123}"""
 
-                    beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
-                    val exitCode by runForEachTest { api.waitForExit(container) }
+                        beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
+                        val exitCode by runForEachTest { api.waitForExit(container) }
 
-                    it("returns the exit code from the container") {
-                        assertThat(exitCode, equalTo(123))
+                        it("returns the exit code from the container") {
+                            assertThat(exitCode, equalTo(123))
+                        }
+
+                        it("configures the HTTP client with no timeout") {
+                            verify(noTimeoutClientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
+                        }
                     }
 
-                    it("configures the HTTP client with no timeout") {
-                        verify(noTimeoutClientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
+                    on("the response containing an empty error") {
+                        val responseBody = """{"StatusCode": 123, "Error": null}"""
+
+                        beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
+                        val exitCode by runForEachTest { api.waitForExit(container) }
+
+                        it("returns the exit code from the container") {
+                            assertThat(exitCode, equalTo(123))
+                        }
+
+                        it("configures the HTTP client with no timeout") {
+                            verify(noTimeoutClientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
+                        }
                     }
                 }
 
                 on("the wait returning an error in the body of the response") {
-                    val responseBody = """{"StatusCode": 123, "Error": "Something might have gone wrong."}"""
+                    val responseBody = """{"StatusCode": 123, "Error": {"Message": "Something might have gone wrong."}}"""
 
                     beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
 

@@ -25,12 +25,7 @@ stages:
 jobs:
   include:
     - stage: Build and test
-      script:
-        - ./gradlew build
-        - ./gradlew check
-        - ./gradlew jacocoTestReport
-        - bash <(curl -s https://codecov.io/bash)
-        - ./gradlew assembleRelease
+      script: ./gradlew build check jacocoTestReport assembleRelease && bash <(curl -s https://codecov.io/bash)
       after_success:
         - gsutil -m rsync -r build/release gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/release
         - gsutil -m rsync -r docs/build/docs gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/docs/build/docs
@@ -43,9 +38,7 @@ jobs:
         - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
         - sudo apt-get update
         - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
-      script:
-        - ./gradlew integrationTest
-        - ./gradlew journeyTest
+      script: ./gradlew integrationTest journeyTest
 
     - stage: Integration and journey test
       name: Test against Docker 17.06
@@ -55,9 +48,7 @@ jobs:
         - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
         - sudo apt-get update
         - sudo apt-get -y -o Dpkg::Options::="--force-confnew" --allow-downgrades install docker-ce=17.06.0~ce-0~ubuntu
-      script:
-        - ./gradlew integrationTest
-        - ./gradlew journeyTest
+      script: ./gradlew integrationTest journeyTest
 
     - stage: Deploy
       script: skip

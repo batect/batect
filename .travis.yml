@@ -12,35 +12,22 @@ install: skip
 
 stages:
   - Build and test
-  - Test against Docker
+  - Integration and journey test
   - Deploy
 
 jobs:
   include:
     - stage: Build and test
       script:
-        - echo "Linting..."
-        - ./gradlew spotlessCheck
-        - echo
-        - echo "Building..."
         - ./gradlew build
-        - echo
-        - echo "Running checks..."
         - ./gradlew check
-        - echo
-        - echo "Generating code coverage report..."
         - ./gradlew jacocoTestReport
         - bash <(curl -s https://codecov.io/bash)
-        - echo
-        - echo "Assembling release..."
         - ./gradlew assembleRelease
 
-    - stage: Test against Docker
+    - stage: Integration and journey test
       script:
-        - echo "Running integration tests..."
         - ./gradlew integrationTest
-        - echo
-        - echo "Running journey tests..."
         - ./gradlew journeyTest
 
     - stage: Deploy

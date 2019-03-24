@@ -44,6 +44,7 @@ import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.logging.Logger
 import batect.os.NativeMethods
+import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.os.SignalListener
 import batect.os.SystemInfo
@@ -54,6 +55,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
+import com.natpryce.hamkrest.or
+import com.natpryce.hamkrest.startsWith
 import com.nhaarman.mockitokotlin2.mock
 import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
@@ -319,7 +322,7 @@ private fun removeImage(imageName: String) {
     val processRunner = ProcessRunner(mock())
     val result = processRunner.runAndCaptureOutput(listOf("docker", "rmi", "-f", imageName))
 
-    assertThat(result.exitCode, equalTo(0))
+    assertThat(result, has(ProcessOutput::exitCode, equalTo(0)) or has(ProcessOutput::output, startsWith("Error: No such image: $imageName")))
 }
 
 private fun httpGet(url: String): Response {

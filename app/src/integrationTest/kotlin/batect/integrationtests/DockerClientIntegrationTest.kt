@@ -52,11 +52,11 @@ import batect.testutils.createForGroup
 import batect.testutils.runBeforeGroup
 import batect.ui.ConsoleInfo
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.or
-import com.natpryce.hamkrest.startsWith
 import com.nhaarman.mockitokotlin2.mock
 import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
@@ -322,7 +322,7 @@ private fun removeImage(imageName: String) {
     val processRunner = ProcessRunner(mock())
     val result = processRunner.runAndCaptureOutput(listOf("docker", "rmi", "-f", imageName))
 
-    assertThat(result, has(ProcessOutput::output, startsWith("Error: No such image: $imageName")) or has(ProcessOutput::exitCode, equalTo(0)))
+    assertThat(result, has(ProcessOutput::output, containsSubstring("No such image: $imageName")) or has(ProcessOutput::exitCode, equalTo(0)))
 }
 
 private fun httpGet(url: String): Response {

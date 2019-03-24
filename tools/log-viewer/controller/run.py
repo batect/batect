@@ -8,6 +8,8 @@ import urllib.parse
 
 import requests
 
+KIBANA_VERSION = "6.6.2"
+
 
 def main():
     logDetails = loadLogData()
@@ -78,7 +80,7 @@ def parseTimestamp(value):
 
 def configureKibana():
     print("Configuring Kibana...")
-    dismissXPackBanner()
+    dismissUsageStatisticsBanner()
     indexId = createIndexPattern()
     setAsDefaultIndexPattern(indexId)
 
@@ -87,11 +89,11 @@ def configureKibana():
     }
 
 
-def dismissXPackBanner():
+def dismissUsageStatisticsBanner():
     response = requests.post(
-        getKibanaUrl("/api/kibana/settings/xPackMonitoring:showBanner"),
-        headers={"Content-Type": "application/json;charset=UTF-8", "kbn-version": "6.2.4"},
-        json={"value": False}
+        getKibanaUrl("/api/telemetry/v1/optIn"),
+        headers={"Content-Type": "application/json;charset=UTF-8", "kbn-version": KIBANA_VERSION},
+        json={"enabled": False}
     )
 
     response.raise_for_status()
@@ -100,7 +102,7 @@ def dismissXPackBanner():
 def createIndexPattern():
     response = requests.post(
         getKibanaUrl("/api/saved_objects/index-pattern"),
-        headers={"Content-Type": "application/json;charset=UTF-8", "kbn-version": "6.2.4"},
+        headers={"Content-Type": "application/json;charset=UTF-8", "kbn-version": KIBANA_VERSION},
         json={
             "attributes": {
                 "title": "logs",
@@ -117,7 +119,7 @@ def createIndexPattern():
 def setAsDefaultIndexPattern(id):
     response = requests.post(
         getKibanaUrl("/api/kibana/settings/defaultIndex"),
-        headers={"Content-Type": "application/json;charset=UTF-8", "kbn-version": "6.2.4"},
+        headers={"Content-Type": "application/json;charset=UTF-8", "kbn-version": KIBANA_VERSION},
         json={
             "value": id
         }

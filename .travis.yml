@@ -48,13 +48,13 @@ jobs:
         - ./gradlew journeyTest
 
     - stage: Integration and journey test
-      name: Test Docker 17.06
+      name: Test against Docker 17.06
       dist: trusty
       before_install:
         - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
         - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
         - sudo apt-get update
-        - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce=17.06.0~ce-0~ubuntu
+        - sudo apt-get -y -o Dpkg::Options::="--force-confnew" --allow-downgrades install docker-ce=17.06.0~ce-0~ubuntu
       script:
         - ./gradlew integrationTest
         - ./gradlew journeyTest

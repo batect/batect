@@ -34,5 +34,3 @@ task integrationTest(type: Test) {
 
     mustRunAfter test
 }
-
-check.dependsOn integrationTest

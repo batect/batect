@@ -32,8 +32,8 @@ jobs:
         - bash <(curl -s https://codecov.io/bash)
         - ./gradlew assembleRelease
       after_success:
-        - gsutil rsync -r build/release gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/release
-        - gsutil rsync -r docs/build/docs gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/docs/build/docs
+        - gsutil -m rsync -r build/release gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/release
+        - gsutil -m rsync -r docs/build/docs gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/docs/build/docs
 
     - stage: Integration and journey test
       script:
@@ -45,8 +45,8 @@ jobs:
       if: tag IS present AND repo = "charleskorn/batect"
       before_deploy:
         - mkdir -p build/release docs/build/docs
-        - gsutil rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/release build/release
-        - gsutil rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/docs/build/docs docs/build/docs
+        - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/release build/release
+        - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/docs/build/docs docs/build/docs
         - ./gradlew validateRelease
       deploy:
         - provider: releases

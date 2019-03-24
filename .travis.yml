@@ -10,6 +10,7 @@ services:
 
 before_install:
   - sudo pip install gsutil
+  - mkdir -p ~/.creds
   - openssl aes-256-cbc -K $encrypted_2210a3652f18_key -iv $encrypted_2210a3652f18_iv -in travis/travis-ci.json.enc -out ~/.creds/travis-ci.json -d
   - echo "[Credentials]" > ~/.boto
   - echo "gs_service_key_file = ~/.creds/travis-ci.json" >> ~/.boto

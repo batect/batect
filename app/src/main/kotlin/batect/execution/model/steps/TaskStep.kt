@@ -27,8 +27,11 @@ import java.nio.file.Path
 
 sealed class TaskStep
 
-data class BuildImageStep(val buildDirectory: String, val imageTags: Set<String>) : TaskStep() {
-    override fun toString() = "${this.javaClass.simpleName}(build directory: '$buildDirectory', image tags: $imageTags)"
+data class BuildImageStep(val buildDirectory: String, val buildArgs: Map<String, String>, val imageTags: Set<String>) : TaskStep() {
+    override fun toString() = "${this.javaClass.simpleName}(" +
+        "build directory: '$buildDirectory', " +
+        "build args: [${buildArgs.map { "${it.key}=${it.value}" }.joinToString(", ")}], " +
+        "image tags: $imageTags)"
 }
 
 data class PullImageStep(val imageName: String) : TaskStep() {

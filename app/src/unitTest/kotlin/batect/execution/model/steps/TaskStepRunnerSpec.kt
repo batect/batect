@@ -108,7 +108,7 @@ object TaskStepRunnerSpec : Spek({
         val dockerClient by createForEachTest { mock<DockerClient>() }
         val creationRequestFactory by createForEachTest { mock<DockerContainerCreationRequestFactory>() }
 
-        val proxyVariables = mapOf("SOME_PROXY_CONFIG" to "some_proxy")
+        val proxyVariables = mapOf("SOME_PROXY_CONFIG" to "some_proxy", "SOME_OTHER_PROXY_CONFIG" to "some_other_value")
         val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider> {
             on { getProxyEnvironmentVariables(emptySet()) } doReturn proxyVariables
         }
@@ -159,8 +159,9 @@ object TaskStepRunnerSpec : Spek({
 
             describe("running a 'build image' step") {
                 val buildDirectory = "/some-build-dir"
+                val buildArgs = mapOf("some_arg" to "some_value", "SOME_PROXY_CONFIG" to "overridden")
                 val imageTags = setOf("some_image_tag", "some_other_image_tag")
-                val step = BuildImageStep(buildDirectory, imageTags)
+                val step = BuildImageStep(buildDirectory, buildArgs, imageTags)
 
                 describe("when building the image succeeds") {
                     on("and propagating proxy-related environment variables is enabled") {
@@ -183,8 +184,14 @@ object TaskStepRunnerSpec : Spek({
                             runner.run(step, eventSink, runOptions)
                         }
 
-                        it("passes the proxy-related environment variables as image build arguments") {
-                            verify(dockerClient).build(any(), eq(proxyVariables), any(), any())
+                        it("passes the image build args provided by the user as well as any proxy-related build args, with user-provided build args overriding the generated proxy-related build args") {
+                            val expectedArgs = mapOf(
+                                "some_arg" to "some_value",
+                                "SOME_PROXY_CONFIG" to "overridden",
+                                "SOME_OTHER_PROXY_CONFIG" to "some_other_value"
+                            )
+
+                            verify(dockerClient).build(any(), eq(expectedArgs), any(), any())
                         }
 
                         it("emits a 'image build progress' event for each update received from Docker") {
@@ -206,8 +213,8 @@ object TaskStepRunnerSpec : Spek({
                             runner.run(step, eventSink, runOptionsWithProxyEnvironmentVariablePropagationDisabled)
                         }
 
-                        it("does not pass the proxy-related environment variables as image build arguments") {
-                            verify(dockerClient).build(any(), eq(emptyMap()), any(), any())
+                        it("does not pass the proxy-related environment variables as image build arguments, but does still pass the user-provided build args") {
+                            verify(dockerClient).build(any(), eq(buildArgs), any(), any())
                         }
 
                         it("emits a 'image built' event") {

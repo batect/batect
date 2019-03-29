@@ -46,13 +46,17 @@
           "description": "Path (relative to the configuration file's directory) to a directory containing a Dockerfile to build and use as an image for this container",
           "minLength": 1
         },
+        "build_args": {
+          "description": "List of build args to use when building the image in build_directory",
+          "$ref": "#/definitions/buildArgList"
+        },
         "command": {
           "type": "string",
           "description": "Command to run when the container starts",
           "minLength": 1
         },
         "environment": {
-          "description": "List of environment variables (in `name=value` format) for the container",
+          "description": "List of environment variables for the container",
           "$ref": "#/definitions/environmentVariableList"
         },
         "working_directory": {
@@ -151,7 +155,7 @@
           "minLength": 1
         },
         "environment": {
-          "description": "List of environment variables (in `name=value` format) to pass to the container, in addition to those defined on the container itself",
+          "description": "List of environment variables to pass to the container, in addition to those defined on the container itself",
           "$ref": "#/definitions/environmentVariableList"
         },
         "ports": {
@@ -177,6 +181,12 @@
       }
     },
     "environmentVariableList": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "buildArgList": {
       "type": "object",
       "additionalProperties": {
         "type": "string"

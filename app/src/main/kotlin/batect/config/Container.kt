@@ -33,6 +33,8 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
 import kotlinx.serialization.decode
 import kotlinx.serialization.internal.SerialClassDescImpl
+import kotlinx.serialization.map
+import kotlinx.serialization.serializer
 import kotlinx.serialization.set
 
 @Serializable
@@ -51,6 +53,7 @@ data class Container(
     @Serializer(forClass = Container::class)
     companion object : KSerializer<Container> {
         private val buildDirectoryFieldName = "build_directory"
+        private val buildArgsFieldName = "build_args"
         private val imageNameFieldName = "image"
         private val commandFieldName = "command"
         private val environmentFieldName = "environment"
@@ -64,6 +67,7 @@ data class Container(
         override val descriptor: SerialDescriptor = object : SerialClassDescImpl("ContainerFromFile") {
             init {
                 addElement(buildDirectoryFieldName, isOptional = true)
+                addElement(buildArgsFieldName, isOptional = true)
                 addElement(imageNameFieldName, isOptional = true)
                 addElement(commandFieldName, isOptional = true)
                 addElement(environmentFieldName, isOptional = true)
@@ -77,6 +81,7 @@ data class Container(
         }
 
         private val buildDirectoryFieldIndex = descriptor.getElementIndex(buildDirectoryFieldName)
+        private val buildArgsFieldIndex = descriptor.getElementIndex(buildArgsFieldName)
         private val imageNameFieldIndex = descriptor.getElementIndex(imageNameFieldName)
         private val commandFieldIndex = descriptor.getElementIndex(commandFieldName)
         private val environmentFieldIndex = descriptor.getElementIndex(environmentFieldName)
@@ -95,6 +100,7 @@ data class Container(
 
         private fun deserializeFromObject(input: YamlInput): Container {
             var buildDirectory: String? = null
+            var buildArgs: Map<String, String>? = null
             var imageName: String? = null
             var command: Command? = null
             var environment = emptyMap<String, EnvironmentVariableExpression>()
@@ -115,6 +121,7 @@ data class Container(
 
                         buildDirectory = resolveBuildDirectory(resolutionResult, location)
                     }
+                    buildArgsFieldIndex -> buildArgs = input.decode((String.serializer() to String.serializer()).map)
                     imageNameFieldIndex -> imageName = input.decodeStringElement(descriptor, i)
                     commandFieldIndex -> command = input.decode(Command.Companion)
                     environmentFieldIndex -> environment = input.decode(EnvironmentDeserializer)
@@ -131,7 +138,7 @@ data class Container(
 
             return Container(
                 "UNNAMED-FROM-CONFIG-FILE",
-                resolveImageSource(buildDirectory, imageName, input.node.location),
+                resolveImageSource(buildDirectory, buildArgs, imageName, input.node.location),
                 command,
                 environment,
                 workingDirectory,
@@ -143,7 +150,12 @@ data class Container(
             )
         }
 
-        private fun resolveImageSource(buildDirectory: String?, imageName: String?, location: Location): ImageSource {
+        private fun resolveImageSource(
+            buildDirectory: String?,
+            buildArgs: Map<String, String>?,
+            imageName: String?,
+            location: Location
+        ): ImageSource {
             if (buildDirectory == null && imageName == null) {
                 throw ConfigurationException("One of either build_directory or image must be specified for each container, but neither have been provided for this container.", location.line, location.column)
             }
@@ -152,8 +164,12 @@ data class Container(
                 throw ConfigurationException("Only one of build_directory or image can be specified for a container, but both have been provided for this container.", location.line, location.column)
             }
 
+            if (imageName != null && buildArgs != null) {
+                throw ConfigurationException("build_args cannot be used with image, but both have been provided.", location.line, location.column)
+            }
+
             if (buildDirectory != null) {
-                return BuildImage(buildDirectory)
+                return BuildImage(buildDirectory, buildArgs ?: emptyMap())
             } else {
                 return PullImage(imageName!!)
             }

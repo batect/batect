@@ -144,6 +144,23 @@ object ContainerSpec : Spek({
             }
         }
 
+        given("the config file has both an image and build args") {
+            val yaml = """
+                image: some_image
+                build_args:
+                  SOME_ARG: some_value
+            """.trimIndent()
+
+            on("loading the configuration from the config file") {
+                it("throws an appropriate exception") {
+                    assertThat(
+                        { parser.parse(Container.Companion, yaml) },
+                        throws(withMessage("build_args cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1))
+                    )
+                }
+            }
+        }
+
         given("the config file has neither a build directory nor an image") {
             val yaml = """
                 command: do-the-thing
@@ -162,6 +179,8 @@ object ContainerSpec : Spek({
         given("the config file has all optional fields specified") {
             val yaml = """
                 build_directory: /container-1-build-dir
+                build_args:
+                  SOME_ARG: some_value
                 command: do-the-thing.sh some-param
                 environment:
                   OPTS: -Dthing
@@ -189,7 +208,7 @@ object ContainerSpec : Spek({
                 val result by runForEachTest { parser.parse(Container.Companion, yaml) }
 
                 it("returns the expected container configuration") {
-                    assertThat(result.imageSource, equalTo(BuildImage("/resolved/container-1-build-dir")))
+                    assertThat(result.imageSource, equalTo(BuildImage("/resolved/container-1-build-dir", mapOf("SOME_ARG" to "some_value"))))
                     assertThat(result.command, equalTo(Command.parse("do-the-thing.sh some-param")))
                     assertThat(
                         result.environment, equalTo(

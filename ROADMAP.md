@@ -31,7 +31,6 @@ If there's something you're really keen to see, pull requests are always welcome
     * Local proxy needs to be listening on correct IP(s) - need to warn users about this and about exposing them to the outside world (and thus allowing other people to access their proxy)
 * some way to clean up old images when they're no longer needed
 * allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
-* support build arguments
 * some way to reference another Dockerfile as the base image for a Dockerfile
 
 ### Other

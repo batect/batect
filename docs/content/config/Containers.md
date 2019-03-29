@@ -13,6 +13,13 @@ Image name (in standard Docker image reference format) to use for this container
 Path (relative to the configuration file's directory) to a directory containing a Dockerfile to build and use as an image for this container.
 **One of `image` or `build_directory` is required.**
 
+## `build_args`
+List of build args (in `name: value` format) to use when building the image in `build_directory`.
+
+Each build arg must be defined in the Dockerfile with an `ARG` instruction otherwise the value provided will have no effect.
+
+Available since v0.28.
+
 ## `command`
 Command to run when the container starts.
 

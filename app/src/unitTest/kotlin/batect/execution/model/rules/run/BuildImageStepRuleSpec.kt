@@ -27,20 +27,21 @@ import org.spekframework.spek2.style.specification.describe
 object BuildImageStepRuleSpec : Spek({
     describe("a build image step rule") {
         val buildDirectory = "/some-build-dir"
+        val buildArgs = mapOf("some_arg" to "some_value")
         val imageTags = setOf("some_image_tag", "some_other_image_tag")
-        val rule = BuildImageStepRule(buildDirectory, imageTags)
+        val rule = BuildImageStepRule(buildDirectory, buildArgs, imageTags)
 
         on("evaluating the rule") {
             val result = rule.evaluate(emptySet())
 
             it("returns a 'build image' step") {
-                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(BuildImageStep(buildDirectory, imageTags))))
+                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(BuildImageStep(buildDirectory, buildArgs, imageTags))))
             }
         }
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(rule.toString(), equalTo("BuildImageStepRule(build directory: '/some-build-dir', image tags: [some_image_tag, some_other_image_tag])"))
+                assertThat(rule.toString(), equalTo("BuildImageStepRule(build directory: '/some-build-dir', build args: [some_arg=some_value], image tags: [some_image_tag, some_other_image_tag])"))
             }
         }
     }

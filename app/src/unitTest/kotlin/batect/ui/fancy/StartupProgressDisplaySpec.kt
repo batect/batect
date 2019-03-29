@@ -59,7 +59,7 @@ object StartupProgressDisplaySpec : Spek({
         }
 
         on("receiving notification that a step is about to start") {
-            val step = BuildImageStep("/some-image-dir", emptySet())
+            val step = BuildImageStep("/some-image-dir", emptyMap(), emptySet())
             beforeEachTest { display.onStepStarting(step) }
 
             it("forwards it to each progress line") {

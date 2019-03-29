@@ -76,7 +76,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving an 'image build starting' notification") {
                 on("that notification being for this line's container") {
-                    val step = BuildImageStep(buildDirectory, emptySet())
+                    val step = BuildImageStep(buildDirectory, emptyMap(), emptySet())
                     beforeEachTest { line.onStepStarting(step) }
                     val output by runForEachTest { line.print() }
 
@@ -86,7 +86,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val step = BuildImageStep(otherBuildDirectory, emptySet())
+                    val step = BuildImageStep(otherBuildDirectory, emptyMap(), emptySet())
                     beforeEachTest { line.onStepStarting(step) }
                     val output by runForEachTest { line.print() }
 
@@ -202,7 +202,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("when the image is still building") {
                     beforeEachTest {
-                        line.onStepStarting(BuildImageStep(buildDirectory, emptySet()))
+                        line.onStepStarting(BuildImageStep(buildDirectory, emptyMap(), emptySet()))
                         line.onEventPosted(event)
                     }
 

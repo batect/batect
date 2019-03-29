@@ -32,8 +32,6 @@ Specifies what to do when this task starts:
     This field supports all of the same syntax as when [specifying a variable directly on the container](Containers.md#environment),
     including passing variables from the host to the container and providing defaults for when the host variable is not set.
 
-    Values that are YAML booleans or numbers should be wrapped in double quotes.
-
     Prior to v0.21, environment variables were required to be supplied in `name=value` format.
 
 * `ports` List of port mappings to create for the container, in addition to those defined on the container itself.

@@ -44,8 +44,6 @@ Both of these can be overridden for an individual task by specifying a [`command
 ## `environment`
 List of environment variables (in `name: value` format) for the container.
 
-Values that are YAML booleans or numbers should be wrapped in double quotes.
-
 Prior to v0.21, environment variables were required to be supplied in `name=value` format.
 
 ### Environment variable substitution
@@ -59,11 +57,14 @@ You can pass environment variables from the host (ie. where you run batect) to t
 
     If the referenced host variable is not present, `<default>` is used instead.
 
+    `<default>` can be empty, so `${<name>:-}` will use the value of `<name>` from the host if it is
+    set, or a blank value if it is not set.
+
 For example, to set `SUPER_SECRET_PASSWORD` in the container to the value of the `MY_PASSWORD` variable on the host, use
 `SUPER_SECRET_PASSWORD: $MY_PASSWORD` or `SUPER_SECRET_PASSWORD: ${MY_PASSWORD}`. Or, to default it to `insecure` if
 `MY_PASSWORD` is not set, use `SUPER_SECRET_PASSWORD: ${MY_PASSWORD:-insecure}`.
 
-Substitutions in the middle of values is not supported (eg. `SUPER_SECRET_PASSWORD: My password is $MY_PASSWORD` will not work).
+Substitution in the middle of values is not supported (eg. `SUPER_SECRET_PASSWORD: My password is $MY_PASSWORD` will not work).
 
 !!! warning
     Be careful when using this - by relying on the host's environment variables, you are introducing inconsistency to how the container

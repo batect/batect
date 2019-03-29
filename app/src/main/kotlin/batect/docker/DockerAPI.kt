@@ -551,23 +551,21 @@ class DockerAPI(
         }
     }
 
-    fun buildImage(context: DockerImageBuildContext, buildArgs: Map<String, String>, registryCredentials: DockerRegistryCredentials?, onProgressUpdate: (JsonObject) -> Unit): DockerImage {
+    fun buildImage(
+        context: DockerImageBuildContext,
+        buildArgs: Map<String, String>,
+        imageTags: Set<String>,
+        registryCredentials: DockerRegistryCredentials?,
+        onProgressUpdate: (JsonObject) -> Unit
+    ): DockerImage {
         logger.info {
             message("Building image.")
             data("context", context)
             data("buildArgs", buildArgs)
+            data("imageTags", imageTags)
         }
 
-        val url = baseUrl.newBuilder()
-            .addPathSegment("build")
-            .addQueryParameter("buildargs", buildArgs.toJsonObject().toString())
-            .build()
-
-        val request = Request.Builder()
-            .post(DockerImageBuildContextRequestBody(context))
-            .url(url)
-            .addRegistryCredentials(registryCredentials)
-            .build()
+        val request = createImageBuildRequest(context, buildArgs, imageTags, registryCredentials)
 
         val clientWithLongTimeout = httpConfig.client.newBuilder()
             .readTimeout(0, TimeUnit.MILLISECONDS)
@@ -619,6 +617,25 @@ class DockerAPI(
 
             return DockerImage(builtImageId!!)
         }
+    }
+
+    private fun createImageBuildRequest(
+        context: DockerImageBuildContext,
+        buildArgs: Map<String, String>,
+        imageTags: Set<String>,
+        registryCredentials: DockerRegistryCredentials?
+    ): Request {
+        val url = baseUrl.newBuilder()
+            .addPathSegment("build")
+            .addQueryParameter("buildargs", buildArgs.toJsonObject().toString())
+
+        imageTags.forEach { url.addQueryParameter("t", it) }
+
+        return Request.Builder()
+            .post(DockerImageBuildContextRequestBody(context))
+            .url(url.build())
+            .addRegistryCredentials(registryCredentials)
+            .build()
     }
 
     fun pullImage(imageName: String, registryCredentials: DockerRegistryCredentials?, onProgressUpdate: (JsonObject) -> Unit) {

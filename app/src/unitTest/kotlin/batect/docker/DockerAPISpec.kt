@@ -697,10 +697,13 @@ object DockerAPISpec : Spek({
             val expectedUrl = hasScheme("http") and
                 hasHost(dockerHost) and
                 hasPath("/v1.30/build") and
-                hasQueryParameter("buildargs", """{"someArg":"someValue"}""")
+                hasQueryParameter("buildargs", """{"someArg":"someValue"}""") and
+                hasQueryParameter("t", "some_image_tag") and
+                hasQueryParameter("t", "some_other_image_tag")
 
             val context = DockerImageBuildContext(emptySet())
             val buildArgs = mapOf("someArg" to "someValue")
+            val imageTags = setOf("some_image_tag", "some_other_image_tag")
             val registryCredentials = mock<DockerRegistryCredentials> {
                 on { toJSON() } doReturn "some json credentials"
             }
@@ -734,7 +737,7 @@ object DockerAPISpec : Spek({
             on("the build succeeding") {
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForAuthentication) }
                 val progressReceiver by createForEachTest { ProgressReceiver() }
-                val image by runForEachTest { api.buildImage(context, buildArgs, registryCredentials, progressReceiver::onProgressUpdate) }
+                val image by runForEachTest { api.buildImage(context, buildArgs, imageTags, registryCredentials, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to build the image") {
                     verify(call).execute()
@@ -760,7 +763,7 @@ object DockerAPISpec : Spek({
             on("the build having no registry credentials") {
                 val expectedHeadersForNoAuthentication = Headers.Builder().build()
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForNoAuthentication) }
-                beforeEachTest { api.buildImage(context, buildArgs, null, {}) }
+                beforeEachTest { api.buildImage(context, buildArgs, imageTags, null, {}) }
 
                 it("sends a request to the Docker daemon to build the image with no authentication header") {
                     verify(call).execute()
@@ -774,7 +777,7 @@ object DockerAPISpec : Spek({
                     hasQueryParameter("buildargs", """{}""")
 
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithNoBuildArgs, successResponse, 200, expectedHeadersForAuthentication) }
-                beforeEachTest { api.buildImage(context, emptyMap(), registryCredentials, {}) }
+                beforeEachTest { api.buildImage(context, emptyMap(), imageTags, registryCredentials, {}) }
 
                 it("sends a request to the Docker daemon to build the image with an empty set of build args") {
                     verify(call).execute()
@@ -787,7 +790,7 @@ object DockerAPISpec : Spek({
                 }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.buildImage(context, buildArgs, registryCredentials, {}) }, throws<ImageBuildFailedException>(
+                    assertThat({ api.buildImage(context, buildArgs, imageTags, registryCredentials, {}) }, throws<ImageBuildFailedException>(
                         withMessage("Building image failed: Something went wrong."))
                     )
                 }
@@ -807,7 +810,7 @@ object DockerAPISpec : Spek({
                 beforeEachTest { clientWithLongTimeout.mock("POST", expectedUrl, errorResponse, 200, expectedHeadersForAuthentication) }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.buildImage(context, buildArgs, registryCredentials, {}) }, throws<ImageBuildFailedException>(
+                    assertThat({ api.buildImage(context, buildArgs, imageTags, registryCredentials, {}) }, throws<ImageBuildFailedException>(
                         withMessage(
                             "Building image failed: The command '/bin/sh -c exit 1' returned a non-zero code: 1. Output from build process was:\n" +
                                 "Step 1/6 : FROM nginx:1.13.0\n" +
@@ -830,7 +833,7 @@ object DockerAPISpec : Spek({
                 }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.buildImage(context, buildArgs, registryCredentials, {}) }, throws<ImageBuildFailedException>(
+                    assertThat({ api.buildImage(context, buildArgs, imageTags, registryCredentials, {}) }, throws<ImageBuildFailedException>(
                         withMessage("Building image failed: daemon never sent built image ID."))
                     )
                 }
@@ -1052,16 +1055,18 @@ private fun hasPath(expectedPath: String) = has(HttpUrl::encodedPath, equalTo(ex
 
 private fun hasQueryParameter(key: String, expectedValue: String) = object : Matcher<HttpUrl> {
     override fun invoke(actual: HttpUrl): MatchResult {
-        val actualParameterValue = actual.queryParameter(key)
+        val actualParameterValues = actual.queryParameterValues(key)
 
-        if (actualParameterValue == null) {
+        if (actualParameterValues.isEmpty()) {
             return MatchResult.Mismatch("'$actual' does not have query parameter '$key'")
         }
 
-        if (actualParameterValue == expectedValue) {
+        if (actualParameterValues.contains(expectedValue)) {
             return MatchResult.Match
+        } else if (actualParameterValues.size == 1) {
+            return MatchResult.Mismatch("'$actual' has query parameter '$key' with value '${actualParameterValues.single()}'")
         } else {
-            return MatchResult.Mismatch("'$actual' has query parameter '$key' with value '$actualParameterValue'")
+            return MatchResult.Mismatch("'$actual' has query parameter '$key' with values '$actualParameterValues'")
         }
     }
 

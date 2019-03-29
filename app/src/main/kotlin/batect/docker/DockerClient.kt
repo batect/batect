@@ -48,11 +48,17 @@ class DockerClient(
     private val logger: Logger,
     private val imagePullProgressReporterFactory: () -> DockerImagePullProgressReporter = ::DockerImagePullProgressReporter
 ) {
-    fun build(buildDirectory: String, buildArgs: Map<String, String>, onStatusUpdate: (DockerImageBuildProgress) -> Unit): DockerImage {
+    fun build(
+        buildDirectory: String,
+        buildArgs: Map<String, String>,
+        imageTags: Set<String>,
+        onStatusUpdate: (DockerImageBuildProgress) -> Unit
+    ): DockerImage {
         logger.info {
             message("Building image.")
             data("buildDirectory", buildDirectory)
             data("buildArgs", buildArgs)
+            data("imageTags", imageTags)
         }
 
         try {
@@ -63,7 +69,7 @@ class DockerClient(
             val reporter = imagePullProgressReporterFactory()
             var lastStepProgressUpdate: DockerImageBuildProgress? = null
 
-            val image = api.buildImage(context, buildArgs, credentials) { line ->
+            val image = api.buildImage(context, buildArgs, imageTags, credentials) { line ->
                 logger.debug {
                     message("Received output from Docker during image build.")
                     data("outputLine", line.toString())

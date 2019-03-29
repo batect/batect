@@ -37,7 +37,8 @@ class RunStagePlanner(private val logger: Logger) {
     fun createStage(graph: ContainerDependencyGraph): RunStage {
         val allContainersInNetwork = graph.allNodes.mapToSet { it.container }
 
-        val rules = graph.allNodes.flatMapToSet { stepsFor(it, allContainersInNetwork) } +
+        val rules = imageCreationRulesFor(graph) +
+            graph.allNodes.flatMapToSet { stepsFor(it, allContainersInNetwork) } +
             CreateTaskNetworkStepRule
 
         logger.info {
@@ -50,7 +51,6 @@ class RunStagePlanner(private val logger: Logger) {
 
     private fun stepsFor(node: ContainerDependencyGraphNode, allContainersInNetwork: Set<Container>): Set<TaskStepRule> {
         return startupRulesFor(node) +
-            imageCreationRuleFor(node.container) +
             CreateContainerStepRule(
                 node.container,
                 node.command,
@@ -61,12 +61,19 @@ class RunStagePlanner(private val logger: Logger) {
             )
     }
 
-    private fun imageCreationRuleFor(container: Container): TaskStepRule {
-        return when (container.imageSource) {
-            is PullImage -> PullImageStepRule(container.imageSource.imageName)
-            is BuildImage -> BuildImageStepRule(container.imageSource.buildDirectory)
-        }
+    private fun imageCreationRulesFor(graph: ContainerDependencyGraph): Set<TaskStepRule> {
+        return graph.allNodes.map { it.container }
+            .groupBy { it.imageSource }
+            .mapToSet { (imageSource, containers) ->
+                when (imageSource) {
+                    is PullImage -> PullImageStepRule(imageSource.imageName)
+                    is BuildImage -> BuildImageStepRule(imageSource.buildDirectory, imageTagsFor(graph.config.projectName!!, containers))
+                }
+            }
     }
+
+    private fun imageTagsFor(projectName: String, containers: List<Container>): Set<String> =
+        containers.mapToSet { "$projectName-${it.name}" }
 
     private fun startupRulesFor(node: ContainerDependencyGraphNode): Set<TaskStepRule> {
         if (node == node.graph.taskContainerNode) {

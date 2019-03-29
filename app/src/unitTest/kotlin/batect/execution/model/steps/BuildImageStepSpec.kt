@@ -24,11 +24,11 @@ import org.spekframework.spek2.style.specification.describe
 
 object BuildImageStepSpec : Spek({
     describe("a 'build image' step") {
-        val step = BuildImageStep("/image-build-dir")
+        val step = BuildImageStep("/image-build-dir", setOf("some_image_tag", "some_other_image_tag"))
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(step.toString(), equalTo("BuildImageStep(build directory: '/image-build-dir')"))
+                assertThat(step.toString(), equalTo("BuildImageStep(build directory: '/image-build-dir', image tags: [some_image_tag, some_other_image_tag])"))
             }
         }
     }

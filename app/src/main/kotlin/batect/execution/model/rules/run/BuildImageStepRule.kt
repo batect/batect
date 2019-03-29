@@ -21,10 +21,10 @@ import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.BuildImageStep
 
-data class BuildImageStepRule(val buildDirectory: String) : TaskStepRule() {
+data class BuildImageStepRule(val buildDirectory: String, val imageTags: Set<String>) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
-        return TaskStepRuleEvaluationResult.Ready(BuildImageStep(buildDirectory))
+        return TaskStepRuleEvaluationResult.Ready(BuildImageStep(buildDirectory, imageTags))
     }
 
-    override fun toString() = "${this::class.simpleName}(build directory: '$buildDirectory')"
+    override fun toString() = "${this::class.simpleName}(build directory: '$buildDirectory', image tags: $imageTags)"
 }

@@ -93,7 +93,7 @@ object RunStagePlannerSpec : Spek({
                         { planner.createStage(graph) },
                         mapOf(
                             "create the task network" to CreateTaskNetworkStepRule,
-                            "build the image for the task container" to BuildImageStepRule("./my-image"),
+                            "build the image for the task container" to BuildImageStepRule("./my-image", setOf("the-project-the-container")),
                             "create the task container" to CreateContainerStepRule(container, graph.nodeFor(container).command, graph.nodeFor(container).workingDirectory, emptyMap(), emptySet(), allContainersInNetwork),
                             "run the task container" to RunContainerStepRule(container, emptySet())
                         )
@@ -168,8 +168,8 @@ object RunStagePlannerSpec : Spek({
                     { planner.createStage(graph) },
                     mapOf(
                         "create the task network" to CreateTaskNetworkStepRule,
-                        "build the image for the task container" to BuildImageStepRule("./task-container"),
-                        "build the image for container 1" to BuildImageStepRule("./container-1"),
+                        "build the image for the task container" to BuildImageStepRule("./task-container", setOf("the-project-task-container")),
+                        "build the image for container 1" to BuildImageStepRule("./container-1", setOf("the-project-container-1")),
                         "pull the image for container 2" to PullImageStepRule("image-2"),
                         "pull the image for container 3" to PullImageStepRule("image-3"),
                         "create the task container" to CreateContainerStepRule(
@@ -240,7 +240,7 @@ object RunStagePlannerSpec : Spek({
                     mapOf(
                         "create the task network" to CreateTaskNetworkStepRule,
                         "pull the image for the task container" to PullImageStepRule("task-image"),
-                        "build the image shared by both container 1 and 2" to BuildImageStepRule("/shared-image"),
+                        "build the image shared by both container 1 and 2" to BuildImageStepRule("/shared-image", setOf("the-project-container-1", "the-project-container-2")),
                         "create the task container" to CreateContainerStepRule(
                             taskContainer,
                             graph.nodeFor(taskContainer).command,

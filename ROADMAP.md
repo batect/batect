@@ -33,7 +33,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
 * support build arguments
 * some way to reference another Dockerfile as the base image for a Dockerfile
-* reintroduce image tagging
 
 ### Other
 * replace factories with references to constructors

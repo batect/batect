@@ -21,6 +21,7 @@ import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerDependencyGraphNode
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
+import batect.ui.ConsoleDimensions
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.doReturn
@@ -30,10 +31,11 @@ import org.spekframework.spek2.style.specification.describe
 
 object StartupProgressDisplayProviderSpec : Spek({
     describe("a startup progress display provider") {
-        val provider = StartupProgressDisplayProvider()
+        val consoleDimensions = mock<ConsoleDimensions>()
+        val provider = StartupProgressDisplayProvider(consoleDimensions)
 
         fun createNodeFor(container: Container, dependencies: Set<Container>): ContainerDependencyGraphNode {
-            return mock<ContainerDependencyGraphNode> {
+            return mock {
                 on { this.container } doReturn container
                 on { dependsOnContainers } doReturn dependencies
             }
@@ -57,8 +59,7 @@ object StartupProgressDisplayProviderSpec : Spek({
             val linesForContainers = display.containerLines.associateBy { it.container }
 
             it("returns progress lines for each node in the graph") {
-                assertThat(display.containerLines.map { it.container }.toSet(),
-                    equalTo(setOf(container1, container2)))
+                assertThat(display.containerLines.map { it.container }.toSet(), equalTo(setOf(container1, container2)))
             }
 
             it("returns a progress line for the first node with its dependencies") {

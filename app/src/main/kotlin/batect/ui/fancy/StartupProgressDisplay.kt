@@ -19,9 +19,16 @@ package batect.ui.fancy
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.steps.TaskStep
 import batect.ui.Console
+import batect.ui.ConsoleDimensions
+import batect.ui.Dimensions
+import batect.ui.text.TextRun
 
-class StartupProgressDisplay(val containerLines: List<ContainerStartupProgressLine>) {
-    private var havePrintedOnceBefore = false
+class StartupProgressDisplay(
+    val containerLines: List<ContainerStartupProgressLine>,
+    val consoleDimensions: ConsoleDimensions
+) {
+    private var lastStatus = mutableListOf<TextRun>()
+    private var lastConsoleDimensions: Dimensions? = null
 
     fun onEventPosted(event: TaskEvent) {
         containerLines.forEach { it.onEventPosted(event) }
@@ -32,18 +39,53 @@ class StartupProgressDisplay(val containerLines: List<ContainerStartupProgressLi
     }
 
     fun print(console: Console) {
-        if (havePrintedOnceBefore) {
-            console.moveCursorUp(containerLines.size)
+        val newStatus = containerLines.mapTo(mutableListOf()) { it.print() }
+        val newConsoleDimensions = consoleDimensions.current
+
+        if (lastStatus.isEmpty()) {
+            printAllLines(newStatus, console)
+        } else if (newConsoleDimensions != lastConsoleDimensions) {
+            reprintAllLines(newStatus, console)
+        } else {
+            printOnlyUpdatedLines(newStatus, console)
         }
 
-        containerLines.forEach { line ->
-            if (havePrintedOnceBefore) {
+        lastStatus = newStatus
+        lastConsoleDimensions = newConsoleDimensions
+    }
+
+    private fun printAllLines(lines: List<TextRun>, console: Console) {
+        lines.forEach { console.printLineLimitedToConsoleWidth(it) }
+    }
+
+    private fun reprintAllLines(lines: List<TextRun>, console: Console) {
+        console.moveCursorUp(lines.size)
+
+        lines.forEach {
+            console.clearCurrentLine()
+            console.printLineLimitedToConsoleWidth(it)
+        }
+    }
+
+    private fun printOnlyUpdatedLines(newStatus: List<TextRun>, console: Console) {
+        val firstLineWithChange = newStatus.zip(lastStatus).indexOfFirst { (new, old) -> !new.equals(old) }
+
+        if (firstLineWithChange == -1) {
+            return
+        }
+
+        console.moveCursorUp(newStatus.size - firstLineWithChange)
+
+        for (i in firstLineWithChange..newStatus.size - 1) {
+            val new = newStatus[i]
+            val old = lastStatus[i]
+
+            if (new.equals(old)) {
+                console.moveCursorDown()
+            } else {
                 console.clearCurrentLine()
+                console.printLineLimitedToConsoleWidth(new)
             }
-
-            console.printLineLimitedToConsoleWidth(line.print())
         }
-
-        havePrintedOnceBefore = true
     }
 }

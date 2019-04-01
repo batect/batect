@@ -13,7 +13,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * prioritise running steps that lie on the critical path (eg. favour pulling image for leaf of dependency graph over creating container for task container)
   * print updates to the console asynchronously (they currently block whatever thread posts the event or is starting the step)
   * batch up printing updates to the console when using fancy output mode, rather than reprinting progress information on every event
-  * improve performance (and reduce flickering) by only printing updated lines when updating startup progress
 * check that Docker client and server are compatible versions
 * `brew doctor` equivalent (`./batect doctor`? `lint`?)
   * warn when using an image without a tag or with tag `latest`

@@ -20,13 +20,18 @@ import batect.docker.DockerNetwork
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.testutils.createForEachTest
+import batect.testutils.given
 import batect.testutils.on
 import batect.ui.Console
+import batect.ui.ConsoleDimensions
+import batect.ui.Dimensions
 import batect.ui.text.TextRun
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.verifyZeroInteractions
+import com.nhaarman.mockitokotlin2.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -46,7 +51,13 @@ object StartupProgressDisplaySpec : Spek({
             }
         }
 
-        val display by createForEachTest { StartupProgressDisplay(listOf(line1, line2)) }
+        val consoleDimensions by createForEachTest {
+            mock<ConsoleDimensions> {
+                on { current } doReturn Dimensions(123, 456)
+            }
+        }
+
+        val display by createForEachTest { StartupProgressDisplay(listOf(line1, line2), consoleDimensions) }
 
         on("receiving an event") {
             val event = TaskNetworkCreatedEvent(DockerNetwork("some-id"))
@@ -71,7 +82,7 @@ object StartupProgressDisplaySpec : Spek({
         describe("displaying the current progress") {
             val console by createForEachTest { mock<Console>() }
 
-            on("when the progress has never been displayed before") {
+            given("the progress has never been displayed before") {
                 beforeEachTest { display.print(console) }
 
                 it("just prints each progress line, limited to the width of the console") {
@@ -82,21 +93,95 @@ object StartupProgressDisplaySpec : Spek({
                 }
             }
 
-            on("when the progress has been displayed before") {
+            given("the progress has been displayed before") {
                 beforeEachTest {
                     display.print(mock())
-                    display.print(console)
                 }
 
-                it("moves the cursor to the start of the progress block, and then clears each line and prints the corresponding progress line in a restricted width console") {
-                    inOrder(console) {
-                        verify(console).moveCursorUp(2)
+                given("the progress lines haven't changed since the last time the progress was displayed") {
+                    beforeEachTest {
+                        display.print(console)
+                    }
 
-                        verify(console).clearCurrentLine()
-                        verify(console).printLineLimitedToConsoleWidth(line1Text)
+                    it("does not print anything") {
+                        verifyZeroInteractions(console)
+                    }
+                }
 
-                        verify(console).clearCurrentLine()
-                        verify(console).printLineLimitedToConsoleWidth(line2Text)
+                given("the console's dimensions have changed since the last time the progress was displayed") {
+                    beforeEachTest {
+                        whenever(consoleDimensions.current).doReturn(Dimensions(789, 1234))
+
+                        display.print(console)
+                    }
+
+                    it("reprints each line") {
+                        inOrder(console) {
+                            verify(console).moveCursorUp(2)
+
+                            verify(console).clearCurrentLine()
+                            verify(console).printLineLimitedToConsoleWidth(line1Text)
+
+                            verify(console).clearCurrentLine()
+                            verify(console).printLineLimitedToConsoleWidth(line2Text)
+                        }
+                    }
+                }
+
+                given("only the first line's text has changed") {
+                    beforeEachTest {
+                        whenever(line1.print()).doReturn(TextRun("Some updated text for the first line"))
+
+                        display.print(console)
+                    }
+
+                    it("reprints just the first line") {
+                        inOrder(console) {
+                            verify(console).moveCursorUp(2)
+
+                            verify(console).clearCurrentLine()
+                            verify(console).printLineLimitedToConsoleWidth(TextRun("Some updated text for the first line"))
+
+                            verify(console).moveCursorDown()
+                        }
+                    }
+                }
+
+                given("only the second line's text has changed") {
+                    beforeEachTest {
+                        whenever(line2.print()).doReturn(TextRun("Some updated text for the second line"))
+
+                        display.print(console)
+                    }
+
+                    it("reprints the second line") {
+                        inOrder(console) {
+                            verify(console).moveCursorUp(1)
+
+                            verify(console).clearCurrentLine()
+                            verify(console).printLineLimitedToConsoleWidth(TextRun("Some updated text for the second line"))
+                        }
+                    }
+                }
+
+                given("both lines' text has changed") {
+                    beforeEachTest {
+                        whenever(line1.print()).doReturn(TextRun("Some updated text for the first line"))
+                        whenever(line2.print()).doReturn(TextRun("Some updated text for the second line"))
+
+                        display.print(console)
+                    }
+
+                    it("reprints each line") {
+                        inOrder(console) {
+                            verify(console).moveCursorUp(2)
+
+                            verify(console).clearCurrentLine()
+                            verify(console).printLineLimitedToConsoleWidth(TextRun("Some updated text for the first line"))
+
+                            verify(console).clearCurrentLine()
+                            verify(console).printLineLimitedToConsoleWidth(TextRun("Some updated text for the second line"))
+                        }
                     }
                 }
             }

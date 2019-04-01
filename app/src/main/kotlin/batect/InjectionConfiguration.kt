@@ -222,7 +222,7 @@ private val uiModule = Kodein.Module("ui") {
     bind<ConsoleDimensions>() with singletonWithLogger { logger -> ConsoleDimensions(instance(), instance(), logger) }
     bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), instance(), logger) }
     bind<FailureErrorMessageFormatter>() with singleton { FailureErrorMessageFormatter() }
-    bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider() }
+    bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider(instance()) }
 }
 
 private val updatesModule = Kodein.Module("updates") {

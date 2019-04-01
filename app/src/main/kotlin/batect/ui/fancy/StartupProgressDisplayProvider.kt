@@ -17,11 +17,12 @@
 package batect.ui.fancy
 
 import batect.execution.ContainerDependencyGraph
+import batect.ui.ConsoleDimensions
 
-class StartupProgressDisplayProvider {
+class StartupProgressDisplayProvider(private val consoleDimensions: ConsoleDimensions) {
     fun createForDependencyGraph(graph: ContainerDependencyGraph): StartupProgressDisplay {
         val lines = graph.allNodes.map { ContainerStartupProgressLine(it.container, it.dependsOnContainers) }
 
-        return StartupProgressDisplay(lines)
+        return StartupProgressDisplay(lines, consoleDimensions)
     }
 }

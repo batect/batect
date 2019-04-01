@@ -17,21 +17,17 @@
 package batect.ui
 
 import batect.logging.Logger
-import batect.os.NativeMethodException
-import batect.os.NativeMethods
 import batect.os.ProcessRunner
-import jnr.constants.platform.Errno
 import jnr.posix.POSIX
 import java.io.FileDescriptor
 
 class ConsoleInfo(
     private val posix: POSIX,
-    private val nativeMethods: NativeMethods,
     private val processRunner: ProcessRunner,
     private val environment: Map<String, String>,
     private val logger: Logger
 ) {
-    constructor(posix: POSIX, nativeMethods: NativeMethods, processRunner: ProcessRunner, logger: Logger) : this(posix, nativeMethods, processRunner, System.getenv(), logger)
+    constructor(posix: POSIX, processRunner: ProcessRunner, logger: Logger) : this(posix, processRunner, System.getenv(), logger)
 
     val stdinIsTTY: Boolean by lazy {
         val result = posix.isatty(FileDescriptor.`in`)
@@ -57,31 +53,6 @@ class ConsoleInfo(
 
     val terminalType: String? = environment["TERM"]
     private val isTravis: Boolean = environment["TRAVIS"] == "true"
-
-    val dimensions: Dimensions?
-        get() {
-            try {
-                val result = nativeMethods.getConsoleDimensions()
-
-                logger.info {
-                    message("Got console dimensions.")
-                    data("result", result)
-                }
-
-                return result
-            } catch (e: NativeMethodException) {
-                if (e.error == Errno.ENOTTY) {
-                    return null
-                } else {
-                    logger.warn {
-                        message("Getting console dimensions failed.")
-                        exception(e)
-                    }
-
-                    throw e
-                }
-            }
-        }
 
     fun enterRawMode(): AutoCloseable {
         if (!stdinIsTTY) {

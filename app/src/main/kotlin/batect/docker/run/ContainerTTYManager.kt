@@ -20,14 +20,13 @@ import batect.docker.ContainerStoppedException
 import batect.docker.DockerAPI
 import batect.docker.DockerContainer
 import batect.logging.Logger
-import batect.os.SignalListener
+import batect.ui.ConsoleDimensions
 import batect.ui.ConsoleInfo
-import jnr.constants.platform.Signal
 
 class ContainerTTYManager(
     private val api: DockerAPI,
     private val consoleInfo: ConsoleInfo,
-    private val signalListener: SignalListener,
+    private val consoleDimensions: ConsoleDimensions,
     private val logger: Logger
 ) {
     fun monitorForSizeChanges(container: DockerContainer): AutoCloseable {
@@ -37,7 +36,7 @@ class ContainerTTYManager(
             }
         }
 
-        val cleanup = signalListener.start(Signal.SIGWINCH) {
+        val cleanup = consoleDimensions.registerListener {
             sendCurrentDimensionsToContainer(container)
         }
 
@@ -47,7 +46,7 @@ class ContainerTTYManager(
     }
 
     private fun sendCurrentDimensionsToContainer(container: DockerContainer) {
-        val currentDimensions = consoleInfo.dimensions
+        val currentDimensions = consoleDimensions.current
 
         if (currentDimensions != null) {
             try {

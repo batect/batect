@@ -24,7 +24,7 @@ import java.io.PrintStream
 class Console(
     private val outputStream: PrintStream,
     private val enableComplexOutput: Boolean,
-    private val consoleInfo: ConsoleInfo
+    private val consoleDimensions: ConsoleDimensions
 ) {
     fun print(text: String) = outputStream.print(text)
     fun println(text: String) = outputStream.println(text)
@@ -66,7 +66,7 @@ class Console(
     }
 
     fun printLineLimitedToConsoleWidth(text: TextRun) {
-        val dimensions = consoleInfo.dimensions
+        val dimensions = consoleDimensions.current
 
         if (dimensions == null) {
             println(text)

@@ -42,7 +42,7 @@ object ConsoleSpec : Spek({
     describe("a console") {
         describe("when complex output is enabled") {
             val output by createForEachTest { ByteArrayOutputStream() }
-            val console by createForEachTest { Console(PrintStream(output), enableComplexOutput = true, consoleInfo = mock()) }
+            val console by createForEachTest { Console(PrintStream(output), enableComplexOutput = true, consoleDimensions = mock()) }
 
             on("printing text") {
                 beforeEachTest { console.print("This is some text") }
@@ -275,7 +275,7 @@ object ConsoleSpec : Spek({
 
         describe("when complex output is disabled") {
             val output by createForEachTest { ByteArrayOutputStream() }
-            val console by createForEachTest { Console(PrintStream(output), enableComplexOutput = false, consoleInfo = mock()) }
+            val console by createForEachTest { Console(PrintStream(output), enableComplexOutput = false, consoleDimensions = mock()) }
 
             on("printing text") {
                 beforeEachTest { console.print("This is some text") }
@@ -344,14 +344,14 @@ object ConsoleSpec : Spek({
 
         describe("printing text restricted to the width of the console") {
             given("the console dimensions are not available") {
-                val consoleInfo by createForEachTest {
-                    mock<ConsoleInfo> {
-                        on { dimensions } doReturn null as Dimensions?
+                val consoleDimensions by createForEachTest {
+                    mock<ConsoleDimensions> {
+                        on { current } doReturn null as Dimensions?
                     }
                 }
 
                 val output by createForEachTest { ByteArrayOutputStream() }
-                val console by createForEachTest { Console(PrintStream(output), true, consoleInfo) }
+                val console by createForEachTest { Console(PrintStream(output), true, consoleDimensions) }
 
                 on("printing text") {
                     beforeEachTest { console.printLineLimitedToConsoleWidth(TextRun("This is some text")) }
@@ -363,14 +363,14 @@ object ConsoleSpec : Spek({
             }
 
             given("the console dimensions are available") {
-                val consoleInfo by createForEachTest {
-                    mock<ConsoleInfo> {
-                        on { dimensions } doReturn Dimensions(40, 10)
+                val consoleDimensions by createForEachTest {
+                    mock<ConsoleDimensions> {
+                        on { current } doReturn Dimensions(40, 10)
                     }
                 }
 
                 val output by createForEachTest { ByteArrayOutputStream() }
-                val console by createForEachTest { Console(PrintStream(output), true, consoleInfo) }
+                val console by createForEachTest { Console(PrintStream(output), true, consoleDimensions) }
 
                 on("printing text") {
                     val text = mock<TextRun> {

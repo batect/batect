@@ -20,15 +20,25 @@ import jnr.constants.platform.Signal
 import jnr.posix.POSIX
 
 class SignalListener(private val posix: POSIX) {
-    fun start(signal: Signal, handler: () -> Unit): AutoCloseable {
-        val originalHandler = posix.signal(signal) {
-            handler()
-        }
+    private val handlers = mutableMapOf<Int, MutableList<SignalHandler>>()
+
+    fun start(signal: Signal, handler: SignalHandler): AutoCloseable {
+        val handlersForSignal = handlers.getOrPut(signal.value(), { mutableListOf() })
+        handlersForSignal.add(handler)
+
+        val originalHandler = posix.signal(signal, ::handleSignal)
 
         return object : AutoCloseable {
             override fun close() {
                 posix.signal(signal, originalHandler)
+                handlers.getValue(signal.value()).remove(handler)
             }
         }
     }
+
+    private fun handleSignal(signal: Int) {
+        handlers.getValue(signal).last().invoke()
+    }
 }
+
+typealias SignalHandler = () -> Unit

@@ -18,11 +18,13 @@ package batect.os
 
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
+import com.nhaarman.mockitokotlin2.atLeastOnce
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
@@ -52,16 +54,16 @@ object SignalListenerSpec : Spek({
             val signalHandlerCalled by runForEachTest {
                 var signalHandlerCalled = false
 
-                val handlerCaptor = argumentCaptor<SignalHandler>()
                 signalListener.start(signal) { signalHandlerCalled = true }
 
+                val handlerCaptor = argumentCaptor<SignalHandler>()
                 verify(posix).signal(eq(signal), handlerCaptor.capture())
                 handlerCaptor.firstValue.handle(signal.value())
 
                 signalHandlerCalled
             }
 
-            it("calls the derived class' onSignalReceived() method") {
+            it("calls the handler function") {
                 assertThat(signalHandlerCalled, equalTo(true))
             }
         }
@@ -77,6 +79,34 @@ object SignalListenerSpec : Spek({
 
             it("restores the previous signal handler") {
                 verify(posix).signal(signal, originalHandler)
+            }
+        }
+
+        given("two handlers are registered for the same signal") {
+            var firstHandlerCalled = false
+            beforeEachTest { signalListener.start(signal) { firstHandlerCalled = true } }
+
+            var secondHandlerCalled = false
+            val secondHandlerCleanup by runForEachTest { signalListener.start(signal) { secondHandlerCalled = true } }
+
+            given("the most-recently registered handler has been de-registered") {
+                beforeEachTest { secondHandlerCleanup.close() }
+
+                on("the signal being received") {
+                    beforeEachTest {
+                        val handlerCaptor = argumentCaptor<SignalHandler>()
+                        verify(posix, atLeastOnce()).signal(eq(signal), handlerCaptor.capture())
+                        handlerCaptor.firstValue.handle(signal.value())
+                    }
+
+                    it("calls the handler function of the remaining handler") {
+                        assertThat(firstHandlerCalled, equalTo(true))
+                    }
+
+                    it("does not call the handler function of the remaining handler") {
+                        assertThat(secondHandlerCalled, equalTo(false))
+                    }
+                }
             }
         }
     }

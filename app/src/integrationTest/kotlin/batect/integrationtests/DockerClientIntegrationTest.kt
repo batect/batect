@@ -50,6 +50,7 @@ import batect.os.SignalListener
 import batect.os.SystemInfo
 import batect.testutils.createForGroup
 import batect.testutils.runBeforeGroup
+import batect.ui.ConsoleDimensions
 import batect.ui.ConsoleInfo
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
@@ -79,7 +80,7 @@ object DockerClientIntegrationTest : Spek({
         val api by createForGroup { DockerAPI(httpConfig, logger) }
         val posix by createForGroup { POSIXFactory.getNativePOSIX() }
         val nativeMethods by createForGroup { NativeMethods(posix) }
-        val consoleInfo by createForGroup { ConsoleInfo(posix, nativeMethods, processRunner, logger) }
+        val consoleInfo by createForGroup { ConsoleInfo(posix, processRunner, logger) }
         val credentialsConfigurationFile by createForGroup { DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger) }
         val credentialsProvider by createForGroup { DockerRegistryCredentialsProvider(DockerRegistryDomainResolver(), DockerRegistryIndexResolver(), credentialsConfigurationFile) }
         val ignoreParser by createForGroup { DockerIgnoreParser() }
@@ -87,9 +88,10 @@ object DockerClientIntegrationTest : Spek({
         val dockerfileParser by createForGroup { DockerfileParser() }
         val waiter by createForGroup { ContainerWaiter(api) }
         val streamer by createForGroup { ContainerIOStreamer(System.out, System.`in`) }
-        val signalListner by createForGroup { SignalListener(posix) }
-        val killer by createForGroup { ContainerKiller(api, signalListner) }
-        val ttyManager by createForGroup { ContainerTTYManager(api, consoleInfo, signalListner, logger) }
+        val signalListener by createForGroup { SignalListener(posix) }
+        val consoleDimensions by createForGroup { ConsoleDimensions(nativeMethods, signalListener, logger) }
+        val killer by createForGroup { ContainerKiller(api, signalListener) }
+        val ttyManager by createForGroup { ContainerTTYManager(api, consoleInfo, consoleDimensions, logger) }
         val client by createForGroup { DockerClient(api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, streamer, killer, ttyManager, logger) }
 
         fun creationRequestForContainer(image: DockerImage, network: DockerNetwork, command: Iterable<String>, volumeMounts: Set<VolumeMount> = emptySet(), portMappings: Set<PortMapping> = emptySet(), userAndGroup: UserAndGroup? = null): DockerContainerCreationRequest {

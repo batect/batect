@@ -56,6 +56,10 @@ class ConsoleInfo(
 
     fun enterRawMode(): AutoCloseable {
         if (!stdinIsTTY) {
+            logger.info {
+                message("Terminal is not a TTY, won't enter raw mode.")
+            }
+
             return object : AutoCloseable {
                 override fun close() {}
             }

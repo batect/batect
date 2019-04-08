@@ -43,6 +43,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.check
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
@@ -55,6 +56,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.content
+import okhttp3.ConnectionPool
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.MediaType
@@ -504,8 +506,8 @@ object DockerAPISpec : Spek({
                             verify(clientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
                         }
 
-                        it("configures the HTTP client with a separate connection pool (because the underlying connection cannot be reused)") {
-                            verify(clientBuilder).connectionPool(any())
+                        it("configures the HTTP client with a separate connection pool that does not evict connections (because the underlying connection cannot be reused and because we don't want to evict the connection just because there hasn't been any output for a while)") {
+                            verify(clientBuilder).connectionPool(connectionPoolWithNoEviction())
                         }
                     }
 
@@ -542,8 +544,8 @@ object DockerAPISpec : Spek({
                             verify(clientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
                         }
 
-                        it("configures the HTTP client with a separate connection pool (because the underlying connection cannot be reused)") {
-                            verify(clientBuilder).connectionPool(any())
+                        it("configures the HTTP client with a separate connection pool that does not evict connections (because the underlying connection cannot be reused and because we don't want to evict the connection just because there hasn't been any input for a while)") {
+                            verify(clientBuilder).connectionPool(connectionPoolWithNoEviction())
                         }
                     }
 
@@ -1101,4 +1103,12 @@ private fun receivedAllUpdatesFrom(lines: Iterable<String>): Matcher<ProgressRec
     val expectedUpdates = lines.map { Json.plain.parseJson(it).jsonObject }
 
     return has(ProgressReceiver::updatesReceived, equalTo(expectedUpdates))
+}
+
+// HACK: ConnectionPool doesn't expose the keep-alive time, so we have to reach into it to verify that we've set it correctly.
+private fun connectionPoolWithNoEviction(): ConnectionPool = argThat {
+    val field = ConnectionPool::class.java.getDeclaredField("keepAliveDurationNs")
+    field.isAccessible = true
+
+    field.getLong(this) == Long.MAX_VALUE
 }

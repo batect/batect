@@ -344,7 +344,7 @@ class DockerAPI(
 
         val client = httpConfig.client.newBuilder()
             .readTimeout(0, TimeUnit.NANOSECONDS)
-            .connectionPool(ConnectionPool())
+            .connectionPool(ConnectionPool(5, Long.MAX_VALUE, TimeUnit.NANOSECONDS))
             .addNetworkInterceptor(hijacker)
             .build()
 
@@ -386,7 +386,7 @@ class DockerAPI(
 
         val client = httpConfig.client.newBuilder()
             .readTimeout(0, TimeUnit.NANOSECONDS)
-            .connectionPool(ConnectionPool())
+            .connectionPool(ConnectionPool(5, Long.MAX_VALUE, TimeUnit.NANOSECONDS))
             .addNetworkInterceptor(hijacker)
             .build()
 

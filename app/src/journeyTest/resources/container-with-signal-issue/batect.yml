@@ -1,0 +1,10 @@
+project_name: quick-restful-api
+
+containers:
+  node:
+    build_directory: .
+tasks:
+  api:
+    run:
+      container: node
+      command: node server.js

@@ -20,8 +20,8 @@ sourceSets {
 
 dependencies {
     testCommonImplementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    testCommonImplementation "org.spekframework.spek2:spek-dsl-jvm:2.0.0"
-    testCommonRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:2.0.0"
+    testCommonImplementation "org.spekframework.spek2:spek-dsl-jvm:2.0.2"
+    testCommonRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:2.0.2"
     testCommonRuntimeOnly 'org.junit.platform:junit-platform-engine:1.4.0'
 }
 

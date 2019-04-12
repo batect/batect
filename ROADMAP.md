@@ -31,6 +31,9 @@ If there's something you're really keen to see, pull requests are always welcome
 * some way to clean up old images when they're no longer needed
 * allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
 * some way to reference another Dockerfile as the base image for a Dockerfile
+* allow running containers in privileged mode (`--privileged`)
+* allow adding and removing capabilities to containers (`--cap-add` and `--cap-drop` - https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities)
+* allow giving access to a specific devices (`--device` - https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities)
 
 ### Other
 * replace factories with references to constructors
@@ -55,10 +58,14 @@ If there's something you're really keen to see, pull requests are always welcome
     * how to run something when the container starts, regardless of the task's command line (eg. `ENTRYPOINT` with shell script and `exec`, similar to the example in [the docs](https://docs.docker.com/engine/reference/builder/#entrypoint))
   * importance of idempotency
   * improve the getting started guide (it's way too wordy)
-  * "what's going on beneath the hood?" - explain the task lifecycle (read config, construct graph, pull images / build images, create network, start containers, wait for healthy etc.)
+  * contributor's guide
+    * explanation of basic standards expected (eg. formatting, tests and documentation)
+    * tools and useful commands (eg. building with `./gradlew installShadowDist`)
+    * "what's going on beneath the hood?" - explain the task lifecycle (read config, construct graph, pull images / build images, create network, start containers, wait for healthy etc.)
   * add note about increasing default CPU and memory limits when using Docker on OS X
   * how to introduce batect to an existing project
   * how to use batect as the basis for a pipeline made up of reusable building blocks
+* public chat channel (eg. Gitter or Discord)
 * switch to coroutines for parallel execution?
 * finish configuration code simplification (first three need https://github.com/Kotlin/kotlinx.serialization/issues/315 to be fixed)
   * Move common stuff when parsing a string (eg. EnvironmentVariableExpression, Command, Duration) out to a common class

@@ -31,6 +31,7 @@ containers:
     run_as_current_user:
       enabled: true
       home_directory: /root
+    enable_init_process: true
 
   with-build-dir:
     build_directory: test

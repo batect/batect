@@ -86,6 +86,9 @@
         "privileged": {
           "type": "boolean",
           "description": "Enable privileged mode for the container"
+        },
+        "enable_init_process": {
+          "$ref": "#/definitions/enableInitProcess"
         }
       },
       "oneOf": [
@@ -336,6 +339,10 @@
           ]
         }
       ]
+    },
+    "enableInitProcess": {
+      "type": "boolean",
+      "description": "Set to `true` to run an init process inside the container that forwards signals and reaps processes"
     }
   }
 }

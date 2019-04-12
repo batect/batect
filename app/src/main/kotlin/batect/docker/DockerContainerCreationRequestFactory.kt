@@ -59,7 +59,8 @@ class DockerContainerCreationRequestFactory(
             container.portMappings + additionalPortMappings,
             container.healthCheckConfig,
             userAndGroup,
-            container.privileged
+            container.privileged,
+            container.enableInitProcess
         )
     }
 

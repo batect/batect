@@ -1,9 +1,0 @@
-{
-  "name": "batect-signal-bug",
-  "scripts": {
-    "start": "json-server --watch db.json --static ./public"
-  },
-  "dependencies": {
-    "express": "^4.16.4"
-  }
-}

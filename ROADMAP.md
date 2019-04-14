@@ -58,8 +58,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * importance of idempotency
   * improve the getting started guide (it's way too wordy)
   * contributor's guide
-    * explanation of basic standards expected (eg. formatting, tests and documentation)
-    * tools and useful commands (eg. building with `./gradlew installShadowDist`)
     * "what's going on beneath the hood?" - explain the task lifecycle (read config, construct graph, pull images / build images, create network, start containers, wait for healthy etc.)
   * add note about increasing default CPU and memory limits when using Docker on OS X
   * how to introduce batect to an existing project

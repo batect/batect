@@ -133,7 +133,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                                 it("populates the privileged mode with the setting from the container") {
                                     assertThat(request.privileged, equalTo(false))
                                 }
-                                
+
                                 it("populates the init configuration on the request with the enable init process configuration from the container") {
                                     assertThat(request.init, equalTo(container.enableInitProcess))
                                 }

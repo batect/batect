@@ -140,7 +140,7 @@ object DockerContainerCreationRequestSpec : Spek({
                         |       "NetworkMode": "the-network",
                         |       "Binds": [],
                         |       "PortBindings": {},
-                        |       "Privileged": false
+                        |       "Privileged": false,
                         |       "Init": false
                         |   },
                         |   "Healthcheck": {

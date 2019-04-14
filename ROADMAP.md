@@ -70,7 +70,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * Move common stuff when reading a list out to a common class (DependencySetDeserializer and PrerequisiteListDeserializer)
 * analytics / metrics
 * use batect to build batect (self-hosting)
-* automate updating sample projects with new batect version
 * tool to visualise execution on a timeline
   * tab to show configuration as parsed
 * switch to [MockK](https://github.com/oleksiyp/mockk) - Kotlin specific library with clearer upgrade path to Kotlin/Native

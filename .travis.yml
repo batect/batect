@@ -9,11 +9,7 @@ services:
   - docker
 
 before_install:
-  - sudo pip install gsutil
-  - mkdir -p ~/.creds
-  - openssl aes-256-cbc -K $encrypted_2210a3652f18_key -iv $encrypted_2210a3652f18_iv -in travis/travis-ci.json.enc -out ~/.creds/travis-ci.json -d
-  - echo "[Credentials]" > ~/.boto
-  - echo "gs_service_key_file = $HOME/.creds/travis-ci.json" >> ~/.boto
+  - ./travis/setup_creds.sh
 
 install: true
 
@@ -27,8 +23,8 @@ jobs:
     - stage: Build and test
       script: ./gradlew build check jacocoTestReport assembleRelease && bash <(curl -s https://codecov.io/bash)
       after_success:
-        - gsutil -m rsync -r build/release gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/release
-        - gsutil -m rsync -r docs/build/docs gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/docs/build/docs
+        - if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_REPO_SLUG" = "charleskorn/batect" ]; then gsutil -m rsync -r build/release gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/release; fi
+        - if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_REPO_SLUG" = "charleskorn/batect" ]; then gsutil -m rsync -r docs/build/docs gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/docs/build/docs; fi
 
     - stage: Integration and journey test
       name: Test against latest Docker

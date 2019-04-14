@@ -82,6 +82,10 @@
         },
         "run_as_current_user": {
           "$ref": "#/definitions/runAsCurrentUserOptions"
+        },
+        "privileged": {
+          "type": "boolean",
+          "description": "Enable privileged mode for the container"
         }
       },
       "oneOf": [

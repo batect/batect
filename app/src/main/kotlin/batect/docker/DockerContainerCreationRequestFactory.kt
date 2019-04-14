@@ -58,7 +58,8 @@ class DockerContainerCreationRequestFactory(
             container.volumeMounts + additionalVolumeMounts,
             container.portMappings + additionalPortMappings,
             container.healthCheckConfig,
-            userAndGroup
+            userAndGroup,
+            container.privileged
         )
     }
 

@@ -96,7 +96,7 @@ object DockerAPISpec : Spek({
                 val image = DockerImage("the-image")
                 val network = DockerNetwork("the-network")
                 val command = listOf("doStuff")
-                val request = DockerContainerCreationRequest(image, network, command, "some-host", "some-host", emptyMap(), "/some-dir", emptySet(), emptySet(), HealthCheckConfig(), null)
+                val request = DockerContainerCreationRequest(image, network, command, "some-host", "some-host", emptyMap(), "/some-dir", emptySet(), emptySet(), HealthCheckConfig(), null, false)
 
                 on("a successful creation") {
                     val call by createForEachTest { httpClient.mockPost(expectedUrl, """{"Id": "abc123"}""", 201) }

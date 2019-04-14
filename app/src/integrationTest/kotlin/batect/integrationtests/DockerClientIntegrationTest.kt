@@ -106,7 +106,8 @@ object DockerClientIntegrationTest : Spek({
                 volumeMounts,
                 portMappings,
                 HealthCheckConfig(),
-                userAndGroup
+                userAndGroup,
+                false
             )
         }
 

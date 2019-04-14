@@ -1,0 +1,15 @@
+project_name: privileged-container
+
+containers:
+  the-container:
+    image: alpine:3.8
+    privileged: true
+    volumes:
+      - local: .
+        container: /code
+
+tasks:
+  the-task:
+    run:
+      container: the-container
+      command: /code/task.sh

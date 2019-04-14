@@ -81,7 +81,8 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                                     volumeMounts = setOf(VolumeMount("local", "remote", "mode")),
                                     portMappings = setOf(PortMapping(123, 456)),
                                     environment = mapOf("SOME_VAR" to LiteralValue("SOME_VALUE")),
-                                    healthCheckConfig = HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(5))
+                                    healthCheckConfig = HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(5)),
+                                    privileged = false
                                 )
 
                                 val userAndGroup = UserAndGroup(123, 456)
@@ -126,6 +127,10 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
                                 it("populates the user and group configuration on the request with the provided values") {
                                     assertThat(request.userAndGroup, equalTo(userAndGroup))
+                                }
+
+                                it("populates the privileged mode with the setting from the container") {
+                                    assertThat(request.privileged, equalTo(false))
                                 }
                             }
                         }

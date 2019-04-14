@@ -186,6 +186,11 @@ by that user, so this is less of an issue. However, for consistency, the same co
 
 See [this page](../tips/BuildArtifactsOwnedByRoot.md) for more information on the effects of this option and why it is necessary.
 
+## `privileged`
+Run the container in [privileged mode](https://docs.docker.com/engine/reference/commandline/run/#full-container-capabilities---privileged).
+
+Available since v0.29.
+
 ## Examples
 
 For more examples and real-world scenarios, take a look at the [sample projects](../SampleProjects.md).

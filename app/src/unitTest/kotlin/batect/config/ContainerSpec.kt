@@ -202,6 +202,7 @@ object ContainerSpec : Spek({
                 run_as_current_user:
                   enabled: true
                   home_directory: /home/something
+                privileged: true
             """.trimIndent()
 
             on("loading the configuration from the config file") {
@@ -233,6 +234,7 @@ object ContainerSpec : Spek({
                     assertThat(result.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
                     assertThat(result.healthCheckConfig, equalTo(HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(1))))
                     assertThat(result.runAsCurrentUserConfig, equalTo(RunAsCurrentUserConfig.RunAsCurrentUser("/home/something")))
+                    assertThat(result.privileged, equalTo(true))
                 }
             }
         }

@@ -48,7 +48,8 @@ data class Container(
     val portMappings: Set<PortMapping> = emptySet(),
     val dependencies: Set<String> = emptySet(),
     val healthCheckConfig: HealthCheckConfig = HealthCheckConfig(),
-    val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
+    val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser,
+    val privileged: Boolean = false
 ) {
     @Serializer(forClass = Container::class)
     companion object : KSerializer<Container> {
@@ -63,6 +64,7 @@ data class Container(
         private val dependenciesFieldName = "dependencies"
         private val healthCheckConfigFieldName = "health_check"
         private val runAsCurrentUserConfigFieldName = "run_as_current_user"
+        private val privilegedFieldName = "privileged"
 
         override val descriptor: SerialDescriptor = object : SerialClassDescImpl("ContainerFromFile") {
             init {
@@ -77,6 +79,7 @@ data class Container(
                 addElement(dependenciesFieldName, isOptional = true)
                 addElement(healthCheckConfigFieldName, isOptional = true)
                 addElement(runAsCurrentUserConfigFieldName, isOptional = true)
+                addElement(privilegedFieldName, isOptional = true)
             }
         }
 
@@ -91,6 +94,7 @@ data class Container(
         private val dependenciesFieldIndex = descriptor.getElementIndex(dependenciesFieldName)
         private val healthCheckConfigFieldIndex = descriptor.getElementIndex(healthCheckConfigFieldName)
         private val runAsCurrentUserConfigFieldIndex = descriptor.getElementIndex(runAsCurrentUserConfigFieldName)
+        private val privilegedFieldIndex = descriptor.getElementIndex(privilegedFieldName)
 
         override fun deserialize(decoder: Decoder): Container {
             val input = decoder.beginStructure(descriptor) as YamlInput
@@ -110,6 +114,7 @@ data class Container(
             var dependencies = emptySet<String>()
             var healthCheckConfig = HealthCheckConfig()
             var runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
+            var privileged = false
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
@@ -131,6 +136,7 @@ data class Container(
                     dependenciesFieldIndex -> dependencies = input.decode(DependencySetDeserializer)
                     healthCheckConfigFieldIndex -> healthCheckConfig = input.decode(HealthCheckConfig.serializer())
                     runAsCurrentUserConfigFieldIndex -> runAsCurrentUserConfig = input.decode(RunAsCurrentUserConfig.serializer())
+                    privilegedFieldIndex -> privileged = input.decodeBooleanElement(descriptor, i)
 
                     else -> throw SerializationException("Unknown index $i")
                 }
@@ -146,7 +152,8 @@ data class Container(
                 portMappings,
                 dependencies,
                 healthCheckConfig,
-                runAsCurrentUserConfig
+                runAsCurrentUserConfig,
+                privileged
             )
         }
 

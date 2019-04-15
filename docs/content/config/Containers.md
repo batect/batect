@@ -192,13 +192,13 @@ Run the container in [privileged mode](https://docs.docker.com/engine/reference/
 Available since v0.29.
 
 ## `enable_init_process`
-
-Creates the container with a simple PID 1 process to handle the responsibilities as the init system.
-
-Defaults to `false`, set to `true` to pass in the [--init](https://docs.docker.com/engine/reference/run/) flag when running the container.
+Set to `true` to pass the [--init](https://docs.docker.com/engine/reference/run/#specify-an-init-process) flag when running the container.
+This creates the container with a simple PID 1 process to handle the responsibilities of the init system, which is required for some applications to behave correctly.
 
 [Read this article](https://engineeringblog.yelp.com/2016/01/dumb-init-an-init-for-docker.html) if you're interested in more information about the behaviour
 of different processes running as PID 1 and why this flag was introduced.
+
+Available since v0.30.
 
 ## Examples
 

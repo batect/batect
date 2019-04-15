@@ -49,7 +49,8 @@ data class Container(
     val dependencies: Set<String> = emptySet(),
     val healthCheckConfig: HealthCheckConfig = HealthCheckConfig(),
     val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser,
-    val privileged: Boolean = false
+    val privileged: Boolean = false,
+    val enableInitProcess: Boolean = false
 ) {
     @Serializer(forClass = Container::class)
     companion object : KSerializer<Container> {
@@ -65,6 +66,7 @@ data class Container(
         private val healthCheckConfigFieldName = "health_check"
         private val runAsCurrentUserConfigFieldName = "run_as_current_user"
         private val privilegedFieldName = "privileged"
+        private val enableInitProcessFieldName = "enable_init_process"
 
         override val descriptor: SerialDescriptor = object : SerialClassDescImpl("ContainerFromFile") {
             init {
@@ -80,6 +82,7 @@ data class Container(
                 addElement(healthCheckConfigFieldName, isOptional = true)
                 addElement(runAsCurrentUserConfigFieldName, isOptional = true)
                 addElement(privilegedFieldName, isOptional = true)
+                addElement(enableInitProcessFieldName, isOptional = true)
             }
         }
 
@@ -95,6 +98,7 @@ data class Container(
         private val healthCheckConfigFieldIndex = descriptor.getElementIndex(healthCheckConfigFieldName)
         private val runAsCurrentUserConfigFieldIndex = descriptor.getElementIndex(runAsCurrentUserConfigFieldName)
         private val privilegedFieldIndex = descriptor.getElementIndex(privilegedFieldName)
+        private val enableInitProcessConfigFieldIndex = descriptor.getElementIndex(enableInitProcessFieldName)
 
         override fun deserialize(decoder: Decoder): Container {
             val input = decoder.beginStructure(descriptor) as YamlInput
@@ -115,6 +119,7 @@ data class Container(
             var healthCheckConfig = HealthCheckConfig()
             var runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
             var privileged = false
+            var enableInitProcess = false
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
@@ -137,6 +142,7 @@ data class Container(
                     healthCheckConfigFieldIndex -> healthCheckConfig = input.decode(HealthCheckConfig.serializer())
                     runAsCurrentUserConfigFieldIndex -> runAsCurrentUserConfig = input.decode(RunAsCurrentUserConfig.serializer())
                     privilegedFieldIndex -> privileged = input.decodeBooleanElement(descriptor, i)
+                    enableInitProcessConfigFieldIndex -> enableInitProcess = input.decodeBooleanElement(descriptor, i)
 
                     else -> throw SerializationException("Unknown index $i")
                 }
@@ -153,7 +159,8 @@ data class Container(
                 dependencies,
                 healthCheckConfig,
                 runAsCurrentUserConfig,
-                privileged
+                privileged,
+                enableInitProcess
             )
         }
 

@@ -42,7 +42,8 @@ object DockerContainerCreationRequestSpec : Spek({
                 setOf(PortMapping(123, 456)),
                 HealthCheckConfig(Duration.ofNanos(555), 12, Duration.ofNanos(333)),
                 UserAndGroup(789, 222),
-                true
+                true,
+                init = true
             )
 
             on("converting it to JSON") {
@@ -80,7 +81,8 @@ object DockerContainerCreationRequestSpec : Spek({
                         |               }
                         |           ]
                         |       },
-                        |       "Privileged": true
+                        |       "Privileged": true,
+                        |       "Init": true
                         |   },
                         |   "Healthcheck": {
                         |       "Test": [],
@@ -115,7 +117,8 @@ object DockerContainerCreationRequestSpec : Spek({
                 emptySet(),
                 HealthCheckConfig(),
                 null,
-                false
+                false,
+                init = false
             )
 
             on("converting it to JSON") {
@@ -137,7 +140,8 @@ object DockerContainerCreationRequestSpec : Spek({
                         |       "NetworkMode": "the-network",
                         |       "Binds": [],
                         |       "PortBindings": {},
-                        |       "Privileged": false
+                        |       "Privileged": false,
+                        |       "Init": false
                         |   },
                         |   "Healthcheck": {
                         |       "Test": [],

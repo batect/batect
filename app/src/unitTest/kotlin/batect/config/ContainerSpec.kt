@@ -203,6 +203,7 @@ object ContainerSpec : Spek({
                   enabled: true
                   home_directory: /home/something
                 privileged: true
+                enable_init_process: true
             """.trimIndent()
 
             on("loading the configuration from the config file") {
@@ -235,6 +236,7 @@ object ContainerSpec : Spek({
                     assertThat(result.healthCheckConfig, equalTo(HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(1))))
                     assertThat(result.runAsCurrentUserConfig, equalTo(RunAsCurrentUserConfig.RunAsCurrentUser("/home/something")))
                     assertThat(result.privileged, equalTo(true))
+                    assertThat(result.enableInitProcess, equalTo(true))
                 }
             }
         }

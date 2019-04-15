@@ -50,7 +50,7 @@ data class Container(
     val healthCheckConfig: HealthCheckConfig = HealthCheckConfig(),
     val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser,
     val privileged: Boolean = false,
-    val enableInitProcess: Boolean? = false
+    val enableInitProcess: Boolean = false
 ) {
     @Serializer(forClass = Container::class)
     companion object : KSerializer<Container> {

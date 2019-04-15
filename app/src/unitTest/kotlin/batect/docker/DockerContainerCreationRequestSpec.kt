@@ -43,7 +43,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 HealthCheckConfig(Duration.ofNanos(555), 12, Duration.ofNanos(333)),
                 UserAndGroup(789, 222),
                 true,
-                true
+                init = true
             )
 
             on("converting it to JSON") {
@@ -118,7 +118,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 HealthCheckConfig(),
                 null,
                 false,
-                null
+                init = false
             )
 
             on("converting it to JSON") {

@@ -36,7 +36,7 @@ data class DockerContainerCreationRequest(
     val healthCheckConfig: HealthCheckConfig,
     val userAndGroup: UserAndGroup?,
     val privileged: Boolean,
-    val init: Boolean?
+    val init: Boolean
 ) {
     fun toJson(): String {
         return json {
@@ -68,7 +68,7 @@ data class DockerContainerCreationRequest(
                 "Binds" to formatVolumeMounts()
                 "PortBindings" to formatPortMappings()
                 "Privileged" to privileged
-                "Init" to (init ?: false)
+                "Init" to init
             }
             "Healthcheck" to json {
                 "Test" to emptyList<String>().toJsonArray()

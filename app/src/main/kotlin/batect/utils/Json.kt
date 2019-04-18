@@ -14,16 +14,12 @@
    limitations under the License.
 */
 
-package batect.config
+package batect.utils
 
-import batect.config.io.deserializers.DurationDeserializer
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import java.time.Duration
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonConfiguration
 
-@Serializable
-data class HealthCheckConfig(
-    @Serializable(with = DurationDeserializer::class) val interval: Duration? = null,
-    val retries: Int? = null,
-    @SerialName("start_period") @Serializable(with = DurationDeserializer::class) val startPeriod: Duration? = null
-)
+object Json {
+    val nonstrictParser = Json(JsonConfiguration.Stable.copy(strictMode = false))
+    val parser = Json(JsonConfiguration.Stable)
+}

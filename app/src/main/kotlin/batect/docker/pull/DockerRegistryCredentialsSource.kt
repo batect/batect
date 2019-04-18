@@ -19,7 +19,7 @@ package batect.docker.pull
 import batect.docker.DockerRegistryCredentialsException
 import batect.os.ExecutableDoesNotExistException
 import batect.os.ProcessRunner
-import kotlinx.serialization.json.Json
+import batect.utils.Json
 import kotlinx.serialization.json.JsonObject
 import java.nio.charset.Charset
 import java.util.Base64
@@ -86,7 +86,7 @@ data class HelperBasedCredentialsSource(val helperName: String, val serverAddres
 
     private fun parseCredentials(credentials: String): JsonObject {
         try {
-            return Json.plain.parseJson(credentials).jsonObject
+            return Json.parser.parseJson(credentials).jsonObject
         } catch (e: Throwable) {
             throw DockerRegistryCredentialsException("The credentials returned for '$serverAddress' by the credential helper executable '$helperName' are invalid: ${e.message}", e)
         }

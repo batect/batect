@@ -26,6 +26,7 @@ import com.charleskorn.kaml.Location
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.CompositeDecoder
 import kotlinx.serialization.Decoder
+import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
@@ -199,5 +200,7 @@ data class Container(
                 is PathResolutionResult.InvalidPath -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' is not a valid path.", location.line, location.line)
             }
         }
+
+        override fun serialize(encoder: Encoder, obj: Container): Unit = throw UnsupportedOperationException()
     }
 }

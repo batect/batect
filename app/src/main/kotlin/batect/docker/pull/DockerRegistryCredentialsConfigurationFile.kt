@@ -18,9 +18,8 @@ package batect.docker.pull
 
 import batect.logging.Logger
 import batect.os.ProcessRunner
-import kotlinx.serialization.Optional
+import batect.utils.Json
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import java.nio.charset.Charset
 import java.nio.file.FileSystem
 import java.nio.file.Files
@@ -50,7 +49,7 @@ class DockerRegistryCredentialsConfigurationFile(
         }
 
         val configFileContent = Files.readAllBytes(configFilePath)!!.toString(Charset.defaultCharset())
-        return Json.nonstrict.parse(DockerConfigFile.serializer(), configFileContent)
+        return Json.nonstrictParser.parse(DockerConfigFile.serializer(), configFileContent)
     }
 
     fun getCredentialsForRegistry(registry: String): DockerRegistryCredentialsSource? {
@@ -111,13 +110,13 @@ class DockerRegistryCredentialsConfigurationFile(
 
     @Serializable
     private data class DockerConfigFile(
-        @Optional val auths: Map<String, DockerAuth> = emptyMap(),
-        @Optional val credHelpers: Map<String, String> = emptyMap(),
-        @Optional val credsStore: String? = null
+        val auths: Map<String, DockerAuth> = emptyMap(),
+        val credHelpers: Map<String, String> = emptyMap(),
+        val credsStore: String? = null
     )
 
     @Serializable
     private data class DockerAuth(
-        @Optional val auth: String? = null
+        val auth: String? = null
     )
 }

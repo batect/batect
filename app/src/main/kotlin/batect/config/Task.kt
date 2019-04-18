@@ -20,7 +20,6 @@ import batect.config.io.deserializers.DependencySetDeserializer
 import batect.config.io.deserializers.EnvironmentDeserializer
 import batect.config.io.deserializers.PrerequisiteListDeserializer
 import batect.os.Command
-import kotlinx.serialization.Optional
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -29,17 +28,17 @@ import kotlinx.serialization.Transient
 data class Task(
     @Transient val name: String = "",
     @SerialName("run") val runConfiguration: TaskRunConfiguration,
-    @Optional val description: String = "",
-    @Optional val group: String = "",
-    @SerialName("dependencies") @Serializable(with = DependencySetDeserializer::class) @Optional val dependsOnContainers: Set<String> = emptySet(),
-    @SerialName("prerequisites") @Serializable(with = PrerequisiteListDeserializer::class) @Optional val prerequisiteTasks: List<String> = emptyList()
+    val description: String = "",
+    val group: String = "",
+    @SerialName("dependencies") @Serializable(with = DependencySetDeserializer::class) val dependsOnContainers: Set<String> = emptySet(),
+    @SerialName("prerequisites") @Serializable(with = PrerequisiteListDeserializer::class) val prerequisiteTasks: List<String> = emptyList()
 )
 
 @Serializable
 data class TaskRunConfiguration(
     val container: String,
-    @Optional val command: Command? = null,
-    @SerialName("environment") @Serializable(with = EnvironmentDeserializer::class) @Optional val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression> = emptyMap(),
-    @SerialName("ports") @Optional val additionalPortMappings: Set<PortMapping> = emptySet(),
-    @Optional @SerialName("working_directory") val workingDiretory: String? = null
+    val command: Command? = null,
+    @SerialName("environment") @Serializable(with = EnvironmentDeserializer::class) val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression> = emptyMap(),
+    @SerialName("ports") val additionalPortMappings: Set<PortMapping> = emptySet(),
+    @SerialName("working_directory") val workingDiretory: String? = null
 )

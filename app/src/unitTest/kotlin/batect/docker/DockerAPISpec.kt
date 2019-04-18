@@ -35,6 +35,7 @@ import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import batect.ui.Dimensions
+import batect.utils.Json
 import batect.utils.Version
 import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
@@ -52,8 +53,6 @@ import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import jnr.constants.platform.Signal
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.content
@@ -109,7 +108,7 @@ object DockerAPISpec : Spek({
 
                     it("creates the container with the expected settings") {
                         verify(httpClient).newCall(requestWithJsonBody { body ->
-                            assertThat(body, equalTo(Json(JsonConfiguration.Stable).parseJson(request.toJson())))
+                            assertThat(body, equalTo(Json.parser.parseJson(request.toJson())))
                         })
                     }
 
@@ -1082,7 +1081,7 @@ private fun requestWithJsonBody(predicate: (JsonObject) -> Unit) = check<Request
 
     val buffer = Buffer()
     request.body()!!.writeTo(buffer)
-    val parsedBody = Json(JsonConfiguration.Stable).parseJson(buffer.readUtf8()).jsonObject
+    val parsedBody = Json.parser.parseJson(buffer.readUtf8()).jsonObject
     predicate(parsedBody)
 }
 
@@ -1101,7 +1100,7 @@ class ProgressReceiver {
 private fun receivedAllUpdatesFrom(response: String): Matcher<ProgressReceiver> = receivedAllUpdatesFrom(response.lines())
 
 private fun receivedAllUpdatesFrom(lines: Iterable<String>): Matcher<ProgressReceiver> {
-    val expectedUpdates = lines.map { Json(JsonConfiguration.Stable).parseJson(it).jsonObject }
+    val expectedUpdates = lines.map { Json.parser.parseJson(it).jsonObject }
 
     return has(ProgressReceiver::updatesReceived, equalTo(expectedUpdates))
 }

@@ -24,9 +24,9 @@ import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputStream
 import batect.logging.Logger
 import batect.ui.Dimensions
+import batect.utils.Json
 import batect.utils.Version
 import jnr.constants.platform.Signal
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.json
@@ -73,7 +73,7 @@ class DockerAPI(
                 throw ContainerCreationFailedException("Output from Docker was: ${error.message}")
             }
 
-            val parsedResponse = Json.plain.parseJson(response.body()!!.string()).jsonObject
+            val parsedResponse = Json.parser.parseJson(response.body()!!.string()).jsonObject
             val containerId = parsedResponse.getValue("Id").primitive.content
 
             logger.info {
@@ -139,7 +139,7 @@ class DockerAPI(
                 throw ContainerInspectionFailedException("Could not inspect container '${container.id}': ${error.message}")
             }
 
-            return Json.nonstrict.parse(DockerContainerInfo.serializer(), response.body()!!.string())
+            return Json.nonstrictParser.parse(DockerContainerInfo.serializer(), response.body()!!.string())
         }
     }
 
@@ -252,7 +252,7 @@ class DockerAPI(
             }
 
             val firstEvent = response.body()!!.source().readUtf8LineStrict()
-            val parsedEvent = Json.plain.parseJson(firstEvent).jsonObject
+            val parsedEvent = Json.parser.parseJson(firstEvent).jsonObject
 
             logger.info {
                 message("Received event for container.")
@@ -294,7 +294,7 @@ class DockerAPI(
             }
 
             val responseBody = response.body()!!.string()
-            val parsedResponse = Json.plain.parseJson(responseBody).jsonObject
+            val parsedResponse = Json.parser.parseJson(responseBody).jsonObject
 
             logger.info {
                 message("Container exited.")
@@ -512,7 +512,7 @@ class DockerAPI(
                 throw NetworkCreationFailedException(error.message)
             }
 
-            val parsedResponse = Json.plain.parseJson(response.body()!!.string()).jsonObject
+            val parsedResponse = Json.parser.parseJson(response.body()!!.string()).jsonObject
             val networkId = parsedResponse.getValue("Id").primitive.content
 
             logger.info {
@@ -585,7 +585,7 @@ class DockerAPI(
             val outputSoFar = StringBuilder()
 
             response.body()!!.charStream().forEachLine { line ->
-                val parsedLine = Json.plain.parseJson(line).jsonObject
+                val parsedLine = Json.parser.parseJson(line).jsonObject
                 val output = parsedLine.getPrimitiveOrNull("stream")?.content
                 val error = parsedLine.getPrimitiveOrNull("error")?.content
 
@@ -666,7 +666,7 @@ class DockerAPI(
             }
 
             response.body()!!.charStream().forEachLine { line ->
-                val parsedLine = Json.plain.parseJson(line).jsonObject
+                val parsedLine = Json.parser.parseJson(line).jsonObject
 
                 if (parsedLine.containsKey("error")) {
                     val message = parsedLine.getValue("error").primitive.content
@@ -724,7 +724,7 @@ class DockerAPI(
             }
 
             val body = response.body()!!.string()
-            val parsedBody = Json.plain.parseJson(body) as JsonArray
+            val parsedBody = Json.parser.parseJson(body) as JsonArray
 
             return parsedBody.isNotEmpty()
         }
@@ -754,7 +754,7 @@ class DockerAPI(
                 throw DockerVersionInfoRetrievalException("The request failed: ${error.message}")
             }
 
-            val parsedResponse = Json.plain.parseJson(response.body()!!.string()).jsonObject
+            val parsedResponse = Json.parser.parseJson(response.body()!!.string()).jsonObject
             val version = parsedResponse.getValue("Version").primitive.content
             val apiVersion = parsedResponse.getValue("ApiVersion").primitive.content
             val minAPIVersion = parsedResponse.getValue("MinAPIVersion").primitive.content
@@ -854,7 +854,7 @@ class DockerAPI(
             return
         }
 
-        val parsedError = Json.plain.parseJson(responseBody).jsonObject
+        val parsedError = Json.parser.parseJson(responseBody).jsonObject
         errorHandler(DockerAPIError(response.code(), parsedError.getValue("message").primitive.content))
     }
 

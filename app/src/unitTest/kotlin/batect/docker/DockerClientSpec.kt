@@ -39,6 +39,7 @@ import batect.testutils.runForEachTest
 import batect.testutils.withCause
 import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
+import batect.utils.Json
 import batect.utils.Version
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
@@ -54,7 +55,6 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.mockito.invocation.InvocationOnMock
 import org.spekframework.spek2.Spek
@@ -636,8 +636,8 @@ object DockerClientSpec : Spek({
                     }
 
                     on("pulling the image") {
-                        val firstProgressUpdate = Json.plain.parseJson("""{"thing": "value"}""").jsonObject
-                        val secondProgressUpdate = Json.plain.parseJson("""{"thing": "other value"}""").jsonObject
+                        val firstProgressUpdate = Json.parser.parseJson("""{"thing": "value"}""").jsonObject
+                        val secondProgressUpdate = Json.parser.parseJson("""{"thing": "other value"}""").jsonObject
 
                         beforeEachTest {
                             whenever(imagePullProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(DockerImagePullProgress("Doing something", 10, 20))
@@ -734,7 +734,7 @@ object DockerClientSpec : Spek({
 })
 
 private fun stubProgressUpdate(reporter: DockerImagePullProgressReporter, input: String, update: DockerImagePullProgress) {
-    val json = Json.plain.parseJson(input).jsonObject
+    val json = Json.parser.parseJson(input).jsonObject
 
     // We use the wacky condition below to work around https://github.com/Kotlin/kotlinx.serialization/issues/358.
     whenever(reporter.processProgressUpdate(argThat { this.keys.equals(json.keys) && this.equals(json) })).thenReturn(update)
@@ -745,7 +745,7 @@ private fun sendProgressAndReturnImage(progressUpdates: String, image: DockerIma
     val onProgressUpdate = invocation.arguments.last() as (JsonObject) -> Unit
 
     progressUpdates.lines().forEach { line ->
-        onProgressUpdate(Json.plain.parseJson(line).jsonObject)
+        onProgressUpdate(Json.parser.parseJson(line).jsonObject)
     }
 
     image

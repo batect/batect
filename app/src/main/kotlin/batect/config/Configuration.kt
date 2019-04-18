@@ -18,15 +18,14 @@ package batect.config
 
 import batect.config.io.ConfigurationException
 import batect.os.PathResolver
-import kotlinx.serialization.Optional
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Configuration(
-    @SerialName("project_name") @Optional val projectName: String? = null,
-    @Optional @Serializable(with = TaskMap.Companion::class) val tasks: TaskMap = TaskMap(),
-    @Optional @Serializable(with = ContainerMap.Companion::class) val containers: ContainerMap = ContainerMap()
+    @SerialName("project_name") val projectName: String? = null,
+    @Serializable(with = TaskMap.Companion::class) val tasks: TaskMap = TaskMap(),
+    @Serializable(with = ContainerMap.Companion::class) val containers: ContainerMap = ContainerMap()
 ) {
     fun withResolvedProjectName(pathResolver: PathResolver): Configuration {
         if (projectName != null) {

@@ -24,7 +24,7 @@ import batect.os.PathResolverFactory
 import com.charleskorn.kaml.EmptyYamlDocumentException
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlException
-import kotlinx.serialization.context.SimpleModule
+import kotlinx.serialization.modules.serializersModuleOf
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
@@ -64,8 +64,8 @@ class ConfigurationLoader(
     private fun loadConfig(configFileContent: String, filePath: Path): Configuration {
         val pathResolver = pathResolverFactory.createResolver(filePath.parent)
         val pathDeserializer = PathDeserializer(pathResolver)
-        val parser = Yaml(extensionDefinitionPrefix = ".")
-        parser.install(SimpleModule(PathResolutionResult::class, pathDeserializer))
+        val module = serializersModuleOf(PathResolutionResult::class, pathDeserializer)
+        val parser = Yaml(extensionDefinitionPrefix = ".", context = module)
 
         try {
             return parser

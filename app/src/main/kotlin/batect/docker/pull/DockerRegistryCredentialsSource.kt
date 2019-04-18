@@ -94,7 +94,7 @@ data class HelperBasedCredentialsSource(val helperName: String, val serverAddres
 
     private fun JsonObject.getStringMember(key: String): String {
         if (this.containsKey(key)) {
-            return this[key].primitive.content
+            return this.getValue(key).primitive.content
         }
 
         throw DockerRegistryCredentialsException("The credentials returned for '$serverAddress' by the credential helper executable '$helperName' are invalid: there is no '$key' field.")

@@ -153,6 +153,6 @@ data class VolumeMount(
         }
 
         private val YamlInput.localPathDeserializer: DeserializationStrategy<PathResolutionResult>
-            get() = context.get(PathResolutionResult::class)!!
+            get() = context.getContextual(PathResolutionResult::class)!!
     }
 }

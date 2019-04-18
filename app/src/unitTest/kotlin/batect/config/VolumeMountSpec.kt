@@ -35,7 +35,7 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.mock
 import kotlinx.serialization.Decoder
-import kotlinx.serialization.context.SimpleModule
+import kotlinx.serialization.modules.serializersModuleOf
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Paths
@@ -57,8 +57,7 @@ object VolumeMountSpec : Spek({
                 }
             }
 
-            val parser by createForEachTest { Yaml() }
-            beforeEachTest { parser.install(SimpleModule(PathResolutionResult::class, pathDeserializer)) }
+            val parser by createForEachTest { Yaml(context = serializersModuleOf(PathResolutionResult::class, pathDeserializer)) }
 
             describe("deserializing from compact form") {
                 on("parsing a valid volume mount definition") {

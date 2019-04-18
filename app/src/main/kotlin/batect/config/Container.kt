@@ -125,7 +125,7 @@ data class Container(
                 when (val i = input.decodeElementIndex(descriptor)) {
                     CompositeDecoder.READ_DONE -> break@loop
                     buildDirectoryFieldIndex -> {
-                        val loader = input.context.get(PathResolutionResult::class)!!
+                        val loader = input.context.getContextual(PathResolutionResult::class)!!
                         val resolutionResult = input.decode(loader)
                         val location = input.getCurrentLocation()
 

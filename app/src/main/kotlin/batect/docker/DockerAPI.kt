@@ -74,7 +74,7 @@ class DockerAPI(
             }
 
             val parsedResponse = Json.plain.parseJson(response.body()!!.string()).jsonObject
-            val containerId = parsedResponse["Id"].primitive.content
+            val containerId = parsedResponse.getValue("Id").primitive.content
 
             logger.info {
                 message("Container created.")
@@ -259,7 +259,7 @@ class DockerAPI(
                 data("event", firstEvent)
             }
 
-            return DockerEvent(parsedEvent["status"].primitive.content)
+            return DockerEvent(parsedEvent.getValue("status").primitive.content)
         }
     }
 
@@ -301,13 +301,13 @@ class DockerAPI(
                 data("result", responseBody)
             }
 
-            if (parsedResponse.containsKey("Error") && !parsedResponse["Error"].isNull) {
+            if (parsedResponse.containsKey("Error") && !parsedResponse.getValue("Error").isNull) {
                 val message = parsedResponse.getObject("Error").getPrimitive("Message").content
 
                 throw DockerException("Waiting for container '${container.id}' to exit succeeded but returned an error: $message")
             }
 
-            return parsedResponse["StatusCode"].primitive.int
+            return parsedResponse.getValue("StatusCode").primitive.int
         }
     }
 
@@ -513,7 +513,7 @@ class DockerAPI(
             }
 
             val parsedResponse = Json.plain.parseJson(response.body()!!.string()).jsonObject
-            val networkId = parsedResponse["Id"].primitive.content
+            val networkId = parsedResponse.getValue("Id").primitive.content
 
             logger.info {
                 message("Network created.")
@@ -669,7 +669,7 @@ class DockerAPI(
                 val parsedLine = Json.plain.parseJson(line).jsonObject
 
                 if (parsedLine.containsKey("error")) {
-                    val message = parsedLine["error"].primitive.content
+                    val message = parsedLine.getValue("error").primitive.content
 
                     throw ImagePullFailedException("Pulling image '$imageName' failed: $message")
                 }
@@ -755,10 +755,10 @@ class DockerAPI(
             }
 
             val parsedResponse = Json.plain.parseJson(response.body()!!.string()).jsonObject
-            val version = parsedResponse["Version"].primitive.content
-            val apiVersion = parsedResponse["ApiVersion"].primitive.content
-            val minAPIVersion = parsedResponse["MinAPIVersion"].primitive.content
-            val gitCommit = parsedResponse["GitCommit"].primitive.content
+            val version = parsedResponse.getValue("Version").primitive.content
+            val apiVersion = parsedResponse.getValue("ApiVersion").primitive.content
+            val minAPIVersion = parsedResponse.getValue("MinAPIVersion").primitive.content
+            val gitCommit = parsedResponse.getValue("GitCommit").primitive.content
 
             return DockerVersionInfo(
                 Version.parse(version),
@@ -855,7 +855,7 @@ class DockerAPI(
         }
 
         val parsedError = Json.plain.parseJson(responseBody).jsonObject
-        errorHandler(DockerAPIError(response.code(), parsedError["message"].primitive.content))
+        errorHandler(DockerAPIError(response.code(), parsedError.getValue("message").primitive.content))
     }
 
     private data class DockerAPIError(val statusCode: Int, val message: String)

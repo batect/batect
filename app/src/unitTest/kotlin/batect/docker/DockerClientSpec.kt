@@ -45,7 +45,6 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doThrow
@@ -735,9 +734,7 @@ object DockerClientSpec : Spek({
 
 private fun stubProgressUpdate(reporter: DockerImagePullProgressReporter, input: String, update: DockerImagePullProgress) {
     val json = Json.parser.parseJson(input).jsonObject
-
-    // We use the wacky condition below to work around https://github.com/Kotlin/kotlinx.serialization/issues/358.
-    whenever(reporter.processProgressUpdate(argThat { this.keys.equals(json.keys) && this.equals(json) })).thenReturn(update)
+    whenever(reporter.processProgressUpdate(eq(json))).thenReturn(update)
 }
 
 private fun sendProgressAndReturnImage(progressUpdates: String, image: DockerImage) = { invocation: InvocationOnMock ->

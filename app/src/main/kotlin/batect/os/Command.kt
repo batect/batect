@@ -27,9 +27,7 @@ import kotlinx.serialization.Serializer
 import kotlinx.serialization.internal.StringDescriptor
 import kotlinx.serialization.withName
 
-// The `with =` below is only necessary because of https://github.com/Kotlin/kotlinx.serialization/issues/354.
-// Once that issue is fixed, the annotation can just be @Serializable
-@Serializable(with = Command.Companion::class)
+@Serializable
 data class Command private constructor(val originalCommand: String, val parsedCommand: Iterable<String>) {
     operator fun plus(newArguments: Iterable<String>): Command {
         val formattedCommand = originalCommand + formatNewArguments(newArguments)

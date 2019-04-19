@@ -46,7 +46,9 @@ nav:
   - Language and tool-specific information:
     - CircleCI: "tools/CircleCI.md"
     - Docker: "tools/Docker.md"
+    - Golang: "tools/Golang.md"
     - Java: "tools/Java.md"
+    - Node.js: "tools/Node.md"
     - Ruby: "tools/Ruby.md"
     - Travis CI: "tools/TravisCI.md"
 

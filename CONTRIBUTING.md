@@ -70,6 +70,40 @@ When executing a task, the following steps are performed:
 3. For each task that needs to be executed:
 
     1. Create a dependency graph of the task's main container and its dependencies
-    2. Prepare and start each of the dependencies, respecting the dependency constraints specified by the user
+    2. Create the Docker network for the task and prepare and start each of the dependencies, respecting the dependency constraints specified by the user
     3. Run the main container
     4. Clean up every container, temporary file, temporary directory and Docker network created
+
+### Task execution model
+
+Steps 3ii, 3iii and 3iv above are all executed using the task execution model. This model is made up of the following concepts:
+
+* [**Step**](app/src/main/kotlin/batect/execution/model/steps): an operation to perform, such as pulling an image, creating the task network or removing a container.
+
+* [**Stage**](app/src/main/kotlin/batect/execution/model/stages/Stage.kt): container for steps that need to occur during a phase of execution. There are two stages:
+
+  * The run stage is responsible for everything required by 3ii and 3iii above: preparing all containers, starting all dependencies in the correct order and then
+    running the main container.
+
+  * The cleanup stage is responsible for everything required by 3iv above: cleaning up everything that was created during the run stage, even if the run stage was
+    not successful.
+
+* [**Stage planner**](app/src/main/kotlin/batect/execution/model/stages): determines what steps need to be run in a stage based on the task's dependency graph, the
+  configuration of each container in the graph, and, in the case of the cleanup stage, what steps completed successfully during the run stage.
+
+* [**Step rule**](app/src/main/kotlin/batect/execution/model/rules): determines when steps are ready to be executed, based on the task's dependency graph and what
+  steps have completed successfully so far.
+
+  For example, the rule for the 'start container' step will only allow the step to start if the image for the container has been pulled or built and all of the
+  container's dependencies have reported as healthy.
+
+* [**Event**](app/src/main/kotlin/batect/execution/model/events): things that have happened, such as a container being created, progress being made on an image pull
+  or a temporary file being deleted. Every step emits at least one event to indicate its progress and eventual successful completion or failure.
+
+* [**State machine**](app/src/main/kotlin/batect/execution/TaskStateMachine.kt): keeps track of the current state of the task, including which stage is currently
+  running, what events have occurred and which steps can be executed.
+
+* [**Execution manager**](app/src/main/kotlin/batect/execution/ParallelExecutionManager.kt): runs steps that are ready for execution.
+
+* [**Event logger**](app/src/main/kotlin/batect/ui): presents the state of the startup and cleanup phases to the user based on the steps that have started and the
+  events that have occurred. (Output from running the main task container itself is not sent through the event logger and is presented to the user directly.)

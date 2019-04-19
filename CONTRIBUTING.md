@@ -48,6 +48,10 @@ Or, to run the tests and linter once and then automatically re-run them when the
 
 `./gradlew journeyTest`
 
+### Serve the docs locally
+
+`./gradlew docs:serve`
+
 ## Pull request guidelines
 
 All pull requests are welcome and warmly encouraged. Some things to keep in mind:

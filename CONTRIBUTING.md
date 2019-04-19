@@ -1,8 +1,8 @@
-# Contribution Guidelines
+# Contribution Guide
 
 Welcome and thanks for your interest in helping improve batect!
 
-These guidelines are a work in progress. If there is some information that you'd like to see below,
+This guide is a work in progress. If there is some information that you'd like to see below,
 please [submit an issue](https://github.com/charleskorn/batect/issues/new).
 
 ## I want to help out, what should I do?
@@ -21,7 +21,7 @@ It's entirely up to you, do whatever you're most interested in. Some suggestions
 * Git (version 2.17.0 or higher)
 * Docker (any version compatible with batect)
 
-## Usage
+## Dev tooling
 
 ### Building the application
 
@@ -56,5 +56,20 @@ All pull requests are welcome and warmly encouraged. Some things to keep in mind
   one or more journey tests)
 * the Travis build should pass - this will be triggered automatically when you submit your PR
 * if you've added a new feature or changed the behaviour of an existing feature, please update the documentation to reflect this
-* please keep PRs limited to a single bugfix or feature - if your PR fixes multiple issues or adds multiple features, please submit a separate PR for each
+* please keep PRs limited to a single bugfix or feature - if you would like to fix multiple issues or add multiple features, please submit a separate PR for each
 * submitting work-in-progress PRs for feedback is welcome and encouraged
+
+## Technical overview
+
+### Task execution phases
+
+When executing a task, the following steps are performed:
+
+1. Parse the configuration file
+2. Determine the order to run the task and its prerequisites in
+3. For each task that needs to be executed:
+
+    1. Create a dependency graph of the task's main container and its dependencies
+    2. Prepare and start each of the dependencies, respecting the dependency constraints specified by the user
+    3. Run the main container
+    4. Clean up every container, temporary file, temporary directory and Docker network created

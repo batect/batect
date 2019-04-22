@@ -33,6 +33,9 @@ If there's something you're really keen to see, pull requests are always welcome
 * some way to reference another Dockerfile as the base image for a Dockerfile
 * allow adding and removing capabilities to containers (`--cap-add` and `--cap-drop` - https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities)
 * allow giving access to a specific devices (`--device` - https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities)
+* allow `home_directory` to match local user's home directory path
+* allow `working_directory` and container side of volume mount to reference home directory (inside container)
+* allow container side of volume mount to use path of local directory (eg. mount current directory at same path inside container)
 
 ### Other
 * replace factories with references to constructors

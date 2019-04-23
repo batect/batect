@@ -3,6 +3,11 @@
 {
     set -euo pipefail
 
+    # This file is part of batect.
+    # Do not modify this file, it will be overwritten next time you upgrade batect.
+    # You should commit this file to version control alongside the rest of your project. It should not be installed globally.
+    # For more information, visit https://github.com/charleskorn/batect.
+
     VERSION="VERSION-GOES-HERE"
     DOWNLOAD_URL=${BATECT_DOWNLOAD_URL:-"DOWNLOAD-URL-GOES-HERE"}
 

@@ -218,7 +218,7 @@ object DockerClientSpec : Spek({
                 val image = DockerImage("the-image")
                 val network = DockerNetwork("the-network")
                 val command = listOf("doStuff")
-                val request = DockerContainerCreationRequest(image, network, command, "some-host", "some-host", emptyMap(), "/some-dir", emptySet(), emptySet(), HealthCheckConfig(), null, false, init = false)
+                val request = DockerContainerCreationRequest(image, network, command, "some-host", "some-host", emptyMap(), "/some-dir", emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
 
                 on("creating the container") {
                     beforeEachTest { whenever(api.createContainer(request)).doReturn(DockerContainer("abc123")) }

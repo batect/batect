@@ -36,7 +36,9 @@ data class DockerContainerCreationRequest(
     val healthCheckConfig: HealthCheckConfig,
     val userAndGroup: UserAndGroup?,
     val privileged: Boolean,
-    val init: Boolean
+    val init: Boolean,
+    val capabilitiesToAdd: Set<Capability>,
+    val capabilitiesToDrop: Set<Capability>
 ) {
     fun toJson(): String {
         return json {
@@ -69,13 +71,17 @@ data class DockerContainerCreationRequest(
                 "PortBindings" to formatPortMappings()
                 "Privileged" to privileged
                 "Init" to init
+                "CapAdd" to formatCapabilitySet(capabilitiesToAdd)
+                "CapDrop" to formatCapabilitySet(capabilitiesToDrop)
             }
+
             "Healthcheck" to json {
                 "Test" to emptyList<String>().toJsonArray()
                 "Interval" to (healthCheckConfig.interval?.toNanos() ?: 0)
                 "Retries" to (healthCheckConfig.retries ?: 0)
                 "StartPeriod" to (healthCheckConfig.startPeriod?.toNanos() ?: 0)
             }
+
             "NetworkingConfig" to json {
                 "EndpointsConfig" to json {
                     network.id to json {
@@ -110,6 +116,10 @@ data class DockerContainerCreationRequest(
             "${it.containerPort}/tcp" to json {}
         }
     }
+
+    private fun formatCapabilitySet(set: Set<Capability>): JsonArray = set
+        .map { it.toString() }
+        .toJsonArray()
 }
 
 data class UserAndGroup(val userId: Int, val groupId: Int)

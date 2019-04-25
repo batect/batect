@@ -17,6 +17,7 @@
 package batect.config
 
 import batect.config.io.deserializers.PathDeserializer
+import batect.docker.Capability
 import batect.os.Command
 import batect.os.PathResolutionResult
 import batect.os.PathType
@@ -203,6 +204,10 @@ object ContainerSpec : Spek({
                   home_directory: /home/something
                 privileged: true
                 enable_init_process: true
+                capabilities_to_add:
+                  - NET_ADMIN
+                capabilities_to_drop:
+                  - KILL
             """.trimIndent()
 
             on("loading the configuration from the config file") {
@@ -236,6 +241,8 @@ object ContainerSpec : Spek({
                     assertThat(result.runAsCurrentUserConfig, equalTo(RunAsCurrentUserConfig.RunAsCurrentUser("/home/something")))
                     assertThat(result.privileged, equalTo(true))
                     assertThat(result.enableInitProcess, equalTo(true))
+                    assertThat(result.capabilitiesToAdd, equalTo(setOf(Capability.NET_ADMIN)))
+                    assertThat(result.capabilitiesToDrop, equalTo(setOf(Capability.KILL)))
                 }
             }
         }

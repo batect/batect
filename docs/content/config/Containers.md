@@ -189,6 +189,8 @@ See [this page](../tips/BuildArtifactsOwnedByRoot.md) for more information on th
 ## `privileged`
 Run the container in [privileged mode](https://docs.docker.com/engine/reference/commandline/run/#full-container-capabilities---privileged).
 
+See also [`capabilities_to_add` and `capabilities_to_drop`](#capabilities_to_add-and-capabilities_to_drop).
+
 Available since v0.29.
 
 ## `enable_init_process`
@@ -199,6 +201,13 @@ This creates the container with a simple PID 1 process to handle the responsibil
 of different processes running as PID 1 and why this flag was introduced.
 
 Available since v0.30.
+
+## `capabilities_to_add` and `capabilities_to_drop`
+Add or drop [capabilities](http://man7.org/linux/man-pages/man7/capabilities.7.html) for the container. 
+
+This is equivalent to passing [`--cap-add` or `--cap-drop`](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) to `docker run`.
+
+Available since v0.31.
 
 ## Examples
 

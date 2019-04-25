@@ -19,6 +19,7 @@ package batect.config
 import batect.config.io.ConfigurationException
 import batect.config.io.deserializers.DependencySetDeserializer
 import batect.config.io.deserializers.EnvironmentDeserializer
+import batect.docker.Capability
 import batect.os.Command
 import batect.os.PathResolutionResult
 import batect.os.PathType
@@ -51,7 +52,9 @@ data class Container(
     val healthCheckConfig: HealthCheckConfig = HealthCheckConfig(),
     val runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser,
     val privileged: Boolean = false,
-    val enableInitProcess: Boolean = false
+    val enableInitProcess: Boolean = false,
+    val capabilitiesToAdd: Set<Capability> = emptySet(),
+    val capabilitiesToDrop: Set<Capability> = emptySet()
 ) {
     @Serializer(forClass = Container::class)
     companion object : KSerializer<Container> {
@@ -68,6 +71,8 @@ data class Container(
         private val runAsCurrentUserConfigFieldName = "run_as_current_user"
         private val privilegedFieldName = "privileged"
         private val enableInitProcessFieldName = "enable_init_process"
+        private val capabilitiesToAddFieldName = "capabilities_to_add"
+        private val capabilitiesToDropFieldName = "capabilities_to_drop"
 
         override val descriptor: SerialDescriptor = object : SerialClassDescImpl("ContainerFromFile") {
             init {
@@ -84,6 +89,8 @@ data class Container(
                 addElement(runAsCurrentUserConfigFieldName, isOptional = true)
                 addElement(privilegedFieldName, isOptional = true)
                 addElement(enableInitProcessFieldName, isOptional = true)
+                addElement(capabilitiesToAddFieldName, isOptional = true)
+                addElement(capabilitiesToDropFieldName, isOptional = true)
             }
         }
 
@@ -100,6 +107,8 @@ data class Container(
         private val runAsCurrentUserConfigFieldIndex = descriptor.getElementIndex(runAsCurrentUserConfigFieldName)
         private val privilegedFieldIndex = descriptor.getElementIndex(privilegedFieldName)
         private val enableInitProcessConfigFieldIndex = descriptor.getElementIndex(enableInitProcessFieldName)
+        private val capabilitiesToAddFieldIndex = descriptor.getElementIndex(capabilitiesToAddFieldName)
+        private val capabilitiesToDropFieldIndex = descriptor.getElementIndex(capabilitiesToDropFieldName)
 
         override fun deserialize(decoder: Decoder): Container {
             val input = decoder.beginStructure(descriptor) as YamlInput
@@ -121,6 +130,8 @@ data class Container(
             var runAsCurrentUserConfig: RunAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
             var privileged = false
             var enableInitProcess = false
+            var capabilitiesToAdd = emptySet<Capability>()
+            var capabilitiesToDrop = emptySet<Capability>()
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
@@ -144,6 +155,8 @@ data class Container(
                     runAsCurrentUserConfigFieldIndex -> runAsCurrentUserConfig = input.decode(RunAsCurrentUserConfig.serializer())
                     privilegedFieldIndex -> privileged = input.decodeBooleanElement(descriptor, i)
                     enableInitProcessConfigFieldIndex -> enableInitProcess = input.decodeBooleanElement(descriptor, i)
+                    capabilitiesToAddFieldIndex -> capabilitiesToAdd = input.decode(Capability.serializer.set)
+                    capabilitiesToDropFieldIndex -> capabilitiesToDrop = input.decode(Capability.serializer.set)
 
                     else -> throw SerializationException("Unknown index $i")
                 }
@@ -161,7 +174,9 @@ data class Container(
                 healthCheckConfig,
                 runAsCurrentUserConfig,
                 privileged,
-                enableInitProcess
+                enableInitProcess,
+                capabilitiesToAdd,
+                capabilitiesToDrop
             )
         }
 

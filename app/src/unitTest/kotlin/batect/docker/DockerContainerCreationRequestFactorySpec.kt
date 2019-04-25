@@ -83,7 +83,9 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                                     environment = mapOf("SOME_VAR" to LiteralValue("SOME_VALUE")),
                                     healthCheckConfig = HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(5)),
                                     privileged = false,
-                                    enableInitProcess = true
+                                    enableInitProcess = true,
+                                    capabilitiesToAdd = setOf(Capability.NET_ADMIN),
+                                    capabilitiesToDrop = setOf(Capability.KILL)
                                 )
 
                                 val userAndGroup = UserAndGroup(123, 456)
@@ -136,6 +138,14 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
                                 it("populates the init configuration on the request with the enable init process configuration from the container") {
                                     assertThat(request.init, equalTo(container.enableInitProcess))
+                                }
+
+                                it("populates the capabilities to add on the request with the set from the container") {
+                                    assertThat(request.capabilitiesToAdd, equalTo(container.capabilitiesToAdd))
+                                }
+
+                                it("populates the capabilities to drop on the request with the set from the container") {
+                                    assertThat(request.capabilitiesToDrop, equalTo(container.capabilitiesToDrop))
                                 }
                             }
                         }

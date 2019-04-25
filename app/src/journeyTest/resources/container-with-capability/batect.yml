@@ -1,0 +1,16 @@
+project_name: container-with-capability
+
+containers:
+  the-container:
+    image: alpine:3.8
+    capabilities_to_add:
+      - NET_ADMIN
+    volumes:
+      - local: .
+        container: /code
+
+tasks:
+  the-task:
+    run:
+      container: the-container
+      command: /code/task.sh

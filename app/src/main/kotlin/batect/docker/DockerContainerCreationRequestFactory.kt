@@ -60,7 +60,9 @@ class DockerContainerCreationRequestFactory(
             container.healthCheckConfig,
             userAndGroup,
             container.privileged,
-            container.enableInitProcess
+            container.enableInitProcess,
+            container.capabilitiesToAdd,
+            container.capabilitiesToDrop
         )
     }
 

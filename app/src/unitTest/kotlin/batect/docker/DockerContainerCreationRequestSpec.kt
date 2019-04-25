@@ -42,8 +42,10 @@ object DockerContainerCreationRequestSpec : Spek({
                 setOf(PortMapping(123, 456)),
                 HealthCheckConfig(Duration.ofNanos(555), 12, Duration.ofNanos(333)),
                 UserAndGroup(789, 222),
-                true,
-                init = true
+                privileged = true,
+                init = true,
+                capabilitiesToAdd = setOf(Capability.NET_ADMIN, Capability.KILL),
+                capabilitiesToDrop = setOf(Capability.AUDIT_READ, Capability.CHOWN)
             )
 
             on("converting it to JSON") {
@@ -82,7 +84,9 @@ object DockerContainerCreationRequestSpec : Spek({
                         |           ]
                         |       },
                         |       "Privileged": true,
-                        |       "Init": true
+                        |       "Init": true,
+                        |       "CapAdd": ["NET_ADMIN", "KILL"],
+                        |       "CapDrop": ["AUDIT_READ", "CHOWN"]
                         |   },
                         |   "Healthcheck": {
                         |       "Test": [],
@@ -117,8 +121,10 @@ object DockerContainerCreationRequestSpec : Spek({
                 emptySet(),
                 HealthCheckConfig(),
                 null,
-                false,
-                init = false
+                privileged = false,
+                init = false,
+                capabilitiesToAdd = emptySet(),
+                capabilitiesToDrop = emptySet()
             )
 
             on("converting it to JSON") {
@@ -141,7 +147,9 @@ object DockerContainerCreationRequestSpec : Spek({
                         |       "Binds": [],
                         |       "PortBindings": {},
                         |       "Privileged": false,
-                        |       "Init": false
+                        |       "Init": false,
+                        |       "CapAdd": [],
+                        |       "CapDrop": []
                         |   },
                         |   "Healthcheck": {
                         |       "Test": [],

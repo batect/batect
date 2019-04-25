@@ -107,8 +107,10 @@ object DockerClientIntegrationTest : Spek({
                 portMappings,
                 HealthCheckConfig(),
                 userAndGroup,
-                false,
-                init = false
+                privileged = false,
+                init = false,
+                capabilitiesToAdd = emptySet(),
+                capabilitiesToDrop = emptySet()
             )
         }
 

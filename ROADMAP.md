@@ -37,7 +37,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * allow container side of volume mount to use path of local directory (eg. mount current directory at same path inside container)
 
 ### Other
-* replace factories with references to constructors
 * switch to Kotlin's built-in `Result` where appropriate
 * use Detekt for static analysis
 * fail CI build on warnings
@@ -69,6 +68,23 @@ If there's something you're really keen to see, pull requests are always welcome
   * Move common stuff when parsing a string or object (eg. port mapping or volume mount) out to a common class
   * Move common stuff when reading a list out to a common class (DependencySetDeserializer and PrerequisiteListDeserializer)
 * analytics / metrics
+  * no personally-identifiable information
+  * no potentially sensitive information (eg. paths, file names, task names, project names etc.)
+  * need a way to opt-out
+  * need to show a message the first time this is enabled for someone so they can opt-out if they want
+  * probably need a privacy policy?
+  * need somewhere to securely store this data and analyse it
+  * events:
+    * invocations - command (task run, help, upgrade, version info or task list), duration, success or failure
+    * errors - type only (no further details due to privacy issues)
+    * shape of task / container dependency graph (numbers only)
+    * timing for task execution - at least startup / run / cleanup times, information about task steps (eg. image pull vs create vs wait for healthy) would be good too
+  * metadata:
+    * OS type and version
+    * batect version
+    * JVM version
+    * Docker version
+    * some way to anonymously identify users (to understand usage patterns) and projects (to understand upgrade and usage patterns regardless of user)
 * use batect to build batect (self-hosting)
 * tool to visualise execution on a timeline
   * tab to show configuration as parsed

@@ -72,7 +72,8 @@ import java.nio.file.Paths
 
 object DockerClientIntegrationTest : Spek({
     describe("a Docker client") {
-        val testImagePath by createForGroup { Paths.get("./src/integrationTest/resources/test-image/").toAbsolutePath().toString() }
+        val testImagesPath by createForGroup { Paths.get("./src/integrationTest/resources/test-images/").toAbsolutePath() }
+        val basicTestImagePath by createForGroup { testImagesPath.resolve("basic-image").toString() }
 
         val logger by createForGroup { mock<Logger>() }
         val processRunner by createForGroup { ProcessRunner(logger) }
@@ -159,7 +160,7 @@ object DockerClientIntegrationTest : Spek({
 
         describe("building, creating, starting, stopping and removing a container") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
-            val image by runBeforeGroup { client.build(testImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image")) {} }
+            val image by runBeforeGroup { client.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image")) {} }
 
             beforeGroup {
                 withNetwork { network ->
@@ -224,7 +225,7 @@ object DockerClientIntegrationTest : Spek({
 
         describe("waiting for a container to become healthy") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
-            val image by runBeforeGroup { client.build(testImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image")) {} }
+            val image by runBeforeGroup { client.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image")) {} }
             data class Result(val healthStatus: HealthStatus, val lastHealthCheckResult: DockerHealthCheckResult)
 
             val result by runBeforeGroup {
@@ -252,46 +253,30 @@ object DockerClientIntegrationTest : Spek({
         }
 
         describe("running a container that exposes a port") {
-            describe("given the image has an EXPOSE instruction for the port to be exposed") {
-                val image by runBeforeGroup { client.pullImage("nginx:1.15.8", {}) }
+            mapOf(
+                "image-with-expose" to "the image has an EXPOSE instruction for the port to be exposed",
+                "image-without-expose" to "the image does not have an EXPOSE instruction for the port to be exposed"
+            ).forEach { path, description ->
+                describe("given $description") {
+                    val dockerfilePath by createForGroup { testImagesPath.resolve(path).toString() }
+                    val image by runBeforeGroup { client.build(dockerfilePath, emptyMap(), "Dockerfile", emptySet(), {}) }
 
-                val response by runBeforeGroup {
-                    withNetwork { network ->
-                        withContainer(creationRequestForContainer(image, network, emptyList(), portMappings = setOf(PortMapping(8080, 80)))) { container ->
-                            try {
-                                client.start(container)
-                                httpGet("http://localhost:8080")
-                            } finally {
-                                client.stop(container)
+                    val response by runBeforeGroup {
+                        withNetwork { network ->
+                            withContainer(creationRequestForContainer(image, network, emptyList(), portMappings = setOf(PortMapping(8080, 80)))) { container ->
+                                try {
+                                    client.start(container)
+                                    httpGet("http://localhost:8080")
+                                } finally {
+                                    client.stop(container)
+                                }
                             }
                         }
                     }
-                }
 
-                it("successfully starts the container and exposes the port") {
-                    assertThat(response, has(Response::code, equalTo(200)))
-                }
-            }
-
-            describe("given the image does not have an EXPOSE instruction for the port to be exposed") {
-                val image by runBeforeGroup { client.pullImage("busybox:1.30.0", {}) }
-                val command = listOf("busybox", "httpd", "-f", "-p", "80")
-
-                val response by runBeforeGroup {
-                    withNetwork { network ->
-                        withContainer(creationRequestForContainer(image, network, command, portMappings = setOf(PortMapping(8080, 80)))) { container ->
-                            try {
-                                client.start(container)
-                                httpGet("http://localhost:8080/.dockerenv")
-                            } finally {
-                                client.stop(container)
-                            }
-                        }
+                    it("successfully starts the container and exposes the port") {
+                        assertThat(response, has(Response::code, equalTo(200)))
                     }
-                }
-
-                it("successfully starts the container and exposes the port") {
-                    assertThat(response, has(Response::code, equalTo(200)))
                 }
             }
         }

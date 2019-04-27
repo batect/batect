@@ -115,6 +115,9 @@ containers:
 
   with-build-dir:
     build_directory: test
+    build_args:
+      SOME_ARG: some value
+    dockerfile: some-dockerfile
     run_as_current_user:
       enabled: false
 

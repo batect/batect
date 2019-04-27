@@ -70,7 +70,7 @@ object StartupProgressDisplaySpec : Spek({
         }
 
         on("receiving notification that a step is about to start") {
-            val step = BuildImageStep("/some-image-dir", emptyMap(), emptySet())
+            val step = BuildImageStep("/some-image-dir", emptyMap(), "Dockerfile", emptySet())
             beforeEachTest { display.onStepStarting(step) }
 
             it("forwards it to each progress line") {

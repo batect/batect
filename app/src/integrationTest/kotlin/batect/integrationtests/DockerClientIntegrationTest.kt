@@ -159,7 +159,7 @@ object DockerClientIntegrationTest : Spek({
 
         describe("building, creating, starting, stopping and removing a container") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
-            val image by runBeforeGroup { client.build(testImagePath, emptyMap(), setOf("batect-integration-tests-image")) {} }
+            val image by runBeforeGroup { client.build(testImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image")) {} }
 
             beforeGroup {
                 withNetwork { network ->
@@ -224,7 +224,7 @@ object DockerClientIntegrationTest : Spek({
 
         describe("waiting for a container to become healthy") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
-            val image by runBeforeGroup { client.build(testImagePath, emptyMap(), setOf("batect-integration-tests-image")) {} }
+            val image by runBeforeGroup { client.build(testImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image")) {} }
             data class Result(val healthStatus: HealthStatus, val lastHealthCheckResult: DockerHealthCheckResult)
 
             val result by runBeforeGroup {

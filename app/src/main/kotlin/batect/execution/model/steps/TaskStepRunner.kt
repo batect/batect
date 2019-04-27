@@ -106,7 +106,7 @@ class TaskStepRunner(
             }
 
             val buildArgs = buildTimeProxyEnvironmentVariablesForOptions(runOptions) + step.buildArgs
-            val image = dockerClient.build(step.buildDirectory, buildArgs, step.imageTags, onStatusUpdate)
+            val image = dockerClient.build(step.buildDirectory, buildArgs, step.dockerfilePath, step.imageTags, onStatusUpdate)
             eventSink.postEvent(ImageBuiltEvent(step.buildDirectory, image))
         } catch (e: ImageBuildFailedException) {
             eventSink.postEvent(ImageBuildFailedEvent(step.buildDirectory, e.message ?: ""))

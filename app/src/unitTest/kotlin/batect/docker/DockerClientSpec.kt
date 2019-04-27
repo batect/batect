@@ -86,12 +86,13 @@ object DockerClientSpec : Spek({
                 "some_other_name" to "some_other_value"
             )
 
+            val dockerfilePath = "some-Dockerfile-path"
             val imageTags = setOf("some_image_tag", "some_other_image_tag")
             val context = DockerImageBuildContext(emptySet())
 
             beforeEachTest {
                 whenever(imageBuildContextFactory.createFromDirectory(Paths.get(buildDirectory))).doReturn(context)
-                whenever(dockerfileParser.extractBaseImageName(Paths.get("/path/to/build/dir/Dockerfile"))).doReturn("nginx:1.13.0")
+                whenever(dockerfileParser.extractBaseImageName(Paths.get("/path/to/build/dir/some-Dockerfile-path"))).doReturn("nginx:1.13.0")
             }
 
             given("getting the credentials for the base image succeeds") {
@@ -130,7 +131,7 @@ object DockerClientSpec : Spek({
 
                     beforeEachTest {
                         stubProgressUpdate(imagePullProgressReporter, output.lines()[0], imagePullProgress)
-                        whenever(api.buildImage(any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
+                        whenever(api.buildImage(any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
                     }
 
                     val statusUpdates by createForEachTest { mutableListOf<DockerImageBuildProgress>() }
@@ -139,10 +140,10 @@ object DockerClientSpec : Spek({
                         statusUpdates.add(p)
                     }
 
-                    val result by runForEachTest { client.build(buildDirectory, buildArgs, imageTags, onStatusUpdate) }
+                    val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, onStatusUpdate) }
 
                     it("builds the image") {
-                        verify(api).buildImage(eq(context), eq(buildArgs), eq(imageTags), eq(credentials), any())
+                        verify(api).buildImage(eq(context), eq(buildArgs), eq(dockerfilePath), eq(imageTags), eq(credentials), any())
                     }
 
                     it("returns the ID of the created image") {
@@ -176,13 +177,13 @@ object DockerClientSpec : Spek({
 
                     beforeEachTest {
                         stubProgressUpdate(imagePullProgressReporter, output.lines()[0], imagePullProgress)
-                        whenever(api.buildImage(any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
+                        whenever(api.buildImage(any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
 
                         val onStatusUpdate = fun(p: DockerImageBuildProgress) {
                             statusUpdates.add(p)
                         }
 
-                        client.build(buildDirectory, buildArgs, imageTags, onStatusUpdate)
+                        client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, onStatusUpdate)
                     }
 
                     it("sends status updates only once the first step is started") {
@@ -204,7 +205,7 @@ object DockerClientSpec : Spek({
 
                 on("building the image") {
                     it("throws an appropriate exception") {
-                        assertThat({ client.build(buildDirectory, buildArgs, imageTags, {}) }, throws<ImageBuildFailedException>(
+                        assertThat({ client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, {}) }, throws<ImageBuildFailedException>(
                             withMessage("Could not build image: Could not load credentials: something went wrong.")
                                 and withCause(exception)
                         ))

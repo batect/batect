@@ -72,7 +72,7 @@ object SimpleEventLoggerSpec : Spek({
         describe("handling when steps start") {
             on("when a 'build image' step is starting") {
                 beforeEachTest {
-                    val step = BuildImageStep("/some-image-dir", emptyMap(), emptySet())
+                    val step = BuildImageStep("/some-image-dir", emptyMap(), "Dockerfile", emptySet())
                     logger.onStartingTaskStep(step)
                 }
 

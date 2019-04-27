@@ -160,8 +160,9 @@ object TaskStepRunnerSpec : Spek({
             describe("running a 'build image' step") {
                 val buildDirectory = "/some-build-dir"
                 val buildArgs = mapOf("some_arg" to "some_value", "SOME_PROXY_CONFIG" to "overridden")
+                val dockerfilePath = "some-Dockerfile-path"
                 val imageTags = setOf("some_image_tag", "some_other_image_tag")
-                val step = BuildImageStep(buildDirectory, buildArgs, imageTags)
+                val step = BuildImageStep(buildDirectory, buildArgs, dockerfilePath, imageTags)
 
                 describe("when building the image succeeds") {
                     on("and propagating proxy-related environment variables is enabled") {
@@ -170,10 +171,10 @@ object TaskStepRunnerSpec : Spek({
                         val update2 = DockerImageBuildProgress(2, 2, "Second step", null)
 
                         beforeEachTest {
-                            whenever(dockerClient.build(eq(buildDirectory), any(), eq(imageTags), any()))
+                            whenever(dockerClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), any()))
                                 .then { invocation ->
                                     @Suppress("UNCHECKED_CAST")
-                                    val onStatusUpdate = invocation.arguments[3] as (DockerImageBuildProgress) -> Unit
+                                    val onStatusUpdate = invocation.arguments[4] as (DockerImageBuildProgress) -> Unit
 
                                     onStatusUpdate(update1)
                                     onStatusUpdate(update2)
@@ -191,7 +192,7 @@ object TaskStepRunnerSpec : Spek({
                                 "SOME_OTHER_PROXY_CONFIG" to "some_other_value"
                             )
 
-                            verify(dockerClient).build(any(), eq(expectedArgs), any(), any())
+                            verify(dockerClient).build(any(), eq(expectedArgs), any(), any(), any())
                         }
 
                         it("emits a 'image build progress' event for each update received from Docker") {
@@ -209,12 +210,12 @@ object TaskStepRunnerSpec : Spek({
                         val runOptionsWithProxyEnvironmentVariablePropagationDisabled = RunOptions("some-task", emptyList(), 123, BehaviourAfterFailure.Cleanup, false)
 
                         beforeEachTest {
-                            whenever(dockerClient.build(eq(buildDirectory), any(), eq(imageTags), any())).thenReturn(image)
+                            whenever(dockerClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), any())).thenReturn(image)
                             runner.run(step, eventSink, runOptionsWithProxyEnvironmentVariablePropagationDisabled)
                         }
 
                         it("does not pass the proxy-related environment variables as image build arguments, but does still pass the user-provided build args") {
-                            verify(dockerClient).build(any(), eq(buildArgs), any(), any())
+                            verify(dockerClient).build(any(), eq(buildArgs), any(), any(), any())
                         }
 
                         it("emits a 'image built' event") {
@@ -225,7 +226,7 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when building the image fails") {
                     beforeEachTest {
-                        whenever(dockerClient.build(eq(buildDirectory), any(), eq(imageTags), any())).thenThrow(ImageBuildFailedException("Something went wrong."))
+                        whenever(dockerClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), any())).thenThrow(ImageBuildFailedException("Something went wrong."))
                         runner.run(step, eventSink, runOptions)
                     }
 

@@ -14,11 +14,18 @@ Path (relative to the configuration file's directory) to a directory containing 
 **One of `image` or `build_directory` is required.**
 
 ## `build_args`
-List of build args (in `name: value` format) to use when building the image in `build_directory`.
+List of build args (in `name: value` format) to use when building the image in [`build_directory`](#build_directory).
 
 Each build arg must be defined in the Dockerfile with an `ARG` instruction otherwise the value provided will have no effect.
 
 Available since v0.28.
+
+## `dockerfile`
+Dockerfile (relative to [`build_directory`](#build_directory)) to use when building the image in [`build_directory`](#build_directory). Defaults to `Dockerfile` if not set.
+
+The Dockerfile must be within [`build_directory`](#build_directory).
+
+Available since v0.31.
 
 ## `command`
 Command to run when the container starts.

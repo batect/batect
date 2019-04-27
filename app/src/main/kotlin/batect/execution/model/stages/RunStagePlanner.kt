@@ -67,7 +67,7 @@ class RunStagePlanner(private val logger: Logger) {
             .mapToSet { (imageSource, containers) ->
                 when (imageSource) {
                     is PullImage -> PullImageStepRule(imageSource.imageName)
-                    is BuildImage -> BuildImageStepRule(imageSource.buildDirectory, imageSource.buildArgs, imageTagsFor(graph.config.projectName!!, containers))
+                    is BuildImage -> BuildImageStepRule(imageSource.buildDirectory, imageSource.buildArgs, imageSource.dockerfilePath, imageTagsFor(graph.config.projectName!!, containers))
                 }
             }
     }

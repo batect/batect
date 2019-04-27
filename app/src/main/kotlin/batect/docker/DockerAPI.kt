@@ -554,6 +554,7 @@ class DockerAPI(
     fun buildImage(
         context: DockerImageBuildContext,
         buildArgs: Map<String, String>,
+        dockerfilePath: String,
         imageTags: Set<String>,
         registryCredentials: DockerRegistryCredentials?,
         onProgressUpdate: (JsonObject) -> Unit
@@ -565,7 +566,7 @@ class DockerAPI(
             data("imageTags", imageTags)
         }
 
-        val request = createImageBuildRequest(context, buildArgs, imageTags, registryCredentials)
+        val request = createImageBuildRequest(context, buildArgs, dockerfilePath, imageTags, registryCredentials)
 
         val clientWithLongTimeout = httpConfig.client.newBuilder()
             .readTimeout(0, TimeUnit.MILLISECONDS)
@@ -622,12 +623,14 @@ class DockerAPI(
     private fun createImageBuildRequest(
         context: DockerImageBuildContext,
         buildArgs: Map<String, String>,
+        dockerfilePath: String,
         imageTags: Set<String>,
         registryCredentials: DockerRegistryCredentials?
     ): Request {
         val url = baseUrl.newBuilder()
             .addPathSegment("build")
             .addQueryParameter("buildargs", buildArgs.toJsonObject().toString())
+            .addQueryParameter("dockerfile", dockerfilePath)
 
         imageTags.forEach { url.addQueryParameter("t", it) }
 

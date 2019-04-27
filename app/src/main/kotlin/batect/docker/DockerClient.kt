@@ -51,6 +51,7 @@ class DockerClient(
     fun build(
         buildDirectory: String,
         buildArgs: Map<String, String>,
+        dockerfilePath: String,
         imageTags: Set<String>,
         onStatusUpdate: (DockerImageBuildProgress) -> Unit
     ): DockerImage {
@@ -64,12 +65,12 @@ class DockerClient(
         try {
             val buildPath = Paths.get(buildDirectory)
             val context = imageBuildContextFactory.createFromDirectory(buildPath)
-            val baseImageName = dockerfileParser.extractBaseImageName(buildPath.resolve("Dockerfile"))
+            val baseImageName = dockerfileParser.extractBaseImageName(buildPath.resolve(dockerfilePath))
             val credentials = credentialsProvider.getCredentials(baseImageName)
             val reporter = imagePullProgressReporterFactory()
             var lastStepProgressUpdate: DockerImageBuildProgress? = null
 
-            val image = api.buildImage(context, buildArgs, imageTags, credentials) { line ->
+            val image = api.buildImage(context, buildArgs, dockerfilePath, imageTags, credentials) { line ->
                 logger.debug {
                     message("Received output from Docker during image build.")
                     data("outputLine", line.toString())

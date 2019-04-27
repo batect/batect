@@ -72,7 +72,7 @@ object ContainerSpec : Spek({
                     val result by runForEachTest { parser.parse(Container.Companion, yaml) }
 
                     it("returns the expected container configuration, with the build directory resolved to an absolute path") {
-                        assertThat(result, equalTo(Container("UNNAMED-FROM-CONFIG-FILE", BuildImage("/resolved/some_build_dir"))))
+                        assertThat(result, equalTo(Container("UNNAMED-FROM-CONFIG-FILE", BuildImage("/resolved/some_build_dir", emptyMap(), "Dockerfile"))))
                     }
                 }
             }
@@ -161,6 +161,22 @@ object ContainerSpec : Spek({
             }
         }
 
+        given("the config file has both an image and a Dockerfile") {
+            val yaml = """
+                image: some_image
+                dockerfile: some-Dockerfile
+            """.trimIndent()
+
+            on("loading the configuration from the config file") {
+                it("throws an appropriate exception") {
+                    assertThat(
+                        { parser.parse(Container.Companion, yaml) },
+                        throws(withMessage("dockerfile cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1))
+                    )
+                }
+            }
+        }
+
         given("the config file has neither a build directory nor an image") {
             val yaml = """
                 command: do-the-thing
@@ -181,6 +197,7 @@ object ContainerSpec : Spek({
                 build_directory: /container-1-build-dir
                 build_args:
                   SOME_ARG: some_value
+                dockerfile: some-Dockerfile
                 command: do-the-thing.sh some-param
                 environment:
                   OPTS: -Dthing
@@ -214,7 +231,7 @@ object ContainerSpec : Spek({
                 val result by runForEachTest { parser.parse(Container.Companion, yaml) }
 
                 it("returns the expected container configuration") {
-                    assertThat(result.imageSource, equalTo(BuildImage("/resolved/container-1-build-dir", mapOf("SOME_ARG" to "some_value"))))
+                    assertThat(result.imageSource, equalTo(BuildImage("/resolved/container-1-build-dir", mapOf("SOME_ARG" to "some_value"), "some-Dockerfile")))
                     assertThat(result.command, equalTo(Command.parse("do-the-thing.sh some-param")))
                     assertThat(
                         result.environment, equalTo(

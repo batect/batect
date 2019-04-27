@@ -60,6 +60,7 @@ data class Container(
     companion object : KSerializer<Container> {
         private val buildDirectoryFieldName = "build_directory"
         private val buildArgsFieldName = "build_args"
+        private val dockerfileFieldName = "dockerfile"
         private val imageNameFieldName = "image"
         private val commandFieldName = "command"
         private val environmentFieldName = "environment"
@@ -78,6 +79,7 @@ data class Container(
             init {
                 addElement(buildDirectoryFieldName, isOptional = true)
                 addElement(buildArgsFieldName, isOptional = true)
+                addElement(dockerfileFieldName, isOptional = true)
                 addElement(imageNameFieldName, isOptional = true)
                 addElement(commandFieldName, isOptional = true)
                 addElement(environmentFieldName, isOptional = true)
@@ -96,6 +98,7 @@ data class Container(
 
         private val buildDirectoryFieldIndex = descriptor.getElementIndex(buildDirectoryFieldName)
         private val buildArgsFieldIndex = descriptor.getElementIndex(buildArgsFieldName)
+        private val dockerfileFieldIndex = descriptor.getElementIndex(dockerfileFieldName)
         private val imageNameFieldIndex = descriptor.getElementIndex(imageNameFieldName)
         private val commandFieldIndex = descriptor.getElementIndex(commandFieldName)
         private val environmentFieldIndex = descriptor.getElementIndex(environmentFieldName)
@@ -119,6 +122,7 @@ data class Container(
         private fun deserializeFromObject(input: YamlInput): Container {
             var buildDirectory: String? = null
             var buildArgs: Map<String, String>? = null
+            var dockerfilePath: String? = null
             var imageName: String? = null
             var command: Command? = null
             var environment = emptyMap<String, EnvironmentVariableExpression>()
@@ -144,6 +148,7 @@ data class Container(
                         buildDirectory = resolveBuildDirectory(resolutionResult, location)
                     }
                     buildArgsFieldIndex -> buildArgs = input.decode((String.serializer() to String.serializer()).map)
+                    dockerfileFieldIndex -> dockerfilePath = input.decodeStringElement(descriptor, i)
                     imageNameFieldIndex -> imageName = input.decodeStringElement(descriptor, i)
                     commandFieldIndex -> command = input.decode(Command.Companion)
                     environmentFieldIndex -> environment = input.decode(EnvironmentDeserializer)
@@ -164,7 +169,7 @@ data class Container(
 
             return Container(
                 "UNNAMED-FROM-CONFIG-FILE",
-                resolveImageSource(buildDirectory, buildArgs, imageName, input.node.location),
+                resolveImageSource(buildDirectory, buildArgs, dockerfilePath, imageName, input.node.location),
                 command,
                 environment,
                 workingDirectory,
@@ -183,6 +188,7 @@ data class Container(
         private fun resolveImageSource(
             buildDirectory: String?,
             buildArgs: Map<String, String>?,
+            dockerfilePath: String?,
             imageName: String?,
             location: Location
         ): ImageSource {
@@ -198,8 +204,12 @@ data class Container(
                 throw ConfigurationException("build_args cannot be used with image, but both have been provided.", location.line, location.column)
             }
 
+            if (imageName != null && dockerfilePath != null) {
+                throw ConfigurationException("dockerfile cannot be used with image, but both have been provided.", location.line, location.column)
+            }
+
             if (buildDirectory != null) {
-                return BuildImage(buildDirectory, buildArgs ?: emptyMap())
+                return BuildImage(buildDirectory, buildArgs ?: emptyMap(), dockerfilePath ?: "Dockerfile")
             } else {
                 return PullImage(imageName!!)
             }

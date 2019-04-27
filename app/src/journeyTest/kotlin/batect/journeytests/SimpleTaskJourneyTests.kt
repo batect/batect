@@ -32,6 +32,7 @@ object SimpleTaskJourneyTests : Spek({
     mapOf(
         "simple-task-using-dockerfile" to "a simple task that uses a Dockerfile with the command specified on the task in the configuration file",
         "simple-task-using-image" to "a simple task that uses an existing image",
+        "simple-task-using-custom-dockerfile" to "a simple task that uses a Dockerfile in a non-standard location",
         "simple-task-dockerfile-command" to "a simple task with the command specified in the Dockerfile",
         "simple-task-container-command" to "a simple task with the command specified on the container in the configuration file",
         "simple-task-with-environment" to "a simple task with a task-level environment variable",

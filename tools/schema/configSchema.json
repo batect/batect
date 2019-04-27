@@ -50,6 +50,11 @@
           "description": "List of build args to use when building the image in build_directory",
           "$ref": "#/definitions/buildArgList"
         },
+        "dockerfile": {
+          "type": "string",
+          "description": "Dockerfile (relative to build_directory) to use when building the image. Defaults to Dockerfile` if not set.",
+          "minLength": 1
+        },
         "command": {
           "type": "string",
           "description": "Command to run when the container starts",
@@ -107,7 +112,8 @@
           ],
           "not": {
             "required": [
-              "build_args"
+              "build_args",
+              "dockerfile"
             ]
           }
         },

@@ -48,19 +48,20 @@ import batect.ui.text.Text
 import com.natpryce.hamkrest.assertion.assertThat
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
 
 object ContainerStartupProgressLineSpec : Spek({
     describe("a container startup progress line") {
         val dependencyA = Container("dependency-a", imageSourceDoesNotMatter())
         val dependencyB = Container("dependency-b", imageSourceDoesNotMatter())
         val dependencyC = Container("dependency-c", imageSourceDoesNotMatter())
-        val otherContainer = Container("other-container", BuildImage("/other-build-dir"))
+        val otherContainer = Container("other-container", BuildImage(Paths.get("/other-build-dir")))
         val containerName = "some-container"
 
         given("the container's image comes from building an image") {
-            val imageSource = BuildImage("/some-image-dir")
+            val imageSource = BuildImage(Paths.get("/some-image-dir"))
             val container = Container(containerName, imageSource)
-            val otherImageSource = BuildImage("/some-other-image-dir")
+            val otherImageSource = BuildImage(Paths.get("/some-other-image-dir"))
 
             val line: ContainerStartupProgressLine by createForEachTest {
                 ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC))

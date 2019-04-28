@@ -73,7 +73,7 @@ import java.nio.file.Paths
 object DockerClientIntegrationTest : Spek({
     describe("a Docker client") {
         val testImagesPath by createForGroup { Paths.get("./src/integrationTest/resources/test-images/").toAbsolutePath() }
-        val basicTestImagePath by createForGroup { testImagesPath.resolve("basic-image").toString() }
+        val basicTestImagePath by createForGroup { testImagesPath.resolve("basic-image") }
 
         val logger by createForGroup { mock<Logger>() }
         val processRunner by createForGroup { ProcessRunner(logger) }
@@ -258,7 +258,7 @@ object DockerClientIntegrationTest : Spek({
                 "image-without-expose" to "the image does not have an EXPOSE instruction for the port to be exposed"
             ).forEach { path, description ->
                 describe("given $description") {
-                    val dockerfilePath by createForGroup { testImagesPath.resolve(path).toString() }
+                    val dockerfilePath by createForGroup { testImagesPath.resolve(path) }
                     val image by runBeforeGroup { client.build(dockerfilePath, emptyMap(), "Dockerfile", emptySet(), {}) }
 
                     val response by runBeforeGroup {

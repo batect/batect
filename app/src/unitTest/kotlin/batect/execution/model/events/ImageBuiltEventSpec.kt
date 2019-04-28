@@ -22,11 +22,12 @@ import batect.testutils.on
 import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
 
 object ImageBuiltEventSpec : Spek({
     describe("an 'image built' event") {
         val image = DockerImage("image-1")
-        val source = BuildImage("/some-build-dir")
+        val source = BuildImage(Paths.get("/some-build-dir"))
         val event = ImageBuiltEvent(source, image)
 
         on("toString()") {

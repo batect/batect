@@ -39,6 +39,7 @@ import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
 
 object CreateContainerStepRuleSpec : Spek({
     describe("a create container step rule") {
@@ -116,7 +117,7 @@ object CreateContainerStepRuleSpec : Spek({
         }
 
         given("the container uses an image that must be built") {
-            val source = BuildImage("/some-image-directory")
+            val source = BuildImage(Paths.get("/some-image-directory"))
             val container = Container("the-container", source)
             val otherContainerInNetwork = Container("the-other-container", imageSourceDoesNotMatter())
             val command = Command.parse("the-command")
@@ -154,7 +155,7 @@ object CreateContainerStepRuleSpec : Spek({
                 }
 
                 given("an image has been built for another container") {
-                    beforeEachTest { events.add(ImageBuiltEvent(BuildImage("/some-other-image-directory"), DockerImage("some-other-image"))) }
+                    beforeEachTest { events.add(ImageBuiltEvent(BuildImage(Paths.get("/some-other-image-directory")), DockerImage("some-other-image"))) }
 
                     on("evaluating the rule") {
                         val result by runForEachTest { rule.evaluate(events) }

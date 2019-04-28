@@ -66,9 +66,9 @@ object CleanupStagePlannerSpec : Spek({
         }
 
         val task = Task("the-task", TaskRunConfiguration("task-container"))
-        val container1 = Container("container-1", BuildImage("./container-1"))
+        val container1 = Container("container-1", BuildImage(Paths.get("./container-1")))
         val container2 = Container("container-2", PullImage("image-2"), dependencies = setOf(container1.name))
-        val taskContainer = Container(task.runConfiguration.container, BuildImage("./task-container"), dependencies = setOf(container1.name, container2.name))
+        val taskContainer = Container(task.runConfiguration.container, BuildImage(Paths.get("./task-container")), dependencies = setOf(container1.name, container2.name))
         val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2))
         val graph = ContainerDependencyGraph(config, task, commandResolver)
         val events by createForEachTest { mutableSetOf<TaskEvent>() }

@@ -53,12 +53,13 @@ import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
 import java.time.Duration
 
 object SimpleEventLoggerSpec : Spek({
     describe("a simple event logger") {
-        val container1And2ImageSource = BuildImage("/some-image-dir")
-        val container3ImageSource = BuildImage("/some-other-image-dir")
+        val container1And2ImageSource = BuildImage(Paths.get("/some-image-dir"))
+        val container3ImageSource = BuildImage(Paths.get("/some-other-image-dir"))
         val container1 = Container("container-1", container1And2ImageSource)
         val container2 = Container("container-2", container1And2ImageSource)
         val container3 = Container("container-3", container3ImageSource)

@@ -72,7 +72,7 @@ object ContainerSpec : Spek({
                     val result by runForEachTest { parser.parse(Container.Companion, yaml) }
 
                     it("returns the expected container configuration, with the build directory resolved to an absolute path") {
-                        assertThat(result, equalTo(Container("UNNAMED-FROM-CONFIG-FILE", BuildImage("/resolved/some_build_dir", emptyMap(), "Dockerfile"))))
+                        assertThat(result, equalTo(Container("UNNAMED-FROM-CONFIG-FILE", BuildImage(Paths.get("/resolved/some_build_dir"), emptyMap(), "Dockerfile"))))
                     }
                 }
             }
@@ -231,7 +231,7 @@ object ContainerSpec : Spek({
                 val result by runForEachTest { parser.parse(Container.Companion, yaml) }
 
                 it("returns the expected container configuration") {
-                    assertThat(result.imageSource, equalTo(BuildImage("/resolved/container-1-build-dir", mapOf("SOME_ARG" to "some_value"), "some-Dockerfile")))
+                    assertThat(result.imageSource, equalTo(BuildImage(Paths.get("/resolved/container-1-build-dir"), mapOf("SOME_ARG" to "some_value"), "some-Dockerfile")))
                     assertThat(result.command, equalTo(Command.parse("do-the-thing.sh some-param")))
                     assertThat(
                         result.environment, equalTo(

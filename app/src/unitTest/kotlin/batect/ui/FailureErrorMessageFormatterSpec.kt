@@ -66,7 +66,7 @@ object FailureErrorMessageFormatterSpec : Spek({
 
             setOf(
                 Scenario("task network creation failed", TaskNetworkCreationFailedEvent("Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not create network for task.\n")) + Text("Something went wrong.")),
-                Scenario("image build failed", ImageBuildFailedEvent(BuildImage("/some-build-dir"), "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not build image from directory '/some-build-dir'.\n")) + Text("Something went wrong.")),
+                Scenario("image build failed", ImageBuildFailedEvent(BuildImage(Paths.get("/some-build-dir")), "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not build image from directory '/some-build-dir'.\n")) + Text("Something went wrong.")),
                 Scenario("image pull failed", ImagePullFailedEvent(PullImage("the-image"), "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not pull image ") + Text.bold("the-image") + Text(".\n")) + Text("Something went wrong.")),
                 Scenario("container creation failed", ContainerCreationFailedEvent(container, "Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not create container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")),
                 Scenario("task network deletion failed", TaskNetworkDeletionFailedEvent("Something went wrong."), Text.red(Text.bold("Error: ") + Text("Could not delete the task network.\n")) + Text("Something went wrong.")),

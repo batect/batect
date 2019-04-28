@@ -21,10 +21,11 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
 
 object BuildImageSpec : Spek({
     describe("a image build source") {
-        val source = BuildImage("/image-build-dir", mapOf("some_arg" to "some_value"), "some-Dockerfile-path")
+        val source = BuildImage(Paths.get("/image-build-dir"), mapOf("some_arg" to "some_value"), "some-Dockerfile-path")
 
         on("toString()") {
             it("returns a human-readable representation of itself") {

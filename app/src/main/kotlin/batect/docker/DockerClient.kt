@@ -29,7 +29,9 @@ import batect.logging.Logger
 import batect.ui.ConsoleInfo
 import kotlinx.serialization.json.JsonObject
 import java.io.IOException
-import java.nio.file.Paths
+import java.nio.file.Files
+import java.nio.file.LinkOption
+import java.nio.file.Path
 import java.time.Duration
 
 // Unix sockets implementation inspired by
@@ -49,7 +51,7 @@ class DockerClient(
     private val imagePullProgressReporterFactory: () -> DockerImagePullProgressReporter = ::DockerImagePullProgressReporter
 ) {
     fun build(
-        buildDirectory: String,
+        buildDirectory: Path,
         buildArgs: Map<String, String>,
         dockerfilePath: String,
         imageTags: Set<String>,
@@ -59,13 +61,23 @@ class DockerClient(
             message("Building image.")
             data("buildDirectory", buildDirectory)
             data("buildArgs", buildArgs)
+            data("dockerfilePath", dockerfilePath)
             data("imageTags", imageTags)
         }
 
         try {
-            val buildPath = Paths.get(buildDirectory)
-            val context = imageBuildContextFactory.createFromDirectory(buildPath)
-            val baseImageName = dockerfileParser.extractBaseImageName(buildPath.resolve(dockerfilePath))
+            val resolvedDockerfilePath = buildDirectory.resolve(dockerfilePath)
+
+            if (!Files.exists(resolvedDockerfilePath)) {
+                throw ImageBuildFailedException("Could not build image: the Dockerfile '$dockerfilePath' does not exist in '$buildDirectory'")
+            }
+
+            if (!resolvedDockerfilePath.toRealPath(LinkOption.NOFOLLOW_LINKS).startsWith(buildDirectory.toRealPath(LinkOption.NOFOLLOW_LINKS))) {
+                throw ImageBuildFailedException("Could not build image: the Dockerfile '$dockerfilePath' is not a child of '$buildDirectory'")
+            }
+
+            val context = imageBuildContextFactory.createFromDirectory(buildDirectory)
+            val baseImageName = dockerfileParser.extractBaseImageName(resolvedDockerfilePath)
             val credentials = credentialsProvider.getCredentials(baseImageName)
             val reporter = imagePullProgressReporterFactory()
             var lastStepProgressUpdate: DockerImageBuildProgress? = null

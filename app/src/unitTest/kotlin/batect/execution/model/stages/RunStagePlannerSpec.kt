@@ -52,6 +52,7 @@ import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
 
 object RunStagePlannerSpec : Spek({
     describe("a run stage planner") {
@@ -84,7 +85,7 @@ object RunStagePlannerSpec : Spek({
                 }
 
                 on("that container builds an image from a Dockerfile") {
-                    val imageSource = BuildImage("./my-image", mapOf("some_arg" to "some_value"), "some-Dockerfile")
+                    val imageSource = BuildImage(Paths.get("./my-image"), mapOf("some_arg" to "some_value"), "some-Dockerfile")
                     val container = Container(task.runConfiguration.container, imageSource)
                     val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                     val graph = ContainerDependencyGraph(config, task, commandResolver)
@@ -157,13 +158,13 @@ object RunStagePlannerSpec : Spek({
             val task = Task("the-task", TaskRunConfiguration("task-container", additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value")), additionalPortMappings = setOf(PortMapping(123, 456))))
 
             given("each container has a unique build directory or existing image to pull") {
-                val container1ImageSource = BuildImage("./container-1")
+                val container1ImageSource = BuildImage(Paths.get("./container-1"))
                 val container1 = Container("container-1", container1ImageSource)
                 val container2ImageSource = PullImage("image-2")
                 val container2 = Container("container-2", container2ImageSource)
                 val container3ImageSource = PullImage("image-3")
                 val container3 = Container("container-3", container3ImageSource, dependencies = setOf(container2.name))
-                val taskContainerImageSource = BuildImage("./task-container")
+                val taskContainerImageSource = BuildImage(Paths.get("./task-container"))
                 val taskContainer = Container(task.runConfiguration.container, taskContainerImageSource, dependencies = setOf(container1.name, container2.name, container3.name))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2, container3))
                 val graph = ContainerDependencyGraph(config, task, commandResolver)
@@ -238,7 +239,7 @@ object RunStagePlannerSpec : Spek({
                 given("those containers have the same set of build args") {
                     given("those containers have the same Dockerfile") {
                         val buildArgs = mapOf("some_arg" to "some_value")
-                        val imageSource = BuildImage("/shared-image", buildArgs, "some-Dockerfile")
+                        val imageSource = BuildImage(Paths.get("/shared-image"), buildArgs, "some-Dockerfile")
                         val container1 = Container("container-1", imageSource)
                         val container2 = Container("container-2", imageSource)
                         val taskContainer = Container(task.runConfiguration.container, PullImage("task-image"), dependencies = setOf(container1.name, container2.name))
@@ -273,8 +274,8 @@ object RunStagePlannerSpec : Spek({
 
                     given("those containers have different Dockefiles") {
                         val buildArgs = mapOf("some_arg" to "some_value")
-                        val container1ImageSource = BuildImage("/shared-image", buildArgs, "some-Dockerfile")
-                        val container2ImageSource = BuildImage("/shared-image", buildArgs, "some-other-Dockerfile")
+                        val container1ImageSource = BuildImage(Paths.get("/shared-image"), buildArgs, "some-Dockerfile")
+                        val container2ImageSource = BuildImage(Paths.get("/shared-image"), buildArgs, "some-other-Dockerfile")
                         val container1 = Container("container-1", container1ImageSource)
                         val container2 = Container("container-2", container2ImageSource)
                         val taskContainer = Container(task.runConfiguration.container, PullImage("task-image"), dependencies = setOf(container1.name, container2.name))
@@ -310,8 +311,8 @@ object RunStagePlannerSpec : Spek({
                 }
 
                 given("those containers different sets of build args") {
-                    val container1ImageSource = BuildImage("/shared-image", mapOf("some_arg" to "some_value"), "some-Dockerfile")
-                    val container2ImageSource = BuildImage("/shared-image", mapOf("some_arg" to "some_other_value"), "some-Dockerfile")
+                    val container1ImageSource = BuildImage(Paths.get("/shared-image"), mapOf("some_arg" to "some_value"), "some-Dockerfile")
+                    val container2ImageSource = BuildImage(Paths.get("/shared-image"), mapOf("some_arg" to "some_other_value"), "some-Dockerfile")
                     val container1 = Container("container-1", container1ImageSource)
                     val container2 = Container("container-2", container2ImageSource)
                     val taskContainer = Container(task.runConfiguration.container, PullImage("task-image"), dependencies = setOf(container1.name, container2.name))

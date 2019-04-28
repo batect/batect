@@ -103,6 +103,7 @@ import com.nhaarman.mockitokotlin2.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
+import java.nio.file.Paths
 
 object TaskStepRunnerSpec : Spek({
     describe("a task step runner") {
@@ -160,7 +161,7 @@ object TaskStepRunnerSpec : Spek({
             }
 
             describe("running a 'build image' step") {
-                val buildDirectory = "/some-build-dir"
+                val buildDirectory = Paths.get("/some-build-dir")
                 val buildArgs = mapOf("some_arg" to "some_value", "SOME_PROXY_CONFIG" to "overridden")
                 val dockerfilePath = "some-Dockerfile-path"
                 val imageTags = setOf("some_image_tag", "some_other_image_tag")

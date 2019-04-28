@@ -38,6 +38,7 @@ import kotlinx.serialization.internal.SerialClassDescImpl
 import kotlinx.serialization.map
 import kotlinx.serialization.serializer
 import kotlinx.serialization.set
+import java.nio.file.Path
 
 @Serializable
 data class Container(
@@ -120,7 +121,7 @@ data class Container(
         }
 
         private fun deserializeFromObject(input: YamlInput): Container {
-            var buildDirectory: String? = null
+            var buildDirectory: Path? = null
             var buildArgs: Map<String, String>? = null
             var dockerfilePath: String? = null
             var imageName: String? = null
@@ -186,7 +187,7 @@ data class Container(
         }
 
         private fun resolveImageSource(
-            buildDirectory: String?,
+            buildDirectory: Path?,
             buildArgs: Map<String, String>?,
             dockerfilePath: String?,
             imageName: String?,
@@ -215,10 +216,10 @@ data class Container(
             }
         }
 
-        private fun resolveBuildDirectory(buildDirectory: PathResolutionResult, location: Location): String {
+        private fun resolveBuildDirectory(buildDirectory: PathResolutionResult, location: Location): Path {
             when (buildDirectory) {
                 is PathResolutionResult.Resolved -> when (buildDirectory.pathType) {
-                    PathType.Directory -> return buildDirectory.absolutePath.toString()
+                    PathType.Directory -> return buildDirectory.absolutePath
                     PathType.DoesNotExist -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') does not exist.", location.line, location.line)
                     else -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') is not a directory.", location.line, location.line)
                 }

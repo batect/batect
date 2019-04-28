@@ -22,10 +22,11 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
 
 object ImageBuildFailedEventSpec : Spek({
     describe("a 'image build failed' event") {
-        val source = BuildImage("/some-build-dir")
+        val source = BuildImage(Paths.get("/some-build-dir"))
         val event = ImageBuildFailedEvent(source, "Something went wrong")
 
         on("toString()") {

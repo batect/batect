@@ -41,6 +41,8 @@ import batect.testutils.withMessage
 import batect.ui.ConsoleInfo
 import batect.utils.Json
 import batect.utils.Version
+import com.google.common.jimfs.Configuration
+import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
@@ -59,7 +61,7 @@ import org.mockito.invocation.InvocationOnMock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.IOException
-import java.nio.file.Paths
+import java.nio.file.Files
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 
@@ -80,7 +82,8 @@ object DockerClientSpec : Spek({
         val client by createForEachTest { DockerClient(api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, ioStreamer, killer, ttyManager, logger, imagePullProgressReporterFactory) }
 
         describe("building an image") {
-            val buildDirectory = "/path/to/build/dir"
+            val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
+            val buildDirectory by createForEachTest { fileSystem.getPath("/path/to/build/dir") }
             val buildArgs = mapOf(
                 "some_name" to "some_value",
                 "some_other_name" to "some_other_value"
@@ -90,20 +93,26 @@ object DockerClientSpec : Spek({
             val imageTags = setOf("some_image_tag", "some_other_image_tag")
             val context = DockerImageBuildContext(emptySet())
 
-            beforeEachTest {
-                whenever(imageBuildContextFactory.createFromDirectory(Paths.get(buildDirectory))).doReturn(context)
-                whenever(dockerfileParser.extractBaseImageName(Paths.get("/path/to/build/dir/some-Dockerfile-path"))).doReturn("nginx:1.13.0")
-            }
-
-            given("getting the credentials for the base image succeeds") {
-                val credentials = mock<DockerRegistryCredentials>()
+            given("the Dockerfile exists") {
+                val resolvedDockerfilePath by createForEachTest { buildDirectory.resolve(dockerfilePath) }
 
                 beforeEachTest {
-                    whenever(credentialsProvider.getCredentials("nginx:1.13.0")).doReturn(credentials)
+                    Files.createDirectories(buildDirectory)
+                    Files.createFile(resolvedDockerfilePath)
+
+                    whenever(imageBuildContextFactory.createFromDirectory(buildDirectory)).doReturn(context)
+                    whenever(dockerfileParser.extractBaseImageName(resolvedDockerfilePath)).doReturn("nginx:1.13.0")
                 }
 
-                on("a successful build") {
-                    val output = """
+                given("getting the credentials for the base image succeeds") {
+                    val credentials = mock<DockerRegistryCredentials>()
+
+                    beforeEachTest {
+                        whenever(credentialsProvider.getCredentials("nginx:1.13.0")).doReturn(credentials)
+                    }
+
+                    on("a successful build") {
+                        val output = """
                         |{"stream":"Step 1/5 : FROM nginx:1.13.0"}
                         |{"status":"pulling the image"}
                         |{"stream":"\n"}
@@ -127,43 +136,47 @@ object DockerClientSpec : Spek({
                         |{"stream":"Successfully built 24125bbc6cbe\n"}
                     """.trimMargin()
 
-                    val imagePullProgress = DockerImagePullProgress("Doing something", 10, 20)
+                        val imagePullProgress = DockerImagePullProgress("Doing something", 10, 20)
 
-                    beforeEachTest {
-                        stubProgressUpdate(imagePullProgressReporter, output.lines()[0], imagePullProgress)
-                        whenever(api.buildImage(any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
+                        beforeEachTest {
+                            stubProgressUpdate(imagePullProgressReporter, output.lines()[0], imagePullProgress)
+                            whenever(api.buildImage(any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
+                        }
+
+                        val statusUpdates by createForEachTest { mutableListOf<DockerImageBuildProgress>() }
+
+                        val onStatusUpdate = fun(p: DockerImageBuildProgress) {
+                            statusUpdates.add(p)
+                        }
+
+                        val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, onStatusUpdate) }
+
+                        it("builds the image") {
+                            verify(api).buildImage(eq(context), eq(buildArgs), eq(dockerfilePath), eq(imageTags), eq(credentials), any())
+                        }
+
+                        it("returns the ID of the created image") {
+                            assertThat(result.id, equalTo("some-image-id"))
+                        }
+
+                        it("sends status updates as the build progresses") {
+                            assertThat(
+                                statusUpdates, equalTo(
+                                    listOf(
+                                        DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0", null),
+                                        DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0", imagePullProgress),
+                                        DockerImageBuildProgress(2, 5, "RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*", null),
+                                        DockerImageBuildProgress(3, 5, "COPY index.html /usr/share/nginx/html", null),
+                                        DockerImageBuildProgress(4, 5, "COPY health-check.sh /tools/", null),
+                                        DockerImageBuildProgress(5, 5, "HEALTHCHECK --interval=2s --retries=1 CMD /tools/health-check.sh", null)
+                                    )
+                                )
+                            )
+                        }
                     }
 
-                    val statusUpdates by createForEachTest { mutableListOf<DockerImageBuildProgress>() }
-
-                    val onStatusUpdate = fun(p: DockerImageBuildProgress) {
-                        statusUpdates.add(p)
-                    }
-
-                    val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, onStatusUpdate) }
-
-                    it("builds the image") {
-                        verify(api).buildImage(eq(context), eq(buildArgs), eq(dockerfilePath), eq(imageTags), eq(credentials), any())
-                    }
-
-                    it("returns the ID of the created image") {
-                        assertThat(result.id, equalTo("some-image-id"))
-                    }
-
-                    it("sends status updates as the build progresses") {
-                        assertThat(statusUpdates, equalTo(listOf(
-                            DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0", null),
-                            DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0", imagePullProgress),
-                            DockerImageBuildProgress(2, 5, "RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*", null),
-                            DockerImageBuildProgress(3, 5, "COPY index.html /usr/share/nginx/html", null),
-                            DockerImageBuildProgress(4, 5, "COPY health-check.sh /tools/", null),
-                            DockerImageBuildProgress(5, 5, "HEALTHCHECK --interval=2s --retries=1 CMD /tools/health-check.sh", null)
-                        )))
-                    }
-                }
-
-                on("the daemon sending image pull information before sending any step progress information") {
-                    val output = """
+                    on("the daemon sending image pull information before sending any step progress information") {
+                        val output = """
                         |{"status":"pulling the image"}
                         |{"stream":"Step 1/5 : FROM nginx:1.13.0"}
                         |{"status":"pulling the image"}
@@ -172,43 +185,80 @@ object DockerClientSpec : Spek({
                         |{"stream":"Step 2/5 : RUN apt update \u0026\u0026 apt install -y curl \u0026\u0026 rm -rf /var/lib/apt/lists/*"}
                     """.trimMargin()
 
-                    val imagePullProgress = DockerImagePullProgress("Doing something", 10, 20)
-                    val statusUpdates by createForEachTest { mutableListOf<DockerImageBuildProgress>() }
+                        val imagePullProgress = DockerImagePullProgress("Doing something", 10, 20)
+                        val statusUpdates by createForEachTest { mutableListOf<DockerImageBuildProgress>() }
 
-                    beforeEachTest {
-                        stubProgressUpdate(imagePullProgressReporter, output.lines()[0], imagePullProgress)
-                        whenever(api.buildImage(any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
+                        beforeEachTest {
+                            stubProgressUpdate(imagePullProgressReporter, output.lines()[0], imagePullProgress)
+                            whenever(api.buildImage(any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
 
-                        val onStatusUpdate = fun(p: DockerImageBuildProgress) {
-                            statusUpdates.add(p)
+                            val onStatusUpdate = fun(p: DockerImageBuildProgress) {
+                                statusUpdates.add(p)
+                            }
+
+                            client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, onStatusUpdate)
                         }
 
-                        client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, onStatusUpdate)
+                        it("sends status updates only once the first step is started") {
+                            assertThat(
+                                statusUpdates, equalTo(
+                                    listOf(
+                                        DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0", null),
+                                        DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0", imagePullProgress),
+                                        DockerImageBuildProgress(2, 5, "RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*", null)
+                                    )
+                                )
+                            )
+                        }
+                    }
+                }
+
+                given("getting credentials for the base image fails") {
+                    val exception = DockerRegistryCredentialsException("Could not load credentials: something went wrong.")
+
+                    beforeEachTest {
+                        whenever(credentialsProvider.getCredentials("nginx:1.13.0")).thenThrow(exception)
                     }
 
-                    it("sends status updates only once the first step is started") {
-                        assertThat(statusUpdates, equalTo(listOf(
-                            DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0", null),
-                            DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0", imagePullProgress),
-                            DockerImageBuildProgress(2, 5, "RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*", null)
-                        )))
+                    on("building the image") {
+                        it("throws an appropriate exception") {
+                            assertThat(
+                                { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, {}) }, throws<ImageBuildFailedException>(
+                                    withMessage("Could not build image: Could not load credentials: something went wrong.")
+                                        and withCause(exception)
+                                )
+                            )
+                        }
                     }
                 }
             }
 
-            given("getting credentials for the base image fails") {
-                val exception = DockerRegistryCredentialsException("Could not load credentials: something went wrong.")
+            given("the Dockerfile does not exist") {
+                on("building the image") {
+                    it("throws an appropriate exception") {
+                        assertThat(
+                            { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, {}) },
+                            throws<ImageBuildFailedException>(withMessage("Could not build image: the Dockerfile 'some-Dockerfile-path' does not exist in '/path/to/build/dir'"))
+                        )
+                    }
+                }
+            }
+
+            given("the Dockerfile exists but is not a child of the build directory") {
+                val dockerfilePathOutsideBuildDir = "../some-Dockerfile"
+                val resolvedDockerfilePath by createForEachTest { buildDirectory.resolve(dockerfilePathOutsideBuildDir) }
 
                 beforeEachTest {
-                    whenever(credentialsProvider.getCredentials("nginx:1.13.0")).thenThrow(exception)
+                    Files.createDirectories(buildDirectory)
+                    Files.createFile(resolvedDockerfilePath)
                 }
 
                 on("building the image") {
                     it("throws an appropriate exception") {
-                        assertThat({ client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, {}) }, throws<ImageBuildFailedException>(
-                            withMessage("Could not build image: Could not load credentials: something went wrong.")
-                                and withCause(exception)
-                        ))
+                        assertThat(
+                            { client.build(buildDirectory, buildArgs, dockerfilePathOutsideBuildDir, imageTags, {}) },
+                            throws<ImageBuildFailedException>(withMessage("Could not build image: the Dockerfile '../some-Dockerfile' is not a child of '/path/to/build/dir'"))
+                        )
                     }
                 }
             }

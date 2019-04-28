@@ -24,10 +24,11 @@ import batect.testutils.on
 import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
 
 object ImageBuildProgressEventSpec : Spek({
     describe("an 'image build progress' event") {
-        val source = BuildImage("/some-build-dir")
+        val source = BuildImage(Paths.get("/some-build-dir"))
 
         given("it has some image pull progress information") {
             val event = ImageBuildProgressEvent(source, DockerImageBuildProgress(1, 10, "Something is happening", DockerImagePullProgress("downloading", 12, 20)))

@@ -131,7 +131,7 @@ object ContainerStartupProgressLineSpec : Spek({
             }
 
             on("after receiving an 'image pull starting' notification") {
-                val step = PullImageStep("some-image")
+                val step = PullImageStep(PullImage("some-image"))
                 beforeEachTest { line.onStepStarting(step) }
                 val output by runForEachTest { line.print() }
 
@@ -179,7 +179,7 @@ object ContainerStartupProgressLineSpec : Spek({
             }
 
             on("after receiving a 'image pull completed' notification") {
-                val event = ImagePulledEvent(DockerImage("some-image"))
+                val event = ImagePulledEvent(PullImage("some-image"), DockerImage("some-image"))
                 beforeEachTest { line.onEventPosted(event) }
                 val output by runForEachTest { line.print() }
 
@@ -451,7 +451,9 @@ object ContainerStartupProgressLineSpec : Spek({
         }
 
         given("the container's image comes from a pre-existing image that needs to be pulled") {
-            val container = Container(containerName, PullImage("some-image"))
+            val imageSource = PullImage("some-image")
+            val container = Container(containerName, imageSource)
+            val otherImageSource = PullImage("some-other-image")
 
             val line: ContainerStartupProgressLine by createForEachTest {
                 ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC))
@@ -467,7 +469,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving an 'image pull starting' notification") {
                 on("that notification being for this line's container's image") {
-                    val step = PullImageStep("some-image")
+                    val step = PullImageStep(imageSource)
                     beforeEachTest { line.onStepStarting(step) }
                     val output by runForEachTest { line.print() }
 
@@ -477,7 +479,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another image") {
-                    val step = PullImageStep("some-other-image")
+                    val step = PullImageStep(otherImageSource)
                     beforeEachTest { line.onStepStarting(step) }
                     val output by runForEachTest { line.print() }
 
@@ -489,11 +491,11 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving an 'image pull progress' notification") {
                 beforeEachTest {
-                    line.onStepStarting(PullImageStep("some-image"))
+                    line.onStepStarting(PullImageStep(imageSource))
                 }
 
                 on("that notification being for this line's container's image") {
-                    beforeEachTest { line.onEventPosted(ImagePullProgressEvent("some-image", DockerImagePullProgress("extracting", 10, 20))) }
+                    beforeEachTest { line.onEventPosted(ImagePullProgressEvent(imageSource, DockerImagePullProgress("extracting", 10, 20))) }
                     val output by runForEachTest { line.print() }
 
                     it("prints that the image is being pulled with detailed progress information") {
@@ -502,7 +504,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another image") {
-                    beforeEachTest { line.onEventPosted(ImagePullProgressEvent("some-other-image", DockerImagePullProgress("Doing something", 10, 20))) }
+                    beforeEachTest { line.onEventPosted(ImagePullProgressEvent(otherImageSource, DockerImagePullProgress("Doing something", 10, 20))) }
                     val output by runForEachTest { line.print() }
 
                     it("prints that the image is being pulled") {
@@ -513,7 +515,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving an 'image pulled' notification") {
                 describe("and that notification being for this line's container's image") {
-                    val event = ImagePulledEvent(DockerImage("some-image"))
+                    val event = ImagePulledEvent(imageSource, DockerImage("some-image"))
 
                     on("when the task network has already been created") {
                         beforeEachTest {
@@ -539,7 +541,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another image") {
-                    val event = ImagePulledEvent(DockerImage("some-other-image"))
+                    val event = ImagePulledEvent(otherImageSource, DockerImage("some-other-image"))
                     beforeEachTest { line.onEventPosted(event) }
                     val output by runForEachTest { line.print() }
 
@@ -563,7 +565,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("when the image is still being pulled but no progress information has been received yet") {
                     beforeEachTest {
-                        line.onStepStarting(PullImageStep("some-image"))
+                        line.onStepStarting(PullImageStep(imageSource))
                         line.onEventPosted(event)
                     }
 
@@ -576,8 +578,8 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("when the image is being pulled and some progress information has been received") {
                     beforeEachTest {
-                        line.onStepStarting(PullImageStep("some-image"))
-                        line.onEventPosted(ImagePullProgressEvent("some-image", DockerImagePullProgress("extracting", 10, 20)))
+                        line.onStepStarting(PullImageStep(imageSource))
+                        line.onEventPosted(ImagePullProgressEvent(imageSource, DockerImagePullProgress("extracting", 10, 20)))
                         line.onEventPosted(event)
                     }
 
@@ -590,7 +592,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("when the image has been pulled") {
                     beforeEachTest {
-                        line.onEventPosted(ImagePulledEvent(DockerImage("some-image")))
+                        line.onEventPosted(ImagePulledEvent(imageSource, DockerImage("some-image")))
                         line.onEventPosted(event)
                     }
 

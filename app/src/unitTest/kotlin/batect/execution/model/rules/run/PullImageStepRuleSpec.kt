@@ -16,6 +16,7 @@
 
 package batect.execution.model.rules.run
 
+import batect.config.PullImage
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.PullImageStep
 import batect.testutils.equalTo
@@ -26,19 +27,20 @@ import org.spekframework.spek2.style.specification.describe
 
 object PullImageStepRuleSpec : Spek({
     describe("a pull image step rule") {
-        val rule = PullImageStepRule("the-image")
+        val source = PullImage("the-image")
+        val rule = PullImageStepRule(source)
 
         on("evaluating the rule") {
             val result = rule.evaluate(emptySet())
 
             it("returns a 'pull image' step") {
-                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(PullImageStep("the-image"))))
+                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(PullImageStep(source))))
             }
         }
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(rule.toString(), equalTo("PullImageStepRule(image name: 'the-image')"))
+                assertThat(rule.toString(), equalTo("PullImageStepRule(source: $source)"))
             }
         }
     }

@@ -18,6 +18,7 @@ package batect.execution.model.events
 
 import batect.config.BuildImage
 import batect.config.Container
+import batect.config.PullImage
 import java.nio.file.Path
 
 sealed class TaskFailedEvent : TaskEvent()
@@ -34,8 +35,8 @@ data class ImageBuildFailedEvent(val source: BuildImage, val message: String) : 
     override fun toString() = "${this::class.simpleName}(source: $source, message: '$message')"
 }
 
-data class ImagePullFailedEvent(val imageName: String, val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(image: '$imageName', message: '$message')"
+data class ImagePullFailedEvent(val source: PullImage, val message: String) : TaskFailedEvent() {
+    override fun toString() = "${this::class.simpleName}(source: $source, message: '$message')"
 }
 
 data class ContainerCreationFailedEvent(val container: Container, val message: String) : TaskFailedEvent() {

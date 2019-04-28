@@ -146,13 +146,13 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
     }
 
     private fun onBuildImageStepStarting(step: BuildImageStep) {
-        if (container.imageSource is BuildImage && step.source == container.imageSource) {
+        if (step.source == container.imageSource) {
             isBuilding = true
         }
     }
 
     private fun onPullImageStepStarting(step: PullImageStep) {
-        if (container.imageSource is PullImage && step.imageName == container.imageSource.imageName) {
+        if (step.source == container.imageSource) {
             isPulling = true
         }
     }
@@ -203,7 +203,7 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
     }
 
     private fun onImagePullProgressEventPosted(event: ImagePullProgressEvent) {
-        if (container.imageSource == PullImage(event.imageName)) {
+        if (container.imageSource == event.source) {
             isPulling = true
             lastPullProgressUpdate = event.progress
         }

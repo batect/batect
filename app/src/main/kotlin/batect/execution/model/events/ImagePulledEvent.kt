@@ -16,8 +16,9 @@
 
 package batect.execution.model.events
 
+import batect.config.PullImage
 import batect.docker.DockerImage
 
-data class ImagePulledEvent(val image: DockerImage) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(image: '${image.id}')"
+data class ImagePulledEvent(val source: PullImage, val image: DockerImage) : TaskEvent() {
+    override fun toString() = "${this::class.simpleName}(source: $source, image: '${image.id}')"
 }

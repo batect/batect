@@ -21,6 +21,7 @@ import batect.config.Container
 import batect.config.HealthCheckConfig
 import batect.config.LiteralValue
 import batect.config.PortMapping
+import batect.config.PullImage
 import batect.config.VolumeMount
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerHealthCheckException
@@ -239,7 +240,8 @@ object TaskStepRunnerSpec : Spek({
             }
 
             describe("running a 'pull image' step") {
-                val step = PullImageStep("some-image")
+                val source = PullImage("some-image")
+                val step = PullImageStep(source)
 
                 on("when pulling the image succeeds") {
                     val image = DockerImage("some-image")
@@ -261,12 +263,12 @@ object TaskStepRunnerSpec : Spek({
                     }
 
                     it("emits a 'image pulled' event") {
-                        verify(eventSink).postEvent(ImagePulledEvent(image))
+                        verify(eventSink).postEvent(ImagePulledEvent(source, image))
                     }
 
                     it("emits a 'image pull progress' event for each update received from Docker") {
-                        verify(eventSink).postEvent(ImagePullProgressEvent("some-image", update1))
-                        verify(eventSink).postEvent(ImagePullProgressEvent("some-image", update2))
+                        verify(eventSink).postEvent(ImagePullProgressEvent(source, update1))
+                        verify(eventSink).postEvent(ImagePullProgressEvent(source, update2))
                     }
                 }
 
@@ -278,7 +280,7 @@ object TaskStepRunnerSpec : Spek({
                     }
 
                     it("emits a 'image pull failed' event") {
-                        verify(eventSink).postEvent(ImagePullFailedEvent("some-image", "Pulling image 'some-image' failed. Output from Docker was: Something went wrong."))
+                        verify(eventSink).postEvent(ImagePullFailedEvent(source, "Pulling image 'some-image' failed. Output from Docker was: Something went wrong."))
                     }
                 }
             }

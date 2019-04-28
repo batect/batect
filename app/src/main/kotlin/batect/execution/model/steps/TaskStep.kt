@@ -20,6 +20,7 @@ import batect.config.BuildImage
 import batect.config.Container
 import batect.config.EnvironmentVariableExpression
 import batect.config.PortMapping
+import batect.config.PullImage
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
@@ -37,8 +38,8 @@ data class BuildImageStep(
         "image tags: $imageTags)"
 }
 
-data class PullImageStep(val imageName: String) : TaskStep() {
-    override fun toString() = "${this.javaClass.simpleName}(image name: '$imageName')"
+data class PullImageStep(val source: PullImage) : TaskStep() {
+    override fun toString() = "${this.javaClass.simpleName}(source: $source)"
 }
 
 object CreateTaskNetworkStep : TaskStep() {

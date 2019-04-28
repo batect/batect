@@ -16,8 +16,9 @@
 
 package batect.execution.model.events
 
+import batect.config.PullImage
 import batect.docker.pull.DockerImagePullProgress
 
-data class ImagePullProgressEvent(val imageName: String, val progress: DockerImagePullProgress) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(image: '$imageName', current operation: '${progress.currentOperation}', completed bytes: ${progress.completedBytes}, total bytes: ${progress.totalBytes})"
+data class ImagePullProgressEvent(val source: PullImage, val progress: DockerImagePullProgress) : TaskEvent() {
+    override fun toString() = "${this::class.simpleName}(source: $source, current operation: '${progress.currentOperation}', completed bytes: ${progress.completedBytes}, total bytes: ${progress.totalBytes})"
 }

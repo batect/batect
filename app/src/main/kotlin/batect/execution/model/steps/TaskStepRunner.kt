@@ -115,13 +115,13 @@ class TaskStepRunner(
 
     private fun handlePullImageStep(step: PullImageStep, eventSink: TaskEventSink) {
         try {
-            val image = dockerClient.pullImage(step.imageName) { progressUpdate ->
-                eventSink.postEvent(ImagePullProgressEvent(step.imageName, progressUpdate))
+            val image = dockerClient.pullImage(step.source.imageName) { progressUpdate ->
+                eventSink.postEvent(ImagePullProgressEvent(step.source, progressUpdate))
             }
 
-            eventSink.postEvent(ImagePulledEvent(image))
+            eventSink.postEvent(ImagePulledEvent(step.source, image))
         } catch (e: ImagePullFailedException) {
-            eventSink.postEvent(ImagePullFailedEvent(step.imageName, e.message ?: ""))
+            eventSink.postEvent(ImagePullFailedEvent(step.source, e.message ?: ""))
         }
     }
 

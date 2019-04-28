@@ -44,7 +44,8 @@ object CreateContainerStepRuleSpec : Spek({
     describe("a create container step rule") {
         given("the container uses an existing image") {
             val imageName = "the-image"
-            val container = Container("the-container", PullImage(imageName))
+            val imageSource = PullImage(imageName)
+            val container = Container("the-container", imageSource)
             val otherContainer = Container("the-other-container", imageSourceDoesNotMatter())
             val command = Command.parse("the-command")
             val workingDirectory = "some-working-dir"
@@ -59,8 +60,8 @@ object CreateContainerStepRuleSpec : Spek({
                 beforeEachTest { events.add(TaskNetworkCreatedEvent(network)) }
 
                 given("the image for the container has been pulled") {
-                    val image = DockerImage(imageName)
-                    beforeEachTest { events.add(ImagePulledEvent(image)) }
+                    val image = DockerImage("some-image-id")
+                    beforeEachTest { events.add(ImagePulledEvent(imageSource, image)) }
 
                     on("evaluating the rule") {
                         val result by runForEachTest { rule.evaluate(events) }
@@ -81,7 +82,7 @@ object CreateContainerStepRuleSpec : Spek({
                 }
 
                 given("an image has been pulled for another container") {
-                    beforeEachTest { events.add(ImagePulledEvent(DockerImage("some-other-image"))) }
+                    beforeEachTest { events.add(ImagePulledEvent(PullImage("some-other-image"), DockerImage("some-other-image-id"))) }
 
                     on("evaluating the rule") {
                         val result by runForEachTest { rule.evaluate(events) }

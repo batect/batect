@@ -24,11 +24,11 @@ import org.spekframework.spek2.style.specification.describe
 
 object BuildImageSpec : Spek({
     describe("a image build source") {
-        val step = BuildImage("/image-build-dir", mapOf("some_arg" to "some_value"), "some-Dockerfile-path")
+        val source = BuildImage("/image-build-dir", mapOf("some_arg" to "some_value"), "some-Dockerfile-path")
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(step.toString(), equalTo("BuildImage(build directory: '/image-build-dir', build args: [some_arg=some_value], Dockerfile path: 'some-Dockerfile-path')"))
+                assertThat(source.toString(), equalTo("BuildImage(build directory: '/image-build-dir', build args: [some_arg=some_value], Dockerfile path: 'some-Dockerfile-path')"))
             }
         }
     }

@@ -18,6 +18,7 @@ package batect.ui.simple
 
 import batect.config.BuildImage
 import batect.config.Container
+import batect.config.PullImage
 import batect.execution.RunOptions
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerStartedEvent
@@ -57,7 +58,7 @@ class SimpleEventLogger(
             when (event) {
                 is TaskFailedEvent -> logTaskFailure(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
                 is ImageBuiltEvent -> logImageBuilt(event.source)
-                is ImagePulledEvent -> logImagePulled(event.image.id)
+                is ImagePulledEvent -> logImagePulled(event.source)
                 is ContainerStartedEvent -> logContainerStarted(event.container)
                 is ContainerBecameHealthyEvent -> logContainerBecameHealthy(event.container)
             }
@@ -73,7 +74,7 @@ class SimpleEventLogger(
         synchronized(lock) {
             when (step) {
                 is BuildImageStep -> logImageBuildStarting(step.source)
-                is PullImageStep -> logImagePullStarting(step.imageName)
+                is PullImageStep -> logImagePullStarting(step.source)
                 is StartContainerStep -> logContainerStarting(step.container)
                 is RunContainerStep -> logCommandStarting(step.container, commands[step.container])
                 is CreateContainerStep -> commands[step.container] = step.command
@@ -98,12 +99,12 @@ class SimpleEventLogger(
             }
     }
 
-    private fun logImagePullStarting(imageName: String) {
-        console.println(Text.white(Text("Pulling ") + Text.bold(imageName) + Text("...")))
+    private fun logImagePullStarting(source: PullImage) {
+        console.println(Text.white(Text("Pulling ") + Text.bold(source.imageName) + Text("...")))
     }
 
-    private fun logImagePulled(imageName: String) {
-        console.println(Text.white(Text("Pulled ") + Text.bold(imageName) + Text(".")))
+    private fun logImagePulled(source: PullImage) {
+        console.println(Text.white(Text("Pulled ") + Text.bold(source.imageName) + Text(".")))
     }
 
     private fun logCommandStarting(container: Container, command: Command?) {

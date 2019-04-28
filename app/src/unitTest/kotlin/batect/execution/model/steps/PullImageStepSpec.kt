@@ -16,6 +16,7 @@
 
 package batect.execution.model.steps
 
+import batect.config.PullImage
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -24,11 +25,12 @@ import org.spekframework.spek2.style.specification.describe
 
 object PullImageStepSpec : Spek({
     describe("a 'pull image' step") {
-        val step = PullImageStep("the-image")
+        val source = PullImage("the-image")
+        val step = PullImageStep(source)
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(step.toString(), equalTo("PullImageStep(image name: 'the-image')"))
+                assertThat(step.toString(), equalTo("PullImageStep(source: $source)"))
             }
         }
     }

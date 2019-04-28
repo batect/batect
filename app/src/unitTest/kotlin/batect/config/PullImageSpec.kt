@@ -14,24 +14,21 @@
    limitations under the License.
 */
 
-package batect.execution.model.events
+package batect.config
 
-import batect.config.PullImage
-import batect.docker.DockerImage
 import batect.testutils.on
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object ImagePulledEventSpec : Spek({
-    describe("an 'image pulled' event") {
-        val source = PullImage("image-1")
-        val image = DockerImage("image-1-id")
-        val event = ImagePulledEvent(source, image)
+object PullImageSpec : Spek({
+    describe("a image pull source") {
+        val source = PullImage("some-image")
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImagePulledEvent(source: $source, image: 'image-1-id')"))
+                assertThat(source.toString(), equalTo("PullImage(image: 'some-image')"))
             }
         }
     }

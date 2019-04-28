@@ -66,7 +66,7 @@ class RunStagePlanner(private val logger: Logger) {
             .groupBy { it.imageSource }
             .mapToSet { (imageSource, containers) ->
                 when (imageSource) {
-                    is PullImage -> PullImageStepRule(imageSource.imageName)
+                    is PullImage -> PullImageStepRule(imageSource)
                     is BuildImage -> BuildImageStepRule(imageSource, imageTagsFor(graph.config.projectName!!, containers))
                 }
             }

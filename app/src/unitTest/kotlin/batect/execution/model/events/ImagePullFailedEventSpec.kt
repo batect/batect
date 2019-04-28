@@ -16,6 +16,7 @@
 
 package batect.execution.model.events
 
+import batect.config.PullImage
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -24,11 +25,12 @@ import org.spekframework.spek2.style.specification.describe
 
 object ImagePullFailedEventSpec : Spek({
     describe("a 'image pull failed' event") {
-        val event = ImagePullFailedEvent("some-image", "Could not pull image 'some-image': Something went wrong")
+        val source = PullImage("some-image")
+        val event = ImagePullFailedEvent(source, "Could not pull image 'some-image': Something went wrong")
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(event.toString(), equalTo("ImagePullFailedEvent(image: 'some-image', message: 'Could not pull image 'some-image': Something went wrong')"))
+                assertThat(event.toString(), equalTo("ImagePullFailedEvent(source: $source, message: 'Could not pull image 'some-image': Something went wrong')"))
             }
         }
     }

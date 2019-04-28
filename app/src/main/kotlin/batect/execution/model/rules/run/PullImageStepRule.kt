@@ -16,15 +16,16 @@
 
 package batect.execution.model.rules.run
 
+import batect.config.PullImage
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.PullImageStep
 
-data class PullImageStepRule(val imageName: String) : TaskStepRule() {
+data class PullImageStepRule(val source: PullImage) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
-        return TaskStepRuleEvaluationResult.Ready(PullImageStep(imageName))
+        return TaskStepRuleEvaluationResult.Ready(PullImageStep(source))
     }
 
-    override fun toString(): String = "${this::class.simpleName}(image name: '$imageName')"
+    override fun toString(): String = "${this::class.simpleName}(source: $source)"
 }

@@ -16,6 +16,7 @@
 
 package batect.execution.model.events
 
+import batect.config.PullImage
 import batect.docker.pull.DockerImagePullProgress
 import batect.testutils.on
 import com.natpryce.hamkrest.equalTo
@@ -24,11 +25,12 @@ import org.spekframework.spek2.style.specification.describe
 
 object ImagePullProgressEventSpec : Spek({
     describe("an 'image pull progress' event") {
-        val event = ImagePullProgressEvent("some-image", DockerImagePullProgress("Doing stuff", 10, 30))
+        val source = PullImage("some-image")
+        val event = ImagePullProgressEvent(source, DockerImagePullProgress("Doing stuff", 10, 30))
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImagePullProgressEvent(image: 'some-image', current operation: 'Doing stuff', completed bytes: 10, total bytes: 30)"))
+                com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImagePullProgressEvent(source: $source, current operation: 'Doing stuff', completed bytes: 10, total bytes: 30)"))
             }
         }
     }

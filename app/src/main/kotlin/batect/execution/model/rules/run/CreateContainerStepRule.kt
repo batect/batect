@@ -67,7 +67,7 @@ data class CreateContainerStepRule(
     private fun findImage(pastEvents: Set<TaskEvent>): DockerImage? {
         return when (container.imageSource) {
             is PullImage -> pastEvents
-                .singleInstanceOrNull<ImagePulledEvent> { it.image.id == container.imageSource.imageName }
+                .singleInstanceOrNull<ImagePulledEvent> { it.source == container.imageSource }
                 ?.image
             is BuildImage -> pastEvents
                 .singleInstanceOrNull<ImageBuiltEvent> { it.source == container.imageSource }

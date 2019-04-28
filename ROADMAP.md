@@ -79,6 +79,7 @@ If there's something you're really keen to see, pull requests are always welcome
     * errors - type only (no further details due to privacy issues)
     * shape of task / container dependency graph (numbers only)
     * timing for task execution - at least startup / run / cleanup times, information about task steps (eg. image pull vs create vs wait for healthy) would be good too
+    * when a 'update is available' message is shown
   * metadata:
     * OS type and version
     * batect version

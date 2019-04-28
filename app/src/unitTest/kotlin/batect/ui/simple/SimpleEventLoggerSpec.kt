@@ -56,9 +56,11 @@ import java.time.Duration
 
 object SimpleEventLoggerSpec : Spek({
     describe("a simple event logger") {
-        val container1 = Container("container-1", BuildImage("/some-image-dir"))
-        val container2 = Container("container-2", BuildImage("/some-image-dir"))
-        val container3 = Container("container-3", BuildImage("/some-other-image-dir"))
+        val container1And2ImageSource = BuildImage("/some-image-dir")
+        val container3ImageSource = BuildImage("/some-other-image-dir")
+        val container1 = Container("container-1", container1And2ImageSource)
+        val container2 = Container("container-2", container1And2ImageSource)
+        val container3 = Container("container-3", container3ImageSource)
         val containers = setOf(container1, container2, container3)
 
         val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
@@ -72,7 +74,7 @@ object SimpleEventLoggerSpec : Spek({
         describe("handling when steps start") {
             on("when a 'build image' step is starting") {
                 beforeEachTest {
-                    val step = BuildImageStep("/some-image-dir", emptyMap(), "Dockerfile", emptySet())
+                    val step = BuildImageStep(container1And2ImageSource, emptySet())
                     logger.onStartingTaskStep(step)
                 }
 
@@ -208,7 +210,7 @@ object SimpleEventLoggerSpec : Spek({
 
             on("when an 'image built' event is posted") {
                 beforeEachTest {
-                    val event = ImageBuiltEvent("/some-image-dir", DockerImage("abc-123"))
+                    val event = ImageBuiltEvent(container1And2ImageSource, DockerImage("abc-123"))
                     logger.postEvent(event)
                 }
 

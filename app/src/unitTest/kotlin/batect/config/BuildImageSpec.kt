@@ -14,24 +14,21 @@
    limitations under the License.
 */
 
-package batect.execution.model.events
+package batect.config
 
-import batect.config.BuildImage
-import batect.docker.DockerImage
 import batect.testutils.on
+import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object ImageBuiltEventSpec : Spek({
-    describe("an 'image built' event") {
-        val image = DockerImage("image-1")
-        val source = BuildImage("/some-build-dir")
-        val event = ImageBuiltEvent(source, image)
+object BuildImageSpec : Spek({
+    describe("a image build source") {
+        val step = BuildImage("/image-build-dir", mapOf("some_arg" to "some_value"), "some-Dockerfile-path")
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuiltEvent(source: $source, image: 'image-1')"))
+                assertThat(step.toString(), equalTo("BuildImage(build directory: '/image-build-dir', build args: [some_arg=some_value], Dockerfile path: 'some-Dockerfile-path')"))
             }
         }
     }

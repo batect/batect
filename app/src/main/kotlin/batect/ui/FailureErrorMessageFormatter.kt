@@ -42,7 +42,7 @@ import batect.ui.text.join
 class FailureErrorMessageFormatter {
     fun formatErrorMessage(event: TaskFailedEvent, runOptions: RunOptions): TextRun = when (event) {
         is TaskNetworkCreationFailedEvent -> formatErrorMessage("Could not create network for task", event.message)
-        is ImageBuildFailedEvent -> formatErrorMessage("Could not build image from directory '${event.buildDirectory}'", event.message)
+        is ImageBuildFailedEvent -> formatErrorMessage("Could not build image from directory '${event.source.buildDirectory}'", event.message)
         is ImagePullFailedEvent -> formatErrorMessage(Text("Could not pull image ") + Text.bold(event.imageName), event.message)
         is ContainerCreationFailedEvent -> formatErrorMessage(Text("Could not create container ") + Text.bold(event.container.name), event.message)
         is ContainerStartFailedEvent -> formatErrorMessage(Text("Could not start container ") + Text.bold(event.container.name), event.message) + hintToReRunWithCleanupDisabled(runOptions)

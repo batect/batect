@@ -56,7 +56,7 @@ class SimpleEventLogger(
         synchronized(lock) {
             when (event) {
                 is TaskFailedEvent -> logTaskFailure(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
-                is ImageBuiltEvent -> logImageBuilt(event.buildDirectory)
+                is ImageBuiltEvent -> logImageBuilt(event.source)
                 is ImagePulledEvent -> logImagePulled(event.image.id)
                 is ContainerStartedEvent -> logContainerStarted(event.container)
                 is ContainerBecameHealthyEvent -> logContainerBecameHealthy(event.container)
@@ -72,7 +72,7 @@ class SimpleEventLogger(
     override fun onStartingTaskStep(step: TaskStep) {
         synchronized(lock) {
             when (step) {
-                is BuildImageStep -> logImageBuildStarting(step.buildDirectory)
+                is BuildImageStep -> logImageBuildStarting(step.source)
                 is PullImageStep -> logImagePullStarting(step.imageName)
                 is StartContainerStep -> logContainerStarting(step.container)
                 is RunContainerStep -> logCommandStarting(step.container, commands[step.container])
@@ -82,17 +82,17 @@ class SimpleEventLogger(
         }
     }
 
-    private fun logImageBuildStarting(buildDirectory: String) {
+    private fun logImageBuildStarting(source: BuildImage) {
         containers
-            .filter { it.imageSource == BuildImage(buildDirectory) }
+            .filter { it.imageSource == source }
             .forEach {
                 console.println(Text.white(Text("Building ") + Text.bold(it.name) + Text("...")))
             }
     }
 
-    private fun logImageBuilt(buildDirectory: String) {
+    private fun logImageBuilt(source: BuildImage) {
         containers
-            .filter { it.imageSource == BuildImage(buildDirectory) }
+            .filter { it.imageSource == source }
             .forEach {
                 console.println(Text.white(Text("Built ") + Text.bold(it.name) + Text(".")))
             }

@@ -16,6 +16,7 @@
 
 package batect.execution.model.events
 
+import batect.config.BuildImage
 import batect.docker.DockerImageBuildProgress
 import batect.docker.pull.DockerImagePullProgress
 import batect.testutils.given
@@ -26,22 +27,24 @@ import org.spekframework.spek2.style.specification.describe
 
 object ImageBuildProgressEventSpec : Spek({
     describe("an 'image build progress' event") {
+        val source = BuildImage("/some-build-dir")
+
         given("it has some image pull progress information") {
-            val event = ImageBuildProgressEvent("/some-build-dir", DockerImageBuildProgress(1, 10, "Something is happening", DockerImagePullProgress("downloading", 12, 20)))
+            val event = ImageBuildProgressEvent(source, DockerImageBuildProgress(1, 10, "Something is happening", DockerImagePullProgress("downloading", 12, 20)))
 
             on("toString()") {
                 it("returns a human-readable representation of itself") {
-                    com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuildProgressEvent(build directory: '/some-build-dir', current step: 1, total steps: 10, message: 'Something is happening', pull progress: 'downloading 12 B of 20 B (60%)')"))
+                    com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuildProgressEvent(source: $source, current step: 1, total steps: 10, message: 'Something is happening', pull progress: 'downloading 12 B of 20 B (60%)')"))
                 }
             }
         }
 
         given("it has no image pull progress information") {
-            val event = ImageBuildProgressEvent("/some-build-dir", DockerImageBuildProgress(1, 10, "Something is happening", null))
+            val event = ImageBuildProgressEvent(source, DockerImageBuildProgress(1, 10, "Something is happening", null))
 
             on("toString()") {
                 it("returns a human-readable representation of itself") {
-                    com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuildProgressEvent(build directory: '/some-build-dir', current step: 1, total steps: 10, message: 'Something is happening', pull progress: null)"))
+                    com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuildProgressEvent(source: $source, current step: 1, total steps: 10, message: 'Something is happening', pull progress: null)"))
                 }
             }
         }

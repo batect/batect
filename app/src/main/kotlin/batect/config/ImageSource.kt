@@ -17,5 +17,14 @@
 package batect.config
 
 sealed class ImageSource
-data class BuildImage(val buildDirectory: String, val buildArgs: Map<String, String> = emptyMap(), val dockerfilePath: String = "Dockerfile") : ImageSource()
+
+data class BuildImage(val buildDirectory: String, val buildArgs: Map<String, String> = emptyMap(), val dockerfilePath: String = "Dockerfile") : ImageSource() {
+    override fun toString(): String {
+        return "${this.javaClass.simpleName}(" +
+            "build directory: '$buildDirectory', " +
+            "build args: [${buildArgs.map { "${it.key}=${it.value}" }.joinToString(", ")}], " +
+            "Dockerfile path: '$dockerfilePath')"
+    }
+}
+
 data class PullImage(val imageName: String) : ImageSource()

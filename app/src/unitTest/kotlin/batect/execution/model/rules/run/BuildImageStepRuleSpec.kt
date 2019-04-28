@@ -16,6 +16,7 @@
 
 package batect.execution.model.rules.run
 
+import batect.config.BuildImage
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.BuildImageStep
 import batect.testutils.equalTo
@@ -26,23 +27,21 @@ import org.spekframework.spek2.style.specification.describe
 
 object BuildImageStepRuleSpec : Spek({
     describe("a build image step rule") {
-        val buildDirectory = "/some-build-dir"
-        val buildArgs = mapOf("some_arg" to "some_value")
-        val dockerfilePath = "some-Dockerfile-path"
+        val source = BuildImage("/some-build-dir", mapOf("some_arg" to "some_value"), "some-Dockerfile-path")
         val imageTags = setOf("some_image_tag", "some_other_image_tag")
-        val rule = BuildImageStepRule(buildDirectory, buildArgs, dockerfilePath, imageTags)
+        val rule = BuildImageStepRule(source, imageTags)
 
         on("evaluating the rule") {
             val result = rule.evaluate(emptySet())
 
             it("returns a 'build image' step") {
-                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(BuildImageStep(buildDirectory, buildArgs, dockerfilePath, imageTags))))
+                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(BuildImageStep(source, imageTags))))
             }
         }
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(rule.toString(), equalTo("BuildImageStepRule(build directory: '/some-build-dir', build args: [some_arg=some_value], Dockerfile path: 'some-Dockerfile-path', image tags: [some_image_tag, some_other_image_tag])"))
+                assertThat(rule.toString(), equalTo("BuildImageStepRule(source: $source, image tags: [some_image_tag, some_other_image_tag])"))
             }
         }
     }

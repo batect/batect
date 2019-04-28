@@ -16,8 +16,9 @@
 
 package batect.execution.model.events
 
+import batect.config.BuildImage
 import batect.docker.DockerImage
 
-data class ImageBuiltEvent(val buildDirectory: String, val image: DockerImage) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(build directory: '$buildDirectory', image: '${image.id}')"
+data class ImageBuiltEvent(val source: BuildImage, val image: DockerImage) : TaskEvent() {
+    override fun toString() = "${this::class.simpleName}(source: $source, image: '${image.id}')"
 }

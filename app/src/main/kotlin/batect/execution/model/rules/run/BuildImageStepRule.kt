@@ -16,24 +16,21 @@
 
 package batect.execution.model.rules.run
 
+import batect.config.BuildImage
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.BuildImageStep
 
 data class BuildImageStepRule(
-    val buildDirectory: String,
-    val buildArgs: Map<String, String>,
-    val dockerfilePath: String,
+    val source: BuildImage,
     val imageTags: Set<String>
 ) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
-        return TaskStepRuleEvaluationResult.Ready(BuildImageStep(buildDirectory, buildArgs, dockerfilePath, imageTags))
+        return TaskStepRuleEvaluationResult.Ready(BuildImageStep(source, imageTags))
     }
 
     override fun toString() = "${this::class.simpleName}(" +
-        "build directory: '$buildDirectory', " +
-        "build args: [${buildArgs.map { "${it.key}=${it.value}" }.joinToString(", ")}], " +
-        "Dockerfile path: '$dockerfilePath', " +
+        "source: $source, " +
         "image tags: $imageTags)"
 }

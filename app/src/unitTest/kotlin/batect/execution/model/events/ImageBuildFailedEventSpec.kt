@@ -16,6 +16,7 @@
 
 package batect.execution.model.events
 
+import batect.config.BuildImage
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -24,11 +25,12 @@ import org.spekframework.spek2.style.specification.describe
 
 object ImageBuildFailedEventSpec : Spek({
     describe("a 'image build failed' event") {
-        val event = ImageBuildFailedEvent("/some-build-dir", "Something went wrong")
+        val source = BuildImage("/some-build-dir")
+        val event = ImageBuildFailedEvent(source, "Something went wrong")
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(event.toString(), equalTo("ImageBuildFailedEvent(build directory: '/some-build-dir', message: 'Something went wrong')"))
+                assertThat(event.toString(), equalTo("ImageBuildFailedEvent(source: $source, message: 'Something went wrong')"))
             }
         }
     }

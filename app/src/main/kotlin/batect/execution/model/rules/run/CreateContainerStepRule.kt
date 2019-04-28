@@ -70,7 +70,7 @@ data class CreateContainerStepRule(
                 .singleInstanceOrNull<ImagePulledEvent> { it.image.id == container.imageSource.imageName }
                 ?.image
             is BuildImage -> pastEvents
-                .singleInstanceOrNull<ImageBuiltEvent> { it.buildDirectory == container.imageSource.buildDirectory }
+                .singleInstanceOrNull<ImageBuiltEvent> { it.source == container.imageSource }
                 ?.image
         }
     }

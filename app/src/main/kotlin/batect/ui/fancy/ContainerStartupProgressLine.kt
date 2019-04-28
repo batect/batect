@@ -146,7 +146,7 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
     }
 
     private fun onBuildImageStepStarting(step: BuildImageStep) {
-        if (container.imageSource is BuildImage && step.buildDirectory == container.imageSource.buildDirectory) {
+        if (container.imageSource is BuildImage && step.source == container.imageSource) {
             isBuilding = true
         }
     }
@@ -190,14 +190,14 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
     }
 
     private fun onImageBuildProgressEventPosted(event: ImageBuildProgressEvent) {
-        if (container.imageSource == BuildImage(event.buildDirectory)) {
+        if (container.imageSource == event.source) {
             isBuilding = true
             lastBuildProgressUpdate = event.progress
         }
     }
 
     private fun onImageBuiltEventPosted(event: ImageBuiltEvent) {
-        if (container.imageSource == BuildImage(event.buildDirectory)) {
+        if (container.imageSource == event.source) {
             hasBeenBuilt = true
         }
     }

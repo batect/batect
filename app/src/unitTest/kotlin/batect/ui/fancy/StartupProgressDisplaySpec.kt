@@ -18,7 +18,7 @@ package batect.ui.fancy
 
 import batect.docker.DockerNetwork
 import batect.execution.model.events.TaskNetworkCreatedEvent
-import batect.execution.model.steps.BuildImageStep
+import batect.execution.model.steps.TaskStep
 import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.on
@@ -70,7 +70,7 @@ object StartupProgressDisplaySpec : Spek({
         }
 
         on("receiving notification that a step is about to start") {
-            val step = BuildImageStep("/some-image-dir", emptyMap(), "Dockerfile", emptySet())
+            val step = mock<TaskStep>()
             beforeEachTest { display.onStepStarting(step) }
 
             it("forwards it to each progress line") {

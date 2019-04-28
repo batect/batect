@@ -16,6 +16,7 @@
 
 package batect.execution.model.steps
 
+import batect.config.BuildImage
 import batect.config.Container
 import batect.config.EnvironmentVariableExpression
 import batect.config.PortMapping
@@ -28,15 +29,11 @@ import java.nio.file.Path
 sealed class TaskStep
 
 data class BuildImageStep(
-    val buildDirectory: String,
-    val buildArgs: Map<String, String>,
-    val dockerfilePath: String,
+    val source: BuildImage,
     val imageTags: Set<String>
 ) : TaskStep() {
     override fun toString() = "${this.javaClass.simpleName}(" +
-        "build directory: '$buildDirectory', " +
-        "build args: [${buildArgs.map { "${it.key}=${it.value}" }.joinToString(", ")}], " +
-        "Dockerfile path: '$dockerfilePath', " +
+        "source: $source, " +
         "image tags: $imageTags)"
 }
 

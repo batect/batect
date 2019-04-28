@@ -16,6 +16,7 @@
 
 package batect.execution.model.steps
 
+import batect.config.BuildImage
 import batect.config.Container
 import batect.config.HealthCheckConfig
 import batect.config.LiteralValue
@@ -162,7 +163,8 @@ object TaskStepRunnerSpec : Spek({
                 val buildArgs = mapOf("some_arg" to "some_value", "SOME_PROXY_CONFIG" to "overridden")
                 val dockerfilePath = "some-Dockerfile-path"
                 val imageTags = setOf("some_image_tag", "some_other_image_tag")
-                val step = BuildImageStep(buildDirectory, buildArgs, dockerfilePath, imageTags)
+                val imageSource = BuildImage(buildDirectory, buildArgs, dockerfilePath)
+                val step = BuildImageStep(imageSource, imageTags)
 
                 describe("when building the image succeeds") {
                     on("and propagating proxy-related environment variables is enabled") {
@@ -196,12 +198,12 @@ object TaskStepRunnerSpec : Spek({
                         }
 
                         it("emits a 'image build progress' event for each update received from Docker") {
-                            verify(eventSink).postEvent(ImageBuildProgressEvent(buildDirectory, update1))
-                            verify(eventSink).postEvent(ImageBuildProgressEvent(buildDirectory, update2))
+                            verify(eventSink).postEvent(ImageBuildProgressEvent(imageSource, update1))
+                            verify(eventSink).postEvent(ImageBuildProgressEvent(imageSource, update2))
                         }
 
                         it("emits a 'image built' event") {
-                            verify(eventSink).postEvent(ImageBuiltEvent(buildDirectory, image))
+                            verify(eventSink).postEvent(ImageBuiltEvent(imageSource, image))
                         }
                     }
 
@@ -219,7 +221,7 @@ object TaskStepRunnerSpec : Spek({
                         }
 
                         it("emits a 'image built' event") {
-                            verify(eventSink).postEvent(ImageBuiltEvent(buildDirectory, image))
+                            verify(eventSink).postEvent(ImageBuiltEvent(imageSource, image))
                         }
                     }
                 }
@@ -231,7 +233,7 @@ object TaskStepRunnerSpec : Spek({
                     }
 
                     it("emits a 'image build failed' event") {
-                        verify(eventSink).postEvent(ImageBuildFailedEvent(buildDirectory, "Something went wrong."))
+                        verify(eventSink).postEvent(ImageBuildFailedEvent(imageSource, "Something went wrong."))
                     }
                 }
             }

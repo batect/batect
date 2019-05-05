@@ -18,6 +18,9 @@ List of build args (in `name: value` format) to use when building the image in [
 
 Each build arg must be defined in the Dockerfile with an `ARG` instruction otherwise the value provided will have no effect.
 
+!!! warning
+    Use caution when using build args for secret values. Build arg values can be revealed by anyone with a copy of the image with the `docker history` command.
+
 Available since v0.28.
 
 ## `dockerfile`
@@ -194,14 +197,14 @@ by that user, so this is less of an issue. However, for consistency, the same co
 See [this page](../tips/BuildArtifactsOwnedByRoot.md) for more information on the effects of this option and why it is necessary.
 
 ## `privileged`
-Run the container in [privileged mode](https://docs.docker.com/engine/reference/commandline/run/#full-container-capabilities---privileged).
+Set to `true` to run the container in [privileged mode](https://docs.docker.com/engine/reference/commandline/run/#full-container-capabilities---privileged).
 
 See also [`capabilities_to_add` and `capabilities_to_drop`](#capabilities_to_add-and-capabilities_to_drop).
 
 Available since v0.29.
 
 ## `capabilities_to_add` and `capabilities_to_drop`
-Add or drop [capabilities](http://man7.org/linux/man-pages/man7/capabilities.7.html) for the container.
+List of [capabilities](http://man7.org/linux/man-pages/man7/capabilities.7.html) to add or drop for the container.
 
 This is equivalent to passing [`--cap-add` or `--cap-drop`](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) to `docker run`.
 

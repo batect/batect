@@ -99,11 +99,11 @@ Let's imagine our application just has one dependency, a Postgres database. We c
 FROM postgres:9.6.2
 ```
 
-Save this as `dev-infrastructure/database/Dockerfile`.
+Save this as `.batect/database/Dockerfile`.
 
 So far, so good - this is just like what we had before for the build environment. However, this will start an empty Postgres database,
 and our application probably needs at least a database and a table or two. Create a SQL script called `create-structure.sql` that creates
-your database tables and save it in the `dev-infrastructure/database` folder you just created.
+your database tables and save it in the `.batect/database` folder you just created.
 
 We can then take advantage of a feature of the [standard Postgres image](https://hub.docker.com/r/library/postgres/) to have this SQL
 script run when the container starts. Any `.sql` file in the `/docker-entrypoint-initdb.d` directory will automatically be run when
@@ -122,8 +122,8 @@ to start running those tests until it's actually ready to use. While Postgres is
 and other things can take anywhere from a few moments to a minute or two to start up and be ready. We can use
 [Docker's health check feature](https://docs.docker.com/engine/reference/builder/#healthcheck) to indicate when a container is ready for use.
 
-In our case, we can take [the health check script](https://github.com/charleskorn/batect-sample-java/tree/master/dev-infrastructure/database/health-check.sh)
-from the sample project and copy it into our `dev-infrastructure/database` folder. All it does is try to issue a simple query against the
+In our case, we can take [the health check script](https://github.com/charleskorn/batect-sample-java/tree/master/.batect/database/health-check.sh)
+from the sample project and copy it into our `.batect/database` folder. All it does is try to issue a simple query against the
 database - if that succeeds, we can assume that the database is up and running. (There's
 [a collection of sample health check scripts provided by Docker](https://github.com/docker-library/healthcheck/) you can use.)
 
@@ -150,7 +150,7 @@ containers:
   ...
 
   database:
-    build_directory: dev-infrastructure/database
+    build_directory: .batect/database
     environment:
       - POSTGRES_USER=international-transfers-service-user
       - POSTGRES_PASSWORD=TheSuperSecretPassword
@@ -197,7 +197,7 @@ containers:
   ...
 
   international-transfers-service:
-    build_directory: dev-infrastructure/international-transfers-service
+    build_directory: .batect/international-transfers-service
     dependencies:
       - database
 ```

@@ -238,10 +238,10 @@ If the image has not already been pulled, batect will pull it before starting th
 ```yaml
 containers:
   build-env:
-    build_directory: dev-infrastructure/build-env
+    build_directory: .batect/build-env
 ```
 
-Running the container `build-env` will first build the Dockerfile in the `dev-infrastructure/build-env` directory, then run the resulting image.
+Running the container `build-env` will first build the Dockerfile in the `.batect/build-env` directory, then run the resulting image.
 
 The [Docker build cache](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#build-cache) is used during the build process,
 so if the image definition has not changed since the last build, the image will not be rebuilt, saving time.
@@ -338,12 +338,12 @@ not `build-env:123`.
 ```yaml
 containers:
   application:
-    build_directory: dev-infrastructure/application
+    build_directory: .batect/application
     dependencies:
       - database
 
   database:
-    build_directory: dev-infrastructure/database
+    build_directory: .batect/database
 ```
 
 Running the container `application` will first run the `database` container and [wait for it to become healthy](../tips/WaitingForDependenciesToBeReady.md)

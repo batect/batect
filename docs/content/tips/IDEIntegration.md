@@ -16,6 +16,7 @@ Some solutions for this include:
   are known to work, although notably IntelliJ does not currently support this). There's more information on how to configure
   this in the [PyCharm docs](https://www.jetbrains.com/help/pycharm/configuring-remote-interpreters-via-docker.html) and
   [RubyMine docs](https://www.jetbrains.com/help/ruby/configuring-remote-interpreters-via-docker.html).
+* The latest release branch of Visual Studio Code - code named [Insiders](https://code.visualstudio.com/insiders/) and also     1.33+ has got this new extension - [Visual Studio Code Remote - Containers extension](https://code.visualstudio.com/docs/remote/containers#_creating-a-devcontainerjson-file) and with the same it gives the option   to use local filesystem and code in runnig docker container with runtme and tools. All the extensions and the IDE features,   including full IntelliSense (completions), code navigation, and debugging  can be used.
 * You could run a text-based editor such as Vim or Emacs in a container (managed by batect, of course) that has your
   required runtime components installed alongside it.
 

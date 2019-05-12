@@ -40,7 +40,6 @@ mainClassName = 'batect.ApplicationKt'
 repositories {
     mavenCentral()
     maven { url "https://kotlin.bintray.com/kotlinx" }
-    maven { url "https://dl.bintray.com/kodein-framework/Kodein-DI" }
     jcenter()
 }
 

@@ -35,6 +35,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * allow `home_directory` to match local user's home directory path
 * allow `working_directory` and container side of volume mount to reference home directory (inside container)
 * allow container side of volume mount to use path of local directory (eg. mount current directory at same path inside container)
+* show build context upload progress when building image
 
 ### Other
 * switch to Kotlin's built-in `Result` where appropriate
@@ -86,6 +87,7 @@ If there's something you're really keen to see, pull requests are always welcome
     * JVM version
     * Docker version
     * some way to anonymously identify users (to understand usage patterns) and projects (to understand upgrade and usage patterns regardless of user)
+* security scanning for Docker images in tests and sample projects
 * use batect to build batect (self-hosting)
 * tool to visualise execution on a timeline
   * tab to show configuration as parsed

@@ -51,7 +51,7 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.11.0"
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.9'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.8'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.9'
     implementation 'org.kodein.di:kodein-di-core-jvm:6.2.0'
     implementation 'org.kodein.di:kodein-di-generic-jvm:6.2.0'
     implementation 'com.squareup.okhttp3:okhttp:3.13.1'

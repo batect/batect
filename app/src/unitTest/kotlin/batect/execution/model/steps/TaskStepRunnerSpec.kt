@@ -22,6 +22,7 @@ import batect.config.HealthCheckConfig
 import batect.config.LiteralValue
 import batect.config.PortMapping
 import batect.config.PullImage
+import batect.config.ReferenceValue
 import batect.config.VolumeMount
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerHealthCheckException
@@ -127,9 +128,10 @@ object TaskStepRunnerSpec : Spek({
 
         val logSink = InMemoryLogSink()
         val runOptions = RunOptions("some-task", emptyList(), 123, BehaviourAfterFailure.Cleanup, true)
+        val hostEnvironmentVariables = mapOf("SOME_ENV_VAR" to "some env var value")
 
         val logger = Logger("some.source", logSink)
-        val runner by createForEachTest { TaskStepRunner(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, logger) }
+        val runner by createForEachTest { TaskStepRunner(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, logger, hostEnvironmentVariables) }
 
         describe("running steps") {
             on("running any step") {
@@ -162,11 +164,13 @@ object TaskStepRunnerSpec : Spek({
 
             describe("running a 'build image' step") {
                 val buildDirectory = Paths.get("/some-build-dir")
-                val buildArgs = mapOf("some_arg" to "some_value", "SOME_PROXY_CONFIG" to "overridden")
+                val buildArgs = mapOf("some_arg" to LiteralValue("some_value"), "SOME_PROXY_CONFIG" to LiteralValue("overridden"), "SOME_HOST_VAR" to ReferenceValue("SOME_ENV_VAR"))
                 val dockerfilePath = "some-Dockerfile-path"
                 val imageTags = setOf("some_image_tag", "some_other_image_tag")
                 val imageSource = BuildImage(buildDirectory, buildArgs, dockerfilePath)
                 val step = BuildImageStep(imageSource, imageTags)
+
+                // TODO: handle case when env var referenced does not exist
 
                 describe("when building the image succeeds") {
                     on("and propagating proxy-related environment variables is enabled") {
@@ -189,11 +193,12 @@ object TaskStepRunnerSpec : Spek({
                             runner.run(step, eventSink, runOptions)
                         }
 
-                        it("passes the image build args provided by the user as well as any proxy-related build args, with user-provided build args overriding the generated proxy-related build args") {
+                        it("passes the image build args provided by the user as well as any proxy-related build args, with user-provided build args overriding the generated proxy-related build args, and with any environment variable references resolved") {
                             val expectedArgs = mapOf(
                                 "some_arg" to "some_value",
                                 "SOME_PROXY_CONFIG" to "overridden",
-                                "SOME_OTHER_PROXY_CONFIG" to "some_other_value"
+                                "SOME_OTHER_PROXY_CONFIG" to "some_other_value",
+                                "SOME_HOST_VAR" to "some env var value"
                             )
 
                             verify(dockerClient).build(any(), eq(expectedArgs), any(), any(), any())
@@ -218,8 +223,14 @@ object TaskStepRunnerSpec : Spek({
                             runner.run(step, eventSink, runOptionsWithProxyEnvironmentVariablePropagationDisabled)
                         }
 
-                        it("does not pass the proxy-related environment variables as image build arguments, but does still pass the user-provided build args") {
-                            verify(dockerClient).build(any(), eq(buildArgs), any(), any(), any())
+                        it("does not pass the proxy-related environment variables as image build arguments, but does still pass the user-provided build args with any environment variable references resolved") {
+                            val expectedArgs = mapOf(
+                                "some_arg" to "some_value",
+                                "SOME_PROXY_CONFIG" to "overridden",
+                                "SOME_HOST_VAR" to "some env var value"
+                            )
+
+                            verify(dockerClient).build(any(), eq(expectedArgs), any(), any(), any())
                         }
 
                         it("emits a 'image built' event") {
@@ -236,6 +247,19 @@ object TaskStepRunnerSpec : Spek({
 
                     it("emits a 'image build failed' event") {
                         verify(eventSink).postEvent(ImageBuildFailedEvent(imageSource, "Something went wrong."))
+                    }
+                }
+
+                on("when a build arg refers to a host environment variable that does not exist") {
+                    val imageSourceWithNonExistentHostVariable = BuildImage(buildDirectory, mapOf("SOME_HOST_VAR" to ReferenceValue("SOME_ENV_VAR_THAT_DOES_NOT_EXIST")), dockerfilePath)
+                    val stepWithNonExistentHostVariable = BuildImageStep(imageSourceWithNonExistentHostVariable, imageTags)
+
+                    beforeEachTest {
+                        runner.run(stepWithNonExistentHostVariable, eventSink, runOptions)
+                    }
+
+                    it("emits a 'image build failed' event") {
+                        verify(eventSink).postEvent(ImageBuildFailedEvent(imageSourceWithNonExistentHostVariable, "The value for the build arg 'SOME_HOST_VAR' cannot be evaluated: The host environment variable 'SOME_ENV_VAR_THAT_DOES_NOT_EXIST' is not set, and no default value has been provided."))
                     }
                 }
             }

@@ -62,7 +62,7 @@ object EnvironmentVariableExpressionSpec : Spek({
             ).forEach { source ->
                 on("parsing the input '$source'") {
                     it("throws an appropriate exception") {
-                        assertThat({ EnvironmentVariableExpression.parse(source) }, throws<IllegalArgumentException>(withMessage("Invalid environment variable expression '$source'")))
+                        assertThat({ EnvironmentVariableExpression.parse(source) }, throws<IllegalArgumentException>(withMessage("Invalid expression '$source'")))
                     }
                 }
             }

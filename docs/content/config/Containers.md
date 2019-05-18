@@ -18,10 +18,12 @@ List of build args (in `name: value` format) to use when building the image in [
 
 Each build arg must be defined in the Dockerfile with an `ARG` instruction otherwise the value provided will have no effect.
 
+The value of environment variables from the host can be passed as build args using [the same syntax as for `environment`](#environment-variable-substitution).
+
 !!! warning
     Use caution when using build args for secret values. Build arg values can be revealed by anyone with a copy of the image with the `docker history` command.
 
-Available since v0.28.
+Available since v0.28. The ability to use environment variable values in build args was added in v0.32.
 
 ## `dockerfile`
 Dockerfile (relative to [`build_directory`](#build_directory)) to use when building the image in [`build_directory`](#build_directory). Defaults to `Dockerfile` if not set.

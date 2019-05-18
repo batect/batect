@@ -25,11 +25,18 @@ import java.nio.file.Paths
 
 object BuildImageSpec : Spek({
     describe("a image build source") {
-        val source = BuildImage(Paths.get("/image-build-dir"), mapOf("some_arg" to "some_value"), "some-Dockerfile-path")
+        val source = BuildImage(
+            Paths.get("/image-build-dir"),
+            mapOf(
+                "some_arg" to LiteralValue("some_value"),
+                "some_other_arg" to ReferenceValue("host_var")
+            ),
+            "some-Dockerfile-path"
+        )
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(source.toString(), equalTo("BuildImage(build directory: '/image-build-dir', build args: [some_arg=some_value], Dockerfile path: 'some-Dockerfile-path')"))
+                assertThat(source.toString(), equalTo("BuildImage(build directory: '/image-build-dir', build args: [some_arg=LiteralValue(value: 'some_value'), some_other_arg=ReferenceValue(reference to: 'host_var', default: null)], Dockerfile path: 'some-Dockerfile-path')"))
             }
         }
     }

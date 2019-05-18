@@ -17,6 +17,7 @@
 package batect.execution.model.steps
 
 import batect.config.BuildImage
+import batect.config.LiteralValue
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -26,7 +27,7 @@ import java.nio.file.Paths
 
 object BuildImageStepSpec : Spek({
     describe("a 'build image' step") {
-        val source = BuildImage(Paths.get("/image-build-dir"), mapOf("some_arg" to "some_value"), "some-Dockerfile-path")
+        val source = BuildImage(Paths.get("/image-build-dir"), mapOf("some_arg" to LiteralValue("some_value")), "some-Dockerfile-path")
         val step = BuildImageStep(source, setOf("some_image_tag", "some_other_image_tag"))
 
         on("toString()") {

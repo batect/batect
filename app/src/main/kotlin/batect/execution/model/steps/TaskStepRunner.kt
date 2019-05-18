@@ -16,6 +16,8 @@
 
 package batect.execution.model.steps
 
+import batect.config.EnvironmentVariableExpression
+import batect.config.EnvironmentVariableExpressionEvaluationException
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerHealthCheckException
 import batect.docker.ContainerRemovalFailedException
@@ -70,8 +72,17 @@ class TaskStepRunner(
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
     private val creationRequestFactory: DockerContainerCreationRequestFactory,
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
-    private val logger: Logger
+    private val logger: Logger,
+    private val hostEnvironmentVariables: Map<String, String>
 ) {
+    constructor(
+        dockerClient: DockerClient,
+        proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
+        creationRequestFactory: DockerContainerCreationRequestFactory,
+        runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
+        logger: Logger
+    ) : this(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, logger, System.getenv())
+
     fun run(step: TaskStep, eventSink: TaskEventSink, runOptions: RunOptions) {
         logger.info {
             message("Running step.")
@@ -105,11 +116,22 @@ class TaskStepRunner(
                 eventSink.postEvent(ImageBuildProgressEvent(step.source, p))
             }
 
-            val buildArgs = buildTimeProxyEnvironmentVariablesForOptions(runOptions) + step.source.buildArgs
+            val buildArgs = buildTimeProxyEnvironmentVariablesForOptions(runOptions) + substituteBuildArgs(step.source.buildArgs)
             val image = dockerClient.build(step.source.buildDirectory, buildArgs, step.source.dockerfilePath, step.imageTags, onStatusUpdate)
             eventSink.postEvent(ImageBuiltEvent(step.source, image))
         } catch (e: ImageBuildFailedException) {
             eventSink.postEvent(ImageBuildFailedEvent(step.source, e.message ?: ""))
+        }
+    }
+
+    private fun substituteBuildArgs(original: Map<String, EnvironmentVariableExpression>): Map<String, String> =
+        original.mapValues { (name, value) -> evaluateBuildArgValue(name, value) }
+
+    private fun evaluateBuildArgValue(name: String, expression: EnvironmentVariableExpression): String {
+        try {
+            return expression.evaluate(hostEnvironmentVariables)
+        } catch (e: EnvironmentVariableExpressionEvaluationException) {
+            throw ImageBuildFailedException("The value for the build arg '$name' cannot be evaluated: ${e.message}", e)
         }
     }
 

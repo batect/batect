@@ -17,6 +17,7 @@
 package batect.execution.model.rules.run
 
 import batect.config.BuildImage
+import batect.config.LiteralValue
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.BuildImageStep
 import batect.testutils.equalTo
@@ -28,7 +29,7 @@ import java.nio.file.Paths
 
 object BuildImageStepRuleSpec : Spek({
     describe("a build image step rule") {
-        val source = BuildImage(Paths.get("/some-build-dir"), mapOf("some_arg" to "some_value"), "some-Dockerfile-path")
+        val source = BuildImage(Paths.get("/some-build-dir"), mapOf("some_arg" to LiteralValue("some_value")), "some-Dockerfile-path")
         val imageTags = setOf("some_image_tag", "some_other_image_tag")
         val rule = BuildImageStepRule(source, imageTags)
 

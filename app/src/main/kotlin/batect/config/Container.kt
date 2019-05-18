@@ -35,8 +35,6 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
 import kotlinx.serialization.decode
 import kotlinx.serialization.internal.SerialClassDescImpl
-import kotlinx.serialization.map
-import kotlinx.serialization.serializer
 import kotlinx.serialization.set
 import java.nio.file.Path
 
@@ -122,7 +120,7 @@ data class Container(
 
         private fun deserializeFromObject(input: YamlInput): Container {
             var buildDirectory: Path? = null
-            var buildArgs: Map<String, String>? = null
+            var buildArgs: Map<String, EnvironmentVariableExpression>? = null
             var dockerfilePath: String? = null
             var imageName: String? = null
             var command: Command? = null
@@ -148,7 +146,7 @@ data class Container(
 
                         buildDirectory = resolveBuildDirectory(resolutionResult, location)
                     }
-                    buildArgsFieldIndex -> buildArgs = input.decode((String.serializer() to String.serializer()).map)
+                    buildArgsFieldIndex -> buildArgs = input.decode(EnvironmentDeserializer)
                     dockerfileFieldIndex -> dockerfilePath = input.decodeStringElement(descriptor, i)
                     imageNameFieldIndex -> imageName = input.decodeStringElement(descriptor, i)
                     commandFieldIndex -> command = input.decode(Command.Companion)
@@ -188,7 +186,7 @@ data class Container(
 
         private fun resolveImageSource(
             buildDirectory: Path?,
-            buildArgs: Map<String, String>?,
+            buildArgs: Map<String, EnvironmentVariableExpression>?,
             dockerfilePath: String?,
             imageName: String?,
             location: Location

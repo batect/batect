@@ -197,6 +197,7 @@ object ContainerSpec : Spek({
                 build_directory: /container-1-build-dir
                 build_args:
                   SOME_ARG: some_value
+                  SOME_DYNAMIC_VALUE: ${'$'}host_var
                 dockerfile: some-Dockerfile
                 command: do-the-thing.sh some-param
                 environment:
@@ -231,7 +232,7 @@ object ContainerSpec : Spek({
                 val result by runForEachTest { parser.parse(Container.Companion, yaml) }
 
                 it("returns the expected container configuration") {
-                    assertThat(result.imageSource, equalTo(BuildImage(Paths.get("/resolved/container-1-build-dir"), mapOf("SOME_ARG" to "some_value"), "some-Dockerfile")))
+                    assertThat(result.imageSource, equalTo(BuildImage(Paths.get("/resolved/container-1-build-dir"), mapOf("SOME_ARG" to LiteralValue("some_value"), "SOME_DYNAMIC_VALUE" to ReferenceValue("host_var")), "some-Dockerfile")))
                     assertThat(result.command, equalTo(Command.parse("do-the-thing.sh some-param")))
                     assertThat(
                         result.environment, equalTo(

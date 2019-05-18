@@ -54,7 +54,7 @@ sealed class EnvironmentVariableExpression {
                 }
             }
 
-            throw IllegalArgumentException("Invalid environment variable expression '$source'")
+            throw IllegalArgumentException("Invalid expression '$source'")
         }
 
         override val descriptor: SerialDescriptor = StringDescriptor.withName("expression")
@@ -89,7 +89,13 @@ data class ReferenceValue(val referenceTo: String, val default: String? = null) 
         }
     }
 
-    override fun toString() = "${this::class.simpleName}(reference to: '$referenceTo', default: '$default')"
+    override fun toString() = "${this::class.simpleName}(reference to: '$referenceTo', default: ${defaultValueToString()})"
+
+    private fun defaultValueToString() = if (default == null) {
+        "null"
+    } else {
+        "'$default'"
+    }
 }
 
 class EnvironmentVariableExpressionEvaluationException(message: String) : RuntimeException(message)

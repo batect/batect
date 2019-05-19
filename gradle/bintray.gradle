@@ -1,0 +1,67 @@
+/*
+   Copyright 2017-2019 Charles Korn.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+import java.nio.file.Paths
+
+def bintrayDescriptorFile = Paths.get("$buildDir/bintray/descriptor.json").toFile()
+
+task generateBintrayDescriptor {
+    description 'Generates the manifest file used to upload files to Bintray.'
+    group 'Build'
+
+    inputs.property("version", { rootProject.simpleVersion })
+    inputs.property("gitCommitHash", { rootProject.gitCommitHash })
+    inputs.property("gitCommitDate", { rootProject.gitCommitDate })
+    inputs.property("isReleaseBuild", { rootProject.isReleaseBuild })
+    outputs.file bintrayDescriptorFile
+
+    doLast {
+        def tag = rootProject.isReleaseBuild ? rootProject.simpleVersion : rootProject.gitCommitHash
+
+        bintrayDescriptorFile.text =
+            """|{
+               |"package": {
+               |    "name": "batect",
+               |    "repo": "batect",
+               |    "subject": "charleskorn",
+               |    "desc": "Build And Testing Environments as Code Tool",
+               |    "website_url": "https://batect.charleskorn.com",
+               |    "issue_tracker_url": "https://github.com/charleskorn/batect/issues",
+               |    "vcs_url": "https://github.com/charleskorn/batect",
+               |    "github_use_tag_release_notes": true,
+               |    "licenses": ["Apache-2.0"],
+               |    "labels": [
+               |        "developer-experience",
+               |        "docker"
+               |    ],
+               |    "public_download_numbers": false,
+               |    "public_stats": false
+               |},
+               |"version": {
+               |    "name": "$rootProject.simpleVersion",
+               |    "released": "$rootProject.gitCommitDate",
+               |    "vcs_tag": "$tag",
+               |    "gpgSign": false
+               |},
+               |"files": [
+               |    {"includePattern": "docs/build/docs/(.*)", "uploadPattern": "docs/\$1"},
+               |    {"includePattern": "build/release/(.*)", "uploadPattern": "bin/\$1"}
+               |],
+               |"publish": true
+               |}
+               |""".stripMargin("|")
+    }
+}

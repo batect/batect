@@ -23,6 +23,7 @@ jobs:
     - stage: Build and test
       script: ./gradlew build check jacocoTestReport assembleRelease && bash <(curl -s https://codecov.io/bash)
       after_success:
+        - if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_REPO_SLUG" = "charleskorn/batect" ]; then gsutil -m rsync -r build/bintray gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/bintray; fi
         - if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_REPO_SLUG" = "charleskorn/batect" ]; then gsutil -m rsync -r build/release gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/release; fi
         - if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_REPO_SLUG" = "charleskorn/batect" ]; then gsutil -m rsync -r docs/build/docs gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/docs/build/docs; fi
 
@@ -46,11 +47,30 @@ jobs:
         - sudo apt-get -y -o Dpkg::Options::="--force-confnew" --allow-downgrades install docker-ce=17.06.0~ce-0~ubuntu
       script: ./gradlew integrationTest journeyTest
 
-    - stage: Deploy
+    - stage: Publish
+      script: skip
+      before_deploy:
+        - mkdir -p build/bintray build/release docs/build/docs
+        - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/bintray build/bintray
+        - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/release build/release
+        - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/docs/build/docs docs/build/docs
+      deploy:
+        - provider: bintray
+          file: build/bintray/descriptor.json
+          user: charleskorn
+          key:
+            secure: "gorxQBTZgKrgQ3Sc/veZX0b+Jh9b6xQxBOjcCPgp51rxXfea+115GrR+I7EG6soA6pnDdawy4TUTlzcKp4uwDlNmhTjWJuaCoVIbVPRfnLhL+wNYgwCeWLv9tocJWyn7RdtmNbfG3W9pSuWE+kaYplC/1I1golMxIIt/0M4OCMfy17oWJCd7LQRSjwPUMHrKgMFOrnQrfliK4fHYlLm35iz3pTvRfyv6AaTIhEstMubt1ljER5HMAtaVVA66rOhwGgUcyht2CqeZf/tonKhTFvsfDK0j2OBZqKetFB6aNorlBNVIr18EKokQmOZPEN1vyUHD0jkJ29w6wXBmeJJJ+nxiKBwiw73B+l9sutQ4DAKiSRfHnhCf5EMGsSKaOPFELCd8F3GoiG806sUtamqq9L7wg6EDd68nfo2gcxoDYYxSTxwBasvN4D8u/mAQkQeelSb5AbKjSSNZp0/umiM8dsVg8JP8oT3zKGBfpo5OUqi/PaDGmYnU32EmV1OYFMk/1BH8w5CXQybaTdY6LNHlEIM5RLiwhbbfUhBa/yNCR2BaZh3IWrq1CXO+3r3HzSE6E21VGcOT9MR0ZdnEpyBQLEGJfBElCkpaoAA6pW9uBEJJ5H4Hb84VoICF4AEN5gzo9KjbFOiz+4a7Wi7+TsqnfL4l/sAVUTa8lawXqX/NsDU="
+          skip_cleanup: true
+          on:
+            repo: charleskorn/batect
+            all_branches: true
+
+    - stage: Release
       script: skip
       if: tag IS present AND repo = "charleskorn/batect"
       before_deploy:
-        - mkdir -p build/release docs/build/docs
+        - mkdir -p build/bintray build/release docs/build/docs
+        - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/bintray build/bintray
         - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/release build/release
         - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/docs/build/docs docs/build/docs
         - ./gradlew validateRelease
@@ -77,6 +97,7 @@ jobs:
             # We skip this whole stage if we don't want to deploy, so just disable the checks here.
             condition: true
             all_branches: true
+
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock

@@ -20,6 +20,7 @@ plugins {
     id 'org.ajoberstar.reckon' version '0.10.0'
 }
 
+apply from: "$rootDir/gradle/bintray.gradle"
 apply from: "$rootDir/gradle/spotless.gradle"
 apply from: "$rootDir/gradle/utilities.gradle"
 apply from: "$rootDir/gradle/versioning.gradle"
@@ -27,6 +28,8 @@ apply from: "$rootDir/gradle/versioning.gradle"
 task assembleRelease(type: Copy) {
     description 'Prepares files for release.'
     group 'Distribution'
+
+    dependsOn 'generateBintrayDescriptor'
 
     from project("app").getTasksByName("shadowJar", false)
     from project("wrapper").getTasksByName("build", false)

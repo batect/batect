@@ -61,8 +61,12 @@ String getCurrentGitCommitHash() {
     return runProcess('git', 'describe', '--always', '--dirty', '--exclude', '*', '--abbrev=0')
 }
 
-String getCurrentGitCommitDate() {
+String getCurrentGitCommitHumanDate() {
     return runProcess('git', 'show', '-s', '--format=%ci', 'HEAD')
+}
+
+String getCurrentGitCommitISO8601Date() {
+    return runProcess('git', 'show', '-s', '--format=%cI', 'HEAD')
 }
 
 boolean isReleaseBuild() {
@@ -81,7 +85,8 @@ String getSimpleVersion() {
 
 ext {
     gitCommitHash = getCurrentGitCommitHash()
-    gitCommitDate = getCurrentGitCommitDate()
+    gitCommitHumanDate = getCurrentGitCommitHumanDate()
+    gitCommitISO8601Date = getCurrentGitCommitISO8601Date()
     isReleaseBuild = isReleaseBuild()
     simpleVersion = getSimpleVersion()
 }

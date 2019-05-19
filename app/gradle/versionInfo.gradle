@@ -38,7 +38,7 @@ String versionInfoFileContents() {
         |// Do not commit it.
         |class VersionInfo {
         |    val gitCommitHash = "${rootProject.gitCommitHash}"
-        |    val gitCommitDate = "${rootProject.gitCommitDate}"
+        |    val gitCommitDate = "${rootProject.gitCommitHumanDate}"
         |    val version = Version.parse("${rootProject.simpleVersion}")
         |    val buildDate = "${getBuildDate()}"
         |}
@@ -53,7 +53,7 @@ task generateVersionInfoFile {
 
     inputs.property("version", { rootProject.simpleVersion })
     inputs.property("gitCommitHash", { rootProject.gitCommitHash })
-    inputs.property("gitCommitDate", { rootProject.gitCommitDate })
+    inputs.property("gitCommitHumanDate", { rootProject.gitCommitHumanDate })
     inputs.property("buildDate", { getBuildDate() })
     outputs.file versionInfoFile
 

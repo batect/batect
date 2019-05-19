@@ -9,7 +9,8 @@
     # For more information, visit https://github.com/charleskorn/batect.
 
     VERSION="VERSION-GOES-HERE"
-    DOWNLOAD_URL=${BATECT_DOWNLOAD_URL:-"DOWNLOAD-URL-GOES-HERE"}
+    DOWNLOAD_URL_ROOT=${BATECT_DOWNLOAD_URL_ROOT:-"https://dl.bintray.com/charleskorn/batect"}
+    DOWNLOAD_URL=${BATECT_DOWNLOAD_URL:-"$DOWNLOAD_URL_ROOT/$VERSION/bin/batect-$VERSION.jar"}
 
     ROOT_CACHE_DIR=${BATECT_CACHE_DIR:-"$HOME/.batect/cache"}
     CACHE_DIR="$ROOT_CACHE_DIR/$VERSION"

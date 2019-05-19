@@ -16,7 +16,8 @@
 
 import java.nio.file.Files
 
-def templateFile = project.file 'src/template.sh'
+def templateFilePath = 'src/template.sh'
+def templateFile = project.file templateFilePath
 
 task shellcheck(type: Exec) {
     description 'Runs the shellcheck linter on the wrapper script template.'
@@ -28,9 +29,9 @@ task shellcheck(type: Exec) {
     outputs.file upToDateFile
 
     commandLine 'docker', 'run', '--rm', '-t',
-        '-v', "$projectDir:$projectDir",
-        '-w', projectDir,
-        'koalaman/shellcheck:v0.5.0', templateFile
+        '-v', "$projectDir:/code",
+        '-w', "/code",
+        'koalaman/shellcheck:v0.5.0', templateFilePath
 
     doLast {
         // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java
@@ -46,6 +47,29 @@ task copyTestJar(type: Copy) {
     into "test"
 }
 
+def testEnvironmentImageName = 'batect-wrapper-test-env'
+
+task buildTestEnvironmentImage(type: Exec) {
+    description 'Build the Docker image used as a test environment.'
+    group 'Verification'
+
+    def imageDirectory = project.file "test/test-env"
+
+    standardOutput = new ByteArrayOutputStream()
+    errorOutput = standardOutput
+    ignoreExitValue = true
+
+    commandLine 'docker', 'build',
+        '-t', testEnvironmentImageName,
+        imageDirectory
+
+    doLast {
+        if (execResult.exitValue != 0) {
+            throw new GradleException("Building image failed: ${standardOutput.toString()}")
+        }
+    }
+}
+
 task test(type: Exec) {
     description 'Runs the unit tests.'
     group 'Verification'
@@ -57,8 +81,12 @@ task test(type: Exec) {
     outputs.file upToDateFile
 
     dependsOn copyTestJar
+    dependsOn buildTestEnvironmentImage
 
-    commandLine './test/run.sh'
+    commandLine 'docker', 'run', '--rm', '-t',
+        '-v', "$projectDir:/code",
+        '-w', "/code",
+        testEnvironmentImageName, './test/tests.py'
 
     doLast {
         // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java

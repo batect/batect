@@ -226,6 +226,20 @@ object VolumeMountSpec : Spek({
                     }
                 }
             }
+
+            describe("deserializing from something that is neither a string nor a map") {
+                val yaml = """
+                    - thing
+                """.trimIndent()
+
+                it("fails with an appropriate error message") {
+                    assertThat(
+                        { parser.parse(VolumeMount.Companion, yaml) }, throws(
+                            withMessage("Volume mount definition is not valid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'.")
+                        )
+                    )
+                }
+            }
         }
     }
 })

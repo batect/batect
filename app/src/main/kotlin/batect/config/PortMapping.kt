@@ -17,8 +17,8 @@
 package batect.config
 
 import batect.config.io.ConfigurationException
+import batect.config.io.deserializers.tryToDeserializeWith
 import com.charleskorn.kaml.YamlInput
-import com.charleskorn.kaml.YamlScalar
 import kotlinx.serialization.CompositeDecoder
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.KSerializer
@@ -27,6 +27,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
 import kotlinx.serialization.internal.SerialClassDescImpl
+import kotlinx.serialization.internal.StringDescriptor
 
 @Serializable
 data class PortMapping(
@@ -62,18 +63,14 @@ data class PortMapping(
         private val localPortFieldIndex = descriptor.getElementIndex("local")
         private val containerPortFieldIndex = descriptor.getElementIndex("container")
 
-        override fun deserialize(decoder: Decoder): PortMapping = when (decoder) {
-            is YamlInput -> {
-                val input = decoder.beginStructure(descriptor) as YamlInput
-
-                when (input.node) {
-                    is YamlScalar -> deserializeFromString(input)
-                    else -> deserializeFromObject(input)
-                }.also {
-                    input.endStructure(descriptor)
-                }
+        override fun deserialize(decoder: Decoder): PortMapping {
+            if (!(decoder is YamlInput)) {
+                throw UnsupportedOperationException("Can only deserialize from YAML source.")
             }
-            else -> throw UnsupportedOperationException("Can only deserialize from YAML source.")
+
+            return decoder.tryToDeserializeWith(descriptor) { deserializeFromObject(it) }
+                ?: decoder.tryToDeserializeWith(StringDescriptor) { deserializeFromString(it) }
+                ?: throw ConfigurationException("Port mapping definition is not valid. It must either be an object or a literal in the form 'local_port:container_port'.")
         }
 
         private fun deserializeFromString(input: YamlInput): PortMapping {

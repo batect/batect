@@ -154,6 +154,20 @@ object PortMappingSpec : Spek({
                     }
                 }
             }
+
+            describe("deserializing from something that is neither a string nor a map") {
+                val yaml = """
+                    - thing
+                """.trimIndent()
+
+                it("fails with an appropriate error message") {
+                    assertThat(
+                        { fromYaml(yaml) }, throws(
+                            withMessage("Port mapping definition is not valid. It must either be an object or a literal in the form 'local_port:container_port'.")
+                        )
+                    )
+                }
+            }
         }
     }
 })

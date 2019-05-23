@@ -55,6 +55,8 @@ data class BasicCredentialsSource(val encodedCredentials: String, val serverAddr
 }
 
 data class HelperBasedCredentialsSource(val helperName: String, val serverAddress: String, private val processRunner: ProcessRunner) : DockerRegistryCredentialsSource() {
+    private val gcpTokenUsername = "_dcgcloud_token"
+
     override fun load(): DockerRegistryCredentials? {
         try {
             val command = listOf(helperName, "get")
@@ -69,18 +71,27 @@ data class HelperBasedCredentialsSource(val helperName: String, val serverAddres
                 throw DockerRegistryCredentialsException("Could not load credentials for '$serverAddress' because the credential helper executable '$helperName' exited with code ${result.exitCode} and output: $output")
             }
 
-            val parsed = parseCredentials(output)
-            val username = parsed.getStringMember("Username")
-            val secret = parsed.getStringMember("Secret")
-            val serverUrl = parsed.getStringMember("ServerURL")
-
-            if (username == "<token>") {
-                return TokenDockerRegistryCredentials(secret)
-            } else {
-                return PasswordDockerRegistryCredentials(username, secret, serverUrl)
-            }
+            return convertOutputToCredentials(output)
         } catch (e: ExecutableDoesNotExistException) {
             throw DockerRegistryCredentialsException("Could not load credentials for '$serverAddress' because the credential helper executable '$helperName' does not exist.", e)
+        }
+    }
+
+    private fun convertOutputToCredentials(output: String): DockerRegistryCredentials {
+        val parsed = parseCredentials(output)
+        val username = parsed.getStringMember("Username")
+        val secret = parsed.getStringMember("Secret")
+
+        if (username == gcpTokenUsername) {
+            return PasswordDockerRegistryCredentials(username, secret, serverAddress)
+        }
+
+        val serverUrl = parsed.getStringMember("ServerURL")
+
+        if (username == "<token>") {
+            return TokenDockerRegistryCredentials(secret)
+        } else {
+            return PasswordDockerRegistryCredentials(username, secret, serverUrl)
         }
     }
 

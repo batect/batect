@@ -157,6 +157,25 @@ object DockerRegistryCredentialsSourceSpec : Spek({
             }
         }
 
+        given("the credential helper returns a GCP-style token") {
+            beforeEachTest {
+                wheneverTheCredentialHelperIsInvoked().thenReturn(ProcessOutput(0, """
+                    |{
+                    |   "Username": "_dcgcloud_token",
+                    |   "Secret": "sometoken"
+                    |}
+                """.trimMargin()))
+            }
+
+            on("loading the credentials") {
+                val credentials by runNullableForEachTest { credentialsSource.load() }
+
+                it("returns those credentials") {
+                    assertThat(credentials, equalTo(PasswordDockerRegistryCredentials("_dcgcloud_token", "sometoken", "someserver.com")))
+                }
+            }
+        }
+
         given("the credential helper returns a response without a server address") {
             beforeEachTest {
                 wheneverTheCredentialHelperIsInvoked().thenReturn(ProcessOutput(0, """

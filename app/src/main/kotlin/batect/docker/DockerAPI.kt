@@ -637,8 +637,23 @@ class DockerAPI(
         return Request.Builder()
             .post(DockerImageBuildContextRequestBody(context))
             .url(url.build())
-            .addRegistryCredentials(registryCredentials)
+            .addRegistryCredentialsForBuild(registryCredentials)
             .build()
+    }
+
+    private fun Request.Builder.addRegistryCredentialsForBuild(registryCredentials: DockerRegistryCredentials?): Request.Builder {
+        if (registryCredentials != null) {
+            val jsonCredentials = json {
+                registryCredentials.serverAddress to registryCredentials.toJSON()
+            }
+
+            val credentialBytes = jsonCredentials.toString().toByteArray()
+            val encodedCredentials = Base64.getEncoder().encodeToString(credentialBytes)
+
+            this.header("X-Registry-Config", encodedCredentials)
+        }
+
+        return this
     }
 
     fun pullImage(imageName: String, registryCredentials: DockerRegistryCredentials?, onProgressUpdate: (JsonObject) -> Unit) {
@@ -655,7 +670,7 @@ class DockerAPI(
         val request = Request.Builder()
             .post(emptyRequestBody())
             .url(url)
-            .addRegistryCredentials(registryCredentials)
+            .addRegistryCredentialsForPull(registryCredentials)
             .build()
 
         httpConfig.client.newCall(request).execute().use { response ->
@@ -686,9 +701,9 @@ class DockerAPI(
         }
     }
 
-    private fun Request.Builder.addRegistryCredentials(registryCredentials: DockerRegistryCredentials?): Request.Builder {
+    private fun Request.Builder.addRegistryCredentialsForPull(registryCredentials: DockerRegistryCredentials?): Request.Builder {
         if (registryCredentials != null) {
-            val credentialBytes = registryCredentials.toJSON().toByteArray()
+            val credentialBytes = registryCredentials.toJSON().toString().toByteArray()
             val encodedCredentials = Base64.getEncoder().encodeToString(credentialBytes)
 
             this.header("X-Registry-Auth", encodedCredentials)

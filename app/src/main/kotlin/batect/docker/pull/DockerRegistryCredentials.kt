@@ -16,27 +16,33 @@
 
 package batect.docker.pull
 
-import batect.utils.Json
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.json
 
-sealed class DockerRegistryCredentials {
-    abstract fun toJSON(): String
+sealed class DockerRegistryCredentials() {
+    abstract val serverAddress: String
+    abstract fun toJSON(): JsonElement
 }
 
-@Serializable
 data class PasswordDockerRegistryCredentials(
     val username: String,
     val password: String,
-    @SerialName("serveraddress") val serverAddress: String,
+    override val serverAddress: String,
     val email: String = ""
 ) : DockerRegistryCredentials() {
-    override fun toJSON(): String = Json.parser.stringify(PasswordDockerRegistryCredentials.serializer(), this)
+    override fun toJSON(): JsonElement = json {
+        "username" to username
+        "password" to password
+        "serveraddress" to serverAddress
+        "email" to email
+    }
 }
 
-@Serializable
 data class TokenDockerRegistryCredentials(
-    @SerialName("identitytoken") val identityToken: String
+    val identityToken: String,
+    override val serverAddress: String
 ) : DockerRegistryCredentials() {
-    override fun toJSON(): String = Json.parser.stringify(TokenDockerRegistryCredentials.serializer(), this)
+    override fun toJSON(): JsonElement = json {
+        "identitytoken" to identityToken
+    }
 }

@@ -20,6 +20,7 @@ import batect.config.HealthCheckConfig
 import batect.docker.build.DockerImageBuildContext
 import batect.docker.build.DockerImageBuildContextRequestBody
 import batect.docker.pull.DockerRegistryCredentials
+import batect.docker.pull.TokenDockerRegistryCredentials
 import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputStream
@@ -54,6 +55,7 @@ import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import jnr.constants.platform.Signal
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.content
 import okhttp3.ConnectionPool
@@ -700,9 +702,7 @@ object DockerAPISpec : Spek({
             val buildArgs = mapOf("someArg" to "someValue")
             val dockerfilePath = "some-Dockerfile-path"
             val imageTags = setOf("some_image_tag", "some_other_image_tag")
-            val registryCredentials = mock<DockerRegistryCredentials> {
-                on { toJSON() } doReturn "some json credentials"
-            }
+            val registryCredentials = TokenDockerRegistryCredentials("some_token", "registry.com")
 
             val expectedUrl = hasScheme("http") and
                 hasHost(dockerHost) and
@@ -712,8 +712,8 @@ object DockerAPISpec : Spek({
                 hasQueryParameter("t", "some_other_image_tag") and
                 hasQueryParameter("dockerfile", dockerfilePath)
 
-            val base64EncodedJSONCredentials = "c29tZSBqc29uIGNyZWRlbnRpYWxz"
-            val expectedHeadersForAuthentication = Headers.Builder().set("X-Registry-Auth", base64EncodedJSONCredentials).build()
+            val base64EncodedJSONCredentials = "eyJyZWdpc3RyeS5jb20iOnsiaWRlbnRpdHl0b2tlbiI6InNvbWVfdG9rZW4ifX0="
+            val expectedHeadersForAuthentication = Headers.Builder().set("X-Registry-Config", base64EncodedJSONCredentials).build()
 
             val successResponse = """
                 |{"stream":"Step 1/5 : FROM nginx:1.13.0"}
@@ -848,10 +848,10 @@ object DockerAPISpec : Spek({
             val imageName = "some-image"
             val expectedUrl = "$dockerBaseUrl/v1.30/images/create?fromImage=some-image"
             val registryCredentials = mock<DockerRegistryCredentials> {
-                on { toJSON() } doReturn "some json credentials"
+                on { toJSON() } doReturn JsonPrimitive("some json credentials")
             }
 
-            val base64EncodedJSONCredentials = "c29tZSBqc29uIGNyZWRlbnRpYWxz"
+            val base64EncodedJSONCredentials = "InNvbWUganNvbiBjcmVkZW50aWFscyI="
             val expectedHeadersForAuthentication = Headers.Builder().set("X-Registry-Auth", base64EncodedJSONCredentials).build()
 
             on("the pull succeeding because the image is already present") {

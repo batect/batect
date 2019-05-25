@@ -44,7 +44,7 @@ data class BasicCredentialsSource(val encodedCredentials: String, val serverAddr
             }
 
             if (parts[0] == "<token>") {
-                return TokenDockerRegistryCredentials(parts[1])
+                return TokenDockerRegistryCredentials(parts[1], serverAddress)
             } else {
                 return PasswordDockerRegistryCredentials(parts[0], parts[1], serverAddress)
             }
@@ -89,7 +89,7 @@ data class HelperBasedCredentialsSource(val helperName: String, val serverAddres
         val serverUrl = parsed.getStringMember("ServerURL")
 
         if (username == "<token>") {
-            return TokenDockerRegistryCredentials(secret)
+            return TokenDockerRegistryCredentials(secret, serverUrl)
         } else {
             return PasswordDockerRegistryCredentials(username, secret, serverUrl)
         }

@@ -33,7 +33,7 @@ object DockerRegistryCredentialsSpec : Spek({
             )
 
             on("serialising the credentials to JSON") {
-                val json = credentials.toJSON()
+                val json = credentials.toJSON().toString()
 
                 it("returns the credentials in the format expected by the Docker API") {
                     assertThat(json, equivalentTo("""
@@ -49,10 +49,10 @@ object DockerRegistryCredentialsSpec : Spek({
         }
 
         given("a token") {
-            val credentials = TokenDockerRegistryCredentials("some-token")
+            val credentials = TokenDockerRegistryCredentials("some-token", "some-server.com")
 
             on("serialising the credentials to JSON") {
-                val json = credentials.toJSON()
+                val json = credentials.toJSON().toString()
 
                 it("returns the credentials in the format expected by the Docker API") {
                     assertThat(json, equivalentTo("""

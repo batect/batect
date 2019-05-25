@@ -88,7 +88,7 @@ object DockerRegistryCredentialsSourceSpec : Spek({
                 val credentials by runForEachTest { credentialsSource.load() }
 
                 it("returns the decoded username and password") {
-                    assertThat(credentials, equalTo(TokenDockerRegistryCredentials("sometoken")))
+                    assertThat(credentials, equalTo(TokenDockerRegistryCredentials("sometoken", "someserver.com")))
                 }
             }
         }
@@ -152,7 +152,7 @@ object DockerRegistryCredentialsSourceSpec : Spek({
                 val credentials by runNullableForEachTest { credentialsSource.load() }
 
                 it("returns those credentials") {
-                    assertThat(credentials, equalTo(TokenDockerRegistryCredentials("sometoken")))
+                    assertThat(credentials, equalTo(TokenDockerRegistryCredentials("sometoken", "someotherserver.com")))
                 }
             }
         }

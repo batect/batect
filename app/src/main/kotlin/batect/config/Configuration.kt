@@ -47,7 +47,13 @@ data class Configuration(
             throw ConfigurationException("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.")
         }
 
-        return this.copy(projectName = pathResolver.relativeTo.fileName.toString())
+        val inferredProjectName = pathResolver.relativeTo.fileName.toString()
+
+        if (!DockerImageNameValidator.isValidImageName(inferredProjectName)) {
+            throw ConfigurationException("The inferred project name '$inferredProjectName' is invalid. The project name must be a valid Docker reference: it ${DockerImageNameValidator.validNameDescription}. Provide a valid project name explicitly with '$projectNameFieldName'.")
+        }
+
+        return this.copy(projectName = inferredProjectName)
     }
 
     @Serializer(forClass = Configuration::class)

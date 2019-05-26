@@ -137,6 +137,14 @@ object ConfigurationLoaderSpec : Spek({
                     assertThat(config.projectName, equalTo("project"))
                 }
             }
+
+            on("loading that file from a directory with a name that is not a valid project name") {
+                val path = "/code/-project/config.yml"
+
+                it("should fail with an error message") {
+                    assertThat({ loadConfiguration(configString, path) }, throws(withMessage("The inferred project name '-project' is invalid. The project name must be a valid Docker reference: it must contain only lowercase letters, digits, dashes (-), single consecutive periods (.) or one or two consecutive underscores (_), and must not start or end with dashes, periods or underscores. Provide a valid project name explicitly with 'project_name'.") and withFileName(path)))
+                }
+            }
         }
 
         on("loading a valid configuration file with no containers or tasks defined") {

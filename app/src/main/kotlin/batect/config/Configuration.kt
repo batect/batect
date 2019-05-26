@@ -17,9 +17,20 @@
 package batect.config
 
 import batect.config.io.ConfigurationException
+import batect.docker.DockerImageNameValidator
 import batect.os.PathResolver
+import com.charleskorn.kaml.YamlInput
+import kotlinx.serialization.CompositeDecoder
+import kotlinx.serialization.Decoder
+import kotlinx.serialization.Encoder
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.Serializer
+import kotlinx.serialization.decode
+import kotlinx.serialization.internal.SerialClassDescImpl
 
 @Serializable
 data class Configuration(
@@ -37,5 +48,66 @@ data class Configuration(
         }
 
         return this.copy(projectName = pathResolver.relativeTo.fileName.toString())
+    }
+
+    @Serializer(forClass = Configuration::class)
+    companion object : KSerializer<Configuration> {
+        private val projectNameFieldName = "project_name"
+        private val tasksFieldName = "tasks"
+        private val containersFieldName = "containers"
+
+        override val descriptor: SerialDescriptor = object : SerialClassDescImpl("Configuration") {
+            init {
+                addElement(projectNameFieldName, isOptional = true)
+                addElement(tasksFieldName, isOptional = true)
+                addElement(containersFieldName, isOptional = true)
+            }
+        }
+
+        private val projectNameFieldIndex = descriptor.getElementIndex(projectNameFieldName)
+        private val tasksFieldIndex = descriptor.getElementIndex(tasksFieldName)
+        private val containersFieldIndex = descriptor.getElementIndex(containersFieldName)
+
+        override fun deserialize(decoder: Decoder): Configuration {
+            val input = decoder.beginStructure(descriptor) as YamlInput
+
+            return deserializeFromObject(input).also { input.endStructure(descriptor) }
+        }
+
+        private fun deserializeFromObject(input: YamlInput): Configuration {
+            var projectName: String? = null
+            var tasks = TaskMap()
+            var containers = ContainerMap()
+
+            loop@ while (true) {
+                when (val i = input.decodeElementIndex(descriptor)) {
+                    CompositeDecoder.READ_DONE -> break@loop
+                    projectNameFieldIndex -> projectName = input.decodeProjectName(i)
+                    tasksFieldIndex -> tasks = input.decode(TaskMap.Companion)
+                    containersFieldIndex -> containers = input.decode(ContainerMap.Companion)
+                    else -> throw SerializationException("Unknown index $i")
+                }
+            }
+
+            return Configuration(projectName, tasks, containers)
+        }
+
+        private fun YamlInput.decodeProjectName(index: Int): String {
+            val projectName = this.decodeStringElement(descriptor, index)
+
+            if (!DockerImageNameValidator.isValidImageName(projectName)) {
+                val location = this.getCurrentLocation()
+
+                throw ConfigurationException(
+                    "Invalid project name '$projectName'. The project name must be a valid Docker reference: it ${DockerImageNameValidator.validNameDescription}.",
+                    location.line,
+                    location.column
+                )
+            }
+
+            return projectName
+        }
+
+        override fun serialize(encoder: Encoder, obj: Configuration): Unit = throw UnsupportedOperationException()
     }
 }

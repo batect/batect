@@ -37,7 +37,7 @@ class ContainerMap(contents: Iterable<Container>) : NamedObjectMap<Container>("c
         override fun validateName(name: String, location: Location) {
             if (!DockerImageNameValidator.isValidImageName(name)) {
                 throw ConfigurationException(
-                    "Invalid container name '$name'. Container names must be valid Docker references: they must contain only lowercase letters, digits, dashes (-), single consecutive periods (.) or one or two consecutive underscores (_), and must not start or end with dashes, periods or underscores.",
+                    "Invalid container name '$name'. Container names must be valid Docker references: they ${DockerImageNameValidator.validNameDescription}.",
                     location.line,
                     location.column
                 )

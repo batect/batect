@@ -139,13 +139,7 @@ data class Container(
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
                     CompositeDecoder.READ_DONE -> break@loop
-                    buildDirectoryFieldIndex -> {
-                        val loader = input.context.getContextual(PathResolutionResult::class)!!
-                        val resolutionResult = input.decode(loader)
-                        val location = input.getCurrentLocation()
-
-                        buildDirectory = resolveBuildDirectory(resolutionResult, location)
-                    }
+                    buildDirectoryFieldIndex -> buildDirectory = input.decodeBuildDirectory()
                     buildArgsFieldIndex -> buildArgs = input.decode(EnvironmentDeserializer)
                     dockerfileFieldIndex -> dockerfilePath = input.decodeStringElement(descriptor, i)
                     imageNameFieldIndex -> imageName = input.decodeStringElement(descriptor, i)
@@ -184,6 +178,25 @@ data class Container(
             )
         }
 
+        private fun YamlInput.decodeBuildDirectory(): Path {
+            val loader = this.context.getContextual(PathResolutionResult::class)!!
+            val resolutionResult = this.decode(loader)
+            val location = this.getCurrentLocation()
+
+            return resolveBuildDirectory(resolutionResult, location)
+        }
+
+        private fun resolveBuildDirectory(buildDirectory: PathResolutionResult, location: Location): Path {
+            when (buildDirectory) {
+                is PathResolutionResult.Resolved -> when (buildDirectory.pathType) {
+                    PathType.Directory -> return buildDirectory.absolutePath
+                    PathType.DoesNotExist -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') does not exist.", location.line, location.line)
+                    else -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') is not a directory.", location.line, location.line)
+                }
+                is PathResolutionResult.InvalidPath -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' is not a valid path.", location.line, location.line)
+            }
+        }
+
         private fun resolveImageSource(
             buildDirectory: Path?,
             buildArgs: Map<String, EnvironmentVariableExpression>?,
@@ -211,17 +224,6 @@ data class Container(
                 return BuildImage(buildDirectory, buildArgs ?: emptyMap(), dockerfilePath ?: "Dockerfile")
             } else {
                 return PullImage(imageName!!)
-            }
-        }
-
-        private fun resolveBuildDirectory(buildDirectory: PathResolutionResult, location: Location): Path {
-            when (buildDirectory) {
-                is PathResolutionResult.Resolved -> when (buildDirectory.pathType) {
-                    PathType.Directory -> return buildDirectory.absolutePath
-                    PathType.DoesNotExist -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') does not exist.", location.line, location.line)
-                    else -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') is not a directory.", location.line, location.line)
-                }
-                is PathResolutionResult.InvalidPath -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' is not a valid path.", location.line, location.line)
             }
         }
 

@@ -34,6 +34,7 @@ import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.runForEachTest
+import batect.testutils.withColumn
 import batect.testutils.withFileName
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
@@ -1145,12 +1146,22 @@ object ConfigurationLoaderSpec : Spek({
         on("loading a configuration file with an invalid container name") {
             val configString = """
                 |containers:
-                |   -invalid:
+                |  -invalid:
                 |       image: some-image:1.2.3
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(configString) }, throws(withMessage("Invalid container name '-invalid'. Container names must be valid Docker references: they must contain only lowercase letters, digits, dashes (-), single consecutive periods (.) or one or two consecutive underscores (_), and must not start or end with dashes, periods or underscores.") and withLineNumber(2) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Invalid container name '-invalid'. Container names must be valid Docker references: they must contain only lowercase letters, digits, dashes (-), single consecutive periods (.) or one or two consecutive underscores (_), and must not start or end with dashes, periods or underscores.") and withLineNumber(2) and withColumn(3) and withFileName(testFileName)))
+            }
+        }
+
+        on("loading a configuration file with an invalid project name") {
+            val configString = """
+                |project_name: -invalid
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Invalid project name '-invalid'. The project name must be a valid Docker reference: it must contain only lowercase letters, digits, dashes (-), single consecutive periods (.) or one or two consecutive underscores (_), and must not start or end with dashes, periods or underscores.") and withLineNumber(1) and withColumn(15) and withFileName(testFileName)))
             }
         }
     }

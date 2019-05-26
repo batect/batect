@@ -16,13 +16,23 @@ file is `/home/alex/projects/my-cool-app/batect.yml` and you do not provide a pr
 
 ## `containers`
 
-Definitions for each of the containers that make up your various environments.
+Definitions for each of the containers that make up your various environments, in `<name>: <options>` format.
+
+Container names must be valid Docker references:
+
+* they must contain only:
+    * lowercase letters
+    * digits
+    * dashes (`-`)
+    * single consecutive periods (`.`)
+    * one or two consecutive underscores (`_`)
+* they must not start or end with dashes, periods or underscores
 
 [Detailed reference for `containers`](Containers.md)
 
 ## `tasks`
 
-Definitions for each of your tasks, the actions you launch through batect.
+Definitions for each of your tasks, the actions you launch through batect, in `<name>: <options>` format.
 
 [Detailed reference for `tasks`](Tasks.md)
 

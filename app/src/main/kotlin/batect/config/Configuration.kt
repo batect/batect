@@ -17,7 +17,9 @@
 package batect.config
 
 import batect.config.io.ConfigurationException
+import batect.config.io.deserializers.PathDeserializer
 import batect.docker.DockerImageNameValidator
+import batect.os.PathResolutionResult
 import batect.os.PathResolver
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.CompositeDecoder
@@ -25,7 +27,6 @@ import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
@@ -34,28 +35,10 @@ import kotlinx.serialization.internal.SerialClassDescImpl
 
 @Serializable
 data class Configuration(
-    @SerialName("project_name") val projectName: String? = null,
-    @Serializable(with = TaskMap.Companion::class) val tasks: TaskMap = TaskMap(),
-    @Serializable(with = ContainerMap.Companion::class) val containers: ContainerMap = ContainerMap()
+    val projectName: String,
+    val tasks: TaskMap = TaskMap(),
+    val containers: ContainerMap = ContainerMap()
 ) {
-    fun withResolvedProjectName(pathResolver: PathResolver): Configuration {
-        if (projectName != null) {
-            return this
-        }
-
-        if (pathResolver.relativeTo.root == pathResolver.relativeTo) {
-            throw ConfigurationException("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.")
-        }
-
-        val inferredProjectName = pathResolver.relativeTo.fileName.toString()
-
-        if (!DockerImageNameValidator.isValidImageName(inferredProjectName)) {
-            throw ConfigurationException("The inferred project name '$inferredProjectName' is invalid. The project name must be a valid Docker reference: it ${DockerImageNameValidator.validNameDescription}. Provide a valid project name explicitly with '$projectNameFieldName'.")
-        }
-
-        return this.copy(projectName = inferredProjectName)
-    }
-
     @Serializer(forClass = Configuration::class)
     companion object : KSerializer<Configuration> {
         private val projectNameFieldName = "project_name"
@@ -95,6 +78,13 @@ data class Configuration(
                 }
             }
 
+            if (projectName == null) {
+                // HACK: this is a terrible hack but there's no other way to get something contextual while deserializing
+                val pathResolver = (input.context.getContextual(PathResolutionResult::class)!! as PathDeserializer).pathResolver
+
+                projectName = inferProjectName(pathResolver)
+            }
+
             return Configuration(projectName, tasks, containers)
         }
 
@@ -112,6 +102,20 @@ data class Configuration(
             }
 
             return projectName
+        }
+
+        private fun inferProjectName(pathResolver: PathResolver): String {
+            if (pathResolver.relativeTo.root == pathResolver.relativeTo) {
+                throw ConfigurationException("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.")
+            }
+
+            val inferredProjectName = pathResolver.relativeTo.fileName.toString()
+
+            if (!DockerImageNameValidator.isValidImageName(inferredProjectName)) {
+                throw ConfigurationException("The inferred project name '$inferredProjectName' is invalid. The project name must be a valid Docker reference: it ${DockerImageNameValidator.validNameDescription}. Provide a valid project name explicitly with '$projectNameFieldName'.")
+            }
+
+            return inferredProjectName
         }
 
         override fun serialize(encoder: Encoder, obj: Configuration): Unit = throw UnsupportedOperationException()

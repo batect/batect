@@ -68,9 +68,7 @@ class ConfigurationLoader(
         val parser = Yaml(extensionDefinitionPrefix = ".", context = module)
 
         try {
-            return parser
-                .parse(Configuration.serializer(), configFileContent)
-                .withResolvedProjectName(pathResolver)
+            return parser.parse(Configuration.serializer(), configFileContent)
         } catch (e: Throwable) {
             logger.error {
                 message("Exception thrown while loading configuration.")

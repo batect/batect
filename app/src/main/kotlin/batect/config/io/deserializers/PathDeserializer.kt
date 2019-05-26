@@ -24,7 +24,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.internal.StringDescriptor
 
-class PathDeserializer(private val pathResolver: PathResolver) : KSerializer<PathResolutionResult> {
+class PathDeserializer(val pathResolver: PathResolver) : KSerializer<PathResolutionResult> {
     override val descriptor: SerialDescriptor = StringDescriptor
 
     override fun deserialize(decoder: Decoder): PathResolutionResult = pathResolver.resolve(decoder.decodeString())

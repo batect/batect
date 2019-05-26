@@ -24,8 +24,6 @@ import org.spekframework.spek2.style.specification.describe
 
 object DockerImageNameValidatorSpec : Spek({
     describe("a Docker image name validator") {
-        val validator = DockerImageNameValidator()
-
         listOf(
             "a",
             "aa",
@@ -40,7 +38,7 @@ object DockerImageNameValidatorSpec : Spek({
         ).forEach { name ->
             given("the name '$name'") {
                 it("reports that '$name' is a valid image name") {
-                    assertThat(validator.isValidImageName(name), equalTo(true))
+                    assertThat(DockerImageNameValidator.isValidImageName(name), equalTo(true))
                 }
             }
         }
@@ -61,7 +59,7 @@ object DockerImageNameValidatorSpec : Spek({
         ).forEach { name ->
             given("the name '$name'") {
                 it("reports that '$name' is not a valid image name") {
-                    assertThat(validator.isValidImageName(name), equalTo(false))
+                    assertThat(DockerImageNameValidator.isValidImageName(name), equalTo(false))
                 }
             }
         }

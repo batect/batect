@@ -16,6 +16,8 @@
 
 package batect.config
 
+import com.charleskorn.kaml.Location
+import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.CompositeDecoder
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
@@ -112,7 +114,10 @@ abstract class NamedObjectMapDeserializer<TCollection, TElement>(val elementSeri
     }
 
     private fun readSingle(input: CompositeDecoder, index: Int, checkIndex: Boolean): TElement {
+        val nameLocation = (input as YamlInput).getCurrentLocation()
         val name = input.decodeSerializableElement(descriptor, index, keySerializer)
+
+        validateName(name, nameLocation)
 
         val valueIndex = if (checkIndex) {
             input.decodeElementIndex(descriptor)
@@ -128,6 +133,7 @@ abstract class NamedObjectMapDeserializer<TCollection, TElement>(val elementSeri
     @Suppress("UNUSED_PARAMETER")
     fun serialize(encoder: Encoder, obj: TCollection): Unit = throw UnsupportedOperationException()
 
+    open fun validateName(name: String, location: Location) {}
     protected abstract fun addName(name: String, element: TElement): TElement
     protected abstract fun createCollection(elements: Set<TElement>): TCollection
 }

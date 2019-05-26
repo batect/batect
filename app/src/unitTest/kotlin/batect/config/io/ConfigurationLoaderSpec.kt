@@ -1141,5 +1141,17 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(config.projectName, equalTo("the_cool_project"))
             }
         }
+
+        on("loading a configuration file with an invalid container name") {
+            val configString = """
+                |containers:
+                |   -invalid:
+                |       image: some-image:1.2.3
+                """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Invalid container name '-invalid'. Container names must be valid Docker references: they must contain only lowercase letters, digits, dashes (-), single consecutive periods (.) or one or two consecutive underscores (_), and must not start or end with dashes, periods or underscores.") and withLineNumber(2) and withFileName(testFileName)))
+            }
+        }
     }
 })

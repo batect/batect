@@ -16,6 +16,9 @@
 
 package batect.config
 
+import batect.config.io.ConfigurationException
+import batect.docker.DockerImageNameValidator
+import com.charleskorn.kaml.Location
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
@@ -30,6 +33,16 @@ class ContainerMap(contents: Iterable<Container>) : NamedObjectMap<Container>("c
     companion object : NamedObjectMapDeserializer<ContainerMap, Container>(Container.serializer()), KSerializer<ContainerMap> {
         override fun addName(name: String, element: Container): Container = element.copy(name = name)
         override fun createCollection(elements: Set<Container>): ContainerMap = ContainerMap(elements)
+
+        override fun validateName(name: String, location: Location) {
+            if (!DockerImageNameValidator.isValidImageName(name)) {
+                throw ConfigurationException(
+                    "Invalid container name '$name'. Container names must be valid Docker references: they must contain only lowercase letters, digits, dashes (-), single consecutive periods (.) or one or two consecutive underscores (_), and must not start or end with dashes, periods or underscores.",
+                    location.line,
+                    location.column
+                )
+            }
+        }
 
         override val descriptor: SerialDescriptor = HashMapClassDesc(keySerializer.descriptor, elementSerializer.descriptor)
     }

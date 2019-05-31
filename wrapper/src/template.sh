@@ -64,14 +64,14 @@
     function checkForCurl() {
         if ! hash curl 2>/dev/null; then
             echo "curl is not installed or not on your PATH. Please install it and try again." >&2
-            exit -1
+            exit 1
         fi
     }
 
     function checkForJava() {
         if ! hash java 2>/dev/null; then
             echo "Java is not installed or not on your PATH. Please install it and try again." >&2
-            exit -1
+            exit 1
         fi
 
         java_version=$(getJavaVersion)
@@ -81,7 +81,7 @@
         if (( java_version_major < 1 || ( java_version_major == 1 && java_version_minor <= 7 ) )); then
             echo "The version of Java that is available on your PATH is version $java_version, but version 1.8 or greater is required."
             echo "If you have a newer version of Java installed, please make sure your PATH is set correctly."
-            exit -1
+            exit 1
         fi
     }
 

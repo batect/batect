@@ -17,6 +17,7 @@
 package batect.execution.model.steps
 
 import batect.testutils.on
+import batect.testutils.osIndependentPath
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
@@ -25,7 +26,7 @@ import java.nio.file.Paths
 
 object DeleteTemporaryDirectoryStepSpec : Spek({
     describe("a 'delete temporary directory' step") {
-        val path = Paths.get("/some-file")
+        val path = osIndependentPath("/some-file")
         val step = DeleteTemporaryDirectoryStep(path)
 
         on("toString()") {

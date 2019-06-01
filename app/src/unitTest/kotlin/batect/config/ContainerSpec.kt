@@ -25,6 +25,7 @@ import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
+import batect.testutils.osIndependentPath
 import batect.testutils.runForEachTest
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
@@ -52,11 +53,11 @@ object ContainerSpec : Spek({
                     val path = input.decodeString()
 
                     when (path) {
-                        "/does_not_exist" -> PathResolutionResult.Resolved(path, Paths.get("/some_resolved_path"), PathType.DoesNotExist)
-                        "/file" -> PathResolutionResult.Resolved(path, Paths.get("/some_resolved_path"), PathType.File)
-                        "/not_file_or_directory" -> PathResolutionResult.Resolved(path, Paths.get("/some_resolved_path"), PathType.Other)
+                        "/does_not_exist" -> PathResolutionResult.Resolved(path, osIndependentPath("/some_resolved_path"), PathType.DoesNotExist)
+                        "/file" -> PathResolutionResult.Resolved(path, osIndependentPath("/some_resolved_path"), PathType.File)
+                        "/not_file_or_directory" -> PathResolutionResult.Resolved(path, osIndependentPath("/some_resolved_path"), PathType.Other)
                         "/invalid" -> PathResolutionResult.InvalidPath(path)
-                        else -> PathResolutionResult.Resolved(path, Paths.get("/resolved" + path), PathType.Directory)
+                        else -> PathResolutionResult.Resolved(path, osIndependentPath("/resolved" + path), PathType.Directory)
                     }
                 }
             }
@@ -72,7 +73,7 @@ object ContainerSpec : Spek({
                     val result by runForEachTest { parser.parse(Container.Companion, yaml) }
 
                     it("returns the expected container configuration, with the build directory resolved to an absolute path") {
-                        assertThat(result, equalTo(Container("UNNAMED-FROM-CONFIG-FILE", BuildImage(Paths.get("/resolved/some_build_dir"), emptyMap(), "Dockerfile"))))
+                        assertThat(result, equalTo(Container("UNNAMED-FROM-CONFIG-FILE", BuildImage(osIndependentPath("/resolved/some_build_dir"), emptyMap(), "Dockerfile"))))
                     }
                 }
             }
@@ -232,7 +233,7 @@ object ContainerSpec : Spek({
                 val result by runForEachTest { parser.parse(Container.Companion, yaml) }
 
                 it("returns the expected container configuration") {
-                    assertThat(result.imageSource, equalTo(BuildImage(Paths.get("/resolved/container-1-build-dir"), mapOf("SOME_ARG" to LiteralValue("some_value"), "SOME_DYNAMIC_VALUE" to ReferenceValue("host_var")), "some-Dockerfile")))
+                    assertThat(result.imageSource, equalTo(BuildImage(osIndependentPath("/resolved/container-1-build-dir"), mapOf("SOME_ARG" to LiteralValue("some_value"), "SOME_DYNAMIC_VALUE" to ReferenceValue("host_var")), "some-Dockerfile")))
                     assertThat(result.command, equalTo(Command.parse("do-the-thing.sh some-param")))
                     assertThat(
                         result.environment, equalTo(

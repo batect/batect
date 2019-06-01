@@ -16,8 +16,11 @@
 
 package batect.testutils
 
+import com.google.common.jimfs.Configuration
+import com.google.common.jimfs.Jimfs
 import jnr.ffi.Platform
 import org.spekframework.spek2.dsl.GroupBody
+import java.nio.file.Path
 
 fun GroupBody.onlyOn(operatingSystems: Set<Platform.OS>, action: GroupBody.() -> Unit) {
     if (Platform.getNativePlatform().os in operatingSystems) {
@@ -28,3 +31,9 @@ fun GroupBody.onlyOn(operatingSystems: Set<Platform.OS>, action: GroupBody.() ->
 val platformLineSeparator = System.getProperty("line.separator")
 
 fun String.withPlatformSpecificLineSeparator() = this.replace("\n", platformLineSeparator)
+
+private val osIndependentFileSystem by lazy { Jimfs.newFileSystem(Configuration.unix()) }
+
+fun osIndependentPath(path: String): Path {
+    return osIndependentFileSystem.getPath(path)
+}

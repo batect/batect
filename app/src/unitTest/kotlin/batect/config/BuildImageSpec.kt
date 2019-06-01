@@ -17,6 +17,7 @@
 package batect.config
 
 import batect.testutils.on
+import batect.testutils.osIndependentPath
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
@@ -26,7 +27,7 @@ import java.nio.file.Paths
 object BuildImageSpec : Spek({
     describe("a image build source") {
         val source = BuildImage(
-            Paths.get("/image-build-dir"),
+            osIndependentPath("/image-build-dir"),
             mapOf(
                 "some_arg" to LiteralValue("some_value"),
                 "some_other_arg" to ReferenceValue("host_var")

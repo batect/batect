@@ -24,6 +24,7 @@ import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
+import batect.testutils.osIndependentPath
 import com.natpryce.hamkrest.assertion.assertThat
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -31,7 +32,7 @@ import java.nio.file.Paths
 
 object DeleteTemporaryFileStepRuleSpec : Spek({
     describe("a delete temporary file step rule") {
-        val path = Paths.get("/some-file")
+        val path = osIndependentPath("/some-file")
 
         given("there is a container that must be removed first") {
             val container = Container("the-container", imageSourceDoesNotMatter())

@@ -21,6 +21,7 @@ import batect.os.PathResolutionResult
 import batect.os.PathType
 import batect.testutils.createForEachTest
 import batect.testutils.on
+import batect.testutils.osIndependentPath
 import batect.testutils.runForEachTest
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
@@ -51,7 +52,7 @@ object VolumeMountSpec : Spek({
 
                         when (originalPath) {
                             "/invalid" -> PathResolutionResult.InvalidPath(originalPath)
-                            else -> PathResolutionResult.Resolved(originalPath, Paths.get("/resolved" + originalPath), PathType.Other)
+                            else -> PathResolutionResult.Resolved(originalPath, osIndependentPath("/resolved" + originalPath), PathType.Other)
                         }
                     }
                 }

@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.os.unixsockets
+package batect.os.unix.unixsockets
 
 import okhttp3.Dns
 import okio.ByteString

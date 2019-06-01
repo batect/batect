@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.os.unixsockets
+package batect.os.unix.unixsockets
 
 import batect.testutils.equalTo
 import batect.testutils.on

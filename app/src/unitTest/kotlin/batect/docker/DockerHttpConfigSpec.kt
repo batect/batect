@@ -16,8 +16,8 @@
 
 package batect.docker
 
-import batect.os.unixsockets.UnixSocketDns
-import batect.os.unixsockets.UnixSocketFactory
+import batect.os.unix.unixsockets.UnixSocketDns
+import batect.os.unix.unixsockets.UnixSocketFactory
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given

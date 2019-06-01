@@ -17,6 +17,7 @@
 package batect.docker.build
 
 import batect.docker.DockerException
+import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -29,6 +30,7 @@ class DockerIgnoreParser {
             return DockerImageBuildIgnoreList(emptyList())
         }
 
+        val fileSystem = path.fileSystem
         val lines = Files.readAllLines(path)
 
         val entries = lines
@@ -47,14 +49,14 @@ class DockerIgnoreParser {
                     Pair(it, false)
                 }
             }.map { (pattern, inverted) ->
-                DockerImageBuildIgnoreEntry(cleanPattern(pattern), inverted)
+                DockerImageBuildIgnoreEntry(cleanPattern(pattern, fileSystem), inverted)
             }
 
         return DockerImageBuildIgnoreList(entries)
     }
 
-    private fun cleanPattern(pattern: String): String {
-        val patternToClean = Paths.get(pattern).normalize().toString()
+    private fun cleanPattern(pattern: String, fileSystem: FileSystem): String {
+        val patternToClean = fileSystem.getPath(pattern).normalize().toString()
 
         if (patternToClean.isEmpty() || patternToClean == "/") {
             return "."

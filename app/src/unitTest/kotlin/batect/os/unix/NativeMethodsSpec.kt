@@ -14,8 +14,9 @@
    limitations under the License.
 */
 
-package batect.os
+package batect.os.unix
 
+import batect.os.NativeMethodException
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.on
@@ -39,13 +40,13 @@ import jnr.posix.POSIX
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object NativeMethodsSpec : Spek({
-    describe("native methods") {
-        val libc by createForEachTest { mock<NativeMethods.LibC>() }
+object UnixNativeMethodsSpec : Spek({
+    describe("Unix native methods") {
+        val libc by createForEachTest { mock<UnixNativeMethods.LibC>() }
         val runtime = Runtime.getSystemRuntime()
         val platform by createForEachTest { mock<Platform>() }
         val posix by createForEachTest { mock<POSIX>() }
-        val nativeMethods by createForEachTest { NativeMethods(libc, runtime, platform, posix) }
+        val nativeMethods by createForEachTest { UnixNativeMethods(libc, runtime, platform, posix) }
 
         describe("getting the console dimensions") {
             describe("when running on any supported platform") {
@@ -57,7 +58,7 @@ object NativeMethodsSpec : Spek({
 
                     beforeEachTest {
                         whenever(libc.ioctl(eq(0), any(), any())).thenAnswer { invocation ->
-                            val size = invocation.arguments[2] as NativeMethods.WindowSize
+                            val size = invocation.arguments[2] as UnixNativeMethods.WindowSize
 
                             size.ws_row.set(expectedRows)
                             size.ws_col.set(expectedColumns)

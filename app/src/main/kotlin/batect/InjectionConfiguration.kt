@@ -68,6 +68,7 @@ import batect.os.SignalListener
 import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablePreprocessor
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
+import batect.os.unix.UnixNativeMethods
 import batect.ui.Console
 import batect.ui.ConsoleDimensions
 import batect.ui.ConsoleInfo
@@ -78,6 +79,7 @@ import batect.updates.UpdateInfoDownloader
 import batect.updates.UpdateInfoStorage
 import batect.updates.UpdateInfoUpdater
 import batect.updates.UpdateNotifier
+import jnr.ffi.Platform
 import jnr.posix.POSIX
 import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
@@ -113,6 +115,10 @@ fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStrea
     import(uiModule)
     import(updatesModule)
     import(coreModule)
+
+    if (Platform.getNativePlatform().os in setOf(Platform.OS.DARWIN, Platform.OS.LINUX)) {
+        import(unixModule)
+    }
 }
 
 enum class StreamType {
@@ -196,12 +202,15 @@ private val loggingModule = Kodein.Module("logging") {
 }
 
 private val osModule = Kodein.Module("os") {
-    bind<NativeMethods>() with singleton { NativeMethods(instance()) }
     bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }
     bind<ProxyEnvironmentVariablePreprocessor>() with singletonWithLogger { logger -> ProxyEnvironmentVariablePreprocessor(instance(), logger) }
     bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider(instance()) }
     bind<SignalListener>() with singleton { SignalListener(instance()) }
     bind<SystemInfo>() with singleton { SystemInfo(instance()) }
+}
+
+private val unixModule = Kodein.Module("os.unix") {
+    bind<NativeMethods>() with singleton { UnixNativeMethods(instance()) }
 }
 
 private val uiModule = Kodein.Module("ui") {

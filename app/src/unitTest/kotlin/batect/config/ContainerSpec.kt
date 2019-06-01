@@ -41,7 +41,6 @@ import kotlinx.serialization.ElementValueDecoder
 import kotlinx.serialization.modules.serializersModuleOf
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
 import java.time.Duration
 
 object ContainerSpec : Spek({

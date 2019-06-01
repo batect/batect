@@ -22,7 +22,6 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
 
 object BuildImageSpec : Spek({
     describe("a image build source") {

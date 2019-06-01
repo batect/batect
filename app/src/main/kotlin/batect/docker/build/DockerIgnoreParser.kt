@@ -20,7 +20,6 @@ import batect.docker.DockerException
 import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 
 class DockerIgnoreParser {
     // Based on https://github.com/docker/cli/blob/master/cli/command/image/build/dockerignore.go and

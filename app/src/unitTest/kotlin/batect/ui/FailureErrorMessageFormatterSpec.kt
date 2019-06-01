@@ -54,7 +54,6 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
 
 object FailureErrorMessageFormatterSpec : Spek({
     describe("a failure error message formatter") {

@@ -39,7 +39,6 @@ import kotlinx.serialization.Decoder
 import kotlinx.serialization.modules.serializersModuleOf
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
 
 object VolumeMountSpec : Spek({
     describe("a volume mount") {

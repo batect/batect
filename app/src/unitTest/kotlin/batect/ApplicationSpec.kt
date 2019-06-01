@@ -33,6 +33,7 @@ import batect.testutils.hasMessage
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.withException
+import batect.testutils.withPlatformSpecificLineSeparator
 import batect.testutils.withSeverity
 import batect.ui.Console
 import batect.ui.text.Text
@@ -171,7 +172,7 @@ object ApplicationSpec : Spek({
                     val exitCode by runForEachTest { application.run(args) }
 
                     it("prints the error message to the error stream") {
-                        assertThat(errorStream.toString(), equalTo("Everything is broken\n"))
+                        assertThat(errorStream.toString(), equalTo("Everything is broken\n".withPlatformSpecificLineSeparator()))
                     }
 
                     it("returns a non-zero exit code") {
@@ -188,7 +189,7 @@ object ApplicationSpec : Spek({
                 val exitCode by runForEachTest { application.run(args) }
 
                 it("prints an error message to the error stream") {
-                    assertThat(errorStream.toString(), equalTo("batect only supports OS X and Linux.\n"))
+                    assertThat(errorStream.toString(), equalTo("batect only supports OS X and Linux.\n".withPlatformSpecificLineSeparator()))
                 }
 
                 it("returns a non-zero exit code") {

@@ -20,6 +20,7 @@ import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.withMessage
+import batect.testutils.withPlatformSpecificLineSeparator
 import batect.ui.text.Text
 import batect.ui.text.TextRun
 import com.natpryce.hamkrest.assertion.assertThat
@@ -56,7 +57,7 @@ object ConsoleSpec : Spek({
                 beforeEachTest { console.println("This is some text") }
 
                 it("writes the text directly to the output") {
-                    assertThat(output.toString(), equalTo("This is some text\n"))
+                    assertThat(output.toString(), equalTo("This is some text\n".withPlatformSpecificLineSeparator()))
                 }
             }
 
@@ -64,7 +65,7 @@ object ConsoleSpec : Spek({
                 beforeEachTest { console.println() }
 
                 it("writes a blank line directly to the output") {
-                    assertThat(output.toString(), equalTo("\n"))
+                    assertThat(output.toString(), equalTo("\n".withPlatformSpecificLineSeparator()))
                 }
             }
 
@@ -80,7 +81,7 @@ object ConsoleSpec : Spek({
                 beforeEachTest { console.println(Text("Hello")) }
 
                 it("writes that text directly to the output") {
-                    assertThat(output.toString(), equalTo("Hello\n"))
+                    assertThat(output.toString(), equalTo("Hello\n".withPlatformSpecificLineSeparator()))
                 }
             }
 
@@ -96,7 +97,7 @@ object ConsoleSpec : Spek({
                 beforeEachTest { console.println(Text.white("the white text")) }
 
                 it("writes the text to the output with the appropriate escape codes") {
-                    assertThat(output.toString(), equalTo("${whiteText}the white text$reset\n"))
+                    assertThat(output.toString(), equalTo("${whiteText}the white text$reset\n".withPlatformSpecificLineSeparator()))
                 }
             }
 
@@ -112,7 +113,7 @@ object ConsoleSpec : Spek({
                 beforeEachTest { console.println(Text.bold("the bold text")) }
 
                 it("writes the text to the output with the appropriate escape codes") {
-                    assertThat(output.toString(), equalTo("${boldText}the bold text$reset\n"))
+                    assertThat(output.toString(), equalTo("${boldText}the bold text$reset\n".withPlatformSpecificLineSeparator()))
                 }
             }
 
@@ -128,7 +129,7 @@ object ConsoleSpec : Spek({
                 beforeEachTest { console.println(Text("bold and red", ConsoleColor.Red, true)) }
 
                 it("writes the text to the output with the appropriate escape codes") {
-                    assertThat(output.toString(), equalTo("${redText}${boldText}bold and red$reset\n"))
+                    assertThat(output.toString(), equalTo("${redText}${boldText}bold and red$reset\n".withPlatformSpecificLineSeparator()))
                 }
             }
 
@@ -144,7 +145,7 @@ object ConsoleSpec : Spek({
                 beforeEachTest { console.println(Text("Hello") + Text(" World")) }
 
                 it("writes that text directly to the output") {
-                    assertThat(output.toString(), equalTo("Hello World\n"))
+                    assertThat(output.toString(), equalTo("Hello World\n".withPlatformSpecificLineSeparator()))
                 }
             }
 
@@ -160,7 +161,7 @@ object ConsoleSpec : Spek({
                 beforeEachTest { console.println(Text.red("red") + Text.white("white")) }
 
                 it("writes the text to the output with the appropriate escape codes") {
-                    assertThat(output.toString(), equalTo("${redText}red${reset}${whiteText}white$reset\n"))
+                    assertThat(output.toString(), equalTo("${redText}red${reset}${whiteText}white$reset\n".withPlatformSpecificLineSeparator()))
                 }
             }
 
@@ -176,7 +177,7 @@ object ConsoleSpec : Spek({
                 beforeEachTest { console.println(Text.bold("bold") + Text("not")) }
 
                 it("writes the text to the output with the appropriate escape codes") {
-                    assertThat(output.toString(), equalTo("${boldText}bold${reset}not\n"))
+                    assertThat(output.toString(), equalTo("${boldText}bold${reset}not\n".withPlatformSpecificLineSeparator()))
                 }
             }
 
@@ -192,7 +193,7 @@ object ConsoleSpec : Spek({
                 beforeEachTest { console.println(Text.bold(Text.red("red") + Text.white("white"))) }
 
                 it("writes the text to the output with the appropriate escape codes") {
-                    assertThat(output.toString(), equalTo("${redText}${boldText}red${reset}${whiteText}${boldText}white$reset\n"))
+                    assertThat(output.toString(), equalTo("${redText}${boldText}red${reset}${whiteText}${boldText}white$reset\n".withPlatformSpecificLineSeparator()))
                 }
             }
 
@@ -289,7 +290,7 @@ object ConsoleSpec : Spek({
                 beforeEachTest { console.println("This is some text") }
 
                 it("writes the text directly to the output") {
-                    assertThat(output.toString(), equalTo("This is some text\n"))
+                    assertThat(output.toString(), equalTo("This is some text\n".withPlatformSpecificLineSeparator()))
                 }
             }
 
@@ -297,7 +298,7 @@ object ConsoleSpec : Spek({
                 beforeEachTest { console.println() }
 
                 it("writes a blank line directly to the output") {
-                    assertThat(output.toString(), equalTo("\n"))
+                    assertThat(output.toString(), equalTo("\n".withPlatformSpecificLineSeparator()))
                 }
             }
 
@@ -357,7 +358,7 @@ object ConsoleSpec : Spek({
                     beforeEachTest { console.printLineLimitedToConsoleWidth(TextRun("This is some text")) }
 
                     it("prints all text") {
-                        assertThat(output.toString(), equalTo("This is some text\n"))
+                        assertThat(output.toString(), equalTo("This is some text\n".withPlatformSpecificLineSeparator()))
                     }
                 }
             }
@@ -380,7 +381,7 @@ object ConsoleSpec : Spek({
                     beforeEachTest { console.printLineLimitedToConsoleWidth(text) }
 
                     it("prints the shortened text") {
-                        assertThat(output.toString(), equalTo("This is some shortened text\n"))
+                        assertThat(output.toString(), equalTo("This is some shortened text\n".withPlatformSpecificLineSeparator()))
                     }
                 }
             }

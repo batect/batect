@@ -21,6 +21,7 @@ import batect.cli.options.OptionDefinition
 import batect.cli.options.OptionParser
 import batect.cli.options.OptionParsingResult
 import batect.testutils.given
+import batect.testutils.withPlatformSpecificLineSeparator
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.doReturn
@@ -71,7 +72,7 @@ object HelpCommandSpec : Spek({
                         |
                         |For documentation and further information on batect, visit https://github.com/charleskorn/batect.
                         |
-                        |""".trimMargin()))
+                        |""".trimMargin().withPlatformSpecificLineSeparator()))
             }
 
             it("returns a non-zero exit code") {

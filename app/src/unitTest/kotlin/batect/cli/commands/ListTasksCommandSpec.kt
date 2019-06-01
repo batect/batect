@@ -25,6 +25,7 @@ import batect.config.io.ConfigurationLoader
 import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.runForEachTest
+import batect.testutils.withPlatformSpecificLineSeparator
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -68,7 +69,7 @@ object ListTasksCommandSpec : Spek({
                                 |- first-task
                                 |- other-task
                                 |
-                            """.trimMargin()
+                            """.trimMargin().withPlatformSpecificLineSeparator()
                         )
                     )
                 }
@@ -106,7 +107,7 @@ object ListTasksCommandSpec : Spek({
                                 |- first-task
                                 |- other-task
                                 |
-                            """.trimMargin()
+                            """.trimMargin().withPlatformSpecificLineSeparator()
                         )
                     )
                 }
@@ -146,7 +147,7 @@ object ListTasksCommandSpec : Spek({
                                 |Test tasks:
                                 |- first-task
                                 |
-                            """.trimMargin()
+                            """.trimMargin().withPlatformSpecificLineSeparator()
                         )
                     )
                 }
@@ -186,7 +187,7 @@ object ListTasksCommandSpec : Spek({
                                 |Ungrouped tasks:
                                 |- first-task
                                 |
-                            """.trimMargin()
+                            """.trimMargin().withPlatformSpecificLineSeparator()
                         )
                     )
                 }

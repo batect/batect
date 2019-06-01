@@ -24,3 +24,7 @@ fun GroupBody.onlyOn(operatingSystems: Set<Platform.OS>, action: GroupBody.() ->
         action(this)
     }
 }
+
+val platformLineSeparator = System.getProperty("line.separator")
+
+fun String.withPlatformSpecificLineSeparator() = this.replace("\n", platformLineSeparator)

@@ -21,6 +21,7 @@ import batect.docker.DockerClient
 import batect.docker.DockerVersionInfoRetrievalResult
 import batect.os.SystemInfo
 import batect.testutils.on
+import batect.testutils.withPlatformSpecificLineSeparator
 import batect.updates.UpdateNotifier
 import batect.utils.Version
 import com.natpryce.hamkrest.assertion.assertThat
@@ -69,7 +70,7 @@ object VersionInfoCommandSpec : Spek({
                     |
                     |For documentation and further information on batect, visit https://github.com/charleskorn/batect.
                     |
-                    |""".trimMargin()))
+                    |""".trimMargin().withPlatformSpecificLineSeparator()))
             }
 
             it("returns a zero exit code") {

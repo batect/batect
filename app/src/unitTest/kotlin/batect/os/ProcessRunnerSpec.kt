@@ -34,7 +34,6 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.io.IOException
 
 object ProcessRunnerSpec : Spek({
     describe("a process runner") {
@@ -43,7 +42,7 @@ object ProcessRunnerSpec : Spek({
         val runner by createForEachTest { ProcessRunner(logger) }
 
         on("running a process with stdin attached") {
-            val command = listOf("sh", "-c", "echo hello world && echo hello error world 1>&2 && echo more non-error output && exit 201")
+            val command = listOf("bash", "-c", "echo hello world && echo hello error world 1>&2 && echo more non-error output && exit 201")
             val result by runForEachTest { runner.runWithStdinAttached(command) }
 
             it("returns the exit code of the command") {
@@ -75,7 +74,7 @@ object ProcessRunnerSpec : Spek({
             given("the executable exists") {
                 given("there is no input to pipe to stdin") {
                     on("running it") {
-                        val command = listOf("sh", "-c", "echo hello world && echo hello error world 1>&2 && echo more non-error output && exit 201")
+                        val command = listOf("bash", "-c", "echo hello world && echo hello error world 1>&2 && echo more non-error output && exit 201")
                         val result by runForEachTest { runner.runAndCaptureOutput(command) }
 
                         it("returns the exit code of the command") {
@@ -106,7 +105,7 @@ object ProcessRunnerSpec : Spek({
 
                 given("there is some input to pipe to stdin") {
                     on("running it") {
-                        val command = listOf("tee")
+                        val command = listOf("bash", "-c", "tee")
                         val stdin = "This is some input to stdin that will be returned by tee as output"
                         val result by runForEachTest { runner.runAndCaptureOutput(command, stdin) }
 
@@ -126,7 +125,7 @@ object ProcessRunnerSpec : Spek({
                     val command = listOf("some-non-existent-app", "--some-arg")
 
                     it("throws an appropriate exception") {
-                        assertThat({ runner.runAndCaptureOutput(command) }, throws<ExecutableDoesNotExistException>(withMessage("The executable 'some-non-existent-app' could not be found.")))
+                        assertThat({ runner.runAndCaptureOutput(command) }, throws<ExecutableDoesNotExistException>(withMessage("The executable 'some-non-existent-app' could not be found or is not executable.")))
                     }
                 }
             }
@@ -136,7 +135,7 @@ object ProcessRunnerSpec : Spek({
                     val command = listOf("/home")
 
                     it("throws an appropriate exception") {
-                        assertThat({ runner.runAndCaptureOutput(command) }, throws<IOException>())
+                        assertThat({ runner.runAndCaptureOutput(command) }, throws<ExecutableDoesNotExistException>(withMessage("The executable '/home' could not be found or is not executable.")))
                     }
                 }
             }

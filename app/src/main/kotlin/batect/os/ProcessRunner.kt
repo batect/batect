@@ -82,7 +82,11 @@ class ProcessRunner(private val logger: Logger) {
 
             return ProcessOutput(exitCode, output)
         } catch (e: IOException) {
-            if (e.cause?.message == "error=2, No such file or directory") {
+            val unixDoesNotExistError = "error=2, No such file or directory"
+            val unixNotExecutableError = "error=13, Permission denied"
+            val windowsError = "CreateProcess error=2, The system cannot find the file specified"
+
+            if (e.cause?.message in setOf(unixDoesNotExistError, unixNotExecutableError, windowsError)) {
                 val executableName = command.first()
                 throw ExecutableDoesNotExistException(executableName, e)
             }
@@ -94,4 +98,4 @@ class ProcessRunner(private val logger: Logger) {
 
 data class ProcessOutput(val exitCode: Int, val output: String)
 
-class ExecutableDoesNotExistException(executableName: String, cause: Throwable?) : RuntimeException("The executable '$executableName' could not be found.", cause)
+class ExecutableDoesNotExistException(executableName: String, cause: Throwable?) : RuntimeException("The executable '$executableName' could not be found or is not executable.", cause)

@@ -26,6 +26,7 @@ import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputStream
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
+import batect.testutils.doesNotThrow
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.mock
@@ -1020,7 +1021,7 @@ object DockerAPISpec : Spek({
                 beforeEachTest { httpClient.mockGet(expectedUrl, "OK") }
 
                 it("does not throw an exception") {
-                    assertThat({ api.ping() }, !throws<Throwable>())
+                    assertThat({ api.ping() }, doesNotThrow())
                 }
             }
 

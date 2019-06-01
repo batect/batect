@@ -21,6 +21,7 @@ import batect.docker.DockerAPI
 import batect.docker.DockerContainer
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
+import batect.testutils.doesNotThrow
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
@@ -29,7 +30,6 @@ import batect.ui.ConsoleDimensions
 import batect.ui.ConsoleInfo
 import batect.ui.Dimensions
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.doReturn
@@ -96,7 +96,7 @@ object ContainerTTYManagerSpec : Spek({
 
                             on("starting to monitor for terminal size changes") {
                                 it("does not throw an exception") {
-                                    assertThat({ manager.monitorForSizeChanges(container) }, !throws<Throwable>())
+                                    assertThat({ manager.monitorForSizeChanges(container) }, doesNotThrow())
                                 }
                             }
                         }
@@ -147,7 +147,7 @@ object ContainerTTYManagerSpec : Spek({
 
                             on("invoking the notification listener") {
                                 it("does not throw an exception") {
-                                    assertThat({ handlerCaptor.firstValue.invoke() }, !throws<Throwable>())
+                                    assertThat({ handlerCaptor.firstValue.invoke() }, doesNotThrow())
                                 }
                             }
                         }

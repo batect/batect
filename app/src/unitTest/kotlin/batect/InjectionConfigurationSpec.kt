@@ -19,9 +19,9 @@ package batect
 import batect.cli.CommandLineOptions
 import batect.logging.LogSink
 import batect.testutils.InMemoryLogSink
+import batect.testutils.doesNotThrow
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.throws
 import org.kodein.di.Copy
 import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
@@ -45,7 +45,7 @@ object InjectionConfigurationSpec : Spek({
             configuration.container.tree.bindings.keys.forEach { key ->
                 on("attempting to get an instance matching $key") {
                     it("does not throw an invalid configuration exception") {
-                        assertThat({ configuration.Instance(key.type, key.tag) }, !throws<Throwable>())
+                        assertThat({ configuration.Instance(key.type, key.tag) }, doesNotThrow())
                     }
                 }
             }

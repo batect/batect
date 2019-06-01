@@ -17,6 +17,7 @@
 package batect.cli.options
 
 import batect.testutils.createForEachTest
+import batect.testutils.doesNotThrow
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
@@ -39,19 +40,19 @@ object OptionDefinitionSpec : Spek({
         describe("creation") {
             on("attempting to create an value option with a valid name and description") {
                 it("does not throw an exception") {
-                    assertThat({ createOption("value", "The value.") }, !throws<Throwable>())
+                    assertThat({ createOption("value", "The value.") }, doesNotThrow())
                 }
             }
 
             on("attempting to create an value option with a valid name, description and short name") {
                 it("does not throw an exception") {
-                    assertThat({ createOption("value", "The value.", 'v') }, !throws<Throwable>())
+                    assertThat({ createOption("value", "The value.", 'v') }, doesNotThrow())
                 }
             }
 
             on("attempting to create an value option with a name with dashes") {
                 it("does not throw an exception") {
-                    assertThat({ createOption("some-value", "The value.") }, !throws<Throwable>())
+                    assertThat({ createOption("some-value", "The value.") }, doesNotThrow())
                 }
             }
 

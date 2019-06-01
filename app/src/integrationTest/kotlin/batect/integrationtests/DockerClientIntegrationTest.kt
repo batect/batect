@@ -43,11 +43,11 @@ import batect.docker.run.ContainerKiller
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.logging.Logger
-import batect.os.NativeMethods
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.os.SignalListener
 import batect.os.SystemInfo
+import batect.os.unix.UnixNativeMethods
 import batect.testutils.createForGroup
 import batect.testutils.runBeforeGroup
 import batect.ui.ConsoleDimensions
@@ -80,7 +80,7 @@ object DockerClientIntegrationTest : Spek({
         val httpConfig by createForGroup { DockerHttpConfig(OkHttpClient(), DockerHttpConfig.defaultDockerHost) }
         val api by createForGroup { DockerAPI(httpConfig, logger) }
         val posix by createForGroup { POSIXFactory.getNativePOSIX() }
-        val nativeMethods by createForGroup { NativeMethods(posix) }
+        val nativeMethods by createForGroup { UnixNativeMethods(posix) }
         val consoleInfo by createForGroup { ConsoleInfo(posix, processRunner, logger) }
         val credentialsConfigurationFile by createForGroup { DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger) }
         val credentialsProvider by createForGroup { DockerRegistryCredentialsProvider(DockerRegistryDomainResolver(), DockerRegistryIndexResolver(), credentialsConfigurationFile) }

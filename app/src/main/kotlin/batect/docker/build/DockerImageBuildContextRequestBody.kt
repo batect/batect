@@ -16,6 +16,7 @@
 
 package batect.docker.build
 
+import jnr.ffi.Platform
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import okio.BufferedSink
@@ -44,7 +45,11 @@ data class DockerImageBuildContextRequestBody(val context: DockerImageBuildConte
             createNormalEntry(entry)
         }
 
-        archiveEntry.mode = Files.getAttribute(entry.localPath, "unix:mode", LinkOption.NOFOLLOW_LINKS) as Int
+        if (Platform.getNativePlatform().os == Platform.OS.WINDOWS) {
+            archiveEntry.mode = 0b111_101_101
+        } else {
+            archiveEntry.mode = Files.getAttribute(entry.localPath, "unix:mode", LinkOption.NOFOLLOW_LINKS) as Int
+        }
 
         output.putArchiveEntry(archiveEntry)
 
@@ -63,7 +68,11 @@ data class DockerImageBuildContextRequestBody(val context: DockerImageBuildConte
         val archiveEntry = TarArchiveEntry(entry.contextPath, TarArchiveEntry.LF_SYMLINK)
         val target = Files.readSymbolicLink(entry.localPath)
 
-        archiveEntry.linkName = target.toString()
+        archiveEntry.linkName = if (target.isAbsolute) {
+            entry.localPath.parent.relativize(target).toString()
+        } else {
+            target.toString()
+        }
 
         return archiveEntry
     }

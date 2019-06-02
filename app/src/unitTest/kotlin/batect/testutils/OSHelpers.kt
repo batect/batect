@@ -20,6 +20,7 @@ import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import jnr.ffi.Platform
 import org.spekframework.spek2.dsl.GroupBody
+import org.spekframework.spek2.style.specification.Suite
 import java.nio.file.Path
 
 fun GroupBody.onlyOn(operatingSystems: Set<Platform.OS>, action: GroupBody.() -> Unit) {
@@ -27,6 +28,14 @@ fun GroupBody.onlyOn(operatingSystems: Set<Platform.OS>, action: GroupBody.() ->
         action(this)
     }
 }
+
+fun Suite.onlyOn(operatingSystems: Set<Platform.OS>, action: Suite.() -> Unit) {
+    if (Platform.getNativePlatform().os in operatingSystems) {
+        action(this)
+    }
+}
+
+fun Suite.onlyOn(operatingSystem: Platform.OS, action: Suite.() -> Unit) = onlyOn(setOf(operatingSystem), action)
 
 val platformLineSeparator = System.getProperty("line.separator")
 

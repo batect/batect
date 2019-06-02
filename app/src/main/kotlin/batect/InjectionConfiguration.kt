@@ -69,6 +69,7 @@ import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablePreprocessor
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.os.unix.UnixNativeMethods
+import batect.os.windows.WindowsNativeMethods
 import batect.ui.Console
 import batect.ui.ConsoleDimensions
 import batect.ui.ConsoleInfo
@@ -118,6 +119,10 @@ fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStrea
 
     if (Platform.getNativePlatform().os in setOf(Platform.OS.DARWIN, Platform.OS.LINUX)) {
         import(unixModule)
+    }
+
+    if (Platform.getNativePlatform().os == Platform.OS.WINDOWS) {
+        import(windowsModule)
     }
 }
 
@@ -211,6 +216,10 @@ private val osModule = Kodein.Module("os") {
 
 private val unixModule = Kodein.Module("os.unix") {
     bind<NativeMethods>() with singleton { UnixNativeMethods(instance()) }
+}
+
+private val windowsModule = Kodein.Module("os.windows") {
+    bind<NativeMethods>() with singleton { WindowsNativeMethods(instance()) }
 }
 
 private val uiModule = Kodein.Module("ui") {

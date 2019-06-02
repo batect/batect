@@ -16,9 +16,10 @@
 
 package batect.ui
 
-import batect.os.NativeMethodException
 import batect.os.NativeMethods
+import batect.os.NoConsoleException
 import batect.os.SignalListener
+import batect.os.unix.UnixNativeMethodException
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
@@ -61,7 +62,7 @@ object ConsoleDimensionsSpec : Spek({
             }
 
             given("the current console dimensions are not available because the terminal is not a TTY") {
-                beforeEachTest { whenever(nativeMethods.getConsoleDimensions()).thenThrow(NativeMethodException("ioctl", Errno.ENOTTY)) }
+                beforeEachTest { whenever(nativeMethods.getConsoleDimensions()).thenThrow(NoConsoleException()) }
 
                 val dimensions by createForEachTest { ConsoleDimensions(nativeMethods, signalListener, logger) }
 
@@ -75,7 +76,7 @@ object ConsoleDimensionsSpec : Spek({
             }
 
             given("the current console dimensions are not available for another reason") {
-                val exception = NativeMethodException("ioctl", Errno.EEXIST)
+                val exception = UnixNativeMethodException("ioctl", Errno.EEXIST)
 
                 beforeEachTest { whenever(nativeMethods.getConsoleDimensions()).thenThrow(exception) }
 
@@ -138,7 +139,7 @@ object ConsoleDimensionsSpec : Spek({
                 var notifiedListener = false
 
                 beforeEachTest {
-                    whenever(nativeMethods.getConsoleDimensions()).thenThrow(NativeMethodException("ioctl", Errno.ENOTTY))
+                    whenever(nativeMethods.getConsoleDimensions()).thenThrow(NoConsoleException())
 
                     dimensions.registerListener { notifiedListener = true }
 
@@ -155,7 +156,7 @@ object ConsoleDimensionsSpec : Spek({
             }
 
             given("the current console dimensions are not available for another reason") {
-                val exception = NativeMethodException("ioctl", Errno.EEXIST)
+                val exception = UnixNativeMethodException("ioctl", Errno.EEXIST)
 
                 beforeEachTest {
                     whenever(nativeMethods.getConsoleDimensions()).thenThrow(exception)

@@ -17,10 +17,12 @@
 package batect.os
 
 import batect.ui.Dimensions
-import jnr.constants.platform.Errno
 
 interface NativeMethods {
     fun getConsoleDimensions(): Dimensions
 }
 
-class NativeMethodException(val method: String, val error: Errno) : RuntimeException("Invoking native method $method failed with error ${error.name} (${error.description()}).")
+abstract class NativeMethodException(val method: String, val errorName: String, val errorDescription: String) :
+    RuntimeException("Invoking native method $method failed with error $errorName ($errorDescription).")
+
+class NoConsoleException() : RuntimeException("STDOUT is not connected to a console.")

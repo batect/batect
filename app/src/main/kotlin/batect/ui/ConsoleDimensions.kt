@@ -19,8 +19,8 @@ package batect.ui
 import batect.logging.Logger
 import batect.os.NativeMethodException
 import batect.os.NativeMethods
+import batect.os.NoConsoleException
 import batect.os.SignalListener
-import jnr.constants.platform.Errno
 import jnr.constants.platform.Signal
 import java.util.concurrent.atomic.AtomicReference
 
@@ -59,17 +59,15 @@ class ConsoleDimensions(
                 message("Got console dimensions.")
                 data("dimensions", currentDimensions)
             }
+        } catch (e: NoConsoleException) {
+            currentDimensions.set(Result.success(null))
         } catch (e: NativeMethodException) {
-            if (e.error == Errno.ENOTTY) {
-                currentDimensions.set(Result.success(null))
-            } else {
-                logger.warn {
-                    message("Getting console dimensions failed.")
-                    exception(e)
-                }
-
-                currentDimensions.set(Result.failure(e))
+            logger.warn {
+                message("Getting console dimensions failed.")
+                exception(e)
             }
+
+            currentDimensions.set(Result.failure(e))
         }
 
         listeners.forEach { it() }

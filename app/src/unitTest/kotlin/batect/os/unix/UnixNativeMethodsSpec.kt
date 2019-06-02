@@ -17,8 +17,10 @@
 package batect.os.unix
 
 import batect.os.NativeMethodException
+import batect.os.NoConsoleException
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.withMessage
@@ -77,11 +79,26 @@ object UnixNativeMethodsSpec : Spek({
                 on("calling ioctl() failing") {
                     beforeEachTest {
                         whenever(libc.ioctl(any(), any(), any())).thenReturn(-1)
-                        whenever(posix.errno()).thenReturn(Errno.ENOTTY.intValue())
                     }
 
-                    it("throws an appropriate exception") {
-                        assertThat({ nativeMethods.getConsoleDimensions() }, throws<NativeMethodException>(withMethod("ioctl") and withError(Errno.ENOTTY)))
+                    given("it failed because stdout is not connected to a TTY") {
+                        beforeEachTest {
+                            whenever(posix.errno()).thenReturn(Errno.ENOTTY.intValue())
+                        }
+
+                        it("throws an appropriate exception") {
+                            assertThat({ nativeMethods.getConsoleDimensions() }, throws<NoConsoleException>())
+                        }
+                    }
+
+                    given("it failed for another reason") {
+                        beforeEachTest {
+                            whenever(posix.errno()).thenReturn(Errno.ENOENT.intValue())
+                        }
+
+                        it("throws an appropriate exception") {
+                            assertThat({ nativeMethods.getConsoleDimensions() }, throws<UnixNativeMethodException>(withMethod("ioctl") and withError(Errno.ENOENT)))
+                        }
                     }
                 }
             }
@@ -127,6 +144,6 @@ fun withMethod(method: String): Matcher<NativeMethodException> {
     return has(NativeMethodException::method, equalTo(method))
 }
 
-fun withError(error: Errno): Matcher<NativeMethodException> {
-    return has(NativeMethodException::error, equalTo(error))
+fun withError(error: Errno): Matcher<UnixNativeMethodException> {
+    return has(UnixNativeMethodException::error, equalTo(error))
 }

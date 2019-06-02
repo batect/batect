@@ -18,6 +18,8 @@ package batect.testutils
 
 import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 
 fun doesNotThrow(): Matcher<() -> Unit> {
     return object : Matcher<() -> Unit> {
@@ -26,7 +28,11 @@ fun doesNotThrow(): Matcher<() -> Unit> {
                 actual()
                 MatchResult.Match
             } catch (e: Throwable) {
-                MatchResult.Mismatch("threw $e")
+                val stream = ByteArrayOutputStream()
+                val printer = PrintStream(stream)
+                e.printStackTrace(printer)
+                printer.flush()
+                MatchResult.Mismatch("threw $stream")
             }
 
         override val description: String get() = "does not throw an exception"

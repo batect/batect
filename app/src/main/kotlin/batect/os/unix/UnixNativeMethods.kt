@@ -18,6 +18,7 @@ package batect.os.unix
 
 import batect.os.NativeMethodException
 import batect.os.NativeMethods
+import batect.os.NoConsoleException
 import batect.ui.Dimensions
 import jnr.constants.platform.Errno
 import jnr.ffi.LibraryLoader
@@ -56,7 +57,12 @@ class UnixNativeMethods(
 
         if (result != 0) {
             val error = Errno.valueOf(posix.errno().toLong())
-            throw NativeMethodException("ioctl", error)
+
+            if (error == Errno.ENOTTY) {
+                throw NoConsoleException()
+            }
+
+            throw UnixNativeMethodException("ioctl", error)
         }
 
         return Dimensions(size.ws_row.get(), size.ws_col.get())
@@ -91,3 +97,5 @@ data class PlatformSpecificConstant<T>(val darwinValue: T, val linuxValue: T) {
         else -> throw UnsupportedOperationException("The platform ${platform.os.name} is not supported.")
     }
 }
+
+class UnixNativeMethodException(method: String, val error: Errno) : NativeMethodException(method, error.name, error.description())

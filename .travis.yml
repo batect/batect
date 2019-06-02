@@ -14,9 +14,10 @@ before_install:
 install: true
 
 stages:
-  - Build and test
+  - Build and unit test
   - Integration and journey test
-  - Deploy
+  - Publish
+  - Release
 
 jobs:
   include:

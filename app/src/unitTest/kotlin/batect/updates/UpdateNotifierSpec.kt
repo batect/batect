@@ -100,7 +100,7 @@ object UpdateNotifierSpec : Spek({
 
             describe("when the cached update information can be read") {
                 val lastUpdated = ZonedDateTime.of(2017, 10, 3, 1, 10, 0, 0, ZoneOffset.UTC)
-                val updateInfo = UpdateInfo(Version(0, 3, 0), "https://something.com/batect/0.3", lastUpdated, "https://something.com/batect/0.3/wrapper")
+                val updateInfo = UpdateInfo(Version(0, 3, 0), "https://something.com/batect/0.3", lastUpdated, emptyList())
 
                 beforeEachTest {
                     whenever(updateInfoStorage.read()).thenReturn(updateInfo)

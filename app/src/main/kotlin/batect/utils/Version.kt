@@ -16,6 +16,13 @@
 
 package batect.utils
 
+import kotlinx.serialization.Decoder
+import kotlinx.serialization.Encoder
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialDescriptor
+import kotlinx.serialization.Serializer
+import kotlinx.serialization.internal.StringDescriptor
+
 data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: String = "") : Comparable<Version> {
     override fun compareTo(other: Version): Int {
         if (major != other.major) {
@@ -37,7 +44,8 @@ data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: S
         }
     }
 
-    companion object {
+    @Serializer(forClass = Version::class)
+    companion object : KSerializer<Version> {
         private val regex = """^(?<major>\d+)(\.(?<minor>\d+)(\.(?<patch>\d+)(-(?<suffix>[a-zA-Z0-9-.]+))?)?)?$""".toRegex()
 
         fun parse(value: String): Version {
@@ -74,5 +82,9 @@ data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: S
                 return group.value
             }
         }
+
+        override val descriptor: SerialDescriptor = StringDescriptor
+        override fun deserialize(decoder: Decoder): Version = parse(decoder.decodeString())
+        override fun serialize(encoder: Encoder, obj: Version) = encoder.encodeString(obj.toString())
     }
 }

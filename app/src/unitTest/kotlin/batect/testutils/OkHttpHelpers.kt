@@ -16,10 +16,11 @@
 
 package batect.testutils
 
+import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
-import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
@@ -48,7 +49,7 @@ fun OkHttpClient.mock(method: String, urlMatcher: Matcher<HttpUrl>, responseBody
     val parsedResponseBody = ResponseBody.create(jsonMediaType, responseBody)
     val call = mock<Call>()
 
-    whenever(this.newCall(any())).then { invocation ->
+    whenever(this.newCall(argThat { urlMatcher.invoke(url()) == MatchResult.Match })).then { invocation ->
         val request = invocation.getArgument<Request>(0)
 
         assertThat(request, has(Request::method, equalTo(method)))
@@ -75,7 +76,7 @@ fun OkHttpClient.mock(method: String, url: String, response: Response, headers: 
     val parsedUrl = HttpUrl.get(url)
     val call = mock<Call>()
 
-    whenever(this.newCall(any())).then { invocation ->
+    whenever(this.newCall(argThat { url().toString() == url })).then { invocation ->
         val request = invocation.getArgument<Request>(0)
 
         assertThat(request, has(Request::method, equalTo(method)))

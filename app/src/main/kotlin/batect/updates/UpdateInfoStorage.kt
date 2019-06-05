@@ -18,14 +18,12 @@ package batect.updates
 
 import batect.logging.Logger
 import batect.os.SystemInfo
-import batect.utils.Version
+import batect.utils.Json
 import java.nio.file.FileSystem
 import java.nio.file.Files
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 
 class UpdateInfoStorage(private val fileSystem: FileSystem, private val systemInfo: SystemInfo, private val logger: Logger) {
-    private val updateInfoPath = fileSystem.getPath(systemInfo.homeDirectory, ".batect", "updates", "latestVersion")
+    private val updateInfoPath = fileSystem.getPath(systemInfo.homeDirectory, ".batect", "updates", "v2", "latestVersion")
 
     fun read(): UpdateInfo? {
         logger.info {
@@ -42,14 +40,8 @@ class UpdateInfoStorage(private val fileSystem: FileSystem, private val systemIn
             return null
         }
 
-        val lines = Files.readAllLines(updateInfoPath)
-        val values = lines.associate { it.substringBefore('=') to it.substringAfter('=') }
-
-        val version = Version.parse(values.getValue("version"))
-        val url = values.getValue("url")
-        val lastUpdated = parseDate(values.getValue("lastUpdated"))
-        val scriptDownloadUrl = values.getOrDefault("scriptDownloadUrl", null)
-        val updateInfo = UpdateInfo(version, url, lastUpdated, scriptDownloadUrl)
+        val data = Files.readAllLines(updateInfoPath).joinToString("\n")
+        val updateInfo = Json.nonstrictParser.parse(UpdateInfo.serializer(), data)
 
         logger.info {
             message("Loaded cached update information from disk.")
@@ -69,15 +61,8 @@ class UpdateInfoStorage(private val fileSystem: FileSystem, private val systemIn
 
         ensureUpdateInfoDirectoryExists()
 
-        val values = mapOf(
-            "version" to updateInfo.version,
-            "url" to updateInfo.url,
-            "lastUpdated" to formatDate(updateInfo.lastUpdated),
-            "scriptDownloadUrl" to updateInfo.scriptDownloadUrl
-        )
-
-        val lines = values.map { (key, value) -> "$key=$value" }
-        Files.write(updateInfoPath, lines)
+        val json = Json.nonstrictParser.stringify(UpdateInfo.serializer(), updateInfo)
+        Files.write(updateInfoPath, json.toByteArray())
 
         logger.info {
             message("Wrote update information cache to disk.")
@@ -90,8 +75,4 @@ class UpdateInfoStorage(private val fileSystem: FileSystem, private val systemIn
         val updateInfoDirectory = updateInfoPath.parent
         Files.createDirectories(updateInfoDirectory)
     }
-
-    private val formatter = DateTimeFormatter.ISO_DATE_TIME
-    private fun parseDate(value: String): ZonedDateTime = ZonedDateTime.parse(value, formatter)
-    private fun formatDate(value: ZonedDateTime): String = value.format(formatter)
 }

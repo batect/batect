@@ -25,6 +25,7 @@ import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.ui.Console
 import batect.ui.text.Text
+import batect.updates.ScriptInfo
 import batect.updates.UpdateInfo
 import batect.updates.UpdateInfoDownloadException
 import batect.updates.UpdateInfoDownloader
@@ -78,25 +79,39 @@ object UpgradeCommandSpec : Spek({
         }
 
         given("the application was launched using the wrapper script") {
-            val wrapperScriptLocation = "/wrapper.sh"
+            val wrapperScriptDirectory = "/"
+            val existingWrapperScriptLocation = "${wrapperScriptDirectory}existing-wrapper.sh"
+            val newWrapperScriptLocation = "${wrapperScriptDirectory}new-wrapper.sh"
+
             val environmentVariables = mapOf(
-                "BATECT_WRAPPER_SCRIPT_PATH" to wrapperScriptLocation
+                "BATECT_WRAPPER_SCRIPT_DIR" to wrapperScriptDirectory
             )
 
             given("downloading the update information succeeds") {
-                given("the update information does includes a script download URL") {
+                given("the update information includes scripts to download") {
                     val fileSystem by createForEachTest {
                         val fileSystem = Jimfs.newFileSystem(Configuration.unix())
-                        Files.write(fileSystem.getPath(wrapperScriptLocation), listOf("This is the existing wrapper script content"))
+                        Files.write(fileSystem.getPath(existingWrapperScriptLocation), listOf("This is the existing wrapper script content"))
 
                         fileSystem
                     }
 
-                    val wrapperScriptPath by createForEachTest { fileSystem.getPath(wrapperScriptLocation) }
+                    val existingWrapperScriptPath by createForEachTest { fileSystem.getPath(existingWrapperScriptLocation) }
+                    val newWrapperScriptPath by createForEachTest { fileSystem.getPath(newWrapperScriptLocation) }
 
-                    val scriptDownloadUrl = "https://batect.com/script-download"
+                    val existingScriptDownloadUrl = "https://batect.com/existing-script-download"
+                    val newScriptDownloadUrl = "https://batect.com/new-script-download"
+
                     val updateInfoDownloader = mock<UpdateInfoDownloader> {
-                        on { getLatestVersionInfo() } doReturn UpdateInfo(Version(1, 2, 3), "https://batect.com/release-notes/1.2.2", ZonedDateTime.now(), scriptDownloadUrl)
+                        on { getLatestVersionInfo() } doReturn UpdateInfo(
+                            Version(1, 2, 3),
+                            "https://batect.com/release-notes/1.2.2",
+                            ZonedDateTime.now(),
+                            listOf(
+                                ScriptInfo("existing-wrapper.sh", existingScriptDownloadUrl),
+                                ScriptInfo("new-wrapper.sh", newScriptDownloadUrl)
+                            )
+                        )
                     }
 
                     given("the update information indicates that there is a newer version available") {
@@ -104,10 +119,10 @@ object UpgradeCommandSpec : Spek({
                             on { version } doReturn Version(1, 1, 1)
                         }
 
-                        given("downloading the new wrapper script succeeds") {
+                        given("downloading the new wrapper scripts succeeds") {
                             beforeEachTest {
-                                val scriptContent = "This is the new wrapper script content"
-                                httpClient.mockGet(scriptDownloadUrl, scriptContent)
+                                httpClient.mockGet(existingScriptDownloadUrl, "This is the replacement wrapper script content")
+                                httpClient.mockGet(newScriptDownloadUrl, "This is the new wrapper script's content")
                             }
 
                             on("running the command") {
@@ -123,9 +138,12 @@ object UpgradeCommandSpec : Spek({
                                         verify(console).println("Downloading latest update information...")
                                         verify(updateInfoDownloader).getLatestVersionInfo()
                                         verify(console).println("Current version is 1.1.1, latest version is 1.2.3.")
-                                        verify(console).println("Downloading latest version of the wrapper script...")
+                                        verify(console).println("Downloading latest version of the 'existing-wrapper.sh' wrapper script...")
                                         verify(httpClient).newCall(any())
-                                        verify(console).println("Replacing existing wrapper script...")
+                                        verify(console).println("Replacing existing 'existing-wrapper.sh' wrapper script...")
+                                        verify(console).println("Downloading latest version of the 'new-wrapper.sh' wrapper script...")
+                                        verify(httpClient).newCall(any())
+                                        verify(console).println("Creating new 'new-wrapper.sh' wrapper script...")
                                         verify(console).println("Upgrade complete! You can read more about this version at: https://batect.com/release-notes/1.2.2")
                                     }
                                 }
@@ -134,16 +152,19 @@ object UpgradeCommandSpec : Spek({
                                     verifyZeroInteractions(errorConsole)
                                 }
 
-                                it("overwrites the content of the existing wrapper script with the new file") {
-                                    assertThat(Files.readAllLines(wrapperScriptPath), equalTo(listOf("This is the new wrapper script content")))
+                                it("overwrites the content of the existing wrapper script with the correct content") {
+                                    assertThat(Files.readAllLines(existingWrapperScriptPath), equalTo(listOf("This is the replacement wrapper script content")))
+                                }
+
+                                it("creates the new wrapper script with the correct content") {
+                                    assertThat(Files.readAllLines(newWrapperScriptPath), equalTo(listOf("This is the new wrapper script's content")))
                                 }
                             }
                         }
 
                         given("downloading the new wrapper script fails with an HTTP error") {
                             beforeEachTest {
-                                val scriptContent = "This is the new wrapper script content"
-                                httpClient.mockGet(scriptDownloadUrl, scriptContent, 404)
+                                httpClient.mockGet(existingScriptDownloadUrl, "This is the new wrapper script content", 404)
                             }
 
                             on("running the command") {
@@ -159,14 +180,14 @@ object UpgradeCommandSpec : Spek({
                                         verify(console).println("Downloading latest update information...")
                                         verify(updateInfoDownloader).getLatestVersionInfo()
                                         verify(console).println("Current version is 1.1.1, latest version is 1.2.3.")
-                                        verify(console).println("Downloading latest version of the wrapper script...")
+                                        verify(console).println("Downloading latest version of the 'existing-wrapper.sh' wrapper script...")
                                         verify(httpClient).newCall(any())
-                                        verify(errorConsole).println(Text.red("Download failed. Could not download https://batect.com/script-download: The server returned HTTP 404."))
+                                        verify(errorConsole).println(Text.red("Download failed. Could not download https://batect.com/existing-script-download: The server returned HTTP 404."))
                                     }
                                 }
 
                                 it("does not overwrite the content of the existing wrapper script") {
-                                    assertThat(Files.readAllLines(wrapperScriptPath), equalTo(listOf("This is the existing wrapper script content")))
+                                    assertThat(Files.readAllLines(existingWrapperScriptPath), equalTo(listOf("This is the existing wrapper script content")))
                                 }
                             }
                         }
@@ -195,14 +216,14 @@ object UpgradeCommandSpec : Spek({
                                         verify(console).println("Downloading latest update information...")
                                         verify(updateInfoDownloader).getLatestVersionInfo()
                                         verify(console).println("Current version is 1.1.1, latest version is 1.2.3.")
-                                        verify(console).println("Downloading latest version of the wrapper script...")
+                                        verify(console).println("Downloading latest version of the 'existing-wrapper.sh' wrapper script...")
                                         verify(httpClient).newCall(any())
-                                        verify(errorConsole).println(Text.red("Download failed. Could not download https://batect.com/script-download: Could not do what you asked because stuff happened."))
+                                        verify(errorConsole).println(Text.red("Download failed. Could not download https://batect.com/existing-script-download: Could not do what you asked because stuff happened."))
                                     }
                                 }
 
                                 it("does not overwrite the content of the existing wrapper script") {
-                                    assertThat(Files.readAllLines(wrapperScriptPath), equalTo(listOf("This is the existing wrapper script content")))
+                                    assertThat(Files.readAllLines(existingWrapperScriptPath), equalTo(listOf("This is the existing wrapper script content")))
                                 }
                             }
                         }
@@ -255,11 +276,11 @@ object UpgradeCommandSpec : Spek({
                     }
                 }
 
-                given("the update information does not include a script download URL") {
+                given("the update information does not include any script download URL") {
                     val fileSystem = Jimfs.newFileSystem(Configuration.unix())
 
                     val updateInfoDownloader = mock<UpdateInfoDownloader> {
-                        on { getLatestVersionInfo() } doReturn UpdateInfo(Version(1, 2, 3), "https://batect.com/release-notes/1.2.2", ZonedDateTime.now(), null)
+                        on { getLatestVersionInfo() } doReturn UpdateInfo(Version(1, 2, 3), "https://batect.com/release-notes/1.2.2", ZonedDateTime.now(), emptyList())
                     }
 
                     given("the update information indicates that there is a newer version available") {

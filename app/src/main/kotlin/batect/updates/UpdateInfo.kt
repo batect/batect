@@ -17,11 +17,33 @@
 package batect.updates
 
 import batect.utils.Version
+import kotlinx.serialization.Decoder
+import kotlinx.serialization.Encoder
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialDescriptor
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.internal.StringDescriptor
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
+@Serializable
 data class UpdateInfo(
     val version: Version,
     val url: String,
-    val lastUpdated: ZonedDateTime,
-    val scriptDownloadUrl: String?
+    @Serializable(with = ZonedDateTimeSerializer::class) val lastUpdated: ZonedDateTime,
+    val scripts: List<ScriptInfo>
 )
+
+@Serializable
+data class ScriptInfo(
+    val name: String,
+    val downloadUrl: String
+)
+
+object ZonedDateTimeSerializer : KSerializer<ZonedDateTime> {
+    private val formatter = DateTimeFormatter.ISO_DATE_TIME
+
+    override val descriptor: SerialDescriptor = StringDescriptor
+    override fun deserialize(decoder: Decoder): ZonedDateTime = ZonedDateTime.parse(decoder.decodeString(), formatter)
+    override fun serialize(encoder: Encoder, obj: ZonedDateTime) = encoder.encodeString(obj.format(formatter))
+}

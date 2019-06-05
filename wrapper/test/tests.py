@@ -27,7 +27,7 @@ class WrapperScriptTests(unittest.TestCase):
         output = result.stdout.decode()
 
         self.assertIn("Downloading batect", output)
-        self.assertIn("BATECT_WRAPPER_SCRIPT_PATH is: {}\n".format(self.get_script_path()), output)
+        self.assertIn("BATECT_WRAPPER_SCRIPT_DIR is: {}\n".format(self.get_script_dir()), output)
         self.assertIn("HOSTNAME is: {}\n".format(socket.gethostname()), output)
         self.assertIn("I received 2 arguments.\narg 1\narg 2\n", output)
         self.assertEqual(result.returncode, 0)
@@ -36,7 +36,7 @@ class WrapperScriptTests(unittest.TestCase):
         first_result = self.run_script(["arg 1", "arg 2"])
         first_output = first_result.stdout.decode()
         self.assertIn("Downloading batect", first_output)
-        self.assertIn("BATECT_WRAPPER_SCRIPT_PATH is: {}\n".format(self.get_script_path()), first_output)
+        self.assertIn("BATECT_WRAPPER_SCRIPT_DIR is: {}\n".format(self.get_script_dir()), first_output)
         self.assertIn("HOSTNAME is: {}\n".format(socket.gethostname()), first_output)
         self.assertIn("I received 2 arguments.\narg 1\narg 2\n", first_output)
         self.assertEqual(first_result.returncode, 0)
@@ -44,7 +44,7 @@ class WrapperScriptTests(unittest.TestCase):
         second_result = self.run_script(["arg 3", "arg 4"])
         second_output = second_result.stdout.decode()
         self.assertNotIn("Downloading batect", second_output)
-        self.assertIn("BATECT_WRAPPER_SCRIPT_PATH is: {}\n".format(self.get_script_path()), second_output)
+        self.assertIn("BATECT_WRAPPER_SCRIPT_DIR is: {}\n".format(self.get_script_dir()), second_output)
         self.assertIn("HOSTNAME is: {}\n".format(socket.gethostname()), second_output)
         self.assertIn("I received 2 arguments.\narg 3\narg 4\n", second_output)
         self.assertEqual(first_result.returncode, 0)
@@ -123,8 +123,11 @@ class WrapperScriptTests(unittest.TestCase):
 
         return subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
 
+    def get_script_dir(self):
+        return os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "src"))
+
     def get_script_path(self):
-        return os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "src", "template.sh"))
+        return os.path.join(self.get_script_dir(), "template.sh")
 
     def start_server(self):
         self.server = http.server.HTTPServer(("", self.http_port), QuietHTTPHandler)

@@ -20,6 +20,7 @@ import batect.VersionInfo
 import batect.logging.Logger
 import batect.ui.Console
 import batect.ui.text.Text
+import batect.updates.ScriptInfo
 import batect.updates.UpdateInfo
 import batect.updates.UpdateInfoDownloadException
 import batect.updates.UpdateInfoDownloader
@@ -43,9 +44,9 @@ class UpgradeCommand(
         this(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, System.getenv())
 
     override fun run(): Int {
-        val wrapperScriptLocation = environmentVariables["BATECT_WRAPPER_SCRIPT_PATH"]
+        val wrapperScriptDir = environmentVariables["BATECT_WRAPPER_SCRIPT_DIR"]
 
-        if (wrapperScriptLocation == null) {
+        if (wrapperScriptDir == null) {
             logger.error {
                 message("batect was started without using the wrapper script and so cannot upgrade it.")
             }
@@ -73,20 +74,22 @@ class UpgradeCommand(
 
         console.println("Current version is ${versionInfo.version}, latest version is ${updateInfo.version}.")
 
-        if (updateInfo.scriptDownloadUrl == null) {
+        if (updateInfo.scripts.isEmpty()) {
             errorConsole.println(Text.red("A newer version of batect (${updateInfo.version}) is available, but the upgrade cannot be performed automatically."))
             errorConsole.println(Text.red("Visit ${updateInfo.url} for more information."))
             return -1
         }
 
-        val newScriptContents = downloadNewScript(updateInfo.scriptDownloadUrl)
+        updateInfo.scripts.forEach { script ->
+            val newScriptContents = downloadNewScript(script)
 
-        if (newScriptContents == null) {
-            return -1
+            if (newScriptContents == null) {
+                return -1
+            }
+
+            val wrapperScriptPath = fileSystem.getPath(wrapperScriptDir, script.name)
+            writeNewScript(script.name, wrapperScriptPath, newScriptContents)
         }
-
-        val wrapperScriptPath = fileSystem.getPath(wrapperScriptLocation)
-        writeNewScript(wrapperScriptPath, newScriptContents)
 
         console.println("Upgrade complete! You can read more about this version at: ${updateInfo.url}")
 
@@ -111,22 +114,22 @@ class UpgradeCommand(
         }
     }
 
-    private fun downloadNewScript(url: String): ByteArray? {
-        console.println("Downloading latest version of the wrapper script...")
+    private fun downloadNewScript(script: ScriptInfo): ByteArray? {
+        console.println("Downloading latest version of the '${script.name}' wrapper script...")
 
         val request = Request.Builder()
-            .url(url)
+            .url(script.downloadUrl)
             .build()
 
         try {
             logger.info {
-                message("Downloading new wrapper script.")
+                message("Downloading wrapper script.")
                 data("url", request.url().toString())
             }
 
             httpClient.newCall(request).execute().use { response ->
                 logger.info {
-                    message("Finished downloading new wrapper script.")
+                    message("Finished downloading wrapper script.")
                     data("successful", response.isSuccessful)
                     data("httpResponseCode", response.code())
                     data("httpResponseMessage", response.message())
@@ -140,18 +143,23 @@ class UpgradeCommand(
             }
         } catch (e: Throwable) {
             logger.error {
-                message("Downloading new wrapper script failed with an exception.")
+                message("Downloading wrapper script failed with an exception.")
                 data("url", request.url().toString())
                 exception(e)
             }
 
-            errorConsole.println(Text.red("Download failed. Could not download $url: ${e.message}"))
+            errorConsole.println(Text.red("Download failed. Could not download ${script.downloadUrl}: ${e.message}"))
             return null
         }
     }
 
-    private fun writeNewScript(path: Path, content: ByteArray) {
-        console.println("Replacing existing wrapper script...")
+    private fun writeNewScript(name: String, path: Path, content: ByteArray) {
+        if (Files.exists(path)) {
+            console.println("Replacing existing '$name' wrapper script...")
+        } else {
+            console.println("Creating new '$name' wrapper script...")
+        }
+
         Files.write(path, content)
     }
 }

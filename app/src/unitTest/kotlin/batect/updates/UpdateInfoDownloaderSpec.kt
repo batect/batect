@@ -24,10 +24,10 @@ import batect.testutils.runForEachTest
 import batect.testutils.withCause
 import batect.testutils.withMessage
 import batect.utils.Version
-import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doThrow
@@ -51,7 +51,7 @@ object UpdateInfoDownloaderSpec : Spek({
         val dateTimeProvider = { dateTime }
         val downloader by createForEachTest { UpdateInfoDownloader(client, logger, dateTimeProvider) }
 
-        on("when the latest release information can be retrieved successfully") {
+        on("when the latest release information can be retrieved successfully and includes known wrapper script information") {
             beforeEachTest {
                 val responseBody = """{
                       "url": "https://api.github.com/repos/charleskorn/batect/releases/7936494",
@@ -61,8 +61,11 @@ object UpdateInfoDownloaderSpec : Spek({
                       "assets": [
                         {
                           "name": "batect",
-                          "content_type": "application/octet-stream",
                           "browser_download_url": "https://github.com/charleskorn/batect/releases/download/0.3/batect"
+                        },
+                        {
+                          "name": "batect.cmd",
+                          "browser_download_url": "https://github.com/charleskorn/batect/releases/download/0.3/batect.cmd"
                         }
                       ]
                   }""".trimIndent()
@@ -84,8 +87,11 @@ object UpdateInfoDownloaderSpec : Spek({
                 assertThat(updateInfo.lastUpdated, equalTo(dateTime))
             }
 
-            it("returns the download URL of the script") {
-                assertThat(updateInfo.scriptDownloadUrl, equalTo("https://github.com/charleskorn/batect/releases/download/0.3/batect"))
+            it("returns the script information") {
+                assertThat(updateInfo.scripts, equalTo(listOf(
+                    ScriptInfo("batect", "https://github.com/charleskorn/batect/releases/download/0.3/batect"),
+                    ScriptInfo("batect.cmd", "https://github.com/charleskorn/batect/releases/download/0.3/batect.cmd")
+                )))
             }
         }
 
@@ -104,12 +110,12 @@ object UpdateInfoDownloaderSpec : Spek({
 
             val updateInfo by runForEachTest { downloader.getLatestVersionInfo() }
 
-            it("returns no script download URL") {
-                assertThat(updateInfo.scriptDownloadUrl, absent())
+            it("returns no script information") {
+                assertThat(updateInfo.scripts, isEmpty)
             }
         }
 
-        on("when the latest release information does not an asset with the script name") {
+        on("when the latest release information does not contain an asset with a known script name") {
             beforeEachTest {
                 val responseBody = """{
                       "url": "https://api.github.com/repos/charleskorn/batect/releases/7936494",
@@ -119,7 +125,6 @@ object UpdateInfoDownloaderSpec : Spek({
                       "assets": [
                         {
                           "name": "batect.jar",
-                          "content_type": "application/octet-stream",
                           "browser_download_url": "https://github.com/charleskorn/batect/releases/download/0.3/batect.jar"
                         }
                       ]
@@ -130,34 +135,8 @@ object UpdateInfoDownloaderSpec : Spek({
 
             val updateInfo by runForEachTest { downloader.getLatestVersionInfo() }
 
-            it("returns no script download URL") {
-                assertThat(updateInfo.scriptDownloadUrl, absent())
-            }
-        }
-
-        on("when the latest release information does not an asset with the expected script content type") {
-            beforeEachTest {
-                val responseBody = """{
-                      "url": "https://api.github.com/repos/charleskorn/batect/releases/7936494",
-                      "html_url": "https://github.com/charleskorn/batect/releases/tag/0.3",
-                      "id": 7936494,
-                      "tag_name": "0.3",
-                      "assets": [
-                        {
-                          "name": "batect",
-                          "content_type": "application/java-archive",
-                          "browser_download_url": "https://github.com/charleskorn/batect/releases/download/0.3/batect"
-                        }
-                      ]
-                  }""".trimIndent()
-
-                client.mockGet(downloadUrl, responseBody)
-            }
-
-            val updateInfo by runForEachTest { downloader.getLatestVersionInfo() }
-
-            it("returns no script download URL") {
-                assertThat(updateInfo.scriptDownloadUrl, absent())
+            it("returns no script information") {
+                assertThat(updateInfo.scripts, isEmpty)
             }
         }
 

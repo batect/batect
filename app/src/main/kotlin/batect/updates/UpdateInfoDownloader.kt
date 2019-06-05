@@ -21,7 +21,6 @@ import batect.utils.Json
 import batect.utils.Version
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.time.ZoneOffset
@@ -55,7 +54,8 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
                 }
 
                 val releaseInfo = Json.nonstrictParser.parse(GitHubReleaseInfo.serializer(), response.body()!!.string())
-                val updateInfo = UpdateInfo(Version.parse(releaseInfo.tagName), releaseInfo.htmlUrl, dateTimeProvider(), releaseInfo.scriptDownloadUrl)
+                val scripts = extractScriptInfo(releaseInfo)
+                val updateInfo = UpdateInfo(Version.parse(releaseInfo.tagName), releaseInfo.htmlUrl, dateTimeProvider(), scripts)
 
                 logger.info {
                     message("Parsed latest version information.")
@@ -75,22 +75,22 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
         }
     }
 
+    private fun extractScriptInfo(releaseInfo: GitHubReleaseInfo): List<ScriptInfo> {
+        return releaseInfo.assets
+            .filter { it.name in setOf("batect", "batect.cmd") }
+            .map { ScriptInfo(it.name, it.browserDownloadUrl) }
+    }
+
     @Serializable
     private data class GitHubReleaseInfo(
         @SerialName("tag_name") val tagName: String,
         @SerialName("html_url") val htmlUrl: String,
         val assets: List<GitHubReleaseAsset>
-    ) {
-        @Transient
-        val scriptDownloadUrl: String? = assets
-            .singleOrNull { it.name == "batect" && it.contentType == "application/octet-stream" }
-            ?.browserDownloadUrl
-    }
+    )
 
     @Serializable
     private data class GitHubReleaseAsset(
         val name: String,
-        @SerialName("content_type") val contentType: String,
         @SerialName("browser_download_url") val browserDownloadUrl: String
     )
 }

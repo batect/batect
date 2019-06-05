@@ -16,7 +16,7 @@
     CACHE_DIR="$ROOT_CACHE_DIR/$VERSION"
     JAR_PATH="$CACHE_DIR/batect-$VERSION.jar"
 
-    SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+    SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
     function main() {
         if ! haveVersionCachedLocally; then
@@ -52,7 +52,7 @@
             JAVA_OPTS=""
         fi
 
-        BATECT_WRAPPER_SCRIPT_PATH="$SCRIPT_PATH" \
+        BATECT_WRAPPER_SCRIPT_DIR="$SCRIPT_PATH" \
         HOSTNAME="$HOSTNAME" \
             java \
             -Djava.net.useSystemProxies=true \

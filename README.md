@@ -9,12 +9,12 @@
 ## The sales pitch
 
 * Consistent, fast, repeatable, isolated builds and test runs everywhere: your computer, your colleagues' computers and on CI
-* Manage dependencies for integration and end-to-end testing with ease
+* Document and share common tasks within your team in a structured way - it's a
+  [go script](https://www.thoughtworks.com/insights/blog/praise-go-script-part-i) based on Docker
+* Manage dependencies for integration and end-to-end testing (like databases) with ease
 * No installation required, only dependencies are Bash, Docker (v17.06+) and `curl`* - onboard new team members in minutes
 * Works with any language or framework, your existing CI system, and your chosen language's existing tooling
 * Take advantage of existing Docker images to get started quickly
-* Document and share common tasks within your team in a structured way - it's a
-  [go script](https://www.thoughtworks.com/insights/blog/praise-go-script-part-i) based on Docker
 
 \* at the moment, a JVM is also required, but this requirement will be removed before v1.0
 
@@ -25,7 +25,7 @@
 1. Drop the latest `batect` script from the [releases page](https://github.com/charleskorn/batect/releases)
    into the root folder of your project.
 2. Make sure it's executable: run `chmod +x batect`.
-3. Create your `batect.yml`: take a look at the [sample projects](https://batect.charleskorn.com/SampleProjects.html)
+3. Create your `batect.yml` to define your environment: take a look at the [sample projects](https://batect.charleskorn.com/SampleProjects.html)
    for inspiration, or dive straight into [the configuration file reference](https://batect.charleskorn.com/config/Overview.html).
 
 ## Documentation

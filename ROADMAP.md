@@ -63,7 +63,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * add note about increasing default CPU and memory limits when using Docker on OS X
   * how to introduce batect to an existing project
   * how to use batect as the basis for a pipeline made up of reusable building blocks
-* public chat channel (eg. Gitter or Discord)
 * switch to coroutines for parallel execution?
 * finish configuration code simplification (first three need https://github.com/Kotlin/kotlinx.serialization/issues/315 to be fixed)
   * Move common stuff when parsing a string (eg. EnvironmentVariableExpression, Command, Duration) out to a common class

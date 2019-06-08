@@ -30,7 +30,7 @@ object DockerImageBuildIgnoreListSpec : Spek({
                 val ignoreList = DockerImageBuildIgnoreList(emptyList())
 
                 it("includes all files") {
-                    assertThat(ignoreList.shouldIncludeInContext("/some/path"), equalTo(true))
+                    assertThat(ignoreList.shouldIncludeInContext("/some/path", "Dockerfile"), equalTo(true))
                 }
             }
 
@@ -38,7 +38,7 @@ object DockerImageBuildIgnoreListSpec : Spek({
                 val ignoreList = DockerImageBuildIgnoreList(listOf(DockerImageBuildIgnoreEntry(".dockerignore", false)))
 
                 it("still includes the .dockerignore file") {
-                    assertThat(ignoreList.shouldIncludeInContext(".dockerignore"), equalTo(true))
+                    assertThat(ignoreList.shouldIncludeInContext(".dockerignore", "Dockerfile"), equalTo(true))
                 }
             }
 
@@ -46,7 +46,22 @@ object DockerImageBuildIgnoreListSpec : Spek({
                 val ignoreList = DockerImageBuildIgnoreList(listOf(DockerImageBuildIgnoreEntry("Dockerfile", false)))
 
                 it("still includes the Dockerfile file") {
-                    assertThat(ignoreList.shouldIncludeInContext("Dockerfile"), equalTo(true))
+                    assertThat(ignoreList.shouldIncludeInContext("Dockerfile", "Dockerfile"), equalTo(true))
+                }
+            }
+
+            given("a list of patterns that ignores a custom Dockerfile and the standard Dockerfile file") {
+                val ignoreList = DockerImageBuildIgnoreList(listOf(
+                    DockerImageBuildIgnoreEntry("CustomDockerfile", false),
+                    DockerImageBuildIgnoreEntry("Dockerfile", false)
+                ))
+
+                it("still includes the custom Dockerfile file") {
+                    assertThat(ignoreList.shouldIncludeInContext("CustomDockerfile", "CustomDockerfile"), equalTo(true))
+                }
+
+                it("does not include a file called Dockerfile") {
+                    assertThat(ignoreList.shouldIncludeInContext("Dockerfile", "CustomDockerfile"), equalTo(false))
                 }
             }
 
@@ -54,11 +69,11 @@ object DockerImageBuildIgnoreListSpec : Spek({
                 val ignoreList = DockerImageBuildIgnoreList(listOf(DockerImageBuildIgnoreEntry("thing.go", false)))
 
                 it("excludes files matching the pattern") {
-                    assertThat(ignoreList.shouldIncludeInContext("thing.go"), equalTo(false))
+                    assertThat(ignoreList.shouldIncludeInContext("thing.go", "Dockerfile"), equalTo(false))
                 }
 
                 it("includes files not matching the pattern") {
-                    assertThat(ignoreList.shouldIncludeInContext("somethingelse.go"), equalTo(true))
+                    assertThat(ignoreList.shouldIncludeInContext("somethingelse.go", "Dockerfile"), equalTo(true))
                 }
             }
 
@@ -66,11 +81,11 @@ object DockerImageBuildIgnoreListSpec : Spek({
                 val ignoreList = DockerImageBuildIgnoreList(listOf(DockerImageBuildIgnoreEntry("thing.go", true)))
 
                 it("includes files matching the pattern") {
-                    assertThat(ignoreList.shouldIncludeInContext("thing.go"), equalTo(true))
+                    assertThat(ignoreList.shouldIncludeInContext("thing.go", "Dockerfile"), equalTo(true))
                 }
 
                 it("includes files not matching the pattern") {
-                    assertThat(ignoreList.shouldIncludeInContext("somethingelse.go"), equalTo(true))
+                    assertThat(ignoreList.shouldIncludeInContext("somethingelse.go", "Dockerfile"), equalTo(true))
                 }
             }
 
@@ -81,15 +96,15 @@ object DockerImageBuildIgnoreListSpec : Spek({
                 ))
 
                 it("includes files that match the exception") {
-                    assertThat(ignoreList.shouldIncludeInContext("docs/README.md"), equalTo(true))
+                    assertThat(ignoreList.shouldIncludeInContext("docs/README.md", "Dockerfile"), equalTo(true))
                 }
 
                 it("excludes files that match the first rule") {
-                    assertThat(ignoreList.shouldIncludeInContext("docs/thing"), equalTo(false))
+                    assertThat(ignoreList.shouldIncludeInContext("docs/thing", "Dockerfile"), equalTo(false))
                 }
 
                 it("includes files that match neither rule") {
-                    assertThat(ignoreList.shouldIncludeInContext("thing"), equalTo(true))
+                    assertThat(ignoreList.shouldIncludeInContext("thing", "Dockerfile"), equalTo(true))
                 }
             }
         }

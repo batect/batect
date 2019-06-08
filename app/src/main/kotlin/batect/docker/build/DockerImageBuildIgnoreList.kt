@@ -17,8 +17,8 @@
 package batect.docker.build
 
 data class DockerImageBuildIgnoreList(private val entries: List<DockerImageBuildIgnoreEntry>) {
-    fun shouldIncludeInContext(pathToTest: String): Boolean {
-        if (pathToTest == ".dockerignore" || pathToTest == "Dockerfile") {
+    fun shouldIncludeInContext(pathToTest: String, dockerfilePath: String): Boolean {
+        if (pathToTest == ".dockerignore" || pathToTest == dockerfilePath) {
             return true
         }
 

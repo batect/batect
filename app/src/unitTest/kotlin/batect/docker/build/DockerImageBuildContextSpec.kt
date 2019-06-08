@@ -26,7 +26,9 @@ import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -39,7 +41,7 @@ object DockerImageBuildContextSpec : Spek({
 
         val ignoreList by createForEachTest {
             mock<DockerImageBuildIgnoreList> {
-                on { shouldIncludeInContext(any()) } doReturn true
+                on { shouldIncludeInContext(any(), eq("Dockerfile")) } doReturn true
             }
         }
 
@@ -57,7 +59,7 @@ object DockerImageBuildContextSpec : Spek({
 
         given("the context directory is empty") {
             on("creating the build context") {
-                val context by runForEachTest { factory.createFromDirectory(contextDirectory) }
+                val context by runForEachTest { factory.createFromDirectory(contextDirectory, "Dockerfile") }
 
                 it("returns an empty list of entries") {
                     assertThat(context, equalTo(DockerImageBuildContext(emptySet())))
@@ -73,12 +75,16 @@ object DockerImageBuildContextSpec : Spek({
             }
 
             on("creating the build context") {
-                val context by runForEachTest { factory.createFromDirectory(contextDirectory) }
+                val context by runForEachTest { factory.createFromDirectory(contextDirectory, "Dockerfile") }
 
                 it("returns a list of entries containing that Dockerfile") {
                     assertThat(context, equalTo(DockerImageBuildContext(setOf(
                         DockerImageBuildContextEntry(dockerfilePath, "Dockerfile")
                     ))))
+                }
+
+                it("uses the relative path of the Dockerfile when checking if it should be included") {
+                    verify(ignoreList).shouldIncludeInContext("Dockerfile", "Dockerfile")
                 }
             }
         }
@@ -93,13 +99,18 @@ object DockerImageBuildContextSpec : Spek({
             }
 
             on("creating the build context") {
-                val context by runForEachTest { factory.createFromDirectory(contextDirectory) }
+                val context by runForEachTest { factory.createFromDirectory(contextDirectory, "Dockerfile") }
 
                 it("returns a list of entries containing both entries") {
                     assertThat(context, equalTo(DockerImageBuildContext(setOf(
                         DockerImageBuildContextEntry(file1, "file1"),
                         DockerImageBuildContextEntry(file2, "file2")
                     ))))
+                }
+
+                it("uses the relative paths of the files when checking if they should be included") {
+                    verify(ignoreList).shouldIncludeInContext("file1", "Dockerfile")
+                    verify(ignoreList).shouldIncludeInContext("file2", "Dockerfile")
                 }
             }
         }
@@ -116,7 +127,7 @@ object DockerImageBuildContextSpec : Spek({
             }
 
             on("creating the build context") {
-                val context by runForEachTest { factory.createFromDirectory(contextDirectory) }
+                val context by runForEachTest { factory.createFromDirectory(contextDirectory, "Dockerfile") }
 
                 it("returns a list of entries containing both entries and the directory") {
                     assertThat(context, equalTo(DockerImageBuildContext(setOf(
@@ -124,6 +135,12 @@ object DockerImageBuildContextSpec : Spek({
                         DockerImageBuildContextEntry(subdirectory, "subdir"),
                         DockerImageBuildContextEntry(file2, "subdir/file2")
                     ))))
+                }
+
+                it("uses the relative paths of the files when checking if they should be included") {
+                    verify(ignoreList).shouldIncludeInContext("file1", "Dockerfile")
+                    verify(ignoreList).shouldIncludeInContext("subdir", "Dockerfile")
+                    verify(ignoreList).shouldIncludeInContext("subdir/file2", "Dockerfile")
                 }
             }
         }
@@ -138,13 +155,18 @@ object DockerImageBuildContextSpec : Spek({
             }
 
             on("creating the build context") {
-                val context by runForEachTest { factory.createFromDirectory(contextDirectory) }
+                val context by runForEachTest { factory.createFromDirectory(contextDirectory, "Dockerfile") }
 
                 it("returns a list of entries containing both entries") {
                     assertThat(context, equalTo(DockerImageBuildContext(setOf(
                         DockerImageBuildContextEntry(file1, "file1"),
                         DockerImageBuildContextEntry(file2, "file2")
                     ))))
+                }
+
+                it("uses the relative paths of the files when checking if they should be included") {
+                    verify(ignoreList).shouldIncludeInContext("file1", "Dockerfile")
+                    verify(ignoreList).shouldIncludeInContext("file2", "Dockerfile")
                 }
             }
         }
@@ -159,13 +181,18 @@ object DockerImageBuildContextSpec : Spek({
             }
 
             on("creating the build context") {
-                val context by runForEachTest { factory.createFromDirectory(contextDirectory) }
+                val context by runForEachTest { factory.createFromDirectory(contextDirectory, "Dockerfile") }
 
                 it("returns a list of entries containing both directories") {
                     assertThat(context, equalTo(DockerImageBuildContext(setOf(
                         DockerImageBuildContextEntry(directory1, "directory1"),
                         DockerImageBuildContextEntry(directory2, "directory2")
                     ))))
+                }
+
+                it("uses the relative paths of the files when checking if they should be included") {
+                    verify(ignoreList).shouldIncludeInContext("directory1", "Dockerfile")
+                    verify(ignoreList).shouldIncludeInContext("directory2", "Dockerfile")
                 }
             }
         }
@@ -180,17 +207,23 @@ object DockerImageBuildContextSpec : Spek({
                 Files.createFile(fileToExclude)
                 Files.createFile(dockerignoreFile)
 
-                whenever(ignoreList.shouldIncludeInContext(fileToExclude.toString())).thenReturn(false)
+                whenever(ignoreList.shouldIncludeInContext("fileToExclude", "Dockerfile")).thenReturn(false)
             }
 
             on("creating the build context") {
-                val context by runForEachTest { factory.createFromDirectory(contextDirectory) }
+                val context by runForEachTest { factory.createFromDirectory(contextDirectory, "Dockerfile") }
 
                 it("returns a list of entries containing only the entries permitted by the .dockerignore file") {
                     assertThat(context, equalTo(DockerImageBuildContext(setOf(
                         DockerImageBuildContextEntry(fileToInclude, "fileToInclude"),
                         DockerImageBuildContextEntry(dockerignoreFile, ".dockerignore")
                     ))))
+                }
+
+                it("uses the relative paths of the files when checking if they should be included") {
+                    verify(ignoreList).shouldIncludeInContext("fileToInclude", "Dockerfile")
+                    verify(ignoreList).shouldIncludeInContext("fileToExclude", "Dockerfile")
+                    verify(ignoreList).shouldIncludeInContext(".dockerignore", "Dockerfile")
                 }
             }
         }

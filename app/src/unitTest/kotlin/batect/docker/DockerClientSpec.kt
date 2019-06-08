@@ -100,7 +100,7 @@ object DockerClientSpec : Spek({
                     Files.createDirectories(buildDirectory)
                     Files.createFile(resolvedDockerfilePath)
 
-                    whenever(imageBuildContextFactory.createFromDirectory(buildDirectory)).doReturn(context)
+                    whenever(imageBuildContextFactory.createFromDirectory(buildDirectory, dockerfilePath)).doReturn(context)
                     whenever(dockerfileParser.extractBaseImageName(resolvedDockerfilePath)).doReturn("nginx:1.13.0")
                 }
 

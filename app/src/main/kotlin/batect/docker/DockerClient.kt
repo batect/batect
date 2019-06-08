@@ -77,7 +77,7 @@ class DockerClient(
                 throw ImageBuildFailedException("Could not build image: the Dockerfile '$dockerfilePath' is not a child of '$buildDirectory'")
             }
 
-            val context = imageBuildContextFactory.createFromDirectory(buildDirectory)
+            val context = imageBuildContextFactory.createFromDirectory(buildDirectory, dockerfilePath)
             val baseImageName = dockerfileParser.extractBaseImageName(resolvedDockerfilePath)
             val credentials = credentialsProvider.getCredentials(baseImageName)
             val reporter = imagePullProgressReporterFactory()

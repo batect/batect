@@ -24,14 +24,14 @@ data class DockerImageBuildContext(val entries: Set<DockerImageBuildContextEntry
 data class DockerImageBuildContextEntry(val localPath: Path, val contextPath: String)
 
 class DockerImageBuildContextFactory(private val ignoreParser: DockerIgnoreParser) {
-    fun createFromDirectory(contextDirectory: Path): DockerImageBuildContext {
+    fun createFromDirectory(contextDirectory: Path, dockerfilePath: String): DockerImageBuildContext {
         val ignoreList = ignoreParser.parse(contextDirectory.resolve(".dockerignore"))
 
         Files.walk(contextDirectory).use { stream ->
             val files = stream
                 .filter { it != contextDirectory }
-                .filter { ignoreList.shouldIncludeInContext(it.toString()) }
                 .map { DockerImageBuildContextEntry(it, contextDirectory.relativize(it).toString()) }
+                .filter { ignoreList.shouldIncludeInContext(it.contextPath, dockerfilePath) }
                 .collect(Collectors.toSet())
 
             return DockerImageBuildContext(files)

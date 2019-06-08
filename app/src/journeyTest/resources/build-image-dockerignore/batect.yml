@@ -1,0 +1,12 @@
+project_name: build-image-dockerignore
+
+containers:
+  build-env:
+    build_directory: build-env
+    dockerfile: dockerfiles/my-special-dockerfile
+
+tasks:
+  the-task:
+    run:
+      container: build-env
+      command: sh -c "echo 'This is some output from the task' && exit 123"

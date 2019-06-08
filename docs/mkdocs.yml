@@ -23,6 +23,8 @@ extra:
   social:
   - type: 'github'
     link: 'https://github.com/charleskorn/batect'
+  - type: 'comments'
+    link: 'https://spectrum.chat/batect'
 
 markdown_extensions:
   - admonition

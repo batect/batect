@@ -820,7 +820,7 @@ class DockerAPI(
     }
 
     private val baseUrl: HttpUrl = httpConfig.baseUrl.newBuilder()
-        .addPathSegment("v1.30")
+        .addPathSegment("v$minimumDockerAPIVersion")
         .build()
 
     private fun urlForContainers(): HttpUrl = baseUrl.newBuilder()

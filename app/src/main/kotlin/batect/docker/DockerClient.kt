@@ -27,6 +27,7 @@ import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.logging.Logger
 import batect.ui.ConsoleInfo
+import batect.utils.Version
 import kotlinx.serialization.json.JsonObject
 import java.io.IOException
 import java.nio.file.Files
@@ -260,7 +261,18 @@ class DockerClient(
             api.ping()
 
             logger.info {
-                message("Connectivity check succeeded.")
+                message("Ping succeeded.")
+            }
+
+            val versionInfo = api.getServerVersionInfo()
+
+            logger.info {
+                message("Getting version info succeeded.")
+                data("versionInfo", versionInfo)
+            }
+
+            if (Version.parse(versionInfo.apiVersion) < Version.parse(minimumDockerAPIVersion)) {
+                return DockerConnectivityCheckResult.Failed("batect requires Docker $minimumDockerVersion or later, but version ${versionInfo.version} is installed.")
             }
 
             return DockerConnectivityCheckResult.Succeeded

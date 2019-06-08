@@ -50,7 +50,7 @@ class RunTaskCommand(
         val connectivityCheckResult = dockerClient.checkConnectivity()
 
         if (connectivityCheckResult is DockerConnectivityCheckResult.Failed) {
-            errorConsole.println(Text.red("Docker is not installed, or not available: ${connectivityCheckResult.message}"))
+            errorConsole.println(Text.red("Docker is not installed, not available or not compatible with batect: ${connectivityCheckResult.message}"))
             return -1
         }
 

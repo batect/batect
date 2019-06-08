@@ -755,8 +755,46 @@ object DockerClientSpec : Spek({
 
         describe("checking connectivity to the Docker daemon") {
             given("pinging the daemon succeeds") {
-                it("returns success") {
-                    assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded))
+                given("getting daemon version info succeeds") {
+                    given("the daemon reports an API version that is greater than required") {
+                        beforeEachTest {
+                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.31", "xxx", "xxx"))
+                        }
+
+                        it("returns success") {
+                            assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded))
+                        }
+                    }
+
+                    given("the daemon reports an API version that is exactly the required version") {
+                        beforeEachTest {
+                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.30", "xxx", "xxx"))
+                        }
+
+                        it("returns success") {
+                            assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded))
+                        }
+                    }
+
+                    given("the daemon reports an API version that is lower than required") {
+                        beforeEachTest {
+                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.29", "xxx", "xxx"))
+                        }
+
+                        it("returns failure") {
+                            assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Failed("batect requires Docker 17.06 or later, but version 1.2.3 is installed.")))
+                        }
+                    }
+                }
+
+                given("getting daemon version info fails") {
+                    beforeEachTest {
+                        whenever(api.getServerVersionInfo()).doThrow(DockerException("Something went wrong."))
+                    }
+
+                    it("returns failure") {
+                        assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Failed("Something went wrong.")))
+                    }
                 }
             }
 

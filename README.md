@@ -25,8 +25,12 @@
 1. Drop the latest `batect` script from the [releases page](https://github.com/charleskorn/batect/releases)
    into the root folder of your project.
 2. Make sure it's executable: run `chmod +x batect`.
-3. Create your `batect.yml` to define your environment: take a look at the [sample projects](https://batect.charleskorn.com/SampleProjects.html)
-   for inspiration, or dive straight into [the configuration file reference](https://batect.charleskorn.com/config/Overview.html).
+3. Create your `batect.yml` to define your environment:
+    * Take a look at the [sample projects](https://batect.charleskorn.com/SampleProjects.html) for inspiration
+    * Dive straight into [the configuration file reference](https://batect.charleskorn.com/config/Overview.html)
+    * Or, if you're using another tool already and want to switch to batect,
+      [batectify](https://batectify.enchanting.dev/) by [@ineffyble](https://github.com/ineffyble) can convert files from
+      other tools to batect's format
 
 ## Documentation
 

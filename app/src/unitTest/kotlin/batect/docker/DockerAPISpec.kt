@@ -94,6 +94,17 @@ object DockerAPISpec : Spek({
 
         describe("creating a container") {
             val expectedUrl = "$dockerBaseUrl/v1.30/containers/create"
+            val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
+            val longTimeoutClientBuilder by createForEachTest {
+                mock<OkHttpClient.Builder> { mock ->
+                    on { readTimeout(any(), any()) } doReturn mock
+                    on { build() } doReturn clientWithLongTimeout
+                }
+            }
+
+            beforeEachTest {
+                whenever(httpClient.newBuilder()).doReturn(longTimeoutClientBuilder)
+            }
 
             given("a container configuration and a built image") {
                 val image = DockerImage("the-image")
@@ -102,7 +113,7 @@ object DockerAPISpec : Spek({
                 val request = DockerContainerCreationRequest(image, network, command, "some-host", "some-host", emptyMap(), "/some-dir", emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
 
                 on("a successful creation") {
-                    val call by createForEachTest { httpClient.mockPost(expectedUrl, """{"Id": "abc123"}""", 201) }
+                    val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, """{"Id": "abc123"}""", 201) }
                     val result by runForEachTest { api.createContainer(request) }
 
                     it("creates the container") {
@@ -110,7 +121,7 @@ object DockerAPISpec : Spek({
                     }
 
                     it("creates the container with the expected settings") {
-                        verify(httpClient).newCall(requestWithJsonBody { body ->
+                        verify(clientWithLongTimeout).newCall(requestWithJsonBody { body ->
                             assertThat(body, equalTo(Json.parser.parseJson(request.toJson())))
                         })
                     }
@@ -118,10 +129,14 @@ object DockerAPISpec : Spek({
                     it("returns the ID of the created container") {
                         assertThat(result.id, equalTo("abc123"))
                     }
+
+                    it("configures the HTTP client with a longer timeout to allow for the container to be created") {
+                        verify(longTimeoutClientBuilder).readTimeout(20, TimeUnit.SECONDS)
+                    }
                 }
 
                 on("a failed creation") {
-                    beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418) }
+                    beforeEachTest { clientWithLongTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                     it("raises an appropriate exception") {
                         assertThat({ api.createContainer(request) }, throws<ContainerCreationFailedException>(withMessage("Output from Docker was: Something went wrong.")))

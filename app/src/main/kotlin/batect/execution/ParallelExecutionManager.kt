@@ -128,7 +128,7 @@ class ParallelExecutionManager(
                     exception(t)
                 }
 
-                postEvent(ExecutionFailedEvent(t.toString()))
+                postEvent(ExecutionFailedEvent("During execution of step of kind '${step::class.simpleName}': " + t.toString()))
             }
         }
     }

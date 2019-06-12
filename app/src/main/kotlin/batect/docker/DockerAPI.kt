@@ -63,7 +63,11 @@ class DockerAPI(
             .url(url)
             .build()
 
-        httpConfig.client.newCall(request).execute().use { response ->
+        val clientWithLongTimeout = httpConfig.client.newBuilder()
+            .readTimeout(20, TimeUnit.SECONDS)
+            .build()
+
+        clientWithLongTimeout.newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Container creation failed.")

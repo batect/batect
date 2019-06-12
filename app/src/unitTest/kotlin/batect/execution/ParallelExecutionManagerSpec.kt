@@ -19,6 +19,7 @@ package batect.execution
 import batect.execution.model.events.ExecutionFailedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
+import batect.execution.model.steps.CreateTaskNetworkStep
 import batect.execution.model.steps.TaskStep
 import batect.execution.model.steps.TaskStepRunner
 import batect.testutils.createForEachTest
@@ -104,22 +105,25 @@ object ParallelExecutionManagerSpec : Spek({
                     }
                 }
             }
+        }
 
-            given("that step throws an exception during execution") {
-                beforeEachTest {
-                    whenever(taskStepRunner.run(eq(step), any(), eq(runOptions))).thenThrow(RuntimeException("Something went wrong."))
+        given("a step throws an exception during execution") {
+            val step = CreateTaskNetworkStep
+
+            beforeEachTest {
+                whenever(stateMachine.popNextStep(false)).doReturn(step, null)
+                whenever(taskStepRunner.run(eq(step), any(), eq(runOptions))).thenThrow(RuntimeException("Something went wrong."))
+            }
+
+            on("running the task") {
+                beforeEachTest { executionManager.run() }
+
+                it("logs a task failure event to the event logger") {
+                    verify(eventLogger).postEvent(ExecutionFailedEvent("During execution of step of kind 'CreateTaskNetworkStep': java.lang.RuntimeException: Something went wrong."))
                 }
 
-                on("running the task") {
-                    beforeEachTest { executionManager.run() }
-
-                    it("logs a task failure event to the event logger") {
-                        verify(eventLogger).postEvent(ExecutionFailedEvent("java.lang.RuntimeException: Something went wrong."))
-                    }
-
-                    it("logs a task failure event to the state machine") {
-                        verify(stateMachine).postEvent(ExecutionFailedEvent("java.lang.RuntimeException: Something went wrong."))
-                    }
+                it("logs a task failure event to the state machine") {
+                    verify(stateMachine).postEvent(ExecutionFailedEvent("During execution of step of kind 'CreateTaskNetworkStep': java.lang.RuntimeException: Something went wrong."))
                 }
             }
         }

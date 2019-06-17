@@ -36,6 +36,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * allow container side of volume mount to use path of local directory (eg. mount current directory at same path inside container)
 * show build context upload progress when building image
 * support credentials for multi-stage image builds where each stage takes base image from different protected registry
+* some way to kill a misbehaving task (eg. one that is not responding to Ctrl+C)
 
 ### Other
 * switch to Kotlin's built-in `Result` where appropriate
@@ -62,6 +63,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * add note about increasing default CPU and memory limits when using Docker on OS X
   * how to introduce batect to an existing project
   * how to use batect as the basis for a pipeline made up of reusable building blocks
+  * expand comparison with other tools to cover Dogo, Cage and Toast
 * switch to coroutines for parallel execution?
 * finish configuration code simplification (first three need https://github.com/Kotlin/kotlinx.serialization/issues/315 to be fixed)
   * Move common stuff when parsing a string (eg. EnvironmentVariableExpression, Command, Duration) out to a common class

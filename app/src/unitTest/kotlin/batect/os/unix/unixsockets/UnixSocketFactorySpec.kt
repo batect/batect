@@ -52,18 +52,19 @@ object UnixSocketFactorySpec : Spek({
                 on("using that socket to connect to a Unix socket") {
                     val dataRead by runForEachTest {
                         val socketPath = getTemporarySocketFileName()
-                        val serverChannel = createSocketServer(socketPath)
 
-                        val port = 1234
-                        val encodedPath = UnixSocketDns.encodePath(socketPath.toString())
-                        val address = InetSocketAddress.createUnresolved(encodedPath, port)
-                        socket.connect(address)
-                        socket.soTimeout = 1000
+                        createSocketServer(socketPath).use { serverChannel ->
+                            val port = 1234
+                            val encodedPath = UnixSocketDns.encodePath(socketPath.toString())
+                            val address = InetSocketAddress.createUnresolved(encodedPath, port)
+                            socket.connect(address)
+                            socket.soTimeout = 1000
 
-                        val dataRead = socket.getInputStream().bufferedReader().readLine()
-                        serverChannel.close()
+                            val dataRead = socket.getInputStream().bufferedReader().readLine()
+                            serverChannel.close()
 
-                        dataRead
+                            dataRead
+                        }
                     }
 
                     it("connects to the socket and can receive data") {

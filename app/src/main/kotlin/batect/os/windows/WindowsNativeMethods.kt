@@ -19,21 +19,29 @@ package batect.os.windows
 import batect.os.NativeMethodException
 import batect.os.NativeMethods
 import batect.os.NoConsoleException
+import batect.os.windows.namedpipes.NamedPipe
 import batect.ui.Dimensions
 import jnr.constants.platform.windows.LastError
 import jnr.ffi.LibraryLoader
 import jnr.ffi.LibraryOption
+import jnr.ffi.Pointer
 import jnr.ffi.Runtime
 import jnr.ffi.Struct
+import jnr.ffi.annotations.Direct
 import jnr.ffi.annotations.In
 import jnr.ffi.annotations.Out
 import jnr.ffi.annotations.SaveError
 import jnr.ffi.annotations.StdCall
 import jnr.ffi.annotations.Transient
+import jnr.ffi.byref.NativeLongByReference
 import jnr.ffi.mapper.TypeMapper
 import jnr.posix.HANDLE
 import jnr.posix.POSIX
 import jnr.posix.WindowsLibC
+import jnr.posix.util.WindowsHelpers
+import java.io.FileNotFoundException
+import java.net.SocketTimeoutException
+import kotlin.reflect.KFunction
 
 class WindowsNativeMethods(
     private val posix: POSIX,
@@ -58,12 +66,9 @@ class WindowsNativeMethods(
     override fun getConsoleDimensions(): Dimensions {
         val console = win32.GetStdHandle(WindowsLibC.STD_OUTPUT_HANDLE)
         val info = ConsoleScreenBufferInfo(runtime)
-        val result = win32.GetConsoleScreenBufferInfo(console, info)
+        val succeeded = win32.GetConsoleScreenBufferInfo(console, info)
 
-        val height = info.srWindow.bottom.intValue() - info.srWindow.top.intValue() + 1
-        val width = info.srWindow.right.intValue() - info.srWindow.left.intValue() + 1
-
-        if (result == 0) {
+        if (!succeeded) {
             val errno = posix.errno()
             val error = LastError.values().single { it.intValue() == errno }
 
@@ -74,13 +79,208 @@ class WindowsNativeMethods(
             throw WindowsNativeMethodException(Win32::GetConsoleScreenBufferInfo.name, error)
         }
 
+        val height = info.srWindow.bottom.intValue() - info.srWindow.top.intValue() + 1
+        val width = info.srWindow.right.intValue() - info.srWindow.left.intValue() + 1
+
         return Dimensions(height, width)
+    }
+
+    fun openNamedPipe(path: String): NamedPipe {
+        val result = win32.CreateFileW(WindowsHelpers.toWPath(path), GENERIC_READ or GENERIC_WRITE, 0L, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null)
+
+        if (!result.isValid) {
+            if (posix.errno() == ERROR_FILE_NOT_FOUND) {
+                throw FileNotFoundException("The named pipe $path does not exist.")
+            }
+
+            throwNativeMethodFailed(WindowsLibC::CreateFileW)
+        }
+
+        return NamedPipe(result, this)
+    }
+
+    fun closeNamedPipe(pipe: NamedPipe) {
+        cancelIo(pipe, null)
+
+        closeHandle(pipe.handle)
+    }
+
+    private fun closeHandle(handle: HANDLE) {
+        if (!win32.CloseHandle(handle)) {
+            throwNativeMethodFailed(Win32::CloseHandle)
+        }
+    }
+
+    fun writeToNamedPipe(pipe: NamedPipe, buffer: ByteArray, offset: Int, length: Int) {
+        val event = createEvent()
+
+        try {
+            val overlapped = Overlapped(runtime)
+            overlapped.event.set(event.toPointer())
+
+            val bufferPointer = runtime.memoryManager.allocateDirect(length, true)
+            bufferPointer.put(0, buffer, offset, length)
+
+            startWrite(pipe, bufferPointer, overlapped)
+
+            val bytesWritten = waitForOverlappedOperation(pipe, overlapped, event, WindowsLibC.INFINITE)
+
+            if (bytesWritten != length) {
+                throw RuntimeException("Expected to write $length bytes, but wrote $bytesWritten")
+            }
+        } finally {
+            closeHandle(event)
+        }
+    }
+
+    private fun startWrite(pipe: NamedPipe, buffer: Pointer, overlapped: Overlapped) {
+        if (!win32.WriteFile(pipe.handle, buffer, buffer.size(), null, overlapped)) {
+            throwNativeMethodFailed(Win32::WriteFile)
+        }
+    }
+
+    fun readFromNamedPipe(pipe: NamedPipe, buffer: ByteArray, offset: Int, maxLength: Int, timeoutInMilliseconds: Int): Int {
+        val event = createEvent()
+
+        try {
+            val overlapped = Overlapped(runtime)
+            overlapped.event.set(event.toPointer())
+
+            val bufferPointer = runtime.memoryManager.allocateDirect(maxLength, true)
+
+            if (!startRead(pipe, bufferPointer, overlapped)) {
+                return -1
+            }
+
+            val bytesRead = waitForOverlappedOperation(pipe, overlapped, event, translateTimeout(timeoutInMilliseconds))
+            bufferPointer.get(0, buffer, offset, bytesRead)
+
+            return bytesRead
+        } finally {
+            closeHandle(event)
+        }
+    }
+
+    private fun translateTimeout(timeoutInMilliseconds: Int): Int = if (timeoutInMilliseconds == 0) {
+        WindowsLibC.INFINITE
+    } else {
+        timeoutInMilliseconds
+    }
+
+    private fun startRead(pipe: NamedPipe, buffer: Pointer, overlapped: Overlapped): Boolean {
+        if (win32.ReadFile(pipe.handle, buffer, buffer.size(), null, overlapped)) {
+            return true
+        }
+
+        val errno = posix.errno()
+
+        if (errno == ERROR_IO_PENDING) {
+            return true
+        }
+
+        val error = LastError.values().single { it.intValue() == errno }
+
+        if (error == LastError.ERROR_BROKEN_PIPE) {
+            return false
+        }
+
+        throw WindowsNativeMethodException(Win32::ReadFile.name, error)
+    }
+
+    private fun waitForOverlappedOperation(pipe: NamedPipe, overlapped: Overlapped, event: HANDLE, timeoutInMilliseconds: Int): Int {
+        if (waitForEvent(event, timeoutInMilliseconds) == WaitResult.TimedOut) {
+            cancelIo(pipe, overlapped)
+
+            throw SocketTimeoutException("Operation timed out after $timeoutInMilliseconds ms.")
+        }
+
+        return getOverlappedResult(pipe, overlapped)
+    }
+
+    private fun getOverlappedResult(pipe: NamedPipe, overlapped: Overlapped): Int {
+        val bytesTransferred = NativeLongByReference()
+
+        if (!win32.GetOverlappedResult(pipe.handle, overlapped, bytesTransferred, false)) {
+            throwNativeMethodFailed(Win32::GetOverlappedResult)
+        }
+
+        return bytesTransferred.toInt()
+    }
+
+    private fun createEvent(): HANDLE {
+        val result = win32.CreateEventW(null, true, false, null)
+
+        if (!result.isValid) {
+            throwNativeMethodFailed(Win32::CreateEventW)
+        }
+
+        return result
+    }
+
+    private fun waitForEvent(event: HANDLE, timeoutInMilliseconds: Int): WaitResult {
+        val result = win32.WaitForSingleObject(event, timeoutInMilliseconds)
+
+        when (result) {
+            WAIT_OBJECT_0 -> return WaitResult.Signaled
+            WAIT_TIMEOUT -> return WaitResult.TimedOut
+            WAIT_ABANDONED -> throw RuntimeException("WaitForSingleObject returned WAIT_ABANDONED")
+            else -> throwNativeMethodFailed(Win32::WaitForSingleObject)
+        }
+    }
+
+    private fun cancelIo(pipe: NamedPipe, overlapped: Overlapped?) {
+        if (!win32.CancelIoEx(pipe.handle, overlapped)) {
+            if (posix.errno() == ERROR_NOT_FOUND) {
+                // There was nothing to cancel.
+                return
+            }
+
+            throwNativeMethodFailed(Win32::CancelIoEx)
+        }
+    }
+
+    private fun <R> throwNativeMethodFailed(function: KFunction<R>): Nothing {
+        val errno = posix.errno()
+        val error = LastError.values().single { it.intValue() == errno }
+
+        throw WindowsNativeMethodException(function.name, error)
+    }
+
+    private enum class WaitResult {
+        Signaled,
+        TimedOut
     }
 
     interface Win32 : WindowsLibC {
         @SaveError
         @StdCall
-        fun GetConsoleScreenBufferInfo(@In hConsoleOutput: HANDLE, @Out @Transient lpConsoleScreenBufferInfo: ConsoleScreenBufferInfo): Int
+        fun GetConsoleScreenBufferInfo(@In hConsoleOutput: HANDLE, @Out @Transient lpConsoleScreenBufferInfo: ConsoleScreenBufferInfo): Boolean
+
+        @StdCall
+        fun CreateFileW(
+            @In lpFileName: ByteArray,
+            @In dwDesiredAccess: Long,
+            @In dwShareMode: Long,
+            @In lpSecurityAttributes: Pointer?,
+            @In dwCreationDisposition: Long,
+            @In dwFlagsAndAttributes: Long,
+            @In hTemplateFile: HANDLE?
+        ): HANDLE
+
+        @SaveError
+        fun WriteFile(@In hFile: HANDLE, @Direct lpBuffer: Pointer, @In nNumberOfBytesToWrite: Long, @Out lpNumberOfBytesWritten: NativeLongByReference?, @Direct lpOverlapped: Overlapped): Boolean
+
+        @SaveError
+        fun ReadFile(@In hFile: HANDLE, @Direct lpBuffer: Pointer, @In nNumberOfBytesToRead: Long, @Out lpNumberOfBytesRead: NativeLongByReference?, @Direct lpOverlapped: Overlapped): Boolean
+
+        @SaveError
+        fun CreateEventW(@In lpEventAttributes: Pointer?, @In bManualReset: Boolean, @In bInitialState: Boolean, @In lpName: ByteArray?): HANDLE
+
+        @SaveError
+        fun CancelIoEx(@In hFile: HANDLE, @Direct lpOverlapped: Overlapped?): Boolean
+
+        @SaveError
+        fun GetOverlappedResult(@In hFile: HANDLE, @Direct lpOverlapped: Overlapped, @Out lpNumberOfBytesTransferred: NativeLongByReference, @In bWait: Boolean): Boolean
     }
 
     class ConsoleScreenBufferInfo(runtime: Runtime) : Struct(runtime) {
@@ -103,10 +303,36 @@ class WindowsNativeMethods(
         val bottom = int16_t()
     }
 
+    class Overlapped(runtime: Runtime) : Struct(runtime) {
+        val internal = UnsignedLong()
+        val intervalHigh = UnsignedLong()
+        val offsetHigh = DWORD()
+        val offsetLow = DWORD()
+        val pointer = Pointer()
+        val event = Pointer()
+
+        init {
+            this.useMemory(runtime.memoryManager.allocateDirect(Struct.size(this), true))
+        }
+    }
+
     companion object {
+        private const val GENERIC_READ: Long = 0x80000000
+        private const val GENERIC_WRITE: Long = 0x40000000
+        private const val OPEN_EXISTING: Long = 0x00000003
+        private const val FILE_FLAG_OVERLAPPED: Long = 0x40000000
+
+        private const val ERROR_FILE_NOT_FOUND: Int = 0x00000002
+        private const val ERROR_IO_PENDING: Int = 0x000003E5
+        private const val ERROR_NOT_FOUND: Int = 0x00000490
+
+        private const val WAIT_ABANDONED: Int = 0x00000080
+        private const val WAIT_OBJECT_0: Int = 0x00000000
+        private const val WAIT_TIMEOUT: Int = 0x00000102
+
         // HACK: This is a hack to workaround the fact that POSIXTypeMapper isn't public, but we
         // need it to translate a number of different Win32 types to their JVM equivalents.
-        private fun createTypeMapper(): TypeMapper {
+        fun createTypeMapper(): TypeMapper {
             val constructor = Class.forName("jnr.posix.POSIXTypeMapper").getDeclaredConstructor()
             constructor.isAccessible = true
 

@@ -26,6 +26,7 @@ import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerHealthCheckResult
 import batect.docker.DockerHttpConfig
+import batect.docker.DockerHttpConfigDefaults
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.DockerVersionInfoRetrievalResult
@@ -48,6 +49,7 @@ import batect.os.ProcessRunner
 import batect.os.SignalListener
 import batect.os.SystemInfo
 import batect.os.unix.UnixNativeMethods
+import batect.os.windows.WindowsNativeMethods
 import batect.testutils.createForGroup
 import batect.testutils.runBeforeGroup
 import batect.ui.ConsoleDimensions
@@ -59,6 +61,8 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.or
 import com.nhaarman.mockitokotlin2.mock
+import jnr.ffi.Platform
+import jnr.posix.POSIX
 import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -75,25 +79,9 @@ object DockerClientIntegrationTest : Spek({
         val testImagesPath by createForGroup { Paths.get("./src/integrationTest/resources/test-images/").toAbsolutePath() }
         val basicTestImagePath by createForGroup { testImagesPath.resolve("basic-image") }
 
-        val logger by createForGroup { mock<Logger>() }
-        val processRunner by createForGroup { ProcessRunner(logger) }
-        val httpConfig by createForGroup { DockerHttpConfig(OkHttpClient(), DockerHttpConfig.defaultDockerHost) }
-        val api by createForGroup { DockerAPI(httpConfig, logger) }
         val posix by createForGroup { POSIXFactory.getNativePOSIX() }
-        val nativeMethods by createForGroup { UnixNativeMethods(posix) }
-        val consoleInfo by createForGroup { ConsoleInfo(posix, processRunner, logger) }
-        val credentialsConfigurationFile by createForGroup { DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger) }
-        val credentialsProvider by createForGroup { DockerRegistryCredentialsProvider(DockerRegistryDomainResolver(), DockerRegistryIndexResolver(), credentialsConfigurationFile) }
-        val ignoreParser by createForGroup { DockerIgnoreParser() }
-        val imageBuildContextFactory by createForGroup { DockerImageBuildContextFactory(ignoreParser) }
-        val dockerfileParser by createForGroup { DockerfileParser() }
-        val waiter by createForGroup { ContainerWaiter(api) }
-        val streamer by createForGroup { ContainerIOStreamer(System.out, System.`in`) }
-        val signalListener by createForGroup { SignalListener(posix) }
-        val consoleDimensions by createForGroup { ConsoleDimensions(nativeMethods, signalListener, logger) }
-        val killer by createForGroup { ContainerKiller(api, signalListener) }
-        val ttyManager by createForGroup { ContainerTTYManager(api, consoleInfo, consoleDimensions, logger) }
-        val client by createForGroup { DockerClient(api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, streamer, killer, ttyManager, logger) }
+        val systemInfo by createForGroup { SystemInfo(posix) }
+        val client by createForGroup { createClient(posix, systemInfo) }
 
         fun creationRequestForContainer(image: DockerImage, network: DockerNetwork, command: Iterable<String>, volumeMounts: Set<VolumeMount> = emptySet(), portMappings: Set<PortMapping> = emptySet(), userAndGroup: UserAndGroup? = null): DockerContainerCreationRequest {
             return DockerContainerCreationRequest(
@@ -119,7 +107,6 @@ object DockerClientIntegrationTest : Spek({
             val fileToCreateParent = fileToCreate.parent.toAbsolutePath()
             val volumeMount = VolumeMount(fileToCreateParent.toString(), fileToCreateParent.toString(), null)
 
-            val systemInfo = SystemInfo(posix)
             val userAndGroup = UserAndGroup(systemInfo.userId, systemInfo.groupId)
 
             return creationRequestForContainer(image, network, command, volumeMounts = setOf(volumeMount), userAndGroup = userAndGroup)
@@ -298,6 +285,35 @@ object DockerClientIntegrationTest : Spek({
         }
     }
 })
+
+private fun createClient(posix: POSIX, systemInfo: SystemInfo): DockerClient {
+    val logger = mock<Logger>()
+    val processRunner = ProcessRunner(logger)
+    val httpDefaults = DockerHttpConfigDefaults(systemInfo)
+    val httpConfig = DockerHttpConfig(OkHttpClient(), httpDefaults.defaultDockerHost, systemInfo)
+    val api = DockerAPI(httpConfig, logger)
+
+    val nativeMethods = if (Platform.getNativePlatform().os == Platform.OS.WINDOWS) {
+        WindowsNativeMethods(posix)
+    } else {
+        UnixNativeMethods(posix)
+    }
+
+    val consoleInfo = ConsoleInfo(posix, processRunner, logger)
+    val credentialsConfigurationFile = DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger)
+    val credentialsProvider = DockerRegistryCredentialsProvider(DockerRegistryDomainResolver(), DockerRegistryIndexResolver(), credentialsConfigurationFile)
+    val ignoreParser = DockerIgnoreParser()
+    val imageBuildContextFactory = DockerImageBuildContextFactory(ignoreParser)
+    val dockerfileParser = DockerfileParser()
+    val waiter = ContainerWaiter(api)
+    val streamer = ContainerIOStreamer(System.out, System.`in`)
+    val signalListener = SignalListener(posix)
+    val consoleDimensions = ConsoleDimensions(nativeMethods, signalListener, logger)
+    val killer = ContainerKiller(api, signalListener)
+    val ttyManager = ContainerTTYManager(api, consoleInfo, consoleDimensions, logger)
+
+    return DockerClient(api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, streamer, killer, ttyManager, logger)
+}
 
 private fun getRandomTemporaryFilePath(): Path {
     val temporaryDirectory = Paths.get("./build/tmp/integrationTest/").toAbsolutePath()

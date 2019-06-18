@@ -17,7 +17,6 @@
 package batect.cli
 
 import batect.cli.options.defaultvalues.LevelOfParallelismDefaultValueProvider
-import batect.docker.DockerHttpConfig
 import batect.logging.FileLogSink
 import batect.logging.LogSink
 import batect.logging.NullLogSink
@@ -46,7 +45,7 @@ data class CommandLineOptions(
     val dontPropagateProxyEnvironmentVariables: Boolean = false,
     val taskName: String? = null,
     val additionalTaskCommandArguments: Iterable<String> = emptyList(),
-    val dockerHost: String = DockerHttpConfig.defaultDockerHost
+    val dockerHost: String = "http://set-to-default-value-in/CommandLineOptionsParser"
 ) {
     fun extend(originalKodein: DKodein): DKodein = Kodein.direct {
         extend(originalKodein, copy = Copy.All)

@@ -16,50 +16,75 @@
 
 package batect.docker
 
+import batect.os.OperatingSystem
+import batect.os.SystemInfo
 import batect.os.unix.unixsockets.UnixSocketDns
 import batect.os.unix.unixsockets.UnixSocketFactory
+import batect.os.windows.namedpipes.NamedPipeDns
+import batect.os.windows.namedpipes.NamedPipeSocketFactory
+import okhttp3.Dns
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import java.net.Proxy
+import javax.net.SocketFactory
 
 class DockerHttpConfig(
     private val baseClient: OkHttpClient,
-    private val dockerHost: String
+    private val dockerHost: String,
+    private val systemInfo: SystemInfo
 ) {
     private val isUnixSocket = dockerHost.startsWith("unix://")
+    private val isNamedPipe = dockerHost.startsWith("npipe://")
+
     val client: OkHttpClient = buildClient()
     val baseUrl: HttpUrl = buildBaseUrl()
 
-    private fun buildClient(): OkHttpClient {
-        if (isUnixSocket) {
-            return buildUnixSocketClient()
-        }
-
-        return baseClient
+    private fun buildClient(): OkHttpClient = when {
+        isUnixSocket -> buildUnixSocketClient()
+        isNamedPipe -> buildNamedPipeClient()
+        else -> baseClient
     }
 
-    private fun buildUnixSocketClient(): OkHttpClient {
-        return baseClient.newBuilder()
-            .proxy(Proxy.NO_PROXY)
-            .socketFactory(UnixSocketFactory())
-            .dns(UnixSocketDns())
-            .build()
-    }
+    private fun buildUnixSocketClient(): OkHttpClient = buildNonTcpClient(UnixSocketFactory(), UnixSocketDns())
+    private fun buildNamedPipeClient(): OkHttpClient = buildNonTcpClient(NamedPipeSocketFactory(), NamedPipeDns())
 
-    private fun buildBaseUrl(): HttpUrl {
-        if (isUnixSocket) {
-            return buildUnixSocketBaseUrl()
-        }
+    private fun buildNonTcpClient(socketFactory: SocketFactory, dns: Dns): OkHttpClient = baseClient.newBuilder()
+        .proxy(Proxy.NO_PROXY)
+        .socketFactory(socketFactory)
+        .dns(dns)
+        .build()
 
-        return HttpUrl.get(cleanUrl())
+    private fun buildBaseUrl(): HttpUrl = when {
+        isUnixSocket -> buildUnixSocketBaseUrl()
+        isNamedPipe -> buildNamedPipeBaseUrl()
+        else -> HttpUrl.get(cleanUrl())
     }
 
     private fun buildUnixSocketBaseUrl(): HttpUrl {
+        if (systemInfo.operatingSystem !in setOf(OperatingSystem.Linux, OperatingSystem.Mac)) {
+            throw InvalidDockerConfigurationException("This operating system does not support Unix sockets and so therefore the Docker host '$dockerHost' cannot be used.")
+        }
+
         val socketPath = dockerHost.replace("^unix://".toRegex(), "")
 
         return HttpUrl.Builder()
             .scheme("http")
             .host(UnixSocketDns.encodePath(socketPath))
+            .build()
+    }
+
+    private fun buildNamedPipeBaseUrl(): HttpUrl {
+        if (systemInfo.operatingSystem != OperatingSystem.Windows) {
+            throw InvalidDockerConfigurationException("Named pipes are only supported on Windows and so therefore the Docker host '$dockerHost' cannot be used.")
+        }
+
+        val socketPath = dockerHost
+            .replace("^npipe://".toRegex(), "")
+            .replace('/', '\\')
+
+        return HttpUrl.Builder()
+            .scheme("http")
+            .host(NamedPipeDns.encodePath(socketPath))
             .build()
     }
 
@@ -79,9 +104,5 @@ class DockerHttpConfig(
         }
 
         return "http://$dockerHost"
-    }
-
-    companion object {
-        const val defaultDockerHost = "unix:///var/run/docker.sock"
     }
 }

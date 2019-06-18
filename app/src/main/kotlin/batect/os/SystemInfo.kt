@@ -35,6 +35,7 @@ class SystemInfo(private val posix: POSIX, private val systemProperties: Propert
     val operatingSystem = when {
         osName.equals("Mac OS X", ignoreCase = true) -> OperatingSystem.Mac
         osName.equals("Linux", ignoreCase = true) -> OperatingSystem.Linux
+        osName.startsWith("Windows", ignoreCase = true) -> OperatingSystem.Windows
         else -> OperatingSystem.Other
     }
 

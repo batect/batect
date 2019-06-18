@@ -14,13 +14,13 @@
    limitations under the License.
 */
 
-package batect.os.unix.unixsockets
+package batect.os.windows.namedpipes
 
 import okhttp3.Dns
 import okio.ByteString
 import java.net.InetAddress
 
-class UnixSocketDns : Dns {
+class NamedPipeDns : Dns {
     override fun lookup(hostname: String): MutableList<InetAddress> {
         if (!hostname.endsWith(encodingMarker)) {
             throw IllegalArgumentException("Host name '$hostname' was not encoded for use with ${this::class.simpleName}.")
@@ -30,7 +30,7 @@ class UnixSocketDns : Dns {
     }
 
     companion object {
-        private val encodingMarker = ".unixsocket"
+        private val encodingMarker = ".namedpipe"
 
         fun encodePath(path: String): String {
             return ByteString.encodeUtf8(path).hex() + encodingMarker
@@ -38,7 +38,7 @@ class UnixSocketDns : Dns {
 
         fun decodePath(hostname: String): String {
             if (!hostname.endsWith(encodingMarker)) {
-                throw IllegalArgumentException("Host name '$hostname' was not encoded for use with ${UnixSocketDns::class.simpleName}.")
+                throw IllegalArgumentException("Host name '$hostname' was not encoded for use with ${NamedPipeDns::class.simpleName}.")
             }
 
             val encodedPart = hostname.substring(0, hostname.length - encodingMarker.length)

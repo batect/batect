@@ -31,6 +31,7 @@ import batect.docker.DockerClient
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerHostNameResolver
 import batect.docker.DockerHttpConfig
+import batect.docker.DockerHttpConfigDefaults
 import batect.docker.build.DockerIgnoreParser
 import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
@@ -134,7 +135,7 @@ enum class StreamType {
 
 private val cliModule = Kodein.Module("cli") {
     bind<CommandFactory>() with singleton { CommandFactory() }
-    bind<CommandLineOptionsParser>() with singleton { CommandLineOptionsParser(instance(), instance()) }
+    bind<CommandLineOptionsParser>() with singleton { CommandLineOptionsParser(instance(), instance(), instance()) }
     bind<EnvironmentVariableDefaultValueProviderFactory>() with singleton { EnvironmentVariableDefaultValueProviderFactory() }
 
     bind<RunTaskCommand>() with singletonWithLogger { logger ->
@@ -175,7 +176,8 @@ private val dockerModule = Kodein.Module("docker") {
     bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
     bind<DockerImageBuildContextFactory>() with singleton { DockerImageBuildContextFactory(instance()) }
     bind<DockerHostNameResolver>() with singleton { DockerHostNameResolver(instance(), instance()) }
-    bind<DockerHttpConfig>() with singleton { DockerHttpConfig(instance(), commandLineOptions().dockerHost) }
+    bind<DockerHttpConfig>() with singleton { DockerHttpConfig(instance(), commandLineOptions().dockerHost, instance()) }
+    bind<DockerHttpConfigDefaults>() with singleton { DockerHttpConfigDefaults(instance()) }
     bind<DockerRegistryCredentialsConfigurationFile>() with singletonWithLogger { logger -> DockerRegistryCredentialsConfigurationFile(instance(), instance(), logger) }
     bind<DockerRegistryCredentialsProvider>() with singleton { DockerRegistryCredentialsProvider(instance(), instance(), instance()) }
     bind<DockerRegistryDomainResolver>() with singleton { DockerRegistryDomainResolver() }

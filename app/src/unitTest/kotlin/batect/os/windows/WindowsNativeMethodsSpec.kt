@@ -63,20 +63,20 @@ object WindowsNativeMethodsSpec : Spek({
                         info.srWindow.left.set(10)
                         info.srWindow.right.set(20)
 
-                        1
+                        true
                     }
                 }
 
                 val dimensions by runForEachTest { nativeMethods.getConsoleDimensions() }
 
-                it("returns a set of dimenions with the expected values") {
+                it("returns a set of dimensions with the expected values") {
                     assertThat(dimensions, equalTo(Dimensions(101, 11)))
                 }
             }
 
             on("the call to GetConsoleScreenBufferInfo failing") {
                 beforeEachTest {
-                    whenever(win32.GetConsoleScreenBufferInfo(eq(stdoutHandle), any())).thenReturn(0)
+                    whenever(win32.GetConsoleScreenBufferInfo(eq(stdoutHandle), any())).thenReturn(false)
                 }
 
                 given("it failed because stdout is not connected to a console") {

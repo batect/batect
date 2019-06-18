@@ -17,6 +17,7 @@
 package batect.cli
 
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
+import batect.docker.DockerHttpConfigDefaults
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
 import batect.os.PathResolverFactory
@@ -48,9 +49,14 @@ object CommandLineOptionsParserSpec : Spek({
 
         val environmentVariableDefaultValueProviderFactory = EnvironmentVariableDefaultValueProviderFactory(emptyMap())
 
+        val defaultDockerHost = "http://some-docker-host"
+        val dockerHttpConfigDefaults = mock<DockerHttpConfigDefaults> {
+            on { this.defaultDockerHost } doReturn defaultDockerHost
+        }
+
         given("no arguments") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory).parse(emptyList())
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(emptyList())
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("No task name provided.")))
@@ -60,11 +66,12 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a single argument for the task name") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory).parse(listOf("some-task"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(listOf("some-task"))
 
                 it("returns a set of options with just the task name populated") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
-                        taskName = "some-task"
+                        taskName = "some-task",
+                        dockerHost = defaultDockerHost
                     ))))
                 }
             }
@@ -72,7 +79,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("multiple arguments without a '--' prefix") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory).parse(listOf("some-task", "some-extra-arg"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(listOf("some-task", "some-extra-arg"))
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed(
@@ -85,12 +92,13 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("multiple arguments with a '--' prefix") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory).parse(listOf("some-task", "--", "some-extra-arg"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(listOf("some-task", "--", "some-extra-arg"))
 
                 it("returns a set of options with the task name and additional arguments populated") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
                         taskName = "some-task",
-                        additionalTaskCommandArguments = listOf("some-extra-arg")
+                        additionalTaskCommandArguments = listOf("some-extra-arg"),
+                        dockerHost = defaultDockerHost
                     ))))
                 }
             }
@@ -98,12 +106,13 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a flag followed by a single argument") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory).parse(listOf("--no-color", "some-task"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(listOf("--no-color", "some-task"))
 
                 it("returns a set of options with the task name populated and the flag set") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
                         disableColorOutput = true,
-                        taskName = "some-task"
+                        taskName = "some-task",
+                        dockerHost = defaultDockerHost
                     ))))
                 }
             }
@@ -111,7 +120,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a flag followed by multiple arguments") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory).parse(listOf("--no-color", "some-task", "some-extra-arg"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(listOf("--no-color", "some-task", "some-extra-arg"))
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed(
@@ -124,7 +133,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("colour output has been disabled and fancy output mode has been selected") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory).parse(listOf("--no-color", "--output=fancy", "some-task", "some-extra-arg"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(listOf("--no-color", "--output=fancy", "some-task", "some-extra-arg"))
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("Fancy output mode cannot be used when colored output has been disabled.")))
@@ -133,31 +142,31 @@ object CommandLineOptionsParserSpec : Spek({
         }
 
         mapOf(
-            listOf("--help") to CommandLineOptions(showHelp = true),
-            listOf("--help", "some-task") to CommandLineOptions(showHelp = true),
-            listOf("--version") to CommandLineOptions(showVersionInfo = true),
-            listOf("--version", "some-task") to CommandLineOptions(showVersionInfo = true),
-            listOf("--list-tasks") to CommandLineOptions(listTasks = true),
-            listOf("--list-tasks", "some-task") to CommandLineOptions(listTasks = true),
-            listOf("--upgrade") to CommandLineOptions(runUpgrade = true),
-            listOf("--upgrade", "some-task") to CommandLineOptions(runUpgrade = true),
-            listOf("-f=somefile.yml", "some-task") to CommandLineOptions(configurationFileName = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task"),
-            listOf("--config-file=somefile.yml", "some-task") to CommandLineOptions(configurationFileName = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task"),
-            listOf("--log-file=somefile.log", "some-task") to CommandLineOptions(logFileName = fileSystem.getPath("/resolved/somefile.log"), taskName = "some-task"),
-            listOf("--output=simple", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Simple, taskName = "some-task"),
-            listOf("--output=quiet", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Quiet, taskName = "some-task"),
-            listOf("--output=fancy", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Fancy, taskName = "some-task"),
-            listOf("--no-color", "some-task") to CommandLineOptions(disableColorOutput = true, taskName = "some-task"),
-            listOf("--no-update-notification", "some-task") to CommandLineOptions(disableUpdateNotification = true, taskName = "some-task"),
-            listOf("--level-of-parallelism=900", "some-task") to CommandLineOptions(levelOfParallelism = 900, taskName = "some-task"),
-            listOf("-p=900", "some-task") to CommandLineOptions(levelOfParallelism = 900, taskName = "some-task"),
-            listOf("--no-cleanup-after-failure", "some-task") to CommandLineOptions(disableCleanupAfterFailure = true, taskName = "some-task"),
-            listOf("--no-proxy-vars", "some-task") to CommandLineOptions(dontPropagateProxyEnvironmentVariables = true, taskName = "some-task"),
+            listOf("--help") to CommandLineOptions(showHelp = true, dockerHost = defaultDockerHost),
+            listOf("--help", "some-task") to CommandLineOptions(showHelp = true, dockerHost = defaultDockerHost),
+            listOf("--version") to CommandLineOptions(showVersionInfo = true, dockerHost = defaultDockerHost),
+            listOf("--version", "some-task") to CommandLineOptions(showVersionInfo = true, dockerHost = defaultDockerHost),
+            listOf("--list-tasks") to CommandLineOptions(listTasks = true, dockerHost = defaultDockerHost),
+            listOf("--list-tasks", "some-task") to CommandLineOptions(listTasks = true, dockerHost = defaultDockerHost),
+            listOf("--upgrade") to CommandLineOptions(runUpgrade = true, dockerHost = defaultDockerHost),
+            listOf("--upgrade", "some-task") to CommandLineOptions(runUpgrade = true, dockerHost = defaultDockerHost),
+            listOf("-f=somefile.yml", "some-task") to CommandLineOptions(configurationFileName = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task", dockerHost = defaultDockerHost),
+            listOf("--config-file=somefile.yml", "some-task") to CommandLineOptions(configurationFileName = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task", dockerHost = defaultDockerHost),
+            listOf("--log-file=somefile.log", "some-task") to CommandLineOptions(logFileName = fileSystem.getPath("/resolved/somefile.log"), taskName = "some-task", dockerHost = defaultDockerHost),
+            listOf("--output=simple", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Simple, taskName = "some-task", dockerHost = defaultDockerHost),
+            listOf("--output=quiet", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Quiet, taskName = "some-task", dockerHost = defaultDockerHost),
+            listOf("--output=fancy", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Fancy, taskName = "some-task", dockerHost = defaultDockerHost),
+            listOf("--no-color", "some-task") to CommandLineOptions(disableColorOutput = true, taskName = "some-task", dockerHost = defaultDockerHost),
+            listOf("--no-update-notification", "some-task") to CommandLineOptions(disableUpdateNotification = true, taskName = "some-task", dockerHost = defaultDockerHost),
+            listOf("--level-of-parallelism=900", "some-task") to CommandLineOptions(levelOfParallelism = 900, taskName = "some-task", dockerHost = defaultDockerHost),
+            listOf("-p=900", "some-task") to CommandLineOptions(levelOfParallelism = 900, taskName = "some-task", dockerHost = defaultDockerHost),
+            listOf("--no-cleanup-after-failure", "some-task") to CommandLineOptions(disableCleanupAfterFailure = true, taskName = "some-task", dockerHost = defaultDockerHost),
+            listOf("--no-proxy-vars", "some-task") to CommandLineOptions(dontPropagateProxyEnvironmentVariables = true, taskName = "some-task", dockerHost = defaultDockerHost),
             listOf("--docker-host=some-host", "some-task") to CommandLineOptions(dockerHost = "some-host", taskName = "some-task")
         ).forEach { args, expectedResult ->
             given("the arguments $args") {
                 on("parsing the command line") {
-                    val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory).parse(args)
+                    val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(args)
 
                     it("returns a set of options with the expected options populated") {
                         assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(expectedResult)))

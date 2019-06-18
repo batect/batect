@@ -14,11 +14,19 @@
    limitations under the License.
 */
 
-package batect.os
+package batect.docker
 
-enum class OperatingSystem {
-    Linux,
-    Mac,
-    Windows,
-    Other
+import batect.os.OperatingSystem
+import batect.os.SystemInfo
+
+class DockerHttpConfigDefaults(
+    private val systemInfo: SystemInfo
+) {
+    val defaultDockerHost by lazy {
+        when (systemInfo.operatingSystem) {
+            OperatingSystem.Mac, OperatingSystem.Linux -> "unix:///var/run/docker.sock"
+            OperatingSystem.Windows -> "npipe:////./pipe/docker_engine"
+            else -> throw IllegalArgumentException("Unknown operating system.")
+        }
+    }
 }

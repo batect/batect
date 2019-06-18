@@ -23,13 +23,24 @@ import kotlin.reflect.KProperty
 private fun <T : Any> LifecycleAware.produceNonNullValueForEachTest(description: String, scope: ValueScope, creator: () -> T): ReadOnlyProperty<Any?, T> {
     val property = object : ReadOnlyProperty<Any?, T> {
         private var value: T? = null
+        private var exceptionThrown: Throwable? = null
 
         fun createValue() {
-            value = creator()
+            try {
+                value = creator()
+                exceptionThrown = null
+            } catch (t: Throwable) {
+                value = null
+                exceptionThrown = t
+            }
         }
 
         override fun getValue(thisRef: Any?, property: KProperty<*>): T {
             if (value == null) {
+                if (exceptionThrown != null) {
+                    throw IllegalStateException("Value '${property.name}' created with $description could not be initialised.", exceptionThrown)
+                }
+
                 throw IllegalStateException("Value '${property.name}' created with $description has not been initialised (are you accessing it outside of a '${scope.beforeEachFunctionName}' or 'it' block?)")
             }
 
@@ -54,14 +65,26 @@ private fun <T : Any?> LifecycleAware.produceNullableValueForEachTest(descriptio
     val property = object : ReadOnlyProperty<Any?, T?> {
         private var valueInitialised = false
         private var value: T? = null
+        private var exceptionThrown: Throwable? = null
 
         fun createValue() {
-            value = creator()
-            valueInitialised = true
+            try {
+                value = creator()
+                valueInitialised = true
+                exceptionThrown = null
+            } catch (t: Throwable) {
+                value = null
+                valueInitialised = false
+                exceptionThrown = t
+            }
         }
 
         override fun getValue(thisRef: Any?, property: KProperty<*>): T? {
             if (!valueInitialised) {
+                if (exceptionThrown != null) {
+                    throw IllegalStateException("Value '${property.name}' created with $description could not be initialised.", exceptionThrown)
+                }
+
                 throw IllegalStateException("Value '${property.name}' created with $description has not been initialised (are you accessing it outside of a '${scope.beforeEachFunctionName}' or 'it' block?)")
             }
 

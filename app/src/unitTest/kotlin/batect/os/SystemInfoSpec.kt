@@ -106,6 +106,20 @@ object SystemInfoSpec : Spek({
                 }
             }
 
+            on("when running on Windows") {
+                beforeEachTest { systemProperties.setProperty("os.name", "Windows 10") }
+
+                val systemInfo by runForEachTest { SystemInfo(posix, systemProperties) }
+
+                it("returns that the operating system is Windows") {
+                    assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Windows))
+                }
+
+                it("returns that the operating system is not supported") {
+                    assertThat(systemInfo.isSupportedOperatingSystem, equalTo(false))
+                }
+            }
+
             on("when running on another operating system") {
                 beforeEachTest { systemProperties.setProperty("os.name", "Something else") }
 

@@ -14,11 +14,17 @@
    limitations under the License.
 */
 
-package batect.os
+package batect.os.windows.namedpipes
 
-enum class OperatingSystem {
-    Linux,
-    Mac,
-    Windows,
-    Other
+import batect.os.windows.WindowsNativeMethods
+import jnr.posix.HANDLE
+
+class NamedPipe(val handle: HANDLE, private val nativeMethods: WindowsNativeMethods) : AutoCloseable {
+    override fun close() = nativeMethods.closeNamedPipe(this)
+
+    fun write(buffer: ByteArray, offset: Int, length: Int) =
+        nativeMethods.writeToNamedPipe(this, buffer, offset, length)
+
+    fun read(buffer: ByteArray, offset: Int, maxLength: Int, timeoutInMilliseconds: Int): Int =
+        nativeMethods.readFromNamedPipe(this, buffer, offset, maxLength, timeoutInMilliseconds)
 }

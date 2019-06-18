@@ -22,7 +22,7 @@ import batect.cli.options.OptionsParsingResult
 import batect.cli.options.ValueConverters
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.cli.options.defaultvalues.LevelOfParallelismDefaultValueProvider
-import batect.docker.DockerHttpConfig
+import batect.docker.DockerHttpConfigDefaults
 import batect.os.PathResolverFactory
 import batect.ui.OutputStyle
 import java.nio.file.Path
@@ -30,7 +30,8 @@ import java.nio.file.Paths
 
 class CommandLineOptionsParser(
     pathResolverFactory: PathResolverFactory,
-    environmentVariableDefaultValueProviderFactory: EnvironmentVariableDefaultValueProviderFactory
+    environmentVariableDefaultValueProviderFactory: EnvironmentVariableDefaultValueProviderFactory,
+    dockerHttpConfigDefaults: DockerHttpConfigDefaults
 ) : OptionParserContainer {
     override val optionParser: OptionParser = OptionParser()
 
@@ -82,8 +83,8 @@ class CommandLineOptionsParser(
 
     private val dockerHost: String by valueOption(
         "docker-host",
-        "Docker host to use, in the format 'unix:///var/run/docker.sock', 'tcp://1.2.3.4:5678' or 'http://1.2.3.4:5678'.",
-        environmentVariableDefaultValueProviderFactory.create("DOCKER_HOST", DockerHttpConfig.defaultDockerHost)
+        "Docker host to use, in the format 'unix:///var/run/docker.sock', 'npipe:////./pipe/docker_engine', 'tcp://1.2.3.4:5678' or 'http://1.2.3.4:5678'.",
+        environmentVariableDefaultValueProviderFactory.create("DOCKER_HOST", dockerHttpConfigDefaults.defaultDockerHost)
     )
 
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {

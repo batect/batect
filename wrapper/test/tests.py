@@ -56,6 +56,26 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertIn("404 File not found", result.stdout.decode())
         self.assertNotEqual(result.returncode, 0)
 
+    def test_download_is_not_quiet(self):
+        result = self.run_script([], download_url=self.default_download_url, quiet_download="false")
+        result_output = result.stdout.decode()
+
+        self.assertIn("Downloading batect", result_output)
+        self.assertIn("BATECT_WRAPPER_SCRIPT_DIR is: {}\n".format(self.get_script_dir()), result_output)
+        self.assertIn("HOSTNAME is: {}\n".format(socket.gethostname()), result_output)
+        self.assertIn("#", result_output)
+        self.assertEqual(result.returncode, 0)
+
+    def test_download_is_quiet(self):
+        result = self.run_script([], download_url=self.default_download_url, quiet_download="true")
+        result_output = result.stdout.decode()
+
+        self.assertIn("Downloading batect", result_output)
+        self.assertIn("BATECT_WRAPPER_SCRIPT_DIR is: {}\n".format(self.get_script_dir()), result_output)
+        self.assertIn("HOSTNAME is: {}\n".format(socket.gethostname()), result_output)
+        self.assertNotIn("#", result_output)
+        self.assertEqual(result.returncode, 0)
+
     def test_no_curl(self):
         path_dir = self.create_limited_path(["/usr/bin/basename", "/usr/bin/dirname"])
 
@@ -111,11 +131,12 @@ class WrapperScriptTests(unittest.TestCase):
 
         return path_dir + ":/bin"
 
-    def run_script(self, args, download_url=default_download_url, path=os.environ["PATH"]):
+    def run_script(self, args, download_url=default_download_url, path=os.environ["PATH"], quiet_download="false"):
         env = {
             "BATECT_CACHE_DIR": self.cache_dir,
             "BATECT_DOWNLOAD_URL": download_url,
-            "PATH": path
+            "PATH": path,
+            "BATECT_QUIET_DOWNLOAD": quiet_download
         }
 
         path = self.get_script_path()

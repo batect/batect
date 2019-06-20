@@ -36,7 +36,13 @@
         echo "Downloading batect version $VERSION from $DOWNLOAD_URL..."
         mkdir -p "$CACHE_DIR"
         temp_file=$(mktemp)
-        curl -# --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
+
+        if [[ $BATECT_QUIET_DOWNLOAD == 'true' ]]; then
+            curl --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
+        else
+            curl -# --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
+        fi
+
         mv "$temp_file" "$JAR_PATH"
     }
 

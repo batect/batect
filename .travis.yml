@@ -29,6 +29,13 @@ jobs:
         - if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_REPO_SLUG" = "charleskorn/batect" ]; then gsutil -m rsync -r build/release gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/release; fi
         - if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_REPO_SLUG" = "charleskorn/batect" ]; then gsutil -m rsync -r docs/build/docs gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/docs/build/docs; fi
 
+    - stage: Build and unit test
+      name: Windows
+      os: windows
+      language: shell # Travis' Windows images don't yet support Java.
+      before_install: choco install jdk8
+      script: ./gradlew build check jacocoTestReport assembleRelease && bash <(curl -s https://codecov.io/bash) -c -F windows
+
     - stage: Integration and journey test
       name: Test against latest Docker
       dist: xenial

@@ -33,7 +33,7 @@ jobs:
       name: Windows
       os: windows
       language: shell # Travis' Windows images don't yet support Java.
-      before_install: choco install jdk8
+      before_install: choco install jdk8 && choco install git.install --params "/GitAndUnixToolsOnPath"
       install: export JAVA_HOME=$(reg query "HKLM\SOFTWARE\JavaSoft\Java Development Kit\1.8" //v JavaHome | head -n3 | tail -n1 | cut -c27-)
       script: ./gradlew build check jacocoTestReport assembleRelease && bash <(curl -s https://codecov.io/bash) -c -F windows
 

@@ -39,6 +39,7 @@ import com.nhaarman.mockitokotlin2.whenever
 import jnr.constants.platform.windows.LastError
 import jnr.ffi.Pointer
 import jnr.ffi.Runtime
+import jnr.ffi.byref.IntByReference
 import jnr.ffi.byref.NativeLongByReference
 import jnr.posix.HANDLE
 import jnr.posix.POSIX
@@ -128,7 +129,7 @@ object WindowsNativeMethodsSpec : Spek({
                 beforeEachTest {
                     whenever(win32.GetUserNameW(any(), any())).doAnswer { invocation ->
                         val buffer = invocation.arguments[0] as ByteBuffer
-                        val length = invocation.arguments[1] as NativeLongByReference
+                        val length = invocation.arguments[1] as IntByReference
                         val bytes = WindowsHelpers.toWString("awesome-user")
 
                         buffer.put(bytes)
@@ -165,7 +166,7 @@ private fun withError(error: LastError): Matcher<WindowsNativeMethodException> {
     return has(WindowsNativeMethodException::error, equalTo(error))
 }
 
-private fun NativeLongByReference.set(value: Byte, runtime: Runtime) {
+private fun IntByReference.set(value: Byte, runtime: Runtime) {
     val memory = ByteBuffer.wrap(byteArrayOf(0, 0, 0, value))
 
     this.fromNative(runtime, Pointer.wrap(runtime, memory), 0)

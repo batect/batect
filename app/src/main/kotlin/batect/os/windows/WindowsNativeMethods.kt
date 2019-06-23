@@ -34,6 +34,7 @@ import jnr.ffi.annotations.Out
 import jnr.ffi.annotations.SaveError
 import jnr.ffi.annotations.StdCall
 import jnr.ffi.annotations.Transient
+import jnr.ffi.byref.IntByReference
 import jnr.ffi.byref.NativeLongByReference
 import jnr.ffi.mapper.TypeMapper
 import jnr.posix.HANDLE
@@ -92,7 +93,7 @@ class WindowsNativeMethods(
         val bytesPerCharacter = 2
         val maxLengthInCharacters = 256
         val buffer = ByteArray(maxLengthInCharacters * bytesPerCharacter)
-        val length = NativeLongByReference(maxLengthInCharacters.toLong())
+        val length = IntByReference(maxLengthInCharacters)
 
         val succeeded = win32.GetUserNameW(ByteBuffer.wrap(buffer), length)
 
@@ -280,7 +281,7 @@ class WindowsNativeMethods(
         fun GetConsoleScreenBufferInfo(@In hConsoleOutput: HANDLE, @Out @Transient lpConsoleScreenBufferInfo: ConsoleScreenBufferInfo): Boolean
 
         @SaveError
-        fun GetUserNameW(@Out lpBuffer: ByteBuffer, @In @Out pcbBuffer: NativeLongByReference): Boolean
+        fun GetUserNameW(@Out lpBuffer: ByteBuffer, @In @Out pcbBuffer: IntByReference): Boolean
 
         @StdCall
         fun CreateFileW(

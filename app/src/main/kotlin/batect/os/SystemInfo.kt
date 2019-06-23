@@ -44,7 +44,7 @@ class SystemInfo(private val nativeMethods: NativeMethods, private val systemPro
         systemProperties.getProperty("java.io.tmpdir")
     }
 
-    val isSupportedOperatingSystem = operatingSystem in setOf(OperatingSystem.Mac, OperatingSystem.Linux)
+    val isSupportedOperatingSystem = operatingSystem in setOf(OperatingSystem.Mac, OperatingSystem.Linux, OperatingSystem.Windows)
 
     val userName: String by lazy { nativeMethods.getUserName() }
 }

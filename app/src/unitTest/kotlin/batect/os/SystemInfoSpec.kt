@@ -119,8 +119,8 @@ object SystemInfoSpec : Spek({
                     assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Windows))
                 }
 
-                it("returns that the operating system is not supported") {
-                    assertThat(systemInfo.isSupportedOperatingSystem, equalTo(false))
+                it("returns that the operating system is supported") {
+                    assertThat(systemInfo.isSupportedOperatingSystem, equalTo(true))
                 }
 
                 it("returns that the temporary directory is the value of the 'java.io.tmpdir' system property") {

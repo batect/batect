@@ -22,6 +22,7 @@ import batect.cli.CommandLineOptionsParsingResult
 import batect.cli.commands.CommandFactory
 import batect.logging.ApplicationInfoLogger
 import batect.logging.logger
+import batect.os.NativeMethods
 import batect.os.SystemInfo
 import batect.ui.Console
 import batect.ui.text.Text
@@ -51,6 +52,7 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
     private val commandLineOptionsParser: CommandLineOptionsParser = instance()
     private val commandFactory: CommandFactory = instance()
     private val systemInfo: SystemInfo = instance()
+    private val nativeMethods: NativeMethods = instance()
 
     fun run(args: Iterable<String>): Int {
         if (!systemInfo.isSupportedOperatingSystem) {
@@ -72,6 +74,8 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
         try {
             val applicationInfoLogger = extendedKodein.instance<ApplicationInfoLogger>()
             applicationInfoLogger.logApplicationInfo(args)
+
+            nativeMethods.enableConsoleEscapeSequences()
 
             val command = commandFactory.createCommand(options, extendedKodein)
             return command.run()

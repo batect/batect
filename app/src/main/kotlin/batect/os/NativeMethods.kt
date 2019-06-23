@@ -20,6 +20,7 @@ import batect.ui.Dimensions
 
 interface NativeMethods {
     fun getConsoleDimensions(): Dimensions
+    fun enableConsoleEscapeSequences()
 
     fun getUserId(): PossiblyUnsupportedValue<Int>
     fun getGroupId(): PossiblyUnsupportedValue<Int>

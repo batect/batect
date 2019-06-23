@@ -25,6 +25,7 @@ import batect.logging.ApplicationInfoLogger
 import batect.logging.Logger
 import batect.logging.LoggerFactory
 import batect.logging.Severity
+import batect.os.NativeMethods
 import batect.os.SystemInfo
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
@@ -60,6 +61,7 @@ object ApplicationSpec : Spek({
         val commandLineOptionsParser by createForEachTest { mock<CommandLineOptionsParser>() }
         val commandFactory by createForEachTest { mock<CommandFactory>() }
         val systemInfo by createForEachTest { mock<SystemInfo>() }
+        val nativeMethods by createForEachTest { mock<NativeMethods>() }
 
         val dependencies by createForEachTest {
             Kodein.direct {
@@ -67,6 +69,7 @@ object ApplicationSpec : Spek({
                 bind<CommandLineOptionsParser>() with instance(commandLineOptionsParser)
                 bind<CommandFactory>() with instance(commandFactory)
                 bind<SystemInfo>() with instance(systemInfo)
+                bind<NativeMethods>() with instance(nativeMethods)
             }
         }
 
@@ -126,9 +129,10 @@ object ApplicationSpec : Spek({
                             assertThat(exitCode, equalTo(123))
                         }
 
-                        it("logs information about the application before running the command") {
-                            inOrder(command, applicationInfoLogger) {
+                        it("logs information about the application and enables console escape sequences before running the command") {
+                            inOrder(command, applicationInfoLogger, nativeMethods) {
                                 verify(applicationInfoLogger).logApplicationInfo(args)
+                                verify(nativeMethods).enableConsoleEscapeSequences()
                                 verify(command).run()
                             }
                         }

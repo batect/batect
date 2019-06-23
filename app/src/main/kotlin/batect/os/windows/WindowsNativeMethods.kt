@@ -69,6 +69,11 @@ class WindowsNativeMethods(
 
     override fun getConsoleDimensions(): Dimensions {
         val console = win32.GetStdHandle(WindowsLibC.STD_OUTPUT_HANDLE)
+
+        if (!console.isValid) {
+            throwNativeMethodFailed(Win32::GetStdHandle)
+        }
+
         val info = ConsoleScreenBufferInfo(runtime)
         val succeeded = win32.GetConsoleScreenBufferInfo(console, info)
 
@@ -87,6 +92,26 @@ class WindowsNativeMethods(
         val width = info.srWindow.right.intValue() - info.srWindow.left.intValue() + 1
 
         return Dimensions(height, width)
+    }
+
+    override fun enableConsoleEscapeSequences() {
+        val console = win32.GetStdHandle(WindowsLibC.STD_OUTPUT_HANDLE)
+
+        if (!console.isValid) {
+            throwNativeMethodFailed(Win32::GetStdHandle)
+        }
+
+        val currentConsoleMode = IntByReference()
+
+        if (!win32.GetConsoleMode(console, currentConsoleMode)) {
+            throwNativeMethodFailed(Win32::GetConsoleMode)
+        }
+
+        val newConsoleMode = currentConsoleMode.toInt() or ENABLE_VIRTUAL_TERMINAL_PROCESSING or DISABLE_NEWLINE_AUTO_RETURN
+
+        if (!win32.SetConsoleMode(console, newConsoleMode)) {
+            throwNativeMethodFailed(Win32::SetConsoleMode)
+        }
     }
 
     override fun getUserName(): String {
@@ -285,6 +310,14 @@ class WindowsNativeMethods(
         fun GetConsoleScreenBufferInfo(@In hConsoleOutput: HANDLE, @Out @Transient lpConsoleScreenBufferInfo: ConsoleScreenBufferInfo): Boolean
 
         @SaveError
+        @StdCall
+        fun SetConsoleMode(@In hConsoleHandle: HANDLE, @In dwMode: Int): Boolean
+
+        @SaveError
+        @StdCall
+        fun GetConsoleMode(@In hConsoleHandle: HANDLE, @Out lpMode: IntByReference): Boolean
+
+        @SaveError
         fun GetUserNameW(@Out lpBuffer: ByteBuffer, @In @Out pcbBuffer: IntByReference): Boolean
 
         @StdCall
@@ -361,6 +394,9 @@ class WindowsNativeMethods(
         private const val WAIT_ABANDONED: Int = 0x00000080
         private const val WAIT_OBJECT_0: Int = 0x00000000
         private const val WAIT_TIMEOUT: Int = 0x00000102
+
+        private const val ENABLE_VIRTUAL_TERMINAL_PROCESSING: Int = 0x4
+        private const val DISABLE_NEWLINE_AUTO_RETURN: Int = 0x8
 
         // HACK: This is a hack to workaround the fact that POSIXTypeMapper isn't public, but we
         // need it to translate a number of different Win32 types to their JVM equivalents.

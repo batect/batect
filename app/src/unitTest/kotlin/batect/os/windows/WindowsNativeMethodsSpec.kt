@@ -35,6 +35,7 @@ import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import jnr.constants.platform.windows.LastError
 import jnr.ffi.Pointer
@@ -56,57 +57,76 @@ object WindowsNativeMethodsSpec : Spek({
         val nativeMethods by createForEachTest { WindowsNativeMethods(posix, win32, runtime) }
 
         describe("getting the console dimensions") {
-            val stdoutHandle = mock<HANDLE>()
+            given("getting the handle for stdout succeeds") {
+                val stdoutHandle = mock<HANDLE> {
+                    on { isValid } doReturn true
+                }
 
-            beforeEachTest { whenever(win32.GetStdHandle(WindowsLibC.STD_OUTPUT_HANDLE)).thenReturn(stdoutHandle) }
+                beforeEachTest { whenever(win32.GetStdHandle(WindowsLibC.STD_OUTPUT_HANDLE)).thenReturn(stdoutHandle) }
 
-            on("the call to GetConsoleScreenBufferInfo succeeding") {
-                beforeEachTest {
-                    whenever(win32.GetConsoleScreenBufferInfo(eq(stdoutHandle), any())).thenAnswer { invocation ->
-                        val info = invocation.arguments[1] as WindowsNativeMethods.ConsoleScreenBufferInfo
+                on("the call to GetConsoleScreenBufferInfo succeeding") {
+                    beforeEachTest {
+                        whenever(win32.GetConsoleScreenBufferInfo(eq(stdoutHandle), any())).thenAnswer { invocation ->
+                            val info = invocation.arguments[1] as WindowsNativeMethods.ConsoleScreenBufferInfo
 
-                        info.srWindow.top.set(0)
-                        info.srWindow.bottom.set(100)
-                        info.srWindow.left.set(10)
-                        info.srWindow.right.set(20)
+                            info.srWindow.top.set(0)
+                            info.srWindow.bottom.set(100)
+                            info.srWindow.left.set(10)
+                            info.srWindow.right.set(20)
 
-                        true
+                            true
+                        }
+                    }
+
+                    val dimensions by runForEachTest { nativeMethods.getConsoleDimensions() }
+
+                    it("returns a set of dimensions with the expected values") {
+                        assertThat(dimensions, equalTo(Dimensions(101, 11)))
                     }
                 }
 
-                val dimensions by runForEachTest { nativeMethods.getConsoleDimensions() }
+                on("the call to GetConsoleScreenBufferInfo failing") {
+                    beforeEachTest {
+                        whenever(win32.GetConsoleScreenBufferInfo(eq(stdoutHandle), any())).thenReturn(false)
+                    }
 
-                it("returns a set of dimensions with the expected values") {
-                    assertThat(dimensions, equalTo(Dimensions(101, 11)))
+                    given("it failed because stdout is not connected to a console") {
+                        beforeEachTest {
+                            whenever(posix.errno()).thenReturn(LastError.ERROR_INVALID_HANDLE.value())
+                        }
+
+                        it("throws an appropriate exception") {
+                            assertThat({ nativeMethods.getConsoleDimensions() }, throws<NoConsoleException>())
+                        }
+                    }
+
+                    given("it failed for another reason") {
+                        beforeEachTest {
+                            whenever(posix.errno()).thenReturn(LastError.ERROR_FILE_NOT_FOUND.value())
+                        }
+
+                        it("throws an appropriate exception") {
+                            assertThat(
+                                { nativeMethods.getConsoleDimensions() },
+                                throws<WindowsNativeMethodException>(withMethod("GetConsoleScreenBufferInfo") and withError(LastError.ERROR_FILE_NOT_FOUND))
+                            )
+                        }
+                    }
                 }
             }
 
-            on("the call to GetConsoleScreenBufferInfo failing") {
+            given("getting the handle for stdout fails") {
+                val stdoutHandle = mock<HANDLE> {
+                    on { isValid } doReturn false
+                }
+
                 beforeEachTest {
-                    whenever(win32.GetConsoleScreenBufferInfo(eq(stdoutHandle), any())).thenReturn(false)
+                    whenever(win32.GetStdHandle(WindowsLibC.STD_OUTPUT_HANDLE)).thenReturn(stdoutHandle)
+                    whenever(posix.errno()).doReturn(LastError.ERROR_FILE_NOT_FOUND.intValue())
                 }
 
-                given("it failed because stdout is not connected to a console") {
-                    beforeEachTest {
-                        whenever(posix.errno()).thenReturn(LastError.ERROR_INVALID_HANDLE.value())
-                    }
-
-                    it("throws an appropriate exception") {
-                        assertThat({ nativeMethods.getConsoleDimensions() }, throws<NoConsoleException>())
-                    }
-                }
-
-                given("it failed for another reason") {
-                    beforeEachTest {
-                        whenever(posix.errno()).thenReturn(LastError.ERROR_FILE_NOT_FOUND.value())
-                    }
-
-                    it("throws an appropriate exception") {
-                        assertThat(
-                            { nativeMethods.getConsoleDimensions() },
-                            throws<WindowsNativeMethodException>(withMethod("GetConsoleScreenBufferInfo") and withError(LastError.ERROR_FILE_NOT_FOUND))
-                        )
-                    }
+                it("throws an appropriate exception") {
+                    assertThat({ nativeMethods.getConsoleDimensions() }, throws(withMethod("GetStdHandle") and withError(LastError.ERROR_FILE_NOT_FOUND)))
                 }
             }
         }
@@ -150,7 +170,76 @@ object WindowsNativeMethodsSpec : Spek({
                 }
 
                 it("throws an appropriate exception") {
-                    assertThat({ nativeMethods.getUserName() }, throws<WindowsNativeMethodException>(withMethod("GetUserNameW") and withError(LastError.ERROR_FILE_NOT_FOUND)))
+                    assertThat({ nativeMethods.getUserName() }, throws(withMethod("GetUserNameW") and withError(LastError.ERROR_FILE_NOT_FOUND)))
+                }
+            }
+        }
+
+        describe("enabling console escape sequences") {
+            given("getting the handle for stdout succeeds") {
+                val stdoutHandle = mock<HANDLE> {
+                    on { isValid } doReturn true
+                }
+
+                beforeEachTest { whenever(win32.GetStdHandle(WindowsLibC.STD_OUTPUT_HANDLE)).thenReturn(stdoutHandle) }
+
+                given("getting the current console mode succeeds") {
+                    val existingConsoleMode = 0x00000003
+
+                    beforeEachTest {
+                        whenever(win32.GetConsoleMode(any(), any())).thenAnswer { invocation ->
+                            val mode = invocation.arguments[1] as IntByReference
+                            mode.set(existingConsoleMode.toByte(), runtime)
+
+                            true
+                        }
+                    }
+
+                    given("setting the current console mode succeeds") {
+                        beforeEachTest { whenever(win32.SetConsoleMode(any(), any())).thenReturn(true) }
+                        beforeEachTest { nativeMethods.enableConsoleEscapeSequences() }
+
+                        it("enables virtual terminal processing and new line auto return") {
+                            verify(win32).SetConsoleMode(stdoutHandle, existingConsoleMode or 0x4 or 0x8)
+                        }
+                    }
+
+                    given("setting the current console mode fails") {
+                        beforeEachTest {
+                            whenever(win32.SetConsoleMode(any(), any())).thenReturn(false)
+                            whenever(posix.errno()).doReturn(LastError.ERROR_FILE_NOT_FOUND.intValue())
+                        }
+
+                        it("throws an appropriate exception") {
+                            assertThat({ nativeMethods.enableConsoleEscapeSequences() }, throws(withMethod("SetConsoleMode") and withError(LastError.ERROR_FILE_NOT_FOUND)))
+                        }
+                    }
+                }
+
+                given("getting the current console mode fails") {
+                    beforeEachTest {
+                        whenever(win32.GetConsoleMode(any(), any())).thenReturn(false)
+                        whenever(posix.errno()).doReturn(LastError.ERROR_FILE_NOT_FOUND.intValue())
+                    }
+
+                    it("throws an appropriate exception") {
+                        assertThat({ nativeMethods.enableConsoleEscapeSequences() }, throws(withMethod("GetConsoleMode") and withError(LastError.ERROR_FILE_NOT_FOUND)))
+                    }
+                }
+            }
+
+            given("getting the handle for stdout fails") {
+                val stdoutHandle = mock<HANDLE> {
+                    on { isValid } doReturn false
+                }
+
+                beforeEachTest {
+                    whenever(win32.GetStdHandle(WindowsLibC.STD_OUTPUT_HANDLE)).thenReturn(stdoutHandle)
+                    whenever(posix.errno()).doReturn(LastError.ERROR_FILE_NOT_FOUND.intValue())
+                }
+
+                it("throws an appropriate exception") {
+                    assertThat({ nativeMethods.enableConsoleEscapeSequences() }, throws(withMethod("GetStdHandle") and withError(LastError.ERROR_FILE_NOT_FOUND)))
                 }
             }
         }

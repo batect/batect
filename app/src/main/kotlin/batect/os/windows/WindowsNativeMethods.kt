@@ -225,6 +225,10 @@ class WindowsNativeMethods(
         val bytesTransferred = NativeLongByReference()
 
         if (!win32.GetOverlappedResult(pipe.handle, overlapped, bytesTransferred, false)) {
+            if (posix.errno() == ERROR_OPERATION_ABORTED) {
+                return 0
+            }
+
             throwNativeMethodFailed(Win32::GetOverlappedResult)
         }
 
@@ -351,6 +355,7 @@ class WindowsNativeMethods(
 
         private const val ERROR_FILE_NOT_FOUND: Int = 0x00000002
         private const val ERROR_IO_PENDING: Int = 0x000003E5
+        private const val ERROR_OPERATION_ABORTED: Int = 0x000003E3
         private const val ERROR_NOT_FOUND: Int = 0x00000490
 
         private const val WAIT_ABANDONED: Int = 0x00000080

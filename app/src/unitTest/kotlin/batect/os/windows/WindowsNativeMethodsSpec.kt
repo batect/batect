@@ -40,7 +40,6 @@ import jnr.constants.platform.windows.LastError
 import jnr.ffi.Pointer
 import jnr.ffi.Runtime
 import jnr.ffi.byref.IntByReference
-import jnr.ffi.byref.NativeLongByReference
 import jnr.posix.HANDLE
 import jnr.posix.POSIX
 import jnr.posix.WindowsLibC

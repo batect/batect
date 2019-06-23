@@ -16,10 +16,9 @@
 
 package batect.os
 
-import jnr.posix.POSIX
 import java.util.Properties
 
-class SystemInfo(private val posix: POSIX, private val systemProperties: Properties = System.getProperties()) {
+class SystemInfo(private val nativeMethods: NativeMethods, private val systemProperties: Properties = System.getProperties()) {
     private val jvmVendor = systemProperties.getProperty("java.vm.vendor")
     private val jvmName = systemProperties.getProperty("java.vm.name")
     private val javaVersion = systemProperties.getProperty("java.version")
@@ -28,10 +27,6 @@ class SystemInfo(private val posix: POSIX, private val systemProperties: Propert
     private val osArch = systemProperties.getProperty("os.arch")
     private val rawOSVersion = systemProperties.getProperty("os.version")
 
-    val jvmVersion = "$jvmVendor $jvmName $javaVersion"
-    val osVersion = "$osName $rawOSVersion ($osArch)"
-    val homeDirectory: String = systemProperties.getProperty("user.home")
-
     val operatingSystem = when {
         osName.equals("Mac OS X", ignoreCase = true) -> OperatingSystem.Mac
         osName.equals("Linux", ignoreCase = true) -> OperatingSystem.Linux
@@ -39,10 +34,17 @@ class SystemInfo(private val posix: POSIX, private val systemProperties: Propert
         else -> OperatingSystem.Other
     }
 
+    val jvmVersion = "$jvmVendor $jvmName $javaVersion"
+    val osVersion = "$osName $rawOSVersion ($osArch)"
+    val homeDirectory: String = systemProperties.getProperty("user.home")
+
+    val tempDirectory: String = if (operatingSystem in setOf(OperatingSystem.Mac, OperatingSystem.Linux)) {
+        "/tmp"
+    } else {
+        systemProperties.getProperty("java.io.tmpdir")
+    }
+
     val isSupportedOperatingSystem = operatingSystem in setOf(OperatingSystem.Mac, OperatingSystem.Linux)
 
-    val userId: Int by lazy { posix.geteuid() }
-    val userName: String by lazy { posix.getpwuid(userId).loginName }
-    val groupId: Int by lazy { posix.getegid() }
-    val groupName: String by lazy { posix.getgrgid(groupId).name }
+    val userName: String by lazy { nativeMethods.getUserName() }
 }

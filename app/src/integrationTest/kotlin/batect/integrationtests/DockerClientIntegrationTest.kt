@@ -44,6 +44,7 @@ import batect.docker.run.ContainerKiller
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.logging.Logger
+import batect.os.NativeMethods
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.os.SignalListener
@@ -80,8 +81,8 @@ object DockerClientIntegrationTest : Spek({
         val basicTestImagePath by createForGroup { testImagesPath.resolve("basic-image") }
 
         val posix by createForGroup { POSIXFactory.getNativePOSIX() }
-        val systemInfo by createForGroup { SystemInfo(posix) }
-        val client by createForGroup { createClient(posix, systemInfo) }
+        val nativeMethods by createForGroup { getNativeMethodsForPlatform(posix) }
+        val client by createForGroup { createClient(posix, nativeMethods) }
 
         fun creationRequestForContainer(image: DockerImage, network: DockerNetwork, command: Iterable<String>, volumeMounts: Set<VolumeMount> = emptySet(), portMappings: Set<PortMapping> = emptySet(), userAndGroup: UserAndGroup? = null): DockerContainerCreationRequest {
             return DockerContainerCreationRequest(
@@ -107,7 +108,7 @@ object DockerClientIntegrationTest : Spek({
             val fileToCreateParent = fileToCreate.parent.toAbsolutePath()
             val volumeMount = VolumeMount(fileToCreateParent.toString(), fileToCreateParent.toString(), null)
 
-            val userAndGroup = UserAndGroup(systemInfo.userId, systemInfo.groupId)
+            val userAndGroup = UserAndGroup(nativeMethods.getUserId().getValueOrDefault(1234), nativeMethods.getGroupId().getValueOrDefault(1234))
 
             return creationRequestForContainer(image, network, command, volumeMounts = setOf(volumeMount), userAndGroup = userAndGroup)
         }
@@ -286,19 +287,13 @@ object DockerClientIntegrationTest : Spek({
     }
 })
 
-private fun createClient(posix: POSIX, systemInfo: SystemInfo): DockerClient {
+private fun createClient(posix: POSIX, nativeMethods: NativeMethods): DockerClient {
     val logger = mock<Logger>()
     val processRunner = ProcessRunner(logger)
+    val systemInfo = SystemInfo(nativeMethods)
     val httpDefaults = DockerHttpConfigDefaults(systemInfo)
     val httpConfig = DockerHttpConfig(OkHttpClient(), httpDefaults.defaultDockerHost, systemInfo)
     val api = DockerAPI(httpConfig, logger)
-
-    val nativeMethods = if (Platform.getNativePlatform().os == Platform.OS.WINDOWS) {
-        WindowsNativeMethods(posix)
-    } else {
-        UnixNativeMethods(posix)
-    }
-
     val consoleInfo = ConsoleInfo(posix, processRunner, logger)
     val credentialsConfigurationFile = DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger)
     val credentialsProvider = DockerRegistryCredentialsProvider(DockerRegistryDomainResolver(), DockerRegistryIndexResolver(), credentialsConfigurationFile)
@@ -313,6 +308,14 @@ private fun createClient(posix: POSIX, systemInfo: SystemInfo): DockerClient {
     val ttyManager = ContainerTTYManager(api, consoleInfo, consoleDimensions, logger)
 
     return DockerClient(api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, streamer, killer, ttyManager, logger)
+}
+
+private fun getNativeMethodsForPlatform(posix: POSIX): NativeMethods {
+    return if (Platform.getNativePlatform().os == Platform.OS.WINDOWS) {
+        WindowsNativeMethods(posix)
+    } else {
+        UnixNativeMethods(posix)
+    }
 }
 
 private fun getRandomTemporaryFilePath(): Path {

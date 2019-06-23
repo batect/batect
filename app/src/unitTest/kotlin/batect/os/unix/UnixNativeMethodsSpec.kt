@@ -18,6 +18,7 @@ package batect.os.unix
 
 import batect.os.NativeMethodException
 import batect.os.NoConsoleException
+import batect.os.PossiblyUnsupportedValue
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -31,6 +32,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
@@ -38,7 +40,9 @@ import com.nhaarman.mockitokotlin2.whenever
 import jnr.constants.platform.Errno
 import jnr.ffi.Platform
 import jnr.ffi.Runtime
+import jnr.posix.Group
 import jnr.posix.POSIX
+import jnr.posix.Passwd
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -135,6 +139,39 @@ object UnixNativeMethodsSpec : Spek({
                         assertThat({ nativeMethods.getConsoleDimensions() }, throws<UnsupportedOperationException>(withMessage("The platform WINDOWS is not supported.")))
                     }
                 }
+            }
+        }
+
+        describe("getting the current user and group information") {
+            val userInfo = mock<Passwd> {
+                on { loginName } doReturn "awesome-user"
+            }
+
+            val groupInfo = mock<Group> {
+                on { name } doReturn "awesome-group"
+            }
+
+            beforeEachTest {
+                whenever(posix.geteuid()).doReturn(123)
+                whenever(posix.getpwuid(123)).doReturn(userInfo)
+                whenever(posix.getegid()).doReturn(456)
+                whenever(posix.getgrgid(456)).doReturn(groupInfo)
+            }
+
+            it("returns the user ID reported by the system API") {
+                assertThat(nativeMethods.getUserId(), equalTo(PossiblyUnsupportedValue.Supported(123)))
+            }
+
+            it("returns the user name reported by the system API") {
+                assertThat(nativeMethods.getUserName(), equalTo("awesome-user"))
+            }
+
+            it("returns the group ID reported by the system API") {
+                assertThat(nativeMethods.getGroupId(), equalTo(PossiblyUnsupportedValue.Supported(456)))
+            }
+
+            it("returns the group name reported by the system API") {
+                assertThat(nativeMethods.getGroupName(), equalTo(PossiblyUnsupportedValue.Supported("awesome-group")))
             }
         }
     }

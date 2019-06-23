@@ -23,6 +23,9 @@ import batect.docker.UserAndGroup
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TemporaryDirectoryCreatedEvent
 import batect.execution.model.events.TemporaryFileCreatedEvent
+import batect.os.NativeMethods
+import batect.os.OperatingSystem
+import batect.os.PossiblyUnsupportedValue
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
@@ -39,6 +42,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isEmpty
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
@@ -54,24 +58,30 @@ import java.nio.file.attribute.PosixFileAttributes
 object RunAsCurrentUserConfigurationProviderSpec : Spek({
     describe("a 'run as current user' configuration provider") {
         val eventSink by createForEachTest { mock<TaskEventSink>() }
-        val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix().toBuilder().setAttributeViews("posix").build()) }
-
-        val directoryThatExists = "/existing/directory"
-        val fileThatExists = "/existing/file"
-        val directoryThatDoesNotExist = "/new/directory"
-        val containerMounts = setOf(
-            VolumeMount(directoryThatExists, "/container/existing-directory", null),
-            VolumeMount(fileThatExists, "/container/existing-file", null),
-            VolumeMount(directoryThatDoesNotExist, "/container/new-directory", null)
-        )
-
-        beforeEachTest {
-            Files.createDirectories(fileSystem.getPath("/tmp"))
-            Files.createDirectories(fileSystem.getPath(directoryThatExists))
-            Files.createFile(fileSystem.getPath(fileThatExists))
+        val userNameCleaner by createForEachTest {
+            mock<UnixUserNameCleaner> {
+                on { clean(any()) } doAnswer { invocation -> "cleaned-${invocation.arguments[0]}" }
+            }
         }
 
         given("the container has 'run as current user' disabled") {
+            val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
+
+            val directoryThatExists = "/existing/directory"
+            val fileThatExists = "/existing/file"
+            val directoryThatDoesNotExist = "/new/directory"
+            val containerMounts = setOf(
+                VolumeMount(directoryThatExists, "/container/existing-directory", null),
+                VolumeMount(fileThatExists, "/container/existing-file", null),
+                VolumeMount(directoryThatDoesNotExist, "/container/new-directory", null)
+            )
+
+            beforeEachTest {
+                Files.createDirectories(fileSystem.getPath("/tmp"))
+                Files.createDirectories(fileSystem.getPath(directoryThatExists))
+                Files.createFile(fileSystem.getPath(fileThatExists))
+            }
+
             val container = Container(
                 "some-container",
                 imageSourceDoesNotMatter(),
@@ -79,8 +89,12 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
             )
 
-            val systemInfo = mock<SystemInfo>()
-            val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, fileSystem) }
+            val systemInfo = mock<SystemInfo> {
+                on { tempDirectory } doReturn "/tmp"
+            }
+
+            val nativeMethods = mock<NativeMethods>()
+            val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, userNameCleaner) }
 
             on("generating the configuration") {
                 val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
@@ -105,194 +119,367 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
         given("the container has 'run as current user' enabled") {
             val homeDirectory = "/home/some-user"
+            val runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsCurrentUser(homeDirectory)
 
-            val container = Container(
-                "some-container",
-                imageSourceDoesNotMatter(),
-                volumeMounts = containerMounts,
-                runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsCurrentUser(homeDirectory)
-            )
-
-            given("the current user is not root") {
+            given("the application is running on Windows") {
                 val systemInfo = mock<SystemInfo> {
-                    on { userId } doReturn 123
-                    on { userName } doReturn "the-user"
-                    on { groupId } doReturn 456
-                    on { groupName } doReturn "the-user's-group"
+                    on { operatingSystem } doReturn OperatingSystem.Windows
+                    on { tempDirectory } doReturn "C:\\temp"
                 }
 
-                val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, fileSystem) }
+                val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.windows()) }
 
-                on("generating the configuration") {
-                    val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
+                val directoryThatExists = "C:\\existing\\directory"
+                val fileThatExists = "C:\\existing\\file"
+                val directoryThatDoesNotExist = "C:\\new\\directory"
+                val containerMounts = setOf(
+                    VolumeMount(directoryThatExists, "/container/existing-directory", null),
+                    VolumeMount(fileThatExists, "/container/existing-file", null),
+                    VolumeMount(directoryThatDoesNotExist, "/container/new-directory", null)
+                )
 
-                    it("returns a set of volume mounts for the passwd and group file and home directory") {
-                        assertThat(configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(setOf(
-                            "/etc/passwd",
-                            "/etc/group",
-                            homeDirectory
-                        )))
+                beforeEachTest {
+                    Files.createDirectories(fileSystem.getPath(systemInfo.tempDirectory))
+                    Files.createDirectories(fileSystem.getPath(directoryThatExists))
+                    Files.createFile(fileSystem.getPath(fileThatExists))
+                }
+
+                val container = Container(
+                    "some-container",
+                    imageSourceDoesNotMatter(),
+                    volumeMounts = containerMounts,
+                    runAsCurrentUserConfig = runAsCurrentUserConfig
+                )
+
+                given("the current user's username is a valid Unix username") {
+                    val nativeMethods = mock<NativeMethods> {
+                        on { getUserName() } doReturn "the-user"
+                        on { getUserId() } doReturn PossiblyUnsupportedValue.Unsupported("Windows doesn't support this")
+                        on { getGroupId() } doReturn PossiblyUnsupportedValue.Unsupported("Windows doesn't support this")
+                        on { getGroupName() } doReturn PossiblyUnsupportedValue.Unsupported("Windows doesn't support this")
                     }
 
-                    it("returns a set of volume mounts with the passwd file mounted read-only") {
-                        assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/passwd"))
-                    }
+                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, userNameCleaner) }
 
-                    it("returns a set of volume mounts with the group file mounted read-only") {
-                        assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/group"))
-                    }
+                    on("generating the configuration") {
+                        val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
 
-                    it("returns a set of volume mounts with the home directory mounted in delegated mode") {
-                        assertThat(configuration.volumeMounts, hasDelegatedVolumeMount(homeDirectory))
-                    }
+                        it("returns a set of volume mounts for the passwd and group file and home directory") {
+                            assertThat(
+                                configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(
+                                    setOf(
+                                        "/etc/passwd",
+                                        "/etc/group",
+                                        homeDirectory
+                                    )
+                                )
+                            )
+                        }
 
-                    it("creates a passwd file with both root and the current user") {
-                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
-                        val content = Files.readAllLines(passwdFilePath).joinToString("\n")
-                        assertThat(content, equalTo("""
-                            |root:x:0:0:root:/root:/bin/sh
-                            |the-user:x:123:456:the-user:/home/some-user:/bin/sh
-                        """.trimMargin()))
-                    }
+                        it("returns a set of volume mounts with the passwd file mounted read-only") {
+                            assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/passwd"))
+                        }
 
-                    it("creates a group file with group for both root and the current user") {
-                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
-                        val content = Files.readAllLines(groupFilePath).joinToString("\n")
-                        assertThat(content, equalTo("""
-                            |root:x:0:root
-                            |the-user's-group:x:456:the-user
-                        """.trimMargin()))
-                    }
+                        it("returns a set of volume mounts with the group file mounted read-only") {
+                            assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/group"))
+                        }
 
-                    it("emits a 'temporary file created' event for the passwd file") {
-                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
-                        verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, passwdFilePath))
-                    }
+                        it("returns a set of volume mounts with the home directory mounted in delegated mode") {
+                            assertThat(configuration.volumeMounts, hasDelegatedVolumeMount(homeDirectory))
+                        }
 
-                    it("emits a 'temporary file created' event for the group file") {
-                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
-                        verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, groupFilePath))
-                    }
+                        it("creates a passwd file with both root and the current user with a cleaned username, a fake UID and a fake GID") {
+                            val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
+                            val content = Files.readAllLines(passwdFilePath).joinToString("\n")
+                            assertThat(
+                                content, equalTo(
+                                    """
+                                        |root:x:0:0:root:/root:/bin/sh
+                                        |cleaned-the-user:x:1234:1234:cleaned-the-user:/home/some-user:/bin/sh
+                                    """.trimMargin()
+                                )
+                            )
+                        }
 
-                    it("emits a 'temporary directory created' event for the home directory") {
-                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
-                        verify(eventSink).postEvent(TemporaryDirectoryCreatedEvent(container, homeDirectoryPath))
-                    }
+                        it("creates a group file with group for both root and the current user with a fake GID") {
+                            val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
+                            val content = Files.readAllLines(groupFilePath).joinToString("\n")
+                            assertThat(
+                                content, equalTo(
+                                    """
+                                        |root:x:0:root
+                                        |cleaned-the-user:x:1234:cleaned-the-user
+                                    """.trimMargin()
+                                )
+                            )
+                        }
 
-                    it("returns a user and group configuration with the current user's user and group IDs") {
-                        assertThat(configuration.userAndGroup, equalTo(UserAndGroup(123, 456)))
-                    }
+                        it("emits a 'temporary file created' event for the passwd file") {
+                            val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
+                            verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, passwdFilePath))
+                        }
 
-                    it("creates a directory for the volume mount path that does not exist") {
-                        assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
-                    }
+                        it("emits a 'temporary file created' event for the group file") {
+                            val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
+                            verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, groupFilePath))
+                        }
 
-                    it("creates a directory for the home directory") {
-                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
-                        assertThat(Files.exists(homeDirectoryPath), equalTo(true))
-                    }
+                        it("emits a 'temporary directory created' event for the home directory") {
+                            val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
+                            verify(eventSink).postEvent(TemporaryDirectoryCreatedEvent(container, homeDirectoryPath))
+                        }
 
-                    it("sets the user for the created home directory to the current user") {
-                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
-                        val owner = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).owner()
-                        assertThat(owner.name, equalTo("the-user"))
-                    }
+                        it("returns a user and group configuration with a fake UID and GID") {
+                            assertThat(configuration.userAndGroup, equalTo(UserAndGroup(1234, 1234)))
+                        }
 
-                    it("sets the group for the created home directory to the current user's primary group") {
-                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
-                        val group = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).group()
-                        assertThat(group.name, equalTo("the-user's-group"))
+                        it("creates a directory for the volume mount path that does not exist") {
+                            assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
+                        }
+
+                        it("creates a directory for the home directory") {
+                            val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
+                            assertThat(Files.exists(homeDirectoryPath), equalTo(true))
+                        }
                     }
                 }
             }
 
-            given("the current user is root") {
+            given("the application is not running on Windows") {
                 val systemInfo = mock<SystemInfo> {
-                    on { userId } doReturn 0
-                    on { userName } doReturn "root"
-                    on { groupId } doReturn 0
-                    on { groupName } doReturn "root"
+                    on { operatingSystem } doReturn OperatingSystem.Other
+                    on { tempDirectory } doReturn "/tmp"
                 }
 
-                val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, fileSystem) }
+                val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix().toBuilder().setAttributeViews("posix").build()) }
 
-                on("generating the configuration") {
-                    val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
+                val directoryThatExists = "/existing/directory"
+                val fileThatExists = "/existing/file"
+                val directoryThatDoesNotExist = "/new/directory"
+                val containerMounts = setOf(
+                    VolumeMount(directoryThatExists, "/container/existing-directory", null),
+                    VolumeMount(fileThatExists, "/container/existing-file", null),
+                    VolumeMount(directoryThatDoesNotExist, "/container/new-directory", null)
+                )
 
-                    it("returns a set of volume mounts for the passwd and group file") {
-                        assertThat(configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(setOf(
-                            "/etc/passwd",
-                            "/etc/group",
-                            homeDirectory
-                        )))
+                beforeEachTest {
+                    Files.createDirectories(fileSystem.getPath(systemInfo.tempDirectory))
+                    Files.createDirectories(fileSystem.getPath(directoryThatExists))
+                    Files.createFile(fileSystem.getPath(fileThatExists))
+                }
+
+                val container = Container(
+                    "some-container",
+                    imageSourceDoesNotMatter(),
+                    volumeMounts = containerMounts,
+                    runAsCurrentUserConfig = runAsCurrentUserConfig
+                )
+
+                given("the current user is not root") {
+                    val nativeMethods = mock<NativeMethods> {
+                        on { getUserId() } doReturn PossiblyUnsupportedValue.Supported(123)
+                        on { getUserName() } doReturn "the-user"
+                        on { getGroupId() } doReturn PossiblyUnsupportedValue.Supported(456)
+                        on { getGroupName() } doReturn PossiblyUnsupportedValue.Supported("the-user's-group")
                     }
 
-                    it("returns a set of volume mounts with the passwd file mounted read-only") {
-                        assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/passwd"))
+                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, userNameCleaner) }
+
+                    on("generating the configuration") {
+                        val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
+
+                        it("returns a set of volume mounts for the passwd and group file and home directory") {
+                            assertThat(
+                                configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(
+                                    setOf(
+                                        "/etc/passwd",
+                                        "/etc/group",
+                                        homeDirectory
+                                    )
+                                )
+                            )
+                        }
+
+                        it("returns a set of volume mounts with the passwd file mounted read-only") {
+                            assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/passwd"))
+                        }
+
+                        it("returns a set of volume mounts with the group file mounted read-only") {
+                            assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/group"))
+                        }
+
+                        it("returns a set of volume mounts with the home directory mounted in delegated mode") {
+                            assertThat(configuration.volumeMounts, hasDelegatedVolumeMount(homeDirectory))
+                        }
+
+                        it("creates a passwd file with both root and the current user") {
+                            val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
+                            val content = Files.readAllLines(passwdFilePath).joinToString("\n")
+                            assertThat(
+                                content, equalTo(
+                                    """
+                                        |root:x:0:0:root:/root:/bin/sh
+                                        |the-user:x:123:456:the-user:/home/some-user:/bin/sh
+                                    """.trimMargin()
+                                )
+                            )
+                        }
+
+                        it("creates a group file with group for both root and the current user") {
+                            val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
+                            val content = Files.readAllLines(groupFilePath).joinToString("\n")
+                            assertThat(
+                                content, equalTo(
+                                    """
+                                        |root:x:0:root
+                                        |the-user's-group:x:456:the-user
+                                    """.trimMargin()
+                                )
+                            )
+                        }
+
+                        it("emits a 'temporary file created' event for the passwd file") {
+                            val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
+                            verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, passwdFilePath))
+                        }
+
+                        it("emits a 'temporary file created' event for the group file") {
+                            val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
+                            verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, groupFilePath))
+                        }
+
+                        it("emits a 'temporary directory created' event for the home directory") {
+                            val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
+                            verify(eventSink).postEvent(TemporaryDirectoryCreatedEvent(container, homeDirectoryPath))
+                        }
+
+                        it("returns a user and group configuration with the current user's user and group IDs") {
+                            assertThat(configuration.userAndGroup, equalTo(UserAndGroup(123, 456)))
+                        }
+
+                        it("creates a directory for the volume mount path that does not exist") {
+                            assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
+                        }
+
+                        it("creates a directory for the home directory") {
+                            val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
+                            assertThat(Files.exists(homeDirectoryPath), equalTo(true))
+                        }
+
+                        it("sets the user for the created home directory to the current user") {
+                            val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
+                            val owner = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).owner()
+                            assertThat(owner.name, equalTo("the-user"))
+                        }
+
+                        it("sets the group for the created home directory to the current user's primary group") {
+                            val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
+                            val group = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).group()
+                            assertThat(group.name, equalTo("the-user's-group"))
+                        }
+                    }
+                }
+
+                given("the current user is root") {
+                    val nativeMethods = mock<NativeMethods> {
+                        on { getUserId() } doReturn PossiblyUnsupportedValue.Supported(0)
+                        on { getUserName() } doReturn "root"
+                        on { getGroupId() } doReturn PossiblyUnsupportedValue.Supported(0)
+                        on { getGroupName() } doReturn PossiblyUnsupportedValue.Supported("root")
                     }
 
-                    it("returns a set of volume mounts with the group file mounted read-only") {
-                        assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/group"))
-                    }
+                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, userNameCleaner) }
 
-                    it("returns a set of volume mounts with the home directory mounted in delegated mode") {
-                        assertThat(configuration.volumeMounts, hasDelegatedVolumeMount(homeDirectory))
-                    }
+                    on("generating the configuration") {
+                        val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
 
-                    it("creates a passwd file with just root listed") {
-                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
-                        val content = Files.readAllLines(passwdFilePath).joinToString("\n")
-                        assertThat(content, equalTo("""
-                            |root:x:0:0:root:/home/some-user:/bin/sh
-                        """.trimMargin()))
-                    }
+                        it("returns a set of volume mounts for the passwd and group file") {
+                            assertThat(
+                                configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(
+                                    setOf(
+                                        "/etc/passwd",
+                                        "/etc/group",
+                                        homeDirectory
+                                    )
+                                )
+                            )
+                        }
 
-                    it("creates a group file with a group for root") {
-                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
-                        val content = Files.readAllLines(groupFilePath).joinToString("\n")
-                        assertThat(content, equalTo("""
-                            |root:x:0:root
-                        """.trimMargin()))
-                    }
+                        it("returns a set of volume mounts with the passwd file mounted read-only") {
+                            assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/passwd"))
+                        }
 
-                    it("emits a 'temporary file created' event for the passwd file") {
-                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
-                        verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, passwdFilePath))
-                    }
+                        it("returns a set of volume mounts with the group file mounted read-only") {
+                            assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/group"))
+                        }
 
-                    it("emits a 'temporary file created' event for the group file") {
-                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
-                        verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, groupFilePath))
-                    }
+                        it("returns a set of volume mounts with the home directory mounted in delegated mode") {
+                            assertThat(configuration.volumeMounts, hasDelegatedVolumeMount(homeDirectory))
+                        }
 
-                    it("emits a 'temporary directory created' event for the home directory") {
-                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
-                        verify(eventSink).postEvent(TemporaryDirectoryCreatedEvent(container, homeDirectoryPath))
-                    }
+                        it("creates a passwd file with just root listed") {
+                            val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
+                            val content = Files.readAllLines(passwdFilePath).joinToString("\n")
+                            assertThat(
+                                content, equalTo(
+                                    """
+                                        |root:x:0:0:root:/home/some-user:/bin/sh
+                                    """.trimMargin()
+                                )
+                            )
+                        }
 
-                    it("returns a user and group configuration with the current user's user and group IDs") {
-                        assertThat(configuration.userAndGroup, equalTo(UserAndGroup(0, 0)))
-                    }
+                        it("creates a group file with a group for root") {
+                            val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
+                            val content = Files.readAllLines(groupFilePath).joinToString("\n")
+                            assertThat(
+                                content, equalTo(
+                                    """
+                                        |root:x:0:root
+                                    """.trimMargin()
+                                )
+                            )
+                        }
 
-                    it("creates a directory for the volume mount path that does not exist") {
-                        assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
-                    }
+                        it("emits a 'temporary file created' event for the passwd file") {
+                            val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
+                            verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, passwdFilePath))
+                        }
 
-                    it("creates a directory for the home directory") {
-                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
-                        assertThat(Files.exists(homeDirectoryPath), equalTo(true))
-                    }
+                        it("emits a 'temporary file created' event for the group file") {
+                            val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
+                            verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, groupFilePath))
+                        }
 
-                    it("sets the user for the created home directory to the current user") {
-                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
-                        val owner = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).owner()
-                        assertThat(owner.name, equalTo("root"))
-                    }
+                        it("emits a 'temporary directory created' event for the home directory") {
+                            val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
+                            verify(eventSink).postEvent(TemporaryDirectoryCreatedEvent(container, homeDirectoryPath))
+                        }
 
-                    it("sets the group for the created home directory to the current user's primary group") {
-                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
-                        val group = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).group()
-                        assertThat(group.name, equalTo("root"))
+                        it("returns a user and group configuration with the current user's user and group IDs") {
+                            assertThat(configuration.userAndGroup, equalTo(UserAndGroup(0, 0)))
+                        }
+
+                        it("creates a directory for the volume mount path that does not exist") {
+                            assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
+                        }
+
+                        it("creates a directory for the home directory") {
+                            val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
+                            assertThat(Files.exists(homeDirectoryPath), equalTo(true))
+                        }
+
+                        it("sets the user for the created home directory to the current user") {
+                            val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
+                            val owner = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).owner()
+                            assertThat(owner.name, equalTo("root"))
+                        }
+
+                        it("sets the group for the created home directory to the current user's primary group") {
+                            val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
+                            val group = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).group()
+                            assertThat(group.name, equalTo("root"))
+                        }
                     }
                 }
             }

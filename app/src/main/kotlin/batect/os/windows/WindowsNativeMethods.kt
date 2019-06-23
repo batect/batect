@@ -19,6 +19,7 @@ package batect.os.windows
 import batect.os.NativeMethodException
 import batect.os.NativeMethods
 import batect.os.NoConsoleException
+import batect.os.PossiblyUnsupportedValue
 import batect.os.windows.namedpipes.NamedPipe
 import batect.ui.Dimensions
 import jnr.constants.platform.windows.LastError
@@ -41,6 +42,7 @@ import jnr.posix.WindowsLibC
 import jnr.posix.util.WindowsHelpers
 import java.io.FileNotFoundException
 import java.net.SocketTimeoutException
+import java.nio.ByteBuffer
 import kotlin.reflect.KFunction
 
 class WindowsNativeMethods(
@@ -53,6 +55,7 @@ class WindowsNativeMethods(
             .option(LibraryOption.TypeMapper, createTypeMapper())
             .library("msvcrt")
             .library("kernel32")
+            .library("Advapi32")
             .load(),
         posix
     )
@@ -84,6 +87,26 @@ class WindowsNativeMethods(
 
         return Dimensions(height, width)
     }
+
+    override fun getUserName(): String {
+        val bytesPerCharacter = 2
+        val maxLengthInCharacters = 256
+        val buffer = ByteArray(maxLengthInCharacters * bytesPerCharacter)
+        val length = NativeLongByReference(maxLengthInCharacters.toLong())
+
+        val succeeded = win32.GetUserNameW(ByteBuffer.wrap(buffer), length)
+
+        if (!succeeded) {
+            throwNativeMethodFailed(Win32::GetUserNameW)
+        }
+
+        val bytesReturned = (length.toInt() - 1) * bytesPerCharacter
+        return String(buffer, 0, bytesReturned, Charsets.UTF_16LE)
+    }
+
+    override fun getUserId(): PossiblyUnsupportedValue<Int> = PossiblyUnsupportedValue.Unsupported("Getting the user ID is not supported on Windows.")
+    override fun getGroupId(): PossiblyUnsupportedValue<Int> = PossiblyUnsupportedValue.Unsupported("Getting the group ID is not supported on Windows.")
+    override fun getGroupName(): PossiblyUnsupportedValue<String> = PossiblyUnsupportedValue.Unsupported("Getting the group name is not supported on Windows.")
 
     fun openNamedPipe(path: String): NamedPipe {
         val result = win32.CreateFileW(WindowsHelpers.toWPath(path), GENERIC_READ or GENERIC_WRITE, 0L, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null)
@@ -255,6 +278,9 @@ class WindowsNativeMethods(
         @SaveError
         @StdCall
         fun GetConsoleScreenBufferInfo(@In hConsoleOutput: HANDLE, @Out @Transient lpConsoleScreenBufferInfo: ConsoleScreenBufferInfo): Boolean
+
+        @SaveError
+        fun GetUserNameW(@Out lpBuffer: ByteBuffer, @In @Out pcbBuffer: NativeLongByReference): Boolean
 
         @StdCall
         fun CreateFileW(

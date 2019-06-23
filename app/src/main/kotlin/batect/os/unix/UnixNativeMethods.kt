@@ -19,6 +19,7 @@ package batect.os.unix
 import batect.os.NativeMethodException
 import batect.os.NativeMethods
 import batect.os.NoConsoleException
+import batect.os.PossiblyUnsupportedValue
 import batect.ui.Dimensions
 import jnr.constants.platform.Errno
 import jnr.ffi.LibraryLoader
@@ -67,6 +68,11 @@ class UnixNativeMethods(
 
         return Dimensions(size.ws_row.get(), size.ws_col.get())
     }
+
+    override fun getUserId(): PossiblyUnsupportedValue<Int> = PossiblyUnsupportedValue.Supported(posix.geteuid())
+    override fun getGroupId(): PossiblyUnsupportedValue<Int> = PossiblyUnsupportedValue.Supported(posix.getegid())
+    override fun getUserName(): String = posix.getpwuid(posix.geteuid()).loginName
+    override fun getGroupName(): PossiblyUnsupportedValue<String> = PossiblyUnsupportedValue.Supported(posix.getgrgid(posix.getegid()).name)
 
     private val TIOCGWINSZ = PlatformSpecificConstant(darwinValue = 0x40087468, linuxValue = 0x00005413)
 

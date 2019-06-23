@@ -53,6 +53,7 @@ import batect.execution.TaskExecutionOrderResolver
 import batect.execution.TaskRunner
 import batect.execution.TaskStateMachineProvider
 import batect.execution.TaskSuggester
+import batect.execution.UnixUserNameCleaner
 import batect.execution.model.stages.CleanupStagePlanner
 import batect.execution.model.stages.RunStagePlanner
 import batect.execution.model.steps.TaskStepRunner
@@ -190,7 +191,7 @@ private val executionModule = Kodein.Module("execution") {
     bind<ContainerDependencyGraphProvider>() with singletonWithLogger { logger -> ContainerDependencyGraphProvider(instance(), logger) }
     bind<InterruptionTrap>() with singleton { InterruptionTrap(instance()) }
     bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance(), instance()) }
-    bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance()) }
+    bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance(), instance(), instance()) }
     bind<RunOptions>() with singleton { RunOptions(commandLineOptions()) }
     bind<RunStagePlanner>() with singletonWithLogger { logger -> RunStagePlanner(logger) }
     bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(), instance(), instance(), logger) }
@@ -198,6 +199,7 @@ private val executionModule = Kodein.Module("execution") {
     bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance(), instance(), instance(), instance()) }
     bind<TaskStepRunner>() with singletonWithLogger { logger -> TaskStepRunner(instance(), instance(), instance(), instance(), logger) }
     bind<TaskSuggester>() with singleton { TaskSuggester() }
+    bind<UnixUserNameCleaner>() with singleton { UnixUserNameCleaner() }
 }
 
 private val loggingModule = Kodein.Module("logging") {

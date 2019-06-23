@@ -23,6 +23,8 @@ import batect.docker.UserAndGroup
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TemporaryDirectoryCreatedEvent
 import batect.execution.model.events.TemporaryFileCreatedEvent
+import batect.os.NativeMethods
+import batect.os.OperatingSystem
 import batect.os.SystemInfo
 import java.nio.file.FileSystem
 import java.nio.file.Files
@@ -32,25 +34,40 @@ import java.nio.file.attribute.PosixFileAttributeView
 
 class RunAsCurrentUserConfigurationProvider(
     private val systemInfo: SystemInfo,
-    private val fileSystem: FileSystem
+    private val nativeMethods: NativeMethods,
+    private val fileSystem: FileSystem,
+    private val userNameCleaner: UnixUserNameCleaner
 ) {
-    private val temporaryDirectory = fileSystem.getPath("/tmp")
+    private val temporaryDirectory = fileSystem.getPath(systemInfo.tempDirectory)
 
     fun generateConfiguration(container: Container, eventSink: TaskEventSink): RunAsCurrentUserConfiguration = when (container.runAsCurrentUserConfig) {
         is RunAsCurrentUserConfig.RunAsCurrentUser -> {
-            val volumeMounts = createMounts(container, container.runAsCurrentUserConfig, eventSink)
+            val userId = nativeMethods.getUserId().getValueOrDefault(1234)
+            val userName = cleanUserNameIfNecessary(nativeMethods.getUserName())
+            val groupId = nativeMethods.getGroupId().getValueOrDefault(1234)
+            val groupName = nativeMethods.getGroupName().getValueOrDefault(userName)
+
+            val volumeMounts = createMounts(container, container.runAsCurrentUserConfig, userId, userName, groupId, groupName, eventSink)
             createMissingVolumeMountDirectories(container)
 
-            RunAsCurrentUserConfiguration(volumeMounts, UserAndGroup(systemInfo.userId, systemInfo.groupId))
+            RunAsCurrentUserConfiguration(volumeMounts, UserAndGroup(userId, groupId))
         }
         is RunAsCurrentUserConfig.RunAsDefaultContainerUser -> RunAsCurrentUserConfiguration(emptySet(), null)
     }
 
-    private fun createMounts(container: Container, runAsCurrentUserConfig: RunAsCurrentUserConfig.RunAsCurrentUser, eventSink: TaskEventSink): Set<VolumeMount> {
-        val passwdFile = createPasswdFile(runAsCurrentUserConfig)
+    private fun createMounts(
+        container: Container,
+        runAsCurrentUserConfig: RunAsCurrentUserConfig.RunAsCurrentUser,
+        userId: Int,
+        userName: String,
+        groupId: Int,
+        groupName: String,
+        eventSink: TaskEventSink
+    ): Set<VolumeMount> {
+        val passwdFile = createPasswdFile(runAsCurrentUserConfig, userId, userName, groupId)
         eventSink.postEvent(TemporaryFileCreatedEvent(container, passwdFile))
 
-        val groupFile = createGroupFile()
+        val groupFile = createGroupFile(userName, groupId, groupName)
         eventSink.postEvent(TemporaryFileCreatedEvent(container, groupFile))
 
         val homeDirectory = createHomeDirectory()
@@ -63,16 +80,16 @@ class RunAsCurrentUserConfigurationProvider(
         )
     }
 
-    private fun createPasswdFile(runAsCurrentUserConfig: RunAsCurrentUserConfig.RunAsCurrentUser): Path {
+    private fun createPasswdFile(runAsCurrentUserConfig: RunAsCurrentUserConfig.RunAsCurrentUser, userId: Int, userName: String, groupId: Int): Path {
         val path = createTempFile("passwd")
         val homeDirectory = runAsCurrentUserConfig.homeDirectory
 
-        val lines = if (systemInfo.userId == 0) {
+        val lines = if (userId == 0) {
             listOf("root:x:0:0:root:$homeDirectory:/bin/sh")
         } else {
             listOf(
                 "root:x:0:0:root:/root:/bin/sh",
-                "${systemInfo.userName}:x:${systemInfo.userId}:${systemInfo.groupId}:${systemInfo.userName}:$homeDirectory:/bin/sh"
+                "$userName:x:$userId:$groupId:$userName:$homeDirectory:/bin/sh"
             )
         }
 
@@ -81,16 +98,16 @@ class RunAsCurrentUserConfigurationProvider(
         return path
     }
 
-    private fun createGroupFile(): Path {
+    private fun createGroupFile(userName: String, groupId: Int, groupName: String): Path {
         val path = createTempFile("group")
         val rootGroup = "root:x:0:root"
 
-        val lines = if (systemInfo.groupId == 0) {
+        val lines = if (groupId == 0) {
             listOf(rootGroup)
         } else {
             listOf(
                 rootGroup,
-                "${systemInfo.groupName}:x:${systemInfo.groupId}:${systemInfo.userName}"
+                "$groupName:x:$groupId:$userName"
             )
         }
 
@@ -102,11 +119,13 @@ class RunAsCurrentUserConfigurationProvider(
     private fun createHomeDirectory(): Path {
         val path = Files.createTempDirectory(temporaryDirectory, "batect-home-")
 
-        val attributeView = Files.getFileAttributeView(path, PosixFileAttributeView::class.java, LinkOption.NOFOLLOW_LINKS)
-        val lookupService = fileSystem.userPrincipalLookupService
+        if (systemInfo.operatingSystem != OperatingSystem.Windows) {
+            val attributeView = Files.getFileAttributeView(path, PosixFileAttributeView::class.java, LinkOption.NOFOLLOW_LINKS)
+            val lookupService = fileSystem.userPrincipalLookupService
 
-        attributeView.setOwner(lookupService.lookupPrincipalByName(systemInfo.userName))
-        attributeView.setGroup(lookupService.lookupPrincipalByGroupName(systemInfo.groupName))
+            attributeView.setOwner(lookupService.lookupPrincipalByName(nativeMethods.getUserName()))
+            attributeView.setGroup(lookupService.lookupPrincipalByGroupName(nativeMethods.getGroupName().getValueOrThrow()))
+        }
 
         return path
     }
@@ -122,4 +141,11 @@ class RunAsCurrentUserConfigurationProvider(
             }
         }
     }
+
+    private fun cleanUserNameIfNecessary(userName: String): String =
+        if (systemInfo.operatingSystem == OperatingSystem.Windows) {
+            userNameCleaner.clean(userName)
+        } else {
+            userName
+        }
 }

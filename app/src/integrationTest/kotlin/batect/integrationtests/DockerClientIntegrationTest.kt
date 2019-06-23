@@ -77,7 +77,7 @@ import java.nio.file.Paths
 
 object DockerClientIntegrationTest : Spek({
     describe("a Docker client") {
-        val testImagesPath by createForGroup { Paths.get("./src/integrationTest/resources/test-images/").toAbsolutePath() }
+        val testImagesPath by createForGroup { Paths.get("src", "integrationTest", "resources", "test-images").toAbsolutePath() }
         val basicTestImagePath by createForGroup { testImagesPath.resolve("basic-image") }
 
         val posix by createForGroup { POSIXFactory.getNativePOSIX() }
@@ -104,26 +104,32 @@ object DockerClientIntegrationTest : Spek({
             )
         }
 
-        fun creationRequestForTestContainer(image: DockerImage, network: DockerNetwork, fileToCreate: Path, command: Iterable<String>): DockerContainerCreationRequest {
-            val fileToCreateParent = fileToCreate.parent.toAbsolutePath()
-            val volumeMount = VolumeMount(fileToCreateParent.toString(), fileToCreateParent.toString(), null)
-
+        fun creationRequestForTestContainer(image: DockerImage, network: DockerNetwork, localMountDirectory: Path, containerMountDirectory: String, command: Iterable<String>): DockerContainerCreationRequest {
+            val volumeMount = VolumeMount(localMountDirectory.toString(), containerMountDirectory, null)
             val userAndGroup = UserAndGroup(nativeMethods.getUserId().getValueOrDefault(1234), nativeMethods.getGroupId().getValueOrDefault(1234))
 
             return creationRequestForContainer(image, network, command, volumeMounts = setOf(volumeMount), userAndGroup = userAndGroup)
         }
 
-        fun creationRequestForContainerThatWaits(image: DockerImage, network: DockerNetwork, fileToCreate: Path): DockerContainerCreationRequest {
-            // See https://stackoverflow.com/a/21882119/1668119 for an explanation of this - we need something that waits indefinitely but immediately responds to a SIGTERM by quitting (sh and wait don't do this).
-            val command = listOf("sh", "-c", "echo 'Hello from container' >> \"$fileToCreate\"; trap 'trap - TERM; kill -s TERM -$$' TERM; tail -f /dev/null & wait")
+        fun creationRequestForContainerThatWaits(image: DockerImage, network: DockerNetwork, localFileToCreate: Path): DockerContainerCreationRequest {
+            val localMountDirectory = localFileToCreate.parent.toAbsolutePath()
+            val containerMountDirectory = "/tmp/batect-integration-test"
+            val containerFileToCreate = "$containerMountDirectory/${localFileToCreate.fileName}"
 
-            return creationRequestForTestContainer(image, network, fileToCreate, command)
+            // See https://stackoverflow.com/a/21882119/1668119 for an explanation of this - we need something that waits indefinitely but immediately responds to a SIGTERM by quitting (sh and wait don't do this).
+            val command = listOf("sh", "-c", "echo 'Hello from container' >> \"$containerFileToCreate\"; trap 'trap - TERM; kill -s TERM -$$' TERM; tail -f /dev/null & wait")
+
+            return creationRequestForTestContainer(image, network, localMountDirectory, containerMountDirectory, command)
         }
 
-        fun creationRequestForContainerThatExits(image: DockerImage, network: DockerNetwork, fileToCreate: Path): DockerContainerCreationRequest {
-            val command = listOf("sh", "-c", "echo 'Hello from container' >> \"$fileToCreate\"")
+        fun creationRequestForContainerThatExits(image: DockerImage, network: DockerNetwork, localFileToCreate: Path): DockerContainerCreationRequest {
+            val localMountDirectory = localFileToCreate.parent.toAbsolutePath()
+            val containerMountDirectory = "/tmp/batect-integration-test"
+            val containerFileToCreate = "$containerMountDirectory/${localFileToCreate.fileName}"
 
-            return creationRequestForTestContainer(image, network, fileToCreate, command)
+            val command = listOf("sh", "-c", "echo 'Hello from container' >> \"$containerFileToCreate\"")
+
+            return creationRequestForTestContainer(image, network, localMountDirectory, containerMountDirectory, command)
         }
 
         fun <T> withNetwork(action: (DockerNetwork) -> T): T {
@@ -319,7 +325,7 @@ private fun getNativeMethodsForPlatform(posix: POSIX): NativeMethods {
 }
 
 private fun getRandomTemporaryFilePath(): Path {
-    val temporaryDirectory = Paths.get("./build/tmp/integrationTest/").toAbsolutePath()
+    val temporaryDirectory = Paths.get("build", "tmp", "integrationTest").toAbsolutePath()
     Files.createDirectories(temporaryDirectory)
 
     val path = Files.createTempFile(temporaryDirectory, "integration-test-", "")

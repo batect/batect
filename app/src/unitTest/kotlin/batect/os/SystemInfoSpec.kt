@@ -44,6 +44,7 @@ object SystemInfoSpec : Spek({
             properties.setProperty("os.version", "4.5.6")
             properties.setProperty("user.home", "/some/home/dir")
             properties.setProperty("java.io.tmpdir", "/some/temp/dir")
+            properties.setProperty("line.separator", "some-long-line-separator")
 
             properties
         }
@@ -156,6 +157,14 @@ object SystemInfoSpec : Spek({
 
             it("returns the ID given by the `id -un` command") {
                 assertThat(userName, equalTo("awesome-user"))
+            }
+        }
+
+        on("getting the line separator") {
+            val lineSeparator by runForEachTest { SystemInfo(nativeMethods, systemProperties).lineSeparator }
+
+            it("returns the system's line separator") {
+                assertThat(lineSeparator, equalTo("some-long-line-separator"))
             }
         }
     }

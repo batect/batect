@@ -37,6 +37,7 @@ class SystemInfo(private val nativeMethods: NativeMethods, private val systemPro
     val jvmVersion = "$jvmVendor $jvmName $javaVersion"
     val osVersion = "$osName $rawOSVersion ($osArch)"
     val homeDirectory: String = systemProperties.getProperty("user.home")
+    val lineSeparator: String = systemProperties.getProperty("line.separator")
 
     val tempDirectory: String = if (operatingSystem in setOf(OperatingSystem.Mac, OperatingSystem.Linux)) {
         "/tmp"

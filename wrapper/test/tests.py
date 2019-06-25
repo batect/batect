@@ -131,13 +131,14 @@ class WrapperScriptTests(unittest.TestCase):
 
         return path_dir + ":/bin"
 
-    def run_script(self, args, download_url=default_download_url, path=os.environ["PATH"], quiet_download="false"):
+    def run_script(self, args, download_url=default_download_url, path=os.environ["PATH"], quiet_download="undefined"):
         env = {
             "BATECT_CACHE_DIR": self.cache_dir,
             "BATECT_DOWNLOAD_URL": download_url,
-            "PATH": path,
-            "BATECT_QUIET_DOWNLOAD": quiet_download
+            "PATH": path
         }
+        if quiet_download != "undefined":
+            env["BATECT_QUIET_DOWNLOAD"] = quiet_download
 
         path = self.get_script_path()
         command = [path] + args

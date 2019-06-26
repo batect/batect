@@ -26,7 +26,7 @@ import batect.docker.run.ContainerKiller
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.logging.Logger
-import batect.ui.ConsoleInfo
+import batect.os.ConsoleManager
 import batect.utils.Version
 import kotlinx.serialization.json.JsonObject
 import java.io.IOException
@@ -40,7 +40,7 @@ import java.time.Duration
 // https://github.com/square/okhttp/blob/master/samples/unixdomainsockets/src/main/java/okhttp3/unixdomainsockets/UnixDomainSocketFactory.java
 class DockerClient(
     private val api: DockerAPI,
-    private val consoleInfo: ConsoleInfo,
+    private val consoleManager: ConsoleManager,
     private val credentialsProvider: DockerRegistryCredentialsProvider,
     private val imageBuildContextFactory: DockerImageBuildContextFactory,
     private val dockerfileParser: DockerfileParser,
@@ -124,7 +124,6 @@ class DockerClient(
         logger.info {
             message("Running container.")
             data("container", container)
-            data("stdinIsTTY", consoleInfo.stdinIsTTY)
         }
 
         val exitCodeSource = waiter.startWaitingForContainerToExit(container)
@@ -135,7 +134,7 @@ class DockerClient(
 
                 ttyManager.monitorForSizeChanges(container).use {
                     killer.killContainerOnSigint(container).use {
-                        consoleInfo.enterRawMode().use {
+                        consoleManager.enterRawMode().use {
                             ioStreamer.stream(outputStream, inputStream)
                         }
                     }

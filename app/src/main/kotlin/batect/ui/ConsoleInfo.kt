@@ -17,17 +17,15 @@
 package batect.ui
 
 import batect.logging.Logger
-import batect.os.ProcessRunner
 import jnr.posix.POSIX
 import java.io.FileDescriptor
 
 class ConsoleInfo(
     private val posix: POSIX,
-    private val processRunner: ProcessRunner,
     private val environment: Map<String, String>,
     private val logger: Logger
 ) {
-    constructor(posix: POSIX, processRunner: ProcessRunner, logger: Logger) : this(posix, processRunner, System.getenv(), logger)
+    constructor(posix: POSIX, logger: Logger) : this(posix, System.getenv(), logger)
 
     val stdinIsTTY: Boolean by lazy {
         val result = posix.isatty(FileDescriptor.`in`)
@@ -53,52 +51,4 @@ class ConsoleInfo(
 
     val terminalType: String? = environment["TERM"]
     private val isTravis: Boolean = environment["TRAVIS"] == "true"
-
-    fun enterRawMode(): AutoCloseable {
-        if (!stdinIsTTY) {
-            logger.info {
-                message("Terminal is not a TTY, won't enter raw mode.")
-            }
-
-            return object : AutoCloseable {
-                override fun close() {}
-            }
-        }
-
-        val existingState = getExistingTerminalState()
-        startRawMode()
-
-        return TerminalStateRestorer(existingState, processRunner)
-    }
-
-    private fun getExistingTerminalState(): String {
-        val output = processRunner.runWithStdinAttached(listOf("stty", "-g"))
-
-        if (output.exitCode != 0) {
-            throw RuntimeException("Invoking 'stty -g' failed with exit code ${output.exitCode}: ${output.output.trim()}")
-        }
-
-        return output.output.trim()
-    }
-
-    private fun startRawMode() {
-        val command = listOf("stty", "-ignbrk", "-brkint", "-parmrk", "-istrip", "-inlcr", "-igncr", "-icrnl", "-ixon", "-opost", "-echo", "-echonl",
-            "-icanon", "-isig", "-iexten", "-parenb", "cs8", "min", "1", "time", "0")
-
-        val output = processRunner.runWithStdinAttached(command)
-
-        if (output.exitCode != 0) {
-            throw RuntimeException("Invoking '${command.joinToString(" ")}' failed with exit code ${output.exitCode}: ${output.output.trim()}")
-        }
-    }
-}
-
-data class TerminalStateRestorer(private val oldState: String, private val processRunner: ProcessRunner) : AutoCloseable {
-    override fun close() {
-        val output = processRunner.runWithStdinAttached(listOf("stty", oldState))
-
-        if (output.exitCode != 0) {
-            throw RuntimeException("Invoking 'stty $oldState' failed with exit code ${output.exitCode}: ${output.output.trim()}")
-        }
-    }
 }

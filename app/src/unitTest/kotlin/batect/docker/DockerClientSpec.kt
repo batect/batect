@@ -30,6 +30,7 @@ import batect.docker.run.ContainerKiller
 import batect.docker.run.ContainerOutputStream
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
+import batect.os.ConsoleManager
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
@@ -38,7 +39,6 @@ import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.withCause
 import batect.testutils.withMessage
-import batect.ui.ConsoleInfo
 import batect.utils.Json
 import batect.utils.Version
 import com.google.common.jimfs.Configuration
@@ -68,7 +68,7 @@ import java.util.concurrent.CompletableFuture
 object DockerClientSpec : Spek({
     describe("a Docker client") {
         val api by createForEachTest { mock<DockerAPI>() }
-        val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
+        val consoleManager by createForEachTest { mock<ConsoleManager>() }
         val credentialsProvider by createForEachTest { mock<DockerRegistryCredentialsProvider>() }
         val imageBuildContextFactory by createForEachTest { mock<DockerImageBuildContextFactory>() }
         val dockerfileParser by createForEachTest { mock<DockerfileParser>() }
@@ -79,7 +79,7 @@ object DockerClientSpec : Spek({
         val logger by createLoggerForEachTest()
         val imagePullProgressReporter by createForEachTest { mock<DockerImagePullProgressReporter>() }
         val imagePullProgressReporterFactory = { imagePullProgressReporter }
-        val client by createForEachTest { DockerClient(api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, ioStreamer, killer, ttyManager, logger, imagePullProgressReporterFactory) }
+        val client by createForEachTest { DockerClient(api, consoleManager, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, ioStreamer, killer, ttyManager, logger, imagePullProgressReporterFactory) }
 
         describe("building an image") {
             val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
@@ -300,7 +300,7 @@ object DockerClientSpec : Spek({
                     whenever(waiter.startWaitingForContainerToExit(container)).doReturn(CompletableFuture.completedFuture(123))
                     whenever(api.attachToContainerOutput(container)).doReturn(outputStream)
                     whenever(api.attachToContainerInput(container)).doReturn(inputStream)
-                    whenever(consoleInfo.enterRawMode()).doReturn(terminalRestorer)
+                    whenever(consoleManager.enterRawMode()).doReturn(terminalRestorer)
                     whenever(killer.killContainerOnSigint(container)).doReturn(signalRestorer)
                     whenever(ttyManager.monitorForSizeChanges(container)).doReturn(resizingRestorer)
                 }
@@ -327,8 +327,8 @@ object DockerClientSpec : Spek({
                     }
 
                     it("starts streaming I/O after putting the terminal into raw mode") {
-                        inOrder(consoleInfo, ioStreamer) {
-                            verify(consoleInfo).enterRawMode()
+                        inOrder(consoleManager, ioStreamer) {
+                            verify(consoleManager).enterRawMode()
                             verify(ioStreamer).stream(outputStream, inputStream)
                         }
                     }
@@ -349,10 +349,10 @@ object DockerClientSpec : Spek({
                     }
 
                     it("configures killing the container when a SIGINT is received after starting the container but before entering raw mode") {
-                        inOrder(api, killer, consoleInfo) {
+                        inOrder(api, killer, consoleManager) {
                             verify(api).startContainer(container)
                             verify(killer).killContainerOnSigint(container)
-                            verify(consoleInfo).enterRawMode()
+                            verify(consoleManager).enterRawMode()
                         }
                     }
 

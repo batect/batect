@@ -93,8 +93,6 @@ class ConsoleInfo(
     }
 }
 
-data class Dimensions(val height: Int, val width: Int)
-
 data class TerminalStateRestorer(private val oldState: String, private val processRunner: ProcessRunner) : AutoCloseable {
     override fun close() {
         val output = processRunner.runWithStdinAttached(listOf("stty", oldState))

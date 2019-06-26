@@ -19,6 +19,7 @@ package batect.docker.run
 import batect.docker.ContainerStoppedException
 import batect.docker.DockerAPI
 import batect.docker.DockerContainer
+import batect.os.Dimensions
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.doesNotThrow
@@ -28,7 +29,6 @@ import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.ui.ConsoleDimensions
 import batect.ui.ConsoleInfo
-import batect.ui.Dimensions
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor

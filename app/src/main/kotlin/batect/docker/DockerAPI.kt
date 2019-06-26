@@ -23,7 +23,7 @@ import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputStream
 import batect.logging.Logger
-import batect.ui.Dimensions
+import batect.os.Dimensions
 import batect.utils.Json
 import batect.utils.Version
 import jnr.constants.platform.Signal

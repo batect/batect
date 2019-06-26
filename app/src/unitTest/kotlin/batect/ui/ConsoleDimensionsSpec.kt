@@ -16,6 +16,7 @@
 
 package batect.ui
 
+import batect.os.Dimensions
 import batect.os.NativeMethods
 import batect.os.NoConsoleException
 import batect.os.SignalListener

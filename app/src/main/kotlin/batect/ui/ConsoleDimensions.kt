@@ -17,6 +17,7 @@
 package batect.ui
 
 import batect.logging.Logger
+import batect.os.Dimensions
 import batect.os.NativeMethodException
 import batect.os.NativeMethods
 import batect.os.NoConsoleException

@@ -16,8 +16,6 @@
 
 package batect.os
 
-import batect.ui.Dimensions
-
 interface NativeMethods {
     fun getConsoleDimensions(): Dimensions
     fun enableConsoleEscapeSequences()
@@ -43,6 +41,8 @@ sealed class PossiblyUnsupportedValue<T> {
         override fun getValueOrThrow(): T = throw UnsupportedOperationException("This value is not supported: $explanation")
     }
 }
+
+data class Dimensions(val height: Int, val width: Int)
 
 abstract class NativeMethodException(val method: String, val errorName: String, val errorDescription: String) :
     RuntimeException("Invoking native method $method failed with error $errorName ($errorDescription).")

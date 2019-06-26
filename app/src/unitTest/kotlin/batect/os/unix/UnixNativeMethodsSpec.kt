@@ -16,6 +16,7 @@
 
 package batect.os.unix
 
+import batect.os.Dimensions
 import batect.os.NativeMethodException
 import batect.os.NoConsoleException
 import batect.os.PossiblyUnsupportedValue
@@ -25,7 +26,6 @@ import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.withMessage
-import batect.ui.Dimensions
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat

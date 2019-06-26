@@ -16,12 +16,12 @@
 
 package batect.os.windows
 
+import batect.os.Dimensions
 import batect.os.NativeMethodException
 import batect.os.NativeMethods
 import batect.os.NoConsoleException
 import batect.os.PossiblyUnsupportedValue
 import batect.os.windows.namedpipes.NamedPipe
-import batect.ui.Dimensions
 import jnr.constants.platform.windows.LastError
 import jnr.ffi.LibraryLoader
 import jnr.ffi.LibraryOption

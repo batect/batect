@@ -16,11 +16,11 @@
 
 package batect.os.unix
 
+import batect.os.Dimensions
 import batect.os.NativeMethodException
 import batect.os.NativeMethods
 import batect.os.NoConsoleException
 import batect.os.PossiblyUnsupportedValue
-import batect.ui.Dimensions
 import jnr.constants.platform.Errno
 import jnr.ffi.LibraryLoader
 import jnr.ffi.Platform

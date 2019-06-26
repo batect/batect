@@ -24,6 +24,7 @@ import batect.docker.pull.TokenDockerRegistryCredentials
 import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputStream
+import batect.os.Dimensions
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.doesNotThrow
@@ -36,7 +37,6 @@ import batect.testutils.mockPost
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.withMessage
-import batect.ui.Dimensions
 import batect.utils.Json
 import batect.utils.Version
 import com.natpryce.hamkrest.MatchResult

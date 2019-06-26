@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
 
 {
-    if [ -z "$BATECT_QUIET_DOWNLOAD" ]; then
-        DO_QUIET='false'
-    else
-        DO_QUIET=$BATECT_QUIET_DOWNLOAD
-    fi
+    BATECT_QUIET_DOWNLOAD=${BATECT_QUIET_DOWNLOAD:-false}
 
     set -euo pipefail
 
@@ -43,7 +39,7 @@
         mkdir -p "$CACHE_DIR"
         temp_file=$(mktemp)
 
-        if [[ $DO_QUIET == 'true' ]]; then
+        if [[ $BATECT_QUIET_DOWNLOAD == 'true' ]]; then
             curl --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
         else
             curl -# --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"

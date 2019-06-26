@@ -44,12 +44,15 @@ import batect.docker.run.ContainerKiller
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.logging.Logger
+import batect.os.ConsoleManager
 import batect.os.NativeMethods
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.os.SignalListener
 import batect.os.SystemInfo
+import batect.os.unix.UnixConsoleManager
 import batect.os.unix.UnixNativeMethods
+import batect.os.windows.WindowsConsoleManager
 import batect.os.windows.WindowsNativeMethods
 import batect.testutils.createForGroup
 import batect.testutils.runBeforeGroup
@@ -300,7 +303,8 @@ private fun createClient(posix: POSIX, nativeMethods: NativeMethods): DockerClie
     val httpDefaults = DockerHttpConfigDefaults(systemInfo)
     val httpConfig = DockerHttpConfig(OkHttpClient(), httpDefaults.defaultDockerHost, systemInfo)
     val api = DockerAPI(httpConfig, logger)
-    val consoleInfo = ConsoleInfo(posix, processRunner, logger)
+    val consoleInfo = ConsoleInfo(posix, logger)
+    val consoleManager = getConsoleManagerForPlatform(consoleInfo, processRunner, logger)
     val credentialsConfigurationFile = DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger)
     val credentialsProvider = DockerRegistryCredentialsProvider(DockerRegistryDomainResolver(), DockerRegistryIndexResolver(), credentialsConfigurationFile)
     val ignoreParser = DockerIgnoreParser()
@@ -313,7 +317,7 @@ private fun createClient(posix: POSIX, nativeMethods: NativeMethods): DockerClie
     val killer = ContainerKiller(api, signalListener)
     val ttyManager = ContainerTTYManager(api, consoleInfo, consoleDimensions, logger)
 
-    return DockerClient(api, consoleInfo, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, streamer, killer, ttyManager, logger)
+    return DockerClient(api, consoleManager, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, streamer, killer, ttyManager, logger)
 }
 
 private fun getNativeMethodsForPlatform(posix: POSIX): NativeMethods {
@@ -321,6 +325,14 @@ private fun getNativeMethodsForPlatform(posix: POSIX): NativeMethods {
         WindowsNativeMethods(posix)
     } else {
         UnixNativeMethods(posix)
+    }
+}
+
+private fun getConsoleManagerForPlatform(consoleInfo: ConsoleInfo, processRunner: ProcessRunner, logger: Logger): ConsoleManager {
+    return if (Platform.getNativePlatform().os == Platform.OS.WINDOWS) {
+        WindowsConsoleManager(logger)
+    } else {
+        UnixConsoleManager(consoleInfo, processRunner, logger)
     }
 }
 

@@ -11,6 +11,7 @@
     VERSION="VERSION-GOES-HERE"
     DOWNLOAD_URL_ROOT=${BATECT_DOWNLOAD_URL_ROOT:-"https://dl.bintray.com/charleskorn/batect"}
     DOWNLOAD_URL=${BATECT_DOWNLOAD_URL:-"$DOWNLOAD_URL_ROOT/$VERSION/bin/batect-$VERSION.jar"}
+    QUIET_DOWNLOAD=${BATECT_QUIET_DOWNLOAD:-false}
 
     ROOT_CACHE_DIR=${BATECT_CACHE_DIR:-"$HOME/.batect/cache"}
     CACHE_DIR="$ROOT_CACHE_DIR/$VERSION"
@@ -36,7 +37,13 @@
         echo "Downloading batect version $VERSION from $DOWNLOAD_URL..."
         mkdir -p "$CACHE_DIR"
         temp_file=$(mktemp)
-        curl -# --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
+
+        if [[ $QUIET_DOWNLOAD == 'true' ]]; then
+            curl --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
+        else
+            curl -# --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
+        fi
+
         mv "$temp_file" "$JAR_PATH"
     }
 

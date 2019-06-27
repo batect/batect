@@ -27,3 +27,9 @@ spotless {
         endWithNewline()
     }
 }
+
+project.afterEvaluate {
+    project.tasks.named('spotlessKotlinCheck') {
+        mustRunAfter 'test'
+    }
+}

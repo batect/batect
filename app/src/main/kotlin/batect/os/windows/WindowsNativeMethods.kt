@@ -240,6 +240,10 @@ class WindowsNativeMethods(
             val bytesRead = waitForOverlappedOperation(pipe, overlapped, event, translateTimeout(timeoutInMilliseconds))
             bufferPointer.get(0, buffer, offset, bytesRead)
 
+            if (bytesRead == 0) {
+                return -1
+            }
+
             return bytesRead
         } finally {
             closeHandle(event)

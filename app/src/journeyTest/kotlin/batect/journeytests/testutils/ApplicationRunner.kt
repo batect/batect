@@ -16,13 +16,20 @@
 
 package batect.journeytests.testutils
 
+import jnr.ffi.Platform
 import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
 data class ApplicationRunner(val testName: String) {
-    val applicationPath: Path = Paths.get("build/install/app-shadow/bin/batect").toAbsolutePath()
+    val applicationName = if (Platform.getNativePlatform().os == Platform.OS.WINDOWS) {
+        "batect.bat"
+    } else {
+        "batect"
+    }
+
+    val applicationPath: Path = Paths.get("build/install/app-shadow/bin/$applicationName").toAbsolutePath()
     val testDirectory: Path = Paths.get("src/journeyTest/resources", testName).toAbsolutePath()
 
     init {

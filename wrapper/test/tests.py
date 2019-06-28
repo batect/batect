@@ -137,6 +137,7 @@ class WrapperScriptTests(unittest.TestCase):
             "BATECT_DOWNLOAD_URL": download_url,
             "PATH": path
         }
+
         if quiet_download is not None:
             env["BATECT_QUIET_DOWNLOAD"] = quiet_download
 

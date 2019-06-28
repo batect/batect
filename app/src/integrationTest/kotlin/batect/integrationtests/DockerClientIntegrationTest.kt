@@ -304,7 +304,7 @@ private fun createClient(posix: POSIX, nativeMethods: NativeMethods): DockerClie
     val httpConfig = DockerHttpConfig(OkHttpClient(), httpDefaults.defaultDockerHost, systemInfo)
     val api = DockerAPI(httpConfig, logger)
     val consoleInfo = ConsoleInfo(posix, logger)
-    val consoleManager = getConsoleManagerForPlatform(consoleInfo, processRunner, logger)
+    val consoleManager = getConsoleManagerForPlatform(consoleInfo, processRunner, nativeMethods, logger)
     val credentialsConfigurationFile = DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger)
     val credentialsProvider = DockerRegistryCredentialsProvider(DockerRegistryDomainResolver(), DockerRegistryIndexResolver(), credentialsConfigurationFile)
     val ignoreParser = DockerIgnoreParser()
@@ -328,9 +328,9 @@ private fun getNativeMethodsForPlatform(posix: POSIX): NativeMethods {
     }
 }
 
-private fun getConsoleManagerForPlatform(consoleInfo: ConsoleInfo, processRunner: ProcessRunner, logger: Logger): ConsoleManager {
+private fun getConsoleManagerForPlatform(consoleInfo: ConsoleInfo, processRunner: ProcessRunner, nativeMethods: NativeMethods, logger: Logger): ConsoleManager {
     return if (Platform.getNativePlatform().os == Platform.OS.WINDOWS) {
-        WindowsConsoleManager(logger)
+        WindowsConsoleManager(consoleInfo, nativeMethods as WindowsNativeMethods, logger)
     } else {
         UnixConsoleManager(consoleInfo, processRunner, logger)
     }

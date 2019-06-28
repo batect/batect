@@ -131,6 +131,132 @@ object WindowsNativeMethodsSpec : Spek({
             }
         }
 
+        describe("enabling console raw mode") {
+            given("getting the handle for stdin succeeds") {
+                val stdinHandle = mock<HANDLE> {
+                    on { isValid } doReturn true
+                }
+
+                beforeEachTest { whenever(win32.GetStdHandle(WindowsLibC.STD_INPUT_HANDLE)).thenReturn(stdinHandle) }
+
+                given("getting the current state succeeds") {
+                    // ECHO_INPUT + LINE_INPUT + MOUSE_INPUT + WINDOW_INPUT + PROCESSED_INPUT + 0x100 (which should remain set)
+                    val existingConsoleMode = 0x0000011F
+
+                    beforeEachTest {
+                        whenever(win32.GetConsoleMode(any(), any())).thenAnswer { invocation ->
+                            val mode = invocation.arguments[1] as IntByReference
+                            mode.set(existingConsoleMode, runtime)
+
+                            true
+                        }
+                    }
+
+                    given("setting the new state succeeds") {
+                        beforeEachTest {
+                            whenever(win32.SetConsoleMode(any(), any())).thenReturn(true)
+                        }
+
+                        val stateToRestore by createForEachTest { nativeMethods.enableConsoleRawMode() }
+
+                        it("returns the existing state so that it can be restored later") {
+                            assertThat(stateToRestore, equalTo(existingConsoleMode))
+                        }
+
+                        it("enabled the desired console modes and disables the unwanted ones, preserving any other settings") {
+                            // EXTENDED_FLAGS + INSERT_MODE + QUICK_EDIT_MODE + ENABLE_VIRTUAL_TERMINAL_OUTPUT + 0x100 (which should remain set)
+                            verify(win32).SetConsoleMode(stdinHandle, 0x3E0)
+                        }
+                    }
+
+                    given("setting the new state fails") {
+                        beforeEachTest {
+                            whenever(win32.SetConsoleMode(any(), any())).thenReturn(false)
+                            whenever(posix.errno()).doReturn(LastError.ERROR_FILE_NOT_FOUND.intValue())
+                        }
+
+                        it("throws an appropriate exception") {
+                            assertThat({ nativeMethods.enableConsoleRawMode() }, throws(withMethod("SetConsoleMode") and withError(LastError.ERROR_FILE_NOT_FOUND)))
+                        }
+                    }
+                }
+
+                given("getting the current state fails") {
+                    beforeEachTest {
+                        whenever(win32.GetConsoleMode(any(), any())).thenReturn(false)
+                        whenever(posix.errno()).doReturn(LastError.ERROR_FILE_NOT_FOUND.intValue())
+                    }
+
+                    it("throws an appropriate exception") {
+                        assertThat({ nativeMethods.enableConsoleRawMode() }, throws(withMethod("GetConsoleMode") and withError(LastError.ERROR_FILE_NOT_FOUND)))
+                    }
+                }
+            }
+
+            given("getting the handle for stdin fails") {
+                val stdinHandle = mock<HANDLE> {
+                    on { isValid } doReturn false
+                }
+
+                beforeEachTest {
+                    whenever(win32.GetStdHandle(WindowsLibC.STD_INPUT_HANDLE)).thenReturn(stdinHandle)
+                    whenever(posix.errno()).doReturn(LastError.ERROR_FILE_NOT_FOUND.intValue())
+                }
+
+                it("throws an appropriate exception") {
+                    assertThat({ nativeMethods.enableConsoleRawMode() }, throws(withMethod("GetStdHandle") and withError(LastError.ERROR_FILE_NOT_FOUND)))
+                }
+            }
+        }
+
+        describe("restoring the console mode") {
+            given("getting the handle for stdin succeeds") {
+                val stdinHandle = mock<HANDLE> {
+                    on { isValid } doReturn true
+                }
+
+                beforeEachTest { whenever(win32.GetStdHandle(WindowsLibC.STD_INPUT_HANDLE)).thenReturn(stdinHandle) }
+
+                given("setting the new state succeeds") {
+                    beforeEachTest {
+                        whenever(win32.SetConsoleMode(any(), any())).thenReturn(true)
+
+                        nativeMethods.restoreConsoleMode(123)
+                    }
+
+                    it("sets the console state to the provided previous value") {
+                        verify(win32).SetConsoleMode(stdinHandle, 123)
+                    }
+                }
+
+                given("setting the new state fails") {
+                    beforeEachTest {
+                        whenever(win32.SetConsoleMode(any(), any())).thenReturn(false)
+                        whenever(posix.errno()).doReturn(LastError.ERROR_FILE_NOT_FOUND.intValue())
+                    }
+
+                    it("throws an appropriate exception") {
+                        assertThat({ nativeMethods.restoreConsoleMode(123) }, throws(withMethod("SetConsoleMode") and withError(LastError.ERROR_FILE_NOT_FOUND)))
+                    }
+                }
+            }
+
+            given("getting the handle for stdin fails") {
+                val stdinHandle = mock<HANDLE> {
+                    on { isValid } doReturn false
+                }
+
+                beforeEachTest {
+                    whenever(win32.GetStdHandle(WindowsLibC.STD_INPUT_HANDLE)).thenReturn(stdinHandle)
+                    whenever(posix.errno()).doReturn(LastError.ERROR_FILE_NOT_FOUND.intValue())
+                }
+
+                it("throws an appropriate exception") {
+                    assertThat({ nativeMethods.restoreConsoleMode(123) }, throws(withMethod("GetStdHandle") and withError(LastError.ERROR_FILE_NOT_FOUND)))
+                }
+            }
+        }
+
         describe("getting the current user and group information") {
             it("returns a value indicating that getting the user ID is not supported on Windows") {
                 assertThat(nativeMethods.getUserId(), equalTo(PossiblyUnsupportedValue.Unsupported("Getting the user ID is not supported on Windows.")))
@@ -152,7 +278,7 @@ object WindowsNativeMethodsSpec : Spek({
                         val bytes = WindowsHelpers.toWString("awesome-user")
 
                         buffer.put(bytes)
-                        length.set((bytes.size / 2).toByte(), runtime)
+                        length.set(bytes.size / 2, runtime)
 
                         true
                     }
@@ -189,7 +315,7 @@ object WindowsNativeMethodsSpec : Spek({
                     beforeEachTest {
                         whenever(win32.GetConsoleMode(any(), any())).thenAnswer { invocation ->
                             val mode = invocation.arguments[1] as IntByReference
-                            mode.set(existingConsoleMode.toByte(), runtime)
+                            mode.set(existingConsoleMode, runtime)
 
                             true
                         }
@@ -254,8 +380,12 @@ private fun withError(error: LastError): Matcher<WindowsNativeMethodException> {
     return has(WindowsNativeMethodException::error, equalTo(error))
 }
 
-private fun IntByReference.set(value: Byte, runtime: Runtime) {
-    val memory = ByteBuffer.wrap(byteArrayOf(0, 0, 0, value))
+private fun IntByReference.set(value: Int, runtime: Runtime) {
+    val byte1 = (value ushr 24).toByte()
+    val byte2 = ((value ushr 16) and 0xFF).toByte()
+    val byte3 = ((value ushr 8) and 0xFF).toByte()
+    val byte4 = (value and 0xFF).toByte()
+    val memory = ByteBuffer.wrap(byteArrayOf(byte1, byte2, byte3, byte4))
 
     this.fromNative(runtime, Pointer.wrap(runtime, memory), 0)
 }

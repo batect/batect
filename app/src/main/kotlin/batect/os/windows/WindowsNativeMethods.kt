@@ -95,7 +95,29 @@ class WindowsNativeMethods(
     }
 
     override fun enableConsoleEscapeSequences() {
-        val console = win32.GetStdHandle(WindowsLibC.STD_OUTPUT_HANDLE)
+        updateConsoleMode(WindowsLibC.STD_OUTPUT_HANDLE) { currentMode ->
+            currentMode or ENABLE_VIRTUAL_TERMINAL_PROCESSING or DISABLE_NEWLINE_AUTO_RETURN
+        }
+    }
+
+    // This is based on MakeRaw from term_windows.go in the Docker CLI.
+    fun enableConsoleRawMode(): Int = updateConsoleMode(WindowsLibC.STD_INPUT_HANDLE) { currentMode ->
+        (
+            currentMode
+                or ENABLE_EXTENDED_FLAGS
+                or ENABLE_INSERT_MODE
+                or ENABLE_QUICK_EDIT_MODE
+                or ENABLE_VIRTUAL_TERMINAL_INPUT
+                and ENABLE_ECHO_INPUT.inv()
+                and ENABLE_LINE_INPUT.inv()
+                and ENABLE_MOUSE_INPUT.inv()
+                and ENABLE_WINDOW_INPUT.inv()
+                and ENABLE_PROCESSED_INPUT.inv()
+            )
+    }
+
+    private fun updateConsoleMode(handle: Int, transform: (Int) -> Int): Int {
+        val console = win32.GetStdHandle(handle)
 
         if (!console.isValid) {
             throwNativeMethodFailed(Win32::GetStdHandle)
@@ -107,9 +129,23 @@ class WindowsNativeMethods(
             throwNativeMethodFailed(Win32::GetConsoleMode)
         }
 
-        val newConsoleMode = currentConsoleMode.toInt() or ENABLE_VIRTUAL_TERMINAL_PROCESSING or DISABLE_NEWLINE_AUTO_RETURN
+        val newConsoleMode = transform(currentConsoleMode.toInt())
 
         if (!win32.SetConsoleMode(console, newConsoleMode)) {
+            throwNativeMethodFailed(Win32::SetConsoleMode)
+        }
+
+        return currentConsoleMode.toInt()
+    }
+
+    fun restoreConsoleMode(previousMode: Int) {
+        val console = win32.GetStdHandle(WindowsLibC.STD_INPUT_HANDLE)
+
+        if (!console.isValid) {
+            throwNativeMethodFailed(Win32::GetStdHandle)
+        }
+
+        if (!win32.SetConsoleMode(console, previousMode)) {
             throwNativeMethodFailed(Win32::SetConsoleMode)
         }
     }
@@ -394,6 +430,16 @@ class WindowsNativeMethods(
         private const val WAIT_ABANDONED: Int = 0x00000080
         private const val WAIT_OBJECT_0: Int = 0x00000000
         private const val WAIT_TIMEOUT: Int = 0x00000102
+
+        private const val ENABLE_ECHO_INPUT: Int = 0x4
+        private const val ENABLE_LINE_INPUT: Int = 0x2
+        private const val ENABLE_MOUSE_INPUT: Int = 0x10
+        private const val ENABLE_WINDOW_INPUT: Int = 0x8
+        private const val ENABLE_PROCESSED_INPUT: Int = 0x1
+        private const val ENABLE_EXTENDED_FLAGS: Int = 0x80
+        private const val ENABLE_INSERT_MODE: Int = 0x20
+        private const val ENABLE_QUICK_EDIT_MODE: Int = 0x40
+        private const val ENABLE_VIRTUAL_TERMINAL_INPUT: Int = 0x200
 
         private const val ENABLE_VIRTUAL_TERMINAL_PROCESSING: Int = 0x4
         private const val DISABLE_NEWLINE_AUTO_RETURN: Int = 0x8

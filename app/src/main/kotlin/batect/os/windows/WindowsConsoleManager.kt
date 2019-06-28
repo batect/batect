@@ -18,9 +18,33 @@ package batect.os.windows
 
 import batect.logging.Logger
 import batect.os.ConsoleManager
+import batect.ui.ConsoleInfo
 
-class WindowsConsoleManager(private val logger: Logger) : ConsoleManager {
+class WindowsConsoleManager(
+    private val consoleInfo: ConsoleInfo,
+    private val nativeMethods: WindowsNativeMethods,
+    private val logger: Logger
+) : ConsoleManager {
     override fun enterRawMode(): AutoCloseable {
-        TODO("not implemented")
+        if (!consoleInfo.stdinIsTTY) {
+            logger.info {
+                message("Terminal is not a TTY, won't enter raw mode.")
+            }
+
+            return object : AutoCloseable {
+                override fun close() {}
+            }
+        }
+
+        val existingState = nativeMethods.enableConsoleRawMode()
+
+        return TerminalStateRestorer(existingState, nativeMethods)
     }
+}
+
+data class TerminalStateRestorer(
+    private val previousState: Int,
+    private val nativeMethods: WindowsNativeMethods
+) : AutoCloseable {
+    override fun close() = nativeMethods.restoreConsoleMode(previousState)
 }

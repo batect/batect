@@ -227,8 +227,9 @@ private val unixModule = Kodein.Module("os.unix") {
 }
 
 private val windowsModule = Kodein.Module("os.windows") {
-    bind<ConsoleManager>() with singletonWithLogger { logger -> WindowsConsoleManager(logger) }
-    bind<NativeMethods>() with singleton { WindowsNativeMethods(instance()) }
+    bind<ConsoleManager>() with singletonWithLogger { logger -> WindowsConsoleManager(instance(), instance(), logger) }
+    bind<WindowsNativeMethods>() with singleton { WindowsNativeMethods(instance()) }
+    bind<NativeMethods>() with singleton { instance<WindowsNativeMethods>() }
 }
 
 private val uiModule = Kodein.Module("ui") {

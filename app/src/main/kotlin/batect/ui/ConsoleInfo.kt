@@ -38,6 +38,17 @@ class ConsoleInfo(
         result
     }
 
+    val stdoutIsTTY: Boolean by lazy {
+        val result = posix.isatty(FileDescriptor.`out`)
+
+        logger.info {
+            message("Called 'isatty' to determine if STDOUT is a TTY.")
+            data("result", result)
+        }
+
+        result
+    }
+
     val supportsInteractivity: Boolean by lazy {
         logger.info {
             message("Checking if terminal supports interactivity.")

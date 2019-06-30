@@ -18,7 +18,6 @@ package batect.os
 
 interface NativeMethods {
     fun getConsoleDimensions(): Dimensions
-    fun enableConsoleEscapeSequences()
 
     fun getUserId(): PossiblyUnsupportedValue<Int>
     fun getGroupId(): PossiblyUnsupportedValue<Int>

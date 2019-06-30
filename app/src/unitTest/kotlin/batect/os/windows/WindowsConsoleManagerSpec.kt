@@ -40,6 +40,26 @@ object WindowsConsoleManagerSpec : Spek({
         val logger by createLoggerForEachTest()
         val consoleManager by createForEachTest { WindowsConsoleManager(consoleInfo, nativeMethods, logger) }
 
+        describe("enabling console escape sequences") {
+            given("stdout is a TTY") {
+                beforeEachTest { whenever(consoleInfo.stdoutIsTTY).doReturn(true) }
+                beforeEachTest { consoleManager.enableConsoleEscapeSequences() }
+
+                it("calls the Windows API to enable console escape sequences") {
+                    verify(nativeMethods).enableConsoleEscapeSequences()
+                }
+            }
+
+            given("stdout is not a TTY") {
+                beforeEachTest { whenever(consoleInfo.stdoutIsTTY).doReturn(false) }
+                beforeEachTest { consoleManager.enableConsoleEscapeSequences() }
+
+                it("does not call the Windows API to enable console escape sequences") {
+                    verify(nativeMethods, never()).enableConsoleEscapeSequences()
+                }
+            }
+        }
+
         describe("entering and exiting raw mode") {
             given("the terminal is a TTY") {
                 beforeEachTest { whenever(consoleInfo.stdinIsTTY).doReturn(true) }

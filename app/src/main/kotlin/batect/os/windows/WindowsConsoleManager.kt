@@ -25,10 +25,22 @@ class WindowsConsoleManager(
     private val nativeMethods: WindowsNativeMethods,
     private val logger: Logger
 ) : ConsoleManager {
+    override fun enableConsoleEscapeSequences() {
+        if (!consoleInfo.stdoutIsTTY) {
+            logger.info {
+                message("STDOUT is not a TTY, won't enable console escape sequences")
+            }
+
+            return
+        }
+
+        nativeMethods.enableConsoleEscapeSequences()
+    }
+
     override fun enterRawMode(): AutoCloseable {
         if (!consoleInfo.stdinIsTTY) {
             logger.info {
-                message("Terminal is not a TTY, won't enter raw mode.")
+                message("STDIN is not a TTY, won't enter raw mode.")
             }
 
             return object : AutoCloseable {

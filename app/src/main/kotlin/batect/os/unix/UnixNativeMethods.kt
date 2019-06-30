@@ -69,10 +69,6 @@ class UnixNativeMethods(
         return Dimensions(size.ws_row.get(), size.ws_col.get())
     }
 
-    override fun enableConsoleEscapeSequences() {
-        // Nothing to do on Linux or OS X.
-    }
-
     override fun getUserId(): PossiblyUnsupportedValue<Int> = PossiblyUnsupportedValue.Supported(posix.geteuid())
     override fun getGroupId(): PossiblyUnsupportedValue<Int> = PossiblyUnsupportedValue.Supported(posix.getegid())
     override fun getUserName(): String = posix.getpwuid(posix.geteuid()).loginName

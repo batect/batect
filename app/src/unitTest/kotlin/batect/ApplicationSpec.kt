@@ -25,7 +25,7 @@ import batect.logging.ApplicationInfoLogger
 import batect.logging.Logger
 import batect.logging.LoggerFactory
 import batect.logging.Severity
-import batect.os.NativeMethods
+import batect.os.ConsoleManager
 import batect.os.SystemInfo
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
@@ -61,7 +61,6 @@ object ApplicationSpec : Spek({
         val commandLineOptionsParser by createForEachTest { mock<CommandLineOptionsParser>() }
         val commandFactory by createForEachTest { mock<CommandFactory>() }
         val systemInfo by createForEachTest { mock<SystemInfo>() }
-        val nativeMethods by createForEachTest { mock<NativeMethods>() }
 
         val dependencies by createForEachTest {
             Kodein.direct {
@@ -69,7 +68,6 @@ object ApplicationSpec : Spek({
                 bind<CommandLineOptionsParser>() with instance(commandLineOptionsParser)
                 bind<CommandFactory>() with instance(commandFactory)
                 bind<SystemInfo>() with instance(systemInfo)
-                bind<NativeMethods>() with instance(nativeMethods)
             }
         }
 
@@ -89,6 +87,7 @@ object ApplicationSpec : Spek({
                     }
                 }
 
+                val consoleManager by createForEachTest { mock<ConsoleManager>() }
                 val errorConsole by createForEachTest { mock<Console>() }
 
                 val extendedDependencies by createForEachTest {
@@ -96,6 +95,7 @@ object ApplicationSpec : Spek({
                         bind<ApplicationInfoLogger>() with instance(applicationInfoLogger)
                         bind<LoggerFactory>() with instance(loggerFactory)
                         bind<Console>(StreamType.Error) with instance(errorConsole)
+                        bind<ConsoleManager>() with instance(consoleManager)
                     }
                 }
 
@@ -130,9 +130,9 @@ object ApplicationSpec : Spek({
                         }
 
                         it("logs information about the application and enables console escape sequences before running the command") {
-                            inOrder(command, applicationInfoLogger, nativeMethods) {
+                            inOrder(command, applicationInfoLogger, consoleManager) {
                                 verify(applicationInfoLogger).logApplicationInfo(args)
-                                verify(nativeMethods).enableConsoleEscapeSequences()
+                                verify(consoleManager).enableConsoleEscapeSequences()
                                 verify(command).run()
                             }
                         }

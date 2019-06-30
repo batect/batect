@@ -94,7 +94,7 @@ class WindowsNativeMethods(
         return Dimensions(height, width)
     }
 
-    override fun enableConsoleEscapeSequences() {
+    fun enableConsoleEscapeSequences() {
         updateConsoleMode(WindowsLibC.STD_OUTPUT_HANDLE) { currentMode ->
             currentMode or ENABLE_VIRTUAL_TERMINAL_PROCESSING or DISABLE_NEWLINE_AUTO_RETURN
         }

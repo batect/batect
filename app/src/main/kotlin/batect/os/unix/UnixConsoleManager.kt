@@ -26,6 +26,10 @@ class UnixConsoleManager(
     private val processRunner: ProcessRunner,
     private val logger: Logger
 ) : ConsoleManager {
+    override fun enableConsoleEscapeSequences() {
+        // Nothing to do on Linux or OS X.
+    }
+
     override fun enterRawMode(): AutoCloseable {
         if (!consoleInfo.stdinIsTTY) {
             logger.info {

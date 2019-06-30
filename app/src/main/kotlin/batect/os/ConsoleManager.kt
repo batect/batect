@@ -17,5 +17,6 @@
 package batect.os
 
 interface ConsoleManager {
+    fun enableConsoleEscapeSequences()
     fun enterRawMode(): AutoCloseable
 }

@@ -59,6 +59,32 @@ object ConsoleInfoSpec : Spek({
             }
         }
 
+        describe("determining if STDOUT is connected to a TTY") {
+            on("STDOUT being connected to a TTY") {
+                val posix = mock<POSIX> {
+                    on { isatty(FileDescriptor.`out`) } doReturn true
+                }
+
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, emptyMap(), logger) }
+
+                it("returns true") {
+                    assertThat(consoleInfo.stdoutIsTTY, equalTo(true))
+                }
+            }
+
+            on("STDOUT not being connected to a TTY") {
+                val posix = mock<POSIX> {
+                    on { isatty(FileDescriptor.`out`) } doReturn false
+                }
+
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, emptyMap(), logger) }
+
+                it("returns false") {
+                    assertThat(consoleInfo.stdoutIsTTY, equalTo(false))
+                }
+            }
+        }
+
         describe("determining if the console supports interactivity") {
             describe("on STDIN being connected to a TTY") {
                 val posix = mock<POSIX> {

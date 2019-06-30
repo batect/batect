@@ -52,12 +52,12 @@ class ConsoleInfo(
     val supportsInteractivity: Boolean by lazy {
         logger.info {
             message("Checking if terminal supports interactivity.")
-            data("stdinIsTTY", stdinIsTTY)
+            data("stdoutIsTTY", stdoutIsTTY)
             data("terminalType", terminalType)
             data("isTravis", isTravis)
         }
 
-        stdinIsTTY && !isTravis && terminalType != "dumb" && terminalType != null
+        stdoutIsTTY && !isTravis && terminalType != "dumb" && terminalType != null
     }
 
     val terminalType: String? = environment["TERM"]

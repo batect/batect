@@ -62,7 +62,7 @@ object ConsoleInfoSpec : Spek({
         describe("determining if STDOUT is connected to a TTY") {
             on("STDOUT being connected to a TTY") {
                 val posix = mock<POSIX> {
-                    on { isatty(FileDescriptor.`out`) } doReturn true
+                    on { isatty(FileDescriptor.out) } doReturn true
                 }
 
                 val consoleInfo by createForEachTest { ConsoleInfo(posix, emptyMap(), logger) }
@@ -74,7 +74,7 @@ object ConsoleInfoSpec : Spek({
 
             on("STDOUT not being connected to a TTY") {
                 val posix = mock<POSIX> {
-                    on { isatty(FileDescriptor.`out`) } doReturn false
+                    on { isatty(FileDescriptor.out) } doReturn false
                 }
 
                 val consoleInfo by createForEachTest { ConsoleInfo(posix, emptyMap(), logger) }
@@ -86,9 +86,9 @@ object ConsoleInfoSpec : Spek({
         }
 
         describe("determining if the console supports interactivity") {
-            describe("on STDIN being connected to a TTY") {
+            describe("on STDOUT being connected to a TTY") {
                 val posix = mock<POSIX> {
-                    on { isatty(FileDescriptor.`in`) } doReturn true
+                    on { isatty(FileDescriptor.out) } doReturn true
                 }
 
                 on("the TERM environment variable being set to 'dumb'") {
@@ -124,9 +124,9 @@ object ConsoleInfoSpec : Spek({
                 }
             }
 
-            on("STDIN not being connected to a TTY") {
+            on("STDOUT not being connected to a TTY") {
                 val posix = mock<POSIX> {
-                    on { isatty(FileDescriptor.`in`) } doReturn false
+                    on { isatty(FileDescriptor.out) } doReturn false
                 }
 
                 val consoleInfo by createForEachTest { ConsoleInfo(posix, mapOf("TERM" to "other-terminal"), logger) }

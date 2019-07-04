@@ -96,6 +96,65 @@ object DockerHostNameResolverSpec : Spek({
             }
         }
 
+        given("the local system is running Windows") {
+            beforeEachTest { whenever(systemInfo.operatingSystem).doReturn(OperatingSystem.Windows) }
+
+            on("the Docker version being less than 17.06") {
+                beforeEachTest {
+                    whenever(dockerClient.getDockerVersionInfo()).doReturn(
+                        DockerVersionInfoRetrievalResult.Succeeded(
+                            createDockerVersionInfoWithServerVersion(Version(17, 5, 0))
+                        )
+                    )
+                }
+
+                val result by runForEachTest { resolver.resolveNameOfDockerHost() }
+
+                it("returns that getting the Docker host's name is not supported") {
+                    assertThat(result, equalTo(DockerHostNameResolutionResult.NotSupported))
+                }
+            }
+
+            data class Scenario(val dockerVersion: Version, val expectedHostName: String, val description: String)
+
+            listOf(
+                Scenario(Version(17, 6, 0), "docker.for.win.localhost", "the Docker version being 17.06"),
+                Scenario(Version(17, 6, 0, "windows1"), "docker.for.win.localhost", "the Docker version being above 17.06 but less than 17.12"),
+                Scenario(Version(17, 12, 0), "docker.for.win.host.internal", "the Docker version being 17.12"),
+                Scenario(Version(17, 12, 0, "windows2"), "docker.for.win.host.internal", "the Docker version being above 17.12 but less than 18.03"),
+                Scenario(Version(18, 3, 0), "host.docker.internal", "the Docker version being 18.03"),
+                Scenario(Version(18, 3, 0, "windows3"), "host.docker.internal", "the Docker version being above 18.03")
+            ).forEach { (dockerVersion, expectedHostName, description) ->
+                on(description) {
+                    beforeEachTest {
+                        whenever(dockerClient.getDockerVersionInfo()).doReturn(
+                            DockerVersionInfoRetrievalResult.Succeeded(
+                                createDockerVersionInfoWithServerVersion(dockerVersion)
+                            )
+                        )
+                    }
+
+                    val result by runForEachTest { resolver.resolveNameOfDockerHost() }
+
+                    it("returns that getting the Docker host's name is '$expectedHostName'") {
+                        assertThat(result, equalTo(DockerHostNameResolutionResult.Resolved(expectedHostName)))
+                    }
+                }
+            }
+
+            on("the Docker version not being able to be determined") {
+                beforeEachTest {
+                    whenever(dockerClient.getDockerVersionInfo()).doReturn(DockerVersionInfoRetrievalResult.Failed("Couldn't get version."))
+                }
+
+                val result by runForEachTest { resolver.resolveNameOfDockerHost() }
+
+                it("returns that getting the Docker host's name is not supported") {
+                    assertThat(result, equalTo(DockerHostNameResolutionResult.NotSupported))
+                }
+            }
+        }
+
         on("the local system is running Linux") {
             beforeEachTest {
                 whenever(systemInfo.operatingSystem).thenReturn(OperatingSystem.Linux)

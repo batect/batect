@@ -26,18 +26,20 @@ class DockerHostNameResolver(
 ) {
     private val dockerVersionInfoRetrievalResult by lazy { dockerClient.getDockerVersionInfo() }
 
-    fun resolveNameOfDockerHost(): DockerHostNameResolutionResult {
-        if (systemInfo.operatingSystem != OperatingSystem.Mac) {
-            return DockerHostNameResolutionResult.NotSupported
-        }
+    fun resolveNameOfDockerHost(): DockerHostNameResolutionResult = when (systemInfo.operatingSystem) {
+        OperatingSystem.Mac -> getDockerHostName("mac")
+        OperatingSystem.Windows -> getDockerHostName("win")
+        OperatingSystem.Linux, OperatingSystem.Other -> DockerHostNameResolutionResult.NotSupported
+    }
 
+    private fun getDockerHostName(operatingSystemPart: String): DockerHostNameResolutionResult {
         val version = (dockerVersionInfoRetrievalResult as? DockerVersionInfoRetrievalResult.Succeeded)?.info?.version
 
         return when {
             version == null -> DockerHostNameResolutionResult.NotSupported
             version >= Version(18, 3, 0) -> DockerHostNameResolutionResult.Resolved("host.docker.internal")
-            version >= Version(17, 12, 0) -> DockerHostNameResolutionResult.Resolved("docker.for.mac.host.internal")
-            version >= Version(17, 6, 0) -> DockerHostNameResolutionResult.Resolved("docker.for.mac.localhost")
+            version >= Version(17, 12, 0) -> DockerHostNameResolutionResult.Resolved("docker.for.$operatingSystemPart.host.internal")
+            version >= Version(17, 6, 0) -> DockerHostNameResolutionResult.Resolved("docker.for.$operatingSystemPart.localhost")
             else -> DockerHostNameResolutionResult.NotSupported
         }
     }

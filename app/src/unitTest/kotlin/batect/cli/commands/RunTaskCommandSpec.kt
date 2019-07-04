@@ -279,7 +279,7 @@ object RunTaskCommandSpec : Spek({
                     val exitCode by runForEachTest { command.run() }
 
                     it("prints a message to the output") {
-                        verify(errorConsole).println(Text.red("Docker is not installed, not available or not compatible with batect: Something went wrong."))
+                        verify(errorConsole).println(Text.red("Docker is not installed, not running or not compatible with batect: Something went wrong."))
                     }
 
                     it("returns a non-zero exit code") {

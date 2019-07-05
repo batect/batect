@@ -170,18 +170,38 @@ class WindowsNativeMethods(
     override fun getGroupId(): PossiblyUnsupportedValue<Int> = PossiblyUnsupportedValue.Unsupported("Getting the group ID is not supported on Windows.")
     override fun getGroupName(): PossiblyUnsupportedValue<String> = PossiblyUnsupportedValue.Unsupported("Getting the group name is not supported on Windows.")
 
-    fun openNamedPipe(path: String): NamedPipe {
-        val result = win32.CreateFileW(WindowsHelpers.toWPath(path), GENERIC_READ or GENERIC_WRITE, 0L, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null)
+    fun openNamedPipe(path: String, connectionTimeoutInMilliseconds: Int): NamedPipe {
+        val startTime = System.nanoTime()
 
-        if (!result.isValid) {
-            if (posix.errno() == ERROR_FILE_NOT_FOUND) {
-                throw FileNotFoundException("The named pipe $path does not exist.")
+        do {
+            val result = win32.CreateFileW(WindowsHelpers.toWPath(path), GENERIC_READ or GENERIC_WRITE, 0L, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null)
+
+            if (!result.isValid) {
+                if (posix.errno() == ERROR_FILE_NOT_FOUND) {
+                    throw FileNotFoundException("The named pipe $path does not exist.")
+                }
+
+                if (posix.errno() == ERROR_PIPE_BUSY) {
+                    continue
+                }
+
+                throwNativeMethodFailed(WindowsLibC::CreateFileW)
             }
 
-            throwNativeMethodFailed(WindowsLibC::CreateFileW)
+            return NamedPipe(result, this)
+        } while (!hasTimedOut(startTime, connectionTimeoutInMilliseconds))
+
+        throw SocketTimeoutException("Could not connect to $path within $connectionTimeoutInMilliseconds milliseconds.")
+    }
+
+    private fun hasTimedOut(startTime: Long, timeoutInMilliseconds: Int): Boolean {
+        if (timeoutInMilliseconds == 0) {
+            return false
         }
 
-        return NamedPipe(result, this)
+        val elapsedTime = System.nanoTime() - startTime
+
+        return elapsedTime > timeoutInMilliseconds * 1000
     }
 
     fun closeNamedPipe(pipe: NamedPipe) {
@@ -430,6 +450,7 @@ class WindowsNativeMethods(
         private const val ERROR_IO_PENDING: Int = 0x000003E5
         private const val ERROR_OPERATION_ABORTED: Int = 0x000003E3
         private const val ERROR_NOT_FOUND: Int = 0x00000490
+        private const val ERROR_PIPE_BUSY: Int = 0x000000E7
 
         private const val WAIT_ABANDONED: Int = 0x00000080
         private const val WAIT_OBJECT_0: Int = 0x00000000

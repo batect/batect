@@ -92,7 +92,7 @@ class NamedPipeSocket : Socket() {
         val path = NamedPipeDns.decodePath(encodedHostName)
 
         try {
-            pipe = nativeMethods.openNamedPipe(path)
+            pipe = nativeMethods.openNamedPipe(path, timeout)
             isOpen = true
         } catch (e: FileNotFoundException) {
             throw IOException("Cannot connect to '$path': the named pipe does not exist", e)

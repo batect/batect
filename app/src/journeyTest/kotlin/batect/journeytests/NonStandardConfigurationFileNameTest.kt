@@ -22,6 +22,7 @@ import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
+import batect.testutils.withPlatformSpecificLineSeparator
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
@@ -38,7 +39,8 @@ object NonStandardConfigurationFileNameTest : Spek({
                 assertThat(result.output, containsSubstring("""
                     |- task-1
                     |- task-2
-                    |- task-3""".trimMargin()))
+                    |- task-3
+                    """.trimMargin().withPlatformSpecificLineSeparator()))
             }
 
             it("returns a zero exit code") {

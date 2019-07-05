@@ -37,10 +37,6 @@ fun Suite.onlyOn(operatingSystems: Set<Platform.OS>, action: Suite.() -> Unit) {
 
 fun Suite.onlyOn(operatingSystem: Platform.OS, action: Suite.() -> Unit) = onlyOn(setOf(operatingSystem), action)
 
-val platformLineSeparator = System.getProperty("line.separator")
-
-fun String.withPlatformSpecificLineSeparator() = this.replace("\n", platformLineSeparator)
-
 private val osIndependentFileSystem by lazy { Jimfs.newFileSystem(Configuration.unix()) }
 
 fun osIndependentPath(path: String): Path {

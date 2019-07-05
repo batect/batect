@@ -20,6 +20,7 @@ import batect.journeytests.testutils.ApplicationRunner
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
+import batect.testutils.withPlatformSpecificLineSeparator
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
@@ -38,7 +39,7 @@ object ListTasksJourneyTest : Spek({
                     |- task-1: do the first thing
                     |- task-2: do the second thing
                     |- task-3: do the third thing
-                    """.trimMargin()))
+                    """.trimMargin().withPlatformSpecificLineSeparator()))
             }
 
             it("returns a zero exit code") {

@@ -16,27 +16,16 @@
 
 package batect.journeytests.testutils
 
-import jnr.ffi.Platform
 import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.streams.toList
 
 data class ApplicationRunner(val testName: String) {
-    val applicationName = if (Platform.getNativePlatform().os == Platform.OS.WINDOWS) {
-        "batect.bat"
-    } else {
-        "batect"
-    }
-
-    val applicationPath: Path = Paths.get("build/install/app-shadow/bin/$applicationName").toAbsolutePath()
     val testDirectory: Path = Paths.get("src/journeyTest/resources", testName).toAbsolutePath()
 
     init {
-        if (!Files.isExecutable(applicationPath)) {
-            throw RuntimeException("The path $applicationPath does not exist or is not executable.")
-        }
-
         if (!Files.isDirectory(testDirectory)) {
             throw RuntimeException("The directory $testDirectory does not exist or is not a directory.")
         }
@@ -71,7 +60,13 @@ data class ApplicationRunner(val testName: String) {
     }
 
     fun commandLineForApplication(arguments: Iterable<String>): List<String> {
-        return listOf(applicationPath.toString()) + arguments
+        val applicationDirectory: Path = Paths.get("build/install/app-shadow/lib").toAbsolutePath()
+
+        val applicationPath = Files.list(applicationDirectory).toList()
+            .single { it.fileName.toString().startsWith("batect-") && it.fileName.toString().endsWith(".jar") }
+            .toAbsolutePath()
+
+        return listOf("java", "-jar", applicationPath.toString()) + arguments
     }
 }
 

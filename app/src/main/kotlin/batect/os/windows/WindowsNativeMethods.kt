@@ -212,6 +212,10 @@ class WindowsNativeMethods(
 
     private fun closeHandle(handle: HANDLE) {
         if (!win32.CloseHandle(handle)) {
+            if (posix.errno() == ERROR_INVALID_HANDLE) {
+                return
+            }
+
             throwNativeMethodFailed(Win32::CloseHandle)
         }
     }
@@ -447,6 +451,7 @@ class WindowsNativeMethods(
         private const val FILE_FLAG_OVERLAPPED: Long = 0x40000000
 
         private const val ERROR_FILE_NOT_FOUND: Int = 0x00000002
+        private const val ERROR_INVALID_HANDLE: Int = 0x00000006
         private const val ERROR_IO_PENDING: Int = 0x000003E5
         private const val ERROR_OPERATION_ABORTED: Int = 0x000003E3
         private const val ERROR_NOT_FOUND: Int = 0x00000490

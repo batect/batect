@@ -20,6 +20,7 @@ import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.DockerUtils
 import batect.testutils.createForGroup
 import batect.testutils.on
+import batect.testutils.platformLineSeparator
 import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
@@ -59,7 +60,7 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
         on("running that task with the '--no-cleanup-on-failure' option") {
             val result by runBeforeGroup { runner.runApplication(listOf("--no-cleanup-after-failure", "--no-color", "the-task")) }
             val commandsRegex = """For container http-server, view its output by running '(?<logsCommand>docker logs (?<id>.*))', or run a command in the container with 'docker exec -it \2 <command>'\.""".toRegex()
-            val cleanupRegex = """Once you have finished investigating the issue, clean up all temporary resources created by batect by running:\n(?<command>(.|\n)+)\n\n""".toRegex()
+            val cleanupRegex = """Once you have finished investigating the issue, clean up all temporary resources created by batect by running:$platformLineSeparator(?<command>(.|$platformLineSeparator)+)$platformLineSeparator$platformLineSeparator""".toRegex()
 
             beforeGroup {
                 val cleanupCommand = cleanupRegex.find(result.output)?.groups?.get("command")?.value
@@ -74,7 +75,7 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
             }
 
             it("prints a message explaining what happened and what to do about it") {
-                assertThat(result.output, containsSubstring("Container http-server did not become healthy.\nThe configured health check did not indicate that the container was healthy within the timeout period."))
+                assertThat(result.output, containsSubstring("Container http-server did not become healthy.${platformLineSeparator}The configured health check did not indicate that the container was healthy within the timeout period."))
             }
 
             it("prints a message explaining how to see the logs of that dependency and how to run a command in the container") {

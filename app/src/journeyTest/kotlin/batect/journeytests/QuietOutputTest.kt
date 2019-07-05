@@ -21,6 +21,7 @@ import batect.journeytests.testutils.itCleansUpAllContainersItCreates
 import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
 import batect.testutils.createForGroup
 import batect.testutils.on
+import batect.testutils.platformLineSeparator
 import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
@@ -36,7 +37,7 @@ object QuietOutputTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--output=quiet", "do-stuff")) }
 
             it("prints the only the output from the task commands") {
-                assertThat(result.output, containsSubstring("This is some output from the build task\r\n\nThis is some output from the main task\r\n"))
+                assertThat(result.output, containsSubstring("This is some output from the build task\r\n${platformLineSeparator}This is some output from the main task\r\n"))
             }
 
             it("returns the exit code from that task") {

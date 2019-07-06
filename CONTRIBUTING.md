@@ -46,7 +46,7 @@ Or, to run the tests and linter once and then automatically re-run them when the
 
 ### Running the journey tests
 
-`./gradlew journeyTest`
+`./gradlew journeyTest`, or run a single test with `./gradlew journeyTest --tests '<test class name>'`
 
 ### Serve the docs locally
 

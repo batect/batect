@@ -41,7 +41,9 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
 
         afterGroup {
             cleanupCommands.forEach {
-                val exitCode = ProcessBuilder("/usr/bin/env", "bash", "-c", it)
+                val commandLine = it.trim().split(" ")
+
+                val exitCode = ProcessBuilder(commandLine)
                     .start()
                     .waitFor()
 
@@ -106,7 +108,7 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
 
                 assertThat(logsCommand, !absent<String>())
 
-                val logsProcess = ProcessBuilder("/usr/bin/env", "bash", "-c", logsCommand)
+                val logsProcess = ProcessBuilder(logsCommand!!.trim().split(" "))
                     .redirectErrorStream(true)
                     .start()
 

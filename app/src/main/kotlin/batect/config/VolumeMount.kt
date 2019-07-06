@@ -79,19 +79,16 @@ data class VolumeMount(
                 throw ConfigurationException("Volume mount definition cannot be empty.", input.node.location.line, input.node.location.column)
             }
 
-            val parts = value.split(':')
+            val regex = """(([a-zA-Z]:\\)?[^:]+):([^:]+)(:([^:]+))?""".toRegex()
+            val match = regex.matchEntire(value)
 
-            if (parts.size < 2 || parts.size > 3) {
+            if (match == null) {
                 throw invalidMountDefinitionException(value, input)
             }
 
-            val local = parts[0]
-            val container = parts[1]
-            val options = parts.getOrNull(2)
-
-            if (local == "" || container == "" || options == "") {
-                throw invalidMountDefinitionException(value, input)
-            }
+            val local = match.groupValues[1]
+            val container = match.groupValues[3]
+            val options = match.groupValues[5].takeIf { it.isNotEmpty() }
 
             val resolvedLocal = resolveLocalPathFromString(local, input)
 

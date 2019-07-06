@@ -100,6 +100,51 @@ object VolumeMountSpec : Spek({
                     }
                 }
 
+                mapOf(
+                    "c:\\local" to "a lowercase drive letter",
+                    "C:\\local" to "a uppercase drive letter"
+                ).forEach { local, description ->
+                    on("parsing a valid Windows volume mount definition with $description") {
+                        val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, "'$local:/container'") }
+
+                        it("returns the correct local path, resolved to an absolute path") {
+                            assertThat(volumeMount.localPath, equalTo("/resolved$local"))
+                        }
+
+                        it("returns the correct container path") {
+                            assertThat(volumeMount.containerPath, equalTo("/container"))
+                        }
+
+                        it("returns the correct options") {
+                            assertThat(volumeMount.options, absent())
+                        }
+
+                        it("returns the correct string form") {
+                            assertThat(volumeMount.toString(), equalTo("/resolved$local:/container"))
+                        }
+                    }
+
+                    on("parsing a valid Windows volume mount definition with $description and options") {
+                        val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, "'$local:/container:cached'") }
+
+                        it("returns the correct local path, resolved to an absolute path") {
+                            assertThat(volumeMount.localPath, equalTo("/resolved$local"))
+                        }
+
+                        it("returns the correct container path") {
+                            assertThat(volumeMount.containerPath, equalTo("/container"))
+                        }
+
+                        it("returns the correct options") {
+                            assertThat(volumeMount.options, equalTo("cached"))
+                        }
+
+                        it("returns the correct string form") {
+                            assertThat(volumeMount.toString(), equalTo("/resolved$local:/container:cached"))
+                        }
+                    }
+                }
+
                 on("parsing an empty volume mount definition") {
                     it("fails with an appropriate error message") {
                         assertThat({ parser.parse(VolumeMount.Companion, "''") }, throws(withMessage("Volume mount definition cannot be empty.") and withLineNumber(1) and withColumn(1)))

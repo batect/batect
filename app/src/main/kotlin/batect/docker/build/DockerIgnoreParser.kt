@@ -17,7 +17,6 @@
 package batect.docker.build
 
 import batect.docker.DockerException
-import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -29,7 +28,6 @@ class DockerIgnoreParser {
             return DockerImageBuildIgnoreList(emptyList())
         }
 
-        val fileSystem = path.fileSystem
         val lines = Files.readAllLines(path)
 
         val entries = lines
@@ -48,21 +46,39 @@ class DockerIgnoreParser {
                     Pair(it, false)
                 }
             }.map { (pattern, inverted) ->
-                DockerImageBuildIgnoreEntry(cleanPattern(pattern, fileSystem), inverted)
+                DockerImageBuildIgnoreEntry(cleanPattern(pattern), inverted)
             }
 
         return DockerImageBuildIgnoreList(entries)
     }
 
-    private fun cleanPattern(pattern: String, fileSystem: FileSystem): String {
-        val patternToClean = fileSystem.getPath(pattern).normalize().toString()
+    // This needs to match the behaviour of Golang's filepath.Clean()
+    private fun cleanPattern(pattern: String): String {
+        val normalisedPattern = pattern
+            .split("/")
+            .filterNot { it == "" }
+            .filterNot { it == "." }
+            .fold(emptyList<String>()) { soFar, nextSegment ->
+                if (nextSegment != "..") {
+                    soFar + nextSegment
+                } else if (soFar.isEmpty()) {
+                    if (pattern.startsWith("/")) {
+                        emptyList()
+                    } else {
+                        listOf(nextSegment)
+                    }
+                } else if (soFar.last() == "..") {
+                    soFar + nextSegment
+                } else {
+                    soFar.dropLast(1)
+                }
+            }
+            .joinToString("/")
 
-        if (patternToClean.isEmpty() || patternToClean == "/") {
+        if (normalisedPattern.isEmpty()) {
             return "."
-        } else if (patternToClean.startsWith('/')) {
-            return patternToClean.substring(1)
-        } else {
-            return patternToClean
         }
+
+        return normalisedPattern
     }
 }

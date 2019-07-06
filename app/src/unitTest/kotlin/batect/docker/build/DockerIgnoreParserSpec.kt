@@ -291,7 +291,11 @@ object DockerIgnoreParserSpec : Spek({
                 "abc/def/../../.." to "..",
                 "/abc/def/../../.." to ".",
                 "abc/def/../../../ghi/jkl/../../../mno" to "../../mno",
-                "/../abc" to "abc"
+                "/../abc" to "abc",
+                "my.file" to "my.file",
+                "my..file" to "my..file",
+                "my\\/file" to "my\\/file",
+                "my\\/.\\/file" to "my\\/.\\/file"
             ).forEach { patternInFile, expectedCleanedPattern ->
                 given("the pattern is '$patternInFile'") {
                     beforeEachTest {

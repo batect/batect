@@ -49,7 +49,12 @@ batect helps solve these problems by:
   your application
 * ensuring that every single command invocation starts with a completely fresh environment based on your configuration file,
   making it impossible to get out-of-sync from the desired state
+* providing an easy mechanism for developers to discover what tasks are available: `./batect --list-tasks`
 * making use of Docker to do all of this in an isolated and low-overhead way
 * using some smart dependency management logic, parallelism and Docker's caching features to do all of this very, very quickly
 * taking advantage of Docker's networking features to set up an isolated network for every command
 * enabling you to use existing Docker images as-is (or easily use custom Dockerfiles) to quickly get up and running
+
+## Where does the name come from?
+
+**b**uild **a**nd **t**esting **e**nvironments as **c**ode **t**ool

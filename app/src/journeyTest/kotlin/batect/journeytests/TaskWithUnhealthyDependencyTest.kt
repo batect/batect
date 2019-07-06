@@ -22,6 +22,7 @@ import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
+import batect.testutils.withPlatformSpecificLineSeparator
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
@@ -36,7 +37,10 @@ object TaskWithUnhealthyDependencyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--no-color", "the-task")) }
 
             it("prints an appropriate error message") {
-                assertThat(result.output, containsSubstring("Container http-server did not become healthy.\nThe configured health check did not indicate that the container was healthy within the timeout period."))
+                assertThat(
+                    result.output,
+                    containsSubstring("Container http-server did not become healthy.\nThe configured health check did not indicate that the container was healthy within the timeout period.".withPlatformSpecificLineSeparator())
+                )
             }
 
             it("prints details of the failing health check") {

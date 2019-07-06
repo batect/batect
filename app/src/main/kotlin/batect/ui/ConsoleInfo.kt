@@ -17,15 +17,18 @@
 package batect.ui
 
 import batect.logging.Logger
+import batect.os.OperatingSystem
+import batect.os.SystemInfo
 import jnr.posix.POSIX
 import java.io.FileDescriptor
 
 class ConsoleInfo(
     private val posix: POSIX,
+    private val systemInfo: SystemInfo,
     private val environment: Map<String, String>,
     private val logger: Logger
 ) {
-    constructor(posix: POSIX, logger: Logger) : this(posix, System.getenv(), logger)
+    constructor(posix: POSIX, systemInfo: SystemInfo, logger: Logger) : this(posix, systemInfo, System.getenv(), logger)
 
     val stdinIsTTY: Boolean by lazy {
         val result = posix.isatty(FileDescriptor.`in`)
@@ -55,9 +58,10 @@ class ConsoleInfo(
             data("stdoutIsTTY", stdoutIsTTY)
             data("terminalType", terminalType)
             data("isTravis", isTravis)
+            data("operatingSystem", systemInfo.operatingSystem)
         }
 
-        stdoutIsTTY && !isTravis && terminalType != "dumb" && terminalType != null
+        stdoutIsTTY && !isTravis && terminalType != "dumb" && (systemInfo.operatingSystem == OperatingSystem.Windows || terminalType != null)
     }
 
     val terminalType: String? = environment["TERM"]

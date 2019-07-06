@@ -16,6 +16,8 @@
 
 package batect.ui
 
+import batect.os.OperatingSystem
+import batect.os.SystemInfo
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
@@ -32,6 +34,11 @@ import java.io.FileDescriptor
 object ConsoleInfoSpec : Spek({
     describe("a console information provider") {
         val logger by createLoggerForEachTest()
+        val genericSystemInfo by createForEachTest {
+            mock<SystemInfo> {
+                on { operatingSystem } doReturn OperatingSystem.Other
+            }
+        }
 
         describe("determining if STDIN is connected to a TTY") {
             on("STDIN being connected to a TTY") {
@@ -39,7 +46,7 @@ object ConsoleInfoSpec : Spek({
                     on { isatty(FileDescriptor.`in`) } doReturn true
                 }
 
-                val consoleInfo by createForEachTest { ConsoleInfo(posix, emptyMap(), logger) }
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, genericSystemInfo, emptyMap(), logger) }
 
                 it("returns true") {
                     assertThat(consoleInfo.stdinIsTTY, equalTo(true))
@@ -51,7 +58,7 @@ object ConsoleInfoSpec : Spek({
                     on { isatty(FileDescriptor.`in`) } doReturn false
                 }
 
-                val consoleInfo by createForEachTest { ConsoleInfo(posix, emptyMap(), logger) }
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, genericSystemInfo, emptyMap(), logger) }
 
                 it("returns false") {
                     assertThat(consoleInfo.stdinIsTTY, equalTo(false))
@@ -65,7 +72,7 @@ object ConsoleInfoSpec : Spek({
                     on { isatty(FileDescriptor.out) } doReturn true
                 }
 
-                val consoleInfo by createForEachTest { ConsoleInfo(posix, emptyMap(), logger) }
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, genericSystemInfo, emptyMap(), logger) }
 
                 it("returns true") {
                     assertThat(consoleInfo.stdoutIsTTY, equalTo(true))
@@ -77,7 +84,7 @@ object ConsoleInfoSpec : Spek({
                     on { isatty(FileDescriptor.out) } doReturn false
                 }
 
-                val consoleInfo by createForEachTest { ConsoleInfo(posix, emptyMap(), logger) }
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, genericSystemInfo, emptyMap(), logger) }
 
                 it("returns false") {
                     assertThat(consoleInfo.stdoutIsTTY, equalTo(false))
@@ -92,23 +99,39 @@ object ConsoleInfoSpec : Spek({
                 }
 
                 on("the TERM environment variable being set to 'dumb'") {
-                    val consoleInfo by createForEachTest { ConsoleInfo(posix, mapOf("TERM" to "dumb"), logger) }
+                    val consoleInfo by createForEachTest { ConsoleInfo(posix, genericSystemInfo, mapOf("TERM" to "dumb"), logger) }
 
                     it("returns false") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(false))
                     }
                 }
 
-                on("the TERM environment variables not being set") {
-                    val consoleInfo by createForEachTest { ConsoleInfo(posix, emptyMap(), logger) }
+                describe("on the TERM environment variable not being set") {
+                    describe("when the application is running on Windows") {
+                        val windowsSystemInfo by createForEachTest {
+                            mock<SystemInfo> {
+                                on { operatingSystem } doReturn OperatingSystem.Windows
+                            }
+                        }
 
-                    it("returns false") {
-                        assertThat(consoleInfo.supportsInteractivity, equalTo(false))
+                        val consoleInfo by createForEachTest { ConsoleInfo(posix, windowsSystemInfo, emptyMap(), logger) }
+
+                        it("returns true") {
+                            assertThat(consoleInfo.supportsInteractivity, equalTo(true))
+                        }
+                    }
+
+                    describe("when the application is not running on Windows") {
+                        val consoleInfo by createForEachTest { ConsoleInfo(posix, genericSystemInfo, emptyMap(), logger) }
+
+                        it("returns false") {
+                            assertThat(consoleInfo.supportsInteractivity, equalTo(false))
+                        }
                     }
                 }
 
                 on("the TERM environment variable being set to something other than 'dumb' and the TRAVIS environment variable not being set") {
-                    val consoleInfo by createForEachTest { ConsoleInfo(posix, mapOf("TERM" to "other-terminal"), logger) }
+                    val consoleInfo by createForEachTest { ConsoleInfo(posix, genericSystemInfo, mapOf("TERM" to "other-terminal"), logger) }
 
                     it("returns true") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(true))
@@ -116,7 +139,7 @@ object ConsoleInfoSpec : Spek({
                 }
 
                 on("the TERM environment variable being set to something other than 'dumb' and the TRAVIS environment variable being set") {
-                    val consoleInfo by createForEachTest { ConsoleInfo(posix, mapOf("TERM" to "other-terminal", "TRAVIS" to "true"), logger) }
+                    val consoleInfo by createForEachTest { ConsoleInfo(posix, genericSystemInfo, mapOf("TERM" to "other-terminal", "TRAVIS" to "true"), logger) }
 
                     it("returns false") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -129,7 +152,7 @@ object ConsoleInfoSpec : Spek({
                     on { isatty(FileDescriptor.out) } doReturn false
                 }
 
-                val consoleInfo by createForEachTest { ConsoleInfo(posix, mapOf("TERM" to "other-terminal"), logger) }
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, genericSystemInfo, mapOf("TERM" to "other-terminal"), logger) }
 
                 it("returns false") {
                     assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -141,7 +164,7 @@ object ConsoleInfoSpec : Spek({
             val posix = mock<POSIX>()
 
             on("when the TERM environment variable is not set") {
-                val consoleInfo by createForEachTest { ConsoleInfo(posix, emptyMap(), logger) }
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, genericSystemInfo, emptyMap(), logger) }
 
                 it("returns null") {
                     assertThat(consoleInfo.terminalType, absent())
@@ -149,7 +172,7 @@ object ConsoleInfoSpec : Spek({
             }
 
             on("when the TERM environment variable is set") {
-                val consoleInfo by createForEachTest { ConsoleInfo(posix, mapOf("TERM" to "some-terminal"), logger) }
+                val consoleInfo by createForEachTest { ConsoleInfo(posix, genericSystemInfo, mapOf("TERM" to "some-terminal"), logger) }
 
                 it("returns its value") {
                     assertThat(consoleInfo.terminalType, equalTo("some-terminal"))

@@ -109,7 +109,7 @@ object DockerClientIntegrationTest : Spek({
 
         fun creationRequestForTestContainer(image: DockerImage, network: DockerNetwork, localMountDirectory: Path, containerMountDirectory: String, command: Iterable<String>): DockerContainerCreationRequest {
             val volumeMount = VolumeMount(localMountDirectory.toString(), containerMountDirectory, null)
-            val userAndGroup = UserAndGroup(nativeMethods.getUserId().getValueOrDefault(1234), nativeMethods.getGroupId().getValueOrDefault(1234))
+            val userAndGroup = UserAndGroup(getUserId(nativeMethods), getGroupId(nativeMethods))
 
             return creationRequestForContainer(image, network, command, volumeMounts = setOf(volumeMount), userAndGroup = userAndGroup)
         }
@@ -320,20 +320,25 @@ private fun createClient(posix: POSIX, nativeMethods: NativeMethods): DockerClie
     return DockerClient(api, consoleManager, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, streamer, killer, ttyManager, logger)
 }
 
-private fun getNativeMethodsForPlatform(posix: POSIX): NativeMethods {
-    return if (Platform.getNativePlatform().os == Platform.OS.WINDOWS) {
-        WindowsNativeMethods(posix)
-    } else {
-        UnixNativeMethods(posix)
-    }
+private fun getNativeMethodsForPlatform(posix: POSIX): NativeMethods = when (Platform.getNativePlatform().os) {
+    Platform.OS.WINDOWS -> WindowsNativeMethods(posix)
+    else -> UnixNativeMethods(posix)
 }
 
-private fun getConsoleManagerForPlatform(consoleInfo: ConsoleInfo, processRunner: ProcessRunner, nativeMethods: NativeMethods, logger: Logger): ConsoleManager {
-    return if (Platform.getNativePlatform().os == Platform.OS.WINDOWS) {
-        WindowsConsoleManager(consoleInfo, nativeMethods as WindowsNativeMethods, logger)
-    } else {
-        UnixConsoleManager(consoleInfo, processRunner, logger)
+private fun getConsoleManagerForPlatform(consoleInfo: ConsoleInfo, processRunner: ProcessRunner, nativeMethods: NativeMethods, logger: Logger): ConsoleManager =
+    when (Platform.getNativePlatform().os) {
+        Platform.OS.WINDOWS -> WindowsConsoleManager(consoleInfo, nativeMethods as WindowsNativeMethods, logger)
+        else -> UnixConsoleManager(consoleInfo, processRunner, logger)
     }
+
+private fun getUserId(nativeMethods: NativeMethods): Int = when (Platform.getNativePlatform().os) {
+    Platform.OS.WINDOWS -> 0
+    else -> nativeMethods.getUserId()
+}
+
+private fun getGroupId(nativeMethods: NativeMethods): Int = when (Platform.getNativePlatform().os) {
+    Platform.OS.WINDOWS -> 0
+    else -> nativeMethods.getGroupId()
 }
 
 private fun getRandomTemporaryFilePath(): Path {

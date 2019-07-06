@@ -19,12 +19,12 @@ package batect.os.windows
 import batect.os.Dimensions
 import batect.os.NativeMethodException
 import batect.os.NoConsoleException
-import batect.os.PossiblyUnsupportedValue
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.runForEachTest
+import batect.testutils.withMessage
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
@@ -259,15 +259,15 @@ object WindowsNativeMethodsSpec : Spek({
 
         describe("getting the current user and group information") {
             it("returns a value indicating that getting the user ID is not supported on Windows") {
-                assertThat(nativeMethods.getUserId(), equalTo(PossiblyUnsupportedValue.Unsupported("Getting the user ID is not supported on Windows.")))
+                assertThat({ nativeMethods.getUserId() }, throws<UnsupportedOperationException>(withMessage("Getting the user ID is not supported on Windows.")))
             }
 
             it("returns a value indicating that getting the group ID is not supported on Windows") {
-                assertThat(nativeMethods.getGroupId(), equalTo(PossiblyUnsupportedValue.Unsupported("Getting the group ID is not supported on Windows.")))
+                assertThat({ nativeMethods.getGroupId() }, throws<UnsupportedOperationException>(withMessage("Getting the group ID is not supported on Windows.")))
             }
 
             it("returns a value indicating that getting the group name is not supported on Windows") {
-                assertThat(nativeMethods.getGroupName(), equalTo(PossiblyUnsupportedValue.Unsupported("Getting the group name is not supported on Windows.")))
+                assertThat({ nativeMethods.getGroupName() }, throws<UnsupportedOperationException>(withMessage("Getting the group name is not supported on Windows.")))
             }
 
             given("getting the current user name succeeds") {

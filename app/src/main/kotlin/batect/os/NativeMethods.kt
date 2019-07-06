@@ -19,26 +19,11 @@ package batect.os
 interface NativeMethods {
     fun getConsoleDimensions(): Dimensions
 
-    fun getUserId(): PossiblyUnsupportedValue<Int>
-    fun getGroupId(): PossiblyUnsupportedValue<Int>
+    fun getUserId(): Int
+    fun getGroupId(): Int
 
     fun getUserName(): String
-    fun getGroupName(): PossiblyUnsupportedValue<String>
-}
-
-sealed class PossiblyUnsupportedValue<T> {
-    abstract fun getValueOrDefault(default: T): T
-    abstract fun getValueOrThrow(): T
-
-    data class Supported<T>(val value: T) : PossiblyUnsupportedValue<T>() {
-        override fun getValueOrDefault(default: T): T = value
-        override fun getValueOrThrow(): T = value
-    }
-
-    data class Unsupported<T>(val explanation: String) : PossiblyUnsupportedValue<T>() {
-        override fun getValueOrDefault(default: T): T = default
-        override fun getValueOrThrow(): T = throw UnsupportedOperationException("This value is not supported: $explanation")
-    }
+    fun getGroupName(): String
 }
 
 data class Dimensions(val height: Int, val width: Int)

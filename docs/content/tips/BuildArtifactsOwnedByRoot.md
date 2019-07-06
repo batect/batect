@@ -33,7 +33,14 @@ When enabled, the following configuration changes are made:
     Again, this means that any other groups defined in the container's image are effectively lost. Under most circumstances, this is not an issue.
 
 While this is really only useful on Linux, for consistency, batect makes the same configuration changes regardless of the host operating system.
-These configuration changes are harmless on OS X.
+These configuration changes are harmless on OS X and Windows.
 
-On Windows, the container is run with UID 1234 and GID 1234. The current user's username is converted to a valid Unix username and used as both the
-container user's user name and group name.
+## Special notes for Windows
+
+On Windows, the container is run with UID 0 and GID 0 and the user and group name `root`. This is because any mounted directories
+are always owned by root when running on Windows, and so running as another user can cause issues interacting with mounted directories.
+
+For consistency, root's home directory inside the container is set to match the directory specified by `home_directory`.
+
+See [docker/for-win#63](https://github.com/docker/for-win/issues/63) and [docker/for-win#39](https://github.com/docker/for-win/issues/39)
+for more details on this limitation.

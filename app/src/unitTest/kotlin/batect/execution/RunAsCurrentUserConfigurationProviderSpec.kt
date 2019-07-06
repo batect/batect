@@ -25,7 +25,6 @@ import batect.execution.model.events.TemporaryDirectoryCreatedEvent
 import batect.execution.model.events.TemporaryFileCreatedEvent
 import batect.os.NativeMethods
 import batect.os.OperatingSystem
-import batect.os.PossiblyUnsupportedValue
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
@@ -42,8 +41,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isEmpty
 import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
@@ -58,11 +57,6 @@ import java.nio.file.attribute.PosixFileAttributes
 object RunAsCurrentUserConfigurationProviderSpec : Spek({
     describe("a 'run as current user' configuration provider") {
         val eventSink by createForEachTest { mock<TaskEventSink>() }
-        val userNameCleaner by createForEachTest {
-            mock<UnixUserNameCleaner> {
-                on { clean(any()) } doAnswer { invocation -> "cleaned-${invocation.arguments[0]}" }
-            }
-        }
 
         given("the container has 'run as current user' disabled") {
             val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
@@ -94,7 +88,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
             }
 
             val nativeMethods = mock<NativeMethods>()
-            val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, userNameCleaner) }
+            val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem) }
 
             on("generating the configuration") {
                 val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
@@ -151,96 +145,92 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     runAsCurrentUserConfig = runAsCurrentUserConfig
                 )
 
-                given("the current user's username is a valid Unix username") {
-                    val nativeMethods = mock<NativeMethods> {
-                        on { getUserName() } doReturn "the-user"
-                        on { getUserId() } doReturn PossiblyUnsupportedValue.Unsupported("Windows doesn't support this")
-                        on { getGroupId() } doReturn PossiblyUnsupportedValue.Unsupported("Windows doesn't support this")
-                        on { getGroupName() } doReturn PossiblyUnsupportedValue.Unsupported("Windows doesn't support this")
+                val nativeMethods = mock<NativeMethods> {
+                    on { getUserName() } doThrow UnsupportedOperationException("This shouldn't be called on Windows")
+                    on { getUserId() } doThrow UnsupportedOperationException("This shouldn't be called on Windows")
+                    on { getGroupId() } doThrow UnsupportedOperationException("This shouldn't be called on Windows")
+                    on { getGroupName() } doThrow UnsupportedOperationException("This shouldn't be called on Windows")
+                }
+
+                val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem) }
+
+                on("generating the configuration") {
+                    val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
+
+                    it("returns a set of volume mounts for the passwd and group file and home directory") {
+                        assertThat(
+                            configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(
+                                setOf(
+                                    "/etc/passwd",
+                                    "/etc/group",
+                                    homeDirectory
+                                )
+                            )
+                        )
                     }
 
-                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, userNameCleaner) }
+                    it("returns a set of volume mounts with the passwd file mounted read-only") {
+                        assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/passwd"))
+                    }
 
-                    on("generating the configuration") {
-                        val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
+                    it("returns a set of volume mounts with the group file mounted read-only") {
+                        assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/group"))
+                    }
 
-                        it("returns a set of volume mounts for the passwd and group file and home directory") {
-                            assertThat(
-                                configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(
-                                    setOf(
-                                        "/etc/passwd",
-                                        "/etc/group",
-                                        homeDirectory
-                                    )
-                                )
+                    it("returns a set of volume mounts with the home directory mounted in delegated mode") {
+                        assertThat(configuration.volumeMounts, hasDelegatedVolumeMount(homeDirectory))
+                    }
+
+                    it("creates a passwd file with root's home directory set to the configured directory") {
+                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
+                        val content = Files.readAllLines(passwdFilePath).joinToString("\n")
+                        assertThat(
+                            content, equalTo(
+                                """
+                                    |root:x:0:0:root:/home/some-user:/bin/sh
+                                """.trimMargin()
                             )
-                        }
+                        )
+                    }
 
-                        it("returns a set of volume mounts with the passwd file mounted read-only") {
-                            assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/passwd"))
-                        }
-
-                        it("returns a set of volume mounts with the group file mounted read-only") {
-                            assertThat(configuration.volumeMounts, hasReadOnlyVolumeMount("/etc/group"))
-                        }
-
-                        it("returns a set of volume mounts with the home directory mounted in delegated mode") {
-                            assertThat(configuration.volumeMounts, hasDelegatedVolumeMount(homeDirectory))
-                        }
-
-                        it("creates a passwd file with both root and the current user with a cleaned username, a fake UID and a fake GID") {
-                            val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
-                            val content = Files.readAllLines(passwdFilePath).joinToString("\n")
-                            assertThat(
-                                content, equalTo(
-                                    """
-                                        |root:x:0:0:root:/root:/bin/sh
-                                        |cleaned-the-user:x:1234:1234:cleaned-the-user:/home/some-user:/bin/sh
-                                    """.trimMargin()
-                                )
+                    it("creates a group file with group for root") {
+                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
+                        val content = Files.readAllLines(groupFilePath).joinToString("\n")
+                        assertThat(
+                            content, equalTo(
+                                """
+                                    |root:x:0:root
+                                """.trimMargin()
                             )
-                        }
+                        )
+                    }
 
-                        it("creates a group file with group for both root and the current user with a fake GID") {
-                            val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
-                            val content = Files.readAllLines(groupFilePath).joinToString("\n")
-                            assertThat(
-                                content, equalTo(
-                                    """
-                                        |root:x:0:root
-                                        |cleaned-the-user:x:1234:cleaned-the-user
-                                    """.trimMargin()
-                                )
-                            )
-                        }
+                    it("emits a 'temporary file created' event for the passwd file") {
+                        val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
+                        verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, passwdFilePath))
+                    }
 
-                        it("emits a 'temporary file created' event for the passwd file") {
-                            val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
-                            verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, passwdFilePath))
-                        }
+                    it("emits a 'temporary file created' event for the group file") {
+                        val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
+                        verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, groupFilePath))
+                    }
 
-                        it("emits a 'temporary file created' event for the group file") {
-                            val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
-                            verify(eventSink).postEvent(TemporaryFileCreatedEvent(container, groupFilePath))
-                        }
+                    it("emits a 'temporary directory created' event for the home directory") {
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
+                        verify(eventSink).postEvent(TemporaryDirectoryCreatedEvent(container, homeDirectoryPath))
+                    }
 
-                        it("emits a 'temporary directory created' event for the home directory") {
-                            val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
-                            verify(eventSink).postEvent(TemporaryDirectoryCreatedEvent(container, homeDirectoryPath))
-                        }
+                    it("returns a user and group configuration with root's UID and GID") {
+                        assertThat(configuration.userAndGroup, equalTo(UserAndGroup(0, 0)))
+                    }
 
-                        it("returns a user and group configuration with a fake UID and GID") {
-                            assertThat(configuration.userAndGroup, equalTo(UserAndGroup(1234, 1234)))
-                        }
+                    it("creates a directory for the volume mount path that does not exist") {
+                        assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
+                    }
 
-                        it("creates a directory for the volume mount path that does not exist") {
-                            assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
-                        }
-
-                        it("creates a directory for the home directory") {
-                            val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
-                            assertThat(Files.exists(homeDirectoryPath), equalTo(true))
-                        }
+                    it("creates a directory for the home directory") {
+                        val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
+                        assertThat(Files.exists(homeDirectoryPath), equalTo(true))
                     }
                 }
             }
@@ -277,13 +267,13 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                 given("the current user is not root") {
                     val nativeMethods = mock<NativeMethods> {
-                        on { getUserId() } doReturn PossiblyUnsupportedValue.Supported(123)
+                        on { getUserId() } doReturn 123
                         on { getUserName() } doReturn "the-user"
-                        on { getGroupId() } doReturn PossiblyUnsupportedValue.Supported(456)
-                        on { getGroupName() } doReturn PossiblyUnsupportedValue.Supported("the-user's-group")
+                        on { getGroupId() } doReturn 456
+                        on { getGroupName() } doReturn "the-user's-group"
                     }
 
-                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, userNameCleaner) }
+                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem) }
 
                     on("generating the configuration") {
                         val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
@@ -382,13 +372,13 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                 given("the current user is root") {
                     val nativeMethods = mock<NativeMethods> {
-                        on { getUserId() } doReturn PossiblyUnsupportedValue.Supported(0)
+                        on { getUserId() } doReturn 0
                         on { getUserName() } doReturn "root"
-                        on { getGroupId() } doReturn PossiblyUnsupportedValue.Supported(0)
-                        on { getGroupName() } doReturn PossiblyUnsupportedValue.Supported("root")
+                        on { getGroupId() } doReturn 0
+                        on { getGroupName() } doReturn "root"
                     }
 
-                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, userNameCleaner) }
+                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem) }
 
                     on("generating the configuration") {
                         val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }

@@ -25,6 +25,7 @@ import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
+import jnr.ffi.Platform
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.InputStreamReader
@@ -49,17 +50,18 @@ object RunAsCurrentUserJourneyTest : Spek({
                 }
 
                 val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
-                val userName by runBeforeGroup { System.getProperty("user.name") }
-                val groupName by runBeforeGroup { getGroupName() }
+                val localUserName by runBeforeGroup { System.getProperty("user.name") }
+                val expectedContainerUserName by runBeforeGroup { getUserNameInContainer() }
+                val expectedContainerGroupName by runBeforeGroup { getGroupNameInContainer() }
 
                 it("prints the output from that task") {
                     val expectedOutput = listOf(
-                        "User: $userName",
-                        "Group: $groupName",
+                        "User: $expectedContainerUserName",
+                        "Group: $expectedContainerGroupName",
                         "Home directory: /home/special-place",
                         "Home directory exists",
-                        "Home directory owned by user: $userName",
-                        "Home directory owned by group: $groupName"
+                        "Home directory owned by user: $expectedContainerUserName",
+                        "Home directory owned by group: $expectedContainerGroupName"
                     ).joinToString("\r\n")
 
                     assertThat(result.output, containsSubstring(expectedOutput))
@@ -67,8 +69,8 @@ object RunAsCurrentUserJourneyTest : Spek({
 
                 it("creates files as the current user, not root") {
                     val expectedFilePath = outputDirectory.resolve("created-file")
-                    val owner = Files.getOwner(expectedFilePath)
-                    assertThat(owner.name, equalTo(userName))
+                    val owner = getCleanFileOwnerName(expectedFilePath)
+                    assertThat(owner, equalTo(localUserName))
                 }
 
                 it("returns the exit code from that task") {
@@ -94,7 +96,21 @@ private fun deleteDirectoryContents(directory: Path) {
     }
 }
 
-private fun getGroupName(): String {
+// On Windows, all mounted directories are mounted with root as the owner and this cannot be changed.
+// See https://github.com/docker/for-win/issues/63 and https://github.com/docker/for-win/issues/39.
+private fun getUserNameInContainer(): String {
+    if (Platform.getNativePlatform().os == Platform.OS.WINDOWS) {
+        return "root"
+    }
+
+    return System.getProperty("user.name")
+}
+
+private fun getGroupNameInContainer(): String {
+    if (Platform.getNativePlatform().os == Platform.OS.WINDOWS) {
+        return "root"
+    }
+
     val commandLine = listOf("id", "-gn")
     val process = ProcessBuilder(commandLine)
         .redirectErrorStream(true)
@@ -108,4 +124,14 @@ private fun getGroupName(): String {
     }
 
     return output.trim()
+}
+
+private fun getCleanFileOwnerName(path: Path): String {
+    val owner = Files.getOwner(path).name
+
+    if (Platform.getNativePlatform().os == Platform.OS.WINDOWS) {
+        return owner.substringAfter('\\')
+    }
+
+    return owner
 }

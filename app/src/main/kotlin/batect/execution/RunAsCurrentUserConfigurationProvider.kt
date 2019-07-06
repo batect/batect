@@ -35,17 +35,16 @@ import java.nio.file.attribute.PosixFileAttributeView
 class RunAsCurrentUserConfigurationProvider(
     private val systemInfo: SystemInfo,
     private val nativeMethods: NativeMethods,
-    private val fileSystem: FileSystem,
-    private val userNameCleaner: UnixUserNameCleaner
+    private val fileSystem: FileSystem
 ) {
     private val temporaryDirectory = fileSystem.getPath(systemInfo.tempDirectory)
 
     fun generateConfiguration(container: Container, eventSink: TaskEventSink): RunAsCurrentUserConfiguration = when (container.runAsCurrentUserConfig) {
         is RunAsCurrentUserConfig.RunAsCurrentUser -> {
-            val userId = nativeMethods.getUserId().getValueOrDefault(1234)
-            val userName = cleanUserNameIfNecessary(nativeMethods.getUserName())
-            val groupId = nativeMethods.getGroupId().getValueOrDefault(1234)
-            val groupName = nativeMethods.getGroupName().getValueOrDefault(userName)
+            val userId = determineUserId()
+            val userName = determineUserName()
+            val groupId = determineGroupId()
+            val groupName = determineGroupName()
 
             val volumeMounts = createMounts(container, container.runAsCurrentUserConfig, userId, userName, groupId, groupName, eventSink)
             createMissingVolumeMountDirectories(container)
@@ -53,6 +52,26 @@ class RunAsCurrentUserConfigurationProvider(
             RunAsCurrentUserConfiguration(volumeMounts, UserAndGroup(userId, groupId))
         }
         is RunAsCurrentUserConfig.RunAsDefaultContainerUser -> RunAsCurrentUserConfiguration(emptySet(), null)
+    }
+
+    private fun determineUserId(): Int = when (systemInfo.operatingSystem) {
+        OperatingSystem.Windows -> 0
+        else -> nativeMethods.getUserId()
+    }
+
+    private fun determineGroupId(): Int = when (systemInfo.operatingSystem) {
+        OperatingSystem.Windows -> 0
+        else -> nativeMethods.getGroupId()
+    }
+
+    private fun determineUserName(): String = when (systemInfo.operatingSystem) {
+        OperatingSystem.Windows -> "root"
+        else -> nativeMethods.getUserName()
+    }
+
+    private fun determineGroupName(): String = when (systemInfo.operatingSystem) {
+        OperatingSystem.Windows -> "root"
+        else -> nativeMethods.getGroupName()
     }
 
     private fun createMounts(
@@ -124,7 +143,7 @@ class RunAsCurrentUserConfigurationProvider(
             val lookupService = fileSystem.userPrincipalLookupService
 
             attributeView.setOwner(lookupService.lookupPrincipalByName(nativeMethods.getUserName()))
-            attributeView.setGroup(lookupService.lookupPrincipalByGroupName(nativeMethods.getGroupName().getValueOrThrow()))
+            attributeView.setGroup(lookupService.lookupPrincipalByGroupName(nativeMethods.getGroupName()))
         }
 
         return path
@@ -141,11 +160,4 @@ class RunAsCurrentUserConfigurationProvider(
             }
         }
     }
-
-    private fun cleanUserNameIfNecessary(userName: String): String =
-        if (systemInfo.operatingSystem == OperatingSystem.Windows) {
-            userNameCleaner.clean(userName)
-        } else {
-            userName
-        }
 }

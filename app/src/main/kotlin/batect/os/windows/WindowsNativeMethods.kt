@@ -20,7 +20,6 @@ import batect.os.Dimensions
 import batect.os.NativeMethodException
 import batect.os.NativeMethods
 import batect.os.NoConsoleException
-import batect.os.PossiblyUnsupportedValue
 import batect.os.windows.namedpipes.NamedPipe
 import jnr.constants.platform.windows.LastError
 import jnr.ffi.LibraryLoader
@@ -166,9 +165,9 @@ class WindowsNativeMethods(
         return String(buffer, 0, bytesReturned, Charsets.UTF_16LE)
     }
 
-    override fun getUserId(): PossiblyUnsupportedValue<Int> = PossiblyUnsupportedValue.Unsupported("Getting the user ID is not supported on Windows.")
-    override fun getGroupId(): PossiblyUnsupportedValue<Int> = PossiblyUnsupportedValue.Unsupported("Getting the group ID is not supported on Windows.")
-    override fun getGroupName(): PossiblyUnsupportedValue<String> = PossiblyUnsupportedValue.Unsupported("Getting the group name is not supported on Windows.")
+    override fun getUserId(): Int = throw UnsupportedOperationException("Getting the user ID is not supported on Windows.")
+    override fun getGroupId(): Int = throw UnsupportedOperationException("Getting the group ID is not supported on Windows.")
+    override fun getGroupName(): String = throw UnsupportedOperationException("Getting the group name is not supported on Windows.")
 
     fun openNamedPipe(path: String, connectionTimeoutInMilliseconds: Int): NamedPipe {
         val startTime = System.nanoTime()

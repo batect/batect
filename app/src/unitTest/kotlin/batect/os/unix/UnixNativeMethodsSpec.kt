@@ -19,7 +19,6 @@ package batect.os.unix
 import batect.os.Dimensions
 import batect.os.NativeMethodException
 import batect.os.NoConsoleException
-import batect.os.PossiblyUnsupportedValue
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -159,7 +158,7 @@ object UnixNativeMethodsSpec : Spek({
             }
 
             it("returns the user ID reported by the system API") {
-                assertThat(nativeMethods.getUserId(), equalTo(PossiblyUnsupportedValue.Supported(123)))
+                assertThat(nativeMethods.getUserId(), equalTo(123))
             }
 
             it("returns the user name reported by the system API") {
@@ -167,11 +166,11 @@ object UnixNativeMethodsSpec : Spek({
             }
 
             it("returns the group ID reported by the system API") {
-                assertThat(nativeMethods.getGroupId(), equalTo(PossiblyUnsupportedValue.Supported(456)))
+                assertThat(nativeMethods.getGroupId(), equalTo(456))
             }
 
             it("returns the group name reported by the system API") {
-                assertThat(nativeMethods.getGroupName(), equalTo(PossiblyUnsupportedValue.Supported("awesome-group")))
+                assertThat(nativeMethods.getGroupName(), equalTo("awesome-group"))
             }
         }
     }

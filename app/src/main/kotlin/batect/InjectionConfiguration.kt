@@ -188,7 +188,7 @@ private val dockerModule = Kodein.Module("docker") {
 }
 
 private val executionModule = Kodein.Module("execution") {
-    bind<CleanupStagePlanner>() with singletonWithLogger { logger -> CleanupStagePlanner(logger) }
+    bind<CleanupStagePlanner>() with singletonWithLogger { logger -> CleanupStagePlanner(instance(), logger) }
     bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance()) }
     bind<ContainerDependencyGraphProvider>() with singletonWithLogger { logger -> ContainerDependencyGraphProvider(instance(), logger) }
     bind<InterruptionTrap>() with singleton { InterruptionTrap(instance()) }

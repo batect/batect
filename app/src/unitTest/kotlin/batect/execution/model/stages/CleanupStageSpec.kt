@@ -18,6 +18,7 @@ package batect.execution.model.stages
 
 import batect.execution.model.rules.cleanup.CleanupTaskStepRule
 import batect.execution.model.rules.cleanup.ManualCleanupSortOrder
+import batect.os.OperatingSystem
 import batect.testutils.given
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -31,53 +32,53 @@ import org.spekframework.spek2.style.specification.describe
 object CleanupStageSpec : Spek({
     describe("a cleanup stage") {
         given("it has no rules") {
-            val stage = CleanupStage(emptySet())
+            val stage = CleanupStage(emptySet(), OperatingSystem.Other)
 
             it("has no manual cleanup commands") {
-                assertThat(stage.manualCleanupCommands, isEmpty)
+                assertThat(stage.manualCleanupInstructions, isEmpty)
             }
         }
 
         given("it has a single rule") {
             given("that rule has no cleanup command") {
                 val rule = mock<CleanupTaskStepRule> {
-                    on { manualCleanupInstruction } doReturn null as String?
+                    on { getManualCleanupInstructionForOperatingSystem(OperatingSystem.Other) } doReturn null as String?
                     on { manualCleanupSortOrder } doThrow UnsupportedOperationException("This rule has no manual cleanup instruction.")
                 }
 
-                val stage = CleanupStage(setOf(rule))
+                val stage = CleanupStage(setOf(rule), OperatingSystem.Other)
 
                 it("has no manual cleanup commands") {
-                    assertThat(stage.manualCleanupCommands, isEmpty)
+                    assertThat(stage.manualCleanupInstructions, isEmpty)
                 }
             }
 
             given("that rule has a cleanup command") {
                 val rule = mock<CleanupTaskStepRule> {
-                    on { manualCleanupInstruction } doReturn "do-cleanup"
+                    on { getManualCleanupInstructionForOperatingSystem(OperatingSystem.Other) } doReturn "do-cleanup"
                 }
 
-                val stage = CleanupStage(setOf(rule))
+                val stage = CleanupStage(setOf(rule), OperatingSystem.Other)
 
                 it("has the cleanup command from the rule") {
-                    assertThat(stage.manualCleanupCommands, equalTo(listOf("do-cleanup")))
+                    assertThat(stage.manualCleanupInstructions, equalTo(listOf("do-cleanup")))
                 }
             }
         }
 
         given("it has multiple rules") {
             val ruleWithNoCommand = mock<CleanupTaskStepRule> {
-                on { manualCleanupInstruction } doReturn null as String?
+                on { getManualCleanupInstructionForOperatingSystem(OperatingSystem.Other) } doReturn null as String?
                 on { manualCleanupSortOrder } doThrow UnsupportedOperationException("This rule has no manual cleanup instruction.")
             }
 
             val lateCleanupRule = mock<CleanupTaskStepRule> {
-                on { manualCleanupInstruction } doReturn "do-this-second"
+                on { getManualCleanupInstructionForOperatingSystem(OperatingSystem.Other) } doReturn "do-this-second"
                 on { manualCleanupSortOrder } doReturn ManualCleanupSortOrder.DeleteTaskNetwork
             }
 
             val earlyCleanupRule = mock<CleanupTaskStepRule> {
-                on { manualCleanupInstruction } doReturn "do-this-first"
+                on { getManualCleanupInstructionForOperatingSystem(OperatingSystem.Other) } doReturn "do-this-first"
                 on { manualCleanupSortOrder } doReturn ManualCleanupSortOrder.RemoveContainers
             }
 
@@ -85,10 +86,10 @@ object CleanupStageSpec : Spek({
                 ruleWithNoCommand,
                 lateCleanupRule,
                 earlyCleanupRule
-            ))
+            ), OperatingSystem.Other)
 
             it("has the cleanup commands from the rules that have commands, sorted in execution order") {
-                assertThat(stage.manualCleanupCommands, equalTo(listOf("do-this-first", "do-this-second")))
+                assertThat(stage.manualCleanupInstructions, equalTo(listOf("do-this-first", "do-this-second")))
             }
         }
     }

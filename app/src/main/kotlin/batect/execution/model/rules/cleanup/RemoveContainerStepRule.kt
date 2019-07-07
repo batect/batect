@@ -22,6 +22,7 @@ import batect.execution.model.events.ContainerStoppedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.RemoveContainerStep
+import batect.os.OperatingSystem
 
 data class RemoveContainerStepRule(val container: Container, val dockerContainer: DockerContainer, val containerWasStarted: Boolean) : CleanupTaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
@@ -35,7 +36,7 @@ data class RemoveContainerStepRule(val container: Container, val dockerContainer
     private fun containerHasStopped(pastEvents: Set<TaskEvent>): Boolean =
         pastEvents.contains(ContainerStoppedEvent(container))
 
-    override val manualCleanupInstruction: String? = "docker rm --force --volumes ${dockerContainer.id}"
+    override fun getManualCleanupInstructionForOperatingSystem(operatingSystem: OperatingSystem): String? = "docker rm --force --volumes ${dockerContainer.id}"
     override val manualCleanupSortOrder: ManualCleanupSortOrder = ManualCleanupSortOrder.RemoveContainers
     override fun toString() = "${this::class.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}', container was started: $containerWasStarted)"
 }

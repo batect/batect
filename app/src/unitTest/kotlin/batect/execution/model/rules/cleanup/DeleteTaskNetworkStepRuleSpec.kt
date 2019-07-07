@@ -21,6 +21,7 @@ import batect.docker.DockerNetwork
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.DeleteTaskNetworkStep
+import batect.os.OperatingSystem
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
@@ -78,7 +79,7 @@ object DeleteTaskNetworkStepRuleSpec : Spek({
 
         on("getting the manual cleanup instruction") {
             val rule = DeleteTaskNetworkStepRule(network, emptySet())
-            val instruction = rule.manualCleanupInstruction
+            val instruction = rule.getManualCleanupInstructionForOperatingSystem(OperatingSystem.Other)
 
             it("returns the appropriate Docker CLI command to use") {
                 assertThat(instruction, equalTo("docker network rm the-network"))

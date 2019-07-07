@@ -22,6 +22,7 @@ import batect.execution.model.events.ContainerStoppedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.StopContainerStep
+import batect.os.OperatingSystem
 import batect.utils.mapToSet
 
 data class StopContainerStepRule(val container: Container, val dockerContainer: DockerContainer, val containersThatMustBeStoppedFirst: Set<Container>) : CleanupTaskStepRule() {
@@ -37,7 +38,7 @@ data class StopContainerStepRule(val container: Container, val dockerContainer: 
         return TaskStepRuleEvaluationResult.NotReady
     }
 
-    override val manualCleanupInstruction: String? = null
+    override fun getManualCleanupInstructionForOperatingSystem(operatingSystem: OperatingSystem): String? = null
     override val manualCleanupSortOrder: ManualCleanupSortOrder
         get() = throw UnsupportedOperationException("This rule has no manual cleanup instruction.")
 

@@ -17,9 +17,11 @@
 package batect.execution.model.rules.cleanup
 
 import batect.execution.model.rules.TaskStepRule
+import batect.os.OperatingSystem
 
 abstract class CleanupTaskStepRule : TaskStepRule() {
-    abstract val manualCleanupInstruction: String?
+    abstract fun getManualCleanupInstructionForOperatingSystem(operatingSystem: OperatingSystem): String?
+
     abstract val manualCleanupSortOrder: ManualCleanupSortOrder
 }
 

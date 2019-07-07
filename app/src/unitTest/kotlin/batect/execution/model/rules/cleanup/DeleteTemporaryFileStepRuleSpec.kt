@@ -20,6 +20,7 @@ import batect.config.Container
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.DeleteTemporaryFileStep
+import batect.os.OperatingSystem
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
@@ -100,12 +101,23 @@ object DeleteTemporaryFileStepRuleSpec : Spek({
             }
         }
 
-        on("getting the manual cleanup instruction") {
+        describe("getting the manual cleanup instruction") {
             val rule = DeleteTemporaryFileStepRule(path, null)
-            val instruction = rule.manualCleanupInstruction
 
-            it("returns the appropriate CLI command to use") {
-                assertThat(instruction, equalTo("rm /some-file"))
+            given("the application is running on Windows") {
+                val instruction = rule.getManualCleanupInstructionForOperatingSystem(OperatingSystem.Windows)
+
+                it("returns the appropriate CLI command to use") {
+                    assertThat(instruction, equalTo("Remove-Item /some-file (if using PowerShell) or del /some-file (if using Command Prompt)"))
+                }
+            }
+
+            given("the application is not running on Windows") {
+                val instruction = rule.getManualCleanupInstructionForOperatingSystem(OperatingSystem.Other)
+
+                it("returns the appropriate CLI command to use") {
+                    assertThat(instruction, equalTo("rm /some-file"))
+                }
             }
         }
     }

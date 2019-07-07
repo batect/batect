@@ -22,6 +22,7 @@ import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.DeleteTaskNetworkStep
+import batect.os.OperatingSystem
 import batect.utils.mapToSet
 
 data class DeleteTaskNetworkStepRule(val network: DockerNetwork, val containersThatMustBeRemovedFirst: Set<Container>) : CleanupTaskStepRule() {
@@ -37,7 +38,7 @@ data class DeleteTaskNetworkStepRule(val network: DockerNetwork, val containersT
         return TaskStepRuleEvaluationResult.NotReady
     }
 
-    override val manualCleanupInstruction: String? = "docker network rm ${network.id}"
+    override fun getManualCleanupInstructionForOperatingSystem(operatingSystem: OperatingSystem): String? = "docker network rm ${network.id}"
     override val manualCleanupSortOrder: ManualCleanupSortOrder = ManualCleanupSortOrder.DeleteTaskNetwork
     override fun toString() = "${this::class.simpleName}(network: '${network.id}', containers that must be removed first: ${containersThatMustBeRemovedFirst.map { "'${it.name}'" }})"
 }

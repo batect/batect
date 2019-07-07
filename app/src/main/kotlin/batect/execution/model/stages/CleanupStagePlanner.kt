@@ -31,10 +31,11 @@ import batect.execution.model.rules.cleanup.DeleteTemporaryFileStepRule
 import batect.execution.model.rules.cleanup.RemoveContainerStepRule
 import batect.execution.model.rules.cleanup.StopContainerStepRule
 import batect.logging.Logger
+import batect.os.SystemInfo
 import batect.utils.filterToSet
 import batect.utils.mapToSet
 
-class CleanupStagePlanner(private val logger: Logger) {
+class CleanupStagePlanner(private val systemInfo: SystemInfo, private val logger: Logger) {
     fun createStage(graph: ContainerDependencyGraph, pastEvents: Set<TaskEvent>): CleanupStage {
         val containersCreated = pastEvents
             .filterIsInstance<ContainerCreatedEvent>()
@@ -56,7 +57,7 @@ class CleanupStagePlanner(private val logger: Logger) {
             data("pastEvents", pastEvents.map { it.toString() })
         }
 
-        return CleanupStage(rules)
+        return CleanupStage(rules, systemInfo.operatingSystem)
     }
 
     private fun networkCleanupRules(pastEvents: Set<TaskEvent>, containersCreated: Map<Container, DockerContainer>): Set<DeleteTaskNetworkStepRule> =

@@ -145,7 +145,7 @@ class TaskStateMachine(
         val cleanupStage = cleanupStagePlanner.createStage(graph, events)
 
         if (taskHasFailed && shouldLeaveCreatedContainersRunningAfterFailure()) {
-            manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events, cleanupStage.manualCleanupCommands)
+            manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events, cleanupStage.manualCleanupInstructions)
             return null
         }
 
@@ -179,7 +179,7 @@ class TaskStateMachine(
         if (inCleanupStage()) {
             taskFailedDuringCleanup = true
 
-            val manualCleanupCommands = (currentStage as CleanupStage).manualCleanupCommands
+            val manualCleanupCommands = (currentStage as CleanupStage).manualCleanupInstructions
             manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessageAfterCleanupFailure(manualCleanupCommands)
         }
     }

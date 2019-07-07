@@ -21,6 +21,7 @@ import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.DeleteTemporaryFileStep
+import batect.os.OperatingSystem
 import java.nio.file.Path
 
 data class DeleteTemporaryFileStepRule(val path: Path, val containerThatMustBeRemovedFirst: Container?) : CleanupTaskStepRule() {
@@ -35,7 +36,11 @@ data class DeleteTemporaryFileStepRule(val path: Path, val containerThatMustBeRe
     private fun containerHasBeenRemoved(pastEvents: Set<TaskEvent>, container: Container): Boolean =
         pastEvents.contains(ContainerRemovedEvent(container))
 
-    override val manualCleanupInstruction: String? = "rm $path"
+    override fun getManualCleanupInstructionForOperatingSystem(operatingSystem: OperatingSystem): String? = when (operatingSystem) {
+        OperatingSystem.Windows -> "Remove-Item $path (if using PowerShell) or del $path (if using Command Prompt)"
+        else -> "rm $path"
+    }
+
     override val manualCleanupSortOrder: ManualCleanupSortOrder = ManualCleanupSortOrder.DeleteTemporaryFiles
     override fun toString() = "${this::class.simpleName}(path: '$path', container that must be removed first: ${if (containerThatMustBeRemovedFirst == null) "null" else "'${containerThatMustBeRemovedFirst.name}'"})"
 }

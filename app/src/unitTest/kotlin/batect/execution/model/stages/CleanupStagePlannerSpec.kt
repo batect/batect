@@ -41,6 +41,8 @@ import batect.execution.model.rules.cleanup.DeleteTemporaryFileStepRule
 import batect.execution.model.rules.cleanup.RemoveContainerStepRule
 import batect.execution.model.rules.cleanup.StopContainerStepRule
 import batect.os.Command
+import batect.os.OperatingSystem
+import batect.os.SystemInfo
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
@@ -61,6 +63,10 @@ import java.nio.file.Paths
 
 object CleanupStagePlannerSpec : Spek({
     describe("a cleanup stage planner") {
+        val systemInfo = mock<SystemInfo> {
+            on { operatingSystem } doReturn OperatingSystem.Other
+        }
+
         val commandResolver = mock<ContainerCommandResolver> {
             on { resolveCommand(any(), any()) } doReturn Command.parse("do-stuff")
         }
@@ -73,7 +79,7 @@ object CleanupStagePlannerSpec : Spek({
         val graph = ContainerDependencyGraph(config, task, commandResolver)
         val events by createForEachTest { mutableSetOf<TaskEvent>() }
         val logger by createLoggerForEachTest()
-        val planner by createForEachTest { CleanupStagePlanner(logger) }
+        val planner by createForEachTest { CleanupStagePlanner(systemInfo, logger) }
 
         given("no events were posted") {
             on("creating the stage") {
@@ -81,6 +87,10 @@ object CleanupStagePlannerSpec : Spek({
 
                 it("has no rules") {
                     assertThat(stage.rules, isEmpty)
+                }
+
+                it("propagates the operating system") {
+                    assertThat(stage.operatingSystem, equalTo(OperatingSystem.Other))
                 }
             }
         }

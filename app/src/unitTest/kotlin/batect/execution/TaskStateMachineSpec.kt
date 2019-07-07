@@ -71,7 +71,7 @@ object TaskStateMachineSpec : Spek({
         val cleanupCommands = listOf("rm /tmp/the-file", "rm /tmp/some-other-file")
         val cleanupStage by createForEachTest {
             mock<CleanupStage> {
-                on { manualCleanupCommands } doReturn cleanupCommands
+                on { manualCleanupInstructions } doReturn cleanupCommands
             }
         }
 

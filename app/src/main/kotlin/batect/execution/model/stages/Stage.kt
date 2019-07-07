@@ -20,6 +20,7 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.rules.cleanup.CleanupTaskStepRule
+import batect.os.OperatingSystem
 
 sealed class Stage(rules: Set<TaskStepRule>) {
     private val remainingRules = rules.toMutableSet()
@@ -43,9 +44,11 @@ sealed class Stage(rules: Set<TaskStepRule>) {
 }
 
 class RunStage(val rules: Set<TaskStepRule>) : Stage(rules)
-class CleanupStage(val rules: Set<CleanupTaskStepRule>) : Stage(rules) {
-    val manualCleanupCommands: List<String> = rules
-        .filter { it.manualCleanupInstruction != null }
-        .sortedBy { it.manualCleanupSortOrder.order }
-        .map { it.manualCleanupInstruction!! }
+
+class CleanupStage(val rules: Set<CleanupTaskStepRule>, val operatingSystem: OperatingSystem) : Stage(rules) {
+    val manualCleanupInstructions: List<String> = rules
+        .map { it to it.getManualCleanupInstructionForOperatingSystem(operatingSystem) }
+        .filter { (_, instruction) -> instruction != null }
+        .sortedBy { (rule, _) -> rule.manualCleanupSortOrder }
+        .map { (_, instruction) -> instruction!! }
 }

@@ -32,6 +32,9 @@ On Linux, you may need to configure the Docker daemon's proxy settings yourself.
 [This page in the Docker documentation](https://docs.docker.com/engine/admin/systemd/#httphttps-proxy) gives an example of
 how to configure a Docker daemon running with systemd.
 
+On Windows, you may need to configure the Docker daemon's proxy settings yourself. You can edit Docker's proxy settings by
+right-clicking the Docker taskbar icon, choosing Settings and then Proxies. 
+
 ## At build time, after the image has been pulled
 
 After pulling the base image, all subsequent build steps use the environment variables of the build environment, which is a

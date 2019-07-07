@@ -13,6 +13,9 @@ Image name (in standard Docker image reference format) to use for this container
 Path (relative to the configuration file's directory) to a directory containing a Dockerfile to build and use as an image for this container.
 **One of `image` or `build_directory` is required.**
 
+On Windows, `build_directory` can use either Windows-style (`path\to\thing`) or Unix-style (`path/to/thing`) paths, but for compatibility
+with users running on other operating systems, using Unix-style paths is recommended.
+
 ## `build_args`
 List of build args (in `name: value` format) to use when building the image in [`build_directory`](#build_directory).
 
@@ -29,6 +32,8 @@ Available since v0.28. The ability to use environment variable values in build a
 Dockerfile (relative to [`build_directory`](#build_directory)) to use when building the image in [`build_directory`](#build_directory). Defaults to `Dockerfile` if not set.
 
 The Dockerfile must be within [`build_directory`](#build_directory).
+
+`dockerfile` must always be specified with Unix-style (`path/to/thing`) paths, even when running on Windows.
 
 Available since v0.31.
 
@@ -130,6 +135,9 @@ Two formats are supported:
           container: /code
           options: cached
   ```
+
+On Windows, the local path can use either Windows-style (`path\to\thing`) or Unix-style (`path/to/thing`) paths, but for compatibility
+with users running on other operating systems, using Unix-style paths is recommended.
 
 See [this page](../tips/Performance.md#io-performance) for more information on why using `cached` volume mounts may be worthwhile.
 

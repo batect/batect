@@ -50,8 +50,8 @@ containers:
     working_directory: /code
 ```
 
-Setting this option will not affect Linux hosts, so it's safe to commit and share this in a project where some developers use
-OS X and others use Linux.
+Setting this option will not affect Linux or Windows hosts, so it's safe to commit and share this in a project where some developers use
+OS X and others use Linux or Windows.
 
 ## Database schema and test data
 

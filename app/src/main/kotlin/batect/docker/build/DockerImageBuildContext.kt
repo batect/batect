@@ -30,8 +30,10 @@ class DockerImageBuildContextFactory(private val ignoreParser: DockerIgnoreParse
         Files.walk(contextDirectory).use { stream ->
             val files = stream
                 .filter { it != contextDirectory }
-                .map { DockerImageBuildContextEntry(it, contextDirectory.relativize(it).toString()) }
-                .filter { ignoreList.shouldIncludeInContext(it.contextPath, dockerfilePath) }
+                .map { it to contextDirectory.relativize(it) }
+                .filter { (_, contextPath) -> ignoreList.shouldIncludeInContext(contextPath, dockerfilePath) }
+                // We intentionally use the Unix-style path separator below to ensure consistency across operating systems.
+                .map { (localPath, contextPath) -> DockerImageBuildContextEntry(localPath, contextPath.joinToString("/")) }
                 .collect(Collectors.toSet())
 
             return DockerImageBuildContext(files)

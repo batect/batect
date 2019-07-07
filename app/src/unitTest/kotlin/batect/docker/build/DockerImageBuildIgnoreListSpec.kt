@@ -16,8 +16,11 @@
 
 package batect.docker.build
 
+import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
+import com.google.common.jimfs.Configuration
+import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -25,12 +28,19 @@ import org.spekframework.spek2.style.specification.describe
 // These tests are based on https://github.com/docker/engine/blob/master/pkg/fileutils/fileutils_test.go
 object DockerImageBuildIgnoreListSpec : Spek({
     describe("a Docker image build ignore list") {
+        val unixFileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
+        val windowsFileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.windows()) }
+
         describe("determining if a file should be included in the build context") {
             given("an empty list of ignore patterns") {
                 val ignoreList = DockerImageBuildIgnoreList(emptyList())
 
-                it("includes all files") {
-                    assertThat(ignoreList.shouldIncludeInContext("/some/path", "Dockerfile"), equalTo(true))
+                it("includes all files with Unix-style paths") {
+                    assertThat(ignoreList.shouldIncludeInContext(unixFileSystem.getPath("/some/path"), "Dockerfile"), equalTo(true))
+                }
+
+                it("includes all files with Windows-style paths") {
+                    assertThat(ignoreList.shouldIncludeInContext(windowsFileSystem.getPath("some\\path"), "Dockerfile"), equalTo(true))
                 }
             }
 
@@ -38,7 +48,7 @@ object DockerImageBuildIgnoreListSpec : Spek({
                 val ignoreList = DockerImageBuildIgnoreList(listOf(DockerImageBuildIgnoreEntry(".dockerignore", false)))
 
                 it("still includes the .dockerignore file") {
-                    assertThat(ignoreList.shouldIncludeInContext(".dockerignore", "Dockerfile"), equalTo(true))
+                    assertThat(ignoreList.shouldIncludeInContext(unixFileSystem.getPath(".dockerignore"), "Dockerfile"), equalTo(true))
                 }
             }
 
@@ -46,7 +56,7 @@ object DockerImageBuildIgnoreListSpec : Spek({
                 val ignoreList = DockerImageBuildIgnoreList(listOf(DockerImageBuildIgnoreEntry("Dockerfile", false)))
 
                 it("still includes the Dockerfile file") {
-                    assertThat(ignoreList.shouldIncludeInContext("Dockerfile", "Dockerfile"), equalTo(true))
+                    assertThat(ignoreList.shouldIncludeInContext(unixFileSystem.getPath("Dockerfile"), "Dockerfile"), equalTo(true))
                 }
             }
 
@@ -57,11 +67,25 @@ object DockerImageBuildIgnoreListSpec : Spek({
                 ))
 
                 it("still includes the custom Dockerfile file") {
-                    assertThat(ignoreList.shouldIncludeInContext("CustomDockerfile", "CustomDockerfile"), equalTo(true))
+                    assertThat(ignoreList.shouldIncludeInContext(unixFileSystem.getPath("CustomDockerfile"), "CustomDockerfile"), equalTo(true))
                 }
 
                 it("does not include a file called Dockerfile") {
-                    assertThat(ignoreList.shouldIncludeInContext("Dockerfile", "CustomDockerfile"), equalTo(false))
+                    assertThat(ignoreList.shouldIncludeInContext(unixFileSystem.getPath("Dockerfile"), "CustomDockerfile"), equalTo(false))
+                }
+            }
+
+            given("a list of patterns that ignores a custom Dockerfile in a subdirectory") {
+                val ignoreList = DockerImageBuildIgnoreList(listOf(
+                    DockerImageBuildIgnoreEntry("Dockerfiles/CustomDockerfile", false)
+                ))
+
+                it("still includes the custom Dockerfile file when given as a Unix-style path") {
+                    assertThat(ignoreList.shouldIncludeInContext(unixFileSystem.getPath("Dockerfiles/CustomDockerfile"), "Dockerfiles/CustomDockerfile"), equalTo(true))
+                }
+
+                it("still includes the custom Dockerfile file when given as a Windows-style path") {
+                    assertThat(ignoreList.shouldIncludeInContext(windowsFileSystem.getPath("Dockerfiles\\CustomDockerfile"), "Dockerfiles/CustomDockerfile"), equalTo(true))
                 }
             }
 
@@ -69,11 +93,11 @@ object DockerImageBuildIgnoreListSpec : Spek({
                 val ignoreList = DockerImageBuildIgnoreList(listOf(DockerImageBuildIgnoreEntry("thing.go", false)))
 
                 it("excludes files matching the pattern") {
-                    assertThat(ignoreList.shouldIncludeInContext("thing.go", "Dockerfile"), equalTo(false))
+                    assertThat(ignoreList.shouldIncludeInContext(unixFileSystem.getPath("thing.go"), "Dockerfile"), equalTo(false))
                 }
 
                 it("includes files not matching the pattern") {
-                    assertThat(ignoreList.shouldIncludeInContext("somethingelse.go", "Dockerfile"), equalTo(true))
+                    assertThat(ignoreList.shouldIncludeInContext(unixFileSystem.getPath("somethingelse.go"), "Dockerfile"), equalTo(true))
                 }
             }
 
@@ -81,11 +105,11 @@ object DockerImageBuildIgnoreListSpec : Spek({
                 val ignoreList = DockerImageBuildIgnoreList(listOf(DockerImageBuildIgnoreEntry("thing.go", true)))
 
                 it("includes files matching the pattern") {
-                    assertThat(ignoreList.shouldIncludeInContext("thing.go", "Dockerfile"), equalTo(true))
+                    assertThat(ignoreList.shouldIncludeInContext(unixFileSystem.getPath("thing.go"), "Dockerfile"), equalTo(true))
                 }
 
                 it("includes files not matching the pattern") {
-                    assertThat(ignoreList.shouldIncludeInContext("somethingelse.go", "Dockerfile"), equalTo(true))
+                    assertThat(ignoreList.shouldIncludeInContext(unixFileSystem.getPath("somethingelse.go"), "Dockerfile"), equalTo(true))
                 }
             }
 
@@ -95,16 +119,24 @@ object DockerImageBuildIgnoreListSpec : Spek({
                     DockerImageBuildIgnoreEntry("docs/README.md", true)
                 ))
 
-                it("includes files that match the exception") {
-                    assertThat(ignoreList.shouldIncludeInContext("docs/README.md", "Dockerfile"), equalTo(true))
+                it("includes files with Unix-style paths that match the exception") {
+                    assertThat(ignoreList.shouldIncludeInContext(unixFileSystem.getPath("docs/README.md"), "Dockerfile"), equalTo(true))
                 }
 
-                it("excludes files that match the first rule") {
-                    assertThat(ignoreList.shouldIncludeInContext("docs/thing", "Dockerfile"), equalTo(false))
+                it("excludes files with Unix-style paths that match the first rule") {
+                    assertThat(ignoreList.shouldIncludeInContext(unixFileSystem.getPath("docs/thing"), "Dockerfile"), equalTo(false))
+                }
+
+                it("includes files with Windows-style paths that match the exception") {
+                    assertThat(ignoreList.shouldIncludeInContext(windowsFileSystem.getPath("docs\\README.md"), "Dockerfile"), equalTo(true))
+                }
+
+                it("excludes files with Windows-style paths that match the first rule") {
+                    assertThat(ignoreList.shouldIncludeInContext(windowsFileSystem.getPath("docs\\thing"), "Dockerfile"), equalTo(false))
                 }
 
                 it("includes files that match neither rule") {
-                    assertThat(ignoreList.shouldIncludeInContext("thing", "Dockerfile"), equalTo(true))
+                    assertThat(ignoreList.shouldIncludeInContext(unixFileSystem.getPath("thing"), "Dockerfile"), equalTo(true))
                 }
             }
         }

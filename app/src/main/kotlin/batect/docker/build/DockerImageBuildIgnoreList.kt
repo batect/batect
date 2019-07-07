@@ -16,14 +16,20 @@
 
 package batect.docker.build
 
+import java.nio.file.Path
+
 data class DockerImageBuildIgnoreList(private val entries: List<DockerImageBuildIgnoreEntry>) {
-    fun shouldIncludeInContext(pathToTest: String, dockerfilePath: String): Boolean {
-        if (pathToTest == ".dockerignore" || pathToTest == dockerfilePath) {
+    fun shouldIncludeInContext(pathToTest: Path, dockerfilePath: String): Boolean {
+        // We deliberately always use a Unix-style path separator here as the Dockerfile path
+        // and .dockerignore rules must always use Unix-style path separators.
+        val canonicalPath = pathToTest.joinToString("/")
+
+        if (canonicalPath == ".dockerignore" || canonicalPath == dockerfilePath) {
             return true
         }
 
         for (entry in entries.reversed()) {
-            val result = entry.matches(pathToTest)
+            val result = entry.matches(canonicalPath)
 
             if (result == MatchResult.MatchedExclude) {
                 return false

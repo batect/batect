@@ -1,11 +1,10 @@
 FROM alpine:3.5
 
-COPY * /app/
-COPY dockerfiles/* /dockerfiles/
+COPY . /app/
 
 RUN ls -la /app
-RUN ls -la /dockerfiles
 
 RUN if [ -f /app/exclude.txt ]; then echo "excluded.txt was included in build context!" && exit 1; fi
 RUN if [ ! -f /app/include.txt ]; then echo "included.txt was not included in build context!" && exit 1; fi
-RUN if [ ! -f /dockerfiles/my-special-dockerfile ]; then echo "dockerfiles/my-special-dockerfile was not included in build context!" && exit 1; fi
+RUN if [ -f /app/dockerfiles/my-special-dockerfile ]; then echo "dockerfiles/my-special-dockerfile was included in build context!" && exit 1; fi
+RUN if [ ! -f /app/files/other_include.txt ]; then echo "files/other_include.txt was not included in build context!" && exit 1; fi

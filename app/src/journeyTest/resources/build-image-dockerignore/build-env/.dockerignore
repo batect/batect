@@ -2,5 +2,5 @@
 *
 
 # ...except the things we want to include
-!dockerfiles
+!files
 !include.txt

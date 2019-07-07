@@ -33,8 +33,7 @@ object NoStdinJourneyTest : Spek({
         val runner by createForGroup { ApplicationRunner("simple-task-using-image") }
 
         on("running that task") {
-            val commandLine by runBeforeGroup { runner.commandLineForApplication(listOf("the-task")).joinToString(" ") }
-            val result by runBeforeGroup { runner.runCommandLine(listOf("sh", "-c", "cat /dev/null | $commandLine")) }
+            val result by runBeforeGroup { runner.runApplication(listOf("the-task"), afterStart = ::closeStdin) }
 
             it("prints the output from that task") {
                 assertThat(result.output, containsSubstring("This is some output from the task\r\n"))
@@ -49,3 +48,7 @@ object NoStdinJourneyTest : Spek({
         }
     }
 })
+
+private fun closeStdin(process: Process) {
+    process.outputStream.close()
+}

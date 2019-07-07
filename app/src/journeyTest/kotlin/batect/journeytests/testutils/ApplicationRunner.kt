@@ -31,13 +31,13 @@ data class ApplicationRunner(val testName: String) {
         }
     }
 
-    fun runApplication(arguments: Iterable<String>, environment: Map<String, String> = emptyMap()): ApplicationResult {
+    fun runApplication(arguments: Iterable<String>, environment: Map<String, String> = emptyMap(), afterStart: (Process) -> Unit = {}): ApplicationResult {
         val commandLine = commandLineForApplication(arguments)
 
-        return runCommandLine(commandLine, environment)
+        return runCommandLine(commandLine, environment, afterStart)
     }
 
-    fun runCommandLine(commandLine: List<String>, environment: Map<String, String> = emptyMap()): ApplicationResult {
+    fun runCommandLine(commandLine: List<String>, environment: Map<String, String> = emptyMap(), afterStart: (Process) -> Unit = {}): ApplicationResult {
         val containersBefore = DockerUtils.getAllCreatedContainers()
         val networksBefore = DockerUtils.getAllNetworks()
         val builder = ProcessBuilder(commandLine)
@@ -47,6 +47,8 @@ data class ApplicationRunner(val testName: String) {
         builder.environment().putAll(environment)
 
         val process = builder.start()
+        afterStart(process)
+
         process.waitFor()
         val output = InputStreamReader(process.inputStream).readText()
 

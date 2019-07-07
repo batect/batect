@@ -80,6 +80,7 @@ import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 import batect.logging.Logger
 import batect.logging.Severity
 import batect.os.Command
+import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
@@ -122,6 +123,10 @@ object TaskStepRunnerSpec : Spek({
             UserAndGroup(456, 789)
         )
 
+        val systemInfo = mock<SystemInfo> {
+            on { lineSeparator } doReturn "SYSTEM_LINE_SEPARATOR"
+        }
+
         val runAsCurrentUserConfigurationProvider = mock<RunAsCurrentUserConfigurationProvider> {
             on { generateConfiguration(any(), any()) } doReturn runAsCurrentUserConfiguration
         }
@@ -131,7 +136,7 @@ object TaskStepRunnerSpec : Spek({
         val hostEnvironmentVariables = mapOf("SOME_ENV_VAR" to "some env var value")
 
         val logger = Logger("some.source", logSink)
-        val runner by createForEachTest { TaskStepRunner(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, logger, hostEnvironmentVariables) }
+        val runner by createForEachTest { TaskStepRunner(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, systemInfo, logger, hostEnvironmentVariables) }
 
         describe("running steps") {
             on("running any step") {
@@ -639,16 +644,16 @@ object TaskStepRunnerSpec : Spek({
 
                         on("and produced some output") {
                             beforeEachTest {
-                                whenever(dockerClient.getLastHealthCheckResult(dockerContainer)).doReturn(DockerHealthCheckResult(2, "Something's not ready yet.\n"))
+                                whenever(dockerClient.getLastHealthCheckResult(dockerContainer)).doReturn(DockerHealthCheckResult(2, "Something's not ready yet.\nMore output on next line.\n"))
 
                                 runner.run(step, eventSink, runOptions)
                             }
 
-                            it("emits a 'container did not become healthy' event with details of the last health check") {
+                            it("emits a 'container did not become healthy' event with details of the last health check with all line breaks replaced with the system line separator") {
                                 verify(eventSink).postEvent(
                                     ContainerDidNotBecomeHealthyEvent(
                                         container,
-                                        "The configured health check did not indicate that the container was healthy within the timeout period. The last health check exited with code 2 and output:\nSomething's not ready yet."
+                                        "The configured health check did not indicate that the container was healthy within the timeout period. The last health check exited with code 2 and output:SYSTEM_LINE_SEPARATORSomething's not ready yet.SYSTEM_LINE_SEPARATORMore output on next line."
                                     )
                                 )
                             }

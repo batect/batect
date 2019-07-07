@@ -63,6 +63,7 @@ import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 import batect.logging.Logger
+import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import java.io.IOException
 import java.nio.file.Files
@@ -72,6 +73,7 @@ class TaskStepRunner(
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
     private val creationRequestFactory: DockerContainerCreationRequestFactory,
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
+    private val systemInfo: SystemInfo,
     private val logger: Logger,
     private val hostEnvironmentVariables: Map<String, String>
 ) {
@@ -80,8 +82,9 @@ class TaskStepRunner(
         proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
         creationRequestFactory: DockerContainerCreationRequestFactory,
         runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
+        systemInfo: SystemInfo,
         logger: Logger
-    ) : this(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, logger, System.getenv())
+    ) : this(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, systemInfo, logger, System.getenv())
 
     fun run(step: TaskStep, eventSink: TaskEventSink, runOptions: RunOptions) {
         logger.info {
@@ -220,7 +223,7 @@ class TaskStepRunner(
         val message = when {
             lastHealthCheckResult.exitCode == 0 -> "The most recent health check exited with code 0, which usually indicates that the container became healthy just after the timeout period expired."
             lastHealthCheckResult.output.isEmpty() -> "The last health check exited with code ${lastHealthCheckResult.exitCode} but did not produce any output."
-            else -> "The last health check exited with code ${lastHealthCheckResult.exitCode} and output:\n${lastHealthCheckResult.output.trim()}"
+            else -> "The last health check exited with code ${lastHealthCheckResult.exitCode} and output:\n${lastHealthCheckResult.output.trim()}".replace("\n", systemInfo.lineSeparator)
         }
 
         return "The configured health check did not indicate that the container was healthy within the timeout period. $message"

@@ -123,7 +123,9 @@ class TaskStepRunner(
             val image = dockerClient.build(step.source.buildDirectory, buildArgs, step.source.dockerfilePath, step.imageTags, onStatusUpdate)
             eventSink.postEvent(ImageBuiltEvent(step.source, image))
         } catch (e: ImageBuildFailedException) {
-            eventSink.postEvent(ImageBuildFailedEvent(step.source, e.message ?: ""))
+            val message = e.message ?: ""
+
+            eventSink.postEvent(ImageBuildFailedEvent(step.source, message.replace("\n", systemInfo.lineSeparator)))
         }
     }
 

@@ -246,12 +246,12 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when building the image fails") {
                     beforeEachTest {
-                        whenever(dockerClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), any())).thenThrow(ImageBuildFailedException("Something went wrong."))
+                        whenever(dockerClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), any())).thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
                         runner.run(step, eventSink, runOptions)
                     }
 
-                    it("emits a 'image build failed' event") {
-                        verify(eventSink).postEvent(ImageBuildFailedEvent(imageSource, "Something went wrong."))
+                    it("emits a 'image build failed' event with all line breaks replaced with the system line separator") {
+                        verify(eventSink).postEvent(ImageBuildFailedEvent(imageSource, "Something went wrong.SYSTEM_LINE_SEPARATORMore details on this line."))
                     }
                 }
 

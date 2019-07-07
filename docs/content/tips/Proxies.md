@@ -33,7 +33,7 @@ On Linux, you may need to configure the Docker daemon's proxy settings yourself.
 how to configure a Docker daemon running with systemd.
 
 On Windows, you may need to configure the Docker daemon's proxy settings yourself. You can edit Docker's proxy settings by
-right-clicking the Docker taskbar icon, choosing Settings and then Proxies. 
+right-clicking the Docker taskbar icon, choosing Settings and then Proxies.
 
 ## At build time, after the image has been pulled
 

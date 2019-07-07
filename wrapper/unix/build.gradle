@@ -1,0 +1,124 @@
+/*
+   Copyright 2017-2019 Charles Korn.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+import java.nio.file.Files
+
+def templateFilePath = 'src/template.sh'
+def templateFile = project.file templateFilePath
+
+task shellcheck(type: Exec) {
+    description 'Runs the shellcheck linter on the wrapper script template.'
+    group 'Verification'
+
+    def upToDateFile = getTemporaryDir().toPath().resolve("lastRun")
+
+    inputs.file templateFile
+    outputs.file upToDateFile
+
+    commandLine 'docker', 'run', '--rm', '-t',
+        '-v', "$projectDir:/code",
+        '-w', "/code",
+        'koalaman/shellcheck:v0.6.0', templateFilePath
+
+    doLast {
+        // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java
+        upToDateFile.text = System.currentTimeMillis()
+    }
+}
+
+task copyTestJar(type: Copy) {
+    description 'Copies the test application JAR into place for use during the wrapper script tests.'
+    group 'Build'
+
+    from project(":wrapper:testapp").getTasksByName("jar", false)
+    into "test"
+}
+
+def testEnvironmentImageName = 'batect-wrapper-test-env'
+
+task buildTestEnvironmentImage(type: Exec) {
+    description 'Build the Docker image used as a test environment.'
+    group 'Verification'
+
+    def imageDirectory = project.file "test/test-env"
+
+    standardOutput = new ByteArrayOutputStream()
+    errorOutput = standardOutput
+    ignoreExitValue = true
+
+    commandLine 'docker', 'build',
+        '-t', testEnvironmentImageName,
+        imageDirectory
+
+    doLast {
+        if (execResult.exitValue != 0) {
+            throw new GradleException("Building image failed: ${standardOutput.toString()}")
+        }
+    }
+}
+
+task test(type: Exec) {
+    description 'Runs the unit tests.'
+    group 'Verification'
+
+    def upToDateFile = getTemporaryDir().toPath().resolve("lastRun")
+
+    inputs.files fileTree(dir: 'test', include: '**/*')
+    inputs.file templateFile
+    outputs.file upToDateFile
+
+    dependsOn copyTestJar
+    dependsOn buildTestEnvironmentImage
+
+    commandLine 'docker', 'run', '--rm', '-t',
+        '-v', "$projectDir:/code",
+        '-w', "/code",
+        testEnvironmentImageName, './test/tests.py'
+
+    doLast {
+        // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java
+        upToDateFile.text = System.currentTimeMillis()
+    }
+}
+
+task build {
+    description 'Build the wrapper script.'
+    group 'Build'
+
+    def scriptDir = getBuildDir().toPath().resolve("scripts")
+    def scriptFile = scriptDir.resolve(rootProject.name)
+
+    inputs.file templateFile
+    inputs.property("version", { version.toString() })
+    outputs.file scriptFile
+
+    doLast {
+        def script = templateFile.text
+            .replace("VERSION-GOES-HERE", version.toString())
+
+        Files.createDirectories scriptDir
+        scriptFile.text = script
+    }
+}
+
+task check {
+    description 'Runs all checks.'
+    group 'Verification'
+
+    dependsOn shellcheck
+    dependsOn test
+    dependsOn build
+}

@@ -37,7 +37,7 @@ yarn-error.log*
 app/src/main/kotlin/batect/VersionInfo.kt
 
 # Don't include the test app JAR.
-wrapper/test/testapp.jar
+wrapper/**/test/testapp.jar
 
 tools/log-viewer/log.json
 tools/viz-tool/log.json

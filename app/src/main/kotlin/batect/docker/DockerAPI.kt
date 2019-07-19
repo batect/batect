@@ -33,6 +33,7 @@ import kotlinx.serialization.json.json
 import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
 import okhttp3.MediaType
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
@@ -63,11 +64,7 @@ class DockerAPI(
             .url(url)
             .build()
 
-        val clientWithLongTimeout = httpConfig.client.newBuilder()
-            .readTimeout(20, TimeUnit.SECONDS)
-            .build()
-
-        clientWithLongTimeout.newCall(request).execute().use { response ->
+        clientWithTimeout(20, TimeUnit.SECONDS).newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Container creation failed.")
@@ -158,11 +155,7 @@ class DockerAPI(
             .url(urlForContainerOperation(container, "stop"))
             .build()
 
-        val clientWithLongTimeout = httpConfig.client.newBuilder()
-            .readTimeout(11, TimeUnit.SECONDS)
-            .build()
-
-        clientWithLongTimeout.newCall(request).execute().use { response ->
+        clientWithTimeout(11, TimeUnit.SECONDS).newCall(request).execute().use { response ->
             if (response.code() == 304) {
                 logger.warn {
                     message("Container has already stopped.")
@@ -241,11 +234,7 @@ class DockerAPI(
             .url(url)
             .build()
 
-        val client = httpConfig.client.newBuilder()
-            .readTimeout(timeout.toNanos(), TimeUnit.NANOSECONDS)
-            .build()
-
-        client.newCall(request).execute().use { response ->
+        clientWithTimeout(timeout.toNanos(), TimeUnit.NANOSECONDS).newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Getting events for container failed.")
@@ -283,11 +272,7 @@ class DockerAPI(
             .url(url)
             .build()
 
-        val client = httpConfig.client.newBuilder()
-            .readTimeout(0, TimeUnit.NANOSECONDS)
-            .build()
-
-        client.newCall(request).execute().use { response ->
+        clientWithNoTimeout().newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Waiting for container to exit failed.")
@@ -572,11 +557,7 @@ class DockerAPI(
 
         val request = createImageBuildRequest(context, buildArgs, dockerfilePath, imageTags, registryCredentials)
 
-        val clientWithLongTimeout = httpConfig.client.newBuilder()
-            .readTimeout(0, TimeUnit.MILLISECONDS)
-            .build()
-
-        clientWithLongTimeout.newCall(request).execute().use { response ->
+        clientWithNoTimeout().newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Could not build image.")
@@ -677,7 +658,7 @@ class DockerAPI(
             .addRegistryCredentialsForPull(registryCredentials)
             .build()
 
-        httpConfig.client.newCall(request).execute().use { response ->
+        clientWithTimeout(20, TimeUnit.SECONDS).newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Could not pull image.")
@@ -822,6 +803,12 @@ class DockerAPI(
             }
         }
     }
+
+    private fun clientWithTimeout(quantity: Long, unit: TimeUnit): OkHttpClient = httpConfig.client.newBuilder()
+        .readTimeout(quantity, unit)
+        .build()
+
+    private fun clientWithNoTimeout() = clientWithTimeout(0, TimeUnit.NANOSECONDS)
 
     private val baseUrl: HttpUrl = httpConfig.baseUrl.newBuilder()
         .addPathSegment("v$minimumDockerAPIVersion")

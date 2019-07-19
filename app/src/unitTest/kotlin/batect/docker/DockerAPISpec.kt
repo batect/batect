@@ -50,6 +50,7 @@ import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.check
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
@@ -430,7 +431,7 @@ object DockerAPISpec : Spek({
                         }
 
                         it("configures the HTTP client with no timeout") {
-                            verify(noTimeoutClientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
+                            verify(noTimeoutClientBuilder).readTimeout(eq(0), any())
                         }
                     }
 
@@ -445,7 +446,7 @@ object DockerAPISpec : Spek({
                         }
 
                         it("configures the HTTP client with no timeout") {
-                            verify(noTimeoutClientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
+                            verify(noTimeoutClientBuilder).readTimeout(eq(0), any())
                         }
                     }
                 }
@@ -521,7 +522,7 @@ object DockerAPISpec : Spek({
                         }
 
                         it("configures the HTTP client with no timeout") {
-                            verify(clientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
+                            verify(clientBuilder).readTimeout(eq(0), any())
                         }
 
                         it("configures the HTTP client with a separate connection pool that does not evict connections (because the underlying connection cannot be reused and because we don't want to evict the connection just because there hasn't been any output for a while)") {
@@ -559,7 +560,7 @@ object DockerAPISpec : Spek({
                         }
 
                         it("configures the HTTP client with no timeout") {
-                            verify(clientBuilder).readTimeout(0, TimeUnit.NANOSECONDS)
+                            verify(clientBuilder).readTimeout(eq(0), any())
                         }
 
                         it("configures the HTTP client with a separate connection pool that does not evict connections (because the underlying connection cannot be reused and because we don't want to evict the connection just because there hasn't been any input for a while)") {
@@ -764,7 +765,7 @@ object DockerAPISpec : Spek({
                 }
 
                 it("configures the HTTP client with no timeout to allow for slow build output") {
-                    verify(longTimeoutClientBuilder).readTimeout(0, TimeUnit.MILLISECONDS)
+                    verify(longTimeoutClientBuilder).readTimeout(eq(0), any())
                 }
 
                 it("builds the image with the expected context") {
@@ -863,6 +864,18 @@ object DockerAPISpec : Spek({
         describe("pulling an image") {
             val imageName = "some-image"
             val expectedUrl = "$dockerBaseUrl/v1.30/images/create?fromImage=some-image"
+            val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
+            val longTimeoutClientBuilder by createForEachTest {
+                mock<OkHttpClient.Builder> { mock ->
+                    on { readTimeout(any(), any()) } doReturn mock
+                    on { build() } doReturn clientWithLongTimeout
+                }
+            }
+
+            beforeEachTest {
+                whenever(httpClient.newBuilder()).doReturn(longTimeoutClientBuilder)
+            }
+
             val registryCredentials = mock<DockerRegistryCredentials> {
                 on { toJSON() } doReturn JsonPrimitive("some json credentials")
             }
@@ -876,7 +889,7 @@ object DockerAPISpec : Spek({
                     |{"status":"Status: Image is up to date for some-image"}
                 """.trimMargin()
 
-                val call by createForEachTest { httpClient.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
+                val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
                 val progressReceiver by createForEachTest { ProgressReceiver() }
                 beforeEachTest { api.pullImage(imageName, registryCredentials, progressReceiver::onProgressUpdate) }
 
@@ -886,6 +899,10 @@ object DockerAPISpec : Spek({
 
                 it("sends all progress updates to the receiver") {
                     assertThat(progressReceiver, receivedAllUpdatesFrom(response))
+                }
+
+                it("configures the HTTP client with a longer timeout to allow for the daemon to contact the registry") {
+                    verify(longTimeoutClientBuilder).readTimeout(20, TimeUnit.SECONDS)
                 }
             }
 
@@ -899,7 +916,7 @@ object DockerAPISpec : Spek({
                     |{"status":"Status: Downloaded newer image for some-image:latest"}
                 """.trimMargin()
 
-                val call by createForEachTest { httpClient.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
+                val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
                 val progressReceiver by createForEachTest { ProgressReceiver() }
                 beforeEachTest { api.pullImage(imageName, registryCredentials, progressReceiver::onProgressUpdate) }
 
@@ -910,11 +927,15 @@ object DockerAPISpec : Spek({
                 it("sends all progress updates to the receiver") {
                     assertThat(progressReceiver, receivedAllUpdatesFrom(response))
                 }
+
+                it("configures the HTTP client with a longer timeout to allow for the daemon to contact the registry") {
+                    verify(longTimeoutClientBuilder).readTimeout(20, TimeUnit.SECONDS)
+                }
             }
 
             on("the pull request having no registry credentials") {
                 val expectedHeadersForNoAuthentication = Headers.Builder().build()
-                val call by createForEachTest { httpClient.mockPost(expectedUrl, "", 200, expectedHeadersForNoAuthentication) }
+                val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, "", 200, expectedHeadersForNoAuthentication) }
                 beforeEachTest { api.pullImage(imageName, null, {}) }
 
                 it("sends a request to the Docker daemon to pull the image with no authentication header") {
@@ -923,7 +944,7 @@ object DockerAPISpec : Spek({
             }
 
             on("the pull failing immediately") {
-                beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418, expectedHeadersForAuthentication) }
+                beforeEachTest { clientWithLongTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418, expectedHeadersForAuthentication) }
 
                 it("throws an appropriate exception") {
                     assertThat({ api.pullImage(imageName, registryCredentials, {}) }, throws<ImagePullFailedException>(
@@ -942,7 +963,7 @@ object DockerAPISpec : Spek({
                     |{"error":"Server error: 404 trying to fetch remote history for some-image","errorDetail":{"code":404,"message":"Server error: 404 trying to fetch remote history for some-image"}}
                 """.trimMargin()
 
-                beforeEachTest { httpClient.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
+                beforeEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
                 val progressReceiver = ProgressReceiver()
 
                 it("throws an appropriate exception") {

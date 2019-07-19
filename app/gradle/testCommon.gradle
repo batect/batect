@@ -22,7 +22,7 @@ dependencies {
     testCommonImplementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     testCommonImplementation "org.spekframework.spek2:spek-dsl-jvm:2.0.5"
     testCommonRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:2.0.5"
-    testCommonRuntimeOnly 'org.junit.platform:junit-platform-engine:1.4.0'
+    testCommonRuntimeOnly 'org.junit.platform:junit-platform-engine:1.5.0'
 }
 
 tasks.withType(Test) {

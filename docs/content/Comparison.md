@@ -29,12 +29,16 @@ cleaned up once the task completes, especially if the task fails.
 In the past, I've used Docker Compose to implement the same idea that is at the core of batect. However, using Docker Compose
 for this purpose has a number of drawbacks.
 
-In particular, Docker Compose is geared towards configuring an application and its dependencies and deploying this whole stack
-to something like Docker Swarm. Its CLI is designed with this purpose in mind, making it frustrating to use day-to-day as a development
-tool and necessitating the use of a higher-level script to automate its usage.
+In particular, Docker Compose is geared towards describing an application and its dependencies and starting this whole stack.
+Its CLI is designed with this purpose in mind, making it frustrating to use day-to-day as a development tool and necessitating
+the use of a higher-level script to automate its usage. Furthermore, Docker Compose has no concept of tasks, further cementing
+the need to use a higher-level script to provide the ability to execute different commands, run prerequisite tasks and provide
+the discoverability that comes with a [go script](https://www.thoughtworks.com/insights/blog/praise-go-script-part-i).
 
-It also does not elegantly support pulling together a set of containers in different configurations (eg. integration vs journey
-testing), does each operation serially (instead of parallelising operations where possible) and has
+Docker Compose is also significantly slower than batect, as it does not parallelise all operations - in one test, batect was 17%
+faster than Docker Compose. It also does not elegantly support pulling together a set of containers in different configurations
+(eg. integration vs functional testing), does not handle [proxies](tips/Proxies.md) or
+[file permission issues on Linux](tips/BuildArtifactsOwnedByRoot.md) automatically and has
 [one long-standing bug](https://github.com/docker/compose/issues/4369) that makes waiting for containers to report as healthy
 difficult.
 

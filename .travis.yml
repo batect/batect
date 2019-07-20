@@ -11,9 +11,6 @@ git:
 services:
   - docker
 
-before_install:
-  - ./travis/setup_creds.sh
-
 install: true
 
 stages:
@@ -30,16 +27,28 @@ jobs:
       after_success: if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_REPO_SLUG" = "charleskorn/batect" ]; then ./travis/push_artifacts.sh; fi
 
     - stage: Integration and journey test
-      name: Test against latest Docker
+      name: Integration test against latest Docker
       dist: xenial
       before_install: ./travis/install_docker.sh
-      script: ./gradlew integrationTest journeyTest
+      script: ./gradlew integrationTest
 
     - stage: Integration and journey test
-      name: Test against Docker 17.06
+      name: Journey test against latest Docker
+      dist: xenial
+      before_install: ./travis/install_docker.sh
+      script: ./gradlew journeyTest
+
+    - stage: Integration and journey test
+      name: Integration test against Docker 17.06
       dist: trusty
       before_install: ./travis/install_docker.sh docker-ce=17.06.0~ce-0~ubuntu
-      script: ./gradlew integrationTest journeyTest
+      script: ./gradlew integrationTest
+
+    - stage: Integration and journey test
+      name: Journey test against Docker 17.06
+      dist: trusty
+      before_install: ./travis/install_docker.sh docker-ce=17.06.0~ce-0~ubuntu
+      script: ./gradlew journeyTest
 
     - stage: Publish
       script: skip

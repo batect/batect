@@ -68,7 +68,7 @@ task test(type: Exec) {
     inputs.files fileTree(dir: 'test', include: '**/*')
     outputs.file upToDateFile
 
-    commandLine 'python', './test/tests.py'
+    commandLine 'python3', './test/tests.py'
 
     doLast {
         // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java

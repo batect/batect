@@ -24,35 +24,60 @@ jobs:
     - stage: Build and unit test
       name: Linux
       script: ./gradlew --parallel build check jacocoTestReport assembleRelease && bash <(curl -s https://codecov.io/bash) -c -F linux
-      after_success: if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_REPO_SLUG" = "charleskorn/batect" ]; then ./travis/push_artifacts.sh; fi
+      workspaces:
+        create:
+          name: build_workspace
+          paths:
+            - build/
+            - app/build/
+            - buildSrc/build/
+            - docs/build/
+            - wrapper/build/
+            - wrapper/testapp/build/
+            - wrapper/unix/build/
+            - wrapper/windows/build/
 
     - stage: Integration and journey test
       name: Integration test against latest Docker
       dist: xenial
       before_install: ./travis/install_docker.sh
       script: ./gradlew integrationTest
+      workspaces:
+        use:
+          - build_workspace
 
     - stage: Integration and journey test
       name: Journey test against latest Docker
       dist: xenial
       before_install: ./travis/install_docker.sh
       script: ./gradlew journeyTest
+      workspaces:
+        use:
+          - build_workspace
 
     - stage: Integration and journey test
       name: Integration test against Docker 17.06
       dist: trusty
       before_install: ./travis/install_docker.sh docker-ce=17.06.0~ce-0~ubuntu
       script: ./gradlew integrationTest
+      workspaces:
+        use:
+          - build_workspace
 
     - stage: Integration and journey test
       name: Journey test against Docker 17.06
       dist: trusty
       before_install: ./travis/install_docker.sh docker-ce=17.06.0~ce-0~ubuntu
       script: ./gradlew journeyTest
+      workspaces:
+        use:
+          - build_workspace
 
     - stage: Publish
       script: skip
-      before_deploy: ./travis/pull_artifacts.sh
+      workspaces:
+        use:
+          - build_workspace
       deploy:
         - provider: bintray
           file: build/bintray/descriptor.json
@@ -67,9 +92,10 @@ jobs:
     - stage: Release
       script: skip
       if: tag IS present AND repo = "charleskorn/batect"
-      before_deploy:
-        - ./travis/pull_artifacts.sh
-        - ./gradlew --parallel validateRelease
+      workspaces:
+        use:
+        - build_workspace
+      before_deploy: ./gradlew --parallel validateRelease
       deploy:
         - provider: releases
           api_key:

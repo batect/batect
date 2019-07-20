@@ -27,38 +27,23 @@ jobs:
     - stage: Build and unit test
       name: Linux
       script: ./gradlew --parallel build check jacocoTestReport assembleRelease && bash <(curl -s https://codecov.io/bash) -c -F linux
-      after_success:
-        - if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_REPO_SLUG" = "charleskorn/batect" ]; then gsutil -m rsync -r build/bintray gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/bintray; fi
-        - if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_REPO_SLUG" = "charleskorn/batect" ]; then gsutil -m rsync -r build/release gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/release; fi
-        - if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_REPO_SLUG" = "charleskorn/batect" ]; then gsutil -m rsync -r docs/build/docs gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/docs/build/docs; fi
+      after_success: if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_REPO_SLUG" = "charleskorn/batect" ]; then ./travis/push_artifacts.sh; fi
 
     - stage: Integration and journey test
       name: Test against latest Docker
       dist: xenial
-      before_install:
-        - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-        - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-        - sudo apt-get update
-        - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+      before_install: ./travis/install_docker.sh
       script: ./gradlew integrationTest journeyTest
 
     - stage: Integration and journey test
       name: Test against Docker 17.06
       dist: trusty
-      before_install:
-        - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-        - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-        - sudo apt-get update
-        - sudo apt-get -y -o Dpkg::Options::="--force-confnew" --allow-downgrades install docker-ce=17.06.0~ce-0~ubuntu
+      before_install: ./travis/install_docker.sh docker-ce=17.06.0~ce-0~ubuntu
       script: ./gradlew integrationTest journeyTest
 
     - stage: Publish
       script: skip
-      before_deploy:
-        - mkdir -p build/bintray build/release docs/build/docs
-        - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/bintray build/bintray
-        - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/release build/release
-        - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/docs/build/docs docs/build/docs
+      before_deploy: ./travis/pull_artifacts.sh
       deploy:
         - provider: bintray
           file: build/bintray/descriptor.json
@@ -74,10 +59,7 @@ jobs:
       script: skip
       if: tag IS present AND repo = "charleskorn/batect"
       before_deploy:
-        - mkdir -p build/bintray build/release docs/build/docs
-        - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/bintray build/bintray
-        - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/release build/release
-        - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/docs/build/docs docs/build/docs
+        - ./travis/pull_artifacts.sh
         - ./gradlew --parallel validateRelease
       deploy:
         - provider: releases

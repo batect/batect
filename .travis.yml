@@ -98,8 +98,16 @@ jobs:
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-  - rm -f  $HOME/.gradle/caches/*/fileHashes/fileHashes.bin
-  - rm -f  $HOME/.gradle/caches/*/fileHashes/fileHashes.lock
+  - rm -fr $HOME/.gradle/caches/*/scripts/
+  - rm -fr $HOME/.gradle/caches/*/scripts-remapped/
+  - rm -fr $HOME/.gradle/caches/*/fileHashes/
+  - rm -f  $HOME/.gradle/caches/*/fileContent/*.lock
+  - rm -f  $HOME/.gradle/caches/*/javaCompile/*.lock
+  - rm -f  $HOME/.gradle/caches/*/executionHistory/*.lock
+  - rm -f  $HOME/.gradle/caches/*/generated-gradle-jars/*.lock
+  - rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
+  - rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
+  - rm -f  $HOME/.gradle/caches/journal-1/*.lock
 
 cache:
   directories:

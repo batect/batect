@@ -34,7 +34,7 @@ spotless {
     format 'misc', {
         target fileTree(
             dir: '.',
-            include: ['**/*.gradle', '**/*.md', '**/.gitignore', '**/*.yaml', '**/*.yml', '**/*.sh', '**/Dockerfile', '**/*.py', '**/*.json'],
+            include: ['**/*.gradle', '**/*.md', '**/.gitignore', '**/*.yaml', '**/*.yml', '**/*.sh', '**/Dockerfile', '**/*.py', '**/*.json', '**/*.ps1', '**/*.cmd'],
             excludes: ['**/node_modules/*', '**/build/*']
         )
 

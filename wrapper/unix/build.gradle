@@ -70,30 +70,6 @@ task buildTestEnvironmentImage(type: Exec) {
     }
 }
 
-task test(type: Exec) {
-    description 'Runs the unit tests.'
-    group 'Verification'
-
-    def upToDateFile = getTemporaryDir().toPath().resolve("lastRun")
-
-    inputs.files fileTree(dir: 'test', include: '**/*')
-    inputs.file templateFile
-    outputs.file upToDateFile
-
-    dependsOn copyTestJar
-    dependsOn buildTestEnvironmentImage
-
-    commandLine 'docker', 'run', '--rm', '-t',
-        '-v', "$projectDir:/code",
-        '-w', "/code",
-        testEnvironmentImageName, './test/tests.py'
-
-    doLast {
-        // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java
-        upToDateFile.text = System.currentTimeMillis()
-    }
-}
-
 task build {
     description 'Build the wrapper script.'
     group 'Build'
@@ -111,6 +87,30 @@ task build {
 
         Files.createDirectories scriptDir
         scriptFile.text = script
+    }
+}
+
+task test(type: Exec) {
+    description 'Runs the unit tests.'
+    group 'Verification'
+
+    def upToDateFile = getTemporaryDir().toPath().resolve("lastRun")
+
+    inputs.files fileTree(dir: 'test', include: '**/*')
+    inputs.files build
+    inputs.files copyTestJar
+    outputs.file upToDateFile
+
+    dependsOn buildTestEnvironmentImage
+
+    commandLine 'docker', 'run', '--rm', '-t',
+        '-v', "$projectDir:/code",
+        '-w', "/code",
+        testEnvironmentImageName, './test/tests.py'
+
+    doLast {
+        // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java
+        upToDateFile.text = System.currentTimeMillis()
     }
 }
 

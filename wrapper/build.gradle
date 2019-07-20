@@ -19,5 +19,6 @@ task build(type: Copy) {
     group 'Build'
 
     from project("unix").getTasksByName("build", false)
+    from project("windows").getTasksByName("build", false)
     into getBuildDir().toPath().resolve("build")
 }

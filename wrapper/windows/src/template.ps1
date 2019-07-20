@@ -36,14 +36,22 @@ function download() {
 
     createCacheDir
 
+    $oldProgressPreference = $ProgressPreference
+
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+        # Turn off the progress bar to significantly reduce download times - see https://github.com/PowerShell/PowerShell/issues/2138#issuecomment-251165868
+        $ProgressPreference = 'SilentlyContinue'
+
         Invoke-WebRequest -Uri $DownloadUrl -OutFile $JarPath | Out-Null
     } catch {
         $Message = $_.Exception.Message
 
         Write-Host -ForegroundColor Red "Downloading failed with error: $Message"
         exit 1
+    } finally {
+        $ProgressPreference = $oldProgressPreference
     }
 }
 

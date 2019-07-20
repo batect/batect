@@ -12,7 +12,7 @@ if [ "$TRAVIS_REPO_SLUG" != "charleskorn/batect" ]; then
     exit 0
 fi
 
-sudo pip3 install gsutil
+sudo pip install gsutil
 mkdir -p ~/.creds
 openssl aes-256-cbc -K $encrypted_2210a3652f18_key -iv $encrypted_2210a3652f18_iv -in travis/travis-ci.json.enc -out ~/.creds/travis-ci.json -d
 echo "[Credentials]" > ~/.boto

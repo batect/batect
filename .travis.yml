@@ -5,6 +5,9 @@ language: java
 jdk:
   - openjdk8
 
+git:
+  depth: false
+
 services:
   - docker
 

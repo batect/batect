@@ -15,6 +15,7 @@
 */
 
 import java.nio.file.Files
+import org.apache.tools.ant.taskdefs.condition.Os
 
 def powershellTemplateFile = project.file 'src/template.ps1'
 def batchTemplateFile = project.file 'src/template.cmd'
@@ -68,7 +69,9 @@ task test(type: Exec) {
     inputs.files fileTree(dir: 'test', include: '**/*')
     outputs.file upToDateFile
 
-    commandLine 'python3', './test/tests.py'
+    def executableName = Os.isFamily(Os.FAMILY_WINDOWS) ? 'python' : 'python3'
+
+    commandLine executableName, './test/tests.py'
 
     doLast {
         // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java

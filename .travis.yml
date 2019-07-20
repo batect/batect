@@ -23,7 +23,7 @@ jobs:
   include:
     - stage: Build and unit test
       name: Linux
-      script: ./gradlew build check jacocoTestReport assembleRelease && bash <(curl -s https://codecov.io/bash) -c -F linux
+      script: ./gradlew --parallel build check jacocoTestReport assembleRelease && bash <(curl -s https://codecov.io/bash) -c -F linux
       after_success:
         - if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_REPO_SLUG" = "charleskorn/batect" ]; then gsutil -m rsync -r build/bintray gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/bintray; fi
         - if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_REPO_SLUG" = "charleskorn/batect" ]; then gsutil -m rsync -r build/release gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/release; fi
@@ -75,7 +75,7 @@ jobs:
         - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/bintray build/bintray
         - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/build/release build/release
         - gsutil -m rsync -r gs://batect-artifacts/$TRAVIS_BUILD_NUMBER/docs/build/docs docs/build/docs
-        - ./gradlew validateRelease
+        - ./gradlew --parallel validateRelease
       deploy:
         - provider: releases
           api_key:

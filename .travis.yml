@@ -105,7 +105,7 @@ before_cache:
   - rm -f  $HOME/.gradle/caches/*/javaCompile/*.lock
   - rm -f  $HOME/.gradle/caches/*/executionHistory/*.lock
   - rm -f  $HOME/.gradle/caches/*/generated-gradle-jars/*.lock
-  - rm -f  $HOME/.gradle/caches/*/jars-3/*.lock
+  - rm -f  $HOME/.gradle/caches/jars-3/*.lock
   - rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
   - rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
   - rm -f  $HOME/.gradle/caches/journal-1/*.lock

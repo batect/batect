@@ -10,7 +10,11 @@ install:
   - docker version
 
 build_script:
-  - ./gradlew --parallel build check jacocoTestReport assembleRelease -x docs:buildDocs -x wrapper:unix:check && bash <(curl -s https://codecov.io/bash) -c -F windows
+  - ./gradlew --parallel build check jacocoTestReport assembleRelease -x docs:buildDocs -x wrapper:unix:check
+  - ps: |
+      $env:PATH = 'C:\msys64\usr\bin;' + $env:PATH
+      Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile build\codecov.sh
+      bash build\codecov.sh -F windows
 
 #test_script:
 #  - ./gradlew integrationTest

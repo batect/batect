@@ -2,7 +2,7 @@ version: "{build}"
 image: "Visual Studio 2017"
 
 install:
-  - docker-switch-linux
+#  - docker-switch-linux
   - docker version
 
 build_script: ./gradlew --parallel build check jacocoTestReport assembleRelease && bash <(curl -s https://codecov.io/bash) -c -F windows

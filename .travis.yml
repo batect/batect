@@ -41,7 +41,7 @@ jobs:
     - stage: Integration and journey test
       name: Integration test against latest Docker
       dist: xenial
-      before_install: ./travis/install_docker.sh
+      before_install: ./travis/install_docker.sh && ls -la app/build/
       script: ./gradlew integrationTest
       workspaces:
         use:

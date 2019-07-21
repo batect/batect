@@ -19,6 +19,9 @@ stages:
   - Publish
   - Release
 
+env:
+  - GRADLE_OPTS=-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false
+
 jobs:
   include:
     - stage: Build and unit test

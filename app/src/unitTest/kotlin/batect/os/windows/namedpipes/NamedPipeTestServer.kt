@@ -33,6 +33,7 @@ import jnr.posix.POSIX
 import jnr.posix.POSIXFactory
 import jnr.posix.WindowsLibC
 import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.reflect.KFunction
 
@@ -61,6 +62,7 @@ class NamedPipeTestServer private constructor(
 
     private val pipe: HANDLE
     private val listenerThread: Thread
+    private val listenerStartedEvent = Semaphore(0)
 
     init {
         pipe = win32.CreateNamedPipeA(
@@ -79,6 +81,7 @@ class NamedPipeTestServer private constructor(
         }
 
         listenerThread = startListener()
+        listenerStartedEvent.tryAcquire(5, TimeUnit.SECONDS)
     }
 
     var sendDelay = 0L
@@ -88,6 +91,7 @@ class NamedPipeTestServer private constructor(
     val dataReceivedEvent = Semaphore(0)
 
     private fun startListener(): Thread = thread(isDaemon = true, name = NamedPipeTestServer::class.qualifiedName) {
+        listenerStartedEvent.release()
         waitForConnection()
 
         if (dataToSend != null) {

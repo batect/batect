@@ -2,7 +2,7 @@ version: "{build}"
 image: "Visual Studio 2017"
 
 environment:
-  GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"
+  GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false -Dorg.gradle.daemon=false"
 
 install:
   - set PATH=C:\Python37;%PATH%

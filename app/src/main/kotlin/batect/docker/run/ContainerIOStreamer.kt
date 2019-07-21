@@ -40,16 +40,13 @@ class ContainerIOStreamer(private val stdout: PrintStream, private val stdin: In
             // Do nothing - we aborted the task.
         } finally {
             executor.shutdownNow()
+            inputStream.stream.close()
         }
     }
 
     private fun streamStdin(inputStream: ContainerInputStream) {
-        try {
-            val stdinStream = Okio.buffer(Okio.source(stdin))
-            stdinStream.copyTo(inputStream.stream)
-        } finally {
-            inputStream.stream.close()
-        }
+        val stdinStream = Okio.buffer(Okio.source(stdin))
+        stdinStream.copyTo(inputStream.stream)
     }
 
     private fun streamStdout(outputStream: ContainerOutputStream, stdinHandler: Future<*>) {

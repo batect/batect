@@ -77,6 +77,11 @@ jobs:
         use:
           - build_workspace
 
+    - stage: Integration and journey test
+      name: Wait for Windows build to complete
+      dist: xenial
+      script: ./travis/wait_for_appveyor.sh $TRAVIS_REPO_SLUG $TRAVIS_COMMIT ${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}
+
     - stage: Publish
       script: skip
       workspaces:

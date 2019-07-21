@@ -26,7 +26,7 @@ jobs:
   include:
     - stage: Build and unit test
       name: Linux
-      script: ./gradlew --parallel --scan build check jacocoTestReport assembleRelease integrationTestClasses journeyTestClasses && bash <(curl -s https://codecov.io/bash) -c -F linux
+      script: ./gradlew --parallel build check jacocoTestReport assembleRelease integrationTestClasses journeyTestClasses && bash <(curl -s https://codecov.io/bash) -c -F linux
       workspaces:
         create:
           name: build_workspace
@@ -45,7 +45,7 @@ jobs:
       name: Integration test against latest Docker
       dist: xenial
       before_install: ./travis/install_docker.sh
-      script: ./gradlew integrationTest --scan
+      script: ./gradlew integrationTest
       workspaces:
         use:
           - build_workspace
@@ -63,7 +63,7 @@ jobs:
       name: Integration test against Docker 17.06
       dist: trusty
       before_install: ./travis/install_docker.sh docker-ce=17.06.0~ce-0~ubuntu
-      script: ./gradlew integrationTest --scan
+      script: ./gradlew integrationTest
       workspaces:
         use:
           - build_workspace

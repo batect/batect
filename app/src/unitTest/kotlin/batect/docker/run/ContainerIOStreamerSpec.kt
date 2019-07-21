@@ -34,8 +34,8 @@ import java.util.concurrent.CountDownLatch
 object ContainerIOStreamerSpec : Spek({
     describe("a container I/O streamer") {
         describe("streaming input and output for a container") {
-            on("all of the input and output being available immediately") {
-                val stdin = ByteArrayInputStream("This is the input".toByteArray())
+            on("all of the output being available immediately") {
+                val stdin = ByteArrayInputStream(ByteArray(0))
                 val stdout = ByteArrayOutputStream()
                 val streamer = ContainerIOStreamer(PrintStream(stdout), stdin)
 
@@ -47,10 +47,6 @@ object ContainerIOStreamerSpec : Spek({
                 val inputStream = ContainerInputStream(response, Okio.buffer(Okio.sink(containerInputStream)))
 
                 streamer.stream(outputStream, inputStream)
-
-                it("writes all of the input from stdin to the input stream") {
-                    assertThat(containerInputStream.toString(), equalTo("This is the input"))
-                }
 
                 it("writes all of the output from the output stream to stdout") {
                     assertThat(stdout.toString(), equalTo("This is the output"))

@@ -9,7 +9,7 @@ install:
   - docker version
 
 build_script:
-  - ./gradlew --parallel build check jacocoTestReport assembleRelease -x docs:buildDocs && bash <(curl -s https://codecov.io/bash) -c -F windows
+  - ./gradlew --parallel build check jacocoTestReport assembleRelease -x docs:buildDocs -x wrapper:unix:check && bash <(curl -s https://codecov.io/bash) -c -F windows
 
 #test_script:
 #  - ./gradlew integrationTest

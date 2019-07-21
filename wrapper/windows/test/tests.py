@@ -31,6 +31,7 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertIn("BATECT_WRAPPER_SCRIPT_DIR is: {}\\\n".format(self.get_script_dir()), output)
         self.assertIn("HOSTNAME is: {}\n".format(os.environ['COMPUTERNAME']), output)
         self.assertIn("I received 2 arguments.\narg1\narg 2\n", output)
+        self.assertNotIn("WARNING: you should never see this", output)
         self.assertEqual(result.returncode, 0)
 
     def test_second_run(self):
@@ -55,6 +56,7 @@ class WrapperScriptTests(unittest.TestCase):
 
         self.assertIn("Downloading batect", result.stdout)
         self.assertIn("(404) Not Found", result.stdout)
+        self.assertNotIn("WARNING: you should never see this", result.stdout)
         self.assertNotEqual(result.returncode, 0)
 
     def test_no_java(self):

@@ -114,7 +114,9 @@ object NamedPipeSocketFactorySpec : Spek({
                                 writer.write("Hello from the client")
                             }
 
-                            pipeServer.dataReceivedEvent.tryAcquire(1000, TimeUnit.MILLISECONDS)
+                            if (!pipeServer.dataReceivedEvent.tryAcquire(5, TimeUnit.SECONDS)) {
+                                throw RuntimeException("Named pipe server never received data.")
+                            }
                         }
 
                         it("connects to the socket and can send data") {

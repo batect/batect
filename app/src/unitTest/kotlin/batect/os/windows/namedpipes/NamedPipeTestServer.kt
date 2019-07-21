@@ -81,7 +81,10 @@ class NamedPipeTestServer private constructor(
         }
 
         listenerThread = startListener()
-        listenerStartedEvent.tryAcquire(5, TimeUnit.SECONDS)
+
+        if (!listenerStartedEvent.tryAcquire(5, TimeUnit.SECONDS)) {
+            throw RuntimeException("Listener thread did not start within expected time")
+        }
     }
 
     var sendDelay = 0L

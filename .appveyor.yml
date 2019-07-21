@@ -5,6 +5,8 @@ environment:
   GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"
 
 install:
+  - set PATH=C:\Python37;%PATH%
+  - echo %PATH%
 #  - docker-switch-linux
   - docker version
 

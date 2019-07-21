@@ -112,6 +112,14 @@ class WrapperScriptTests(unittest.TestCase):
                 self.assertIn("The Java application has started.", result.stdout.decode())
                 self.assertEqual(result.returncode, 0)
 
+    def test_non_zero_exit(self):
+        result = self.run_script(["exit-non-zero"])
+        output = result.stdout.decode()
+
+        self.assertIn("The Java application has started.", output)
+        self.assertNotIn("WARNING: you should never see this", output)
+        self.assertEqual(result.returncode, 123)
+
     def create_limited_path_for_specific_java_version(self, java_version):
         return self.create_limited_path([
             "/usr/bin/basename",

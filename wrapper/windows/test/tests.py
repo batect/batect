@@ -96,6 +96,14 @@ class WrapperScriptTests(unittest.TestCase):
 
                 self.assertEqual(result.returncode, 0)
 
+    def test_non_zero_exit(self):
+        result = self.run_script(["exit-non-zero"])
+        output = result.stdout
+
+        self.assertIn("The Java application has started.", output)
+        self.assertNotIn("WARNING: you should never see this", output)
+        self.assertEqual(result.returncode, 123)
+
     def create_limited_path(self):
         powershellDir = os.path.join(os.environ["SYSTEMROOT"], "System32", "WindowsPowerShell", "v1.0")
 

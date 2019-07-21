@@ -26,5 +26,9 @@ public class Application {
         System.out.println("I received " + args.length + " arguments.");
 
         Arrays.stream(args).forEach(System.out::println);
+
+        if (args.length >= 1 && args[0].equals("exit-non-zero")) {
+            System.exit(123);
+        }
     }
 }

@@ -6,7 +6,6 @@ environment:
 
 install:
   - set PATH=C:\Python37;%PATH%
-  - echo %PATH%
 #  - docker-switch-linux
   - docker version
 
@@ -16,3 +15,22 @@ build_script:
 #test_script:
 #  - ./gradlew integrationTest
 #  - ./gradlew journeyTest
+
+after_test:
+  - ps: Remove-Item          ${env:USERPROFILE}\.gradle\caches\modules-2\modules-2.lock
+  - ps: Remove-Item -Recurse ${env:USERPROFILE}\.gradle\caches\*\plugin-resolution\
+  - ps: Remove-Item -Recurse ${env:USERPROFILE}\.gradle\caches\*\scripts\
+  - ps: Remove-Item -Recurse ${env:USERPROFILE}\.gradle\caches\*\scripts-remapped\
+  - ps: Remove-Item -Recurse ${env:USERPROFILE}\.gradle\caches\*\fileHashes\
+  - ps: Remove-Item          ${env:USERPROFILE}\.gradle\caches\*\fileContent\*.lock
+  - ps: Remove-Item          ${env:USERPROFILE}\.gradle\caches\*\javaCompile\*.lock
+  - ps: Remove-Item          ${env:USERPROFILE}\.gradle\caches\*\executionHistory\*.lock
+  - ps: Remove-Item          ${env:USERPROFILE}\.gradle\caches\*\generated-gradle-jars\*.lock
+  - ps: Remove-Item          ${env:USERPROFILE}\.gradle\caches\jars-3\*.lock
+  - ps: Remove-Item          ${env:USERPROFILE}\.gradle\caches\transforms-1\transforms-1.lock
+  - ps: Remove-Item          ${env:USERPROFILE}\.gradle\caches\journal-1\file-access.bin
+  - ps: Remove-Item          ${env:USERPROFILE}\.gradle\caches\journal-1\*.lock
+
+cache:
+  - %USERPROFILE%\.gradle\caches\
+  - %USERPROFILE%\.gradle\wrapper\

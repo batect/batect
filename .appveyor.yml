@@ -1,11 +1,15 @@
 version: "{build}"
 image: "Visual Studio 2017"
 
+environment:
+  GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"
+
 install:
 #  - docker-switch-linux
   - docker version
 
-build_script: ./gradlew --parallel build check jacocoTestReport assembleRelease && bash <(curl -s https://codecov.io/bash) -c -F windows
+build_script:
+  - ./gradlew --parallel build check jacocoTestReport assembleRelease && bash <(curl -s https://codecov.io/bash) -c -F windows
 
 test_script:
   - ./gradlew integrationTest

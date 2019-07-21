@@ -1,4 +1,5 @@
-version: '{build}'
+version: "{build}"
+image: "Visual Studio 2017"
 
 build_script: ./gradlew --parallel build check jacocoTestReport assembleRelease && bash <(curl -s https://codecov.io/bash) -c -F windows
 

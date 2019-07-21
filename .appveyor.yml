@@ -32,5 +32,5 @@ after_test:
   - ps: Remove-Item          ${env:USERPROFILE}\.gradle\caches\journal-1\*.lock
 
 cache:
-  - %USERPROFILE%\.gradle\caches\
-  - %USERPROFILE%\.gradle\wrapper\
+  - %USERPROFILE%\.gradle\caches
+  - %USERPROFILE%\.gradle\wrapper

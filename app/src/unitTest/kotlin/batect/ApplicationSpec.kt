@@ -193,7 +193,7 @@ object ApplicationSpec : Spek({
                 val exitCode by runForEachTest { application.run(args) }
 
                 it("prints an error message to the error stream") {
-                    assertThat(errorStream.toString(), equalTo("batect only supports OS X and Linux.\n".withPlatformSpecificLineSeparator()))
+                    assertThat(errorStream.toString(), equalTo("batect only supports Linux, OS X and Windows.\n".withPlatformSpecificLineSeparator()))
                 }
 
                 it("returns a non-zero exit code") {

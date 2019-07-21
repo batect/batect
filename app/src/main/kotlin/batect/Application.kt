@@ -55,7 +55,7 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
 
     fun run(args: Iterable<String>): Int {
         if (!systemInfo.isSupportedOperatingSystem) {
-            errorStream.println("batect only supports OS X and Linux.")
+            errorStream.println("batect only supports Linux, OS X and Windows.")
             return -1
         }
 

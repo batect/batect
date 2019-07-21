@@ -31,7 +31,6 @@ after_test:
   - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\*\executionHistory\*.lock
   - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\*\generated-gradle-jars\*.lock
   - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\jars-3\*.lock
-  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\transforms-1\transforms-1.lock
   - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\journal-1\file-access.bin
   - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\journal-1\*.lock
 

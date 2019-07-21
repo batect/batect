@@ -1,0 +1,7 @@
+version: '{build}'
+
+build_script: ./gradlew --parallel build check jacocoTestReport assembleRelease && bash <(curl -s https://codecov.io/bash) -c -F windows
+
+test_script:
+  - ./gradlew integrationTest
+  - ./gradlew journeyTest

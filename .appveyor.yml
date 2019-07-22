@@ -6,14 +6,11 @@ environment:
   GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false -Dorg.gradle.daemon=false"
 
 install:
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-  - dir C:\msys64\usr\bin
   - docker-switch-linux
   - docker version
   - cinst jdk8
-  - cinst python3
   - refreshenv
-  - set PATH=C:\msys64\usr\bin;C:\Python37;%PATH%
+  - set PATH=C:\Program Files\Git\bin;C:\Python37;%PATH%
   - java -version
   - python --version
   - bash --version
@@ -23,8 +20,8 @@ build_script:
   - ps: |
       Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile build\codecov.sh
       bash build/codecov.sh -F windows
-  - ./gradlew integrationTest
-  - ./gradlew journeyTest
+#  - ./gradlew integrationTest
+#  - ./gradlew journeyTest
 
 after_test:
   - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\modules-2\modules-2.lock

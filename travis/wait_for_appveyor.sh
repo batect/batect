@@ -12,7 +12,7 @@ function main() {
     echo "Will poll $URL."
 
     while true; do
-        status=$(curl --fail --show-error --silent "$URL" | jq -r ".builds | .[] | select(.commitId == \"$GIT_COMMIT\").status")
+        status=$(curl --fail --show-error --silent "$URL" | jq -r "[.builds | .[] | select(.commitId == \"$GIT_COMMIT\").status][0]")
 
         case "$status" in
         success)
@@ -31,7 +31,7 @@ function main() {
             ;;
         esac
 
-        sleep 1
+        sleep 10
     done
 }
 

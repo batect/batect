@@ -1,5 +1,10 @@
 # Release process
 
+Before releasing, don't forget to:
+
+* Update CLI and config file reference in docs
+* Update config schema
+
 1. Commit any remaining changes and push. Wait for Travis build to come back green.
 2. Create Git tag with next version number: `git tag -s <version>`
 3. Run `./gradlew validateRelease` to ensure everything looks OK.

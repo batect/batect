@@ -12,25 +12,31 @@
 * Document and share common tasks within your team in a structured way - it's a
   [go script](https://www.thoughtworks.com/insights/blog/praise-go-script-part-i) based on Docker
 * Manage dependencies for integration and end-to-end testing (like databases) with ease
-* No installation required, only dependencies are Bash, Docker (v17.06+) and `curl`* - onboard new team members in minutes
+* Onboard new team members in minutes: no installation required
+* Supports Linux, OS X and Windows
 * Works with any language or framework, your existing CI system, and your chosen language's existing tooling
 * Take advantage of existing Docker images to get started quickly
-
-\* at the moment, a JVM is also required, but this requirement will be removed before v1.0
 
 [![asciicast](https://asciinema.org/a/714gRQsQW1VDHQMuWzwRuAdU4.svg)](https://asciinema.org/a/714gRQsQW1VDHQMuWzwRuAdU4)
 
 ## Getting started
 
-1. Drop the latest `batect` script from the [releases page](https://github.com/charleskorn/batect/releases)
+1. Drop the latest `batect` and `batect.cmd` scripts from the [releases page](https://github.com/charleskorn/batect/releases)
    into the root folder of your project.
-2. Make sure it's executable: run `chmod +x batect`.
+2. If you're on Linux or OS X, make sure the script is executable: run `chmod +x batect`.
 3. Create your `batect.yml` to define your environment:
     * Take a look at the [sample projects](https://batect.charleskorn.com/SampleProjects.html) for inspiration
     * Dive straight into [the configuration file reference](https://batect.charleskorn.com/config/Overview.html)
     * Or, if you're using another tool already and want to switch to batect,
       [batectify](https://batectify.enchanting.dev/) by [@ineffyble](https://github.com/ineffyble) can convert files from
       other tools to batect's format
+
+## System requirements
+
+batect requires Docker 17.06 or newer, Java 8 or newer (although this requirement will be removed before v1.0), and:
+
+* On Linux and OS X: Bash and `curl`
+* On Windows: Windows 10
 
 ## Documentation
 

@@ -45,6 +45,8 @@ nav:
     - Containers: "config/Containers.md"
     - Tasks: "config/Tasks.md"
 
+  - CLI reference: "CLIReference.md"
+
   - Language and tool-specific information:
     - CircleCI: "tools/CircleCI.md"
     - Docker: "tools/Docker.md"

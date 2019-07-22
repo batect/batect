@@ -23,7 +23,11 @@ function main() {
             echo "Build failed."
             exit 1
             ;;
-        "")
+        cancelled)
+            echo "Build was cancelled."
+            exit 1
+            ;;
+        null)
             echo "Build has not started."
             ;;
         *)

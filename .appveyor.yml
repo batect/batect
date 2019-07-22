@@ -8,6 +8,8 @@ install:
   - set PATH=C:\Python37;%PATH%
   - docker-switch-linux
   - docker version
+  - cinst jdk8
+  - java -version
 
 build_script:
   - ./gradlew --parallel build check jacocoTestReport assembleRelease

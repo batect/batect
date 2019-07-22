@@ -11,6 +11,7 @@ install:
   - cinst jdk8
   - cinst python3
   - refreshenv
+  - set PATH=C:\Python37;%PATH%
   - java -version
   - python --version
 

@@ -6,19 +6,20 @@ environment:
   GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false -Dorg.gradle.daemon=false"
 
 install:
+  - dir C:\msys64\usr\bin
   - docker-switch-linux
   - docker version
   - cinst jdk8
   - cinst python3
   - refreshenv
-  - set PATH=C:\Python37;%PATH%
+  - set PATH=C:\msys64\usr\bin;C:\Python37;%PATH%
   - java -version
   - python --version
+  - bash --version
 
 build_script:
   - ./gradlew --parallel app:check wrapper:windows:check jacocoTestReport
   - ps: |
-      $env:PATH = 'C:\msys64\usr\bin;' + $env:PATH
       Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile build\codecov.sh
       bash build/codecov.sh -F windows
   - ./gradlew integrationTest

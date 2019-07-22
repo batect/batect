@@ -9,6 +9,7 @@ install:
   - docker-switch-linux
   - docker version
   - cinst jdk8
+  - refreshenv
   - java -version
 
 build_script:

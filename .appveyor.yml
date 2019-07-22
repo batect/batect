@@ -14,7 +14,7 @@ install:
   - java -version
 
 build_script:
-  - ./gradlew --parallel build check jacocoTestReport assembleRelease
+  - ./gradlew --parallel build check jacocoTestReport assembleRelease -x wrapper:unix:check
   - ps: |
       $env:PATH = 'C:\msys64\usr\bin;' + $env:PATH
       Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile build\codecov.sh

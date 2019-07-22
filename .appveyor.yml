@@ -1,24 +1,22 @@
 version: "{build}"
-image: "Visual Studio 2017"
+image: "Windows Server 2019"
 
 environment:
   GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false -Dorg.gradle.daemon=false"
 
 install:
   - set PATH=C:\Python37;%PATH%
-#  - docker-switch-linux
+  - docker-switch-linux
   - docker version
 
 build_script:
-  - ./gradlew --parallel build check jacocoTestReport assembleRelease -x docs:buildDocs -x wrapper:unix:check
+  - ./gradlew --parallel build check jacocoTestReport assembleRelease
   - ps: |
       $env:PATH = 'C:\msys64\usr\bin;' + $env:PATH
       Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile build\codecov.sh
       bash build\codecov.sh -F windows
-
-#test_script:
-#  - ./gradlew integrationTest
-#  - ./gradlew journeyTest
+  - ./gradlew integrationTest
+  - ./gradlew journeyTest
 
 after_test:
   - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\modules-2\modules-2.lock

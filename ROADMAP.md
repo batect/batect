@@ -38,10 +38,18 @@ If there's something you're really keen to see, pull requests are always welcome
 * show build context upload progress when building image
 * support credentials for multi-stage image builds where each stage takes base image from different protected registry
 * some way to kill a misbehaving task (eg. one that is not responding to Ctrl+C)
+* support for BuildKit
+* interrupt tasks (eg. image build or pull) when the user presses Ctrl-C during startup (currently wait for it to complete then clean up)
+* shell tab completion for options (eg. `batect --h<tab>` completes to `batect --help`) - #116
+* shell tab completion for tasks (eg. `batect b<tab>` completes to `batect build`) - #116
+* add option to keep containers running after task completes (similar to `--no-cleanup-after-failure`, eg. `--no-cleanup`) - #115
+* add output format that shows output from all containers, not just main task one - #115
 
 ### Other
 * switch to Kotlin's built-in `Result` where appropriate
 * use Detekt for static analysis
+* PEP8 formatting check for Python code
+* add something like https://github.com/find-sec-bugs/find-sec-bugs
 * fail CI build on warnings
 * fail CI build on pending tests
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
@@ -65,6 +73,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * how to introduce batect to an existing project
   * how to use batect as the basis for a pipeline made up of reusable building blocks
   * expand comparison with other tools to cover Dogo, Cage and Toast
+  * expand comparison to cover multi-stage builds
 * switch to coroutines for parallel execution?
 * finish configuration code simplification (first three need https://github.com/Kotlin/kotlinx.serialization/issues/315 to be fixed)
   * Move common stuff when parsing a string (eg. EnvironmentVariableExpression, Command, Duration) out to a common class
@@ -132,8 +141,6 @@ If there's something you're really keen to see, pull requests are always welcome
 
 * support port ranges in mappings
 * support protocols other than TCP in port mappings
-* shell tab completion for options (eg. `batect --h<tab>` completes to `batect --help`)
-* shell tab completion for tasks (eg. `batect b<tab>` completes to `batect build`)
 * requires / provides relationships (eg. 'app' requires 'service-a', and 'service-a-fake' and 'service-a-real' provide 'service-a')
 * don't do all path resolution up-front
   * if not all containers are used, doesn't make sense to try to resolve their paths

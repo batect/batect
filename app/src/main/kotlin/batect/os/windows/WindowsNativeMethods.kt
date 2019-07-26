@@ -43,6 +43,7 @@ import jnr.posix.util.WindowsHelpers
 import java.io.FileNotFoundException
 import java.net.SocketTimeoutException
 import java.nio.ByteBuffer
+import java.time.Duration
 import kotlin.reflect.KFunction
 
 class WindowsNativeMethods(
@@ -170,6 +171,7 @@ class WindowsNativeMethods(
     override fun getGroupName(): String = throw UnsupportedOperationException("Getting the group name is not supported on Windows.")
 
     fun openNamedPipe(path: String, connectionTimeoutInMilliseconds: Int): NamedPipe {
+        val timeout = Duration.ofMillis(connectionTimeoutInMilliseconds.toLong())
         val startTime = System.nanoTime()
 
         do {
@@ -188,19 +190,21 @@ class WindowsNativeMethods(
             }
 
             return NamedPipe(result, this)
-        } while (!hasTimedOut(startTime, connectionTimeoutInMilliseconds))
+        } while (!hasTimedOut(startTime, timeout))
 
         throw SocketTimeoutException("Could not connect to $path within $connectionTimeoutInMilliseconds milliseconds.")
     }
 
-    private fun hasTimedOut(startTime: Long, timeoutInMilliseconds: Int): Boolean {
-        if (timeoutInMilliseconds == 0) {
+    private fun hasTimedOut(startTime: Long, timeout: Duration): Boolean {
+        if (timeout.isZero) {
             return false
         }
 
         val elapsedTime = System.nanoTime() - startTime
 
-        return elapsedTime > timeoutInMilliseconds * 1000
+        // We can't use A > B here due to overflow issues with nanoTime()
+        // (see the nanoTime() docs for more details)
+        return elapsedTime - timeout.toNanos() > 0
     }
 
     fun closeNamedPipe(pipe: NamedPipe) {

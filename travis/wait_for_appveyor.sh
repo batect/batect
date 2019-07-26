@@ -12,28 +12,35 @@ function main() {
     echo "Will poll $URL."
 
     while true; do
-        status=$(curl --fail --show-error --silent "$URL" | jq -r "[.builds | .[] | select(.commitId == \"$GIT_COMMIT\").status][0]")
+        build=$(curl --fail --show-error --silent "$URL" | jq "[.builds | .[] | select(.commitId == \"$GIT_COMMIT\")][0]")
+        id=$(echo "$build" | jq -r ".buildId")
+        status=$(echo "$build" | jq -r ".status")
 
-        case "$status" in
-        success)
-            echo "Build succeeded."
-            exit 0
-            ;;
-        failed)
-            echo "Build failed."
-            exit 1
-            ;;
-        cancelled)
-            echo "Build was cancelled."
-            exit 1
-            ;;
-        null)
+        if [ "$status" = "null" ]; then
             echo "Build has not started."
-            ;;
-        *)
-            echo "Build has not completed: status is $status"
-            ;;
-        esac
+        else
+            echo -n "https://ci.appveyor.com/project/charleskorn/batect/builds/$id: "
+
+            case "$status" in
+            success)
+                echo "build succeeded."
+                exit 0
+                ;;
+            failed)
+                echo "build failed."
+                exit 1
+                ;;
+            cancelled)
+                echo "build was cancelled."
+                exit 1
+                ;;
+            *)
+                echo "build has not completed: status is $status"
+                ;;
+            esac
+        fi
+
+
 
         sleep 10
     done

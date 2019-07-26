@@ -28,7 +28,6 @@ import com.natpryce.hamkrest.throws
 import jnr.ffi.Platform
 import kotlinx.io.IOException
 import org.spekframework.spek2.Spek
-import org.spekframework.spek2.dsl.Skip
 import org.spekframework.spek2.style.specification.describe
 import java.net.InetAddress
 import java.net.InetSocketAddress

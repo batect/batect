@@ -15,6 +15,10 @@ install:
   - python --version
   - bash --version
 
+  # Fix symlinks in working copy (see https://github.com/appveyor/ci/issues/650#issuecomment-186592582)
+  - git config core.symlinks true
+  - git reset --hard
+
 build_script:
   - ./gradlew --parallel app:check wrapper:windows:check jacocoTestReport
   - ps: |

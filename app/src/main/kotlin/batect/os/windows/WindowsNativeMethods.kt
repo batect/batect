@@ -362,8 +362,8 @@ class WindowsNativeMethods(
 
     private fun cancelIo(pipe: NamedPipe, overlapped: Overlapped?) {
         if (!win32.CancelIoEx(pipe.handle, overlapped)) {
-            if (posix.errno() == ERROR_NOT_FOUND) {
-                // There was nothing to cancel.
+            if (posix.errno() == ERROR_NOT_FOUND || posix.errno() == ERROR_INVALID_HANDLE) {
+                // There was nothing to cancel, or the pipe has already been closed.
                 return
             }
 

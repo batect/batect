@@ -106,24 +106,26 @@ object NamedPipeSocketFactorySpec : Spek({
                         }
                     }
 
-                    describe("flaky test", Skip.Yes("Test consistently passes locally but frequently fails on CI, issues will be caught by integration tests in meantime")) {
-                        given("the client sends some data") {
-                            beforeEachTest {
-                                pipeServer.expectData = true
+                    given("the client sends some data") {
+                        beforeEachTest {
+                            pipeServer.dataToSend = "\n"
+                            pipeServer.expectData = true
 
-                                connect(pipePath)
-                                socket.getOutputStream().bufferedWriter().use { writer ->
-                                    writer.write("Hello from the client")
-                                }
+                            connect(pipePath)
 
-                                if (!pipeServer.dataReceivedEvent.tryAcquire(5, TimeUnit.SECONDS)) {
-                                    throw RuntimeException("Named pipe server never received data.")
-                                }
+                            socket.getInputStream().bufferedReader().readLine()
+
+                            socket.getOutputStream().bufferedWriter().use { writer ->
+                                writer.write("Hello from the client")
                             }
 
-                            it("connects to the socket and can send data") {
-                                assertThat(pipeServer.dataReceived, equalTo("Hello from the client"))
+                            if (!pipeServer.dataReceivedEvent.tryAcquire(5, TimeUnit.SECONDS)) {
+                                throw RuntimeException("Named pipe server never received data.")
                             }
+                        }
+
+                        it("connects to the socket and can send data") {
+                            assertThat(pipeServer.dataReceived, equalTo("Hello from the client"))
                         }
                     }
 

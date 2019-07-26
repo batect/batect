@@ -183,6 +183,7 @@ class WindowsNativeMethods(
                 }
 
                 if (posix.errno() == ERROR_PIPE_BUSY) {
+                    waitForPipeToBeAvailable(path, startTime, timeout)
                     continue
                 }
 
@@ -192,7 +193,16 @@ class WindowsNativeMethods(
             return NamedPipe(result, this)
         } while (!hasTimedOut(startTime, timeout))
 
-        throw SocketTimeoutException("Could not connect to $path within $connectionTimeoutInMilliseconds milliseconds.")
+        throw connectionTimedOut(path, connectionTimeoutInMilliseconds)
+    }
+
+    private fun waitForPipeToBeAvailable(path: String, startTime: Long, timeout: Duration) {
+        val currentTime = System.nanoTime()
+        val endTime = startTime + timeout.toNanos()
+        val remainingTime = Duration.ofNanos(endTime - currentTime)
+
+        // We add one below as toMillis() rounds down and a value of 0 means 'use default wait'
+        win32.WaitNamedPipeW(WindowsHelpers.toWPath(path), remainingTime.toMillis() + 1)
     }
 
     private fun hasTimedOut(startTime: Long, timeout: Duration): Boolean {
@@ -206,6 +216,8 @@ class WindowsNativeMethods(
         // (see the nanoTime() docs for more details)
         return elapsedTime - timeout.toNanos() > 0
     }
+
+    private fun connectionTimedOut(path: String, connectionTimeoutInMilliseconds: Int) = SocketTimeoutException("Could not connect to $path within $connectionTimeoutInMilliseconds milliseconds.")
 
     fun closeNamedPipe(pipe: NamedPipe) {
         cancelIo(pipe, null)
@@ -397,6 +409,9 @@ class WindowsNativeMethods(
             @In dwFlagsAndAttributes: Long,
             @In hTemplateFile: HANDLE?
         ): HANDLE
+
+        @SaveError
+        fun WaitNamedPipeW(@In lpNamedPipeName: ByteArray, @In nTimeOut: Long): Boolean
 
         @SaveError
         fun WriteFile(@In hFile: HANDLE, @Direct lpBuffer: Pointer, @In nNumberOfBytesToWrite: Long, @Out lpNumberOfBytesWritten: NativeLongByReference?, @Direct lpOverlapped: Overlapped): Boolean

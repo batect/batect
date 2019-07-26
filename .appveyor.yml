@@ -24,7 +24,7 @@ build_script:
   - ps: |
       Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile build\codecov.sh
       bash build/codecov.sh -F windows
-#  - ./gradlew integrationTest
+  - ./gradlew integrationTest
 #  - ./gradlew journeyTest
 
 after_test:

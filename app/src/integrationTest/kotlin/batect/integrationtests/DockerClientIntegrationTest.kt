@@ -77,6 +77,7 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.random.Random
 
 object DockerClientIntegrationTest : Spek({
     describe("a Docker client") {
@@ -345,8 +346,8 @@ private fun getRandomTemporaryFilePath(): Path {
     val temporaryDirectory = Paths.get("build", "tmp", "integrationTest").toAbsolutePath()
     Files.createDirectories(temporaryDirectory)
 
-    val path = Files.createTempFile(temporaryDirectory, "integration-test-", "")
-    path.toFile().deleteOnExit()
+    val path = temporaryDirectory.resolve("integration-test-${Random.nextLong()}")
+    Files.deleteIfExists(path)
 
     return path
 }

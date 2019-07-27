@@ -118,8 +118,8 @@ class NamedPipeSocket : Socket() {
 
     override fun shutdownInput() {}
     override fun shutdownOutput() {}
-    override fun isInputShutdown(): Boolean = this.isConnected
-    override fun isOutputShutdown(): Boolean = this.isConnected
+    override fun isInputShutdown(): Boolean = !this.isConnected
+    override fun isOutputShutdown(): Boolean = !this.isConnected
 
     override fun isBound(): Boolean = isOpen
     override fun isConnected(): Boolean = isOpen

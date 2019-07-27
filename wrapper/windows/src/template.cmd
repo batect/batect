@@ -32,7 +32,7 @@ rem If we modify the script while it is still running (eg. because we're updatin
 rem because it continues execution from the next byte (which was previously the end of the line).
 rem By explicitly exiting on the same line as starting the application, we avoid these issues as cmd.exe has already read the entire
 rem line before we start the application and therefore will always exit.
-powershell.exe -ExecutionPolicy Bypass -NoLogo -File "%ps1Path%" %* && exit 0 || exit !ERRORLEVEL!
+powershell.exe -ExecutionPolicy Bypass -NoLogo -NoProfile -File "%ps1Path%" %* && exit 0 || exit !ERRORLEVEL!
 
 rem What's this for?
 rem This is so the tests for the wrapper has a way to ensure that the line above terminates the script correctly.

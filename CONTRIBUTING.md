@@ -111,3 +111,21 @@ Steps 3ii, 3iii and 3iv above are all executed using the task execution model. T
 
 * [**Event logger**](app/src/main/kotlin/batect/ui): presents the state of the startup and cleanup phases to the user based on the steps that have started and the
   events that have occurred. (Output from running the main task container itself is not sent through the event logger and is presented to the user directly.)
+
+## Creating a batect-compatible Windows VM
+
+Running Docker on Windows on a virtual machine requires running Windows on hardware that supports nested virtualisation.
+
+The only cloud provider that supports this with Windows at the time of writing is Azure, and only with their Dv3 or Ev3 series VMs.
+
+Once you've created a VM and logged in, you can install the software you need with the following commands (at a PowerShell prompt):
+
+* check if nested virtualisation is enabled with `(Get-WmiObject Win32_Processor).VirtualizationFirmwareEnabled[0] -and (Get-WmiObject Win32_Processor).SecondLevelAddressTranslationExtensions[0]`
+* install Chocolatey: `Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))`
+* install Git: `cinst git --params="/GitAndUnixToolsOnPath"`
+* install JDK: `cinst jdk8`
+* install Python 3: `cinst python3`
+* install Hyper-V: `Install-WindowsFeature -Name Hyper-V -IncludeManagementTools`
+* restart the machine
+* install Docker: `cinst docker-desktop`
+* restart the machine

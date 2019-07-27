@@ -25,7 +25,7 @@ build_script:
       Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile build\codecov.sh
       bash build/codecov.sh -F windows
   - ./gradlew integrationTest
-#  - ./gradlew journeyTest
+  - ./gradlew journeyTest
 
 after_test:
   - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\modules-2\modules-2.lock

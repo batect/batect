@@ -150,12 +150,18 @@ class DockerAPI(
             data("container", container)
         }
 
-        val request = Request.Builder()
-            .post(emptyRequestBody())
-            .url(urlForContainerOperation(container, "stop"))
+        val timeoutInSeconds = 10L
+
+        val url = urlForContainerOperation(container, "stop").newBuilder()
+            .addQueryParameter("timeout", timeoutInSeconds.toString())
             .build()
 
-        clientWithTimeout(11, TimeUnit.SECONDS).newCall(request).execute().use { response ->
+        val request = Request.Builder()
+            .post(emptyRequestBody())
+            .url(url)
+            .build()
+
+        clientWithTimeout(timeoutInSeconds + 5, TimeUnit.SECONDS).newCall(request).execute().use { response ->
             if (response.code() == 304) {
                 logger.warn {
                     message("Container has already stopped.")

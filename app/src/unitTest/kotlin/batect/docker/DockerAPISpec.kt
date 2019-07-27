@@ -266,7 +266,7 @@ object DockerAPISpec : Spek({
         describe("stopping a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
-                val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/stop"
+                val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/stop?timeout=10"
                 val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
                 val longTimeoutClientBuilder by createForEachTest {
                     mock<OkHttpClient.Builder> { mock ->
@@ -287,8 +287,8 @@ object DockerAPISpec : Spek({
                         verify(call).execute()
                     }
 
-                    it("configures the HTTP client with a longer timeout to allow for the default container stop timeout period of 10 seconds") {
-                        verify(longTimeoutClientBuilder).readTimeout(11, TimeUnit.SECONDS)
+                    it("configures the HTTP client with a longer timeout to allow for the specified container stop timeout period") {
+                        verify(longTimeoutClientBuilder).readTimeout(15, TimeUnit.SECONDS)
                     }
                 }
 

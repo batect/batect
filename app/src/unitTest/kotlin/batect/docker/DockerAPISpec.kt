@@ -132,7 +132,7 @@ object DockerAPISpec : Spek({
                     }
 
                     it("configures the HTTP client with a longer timeout to allow for the container to be created") {
-                        verify(longTimeoutClientBuilder).readTimeout(20, TimeUnit.SECONDS)
+                        verify(longTimeoutClientBuilder).readTimeout(30, TimeUnit.SECONDS)
                     }
                 }
 
@@ -150,18 +150,33 @@ object DockerAPISpec : Spek({
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
                 val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/start"
+                val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
+                val longTimeoutClientBuilder by createForEachTest {
+                    mock<OkHttpClient.Builder> { mock ->
+                        on { readTimeout(any(), any()) } doReturn mock
+                        on { build() } doReturn clientWithLongTimeout
+                    }
+                }
+
+                beforeEachTest {
+                    whenever(httpClient.newBuilder()).doReturn(longTimeoutClientBuilder)
+                }
 
                 on("starting that container") {
-                    val call by createForEachTest { httpClient.mockPost(expectedUrl, "", 204) }
+                    val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, "", 204) }
                     beforeEachTest { api.startContainer(container) }
 
                     it("sends a request to the Docker daemon to start the container") {
                         verify(call).execute()
                     }
+
+                    it("configures the HTTP client with a longer timeout") {
+                        verify(longTimeoutClientBuilder).readTimeout(20, TimeUnit.SECONDS)
+                    }
                 }
 
                 on("an unsuccessful start attempt") {
-                    beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418) }
+                    beforeEachTest { clientWithLongTimeout.mockPost(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                     it("raises an appropriate exception") {
                         assertThat({ api.startContainer(container) }, throws<ContainerStartFailedException>(withMessage("Starting container 'the-container-id' failed: Something went wrong.")))
@@ -288,7 +303,7 @@ object DockerAPISpec : Spek({
                     }
 
                     it("configures the HTTP client with a longer timeout to allow for the specified container stop timeout period") {
-                        verify(longTimeoutClientBuilder).readTimeout(15, TimeUnit.SECONDS)
+                        verify(longTimeoutClientBuilder).readTimeout(20, TimeUnit.SECONDS)
                     }
                 }
 
@@ -315,18 +330,33 @@ object DockerAPISpec : Spek({
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
                 val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id?v=true&force=true"
+                val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
+                val longTimeoutClientBuilder by createForEachTest {
+                    mock<OkHttpClient.Builder> { mock ->
+                        on { readTimeout(any(), any()) } doReturn mock
+                        on { build() } doReturn clientWithLongTimeout
+                    }
+                }
+
+                beforeEachTest {
+                    whenever(httpClient.newBuilder()).doReturn(longTimeoutClientBuilder)
+                }
 
                 on("a successful removal") {
-                    val call by createForEachTest { httpClient.mockDelete(expectedUrl, "", 204) }
+                    val call by createForEachTest { clientWithLongTimeout.mockDelete(expectedUrl, "", 204) }
                     beforeEachTest { api.removeContainer(container) }
 
                     it("sends a request to the Docker daemon to remove the container") {
                         verify(call).execute()
                     }
+
+                    it("configures the HTTP client with a longer timeout") {
+                        verify(longTimeoutClientBuilder).readTimeout(20, TimeUnit.SECONDS)
+                    }
                 }
 
                 on("an unsuccessful deletion") {
-                    beforeEachTest { httpClient.mockDelete(expectedUrl, """{"message": "Something went wrong."}""", 418) }
+                    beforeEachTest { clientWithLongTimeout.mockDelete(expectedUrl, """{"message": "Something went wrong."}""", 418) }
 
                     it("throws an appropriate exception") {
                         assertThat({ api.removeContainer(container) }, throws<ContainerRemovalFailedException>(withMessage("Removal of container 'the-container-id' failed: Something went wrong.")))

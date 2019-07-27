@@ -64,7 +64,7 @@ class DockerAPI(
             .url(url)
             .build()
 
-        clientWithTimeout(20, TimeUnit.SECONDS).newCall(request).execute().use { response ->
+        clientWithTimeout(30, TimeUnit.SECONDS).newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Container creation failed.")
@@ -97,7 +97,7 @@ class DockerAPI(
             .url(urlForContainerOperation(container, "start"))
             .build()
 
-        httpConfig.client.newCall(request).execute().use { response ->
+        clientWithTimeout(20, TimeUnit.SECONDS).newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Starting container failed.")
@@ -161,7 +161,7 @@ class DockerAPI(
             .url(url)
             .build()
 
-        clientWithTimeout(timeoutInSeconds + 5, TimeUnit.SECONDS).newCall(request).execute().use { response ->
+        clientWithTimeout(timeoutInSeconds + 10, TimeUnit.SECONDS).newCall(request).execute().use { response ->
             if (response.code() == 304) {
                 logger.warn {
                     message("Container has already stopped.")
@@ -201,7 +201,7 @@ class DockerAPI(
             .url(url)
             .build()
 
-        httpConfig.client.newCall(request).execute().use { response ->
+        clientWithTimeout(20, TimeUnit.SECONDS).newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Could not remove container.")

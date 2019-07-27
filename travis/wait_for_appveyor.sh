@@ -40,8 +40,6 @@ function main() {
             esac
         fi
 
-
-
         sleep 10
     done
 }

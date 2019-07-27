@@ -1,12 +1,11 @@
 version: "{build}"
 image: "Windows Server 2019"
-clone_folder: D:\projects\batect # The C: drive isn't shared with Docker, but D: is.
 
 environment:
   GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false -Dorg.gradle.daemon=false"
 
 install:
-  - docker-switch-linux
+  - ps: ./appveyor/enable-docker.ps1
   - docker version
   - cinst jdk8
   - refreshenv

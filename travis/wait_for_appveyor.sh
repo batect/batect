@@ -2,14 +2,19 @@
 
 set -euo pipefail
 
-REPO_SLUG=$1
-GIT_COMMIT=$2
-GIT_BRANCH=$3
+REPO_SLUG=$TRAVIS_REPO_SLUG
+GIT_COMMIT=$TRAVIS_COMMIT
+
+if [ -z "${TRAVIS_TAG:-}" ]; then
+    GIT_BRANCH=${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}
+else
+    GIT_BRANCH=master
+fi
 
 function main() {
     URL="https://ci.appveyor.com/api/projects/$REPO_SLUG/history?recordsNumber=20&branch=$GIT_BRANCH"
 
-    echo "Will poll $URL."
+    echo "Will poll $URL looking for commit $GIT_COMMIT."
 
     while true; do
         build=$(curl --fail --show-error --silent "$URL" | jq "[.builds | .[] | select(.commitId == \"$GIT_COMMIT\")][0]")

@@ -25,6 +25,7 @@ function updateProject {
         git pull --ff-only
         ./batect --upgrade
         git add batect
+        git add batect.cmd
         git commit -m "$commit_message"
         git push
     }

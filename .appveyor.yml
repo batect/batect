@@ -1,5 +1,6 @@
 version: "{build}"
 image: "Windows Server 2019"
+skip_tags: true
 
 environment:
   GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false -Dorg.gradle.daemon=false"

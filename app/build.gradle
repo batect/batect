@@ -60,7 +60,6 @@ dependencies {
     implementation 'org.apache.commons:commons-compress:1.18'
     implementation 'com.charleskorn.kaml:kaml:0.11.0'
 
-    testImplementation 'com.natpryce:hamkrest:1.7.0.0'
     testImplementation 'org.araqnid:hamkrest-json:1.0.3'
     testImplementation 'com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0'
     testImplementation 'com.google.jimfs:jimfs:1.1'

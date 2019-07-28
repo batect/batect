@@ -20,6 +20,7 @@ import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.itCleansUpAllContainersItCreates
 import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
 import batect.testutils.createForGroup
+import batect.testutils.doesNotThrow
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
@@ -42,7 +43,11 @@ object RunAsCurrentUserJourneyTest : Spek({
             val runner by createForGroup { ApplicationRunner(name) }
 
             on("running that task") {
-                val outputDirectory by createForGroup { Paths.get("build/test-results/journey-tests/$name").toAbsolutePath() }
+                val outputDirectory by runBeforeGroup { Paths.get("build/test-results/journey-tests/$name").toAbsolutePath() }
+                val localUserName by runBeforeGroup { System.getProperty("user.name") }
+                val expectedContainerUserName by runBeforeGroup { getUserNameInContainer() }
+                val expectedContainerGroupName by runBeforeGroup { getGroupNameInContainer() }
+                val expectedFilePath by runBeforeGroup { outputDirectory.resolve("created-file") }
 
                 beforeGroup {
                     Files.createDirectories(outputDirectory)
@@ -50,9 +55,6 @@ object RunAsCurrentUserJourneyTest : Spek({
                 }
 
                 val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
-                val localUserName by runBeforeGroup { System.getProperty("user.name") }
-                val expectedContainerUserName by runBeforeGroup { getUserNameInContainer() }
-                val expectedContainerGroupName by runBeforeGroup { getGroupNameInContainer() }
 
                 it("prints the output from that task") {
                     val expectedOutput = listOf(
@@ -67,10 +69,22 @@ object RunAsCurrentUserJourneyTest : Spek({
                     assertThat(result.output, containsSubstring(expectedOutput))
                 }
 
-                it("creates files as the current user, not root") {
-                    val expectedFilePath = outputDirectory.resolve("created-file")
-                    val owner = getCleanFileOwnerName(expectedFilePath)
-                    assertThat(owner, equalTo(localUserName))
+                if (Platform.getNativePlatform().os != Platform.OS.WINDOWS) {
+                    // On Windows, the owner of the file will be the owner of the directory the file was created in, which is not
+                    // always predictable. Being the owner doesn't guarantee any permissions beyond being able to grant yourself
+                    // access, so this test isn't so meaningful.
+
+                    it("creates files as the current user, not root") {
+                        assertThat(Files.getOwner(expectedFilePath).name, equalTo(localUserName))
+                    }
+                }
+
+                it("creates files so that the current host user can read, edit and delete them") {
+                    assertThat({
+                        Files.readAllBytes(expectedFilePath)
+                        Files.write(expectedFilePath, byteArrayOf(1, 2, 3))
+                        Files.delete(expectedFilePath)
+                    }, doesNotThrow())
                 }
 
                 it("returns the exit code from that task") {
@@ -124,14 +138,4 @@ private fun getGroupNameInContainer(): String {
     }
 
     return output.trim()
-}
-
-private fun getCleanFileOwnerName(path: Path): String {
-    val owner = Files.getOwner(path).name
-
-    if (Platform.getNativePlatform().os == Platform.OS.WINDOWS) {
-        return owner.substringAfter('\\')
-    }
-
-    return owner
 }

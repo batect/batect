@@ -63,6 +63,7 @@ nav:
     - Build artifacts are owned by root: "tips/BuildArtifactsOwnedByRoot.md"
     - Waiting for dependencies to be ready: "tips/WaitingForDependenciesToBeReady.md"
     - Proxies: "tips/Proxies.md"
+    - Windows: "tips/Windows.md"
 
   - Sample projects: "SampleProjects.md"
   - Release notes: "https://github.com/charleskorn/batect/releases"

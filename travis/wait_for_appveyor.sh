@@ -17,7 +17,7 @@ function main() {
     echo "Will poll $URL looking for commit $GIT_COMMIT."
 
     while true; do
-        build=$(curl --fail --show-error --silent "$URL" | jq "[.builds | .[] | select(.commitId == \"$GIT_COMMIT\")][0]")
+        build=$(curl --fail --show-error --silent "$URL" | jq "[.builds | .[] | select(.commitId == \"$GIT_COMMIT\")][0]") || sleep 10 && continue
         id=$(echo "$build" | jq -r ".buildId")
         status=$(echo "$build" | jq -r ".status")
 

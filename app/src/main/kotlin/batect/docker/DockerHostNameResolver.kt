@@ -19,6 +19,7 @@ package batect.docker
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
 import batect.utils.Version
+import batect.utils.VersionComparisonMode
 
 class DockerHostNameResolver(
     private val systemInfo: SystemInfo,
@@ -37,12 +38,14 @@ class DockerHostNameResolver(
 
         return when {
             version == null -> DockerHostNameResolutionResult.NotSupported
-            version >= Version(18, 3, 0) -> DockerHostNameResolutionResult.Resolved("host.docker.internal")
-            version >= Version(17, 12, 0) -> DockerHostNameResolutionResult.Resolved("docker.for.$operatingSystemPart.host.internal")
-            version >= Version(17, 6, 0) -> DockerHostNameResolutionResult.Resolved("docker.for.$operatingSystemPart.localhost")
+            version.isGreaterThanOrEqualToDockerVersion(Version(18, 3, 0)) -> DockerHostNameResolutionResult.Resolved("host.docker.internal")
+            version.isGreaterThanOrEqualToDockerVersion(Version(17, 12, 0)) -> DockerHostNameResolutionResult.Resolved("docker.for.$operatingSystemPart.host.internal")
+            version.isGreaterThanOrEqualToDockerVersion(Version(17, 6, 0)) -> DockerHostNameResolutionResult.Resolved("docker.for.$operatingSystemPart.localhost")
             else -> DockerHostNameResolutionResult.NotSupported
         }
     }
+
+    private fun Version.isGreaterThanOrEqualToDockerVersion(dockerVersion: Version): Boolean = this.compareTo(dockerVersion, VersionComparisonMode.DockerStyle) >= 0
 }
 
 sealed class DockerHostNameResolutionResult {

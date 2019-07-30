@@ -24,24 +24,23 @@ import kotlinx.serialization.Serializer
 import kotlinx.serialization.internal.StringDescriptor
 
 data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: String = "") : Comparable<Version> {
-    override fun compareTo(other: Version): Int {
-        if (major != other.major) {
-            return major.compareTo(other.major)
-        } else if (minor != other.minor) {
-            return minor.compareTo(other.minor)
-        } else if (patch != other.patch) {
-            return patch.compareTo(other.patch)
-        } else {
-            return suffix.compareTo(other.suffix)
-        }
+    override fun compareTo(other: Version): Int = this.compareTo(other, VersionComparisonMode.Normal)
+
+    fun compareTo(other: Version, mode: VersionComparisonMode): Int = when {
+        major != other.major -> major.compareTo(other.major)
+        minor != other.minor -> minor.compareTo(other.minor)
+        patch != other.patch -> patch.compareTo(other.patch)
+        mode == VersionComparisonMode.DockerStyle -> suffix.compareTo(other.suffix)
+        suffix == other.suffix -> 0
+        suffix == "" -> 1
+        other.suffix == "" -> -1
+        else -> suffix.compareTo(other.suffix)
     }
 
-    override fun toString(): String {
-        when {
-            suffix != "" -> return "$major.$minor.$patch-$suffix"
-            patch != 0 -> return "$major.$minor.$patch"
-            else -> return "$major.$minor"
-        }
+    override fun toString(): String = when {
+        suffix != "" -> "$major.$minor.$patch-$suffix"
+        patch != 0 -> "$major.$minor.$patch"
+        else -> "$major.$minor"
     }
 
     @Serializer(forClass = Version::class)
@@ -87,4 +86,9 @@ data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: S
         override fun deserialize(decoder: Decoder): Version = parse(decoder.decodeString())
         override fun serialize(encoder: Encoder, obj: Version) = encoder.encodeString(obj.toString())
     }
+}
+
+enum class VersionComparisonMode {
+    Normal,
+    DockerStyle
 }

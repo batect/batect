@@ -28,6 +28,7 @@ import batect.docker.run.ContainerWaiter
 import batect.logging.Logger
 import batect.os.ConsoleManager
 import batect.utils.Version
+import batect.utils.VersionComparisonMode
 import kotlinx.serialization.json.JsonObject
 import java.io.IOException
 import java.nio.file.Files
@@ -270,7 +271,7 @@ class DockerClient(
                 data("versionInfo", versionInfo)
             }
 
-            if (Version.parse(versionInfo.apiVersion) < Version.parse(minimumDockerAPIVersion)) {
+            if (Version.parse(versionInfo.apiVersion).compareTo(Version.parse(minimumDockerAPIVersion), VersionComparisonMode.DockerStyle) < 0) {
                 return DockerConnectivityCheckResult.Failed("batect requires Docker $minimumDockerVersion or later, but version ${versionInfo.version} is installed.")
             }
 

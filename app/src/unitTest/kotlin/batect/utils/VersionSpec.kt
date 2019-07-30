@@ -48,13 +48,24 @@ object VersionSpec : Spek({
                 }
 
                 on("when one version does not have a suffix and the other does") {
-                    val otherVersion = Version(1, 2, 3)
+                    val versionWithoutSuffix = Version(1, 2, 3)
 
-                    // This breaks the semver convention (things with suffixes should come before things without suffixes,
-                    // eg. 1.0.0-alpha comes before 1.0.0), but Docker for Mac breaks this rule, and Docker versioning is the only
-                    // reason we even support suffixes in the first place.
-                    it("gives the version with no suffix as less than the other version") {
-                        assertThat(otherVersion, lessThan(version))
+                    on("when comparing Docker versions") {
+                        // This breaks the semver convention (things with suffixes should come before things without suffixes,
+                        // eg. 1.0.0-alpha comes before 1.0.0), but Docker for Mac breaks this rule.
+                        it("gives the version with no suffix as less than the other version") {
+                            assertThat(versionWithoutSuffix.compareTo(version, VersionComparisonMode.DockerStyle), lessThan(0))
+                        }
+                    }
+
+                    on("when comparing normal versions") {
+                        it("gives the version with no suffix as greater than the other version") {
+                            assertThat(versionWithoutSuffix, greaterThan(version))
+                        }
+
+                        it("gives the version with a suffix as less than the other version") {
+                            assertThat(version, lessThan(versionWithoutSuffix))
+                        }
                     }
                 }
             }

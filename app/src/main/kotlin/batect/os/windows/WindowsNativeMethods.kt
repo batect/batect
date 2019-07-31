@@ -373,9 +373,13 @@ class WindowsNativeMethods(
 
     private fun <R> throwNativeMethodFailed(function: KFunction<R>): Nothing {
         val errno = posix.errno()
-        val error = LastError.values().single { it.intValue() == errno }
+        val error = LastError.values().singleOrNull { it.intValue() == errno }
 
-        throw WindowsNativeMethodException(function.name, error)
+        if (error != null) {
+            throw WindowsNativeMethodException(function.name, error)
+        }
+
+        throw WindowsNativeMethodException(function.name, "0x${errno.toString(16)}", "unknown", null)
     }
 
     private enum class WaitResult {
@@ -503,5 +507,8 @@ class WindowsNativeMethods(
     }
 }
 
-class WindowsNativeMethodException(method: String, val error: LastError) :
-    NativeMethodException(method, error.name, error.toString())
+class WindowsNativeMethodException(method: String, errorName: String, errorDescription: String, val error: LastError?) :
+    NativeMethodException(method, errorName, errorDescription) {
+
+    constructor(method: String, error: LastError) : this(method, error.name, error.toString(), error)
+}

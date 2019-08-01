@@ -31,7 +31,7 @@ import java.time.temporal.ChronoUnit
 object DurationDeserializer : KSerializer<Duration> {
     override val descriptor: SerialDescriptor = StringDescriptor
 
-    private val valueRegexString = """((\d+)|(\d+\.\d*)|(\d*\.\d+))(ns|\u00b5s|\u03bcs|us|ms|s|m|h)"""
+    private const val valueRegexString = """((\d+)|(\d+\.\d*)|(\d*\.\d+))(ns|\u00b5s|\u03bcs|us|ms|s|m|h)"""
     private val fullRegex = "^([+-])?(0|($valueRegexString)+)\$".toRegex()
     private val valueRegex = valueRegexString.toRegex()
 

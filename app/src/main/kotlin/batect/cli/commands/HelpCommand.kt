@@ -53,7 +53,7 @@ class HelpCommand(val optionsParser: CommandLineOptionsParser, val outputStream:
     private fun printInColumns(items: Map<String, String>) {
         val alignToColumn = items.keys.map { it.length }.max() ?: 0
 
-        items.forEach { firstColumn, secondColumn ->
+        items.forEach { (firstColumn, secondColumn) ->
             val indentationCount = 4 + alignToColumn - firstColumn.length
             val indentation = " ".repeat(indentationCount)
             outputStream.println("  $firstColumn$indentation$secondColumn")

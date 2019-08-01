@@ -339,11 +339,11 @@ object DockerImageBuildIgnoreEntrySpec : Spek({
                 "docs" to true,
                 "docs/thing" to true
             )
-        ).forEach { pattern, testCases ->
+        ).forEach { (pattern, testCases) ->
             given("the pattern '$pattern'") {
                 val entry = DockerImageBuildIgnoreEntry(pattern, false)
 
-                testCases.forEach { path, shouldMatch ->
+                testCases.forEach { (path, shouldMatch) ->
                     if (shouldMatch) {
                         it("should match the path '$path'") {
                             assertThat(entry.matches(path), equalTo(MatchResult.MatchedExclude))

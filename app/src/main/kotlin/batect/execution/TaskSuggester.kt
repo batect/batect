@@ -24,14 +24,10 @@ class TaskSuggester {
         val taskNames = config.tasks.keys
         val distances = taskNames.associateWith { EditDistanceCalculator.calculateDistanceBetween(originalTaskName, it) }
 
-        val closeMatches = distances
+        return distances
             .filterValues { it <= 3 }
-            .toSortedMap(object : Comparator<String> {
-                override fun compare(o1: String, o2: String): Int = distances.getValue(o1).compareTo(distances.getValue(o2))
-            })
+            .toSortedMap(Comparator { o1, o2 -> distances.getValue(o1).compareTo(distances.getValue(o2)) })
             .keys
             .toList()
-
-        return closeMatches
     }
 }

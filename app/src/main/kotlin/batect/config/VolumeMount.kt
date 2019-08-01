@@ -63,7 +63,7 @@ data class VolumeMount(
         private val optionsFieldIndex = descriptor.getElementIndex("options")
 
         override fun deserialize(decoder: Decoder): VolumeMount {
-            if (!(decoder is YamlInput)) {
+            if (decoder !is YamlInput) {
                 throw UnsupportedOperationException("Can only deserialize from YAML source.")
             }
 

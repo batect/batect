@@ -108,9 +108,9 @@ data class Command private constructor(val originalCommand: String, val parsedCo
             }
         }
 
-        private val backslash: Char = '\\'
-        private val singleQuote: Char = '\''
-        private val doubleQuote: Char = '"'
+        private const val backslash: Char = '\\'
+        private const val singleQuote: Char = '\''
+        private const val doubleQuote: Char = '"'
 
         private fun invalidCommandLine(command: String, message: String): Throwable =
             InvalidCommandLineException("Command `$command` is invalid: $message")

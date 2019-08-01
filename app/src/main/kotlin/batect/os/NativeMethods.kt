@@ -31,4 +31,4 @@ data class Dimensions(val height: Int, val width: Int)
 abstract class NativeMethodException(val method: String, val errorName: String, val errorDescription: String) :
     RuntimeException("Invoking native method $method failed with error $errorName ($errorDescription).")
 
-class NoConsoleException() : RuntimeException("STDOUT is not connected to a console.")
+class NoConsoleException : RuntimeException("STDOUT is not connected to a console.")

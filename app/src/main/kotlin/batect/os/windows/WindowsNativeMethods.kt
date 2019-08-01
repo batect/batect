@@ -347,9 +347,7 @@ class WindowsNativeMethods(
     }
 
     private fun waitForEvent(event: HANDLE, timeoutInMilliseconds: Int): WaitResult {
-        val result = win32.WaitForSingleObject(event, timeoutInMilliseconds)
-
-        when (result) {
+        when (win32.WaitForSingleObject(event, timeoutInMilliseconds)) {
             WAIT_OBJECT_0 -> return WaitResult.Signaled
             WAIT_TIMEOUT -> return WaitResult.TimedOut
             WAIT_ABANDONED -> throw RuntimeException("WaitForSingleObject returned WAIT_ABANDONED")
@@ -460,7 +458,7 @@ class WindowsNativeMethods(
         val event = Pointer()
 
         init {
-            this.useMemory(runtime.memoryManager.allocateDirect(Struct.size(this), true))
+            this.useMemory(runtime.memoryManager.allocateDirect(size(this), true))
         }
     }
 

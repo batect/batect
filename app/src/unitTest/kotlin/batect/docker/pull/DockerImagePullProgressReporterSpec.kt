@@ -40,7 +40,7 @@ object DockerImagePullProgressReporterSpec : Spek({
             "an 'image digest' event" to """{"status":"Digest: sha256:e6b798f4eeb4e6334d195cdeabc18d07dc5158aa88ad5d83670462852b431a71"}""",
             "a 'downloaded newer image' event" to """{"status":"Status: Downloaded newer image for node:10-stretch"}""",
             "an 'image up to date' event" to """{"status":"Status: Image is up to date for node:10-stretch"}"""
-        ).forEach { description, json ->
+        ).forEach { (description, json) ->
             given(description) {
                 on("processing the event") {
                     val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
@@ -168,7 +168,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                     "download complete" to """{"status":"Download complete","progressDetail":{},"id":"b59856e9f0ab"}""",
                     "extracting" to """{"status":"Extracting","progressDetail":{"current":1000,"total":7000},"id":"b59856e9f0ab"}""",
                     "pull complete" to """{"status":"Pull complete","progressDetail":{},"id":"b59856e9f0ab"}"""
-                ).forEach { eventType, json ->
+                ).forEach { (eventType, json) ->
                     on("processing a '$eventType' event for that other layer") {
                         val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 

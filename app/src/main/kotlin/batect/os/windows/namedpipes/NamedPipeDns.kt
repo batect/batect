@@ -30,7 +30,7 @@ class NamedPipeDns : Dns {
     }
 
     companion object {
-        private val encodingMarker = ".namedpipe"
+        private const val encodingMarker = ".namedpipe"
 
         fun encodePath(path: String): String {
             return ByteString.encodeUtf8(path).hex() + encodingMarker

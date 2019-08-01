@@ -19,7 +19,7 @@ package batect.docker.pull
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.json
 
-sealed class DockerRegistryCredentials() {
+sealed class DockerRegistryCredentials {
     abstract val serverAddress: String
     abstract fun toJSON(): JsonElement
 }

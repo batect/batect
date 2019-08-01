@@ -57,22 +57,22 @@ data class Container(
 ) {
     @Serializer(forClass = Container::class)
     companion object : KSerializer<Container> {
-        private val buildDirectoryFieldName = "build_directory"
-        private val buildArgsFieldName = "build_args"
-        private val dockerfileFieldName = "dockerfile"
-        private val imageNameFieldName = "image"
-        private val commandFieldName = "command"
-        private val environmentFieldName = "environment"
-        private val workingDirectoryFieldName = "working_directory"
-        private val volumeMountsFieldName = "volumes"
-        private val portMappingsFieldName = "ports"
-        private val dependenciesFieldName = "dependencies"
-        private val healthCheckConfigFieldName = "health_check"
-        private val runAsCurrentUserConfigFieldName = "run_as_current_user"
-        private val privilegedFieldName = "privileged"
-        private val enableInitProcessFieldName = "enable_init_process"
-        private val capabilitiesToAddFieldName = "capabilities_to_add"
-        private val capabilitiesToDropFieldName = "capabilities_to_drop"
+        private const val buildDirectoryFieldName = "build_directory"
+        private const val buildArgsFieldName = "build_args"
+        private const val dockerfileFieldName = "dockerfile"
+        private const val imageNameFieldName = "image"
+        private const val commandFieldName = "command"
+        private const val environmentFieldName = "environment"
+        private const val workingDirectoryFieldName = "working_directory"
+        private const val volumeMountsFieldName = "volumes"
+        private const val portMappingsFieldName = "ports"
+        private const val dependenciesFieldName = "dependencies"
+        private const val healthCheckConfigFieldName = "health_check"
+        private const val runAsCurrentUserConfigFieldName = "run_as_current_user"
+        private const val privilegedFieldName = "privileged"
+        private const val enableInitProcessFieldName = "enable_init_process"
+        private const val capabilitiesToAddFieldName = "capabilities_to_add"
+        private const val capabilitiesToDropFieldName = "capabilities_to_drop"
 
         override val descriptor: SerialDescriptor = object : SerialClassDescImpl("ContainerFromFile") {
             init {

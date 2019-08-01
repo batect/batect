@@ -43,9 +43,7 @@ class WindowsConsoleManager(
                 message("STDIN is not a TTY, won't enter raw mode.")
             }
 
-            return object : AutoCloseable {
-                override fun close() {}
-            }
+            return AutoCloseable { }
         }
 
         val existingState = nativeMethods.enableConsoleRawMode()

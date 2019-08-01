@@ -17,11 +17,11 @@
 package batect.docker
 
 object DockerImageNameValidator {
-    private val separators = """(\.|_|__|-+)"""
-    private val nonSeparators = "([a-z0-9]+)"
+    private const val separators = """(\.|_|__|-+)"""
+    private const val nonSeparators = "([a-z0-9]+)"
     private val nameRegex = Regex("^$nonSeparators($separators$nonSeparators)*$")
 
-    val validNameDescription = "must contain only lowercase letters, digits, dashes (-), single consecutive periods (.) or one or two consecutive underscores (_), and must not start or end with dashes, periods or underscores"
+    const val validNameDescription = "must contain only lowercase letters, digits, dashes (-), single consecutive periods (.) or one or two consecutive underscores (_), and must not start or end with dashes, periods or underscores"
 
     fun isValidImageName(name: String): Boolean = nameRegex.matches(name)
 }

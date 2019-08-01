@@ -40,7 +40,7 @@ object EnvironmentVariableExpressionSpec : Spek({
                 "\${SOME_VAR:-}" to ReferenceValue("SOME_VAR", ""),
                 "\${SOME_VAR:-default}" to ReferenceValue("SOME_VAR", "default"),
                 "\${SOME_VAR:-some value}" to ReferenceValue("SOME_VAR", "some value")
-            ).forEach { source, expectedExpression ->
+            ).forEach { (source, expectedExpression) ->
                 on("parsing the input '$source'") {
                     val expression = EnvironmentVariableExpression.parse(source)
 

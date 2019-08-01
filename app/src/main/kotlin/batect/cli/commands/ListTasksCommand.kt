@@ -30,12 +30,10 @@ class ListTasksCommand(val configFile: Path, val configLoader: ConfigurationLoad
         groups.entries
             .sortedWith(groupComparator)
             .forEachIndexed { index, (groupName, tasks) ->
-                if (allTasksHaveNoGroup) {
-                    outputStream.println("Available tasks:")
-                } else if (groupName == "") {
-                    outputStream.println("Ungrouped tasks:")
-                } else {
-                    outputStream.println("$groupName:")
+                when {
+                    allTasksHaveNoGroup -> outputStream.println("Available tasks:")
+                    groupName == "" -> outputStream.println("Ungrouped tasks:")
+                    else -> outputStream.println("$groupName:")
                 }
 
                 printGroup(tasks)
@@ -49,14 +47,11 @@ class ListTasksCommand(val configFile: Path, val configLoader: ConfigurationLoad
     }
 
     private val groupComparator = Comparator<Map.Entry<String, List<Task>>> { (a, _), (b, _) ->
-        if (a == b) {
-            0
-        } else if (a == "") {
-            1
-        } else if (b == "") {
-            -1
-        } else {
-            a.compareTo(b)
+        when {
+            a == b -> 0
+            a == "" -> 1
+            b == "" -> -1
+            else -> a.compareTo(b)
         }
     }
 

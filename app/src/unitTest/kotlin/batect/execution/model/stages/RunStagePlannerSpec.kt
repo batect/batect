@@ -353,7 +353,7 @@ object RunStagePlannerSpec : Spek({
 private fun Suite.itHasExactlyTheRules(stageCreator: () -> RunStage, expectedRules: Map<String, TaskStepRule>) {
     val stage by runForEachTest(stageCreator)
 
-    expectedRules.forEach { description, expectedRule ->
+    expectedRules.forEach { (description, expectedRule) ->
         it("includes a rule to $description") {
             assertThat(stage.rules, hasElement(expectedRule))
         }

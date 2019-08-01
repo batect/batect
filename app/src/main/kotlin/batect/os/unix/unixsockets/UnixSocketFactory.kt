@@ -26,7 +26,7 @@ import java.net.Socket
 import java.net.SocketAddress
 import javax.net.SocketFactory
 
-class UnixSocketFactory() : SocketFactory() {
+class UnixSocketFactory : SocketFactory() {
     override fun createSocket(): Socket {
         val channel = UnixSocketChannel.create()
 

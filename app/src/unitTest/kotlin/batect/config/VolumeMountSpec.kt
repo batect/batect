@@ -47,9 +47,8 @@ object VolumeMountSpec : Spek({
                 mock<PathDeserializer> {
                     on { deserialize(any()) } doAnswer { invocation ->
                         val input = invocation.arguments[0] as Decoder
-                        val originalPath = input.decodeString()
 
-                        when (originalPath) {
+                        when (val originalPath = input.decodeString()) {
                             "/invalid" -> PathResolutionResult.InvalidPath(originalPath)
                             else -> PathResolutionResult.Resolved(originalPath, osIndependentPath("/resolved" + originalPath), PathType.Other)
                         }
@@ -103,7 +102,7 @@ object VolumeMountSpec : Spek({
                 mapOf(
                     "c:\\local" to "a lowercase drive letter",
                     "C:\\local" to "a uppercase drive letter"
-                ).forEach { local, description ->
+                ).forEach { (local, description) ->
                     on("parsing a valid Windows volume mount definition with $description") {
                         val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, "'$local:/container'") }
 

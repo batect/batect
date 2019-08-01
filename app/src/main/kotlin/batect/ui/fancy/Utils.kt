@@ -24,12 +24,10 @@ internal fun humanReadableList(list: Collection<Text>): TextRun {
         val secondLastItem = index == list.size - 2
         val beforeSecondLastItem = index < list.size - 2
 
-        val separator = if (secondLastItem) {
-            Text(" and ")
-        } else if (beforeSecondLastItem) {
-            Text(", ")
-        } else {
-            Text("")
+        val separator = when {
+            secondLastItem -> Text(" and ")
+            beforeSecondLastItem -> Text(", ")
+            else -> Text("")
         }
 
         acc + current + separator

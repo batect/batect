@@ -30,7 +30,7 @@ class UnixSocketDns : Dns {
     }
 
     companion object {
-        private val encodingMarker = ".unixsocket"
+        private const val encodingMarker = ".unixsocket"
 
         fun encodePath(path: String): String {
             return ByteString.encodeUtf8(path).hex() + encodingMarker

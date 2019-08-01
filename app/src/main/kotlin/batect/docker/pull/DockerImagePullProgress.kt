@@ -29,18 +29,13 @@ data class DockerImagePullProgress(val currentOperation: String, val completedBy
         return "$currentOperation ${humaniseBytes(completedBytes)} of ${humaniseBytes(totalBytes)} ($percentage%)"
     }
 
-    private fun humaniseBytes(bytes: Long): String =
-        if (bytes < oneKilobyte) {
-            "$bytes B"
-        } else if (bytes < oneMegabyte) {
-            "${formatFraction(bytes.toDouble() / oneKilobyte)} KB"
-        } else if (bytes < oneGigabyte) {
-            "${formatFraction(bytes.toDouble() / oneMegabyte)} MB"
-        } else if (bytes < oneTerabyte) {
-            "${formatFraction(bytes.toDouble() / oneGigabyte)} GB"
-        } else {
-            "${formatFraction(bytes.toDouble() / oneTerabyte)} TB"
-        }
+    private fun humaniseBytes(bytes: Long): String = when {
+        bytes < oneKilobyte -> "$bytes B"
+        bytes < oneMegabyte -> "${formatFraction(bytes.toDouble() / oneKilobyte)} KB"
+        bytes < oneGigabyte -> "${formatFraction(bytes.toDouble() / oneMegabyte)} MB"
+        bytes < oneTerabyte -> "${formatFraction(bytes.toDouble() / oneGigabyte)} GB"
+        else -> "${formatFraction(bytes.toDouble() / oneTerabyte)} TB"
+    }
 
     private fun formatFraction(value: Double) = String.format("%.1f", value)
 

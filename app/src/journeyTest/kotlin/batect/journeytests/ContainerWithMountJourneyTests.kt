@@ -32,7 +32,7 @@ object ContainerWithMountJourneyTests : Spek({
     mapOf(
         "container-with-mount" to "a simple task with a volume mount",
         "container-with-cached-mount" to "a simple task with a cached volume mount"
-    ).forEach { testName, description ->
+    ).forEach { (testName, description) ->
         describe(description) {
             val runner by createForGroup { ApplicationRunner(testName) }
 

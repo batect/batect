@@ -50,8 +50,8 @@ data class PortMapping(
 
     @Serializer(forClass = PortMapping::class)
     companion object : KSerializer<PortMapping> {
-        private val localPortFieldName = "local"
-        private val containerPortFieldName = "container"
+        private const val localPortFieldName = "local"
+        private const val containerPortFieldName = "container"
 
         override val descriptor: SerialDescriptor = object : SerialClassDescImpl("PortMapping") {
             init {
@@ -64,7 +64,7 @@ data class PortMapping(
         private val containerPortFieldIndex = descriptor.getElementIndex("container")
 
         override fun deserialize(decoder: Decoder): PortMapping {
-            if (!(decoder is YamlInput)) {
+            if (decoder !is YamlInput) {
                 throw UnsupportedOperationException("Can only deserialize from YAML source.")
             }
 

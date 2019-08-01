@@ -16,6 +16,6 @@
 
 package batect.docker
 
-val defaultRegistryName = "docker.io"
-val minimumDockerAPIVersion = "1.30"
-val minimumDockerVersion = "17.06" // This should be kept in sync with the above API version (see https://docs.docker.com/develop/sdk/#api-version-matrix for table)
+const val defaultRegistryName = "docker.io"
+const val minimumDockerAPIVersion = "1.30"
+const val minimumDockerVersion = "17.06" // This should be kept in sync with the above API version (see https://docs.docker.com/develop/sdk/#api-version-matrix for table)

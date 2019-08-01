@@ -87,7 +87,7 @@ object DockerImagePullProgressSpec : Spek({
             2L * 1000 * 1000 * 1000 to "2.0 GB",
             1000L * 1000 * 1000 * 1000 to "1.0 TB",
             2L * 1000 * 1000 * 1000 * 1000 to "2.0 TB"
-        ).forEach { bytes, expectedBytesDisplay ->
+        ).forEach { (bytes, expectedBytesDisplay) ->
             given("$bytes have been downloaded so far") {
                 val progress = DockerImagePullProgress("Downloading", bytes, 100)
 

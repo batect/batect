@@ -165,7 +165,7 @@ object DockerHttpConfigSpec : Spek({
             "1.2.3.4" to HttpUrl.get("http://1.2.3.4"),
             "1.2.3.4:1234" to HttpUrl.get("http://1.2.3.4:1234"),
             ":1234" to HttpUrl.get("http://0.0.0.0:1234")
-        ).forEach { host, expectedBaseUrl ->
+        ).forEach { (host, expectedBaseUrl) ->
             given("the host address '$host'") {
                 val systemInfo by createForEachTest { systemInfoFor(OperatingSystem.Other) }
                 val config by createForEachTest { DockerHttpConfig(baseClient, host, systemInfo) }
@@ -212,7 +212,7 @@ object DockerHttpConfigSpec : Spek({
 })
 
 private fun systemInfoFor(os: OperatingSystem): SystemInfo {
-    return mock<SystemInfo> {
+    return mock {
         on { operatingSystem } doReturn os
     }
 }

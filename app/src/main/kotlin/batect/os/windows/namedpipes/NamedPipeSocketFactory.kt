@@ -20,7 +20,7 @@ import java.net.InetAddress
 import java.net.Socket
 import javax.net.SocketFactory
 
-class NamedPipeSocketFactory() : SocketFactory() {
+class NamedPipeSocketFactory : SocketFactory() {
     override fun createSocket(): Socket {
         return NamedPipeSocket()
     }

@@ -34,7 +34,7 @@ class DockerIgnoreParser {
             .filterNot { it.startsWith('#') }
             .map { it.trim() }
             .filterNot { it.isEmpty() }
-            .filterNot { it.equals(".") }
+            .filterNot { it == "." }
             .map {
                 if (it == "!") {
                     throw DockerException("The .dockerignore pattern '$it' is invalid.")

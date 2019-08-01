@@ -42,7 +42,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
             mapOf(
                 "there are no additional 'don't proxy' entries" to emptySet(),
                 "there are some additional 'don't proxy' entries" to setOf("host-1", "host-2")
-            ).forEach { description, extraNoProxyEntries ->
+            ).forEach { (description, extraNoProxyEntries) ->
                 given(description) {
                     on("getting proxy environment variables") {
                         val proxyEnvironmentVariables = provider.getProxyEnvironmentVariables(extraNoProxyEntries)
@@ -66,7 +66,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
             mapOf(
                 "there are no additional 'don't proxy' entries" to emptySet(),
                 "there are some additional 'don't proxy' entries" to setOf("host-1", "host-2")
-            ).forEach { description, extraNoProxyEntries ->
+            ).forEach { (description, extraNoProxyEntries) ->
                 given(description) {
                     on("getting proxy environment variables") {
                         val proxyEnvironmentVariables = provider.getProxyEnvironmentVariables(extraNoProxyEntries)

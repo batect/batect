@@ -31,9 +31,7 @@ class ContainerTTYManager(
 ) {
     fun monitorForSizeChanges(container: DockerContainer): AutoCloseable {
         if (!consoleInfo.stdinIsTTY) {
-            return object : AutoCloseable {
-                override fun close() {}
-            }
+            return AutoCloseable { }
         }
 
         val cleanup = consoleDimensions.registerListener {

@@ -28,11 +28,9 @@ class SignalListener(private val posix: POSIX) {
 
         val originalHandler = posix.signal(signal, ::handleSignal)
 
-        return object : AutoCloseable {
-            override fun close() {
-                posix.signal(signal, originalHandler)
-                handlers.getValue(signal.value()).remove(handler)
-            }
+        return AutoCloseable {
+            posix.signal(signal, originalHandler)
+            handlers.getValue(signal.value()).remove(handler)
         }
     }
 

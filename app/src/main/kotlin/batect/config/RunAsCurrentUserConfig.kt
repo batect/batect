@@ -29,7 +29,7 @@ import kotlinx.serialization.Serializer
 import kotlinx.serialization.internal.SerialClassDescImpl
 
 @Serializable
-sealed class RunAsCurrentUserConfig() {
+sealed class RunAsCurrentUserConfig {
     @Serializer(forClass = RunAsCurrentUserConfig::class)
     companion object : KSerializer<RunAsCurrentUserConfig> {
         override val descriptor: SerialDescriptor = object : SerialClassDescImpl("RunAsCurrentUserConfig") {

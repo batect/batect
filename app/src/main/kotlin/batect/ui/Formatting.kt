@@ -36,11 +36,9 @@ fun Duration.humanise(): String = when {
 
 private val Duration.wholeSeconds: BigDecimal
     get() {
-        val durationDisplay = BigDecimal.valueOf(seconds - (60 * toMinutes()))
+        return BigDecimal.valueOf(seconds - (60 * toMinutes()))
             .add(BigDecimal.valueOf(nano.toLong(), 9))
             .setScale(0, RoundingMode.HALF_UP)
-
-        return durationDisplay
     }
 
 private val Duration.wholeMinutes: Long

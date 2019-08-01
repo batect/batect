@@ -45,11 +45,7 @@ class ConsoleDimensions(
     fun registerListener(listener: Listener): AutoCloseable {
         listeners.add(listener)
 
-        return object : AutoCloseable {
-            override fun close() {
-                listeners.remove(listener)
-            }
-        }
+        return AutoCloseable { listeners.remove(listener) }
     }
 
     private fun updateCachedDimensions() {

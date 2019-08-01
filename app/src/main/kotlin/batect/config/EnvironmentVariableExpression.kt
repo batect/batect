@@ -80,12 +80,10 @@ data class ReferenceValue(val referenceTo: String, val default: String? = null) 
     override fun evaluate(hostEnvironmentVariables: Map<String, String>): String {
         val hostValue = hostEnvironmentVariables.get(referenceTo)
 
-        if (hostValue != null) {
-            return hostValue
-        } else if (default != null) {
-            return default
-        } else {
-            throw EnvironmentVariableExpressionEvaluationException("The host environment variable '$referenceTo' is not set, and no default value has been provided.")
+        return when {
+            hostValue != null -> hostValue
+            default != null -> default
+            else -> throw EnvironmentVariableExpressionEvaluationException("The host environment variable '$referenceTo' is not set, and no default value has been provided.")
         }
     }
 

@@ -113,7 +113,7 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
                     "http://$localhostAddress/thing" to "http://local.docker/thing",
                     "http://user@$localhostAddress" to "http://user@local.docker/",
                     "http://user:password@$localhostAddress" to "http://user:password@local.docker/"
-                ).forEach { originalValue, expectedValue ->
+                ).forEach { (originalValue, expectedValue) ->
                     on("processing a variable that refers to the local machine through '$originalValue'") {
                         val result by runForEachTest { preprocessor.process(originalValue) }
 

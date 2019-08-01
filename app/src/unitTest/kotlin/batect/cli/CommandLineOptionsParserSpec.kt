@@ -163,7 +163,7 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--no-cleanup-after-failure", "some-task") to CommandLineOptions(disableCleanupAfterFailure = true, taskName = "some-task", dockerHost = defaultDockerHost),
             listOf("--no-proxy-vars", "some-task") to CommandLineOptions(dontPropagateProxyEnvironmentVariables = true, taskName = "some-task", dockerHost = defaultDockerHost),
             listOf("--docker-host=some-host", "some-task") to CommandLineOptions(dockerHost = "some-host", taskName = "some-task")
-        ).forEach { args, expectedResult ->
+        ).forEach { (args, expectedResult) ->
             given("the arguments $args") {
                 on("parsing the command line") {
                     val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(args)

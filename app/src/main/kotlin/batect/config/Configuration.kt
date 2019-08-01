@@ -41,9 +41,9 @@ data class Configuration(
 ) {
     @Serializer(forClass = Configuration::class)
     companion object : KSerializer<Configuration> {
-        private val projectNameFieldName = "project_name"
-        private val tasksFieldName = "tasks"
-        private val containersFieldName = "containers"
+        private const val projectNameFieldName = "project_name"
+        private const val tasksFieldName = "tasks"
+        private const val containersFieldName = "containers"
 
         override val descriptor: SerialDescriptor = object : SerialClassDescImpl("Configuration") {
             init {

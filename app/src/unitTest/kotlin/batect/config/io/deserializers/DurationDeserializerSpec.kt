@@ -73,7 +73,7 @@ object DurationDeserializerSpec : Spek({
             "52763797000ns" to Duration.ofNanos(52763797000),
             "0.100000000000000000000h" to Duration.ofMinutes(6),
             "0.830103483285477580700h" to Duration.ofMinutes(49) + Duration.ofSeconds(48) + Duration.ofNanos(372539827)
-        ).forEach { input, expectedOutput ->
+        ).forEach { (input, expectedOutput) ->
             given("the string '$input'") {
                 val decoder = mock<YamlInput> {
                     on { decodeString() } doReturn input

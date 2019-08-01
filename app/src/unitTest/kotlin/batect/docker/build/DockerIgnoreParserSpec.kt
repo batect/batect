@@ -296,7 +296,7 @@ object DockerIgnoreParserSpec : Spek({
                 "my..file" to "my..file",
                 "my\\/file" to "my\\/file",
                 "my\\/.\\/file" to "my\\/.\\/file"
-            ).forEach { patternInFile, expectedCleanedPattern ->
+            ).forEach { (patternInFile, expectedCleanedPattern) ->
                 given("the pattern is '$patternInFile'") {
                     beforeEachTest {
                         Files.write(path, listOf(patternInFile))
@@ -320,7 +320,7 @@ object DockerIgnoreParserSpec : Spek({
                 "abc/./def" to "abc/def",
                 "/./abc/def" to "abc/def",
                 "abc/." to "abc"
-            ).forEach { patternInFile, expectedCleanedPattern ->
+            ).forEach { (patternInFile, expectedCleanedPattern) ->
                 given("the pattern is '$patternInFile'") {
                     beforeEachTest {
                         Files.write(path, listOf(patternInFile))
@@ -344,7 +344,7 @@ object DockerIgnoreParserSpec : Spek({
                 "abc/./../def" to "def",
                 "abc//./../def" to "def",
                 "abc/../../././../def" to "../../def"
-            ).forEach { patternInFile, expectedCleanedPattern ->
+            ).forEach { (patternInFile, expectedCleanedPattern) ->
                 given("the pattern is '$patternInFile'") {
                     beforeEachTest {
                         Files.write(path, listOf(patternInFile))

@@ -38,7 +38,7 @@ object SimpleTaskJourneyTests : Spek({
         "simple-task-with-environment" to "a simple task with a task-level environment variable",
         "container-with-health-check-overrides" to "a task with a dependency container that has a batect-specific health check configuration",
         "build-image-dockerignore" to "a task that builds an image with a .dockerignore file"
-    ).forEach { testName, description ->
+    ).forEach { (testName, description) ->
         describe(description) {
             val runner by createForGroup { ApplicationRunner(testName) }
 

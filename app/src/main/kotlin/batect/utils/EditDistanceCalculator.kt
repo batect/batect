@@ -22,12 +22,10 @@ object EditDistanceCalculator {
     fun calculateDistanceBetween(first: String, second: String): Int {
         val prefixes = Array(first.length + 1) { i ->
             IntArray(second.length + 1) { j ->
-                if (i == 0) {
-                    j
-                } else if (j == 0) {
-                    i
-                } else {
-                    Int.MAX_VALUE
+                when {
+                    i == 0 -> j
+                    j == 0 -> i
+                    else -> Int.MAX_VALUE
                 }
             }
         }

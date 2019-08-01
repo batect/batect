@@ -85,7 +85,7 @@ object TextSpec : Spek({
                 ConsoleColor.Magenta to ::magenta,
                 ConsoleColor.Cyan to ::cyan,
                 ConsoleColor.White to ::white
-            ).forEach { color, producer ->
+            ).forEach { (color, producer) ->
                 val colorName = color.name.toLowerCase()
 
                 on("creating $colorName text from a string") {
@@ -106,7 +106,7 @@ object TextSpec : Spek({
                 ConsoleColor.Magenta to ::magenta,
                 ConsoleColor.Cyan to ::cyan,
                 ConsoleColor.White to ::white
-            ).forEach { color, producer ->
+            ).forEach { (color, producer) ->
                 val colorName = color.name.toLowerCase()
                 val anotherColor = ConsoleColor.values().toList().filterNot { it == color }.first()
 

@@ -57,12 +57,10 @@ class DockerImagePullProgressReporter {
             0
         }
 
-        val totalBytesToUse = if (totalBytes != null) {
-            totalBytes
-        } else if (previousState != null) {
-            previousState.totalBytes
-        } else {
-            0
+        val totalBytesToUse = when {
+            totalBytes != null -> totalBytes
+            previousState != null -> previousState.totalBytes
+            else -> 0
         }
 
         return LayerStatus(currentOperation, completedBytesToUse, totalBytesToUse)
@@ -89,7 +87,7 @@ class DockerImagePullProgressReporter {
         val displayName: String = statusName.toLowerCase()
 
         companion object {
-            val knownOperations = LayerOperation.values().associate { it.statusName to it }
+            val knownOperations = values().associate { it.statusName to it }
         }
     }
 

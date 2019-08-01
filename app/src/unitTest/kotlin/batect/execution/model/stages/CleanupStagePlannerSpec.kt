@@ -405,7 +405,7 @@ object CleanupStagePlannerSpec : Spek({
 private fun Suite.itHasExactlyTheRules(stageCreator: () -> CleanupStage, expectedRules: Map<String, CleanupTaskStepRule>) {
     val stage by runForEachTest(stageCreator)
 
-    expectedRules.forEach { description, expectedRule ->
+    expectedRules.forEach { (description, expectedRule) ->
         it("includes a rule to $description") {
             assertThat(stage.rules, hasElement(expectedRule))
         }

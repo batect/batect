@@ -48,7 +48,7 @@ class DockerRegistryCredentialsConfigurationFile(
             return DockerConfigFile()
         }
 
-        val configFileContent = Files.readAllBytes(configFilePath)!!.toString(Charset.defaultCharset())
+        val configFileContent = Files.readAllBytes(configFilePath).toString(Charset.defaultCharset())
         return Json.nonstrictParser.parse(DockerConfigFile.serializer(), configFileContent)
     }
 

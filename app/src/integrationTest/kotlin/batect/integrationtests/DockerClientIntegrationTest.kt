@@ -254,7 +254,7 @@ object DockerClientIntegrationTest : Spek({
             mapOf(
                 "image-with-expose" to "the image has an EXPOSE instruction for the port to be exposed",
                 "image-without-expose" to "the image does not have an EXPOSE instruction for the port to be exposed"
-            ).forEach { path, description ->
+            ).forEach { (path, description) ->
                 describe("given $description") {
                     val dockerfilePath by createForGroup { testImagesPath.resolve(path) }
                     val image by runBeforeGroup { client.build(dockerfilePath, emptyMap(), "Dockerfile", emptySet(), {}) }
@@ -283,7 +283,7 @@ object DockerClientIntegrationTest : Spek({
             val result by runBeforeGroup { client.checkConnectivity() }
 
             it("returns that Docker is available") {
-                assertThat(result, equalTo<DockerConnectivityCheckResult>(DockerConnectivityCheckResult.Succeeded))
+                assertThat(result, equalTo(DockerConnectivityCheckResult.Succeeded))
             }
         }
 

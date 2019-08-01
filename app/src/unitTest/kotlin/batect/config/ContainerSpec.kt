@@ -49,9 +49,8 @@ object ContainerSpec : Spek({
             mock<PathDeserializer> {
                 on { deserialize(any()) } doAnswer { invocation ->
                     val input = invocation.arguments[0] as ElementValueDecoder
-                    val path = input.decodeString()
 
-                    when (path) {
+                    when (val path = input.decodeString()) {
                         "/does_not_exist" -> PathResolutionResult.Resolved(path, osIndependentPath("/some_resolved_path"), PathType.DoesNotExist)
                         "/file" -> PathResolutionResult.Resolved(path, osIndependentPath("/some_resolved_path"), PathType.File)
                         "/not_file_or_directory" -> PathResolutionResult.Resolved(path, osIndependentPath("/some_resolved_path"), PathType.Other)

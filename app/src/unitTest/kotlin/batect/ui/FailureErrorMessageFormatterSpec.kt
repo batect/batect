@@ -160,7 +160,7 @@ object FailureErrorMessageFormatterSpec : Spek({
             ).forEach { (description, event, expectedMessage) ->
                 given("a '$description' event") {
                     given("cleanup after failure is disabled") {
-                        val runOptions = mock<RunOptions>() {
+                        val runOptions = mock<RunOptions> {
                             on { behaviourAfterFailure } doReturn BehaviourAfterFailure.DontCleanup
                         }
 
@@ -174,7 +174,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                     }
 
                     given("cleanup after failure is enabled") {
-                        val runOptions = mock<RunOptions>() {
+                        val runOptions = mock<RunOptions> {
                             on { behaviourAfterFailure } doReturn BehaviourAfterFailure.Cleanup
                         }
 

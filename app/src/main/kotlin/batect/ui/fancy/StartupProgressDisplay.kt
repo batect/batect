@@ -42,12 +42,10 @@ class StartupProgressDisplay(
         val newStatus = containerLines.mapTo(mutableListOf()) { it.print() }
         val newConsoleDimensions = consoleDimensions.current
 
-        if (lastStatus.isEmpty()) {
-            printAllLines(newStatus, console)
-        } else if (newConsoleDimensions != lastConsoleDimensions) {
-            reprintAllLines(newStatus, console)
-        } else {
-            printOnlyUpdatedLines(newStatus, console)
+        when {
+            lastStatus.isEmpty() -> printAllLines(newStatus, console)
+            newConsoleDimensions != lastConsoleDimensions -> reprintAllLines(newStatus, console)
+            else -> printOnlyUpdatedLines(newStatus, console)
         }
 
         lastStatus = newStatus
@@ -68,7 +66,7 @@ class StartupProgressDisplay(
     }
 
     private fun printOnlyUpdatedLines(newStatus: List<TextRun>, console: Console) {
-        val firstLineWithChange = newStatus.zip(lastStatus).indexOfFirst { (new, old) -> !new.equals(old) }
+        val firstLineWithChange = newStatus.zip(lastStatus).indexOfFirst { (new, old) -> new != old }
 
         if (firstLineWithChange == -1) {
             return
@@ -80,7 +78,7 @@ class StartupProgressDisplay(
             val new = newStatus[i]
             val old = lastStatus[i]
 
-            if (new.equals(old)) {
+            if (new == old) {
                 console.moveCursorDown()
             } else {
                 console.clearCurrentLine()

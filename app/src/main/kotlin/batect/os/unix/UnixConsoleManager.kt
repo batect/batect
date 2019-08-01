@@ -36,9 +36,7 @@ class UnixConsoleManager(
                 message("Terminal is not a TTY, won't enter raw mode.")
             }
 
-            return object : AutoCloseable {
-                override fun close() {}
-            }
+            return AutoCloseable { }
         }
 
         val existingState = getExistingTerminalState()

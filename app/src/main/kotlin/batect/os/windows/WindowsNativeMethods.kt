@@ -44,6 +44,7 @@ import java.io.FileNotFoundException
 import java.net.SocketTimeoutException
 import java.nio.ByteBuffer
 import java.time.Duration
+import kotlin.math.max
 import kotlin.reflect.KFunction
 
 class WindowsNativeMethods(
@@ -201,7 +202,7 @@ class WindowsNativeMethods(
         val remainingTime = Duration.ofNanos(endTime - currentTime)
 
         // We add one below as toMillis() rounds down and a value of 0 means 'use default wait'
-        win32.WaitNamedPipeW(WindowsHelpers.toWPath(path), remainingTime.toMillis() + 1)
+        win32.WaitNamedPipeW(WindowsHelpers.toWPath(path), max(remainingTime.toMillis(), 1))
     }
 
     private fun hasTimedOut(startTime: Long, timeout: Duration): Boolean {

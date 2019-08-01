@@ -79,13 +79,12 @@ class WindowsNativeMethods(
 
         if (!succeeded) {
             val errno = posix.errno()
-            val error = LastError.values().single { it.intValue() == errno }
 
-            if (error == LastError.ERROR_INVALID_HANDLE) {
+            if (errno == ERROR_INVALID_HANDLE) {
                 throw NoConsoleException()
             }
 
-            throw WindowsNativeMethodException(Win32::GetConsoleScreenBufferInfo.name, error)
+            throwNativeMethodFailed(Win32::GetConsoleScreenBufferInfo)
         }
 
         val height = info.srWindow.bottom.intValue() - info.srWindow.top.intValue() + 1
@@ -258,8 +257,13 @@ class WindowsNativeMethods(
     }
 
     private fun startWrite(pipe: NamedPipe, buffer: Pointer, overlapped: Overlapped) {
-        if (!win32.WriteFile(pipe.handle, buffer, buffer.size(), null, overlapped)) {
-            throwNativeMethodFailed(Win32::WriteFile)
+        if (win32.WriteFile(pipe.handle, buffer, buffer.size(), null, overlapped)) {
+            return
+        }
+
+        when (posix.errno()) {
+            ERROR_IO_PENDING -> return
+            else -> throwNativeMethodFailed(Win32::WriteFile)
         }
     }
 
@@ -300,19 +304,11 @@ class WindowsNativeMethods(
             return true
         }
 
-        val errno = posix.errno()
-
-        if (errno == ERROR_IO_PENDING) {
-            return true
+        return when (posix.errno()) {
+            ERROR_IO_PENDING -> true
+            ERROR_BROKEN_PIPE -> false
+            else -> throwNativeMethodFailed(win32::ReadFile)
         }
-
-        val error = LastError.values().single { it.intValue() == errno }
-
-        if (error == LastError.ERROR_BROKEN_PIPE) {
-            return false
-        }
-
-        throw WindowsNativeMethodException(Win32::ReadFile.name, error)
     }
 
     private fun waitForOverlappedOperation(pipe: NamedPipe, overlapped: Overlapped, event: HANDLE, timeoutInMilliseconds: Int): Int {
@@ -361,13 +357,14 @@ class WindowsNativeMethods(
     }
 
     private fun cancelIo(pipe: NamedPipe, overlapped: Overlapped?) {
-        if (!win32.CancelIoEx(pipe.handle, overlapped)) {
-            if (posix.errno() == ERROR_NOT_FOUND || posix.errno() == ERROR_INVALID_HANDLE) {
-                // There was nothing to cancel, or the pipe has already been closed.
-                return
-            }
+        if (win32.CancelIoEx(pipe.handle, overlapped)) {
+            return
+        }
 
-            throwNativeMethodFailed(Win32::CancelIoEx)
+        when (posix.errno()) {
+            // There was nothing to cancel, or the pipe has already been closed.
+            ERROR_NOT_FOUND, ERROR_INVALID_HANDLE -> return
+            else -> throwNativeMethodFailed(Win32::CancelIoEx)
         }
     }
 
@@ -478,6 +475,7 @@ class WindowsNativeMethods(
         private const val ERROR_OPERATION_ABORTED: Int = 0x000003E3
         private const val ERROR_NOT_FOUND: Int = 0x00000490
         private const val ERROR_PIPE_BUSY: Int = 0x000000E7
+        private const val ERROR_BROKEN_PIPE: Int = 0x0000006D
 
         private const val WAIT_ABANDONED: Int = 0x00000080
         private const val WAIT_OBJECT_0: Int = 0x00000000

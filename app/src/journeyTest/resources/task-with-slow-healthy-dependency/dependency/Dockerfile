@@ -1,4 +1,4 @@
-FROM alpine:3.7
+FROM alpine:3.10.1
 
 COPY health-check.sh /tools/
 

@@ -56,7 +56,7 @@ object DockerHttpConfigSpec : Spek({
         }
 
         given("a Unix socket address") {
-            val dockerHost = "unix:///var/thing/some/docker.sock"
+            val dockerHost = "unix:///var/run/very/very/long/name/docker.sock"
 
             given("the application is running on an operating system that supports Unix sockets") {
                 val systemInfo by createForEachTest { systemInfoFor(OperatingSystem.Linux) }
@@ -83,7 +83,7 @@ object DockerHttpConfigSpec : Spek({
                 }
 
                 on("getting the base URL to use") {
-                    val encodedPath = UnixSocketDns.encodePath("/var/thing/some/docker.sock")
+                    val encodedPath = UnixSocketDns.encodePath("/var/run/very/very/long/name/docker.sock")
 
                     it("returns a URL ready for use with the local Unix socket") {
                         assertThat(config.baseUrl, equalTo(HttpUrl.parse("http://$encodedPath")!!))
@@ -97,14 +97,14 @@ object DockerHttpConfigSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { DockerHttpConfig(baseClient, dockerHost, systemInfo) },
-                        throws<InvalidDockerConfigurationException>(withMessage("This operating system does not support Unix sockets and so therefore the Docker host 'unix:///var/thing/some/docker.sock' cannot be used."))
+                        throws<InvalidDockerConfigurationException>(withMessage("This operating system does not support Unix sockets and so therefore the Docker host 'unix:///var/run/very/very/long/name/docker.sock' cannot be used."))
                     )
                 }
             }
         }
 
         given("a named pipe address") {
-            val dockerHost = "npipe:////./pipe/some/docker_engine"
+            val dockerHost = "npipe:////./pipe/some/very/very/very/long/name/docker_engine"
 
             given("the application is running on Windows") {
                 val systemInfo by createForEachTest { systemInfoFor(OperatingSystem.Windows) }
@@ -131,7 +131,7 @@ object DockerHttpConfigSpec : Spek({
                 }
 
                 on("getting the base URL to use") {
-                    val encodedPath = NamedPipeDns.encodePath("""\\.\pipe\some\docker_engine""")
+                    val encodedPath = NamedPipeDns.encodePath("""\\.\pipe\some\very\very\very\long\name\docker_engine""")
 
                     it("returns a URL ready for use with the local Unix socket") {
                         assertThat(config.baseUrl, equalTo(HttpUrl.parse("http://$encodedPath")!!))
@@ -145,7 +145,7 @@ object DockerHttpConfigSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { DockerHttpConfig(baseClient, dockerHost, systemInfo) },
-                        throws<InvalidDockerConfigurationException>(withMessage("Named pipes are only supported on Windows and so therefore the Docker host 'npipe:////./pipe/some/docker_engine' cannot be used."))
+                        throws<InvalidDockerConfigurationException>(withMessage("Named pipes are only supported on Windows and so therefore the Docker host 'npipe:////./pipe/some/very/very/very/long/name/docker_engine' cannot be used."))
                     )
                 }
             }

@@ -16,8 +16,8 @@
 
 package batect.os.windows.namedpipes
 
+import batect.os.DnsToPathResolver
 import okhttp3.Dns
-import okio.ByteString
 import java.net.InetAddress
 
 class NamedPipeDns : Dns {
@@ -29,21 +29,5 @@ class NamedPipeDns : Dns {
         return mutableListOf(InetAddress.getByAddress(hostname, byteArrayOf(0, 0, 0, 0)))
     }
 
-    companion object {
-        private const val encodingMarker = ".namedpipe"
-
-        fun encodePath(path: String): String {
-            return ByteString.encodeUtf8(path).hex() + encodingMarker
-        }
-
-        fun decodePath(hostname: String): String {
-            if (!hostname.endsWith(encodingMarker)) {
-                throw IllegalArgumentException("Host name '$hostname' was not encoded for use with ${NamedPipeDns::class.simpleName}.")
-            }
-
-            val encodedPart = hostname.substring(0, hostname.length - encodingMarker.length)
-
-            return ByteString.decodeHex(encodedPart).utf8()
-        }
-    }
+    companion object : DnsToPathResolver(".namedpipe", NamedPipeDns::class.simpleName!!)
 }

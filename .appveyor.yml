@@ -8,7 +8,6 @@ environment:
 install:
   - ps: ./appveyor/enable-docker.ps1
   - docker version
-  - refreshenv
   - java -version
   - python --version
   - bash --version

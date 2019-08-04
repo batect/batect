@@ -1,5 +1,5 @@
 version: "{build}"
-image: "Windows Server 2019"
+image: "Windows Server 2019 on Azure for batect"
 skip_tags: true
 
 environment:
@@ -8,16 +8,10 @@ environment:
 install:
   - ps: ./appveyor/enable-docker.ps1
   - docker version
-  - cinst jdk8
   - refreshenv
-  - set PATH=C:\Program Files\Git\bin;C:\Python37;%PATH%
   - java -version
   - python --version
   - bash --version
-
-  # Fix symlinks in working copy (see https://github.com/appveyor/ci/issues/650#issuecomment-186592582)
-  - git config core.symlinks true
-  - git reset --hard
 
 build_script:
   - ./gradlew --parallel app:check wrapper:windows:check jacocoTestReport

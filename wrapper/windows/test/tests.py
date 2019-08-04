@@ -79,7 +79,7 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
 
     def test_supported_java(self):
-        opens_args = "Args are: --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED"
+        opens_args = "Args are: \"--add-opens\" \"java.base/sun.nio.ch=ALL-UNNAMED\" \"--add-opens\" \"java.base/java.io=ALL-UNNAMED\""
 
         for version in [8, 9, 10, 11]:
             with self.subTest(java_version=version):
@@ -103,6 +103,28 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertIn("The Java application has started.", output)
         self.assertNotIn("WARNING: you should never see this", output)
         self.assertEqual(result.returncode, 123)
+
+    def test_no_args(self):
+        result = self.run_script([])
+        output = result.stdout
+
+        self.assertIn("Downloading batect", output)
+        self.assertIn("BATECT_WRAPPER_SCRIPT_DIR is: {}\\\n".format(self.get_script_dir()), output)
+        self.assertIn("HOSTNAME is: {}\n".format(os.environ['COMPUTERNAME']), output)
+        self.assertIn("I received 0 arguments.\n", output)
+        self.assertNotIn("WARNING: you should never see this", output)
+        self.assertEqual(result.returncode, 0)
+
+    def test_one_arg(self):
+        result = self.run_script(["arg1"])
+        output = result.stdout
+
+        self.assertIn("Downloading batect", output)
+        self.assertIn("BATECT_WRAPPER_SCRIPT_DIR is: {}\\\n".format(self.get_script_dir()), output)
+        self.assertIn("HOSTNAME is: {}\n".format(os.environ['COMPUTERNAME']), output)
+        self.assertIn("I received 1 arguments.\narg1\n", output)
+        self.assertNotIn("WARNING: you should never see this", output)
+        self.assertEqual(result.returncode, 0)
 
     def create_limited_path(self):
         powershellDir = os.path.join(os.environ["SYSTEMROOT"], "System32", "WindowsPowerShell", "v1.0")

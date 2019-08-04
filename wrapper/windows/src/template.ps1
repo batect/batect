@@ -62,7 +62,8 @@ function createCacheDir() {
 }
 
 function runApplication() {
-    $javaVersion = checkJava
+    $java = findJava
+    $javaVersion = checkJavaVersion $java
 
     if ($javaVersion.Major -ge 9) {
         $javaArgs = @("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens", "java.base/java.io=ALL-UNNAMED")
@@ -70,12 +71,25 @@ function runApplication() {
         $javaArgs = @()
     }
 
+    $combinedArgs = $javaArgs + @("-Djava.net.useSystemProxies=true", "-jar", $JarPath) + $args
     $env:HOSTNAME = $env:COMPUTERNAME
-    java @javaArgs "-Djava.net.useSystemProxies=true" -jar $JarPath @args
-    exit $LASTEXITCODE
+
+    $info = New-Object System.Diagnostics.ProcessStartInfo
+    $info.FileName = $java.Source
+    $info.Arguments = combineArgumentsToString($combinedArgs)
+    $info.RedirectStandardError = $false
+    $info.RedirectStandardOutput = $false
+    $info.UseShellExecute = $false
+
+    $process = New-Object System.Diagnostics.Process
+    $process.StartInfo = $info
+    $process.Start() | Out-Null
+    $process.WaitForExit()
+
+    exit $process.ExitCode
 }
 
-function checkJava() {
+function findJava() {
     $java = Get-Command "java" -ErrorAction SilentlyContinue
 
     if ($java -eq $null) {
@@ -83,7 +97,7 @@ function checkJava() {
         exit 1
     }
 
-    return checkJavaVersion $java
+    return $java
 }
 
 function checkJavaVersion([System.Management.Automation.CommandInfo]$java) {
@@ -131,5 +145,16 @@ function getJavaVersion([System.Management.Automation.CommandInfo]$java) {
     return "$major.$minor"
 }
 
+function combineArgumentsToString([Object[]]$arguments) {
+    $combined = @()
 
-main $args
+    $arguments | % { $combined += escapeArgument($_) }
+
+    return $combined -join " "
+}
+
+function escapeArgument([String]$argument) {
+    return '"' + $argument.Replace('"', '"""') + '"'
+}
+
+main @args

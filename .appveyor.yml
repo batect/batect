@@ -11,9 +11,6 @@ install:
   - java -version
   - python --version
   - bash --version
-  - ps: Write-Host ${env:CI}
-  - ps: Write-Host ${env:APPVEYOR}
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 build_script:
   - ./gradlew --parallel app:check wrapper:windows:check jacocoTestReport

@@ -77,10 +77,10 @@ jobs:
         use:
           - build_workspace
 
-    - stage: Integration and journey test
-      name: Wait for Windows build to complete
-      dist: xenial
-      script: ./travis/wait_for_appveyor.sh
+#    - stage: Integration and journey test
+#      name: Wait for Windows build to complete
+#      dist: xenial
+#      script: ./travis/wait_for_appveyor.sh
 
     - stage: Publish
       script: skip

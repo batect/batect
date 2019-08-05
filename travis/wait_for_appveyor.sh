@@ -12,7 +12,7 @@ else
 fi
 
 function main() {
-    URL="https://ci.appveyor.com/api/projects/$REPO_SLUG/history?recordsNumber=20&branch=$GIT_BRANCH"
+    URL="https://ci.appveyor.com/api/projects/$REPO_SLUG/history?recordsNumber=200&branch=$GIT_BRANCH"
 
     echo "Will poll $URL looking for commit $GIT_COMMIT."
 

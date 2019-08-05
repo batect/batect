@@ -17,6 +17,7 @@ build_script:
   - ./gradlew --parallel app:check wrapper:windows:check jacocoTestReport
   - ps: |
       Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile build\codecov.sh
+      $env:Path = "C:\Program Files\Git\mingw64\bin;" + $env:Path
       bash -c 'CI=True APPVEYOR=True ./build/codecov.sh -F windows'
   - ./gradlew integrationTest
   - ./gradlew journeyTest

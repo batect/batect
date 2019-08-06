@@ -18,6 +18,7 @@ build_script:
   - ps: |
       Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile build\codecov.sh
       $env:Path = "C:\Program Files\Git\mingw64\bin;" + $env:Path
+      Write-Host $env:Path
       bash -c 'echo $PATH'
       bash -c 'which find'
       bash -c 'CI=True APPVEYOR=True ./build/codecov.sh -F windows'

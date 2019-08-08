@@ -24,6 +24,7 @@ import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputStream
 import batect.logging.Logger
 import batect.os.Dimensions
+import batect.os.SystemInfo
 import batect.utils.Json
 import batect.utils.Version
 import jnr.constants.platform.Signal
@@ -44,6 +45,7 @@ import java.util.concurrent.TimeUnit
 
 class DockerAPI(
     private val httpConfig: DockerHttpConfig,
+    private val systemInfo: SystemInfo,
     private val logger: Logger,
     private val hijackerFactory: () -> ConnectionHijacker = ::ConnectionHijacker
 ) {
@@ -582,12 +584,12 @@ class DockerAPI(
                 val error = parsedLine.getPrimitiveOrNull("error")?.content
 
                 if (output != null) {
-                    outputSoFar.append(output)
+                    outputSoFar.append(output.correctLineEndings())
                 }
 
                 if (error != null) {
-                    outputSoFar.append(error)
-                    throw ImageBuildFailedException("Building image failed: $error. Output from build process was:\n" + outputSoFar.trim().toString())
+                    outputSoFar.append(error.correctLineEndings())
+                    throw ImageBuildFailedException("Building image failed: $error. Output from build process was:" + systemInfo.lineSeparator + outputSoFar.trim().toString())
                 }
 
                 val imageId = parsedLine.getObjectOrNull("aux")?.getPrimitiveOrNull("ID")?.content
@@ -679,6 +681,7 @@ class DockerAPI(
 
                 if (parsedLine.containsKey("error")) {
                     val message = parsedLine.getValue("error").primitive.content
+                        .correctLineEndings()
 
                     throw ImagePullFailedException("Pulling image '$imageName' failed: $message")
                 }
@@ -870,8 +873,13 @@ class DockerAPI(
         }
 
         val parsedError = Json.parser.parseJson(responseBody).jsonObject
-        errorHandler(DockerAPIError(response.code(), parsedError.getValue("message").primitive.content))
+        val message = parsedError.getValue("message").primitive.content
+            .correctLineEndings()
+
+        errorHandler(DockerAPIError(response.code(), message))
     }
 
     private data class DockerAPIError(val statusCode: Int, val message: String)
+
+    private fun String.correctLineEndings(): String = this.replace("\n", systemInfo.lineSeparator)
 }

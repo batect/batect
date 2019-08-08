@@ -172,7 +172,7 @@ private val dockerModule = Kodein.Module("docker") {
     bind<ContainerKiller>() with singleton { ContainerKiller(instance(), instance()) }
     bind<ContainerTTYManager>() with singletonWithLogger { logger -> ContainerTTYManager(instance(), instance(), instance(), logger) }
     bind<ContainerWaiter>() with singleton { ContainerWaiter(instance()) }
-    bind<DockerAPI>() with singletonWithLogger { logger -> DockerAPI(instance(), logger) }
+    bind<DockerAPI>() with singletonWithLogger { logger -> DockerAPI(instance(), instance(), logger) }
     bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(), logger) }
     bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
     bind<DockerfileParser>() with singleton { DockerfileParser() }

@@ -16,7 +16,7 @@
 
 package batect.ui
 
-import batect.execution.BehaviourAfterFailure
+import batect.execution.CleanupOption
 import batect.execution.RunOptions
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
@@ -64,8 +64,8 @@ class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
     private fun formatErrorMessage(headline: TextRun, body: String) = Text.red(Text.bold("Error: ") + headline + Text(".$newLine")) + Text(body)
 
     private fun hintToReRunWithCleanupDisabled(runOptions: RunOptions): TextRun = when (runOptions.behaviourAfterFailure) {
-        BehaviourAfterFailure.Cleanup -> Text("$newLine${newLine}You can re-run the task with ") + Text.bold("--no-cleanup-after-failure") + Text(" to leave the created containers running to diagnose the issue.")
-        BehaviourAfterFailure.DontCleanup -> TextRun("")
+        CleanupOption.Cleanup -> Text("$newLine${newLine}You can re-run the task with ") + Text.bold("--no-cleanup-after-failure") + Text(" to leave the created containers running to diagnose the issue.")
+        CleanupOption.DontCleanup -> TextRun("")
     }
 
     fun formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events: Set<TaskEvent>, cleanupCommands: List<String>): TextRun {

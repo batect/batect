@@ -184,7 +184,7 @@ class TaskStateMachine(
         }
     }
 
-    private fun shouldLeaveCreatedContainersRunningAfterFailure(): Boolean = runOptions.behaviourAfterFailure == BehaviourAfterFailure.DontCleanup && events.any { it is ContainerCreatedEvent }
+    private fun shouldLeaveCreatedContainersRunningAfterFailure(): Boolean = runOptions.behaviourAfterFailure == CleanupOption.DontCleanup && events.any { it is ContainerCreatedEvent }
     private fun inRunStage(): Boolean = currentStage is RunStage
     private fun inCleanupStage(): Boolean = currentStage is CleanupStage
 

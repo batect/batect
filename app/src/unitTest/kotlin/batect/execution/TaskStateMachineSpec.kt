@@ -276,7 +276,7 @@ object TaskStateMachineSpec : Spek({
                         val stepsStillRunning = false
 
                         given("cleanup after failure is enabled") {
-                            beforeEachTest { whenever(runOptions.behaviourAfterFailure) doReturn BehaviourAfterFailure.Cleanup }
+                            beforeEachTest { whenever(runOptions.behaviourAfterFailure) doReturn CleanupOption.Cleanup }
 
                             on("getting the next steps to execute") {
                                 val firstCleanupStep = mock<TaskStep>()
@@ -306,7 +306,7 @@ object TaskStateMachineSpec : Spek({
                         }
 
                         given("cleanup after failure is disabled") {
-                            beforeEachTest { whenever(runOptions.behaviourAfterFailure) doReturn BehaviourAfterFailure.DontCleanup }
+                            beforeEachTest { whenever(runOptions.behaviourAfterFailure) doReturn CleanupOption.DontCleanup }
 
                             given("no containers have been created") {
                                 on("getting the next steps to execute") {

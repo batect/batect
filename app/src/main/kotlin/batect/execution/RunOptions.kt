@@ -22,7 +22,7 @@ data class RunOptions(
     val taskName: String,
     val additionalTaskCommandArguments: Iterable<String>,
     val levelOfParallelism: Int,
-    val behaviourAfterFailure: BehaviourAfterFailure,
+    val behaviourAfterFailure: CleanupOption,
     val propagateProxyEnvironmentVariables: Boolean
 ) {
     constructor(options: CommandLineOptions) : this(
@@ -30,9 +30,9 @@ data class RunOptions(
         options.additionalTaskCommandArguments,
         options.levelOfParallelism,
         if (options.disableCleanupAfterFailure) {
-            BehaviourAfterFailure.DontCleanup
+            CleanupOption.DontCleanup
         } else {
-            BehaviourAfterFailure.Cleanup
+            CleanupOption.Cleanup
         },
         !options.dontPropagateProxyEnvironmentVariables
     )

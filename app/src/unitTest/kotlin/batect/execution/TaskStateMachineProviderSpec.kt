@@ -37,7 +37,7 @@ object TaskStateMachineProviderSpec : Spek({
                 on { createLoggerForClass(TaskStateMachine::class) } doReturn logger
             }
 
-            val runOptions = RunOptions("some-task", emptyList(), 1, BehaviourAfterFailure.Cleanup, true)
+            val runOptions = RunOptions("some-task", emptyList(), 1, CleanupOption.Cleanup, true)
             val provider = TaskStateMachineProvider(mock(), mock(), mock(), loggerFactory)
             val stateMachine = provider.createStateMachine(graph, runOptions)
 

@@ -24,7 +24,7 @@ import batect.config.TaskRunConfiguration
 import batect.config.io.ConfigurationLoader
 import batect.docker.DockerClient
 import batect.docker.DockerConnectivityCheckResult
-import batect.execution.BehaviourAfterFailure
+import batect.execution.CleanupOption
 import batect.execution.RunOptions
 import batect.execution.TaskExecutionOrderResolutionException
 import batect.execution.TaskExecutionOrderResolver
@@ -67,7 +67,7 @@ object RunTaskCommandSpec : Spek({
             val mainTask = Task(taskName, TaskRunConfiguration("the-container"))
             val config = Configuration("the_project", TaskMap(), ContainerMap())
             val expectedTaskExitCode = 123
-            val runOptions = RunOptions(taskName, emptyList(), 64, BehaviourAfterFailure.Cleanup, true)
+            val runOptions = RunOptions(taskName, emptyList(), 64, CleanupOption.Cleanup, true)
             val logSink = InMemoryLogSink()
             val logger = Logger("test.source", logSink)
 

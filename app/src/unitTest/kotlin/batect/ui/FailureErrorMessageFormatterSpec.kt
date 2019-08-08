@@ -20,7 +20,7 @@ import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
 import batect.docker.DockerContainer
-import batect.execution.BehaviourAfterFailure
+import batect.execution.CleanupOption
 import batect.execution.RunOptions
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
@@ -161,7 +161,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                 given("a '$description' event") {
                     given("cleanup after failure is disabled") {
                         val runOptions = mock<RunOptions> {
-                            on { behaviourAfterFailure } doReturn BehaviourAfterFailure.DontCleanup
+                            on { behaviourAfterFailure } doReturn CleanupOption.DontCleanup
                         }
 
                         on("getting the message for that event") {
@@ -175,7 +175,7 @@ object FailureErrorMessageFormatterSpec : Spek({
 
                     given("cleanup after failure is enabled") {
                         val runOptions = mock<RunOptions> {
-                            on { behaviourAfterFailure } doReturn BehaviourAfterFailure.Cleanup
+                            on { behaviourAfterFailure } doReturn CleanupOption.Cleanup
                         }
 
                         on("getting the message for that event") {

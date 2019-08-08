@@ -51,7 +51,7 @@ object RunOptionsSpec : Spek({
                 }
 
                 it("enables cleanup after failure") {
-                    assertThat(runOptions.behaviourAfterFailure, equalTo(BehaviourAfterFailure.Cleanup))
+                    assertThat(runOptions.behaviourAfterFailure, equalTo(CleanupOption.Cleanup))
                 }
 
                 it("takes the proxy environment variable behaviour from the command line options") {
@@ -85,7 +85,7 @@ object RunOptionsSpec : Spek({
                 }
 
                 it("enables cleanup after failure") {
-                    assertThat(runOptions.behaviourAfterFailure, equalTo(BehaviourAfterFailure.DontCleanup))
+                    assertThat(runOptions.behaviourAfterFailure, equalTo(CleanupOption.DontCleanup))
                 }
 
                 it("takes the proxy environment variable behaviour from the command line options") {

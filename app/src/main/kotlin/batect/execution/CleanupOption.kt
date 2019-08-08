@@ -16,7 +16,7 @@
 
 package batect.execution
 
-enum class BehaviourAfterFailure {
+enum class CleanupOption {
     Cleanup,
     DontCleanup
 }

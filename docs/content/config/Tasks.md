@@ -49,12 +49,12 @@ Specifies what to do when this task starts:
     Available since v0.26.
 
 ## `dependencies`
-List of other containers that should be started and healthy before starting the task container given in `run`.
+List of other containers (not tasks) that should be started and healthy before starting the task container given in `run`.
 
 The behaviour is the same as if the dependencies were specified for the `dependencies` property of the task's container's definition.
 
 ## `prerequisites`
-List of other tasks that should be run before running this task.
+List of other tasks that should be run to completion before running this task.
 
 If a prerequisite task finishes with a non-zero exit code, then neither this task nor any other prerequisites will be run.
 

@@ -132,7 +132,7 @@ object TaskStepRunnerSpec : Spek({
         }
 
         val logSink = InMemoryLogSink()
-        val runOptions = RunOptions("some-task", emptyList(), 123, CleanupOption.Cleanup, true)
+        val runOptions = RunOptions("some-task", emptyList(), 123, CleanupOption.Cleanup, CleanupOption.Cleanup, true)
         val hostEnvironmentVariables = mapOf("SOME_ENV_VAR" to "some env var value")
 
         val logger = Logger("some.source", logSink)
@@ -221,7 +221,7 @@ object TaskStepRunnerSpec : Spek({
 
                     on("and propagating proxy-related environment variables is disabled") {
                         val image = DockerImage("some-image")
-                        val runOptionsWithProxyEnvironmentVariablePropagationDisabled = RunOptions("some-task", emptyList(), 123, CleanupOption.Cleanup, false)
+                        val runOptionsWithProxyEnvironmentVariablePropagationDisabled = runOptions.copy(propagateProxyEnvironmentVariables = false)
 
                         beforeEachTest {
                             whenever(dockerClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), any())).thenReturn(image)

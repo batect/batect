@@ -164,4 +164,5 @@ object ContainerCommandResolverSpec : Spek({
     }
 })
 
-private fun runOptionsForTask(taskName: String, additionalCommandLineArguments: Iterable<String>) = RunOptions(taskName, additionalCommandLineArguments, 1, CleanupOption.Cleanup, false)
+private fun runOptionsForTask(taskName: String, additionalCommandLineArguments: Iterable<String>) =
+    RunOptions(taskName, additionalCommandLineArguments, 1, CleanupOption.Cleanup, CleanupOption.Cleanup, false)

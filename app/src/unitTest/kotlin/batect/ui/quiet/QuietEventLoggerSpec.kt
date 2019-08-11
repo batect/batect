@@ -79,5 +79,13 @@ object QuietEventLoggerSpec : Spek({
                 verifyZeroInteractions(errorConsole)
             }
         }
+
+        on("when a task finishes with cleanup disabled") {
+            beforeEachTest { logger.onTaskFinishedWithCleanupDisabled(TextRun()) }
+
+            it("does not print anything to the console") {
+                verifyZeroInteractions(errorConsole)
+            }
+        }
     }
 })

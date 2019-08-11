@@ -360,6 +360,18 @@ object FancyEventLoggerSpec : Spek({
             }
         }
 
+        on("when the task finishes with cleanup disabled") {
+            val cleanupInstructions = TextRun("Some instructions")
+            beforeEachTest { logger.onTaskFinishedWithCleanupDisabled(cleanupInstructions) }
+
+            it("prints the cleanup instructions") {
+                inOrder(errorConsole) {
+                    verify(errorConsole).println()
+                    verify(errorConsole).println(cleanupInstructions)
+                }
+            }
+        }
+
         describe("when the task fails") {
             given("there are no cleanup instructions") {
                 on("when logging that the task has failed") {

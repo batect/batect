@@ -230,18 +230,53 @@ object TaskStateMachineSpec : Spek({
                                 stateMachine.postEvent(event)
                             }
 
-                            on("getting the next step to execute") {
-                                val cleanupStep = mock<TaskStep>()
-                                beforeEachTest { whenever(cleanupStage.popNextStep(setOf(event))).doReturn(StepReady(cleanupStep)) }
+                            given("cleanup after success is enabled") {
+                                beforeEachTest { whenever(runOptions.behaviourAfterSuccess) doReturn CleanupOption.Cleanup }
 
-                                val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
+                                on("getting the next step to execute") {
+                                    val cleanupStep = mock<TaskStep>()
+                                    beforeEachTest { whenever(cleanupStage.popNextStep(setOf(event))).doReturn(StepReady(cleanupStep)) }
 
-                                it("returns the first step from the cleanup stage") {
-                                    assertThat(result, equalTo(cleanupStep))
+                                    val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
+
+                                    it("returns the first step from the cleanup stage") {
+                                        assertThat(result, equalTo(cleanupStep))
+                                    }
+
+                                    it("sends all previous events to the cleanup stage planner") {
+                                        verify(cleanupStagePlanner).createStage(graph, setOf(event))
+                                    }
                                 }
+                            }
 
-                                it("sends all previous events to the cleanup stage planner") {
-                                    verify(cleanupStagePlanner).createStage(graph, setOf(event))
+                            given("cleanup after success is disabled") {
+                                beforeEachTest { whenever(runOptions.behaviourAfterSuccess) doReturn CleanupOption.DontCleanup }
+
+                                on("getting the next steps to execute") {
+                                    beforeEachTest {
+                                        whenever(failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskSuccessWithCleanupDisabled(setOf(event), cleanupCommands)).doReturn(TextRun("Do this to clean up"))
+                                    }
+
+                                    val cleanupStepThatShouldNeverBeRun = mock<TaskStep>()
+                                    beforeEachTest { whenever(cleanupStage.popNextStep(setOf(event))).doReturn(StepReady(cleanupStepThatShouldNeverBeRun)) }
+
+                                    val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
+
+                                    it("returns null") {
+                                        assertThat(result, absent())
+                                    }
+
+                                    it("sends all previous events to the cleanup stage planner") {
+                                        verify(cleanupStagePlanner).createStage(graph, setOf(event))
+                                    }
+
+                                    it("sets the cleanup instruction to that provided by the error message formatter") {
+                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(TextRun("Do this to clean up")))
+                                    }
+
+                                    it("does not indicate that the task has failed") {
+                                        assertThat(stateMachine.taskHasFailed, equalTo(false))
+                                    }
                                 }
                             }
                         }

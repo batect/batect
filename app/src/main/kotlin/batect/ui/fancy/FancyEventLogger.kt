@@ -129,4 +129,9 @@ class FancyEventLogger(
 
         console.println(Text.white(Text.bold(taskName) + Text(" finished with exit code $exitCode in ${duration.humanise()}.")))
     }
+
+    override fun onTaskFinishedWithCleanupDisabled(manualCleanupInstructions: TextRun) {
+        errorConsole.println()
+        errorConsole.println(manualCleanupInstructions)
+    }
 }

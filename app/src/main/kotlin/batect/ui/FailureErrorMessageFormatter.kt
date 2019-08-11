@@ -69,6 +69,14 @@ class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
     }
 
     fun formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events: Set<TaskEvent>, cleanupCommands: List<String>): TextRun {
+        return formatManualCleanupMessageWhenCleanupDisabled(events, cleanupCommands, "--no-cleanup-after-failure", "Once you have finished investigating the issue")
+    }
+
+    fun formatManualCleanupMessageAfterTaskSuccessWithCleanupDisabled(events: Set<TaskEvent>, cleanupCommands: List<String>): TextRun {
+        return formatManualCleanupMessageWhenCleanupDisabled(events, cleanupCommands, "--no-cleanup-after-success", "Once you have finished using the containers")
+    }
+
+    private fun formatManualCleanupMessageWhenCleanupDisabled(events: Set<TaskEvent>, cleanupCommands: List<String>, argumentName: String, cleanupPhrase: String): TextRun {
         val containerCreationEvents = events.filterIsInstance<ContainerCreatedEvent>()
 
         if (containerCreationEvents.isEmpty()) {
@@ -86,10 +94,10 @@ class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
 
         val formattedCommands = cleanupCommands.joinToString(newLine)
 
-        return Text.red(Text("As the task was run with ") + Text.bold("--no-cleanup-after-failure") + Text(", the created containers will not be cleaned up.$newLine")) +
+        return Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(", the created containers will not be cleaned up.$newLine")) +
             containerMessages +
             Text(newLine) +
-            Text("Once you have finished investigating the issue, clean up all temporary resources created by batect by running:$newLine") +
+            Text("$cleanupPhrase, clean up all temporary resources created by batect by running:$newLine") +
             Text.bold(formattedCommands)
     }
 

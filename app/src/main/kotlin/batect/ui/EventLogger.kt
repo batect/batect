@@ -25,5 +25,6 @@ abstract class EventLogger : TaskEventSink {
     abstract fun onStartingTaskStep(step: TaskStep)
     abstract fun onTaskStarting(taskName: String)
     abstract fun onTaskFinished(taskName: String, exitCode: Int, duration: Duration)
+    abstract fun onTaskFinishedWithCleanupDisabled(manualCleanupInstructions: TextRun)
     abstract fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun)
 }

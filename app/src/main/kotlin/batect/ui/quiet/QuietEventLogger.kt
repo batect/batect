@@ -42,4 +42,5 @@ class QuietEventLogger(
     override fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun) {}
     override fun onTaskStarting(taskName: String) {}
     override fun onTaskFinished(taskName: String, exitCode: Int, duration: Duration) {}
+    override fun onTaskFinishedWithCleanupDisabled(manualCleanupInstructions: TextRun) {}
 }

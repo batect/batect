@@ -149,6 +149,15 @@ class TaskStateMachine(
             return null
         }
 
+        if (runOptions.behaviourAfterSuccess == CleanupOption.DontCleanup) {
+            logger.info {
+                message("Cleanup after success has been disabled. Not cleaning up.")
+            }
+
+            manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskSuccessWithCleanupDisabled(events, cleanupStage.manualCleanupInstructions)
+            return null
+        }
+
         currentStage = cleanupStage
 
         logger.info {

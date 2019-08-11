@@ -69,7 +69,7 @@ data class TaskRunner(
 
         val duration = Duration.between(startTime, finishTime)
 
-        return findTaskContainerExitCode(eventLogger, task, stateMachine, duration)
+        return onTaskSucceeded(eventLogger, task, stateMachine, duration, runOptions)
     }
 
     private fun onTaskFailed(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine): Int {
@@ -83,7 +83,7 @@ data class TaskRunner(
         return -1
     }
 
-    private fun findTaskContainerExitCode(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine, duration: Duration): Int {
+    private fun onTaskSucceeded(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine, duration: Duration, runOptions: RunOptions): Int {
         val containerExitedEvent = stateMachine.getAllEvents()
             .filterIsInstance<RunningContainerExitedEvent>()
             .singleOrNull()
@@ -98,6 +98,11 @@ data class TaskRunner(
             message("Task execution completed normally.")
             data("taskName", task.name)
             data("exitCode", containerExitedEvent.exitCode)
+        }
+
+        if (runOptions.behaviourAfterSuccess == CleanupOption.DontCleanup) {
+            eventLogger.onTaskFinishedWithCleanupDisabled(stateMachine.manualCleanupInstructions)
+            return -1
         }
 
         return containerExitedEvent.exitCode

@@ -37,6 +37,8 @@ class CommandLineOptionsParser(
 
     companion object {
         const val disableCleanupAfterFailureFlagName = "no-cleanup-after-failure"
+        const val disableCleanupAfterSuccessFlagName = "no-cleanup-after-success"
+        const val disableCleanupFlagName = "no-cleanup"
         const val upgradeFlagName = "upgrade"
         const val helpBlurb = "For documentation and further information on batect, visit https://github.com/charleskorn/batect."
     }
@@ -78,7 +80,9 @@ class CommandLineOptionsParser(
         'p'
     )
 
-    private val disableCleanupAfterFailure: Boolean by flagOption(disableCleanupAfterFailureFlagName, "If an error occurs before the task runs, leave created containers running so that the issue can be investigated.")
+    private val disableCleanupAfterFailure: Boolean by flagOption(disableCleanupAfterFailureFlagName, "If an error occurs before any task can start, leave all containers created for that task running so that the issue can be investigated.")
+    private val disableCleanupAfterSuccess: Boolean by flagOption(disableCleanupAfterSuccessFlagName, "If the main task succeeds, leave all containers created for that task running.")
+    private val disableCleanup: Boolean by flagOption(disableCleanupFlagName, "Equivalent to providing both --$disableCleanupAfterFailureFlagName and --$disableCleanupAfterSuccessFlagName.")
     private val dontPropagateProxyEnvironmentVariables: Boolean by flagOption("no-proxy-vars", "Don't propagate proxy-related environment variables such as http_proxy and no_proxy to image builds or containers.")
 
     private val dockerHost: String by valueOption(
@@ -136,7 +140,8 @@ class CommandLineOptionsParser(
         disableColorOutput = disableColorOutput,
         disableUpdateNotification = disableUpdateNotification,
         levelOfParallelism = levelOfParallelism,
-        disableCleanupAfterFailure = disableCleanupAfterFailure,
+        disableCleanupAfterFailure = disableCleanupAfterFailure || disableCleanup,
+        disableCleanupAfterSuccess = disableCleanupAfterSuccess || disableCleanup,
         dontPropagateProxyEnvironmentVariables = dontPropagateProxyEnvironmentVariables,
         taskName = taskName,
         additionalTaskCommandArguments = additionalTaskCommandArguments,

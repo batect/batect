@@ -21,6 +21,7 @@ import batect.config.Task
 import batect.config.io.ConfigurationLoader
 import batect.docker.DockerClient
 import batect.docker.DockerConnectivityCheckResult
+import batect.execution.CleanupOption
 import batect.execution.RunOptions
 import batect.execution.TaskExecutionOrderResolutionException
 import batect.execution.TaskExecutionOrderResolver
@@ -77,13 +78,17 @@ class RunTaskCommand(
 
     private fun runTasks(config: Configuration, tasks: List<Task>): Int {
         for (task in tasks) {
-            val exitCode = taskRunner.run(config, task, runOptions)
+            val isMainTask = task == tasks.last()
+            val behaviourAfterSuccess = if (isMainTask) runOptions.behaviourAfterSuccess else CleanupOption.Cleanup
+            val runOptionsForThisTask = runOptions.copy(behaviourAfterSuccess = behaviourAfterSuccess)
+
+            val exitCode = taskRunner.run(config, task, runOptionsForThisTask)
 
             if (exitCode != 0) {
                 return exitCode
             }
 
-            if (task != tasks.last()) {
+            if (!isMainTask) {
                 console.println()
             }
         }

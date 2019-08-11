@@ -12,13 +12,14 @@ Run a task by running `./batect <task-name>`. For example, to run `the-task`, ru
 You can also pass arguments to the task command by passing those arguments by running `./batect <task-name> -- <args...>`.
 For example, to run the task `the-task` with the arguments `arg1 arg2`, run `./batect the-task -- arg1 arg2`.
 
-### Disable cleaning up after a startup failure <small>(`--no-cleanup-after-failure`)</small>
+### Disable cleaning up <small>(`--no-cleanup`, `--no-cleanup-after-failure` and `--no-cleanup-after-success`)</small>
 
 By default, batect will automatically cleanup all containers and other resources it creates while running a task.
-However, sometimes it can be useful to leave all the created containers running to diagnose issues during startup, such as when
-a container does not report as healthy.
+However, sometimes it can be useful to leave all the created containers running to diagnose issues running a task.
 
-Use this option to disable cleaning up all containers and other resources if a task fails to start for any reason.
+* Use `--no-cleanup-after-failure` to not clean up if any task fails to start for any reason.
+* Use `--no-cleanup-after-success` to not clean up the containers and other resources created for the main task (the one specified on the command line) if it succeeds.
+* Use `--no-cleanup` to enable both of the above.
 
 Example:
 

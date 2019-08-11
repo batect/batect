@@ -161,6 +161,8 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--level-of-parallelism=900", "some-task") to CommandLineOptions(levelOfParallelism = 900, taskName = "some-task", dockerHost = defaultDockerHost),
             listOf("-p=900", "some-task") to CommandLineOptions(levelOfParallelism = 900, taskName = "some-task", dockerHost = defaultDockerHost),
             listOf("--no-cleanup-after-failure", "some-task") to CommandLineOptions(disableCleanupAfterFailure = true, taskName = "some-task", dockerHost = defaultDockerHost),
+            listOf("--no-cleanup-after-success", "some-task") to CommandLineOptions(disableCleanupAfterSuccess = true, taskName = "some-task", dockerHost = defaultDockerHost),
+            listOf("--no-cleanup", "some-task") to CommandLineOptions(disableCleanupAfterFailure = true, disableCleanupAfterSuccess = true, taskName = "some-task", dockerHost = defaultDockerHost),
             listOf("--no-proxy-vars", "some-task") to CommandLineOptions(dontPropagateProxyEnvironmentVariables = true, taskName = "some-task", dockerHost = defaultDockerHost),
             listOf("--docker-host=some-host", "some-task") to CommandLineOptions(dockerHost = "some-host", taskName = "some-task")
         ).forEach { (args, expectedResult) ->

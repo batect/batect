@@ -67,7 +67,7 @@ object RunTaskCommandSpec : Spek({
             val mainTask = Task(taskName, TaskRunConfiguration("the-container"))
             val config = Configuration("the_project", TaskMap(), ContainerMap())
             val expectedTaskExitCode = 123
-            val runOptions = RunOptions(taskName, emptyList(), 64, CleanupOption.Cleanup, CleanupOption.Cleanup, true)
+            val runOptions = RunOptions(taskName, emptyList(), 64, CleanupOption.DontCleanup, CleanupOption.Cleanup, true)
             val logSink = InMemoryLogSink()
             val logger = Logger("test.source", logSink)
 
@@ -85,7 +85,7 @@ object RunTaskCommandSpec : Spek({
                         on { checkConnectivity() } doReturn DockerConnectivityCheckResult.Succeeded
                     }
 
-                    given("the task has no dependencies") {
+                    given("the task has no prerequisites") {
                         val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {
                             on { resolveExecutionOrder(config, taskName) } doReturn listOf(mainTask)
                         }
@@ -159,8 +159,9 @@ object RunTaskCommandSpec : Spek({
                         }
                     }
 
-                    given("the task has a dependency") {
+                    given("the task has a prerequisite") {
                         val otherTask = Task("other-task", TaskRunConfiguration("the-other-container"))
+                        val runOptionsForOtherTask = runOptions.copy(behaviourAfterSuccess = CleanupOption.Cleanup)
 
                         val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {
                             on { resolveExecutionOrder(config, taskName) } doReturn listOf(otherTask, mainTask)
@@ -169,7 +170,7 @@ object RunTaskCommandSpec : Spek({
                         on("and the dependency finishes with an exit code of 0") {
                             val taskRunner by createForEachTest {
                                 mock<TaskRunner> {
-                                    on { run(config, otherTask, runOptions) } doReturn 0
+                                    on { run(config, otherTask, runOptionsForOtherTask) } doReturn 0
                                     on { run(config, mainTask, runOptions) } doReturn expectedTaskExitCode
                                 }
                             }
@@ -177,17 +178,17 @@ object RunTaskCommandSpec : Spek({
                             val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger) }
                             val exitCode by runForEachTest { command.run() }
 
-                            it("runs the dependency task") {
-                                verify(taskRunner).run(config, otherTask, runOptions)
+                            it("runs the dependency task with cleanup on success enabled") {
+                                verify(taskRunner).run(config, otherTask, runOptionsForOtherTask)
                             }
 
-                            it("runs the main task") {
+                            it("runs the main task with cleanup on success matching the preference provided by the user") {
                                 verify(taskRunner).run(config, mainTask, runOptions)
                             }
 
                             it("runs the dependency before the main task, and prints a blank line in between") {
                                 inOrder(taskRunner, console) {
-                                    verify(taskRunner).run(config, otherTask, runOptions)
+                                    verify(taskRunner).run(config, otherTask, runOptionsForOtherTask)
                                     verify(console).println()
                                     verify(taskRunner).run(config, mainTask, runOptions)
                                 }
@@ -212,7 +213,7 @@ object RunTaskCommandSpec : Spek({
                         on("and the dependency finishes with a non-zero exit code") {
                             val taskRunner by createForEachTest {
                                 mock<TaskRunner> {
-                                    on { run(config, otherTask, runOptions) } doReturn 1
+                                    on { run(config, otherTask, runOptionsForOtherTask) } doReturn 1
                                 }
                             }
 
@@ -220,7 +221,7 @@ object RunTaskCommandSpec : Spek({
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the dependency task") {
-                                verify(taskRunner).run(config, otherTask, runOptions)
+                                verify(taskRunner).run(config, otherTask, runOptionsForOtherTask)
                             }
 
                             it("does not run the main task") {

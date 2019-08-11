@@ -30,12 +30,8 @@ data class RunOptions(
         options.taskName!!,
         options.additionalTaskCommandArguments,
         options.levelOfParallelism,
-        CleanupOption.Cleanup,
-        if (options.disableCleanupAfterFailure) {
-            CleanupOption.DontCleanup
-        } else {
-            CleanupOption.Cleanup
-        },
+        if (options.disableCleanupAfterSuccess) CleanupOption.DontCleanup else CleanupOption.Cleanup,
+        if (options.disableCleanupAfterFailure) CleanupOption.DontCleanup else CleanupOption.Cleanup,
         !options.dontPropagateProxyEnvironmentVariables
     )
 }

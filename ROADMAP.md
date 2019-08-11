@@ -42,7 +42,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * interrupt tasks (eg. image build or pull) when the user presses Ctrl-C during startup (currently wait for it to complete then clean up)
 * shell tab completion for options (eg. `batect --h<tab>` completes to `batect --help`) - #116
 * shell tab completion for tasks (eg. `batect b<tab>` completes to `batect build`) - #116
-* add option to keep containers running after task completes (similar to `--no-cleanup-after-failure`, eg. `--no-cleanup`) - #115
 * add output format that shows output from all containers, not just main task one - #115
 
 ### Other

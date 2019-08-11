@@ -26,10 +26,11 @@ import org.spekframework.spek2.style.specification.describe
 
 object RunOptionsSpec : Spek({
     describe("a set of run options") {
-        given("a set of command line options with cleanup after failure enabled") {
+        given("a set of command line options with cleanup after failure enabled and cleanup after success disabled") {
             val commandLineOptions = CommandLineOptions(
                 taskName = "some-task",
                 additionalTaskCommandArguments = listOf("extra-arg-1", "extra-arg-2"),
+                disableCleanupAfterSuccess = true,
                 disableCleanupAfterFailure = false,
                 levelOfParallelism = 444,
                 dontPropagateProxyEnvironmentVariables = true
@@ -54,16 +55,21 @@ object RunOptionsSpec : Spek({
                     assertThat(runOptions.behaviourAfterFailure, equalTo(CleanupOption.Cleanup))
                 }
 
+                it("disables cleanup after success") {
+                    assertThat(runOptions.behaviourAfterSuccess, equalTo(CleanupOption.DontCleanup))
+                }
+
                 it("takes the proxy environment variable behaviour from the command line options") {
                     assertThat(runOptions.propagateProxyEnvironmentVariables, equalTo(false))
                 }
             }
         }
 
-        given("a set of command line options with cleanup after failure disabled") {
+        given("a set of command line options with cleanup after failure disabled and cleanup after success enabled") {
             val commandLineOptions = CommandLineOptions(
                 taskName = "some-task",
                 additionalTaskCommandArguments = listOf("extra-arg-1", "extra-arg-2"),
+                disableCleanupAfterSuccess = false,
                 disableCleanupAfterFailure = true,
                 levelOfParallelism = 444,
                 dontPropagateProxyEnvironmentVariables = false
@@ -84,8 +90,12 @@ object RunOptionsSpec : Spek({
                     assertThat(runOptions.levelOfParallelism, equalTo(commandLineOptions.levelOfParallelism))
                 }
 
-                it("enables cleanup after failure") {
+                it("disables cleanup after failure") {
                     assertThat(runOptions.behaviourAfterFailure, equalTo(CleanupOption.DontCleanup))
+                }
+
+                it("enables cleanup after success") {
+                    assertThat(runOptions.behaviourAfterSuccess, equalTo(CleanupOption.Cleanup))
                 }
 
                 it("takes the proxy environment variable behaviour from the command line options") {

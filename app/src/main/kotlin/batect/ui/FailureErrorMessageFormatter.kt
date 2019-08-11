@@ -16,6 +16,9 @@
 
 package batect.ui
 
+import batect.cli.CommandLineOptionsParser
+import batect.config.Container
+import batect.docker.DockerContainer
 import batect.execution.CleanupOption
 import batect.execution.RunOptions
 import batect.execution.model.events.ContainerCreatedEvent
@@ -28,6 +31,7 @@ import batect.execution.model.events.ContainerStopFailedEvent
 import batect.execution.model.events.ExecutionFailedEvent
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImagePullFailedEvent
+import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
@@ -64,16 +68,16 @@ class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
     private fun formatErrorMessage(headline: TextRun, body: String) = Text.red(Text.bold("Error: ") + headline + Text(".$newLine")) + Text(body)
 
     private fun hintToReRunWithCleanupDisabled(runOptions: RunOptions): TextRun = when (runOptions.behaviourAfterFailure) {
-        CleanupOption.Cleanup -> Text("$newLine${newLine}You can re-run the task with ") + Text.bold("--no-cleanup-after-failure") + Text(" to leave the created containers running to diagnose the issue.")
+        CleanupOption.Cleanup -> Text("$newLine${newLine}You can re-run the task with ") + Text.bold("--${CommandLineOptionsParser.disableCleanupAfterFailureFlagName}") + Text(" to leave the created containers running to diagnose the issue.")
         CleanupOption.DontCleanup -> TextRun("")
     }
 
     fun formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events: Set<TaskEvent>, cleanupCommands: List<String>): TextRun {
-        return formatManualCleanupMessageWhenCleanupDisabled(events, cleanupCommands, "--no-cleanup-after-failure", "Once you have finished investigating the issue")
+        return formatManualCleanupMessageWhenCleanupDisabled(events, cleanupCommands, CommandLineOptionsParser.disableCleanupAfterFailureFlagName, "Once you have finished investigating the issue")
     }
 
     fun formatManualCleanupMessageAfterTaskSuccessWithCleanupDisabled(events: Set<TaskEvent>, cleanupCommands: List<String>): TextRun {
-        return formatManualCleanupMessageWhenCleanupDisabled(events, cleanupCommands, "--no-cleanup-after-success", "Once you have finished using the containers")
+        return formatManualCleanupMessageWhenCleanupDisabled(events, cleanupCommands, CommandLineOptionsParser.disableCleanupAfterSuccessFlagName, "Once you have finished using the containers")
     }
 
     private fun formatManualCleanupMessageWhenCleanupDisabled(events: Set<TaskEvent>, cleanupCommands: List<String>, argumentName: String, cleanupPhrase: String): TextRun {
@@ -89,16 +93,23 @@ class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
 
         val containerMessages = containerCreationEvents
             .sortedBy { it.container.name }
-            .map { event -> Text("For container ") + Text.bold(event.container.name) + Text(", view its output by running '") + Text.bold("docker logs ${event.dockerContainer.id}") + Text("', or run a command in the container with '") + Text.bold("docker exec -it ${event.dockerContainer.id} <command>") + Text("'.$newLine") }
+            .map { event -> containerOutputAndExecInstructions(event.container, event.dockerContainer, events) }
             .join()
 
         val formattedCommands = cleanupCommands.joinToString(newLine)
 
-        return Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(", the created containers will not be cleaned up.$newLine")) +
+        return Text.red(Text("As the task was run with ") + Text.bold("--$argumentName") + Text(" or ") + Text.bold("--${CommandLineOptionsParser.disableCleanupFlagName}") + Text(", the created containers will not be cleaned up.$newLine")) +
             containerMessages +
             Text(newLine) +
             Text("$cleanupPhrase, clean up all temporary resources created by batect by running:$newLine") +
             Text.bold(formattedCommands)
+    }
+
+    private fun containerOutputAndExecInstructions(container: Container, dockerContainer: DockerContainer, events: Set<TaskEvent>): TextRun {
+        val alreadyExited = events.any { it is RunningContainerExitedEvent && it.container == container }
+        val execPart = if (alreadyExited) TextRun() else Text("', or run a command in the container with '") + Text.bold("docker exec -it ${dockerContainer.id} <command>")
+
+        return Text("For container ") + Text.bold(container.name) + Text(", view its output by running '") + Text.bold("docker logs ${dockerContainer.id}") + execPart + Text("'.$newLine")
     }
 
     fun formatManualCleanupMessageAfterCleanupFailure(cleanupCommands: List<String>): TextRun {

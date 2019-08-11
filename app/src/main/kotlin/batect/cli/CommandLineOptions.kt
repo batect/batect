@@ -42,6 +42,7 @@ data class CommandLineOptions(
     val disableUpdateNotification: Boolean = false,
     val levelOfParallelism: Int = LevelOfParallelismDefaultValueProvider.value,
     val disableCleanupAfterFailure: Boolean = false,
+    val disableCleanupAfterSuccess: Boolean = false,
     val dontPropagateProxyEnvironmentVariables: Boolean = false,
     val taskName: String? = null,
     val additionalTaskCommandArguments: Iterable<String> = emptyList(),

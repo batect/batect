@@ -36,6 +36,7 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import org.spekframework.spek2.Spek
@@ -60,47 +61,105 @@ object ParallelExecutionManagerSpec : Spek({
             beforeEachTest { whenever(stateMachine.popNextStep(false)).doReturn(step, null) }
 
             given("that step runs successfully") {
-                val eventToPost by createForEachTest { mock<TaskEvent>() }
+                given("the step posts no events") {
+                    on("running the task") {
+                        beforeEachTest { executionManager.run() }
 
-                beforeEachTest {
-                    whenever(taskStepRunner.run(eq(step), any(), eq(runOptions))).then { invocation ->
-                        val eventSink = invocation.arguments[1] as TaskEventSink
-                        eventSink.postEvent(eventToPost)
+                        it("logs the step to the event logger") {
+                            verify(eventLogger).onStartingTaskStep(step)
+                        }
 
-                        null
+                        it("runs the step") {
+                            verify(taskStepRunner).run(eq(step), any(), eq(runOptions))
+                        }
+
+                        it("logs the step to the event logger and then runs it") {
+                            inOrder(eventLogger, taskStepRunner) {
+                                verify(eventLogger).onStartingTaskStep(step)
+                                verify(taskStepRunner).run(eq(step), any(), eq(runOptions))
+                            }
+                        }
                     }
                 }
 
-                on("running the task") {
-                    beforeEachTest { executionManager.run() }
-
-                    it("logs the step to the event logger") {
-                        verify(eventLogger).onStartingTaskStep(step)
-                    }
-
-                    it("runs the step") {
-                        verify(taskStepRunner).run(eq(step), any(), eq(runOptions))
-                    }
-
-                    it("logs the step to the event logger and then runs it") {
-                        inOrder(eventLogger, taskStepRunner) {
-                            verify(eventLogger).onStartingTaskStep(step)
-                            verify(taskStepRunner).run(eq(step), any(), eq(runOptions))
+                given("the step posts an informational event") {
+                    val eventToPost by createForEachTest {
+                        mock<TaskEvent> {
+                            on { isInformationalEvent } doReturn true
                         }
                     }
 
-                    it("logs the posted event to the event logger") {
-                        verify(eventLogger).postEvent(eventToPost)
+                    val stepThatShouldNotBeRun by createForEachTest { mock<TaskStep>() }
+
+                    beforeEachTest {
+                        whenever(taskStepRunner.run(eq(step), any(), eq(runOptions))).then { invocation ->
+                            val eventSink = invocation.arguments[1] as TaskEventSink
+
+                            whenever(stateMachine.popNextStep(any())).doReturn(stepThatShouldNotBeRun, null)
+                            eventSink.postEvent(eventToPost)
+                            whenever(stateMachine.popNextStep(any())).doReturn(null)
+
+                            null
+                        }
                     }
 
-                    it("forwards the posted event to the state machine") {
-                        verify(stateMachine).postEvent(eventToPost)
-                    }
+                    on("running the task") {
+                        beforeEachTest { executionManager.run() }
 
-                    it("logs the posted event to the event logger before forwarding it to the state machine") {
-                        inOrder(eventLogger, stateMachine) {
+                        it("logs the posted event to the event logger") {
                             verify(eventLogger).postEvent(eventToPost)
+                        }
+
+                        it("does not forward the posted event to the state machine") {
+                            verify(stateMachine, never()).postEvent(any())
+                        }
+
+                        it("does not queue any new work as a result of the event") {
+                            verify(taskStepRunner, never()).run(eq(stepThatShouldNotBeRun), any(), any())
+                        }
+                    }
+                }
+
+                given("the step posts a non-informational event") {
+                    val eventToPost by createForEachTest {
+                        mock<TaskEvent> {
+                            on { isInformationalEvent } doReturn false
+                        }
+                    }
+
+                    val stepTriggeredByEvent by createForEachTest { mock<TaskStep>() }
+
+                    beforeEachTest {
+                        whenever(taskStepRunner.run(eq(step), any(), eq(runOptions))).then { invocation ->
+                            val eventSink = invocation.arguments[1] as TaskEventSink
+
+                            whenever(stateMachine.popNextStep(any())).doReturn(stepTriggeredByEvent, null)
+                            eventSink.postEvent(eventToPost)
+
+                            null
+                        }
+                    }
+
+                    on("running the task") {
+                        beforeEachTest { executionManager.run() }
+
+                        it("logs the posted event to the event logger") {
+                            verify(eventLogger).postEvent(eventToPost)
+                        }
+
+                        it("forwards the posted event to the state machine") {
                             verify(stateMachine).postEvent(eventToPost)
+                        }
+
+                        it("logs the posted event to the event logger before forwarding it to the state machine") {
+                            inOrder(eventLogger, stateMachine) {
+                                verify(eventLogger).postEvent(eventToPost)
+                                verify(stateMachine).postEvent(eventToPost)
+                            }
+                        }
+
+                        it("queues any new work made available as a result of the event") {
+                            verify(taskStepRunner).run(eq(stepTriggeredByEvent), any(), any())
                         }
                     }
                 }
@@ -296,19 +355,6 @@ object ParallelExecutionManagerSpec : Spek({
 
             it("does not run more than two steps at the same time") {
                 assertThat(noMoreThanTwoTasksRunningAtTimeOfInvocation.values, allElements(equalTo(true)))
-            }
-        }
-
-        on("being sent an event") {
-            val eventToPost = mock<TaskEvent>()
-
-            beforeEachTest { executionManager.postEvent(eventToPost) }
-
-            it("logs the posted event to the event logger before forwarding it to the state machine") {
-                inOrder(eventLogger, stateMachine) {
-                    verify(eventLogger).postEvent(eventToPost)
-                    verify(stateMachine).postEvent(eventToPost)
-                }
             }
         }
     }

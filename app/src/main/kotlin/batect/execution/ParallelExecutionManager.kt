@@ -75,8 +75,11 @@ class ParallelExecutionManager(
 
     override fun postEvent(event: TaskEvent) {
         eventLogger.postEvent(event)
-        stateMachine.postEvent(event)
-        startNewWorkIfPossible()
+
+        if (!event.isInformationalEvent) {
+            stateMachine.postEvent(event)
+            startNewWorkIfPossible()
+        }
     }
 
     private fun startNewWorkIfPossible(justCompletedStep: Boolean = false) {

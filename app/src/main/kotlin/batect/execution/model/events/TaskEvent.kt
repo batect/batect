@@ -16,4 +16,4 @@
 
 package batect.execution.model.events
 
-abstract class TaskEvent
+abstract class TaskEvent(val isInformationalEvent: Boolean = false)

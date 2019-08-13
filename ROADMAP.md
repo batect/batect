@@ -32,6 +32,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
 * some way to reference another Dockerfile as the base image for a Dockerfile
 * allow giving access to a specific devices (`--device` - https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities)
+* support setting `ulimit` values (`--ulimit` - https://docs.docker.com/engine/reference/commandline/run/#set-ulimits-in-container---ulimit)
 * allow `home_directory` to match local user's home directory path
 * allow `working_directory` and container side of volume mount to reference home directory (inside container)
 * allow container side of volume mount to use path of local directory (eg. mount current directory at same path inside container)

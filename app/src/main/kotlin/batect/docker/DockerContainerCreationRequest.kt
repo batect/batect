@@ -27,6 +27,7 @@ data class DockerContainerCreationRequest(
     val image: DockerImage,
     val network: DockerNetwork,
     val command: Iterable<String>,
+    val entrypoint: Iterable<String>,
     val hostname: String,
     val networkAlias: String,
     val environmentVariables: Map<String, String>,
@@ -55,6 +56,10 @@ data class DockerContainerCreationRequest(
 
             if (command.count() > 0) {
                 "Cmd" to command.toJsonArray()
+            }
+
+            if (entrypoint.count() > 0) {
+                "Entrypoint" to entrypoint.toJsonArray()
             }
 
             if (workingDirectory != null) {

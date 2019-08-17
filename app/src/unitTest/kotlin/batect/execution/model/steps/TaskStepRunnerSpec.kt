@@ -349,14 +349,15 @@ object TaskStepRunnerSpec : Spek({
                 val container = Container("some-container", imageSourceDoesNotMatter())
                 val otherContainer = Container("some-other-container", imageSourceDoesNotMatter())
                 val command = Command.parse("do-stuff")
+                val entrypoint = Command.parse("sh")
                 val workingDirectory = "some-dir"
                 val additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value"))
                 val additionalPortMappings = setOf(PortMapping(123, 456))
                 val image = DockerImage("some-image")
                 val network = DockerNetwork("some-network")
 
-                val step = CreateContainerStep(container, command, workingDirectory, additionalEnvironmentVariables, additionalPortMappings, setOf(container, otherContainer), image, network)
-                val request = DockerContainerCreationRequest(image, network, command.parsedCommand, "some-container", "some-container", emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
+                val step = CreateContainerStep(container, command, entrypoint, workingDirectory, additionalEnvironmentVariables, additionalPortMappings, setOf(container, otherContainer), image, network)
+                val request = DockerContainerCreationRequest(image, network, command.parsedCommand, entrypoint.parsedCommand, "some-container", "some-container", emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
 
                 beforeEachTest {
                     whenever(
@@ -365,6 +366,7 @@ object TaskStepRunnerSpec : Spek({
                             image,
                             network,
                             command,
+                            entrypoint,
                             workingDirectory,
                             additionalEnvironmentVariables,
                             runAsCurrentUserConfiguration.volumeMounts,

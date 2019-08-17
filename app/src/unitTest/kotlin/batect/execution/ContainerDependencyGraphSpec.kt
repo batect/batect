@@ -52,7 +52,7 @@ object ContainerDependencyGraphSpec : Spek({
 
         given("a task with no dependencies") {
             given("the task does not override the container's working directory") {
-                val container = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("some-container-command"), workingDirectory = "task-working-dir-that-wont-be-used")
+                val container = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("some-container-command"), entrypoint = Command.parse("sh"), workingDirectory = "task-working-dir-that-wont-be-used")
                 val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)), "some-task-specific-working-dir")
                 val task = Task("the-task", runConfig, dependsOnContainers = emptySet())
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
@@ -71,6 +71,10 @@ object ContainerDependencyGraphSpec : Spek({
 
                     it("takes its command from the command resolver") {
                         assertThat(node.command, equalTo(commandResolver.resolveCommand(container, task)))
+                    }
+
+                    it("takes its entrypoint from the container") {
+                        assertThat(node.entrypoint, equalTo(container.entrypoint))
                     }
 
                     it("takes its working directory from the task") {
@@ -104,7 +108,7 @@ object ContainerDependencyGraphSpec : Spek({
             }
 
             given("the task overrides the container's working directory") {
-                val container = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("some-container-command"), workingDirectory = "task-working-dir")
+                val container = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("some-container-command"), entrypoint = Command.parse("sh"), workingDirectory = "task-working-dir")
                 val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)))
                 val task = Task("the-task", runConfig, dependsOnContainers = emptySet())
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
@@ -123,6 +127,10 @@ object ContainerDependencyGraphSpec : Spek({
 
                     it("takes its command from the command resolver") {
                         assertThat(node.command, equalTo(commandResolver.resolveCommand(container, task)))
+                    }
+
+                    it("takes its entrypoint from the container") {
+                        assertThat(node.entrypoint, equalTo(container.entrypoint))
                     }
 
                     it("takes its working directory from the container") {
@@ -161,7 +169,7 @@ object ContainerDependencyGraphSpec : Spek({
         }
 
         given("a task with a dependency") {
-            val taskContainer = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("task-command-that-wont-be-used"), workingDirectory = "task-working-dir-that-wont-be-used")
+            val taskContainer = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("task-command-that-wont-be-used"), entrypoint = Command.parse("sh"), workingDirectory = "task-working-dir-that-wont-be-used")
             val dependencyContainer = Container("dependency-container", imageSourceDoesNotMatter(), command = Command.parse("dependency-command"), workingDirectory = "dependency-working-dir")
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)), "some-task-specific-working-dir")
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(dependencyContainer.name))
@@ -181,6 +189,10 @@ object ContainerDependencyGraphSpec : Spek({
 
                 it("takes its command from the command resolver") {
                     assertThat(node.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                }
+
+                it("takes its entrypoint from the container") {
+                    assertThat(node.entrypoint, equalTo(taskContainer.entrypoint))
                 }
 
                 it("takes its working directory from the task") {
@@ -217,6 +229,10 @@ object ContainerDependencyGraphSpec : Spek({
 
                 it("takes its command from the command resolver") {
                     assertThat(node.command, equalTo(commandResolver.resolveCommand(dependencyContainer, task)))
+                }
+
+                it("takes its entrypoint from the container") {
+                    assertThat(node.entrypoint, equalTo(dependencyContainer.entrypoint))
                 }
 
                 it("takes its working directory from the container configuration") {

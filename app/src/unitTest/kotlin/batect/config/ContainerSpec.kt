@@ -199,6 +199,7 @@ object ContainerSpec : Spek({
                   SOME_DYNAMIC_VALUE: ${'$'}host_var
                 dockerfile: some-Dockerfile
                 command: do-the-thing.sh some-param
+                entrypoint: sh
                 environment:
                   OPTS: -Dthing
                   INT_VALUE: 1
@@ -233,6 +234,7 @@ object ContainerSpec : Spek({
                 it("returns the expected container configuration") {
                     assertThat(result.imageSource, equalTo(BuildImage(osIndependentPath("/resolved/container-1-build-dir"), mapOf("SOME_ARG" to LiteralValue("some_value"), "SOME_DYNAMIC_VALUE" to ReferenceValue("host_var")), "some-Dockerfile")))
                     assertThat(result.command, equalTo(Command.parse("do-the-thing.sh some-param")))
+                    assertThat(result.entrypoint, equalTo(Command.parse("sh")))
                     assertThat(
                         result.environment, equalTo(
                             mapOf(

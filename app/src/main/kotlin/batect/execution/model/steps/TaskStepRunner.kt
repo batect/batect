@@ -170,6 +170,7 @@ class TaskStepRunner(
                 step.image,
                 step.network,
                 step.command,
+                step.entrypoint,
                 step.workingDirectory,
                 step.additionalEnvironmentVariables,
                 runAsCurrentUserConfiguration.volumeMounts,

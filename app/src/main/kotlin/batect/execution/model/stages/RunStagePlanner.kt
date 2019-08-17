@@ -54,6 +54,7 @@ class RunStagePlanner(private val logger: Logger) {
             CreateContainerStepRule(
                 node.container,
                 node.command,
+                node.entrypoint,
                 node.workingDirectory,
                 node.additionalEnvironmentVariables,
                 node.additionalPortMappings,

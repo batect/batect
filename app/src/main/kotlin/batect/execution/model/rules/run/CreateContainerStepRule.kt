@@ -35,6 +35,7 @@ import batect.os.Command
 data class CreateContainerStepRule(
     val container: Container,
     val command: Command?,
+    val entrypoint: Command?,
     val workingDirectory: String?,
     val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression>,
     val additionalPortMappings: Set<PortMapping>,
@@ -51,6 +52,7 @@ data class CreateContainerStepRule(
         return TaskStepRuleEvaluationResult.Ready(CreateContainerStep(
             container,
             command,
+            entrypoint,
             workingDirectory,
             additionalEnvironmentVariables,
             additionalPortMappings,
@@ -77,6 +79,7 @@ data class CreateContainerStepRule(
 
     override fun toString() = "${this::class.simpleName}(container: '${container.name}', " +
         "command: ${command?.parsedCommand ?: "null"}, " +
+        "entrypoint: ${entrypoint?.parsedCommand ?: "null"}, " +
         "working directory: ${workingDirectory ?: "null"}, " +
         "additional environment variables: [${additionalEnvironmentVariables.map { "${it.key}=${it.value}" }.joinToString(", ")}], " +
         "additional port mappings: $additionalPortMappings, " +

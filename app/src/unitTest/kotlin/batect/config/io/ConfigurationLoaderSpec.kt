@@ -468,6 +468,7 @@ object ConfigurationLoaderSpec : Spek({
                     |  container-1:
                     |    build_directory: container-1-build-dir
                     |    command: do-the-thing.sh some-param
+                    |    entrypoint: sh
                     |    environment:
                     |      OPTS: -Dthing
                     |      INT_VALUE: 1
@@ -505,6 +506,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.name, equalTo("container-1"))
                 assertThat(container.imageSource, equalTo(BuildImage(fileSystem.getPath("/resolved/container-1-build-dir"))))
                 assertThat(container.command, equalTo(Command.parse("do-the-thing.sh some-param")))
+                assertThat(container.entrypoint, equalTo(Command.parse("sh")))
                 assertThat(container.environment, equalTo(mapOf(
                     "OPTS" to LiteralValue("-Dthing"),
                     "INT_VALUE" to LiteralValue("1"),

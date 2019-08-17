@@ -34,6 +34,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 DockerImage("the-image"),
                 DockerNetwork("the-network"),
                 listOf("do-the-thing"),
+                listOf("sh"),
                 "the-hostname",
                 "the-network-alias",
                 mapOf("SOME_VAR" to "some value"),
@@ -61,6 +62,7 @@ object DockerContainerCreationRequestSpec : Spek({
                         |   "StdinOnce": true,
                         |   "Image": "the-image",
                         |   "Cmd": ["do-the-thing"],
+                        |   "Entrypoint": ["sh"],
                         |   "Hostname": "the-hostname",
                         |   "WorkingDir": "/work-dir",
                         |   "User": "789:222",
@@ -112,6 +114,7 @@ object DockerContainerCreationRequestSpec : Spek({
             val request = DockerContainerCreationRequest(
                 DockerImage("the-image"),
                 DockerNetwork("the-network"),
+                emptyList(),
                 emptyList(),
                 "the-hostname",
                 "the-network-alias",

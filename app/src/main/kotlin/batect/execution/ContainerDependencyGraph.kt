@@ -72,6 +72,7 @@ data class ContainerDependencyGraph(val config: Configuration, val task: Task, v
 
             val dependencyNodes = resolveDependencies(dependencies, nodesAlreadyCreated, newPath)
             val command = containerCommandResolver.resolveCommand(container, task)
+            val entrypoint = container.entrypoint
             val workingDirectory = workingDirectory(isRootNode, container, task)
             val additionalEnvironmentVariables = additionalEnvironmentVariables(isRootNode)
             val additionalPortMappings = additionalPortMappings(isRootNode)
@@ -79,6 +80,7 @@ data class ContainerDependencyGraph(val config: Configuration, val task: Task, v
             ContainerDependencyGraphNode(
                 container,
                 command,
+                entrypoint,
                 workingDirectory,
                 additionalEnvironmentVariables,
                 additionalPortMappings,
@@ -164,6 +166,7 @@ data class ContainerDependencyGraph(val config: Configuration, val task: Task, v
 data class ContainerDependencyGraphNode(
     val container: Container,
     val command: Command?,
+    val entrypoint: Command?,
     val workingDirectory: String?,
     val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression>,
     val additionalPortMappings: Set<PortMapping>,

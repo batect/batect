@@ -137,8 +137,6 @@ object TaskStepRunnerSpec : Spek({
                 val imageSource = BuildImage(buildDirectory, buildArgs, dockerfilePath)
                 val step = BuildImageStep(imageSource, imageTags)
 
-                // TODO: handle case when env var referenced does not exist
-
                 describe("when building the image succeeds") {
                     on("and propagating proxy-related environment variables is enabled") {
                         val image = DockerImage("some-image")

@@ -56,6 +56,24 @@ object DockerRegistryDomainResolverSpec : Spek({
             }
         }
 
+        given("an image name with a local registry and no repository") {
+            it("returns that registry domain name") {
+                assertThat(resolver.resolveDomainForImage("localhost/ubuntu"), equalTo("localhost"))
+            }
+        }
+
+        given("an image name with a non-default registry name and no repository") {
+            it("returns that registry domain name") {
+                assertThat(resolver.resolveDomainForImage("some-docker-registry.com/ubuntu"), equalTo("some-docker-registry.com"))
+            }
+        }
+
+        given("an image name with a non-default registry name that does not contain a dot but does contain a port and no repository") {
+            it("returns that registry domain name") {
+                assertThat(resolver.resolveDomainForImage("some-docker-registry:8080/ubuntu"), equalTo("some-docker-registry:8080"))
+            }
+        }
+
         given("an image name with a repository and a non-default registry name") {
             it("returns that registry domain name") {
                 assertThat(resolver.resolveDomainForImage("some-docker-registry.com/library/ubuntu"), equalTo("some-docker-registry.com"))

@@ -21,7 +21,6 @@ import batect.cli.options.OptionParserContainer
 import batect.cli.options.OptionsParsingResult
 import batect.cli.options.ValueConverters
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
-import batect.cli.options.defaultvalues.LevelOfParallelismDefaultValueProvider
 import batect.docker.DockerHttpConfigDefaults
 import batect.os.PathResolverFactory
 import batect.ui.OutputStyle
@@ -70,14 +69,6 @@ class CommandLineOptionsParser(
         "Force a particular style of output from batect (does not affect task command output). Valid values are: fancy (default value if your console supports this), simple (no updating text), or quiet (only error messages).",
         ValueConverters.optionalEnum(),
         'o'
-    )
-
-    private val levelOfParallelism: Int by valueOption(
-        "level-of-parallelism",
-        "Maximum number of operations to run in parallel.",
-        LevelOfParallelismDefaultValueProvider,
-        ValueConverters::positiveInteger,
-        'p'
     )
 
     private val disableCleanupAfterFailure: Boolean by flagOption(disableCleanupAfterFailureFlagName, "If an error occurs before any task can start, leave all containers created for that task running so that the issue can be investigated.")
@@ -139,7 +130,6 @@ class CommandLineOptionsParser(
         requestedOutputStyle = requestedOutputStyle,
         disableColorOutput = disableColorOutput,
         disableUpdateNotification = disableUpdateNotification,
-        levelOfParallelism = levelOfParallelism,
         disableCleanupAfterFailure = disableCleanupAfterFailure || disableCleanup,
         disableCleanupAfterSuccess = disableCleanupAfterSuccess || disableCleanup,
         dontPropagateProxyEnvironmentVariables = dontPropagateProxyEnvironmentVariables,

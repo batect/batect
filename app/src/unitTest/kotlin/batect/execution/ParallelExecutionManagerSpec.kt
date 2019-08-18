@@ -27,7 +27,6 @@ import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
 import batect.testutils.on
 import batect.ui.EventLogger
-import com.natpryce.hamkrest.allElements
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.any
@@ -41,7 +40,6 @@ import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
@@ -50,7 +48,7 @@ object ParallelExecutionManagerSpec : Spek({
         val eventLogger by createForEachTest { mock<EventLogger>() }
         val taskStepRunner by createForEachTest { mock<TaskStepRunner>() }
         val stateMachine by createForEachTest { mock<TaskStateMachine>() }
-        val runOptions = RunOptions("some-task", emptyList(), 2, CleanupOption.Cleanup, CleanupOption.Cleanup, true)
+        val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true)
         val logger by createLoggerForEachTest()
         val executionManager by createForEachTest {
             ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, runOptions, logger)
@@ -297,64 +295,6 @@ object ParallelExecutionManagerSpec : Spek({
 
             it("runs the first step in parallel with the second step") {
                 assertThat(step2StartedBeforeStep1Ended, equalTo(true))
-            }
-        }
-
-        on("three steps being provided by the state machine initially (one more than the maximum number of concurrent steps)") {
-            val step1 = mock<TaskStep>()
-            val step2 = mock<TaskStep>()
-            val step3 = mock<TaskStep>()
-
-            val noMoreThanTwoTasksRunningAtTimeOfInvocation by createForEachTest { ConcurrentHashMap<TaskStep, Boolean>() }
-
-            beforeEachTest {
-                whenever(stateMachine.popNextStep(any())).doReturn(step1, step2, step3, null)
-
-                val counter = Semaphore(2)
-
-                whenever(taskStepRunner.run(any(), any(), eq(runOptions))).doAnswer { invocation ->
-                    val step = invocation.arguments[0] as TaskStep
-                    val acquired = counter.tryAcquire()
-
-                    noMoreThanTwoTasksRunningAtTimeOfInvocation[step] = acquired
-                    Thread.sleep(50)
-
-                    if (acquired) {
-                        counter.release()
-                    }
-
-                    null
-                }
-
-                executionManager.run()
-            }
-
-            it("logs the first step to the event logger") {
-                verify(eventLogger).onStartingTaskStep(step1)
-            }
-
-            it("runs the first step") {
-                verify(taskStepRunner).run(eq(step1), any(), eq(runOptions))
-            }
-
-            it("logs the second step to the event logger") {
-                verify(eventLogger).onStartingTaskStep(step2)
-            }
-
-            it("runs the second step") {
-                verify(taskStepRunner).run(eq(step2), any(), eq(runOptions))
-            }
-
-            it("logs the third step to the event logger") {
-                verify(eventLogger).onStartingTaskStep(step3)
-            }
-
-            it("runs the third step") {
-                verify(taskStepRunner).run(eq(step3), any(), eq(runOptions))
-            }
-
-            it("does not run more than two steps at the same time") {
-                assertThat(noMoreThanTwoTasksRunningAtTimeOfInvocation.values, allElements(equalTo(true)))
             }
         }
     }

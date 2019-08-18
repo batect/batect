@@ -67,7 +67,7 @@ object RunTaskCommandSpec : Spek({
             val mainTask = Task(taskName, TaskRunConfiguration("the-container"))
             val config = Configuration("the_project", TaskMap(), ContainerMap())
             val expectedTaskExitCode = 123
-            val runOptions = RunOptions(taskName, emptyList(), 64, CleanupOption.DontCleanup, CleanupOption.Cleanup, true)
+            val runOptions = RunOptions(taskName, emptyList(), CleanupOption.DontCleanup, CleanupOption.Cleanup, true)
             val logSink = InMemoryLogSink()
             val logger = Logger("test.source", logSink)
 

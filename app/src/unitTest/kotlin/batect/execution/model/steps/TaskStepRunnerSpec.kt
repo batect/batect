@@ -132,7 +132,7 @@ object TaskStepRunnerSpec : Spek({
         }
 
         val logSink = InMemoryLogSink()
-        val runOptions = RunOptions("some-task", emptyList(), 123, CleanupOption.Cleanup, CleanupOption.Cleanup, true)
+        val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true)
         val hostEnvironmentVariables = mapOf("SOME_ENV_VAR" to "some env var value")
 
         val logger = Logger("some.source", logSink)

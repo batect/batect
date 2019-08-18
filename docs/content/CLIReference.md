@@ -27,17 +27,6 @@ Example:
 ./batect --no-cleanup-after-failure the-task
 ```
 
-### Override the default level of parallelism <small>(`--level-of-parallelism` or `-p`)</small>
-
-batect runs whatever operations it can in parallel to make tasks run as fast as possible. It automatically detects an appropriate
-number of operations to run in parallel based on your system. Use this option to override this default value.
-
-Example:
-
-```shell
-./batect --level-of-parallelism 10 the-task
-```
-
 ### Disable propagation of proxy-related environment variables <small>(`--no-proxy-vars`)</small>
 
 By default, batect will automatically propagate proxy-related environment variables as described [here](tips/Proxies.md).

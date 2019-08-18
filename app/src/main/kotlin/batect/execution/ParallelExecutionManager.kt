@@ -28,12 +28,12 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-// Why do we do all this when a ThreadPoolExecutor would provide us with a 'maximum concurrent threads' limit?
+// Why do we do all this when a ThreadPoolExecutor serves a similar purpose?
 // Because it requires us to just feed it tasks and it internally will manage the queue of work.
 // However, we want to manage the queue of work ourselves (this is what the state machine and the events do), so
-// that we can retract work (steps) that have not been started yet in the event of a failure. This retraction is
-// all handled by the state machine, so all we need to do is only submit work to the thread pool when we there are
-// fewer threads running than our maximum concurrent threads limit.
+// that we can retract work (steps) that have not been started yet in the event of a failure and trigger them when
+// events occur. This is all handled by the state machine, so all we need to do is only submit work to the thread
+// pool when it is ready.
 class ParallelExecutionManager(
     private val eventLogger: EventLogger,
     private val taskStepRunner: TaskStepRunner,
@@ -56,7 +56,7 @@ class ParallelExecutionManager(
     }
 
     private fun createThreadPool() =
-        object : ThreadPoolExecutor(runOptions.levelOfParallelism, runOptions.levelOfParallelism, 0, TimeUnit.NANOSECONDS, LinkedBlockingQueue<Runnable>()) {
+        object : ThreadPoolExecutor(Int.MAX_VALUE, Int.MAX_VALUE, Long.MAX_VALUE, TimeUnit.DAYS, LinkedBlockingQueue<Runnable>()) {
             override fun afterExecute(r: Runnable?, t: Throwable?) {
                 super.afterExecute(r, t)
 
@@ -89,7 +89,7 @@ class ParallelExecutionManager(
             }
 
             try {
-                while (runningSteps < runOptions.levelOfParallelism) {
+                while (true) {
                     val stepsStillRunning = runningSteps > 0
                     val step = stateMachine.popNextStep(stepsStillRunning)
 

@@ -62,7 +62,6 @@ import batect.execution.model.events.TemporaryDirectoryDeletedEvent
 import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
-import batect.logging.Logger
 import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import java.io.IOException
@@ -74,7 +73,6 @@ class TaskStepRunner(
     private val creationRequestFactory: DockerContainerCreationRequestFactory,
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
     private val systemInfo: SystemInfo,
-    private val logger: Logger,
     private val hostEnvironmentVariables: Map<String, String>
 ) {
     constructor(
@@ -82,16 +80,10 @@ class TaskStepRunner(
         proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
         creationRequestFactory: DockerContainerCreationRequestFactory,
         runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
-        systemInfo: SystemInfo,
-        logger: Logger
-    ) : this(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, systemInfo, logger, System.getenv())
+        systemInfo: SystemInfo
+    ) : this(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, systemInfo, System.getenv())
 
     fun run(step: TaskStep, eventSink: TaskEventSink, runOptions: RunOptions) {
-        logger.info {
-            message("Running step.")
-            data("step", step.toString())
-        }
-
         when (step) {
             is BuildImageStep -> handleBuildImageStep(step, eventSink, runOptions)
             is PullImageStep -> handlePullImageStep(step, eventSink)
@@ -105,11 +97,6 @@ class TaskStepRunner(
             is DeleteTemporaryFileStep -> handleDeleteTemporaryFileStep(step, eventSink)
             is DeleteTemporaryDirectoryStep -> handleDeleteTemporaryDirectoryStep(step, eventSink)
             is DeleteTaskNetworkStep -> handleDeleteTaskNetworkStep(step, eventSink)
-        }
-
-        logger.info {
-            message("Step completed.")
-            data("step", step.toString())
         }
     }
 

@@ -125,10 +125,16 @@ class ParallelExecutionManager(
 
                 eventLogger.onStartingTaskStep(step)
                 taskStepRunner.run(step, eventSink, runOptions)
+
+                logger.info {
+                    message("Step completed.")
+                    data("step", step.toString())
+                }
             } catch (t: Throwable) {
                 logger.error {
                     message("Unhandled exception during task step execution.")
                     exception(t)
+                    data("step", step.toString())
                 }
 
                 postEvent(ExecutionFailedEvent("During execution of step of kind '${step::class.simpleName}': " + t.toString()))

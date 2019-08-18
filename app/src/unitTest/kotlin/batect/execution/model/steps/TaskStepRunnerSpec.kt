@@ -77,23 +77,15 @@ import batect.execution.model.events.TemporaryDirectoryDeletedEvent
 import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
-import batect.logging.Logger
-import batect.logging.Severity
 import batect.os.Command
 import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
-import batect.testutils.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
-import batect.testutils.hasMessage
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
-import batect.testutils.withAdditionalData
-import batect.testutils.withLogMessage
-import batect.testutils.withSeverity
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
-import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
@@ -131,42 +123,12 @@ object TaskStepRunnerSpec : Spek({
             on { generateConfiguration(any(), any()) } doReturn runAsCurrentUserConfiguration
         }
 
-        val logSink = InMemoryLogSink()
         val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true)
         val hostEnvironmentVariables = mapOf("SOME_ENV_VAR" to "some env var value")
 
-        val logger = Logger("some.source", logSink)
-        val runner by createForEachTest { TaskStepRunner(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, systemInfo, logger, hostEnvironmentVariables) }
+        val runner by createForEachTest { TaskStepRunner(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, systemInfo, hostEnvironmentVariables) }
 
         describe("running steps") {
-            on("running any step") {
-                val step = mock<TaskStep> {
-                    on { toString() } doReturn "The step description"
-                }
-
-                beforeEachTest { runner.run(step, eventSink, runOptions) }
-
-                it("logs that the step is starting") {
-                    assertThat(
-                        logSink, hasMessage(
-                            withSeverity(Severity.Info) and
-                                withLogMessage("Running step.") and
-                                withAdditionalData("step", "The step description")
-                        )
-                    )
-                }
-
-                it("logs that the step has finished") {
-                    assertThat(
-                        logSink, hasMessage(
-                            withSeverity(Severity.Info) and
-                                withLogMessage("Step completed.") and
-                                withAdditionalData("step", "The step description")
-                        )
-                    )
-                }
-            }
-
             describe("running a 'build image' step") {
                 val buildDirectory = Paths.get("/some-build-dir")
                 val buildArgs = mapOf("some_arg" to LiteralValue("some_value"), "SOME_PROXY_CONFIG" to LiteralValue("overridden"), "SOME_HOST_VAR" to ReferenceValue("SOME_ENV_VAR"))

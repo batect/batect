@@ -33,9 +33,7 @@ data class BuildImageStep(
     val source: BuildImage,
     val imageTags: Set<String>
 ) : TaskStep() {
-    override fun toString() = "${this.javaClass.simpleName}(" +
-        "source: $source, " +
-        "image tags: $imageTags)"
+    override fun toString() = "${this.javaClass.simpleName}(source: $source, image tags: $imageTags)"
 }
 
 data class PullImageStep(val source: PullImage) : TaskStep() {

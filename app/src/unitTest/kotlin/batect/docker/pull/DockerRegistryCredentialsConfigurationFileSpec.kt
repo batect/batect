@@ -240,7 +240,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
                             |       },
                             |       "someregistrywithnoauth.com": {
                             |       }
-                            |   },
+                            |   }
                             |}
                         """.trimMargin().lines())
                     }

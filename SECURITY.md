@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Only the most recent version of batect is supported with security fixes. 
+Only the most recent version of batect is supported with security fixes.
 
 ## Reporting a Vulnerability
 

@@ -138,6 +138,15 @@ object ConfigurationLoaderSpec : Spek({
                 }
             }
 
+            on("loading that file from a directory containing uppercase letters") {
+                val path = "/code/PROject/config.yml"
+                val config by runForEachTest { loadConfiguration(configString, path) }
+
+                it("should use the lowercase version of the parent directory's name as the project name") {
+                    assertThat(config.projectName, equalTo("project"))
+                }
+            }
+
             on("loading that file from a directory with a name that is not a valid project name") {
                 val path = "/code/-project/config.yml"
 

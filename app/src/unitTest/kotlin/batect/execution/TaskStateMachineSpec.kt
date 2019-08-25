@@ -82,8 +82,9 @@ object TaskStateMachineSpec : Spek({
         }
 
         val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
+        val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
-        val stateMachine by createForEachTest { TaskStateMachine(graph, runOptions, runStagePlanner, cleanupStagePlanner, failureErrorMessageFormatter, logger) }
+        val stateMachine by createForEachTest { TaskStateMachine(graph, runOptions, runStagePlanner, cleanupStagePlanner, failureErrorMessageFormatter, cancellationContext, logger) }
 
         describe("posting and retrieving events") {
             given("no events have been posted") {
@@ -111,6 +112,36 @@ object TaskStateMachineSpec : Spek({
 
                 it("returns all posted events in the list of all events") {
                     assertThat(stateMachine.getAllEvents(), equalTo(events))
+                }
+            }
+
+            given("the event is a failure event") {
+                val event = mock<TaskFailedEvent>()
+
+                given("the run stage is active") {
+                    on("posting the event") {
+                        beforeEachTest { stateMachine.postEvent(event) }
+
+                        it("cancels all currently running operations") {
+                            verify(cancellationContext).cancel()
+                        }
+                    }
+                }
+
+                given("the cleanup stage is active") {
+                    beforeEachTest {
+                        whenever(runStage.popNextStep(emptySet())).doReturn(NoStepsRemaining)
+                        whenever(cleanupStage.popNextStep(emptySet())).doReturn(StepReady(mock()))
+                        stateMachine.popNextStep(false)
+                    }
+
+                    on("posting the event") {
+                        beforeEachTest { stateMachine.postEvent(event) }
+
+                        it("does not cancel all currently running operations") {
+                            verify(cancellationContext, never()).cancel()
+                        }
+                    }
                 }
             }
         }

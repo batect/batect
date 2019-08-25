@@ -34,6 +34,7 @@ class SignalListener(private val posix: POSIX) {
         }
     }
 
+    // See https://github.com/jnr/jnr-posix/issues/137 for why this is necessary.
     companion object : LibC.LibCSignalHandler {
         private val handlers = ConcurrentHashMap<Int, ConcurrentLinkedDeque<SignalHandler>>()
 

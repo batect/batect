@@ -61,11 +61,12 @@ class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
         is TemporaryFileDeletionFailedEvent -> formatErrorMessage("Could not delete temporary file '${event.filePath}'", event.message)
         is TemporaryDirectoryDeletionFailedEvent -> formatErrorMessage("Could not delete temporary directory '${event.directoryPath}'", event.message)
         is ExecutionFailedEvent -> formatErrorMessage("An unexpected exception occurred during execution", event.message)
-        is UserInterruptedExecutionEvent -> formatErrorMessage("Interrupt received during execution", "User interrupted execution.")
+        is UserInterruptedExecutionEvent -> formatMessage("Task cancelled", TextRun("Interrupt received during execution"), "Waiting for outstanding operations to stop or finish before cleaning up...")
     }
 
     private fun formatErrorMessage(headline: String, body: String) = formatErrorMessage(TextRun(headline), body)
-    private fun formatErrorMessage(headline: TextRun, body: String) = Text.red(Text.bold("Error: ") + headline + Text(".$newLine")) + Text(body)
+    private fun formatErrorMessage(headline: TextRun, body: String) = formatMessage("Error", headline, body)
+    private fun formatMessage(type: String, headline: TextRun, body: String) = Text.red(Text.bold("$type: ") + headline + Text(".$newLine")) + Text(body)
 
     private fun hintToReRunWithCleanupDisabled(runOptions: RunOptions): TextRun = when (runOptions.behaviourAfterFailure) {
         CleanupOption.Cleanup -> Text("$newLine${newLine}You can re-run the task with ") + Text.bold("--${CommandLineOptionsParser.disableCleanupAfterFailureFlagName}") + Text(" to leave the created containers running to diagnose the issue.")

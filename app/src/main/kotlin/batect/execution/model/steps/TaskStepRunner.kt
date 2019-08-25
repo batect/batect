@@ -33,6 +33,7 @@ import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.NetworkCreationFailedException
 import batect.docker.NetworkDeletionFailedException
+import batect.execution.CancellationContext
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
 import batect.execution.model.events.ContainerBecameHealthyEvent
@@ -83,10 +84,10 @@ class TaskStepRunner(
         systemInfo: SystemInfo
     ) : this(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, systemInfo, System.getenv())
 
-    fun run(step: TaskStep, eventSink: TaskEventSink, runOptions: RunOptions) {
+    fun run(step: TaskStep, eventSink: TaskEventSink, runOptions: RunOptions, cancellationContext: CancellationContext) {
         when (step) {
             is BuildImageStep -> handleBuildImageStep(step, eventSink, runOptions)
-            is PullImageStep -> handlePullImageStep(step, eventSink)
+            is PullImageStep -> handlePullImageStep(step, eventSink, cancellationContext)
             is CreateTaskNetworkStep -> handleCreateTaskNetworkStep(eventSink)
             is CreateContainerStep -> handleCreateContainerStep(step, eventSink, runOptions)
             is RunContainerStep -> handleRunContainerStep(step, eventSink)
@@ -127,9 +128,9 @@ class TaskStepRunner(
         }
     }
 
-    private fun handlePullImageStep(step: PullImageStep, eventSink: TaskEventSink) {
+    private fun handlePullImageStep(step: PullImageStep, eventSink: TaskEventSink, cancellationContext: CancellationContext) {
         try {
-            val image = dockerClient.pullImage(step.source.imageName) { progressUpdate ->
+            val image = dockerClient.pullImage(step.source.imageName, cancellationContext) { progressUpdate ->
                 eventSink.postEvent(ImagePullProgressEvent(step.source, progressUpdate))
             }
 

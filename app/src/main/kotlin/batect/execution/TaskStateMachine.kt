@@ -41,6 +41,7 @@ class TaskStateMachine(
     val runStagePlanner: RunStagePlanner,
     val cleanupStagePlanner: CleanupStagePlanner,
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
+    val cancellationContext: CancellationContext,
     val logger: Logger
 ) : TaskEventSink {
     var taskHasFailed: Boolean = false
@@ -190,6 +191,8 @@ class TaskStateMachine(
 
             val manualCleanupCommands = (currentStage as CleanupStage).manualCleanupInstructions
             manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessageAfterCleanupFailure(manualCleanupCommands)
+        } else {
+            cancellationContext.cancel()
         }
     }
 

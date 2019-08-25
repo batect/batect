@@ -133,7 +133,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                 Scenario(
                     "user interrupted execution",
                     UserInterruptedExecutionEvent,
-                    Text.red(Text.bold("Error: ") + Text("Interrupt received during execution.\n")) + Text("User interrupted execution.")
+                    Text.red(Text.bold("Task cancelled: ") + Text("Interrupt received during execution.\n")) + Text("Waiting for outstanding operations to stop or finish before cleaning up...")
                 )
             ).forEach { (description, event, expectedMessage) ->
                 given("a '$description' event") {

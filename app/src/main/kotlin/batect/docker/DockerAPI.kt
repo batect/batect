@@ -22,6 +22,8 @@ import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputStream
+import batect.execution.CancellationContext
+import batect.execution.executeInCancellationContext
 import batect.logging.Logger
 import batect.os.Dimensions
 import batect.os.SystemInfo
@@ -649,7 +651,12 @@ class DockerAPI(
         return this
     }
 
-    fun pullImage(imageName: String, registryCredentials: DockerRegistryCredentials?, onProgressUpdate: (JsonObject) -> Unit) {
+    fun pullImage(
+        imageName: String,
+        registryCredentials: DockerRegistryCredentials?,
+        cancellationContext: CancellationContext,
+        onProgressUpdate: (JsonObject) -> Unit
+    ) {
         logger.info {
             message("Pulling image.")
             data("imageName", imageName)
@@ -666,29 +673,31 @@ class DockerAPI(
             .addRegistryCredentialsForPull(registryCredentials)
             .build()
 
-        clientWithTimeout(20, TimeUnit.SECONDS).newCall(request).execute().use { response ->
-            checkForFailure(response) { error ->
-                logger.error {
-                    message("Could not pull image.")
-                    data("error", error)
+        clientWithTimeout(20, TimeUnit.SECONDS)
+            .newCall(request)
+            .executeInCancellationContext(cancellationContext) { response ->
+                checkForFailure(response) { error ->
+                    logger.error {
+                        message("Could not pull image.")
+                        data("error", error)
+                    }
+
+                    throw ImagePullFailedException("Pulling image '$imageName' failed: ${error.message}")
                 }
 
-                throw ImagePullFailedException("Pulling image '$imageName' failed: ${error.message}")
-            }
+                response.body()!!.charStream().forEachLine { line ->
+                    val parsedLine = Json.parser.parseJson(line).jsonObject
 
-            response.body()!!.charStream().forEachLine { line ->
-                val parsedLine = Json.parser.parseJson(line).jsonObject
+                    if (parsedLine.containsKey("error")) {
+                        val message = parsedLine.getValue("error").primitive.content
+                            .correctLineEndings()
 
-                if (parsedLine.containsKey("error")) {
-                    val message = parsedLine.getValue("error").primitive.content
-                        .correctLineEndings()
+                        throw ImagePullFailedException("Pulling image '$imageName' failed: $message")
+                    }
 
-                    throw ImagePullFailedException("Pulling image '$imageName' failed: $message")
+                    onProgressUpdate(parsedLine)
                 }
-
-                onProgressUpdate(parsedLine)
             }
-        }
 
         logger.info {
             message("Image pulled.")

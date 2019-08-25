@@ -34,6 +34,7 @@ class TaskStateMachineProvider(
             runStagePlanner,
             cleanupStagePlanner,
             failureErrorMessageFormatter,
+            CancellationContext(),
             loggerFactory.createLoggerForClass(TaskStateMachine::class)
         )
 }

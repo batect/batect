@@ -124,10 +124,16 @@ class ParallelExecutionManager(
                 }
 
                 eventLogger.onStartingTaskStep(step)
-                taskStepRunner.run(step, eventSink, runOptions)
+                taskStepRunner.run(step, eventSink, runOptions, stateMachine.cancellationContext)
 
                 logger.info {
                     message("Step completed.")
+                    data("step", step.toString())
+                }
+            } catch (ex: CancellationException) {
+                logger.info {
+                    message("Step was cancelled and threw an exception.")
+                    exception(ex)
                     data("step", step.toString())
                 }
             } catch (t: Throwable) {

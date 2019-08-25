@@ -24,6 +24,7 @@ import batect.docker.pull.TokenDockerRegistryCredentials
 import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputStream
+import batect.execution.CancellationContext
 import batect.os.Dimensions
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
@@ -922,6 +923,7 @@ object DockerAPISpec : Spek({
 
             val base64EncodedJSONCredentials = "InNvbWUganNvbiBjcmVkZW50aWFscyI="
             val expectedHeadersForAuthentication = Headers.Builder().set("X-Registry-Auth", base64EncodedJSONCredentials).build()
+            val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
             on("the pull succeeding because the image is already present") {
                 val response = """
@@ -931,7 +933,7 @@ object DockerAPISpec : Spek({
 
                 val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
                 val progressReceiver by createForEachTest { ProgressReceiver() }
-                beforeEachTest { api.pullImage(imageName, registryCredentials, progressReceiver::onProgressUpdate) }
+                beforeEachTest { api.pullImage(imageName, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to pull the image") {
                     verify(call).execute()
@@ -943,6 +945,10 @@ object DockerAPISpec : Spek({
 
                 it("configures the HTTP client with a longer timeout to allow for the daemon to contact the registry") {
                     verify(longTimeoutClientBuilder).readTimeout(20, TimeUnit.SECONDS)
+                }
+
+                it("registers the API call with the cancellation context") {
+                    verify(cancellationContext).addCancellationCallback(call::cancel)
                 }
             }
 
@@ -958,7 +964,7 @@ object DockerAPISpec : Spek({
 
                 val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
                 val progressReceiver by createForEachTest { ProgressReceiver() }
-                beforeEachTest { api.pullImage(imageName, registryCredentials, progressReceiver::onProgressUpdate) }
+                beforeEachTest { api.pullImage(imageName, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to pull the image") {
                     verify(call).execute()
@@ -971,12 +977,16 @@ object DockerAPISpec : Spek({
                 it("configures the HTTP client with a longer timeout to allow for the daemon to contact the registry") {
                     verify(longTimeoutClientBuilder).readTimeout(20, TimeUnit.SECONDS)
                 }
+
+                it("registers the API call with the cancellation context") {
+                    verify(cancellationContext).addCancellationCallback(call::cancel)
+                }
             }
 
             on("the pull request having no registry credentials") {
                 val expectedHeadersForNoAuthentication = Headers.Builder().build()
                 val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, "", 200, expectedHeadersForNoAuthentication) }
-                beforeEachTest { api.pullImage(imageName, null, {}) }
+                beforeEachTest { api.pullImage(imageName, null, cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to pull the image with no authentication header") {
                     verify(call).execute()
@@ -987,7 +997,7 @@ object DockerAPISpec : Spek({
                 beforeEachTest { clientWithLongTimeout.mockPost(expectedUrl, errorResponse, 418, expectedHeadersForAuthentication) }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.pullImage(imageName, registryCredentials, {}) }, throws<ImagePullFailedException>(
+                    assertThat({ api.pullImage(imageName, registryCredentials, cancellationContext, {}) }, throws<ImagePullFailedException>(
                         withMessage("Pulling image 'some-image' failed: $errorMessageWithCorrectLineEndings"))
                     )
                 }
@@ -1007,7 +1017,7 @@ object DockerAPISpec : Spek({
                 val progressReceiver = ProgressReceiver()
 
                 it("throws an appropriate exception with all line endings corrected for the host system") {
-                    assertThat({ api.pullImage(imageName, registryCredentials, progressReceiver::onProgressUpdate) }, throws<ImagePullFailedException>(
+                    assertThat({ api.pullImage(imageName, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }, throws<ImagePullFailedException>(
                         withMessage("Pulling image 'some-image' failed: Server error: 404 trying to fetch remote history for some-image.SYSTEM_LINE_SEPARATORMore details on following line."))
                     )
                 }

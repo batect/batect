@@ -25,6 +25,7 @@ import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerKiller
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
+import batect.execution.CancellationContext
 import batect.logging.Logger
 import batect.os.ConsoleManager
 import batect.utils.Version
@@ -231,13 +232,13 @@ class DockerClient(
         }
     }
 
-    fun pullImage(imageName: String, onProgressUpdate: (DockerImagePullProgress) -> Unit): DockerImage {
+    fun pullImage(imageName: String, cancellationContext: CancellationContext, onProgressUpdate: (DockerImagePullProgress) -> Unit): DockerImage {
         try {
             if (!api.hasImage(imageName)) {
                 val credentials = credentialsProvider.getCredentials(imageName)
                 val reporter = imagePullProgressReporterFactory()
 
-                api.pullImage(imageName, credentials) { progress ->
+                api.pullImage(imageName, credentials, cancellationContext) { progress ->
                     val progressUpdate = reporter.processProgressUpdate(progress)
 
                     if (progressUpdate != null) {

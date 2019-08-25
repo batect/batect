@@ -30,6 +30,7 @@ import batect.docker.run.ContainerKiller
 import batect.docker.run.ContainerOutputStream
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
+import batect.execution.CancellationContext
 import batect.os.ConsoleManager
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
@@ -673,6 +674,8 @@ object DockerClientSpec : Spek({
         }
 
         describe("pulling an image") {
+            val cancellationContext by createForEachTest { mock<CancellationContext>() }
+
             given("the image does not exist locally") {
                 beforeEachTest {
                     whenever(api.hasImage("some-image")).thenReturn(false)
@@ -693,9 +696,9 @@ object DockerClientSpec : Spek({
                             whenever(imagePullProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(DockerImagePullProgress("Doing something", 10, 20))
                             whenever(imagePullProgressReporter.processProgressUpdate(secondProgressUpdate)).thenReturn(null)
 
-                            whenever(api.pullImage(any(), any(), any())).then { invocation ->
+                            whenever(api.pullImage(any(), any(), any(), any())).then { invocation ->
                                 @Suppress("UNCHECKED_CAST")
-                                val onProgressUpdate = invocation.arguments[2] as (JsonObject) -> Unit
+                                val onProgressUpdate = invocation.arguments[3] as (JsonObject) -> Unit
                                 onProgressUpdate(firstProgressUpdate)
                                 onProgressUpdate(secondProgressUpdate)
 
@@ -704,10 +707,10 @@ object DockerClientSpec : Spek({
                         }
 
                         val progressUpdatesReceived by createForEachTest { mutableListOf<DockerImagePullProgress>() }
-                        val image by runForEachTest { client.pullImage("some-image") { progressUpdatesReceived.add(it) } }
+                        val image by runForEachTest { client.pullImage("some-image", cancellationContext) { progressUpdatesReceived.add(it) } }
 
                         it("calls the Docker CLI to pull the image") {
-                            verify(api).pullImage(eq("some-image"), eq(credentials), any())
+                            verify(api).pullImage(eq("some-image"), eq(credentials), eq(cancellationContext), any())
                         }
 
                         it("sends notifications for all relevant progress updates") {
@@ -729,7 +732,7 @@ object DockerClientSpec : Spek({
 
                     on("pulling the image") {
                         it("throws an appropriate exception") {
-                            assertThat({ client.pullImage("some-image", {}) }, throws<ImagePullFailedException>(
+                            assertThat({ client.pullImage("some-image", cancellationContext, {}) }, throws<ImagePullFailedException>(
                                 withMessage("Could not pull image 'some-image': Could not load credentials: something went wrong.")
                                     and withCause(exception)
                             ))
@@ -741,10 +744,10 @@ object DockerClientSpec : Spek({
             on("when the image already exists locally") {
                 beforeEachTest { whenever(api.hasImage("some-image")).thenReturn(true) }
 
-                val image by runForEachTest { client.pullImage("some-image", {}) }
+                val image by runForEachTest { client.pullImage("some-image", cancellationContext, {}) }
 
                 it("does not call the Docker CLI to pull the image again") {
-                    verify(api, never()).pullImage(any(), any(), any())
+                    verify(api, never()).pullImage(any(), any(), any(), any())
                 }
 
                 it("returns the Docker image") {

@@ -19,10 +19,12 @@ package batect.os
 import jnr.constants.platform.Signal
 import jnr.posix.LibC
 import jnr.posix.POSIX
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedDeque
 
 class SignalListener(private val posix: POSIX) {
     fun start(signal: Signal, handler: SignalHandler): AutoCloseable {
-        val handlersForSignal = handlers.getOrPut(signal.value(), { mutableListOf() })
+        val handlersForSignal = handlers.getOrPut(signal.value(), { ConcurrentLinkedDeque() })
         handlersForSignal.add(handler)
 
         posix.libc().signal(signal.value(), Companion)
@@ -33,10 +35,10 @@ class SignalListener(private val posix: POSIX) {
     }
 
     companion object : LibC.LibCSignalHandler {
-        private val handlers = mutableMapOf<Int, MutableList<SignalHandler>>()
+        private val handlers = ConcurrentHashMap<Int, ConcurrentLinkedDeque<SignalHandler>>()
 
         override fun signal(sig: Int) {
-            handlers.getValue(sig).lastOrNull()?.invoke()
+            handlers.getOrDefault(sig, ConcurrentLinkedDeque()).peekLast()?.invoke()
         }
     }
 }

@@ -560,7 +560,7 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when the container has no health check") {
                     beforeEachTest {
-                        whenever(dockerClient.waitForHealthStatus(dockerContainer)).doReturn(HealthStatus.NoHealthCheck)
+                        whenever(dockerClient.waitForHealthStatus(dockerContainer, cancellationContext)).doReturn(HealthStatus.NoHealthCheck)
 
                         runner.run(step, eventSink, runOptions, cancellationContext)
                     }
@@ -572,7 +572,7 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when the container becomes healthy") {
                     beforeEachTest {
-                        whenever(dockerClient.waitForHealthStatus(dockerContainer)).doReturn(HealthStatus.BecameHealthy)
+                        whenever(dockerClient.waitForHealthStatus(dockerContainer, cancellationContext)).doReturn(HealthStatus.BecameHealthy)
 
                         runner.run(step, eventSink, runOptions, cancellationContext)
                     }
@@ -584,7 +584,7 @@ object TaskStepRunnerSpec : Spek({
 
                 describe("when the container becomes unhealthy") {
                     beforeEachTest {
-                        whenever(dockerClient.waitForHealthStatus(dockerContainer)).doReturn(HealthStatus.BecameUnhealthy)
+                        whenever(dockerClient.waitForHealthStatus(dockerContainer, cancellationContext)).doReturn(HealthStatus.BecameUnhealthy)
                     }
 
                     describe("when the last health check returned a non-zero exit code") {
@@ -660,7 +660,7 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when the container exits before reporting a health status") {
                     beforeEachTest {
-                        whenever(dockerClient.waitForHealthStatus(dockerContainer)).doReturn(HealthStatus.Exited)
+                        whenever(dockerClient.waitForHealthStatus(dockerContainer, cancellationContext)).doReturn(HealthStatus.Exited)
 
                         runner.run(step, eventSink, runOptions, cancellationContext)
                     }
@@ -672,7 +672,7 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when waiting for the container's health status fails") {
                     beforeEachTest {
-                        whenever(dockerClient.waitForHealthStatus(dockerContainer)).doThrow(ContainerHealthCheckException("Something went wrong"))
+                        whenever(dockerClient.waitForHealthStatus(dockerContainer, cancellationContext)).doThrow(ContainerHealthCheckException("Something went wrong"))
 
                         runner.run(step, eventSink, runOptions, cancellationContext)
                     }

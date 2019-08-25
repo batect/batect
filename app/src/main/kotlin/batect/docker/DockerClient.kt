@@ -155,7 +155,7 @@ class DockerClient(
         return DockerContainerRunResult(exitCode)
     }
 
-    fun waitForHealthStatus(container: DockerContainer): HealthStatus {
+    fun waitForHealthStatus(container: DockerContainer, cancellationContext: CancellationContext): HealthStatus {
         logger.info {
             message("Checking health status of container.")
             data("container", container)
@@ -176,7 +176,7 @@ class DockerClient(
             val checkPeriod = (healthCheckInfo.interval + healthCheckInfo.timeout).multipliedBy(healthCheckInfo.retries.toLong())
             val overheadMargin = Duration.ofSeconds(1)
             val timeout = healthCheckInfo.startPeriod + checkPeriod + overheadMargin
-            val event = api.waitForNextEventForContainer(container, setOf("die", "health_status"), timeout)
+            val event = api.waitForNextEventForContainer(container, setOf("die", "health_status"), timeout, cancellationContext)
 
             logger.info {
                 message("Received event notification from Docker.")

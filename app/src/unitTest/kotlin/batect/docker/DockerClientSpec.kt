@@ -426,6 +426,8 @@ object DockerClientSpec : Spek({
         }
 
         describe("waiting for a container to report its health status") {
+            val cancellationContext by createForEachTest { mock<CancellationContext>() }
+
             given("a Docker container with no health check") {
                 val container = DockerContainer("the-container-id")
 
@@ -439,7 +441,7 @@ object DockerClientSpec : Spek({
                 }
 
                 on("waiting for that container to become healthy") {
-                    val result by runForEachTest { client.waitForHealthStatus(container) }
+                    val result by runForEachTest { client.waitForHealthStatus(container, cancellationContext) }
 
                     it("reports that the container does not have a health check") {
                         assertThat(result, equalTo(HealthStatus.NoHealthCheck))
@@ -456,7 +458,7 @@ object DockerClientSpec : Spek({
 
                 on("waiting for that container to become healthy") {
                     it("throws an appropriate exception") {
-                        assertThat({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Checking if container 'the-container-id' has a health check failed: Something went wrong")))
+                        assertThat({ client.waitForHealthStatus(container, cancellationContext) }, throws<ContainerHealthCheckException>(withMessage("Checking if container 'the-container-id' has a health check failed: Something went wrong")))
                     }
                 }
             }
@@ -481,15 +483,15 @@ object DockerClientSpec : Spek({
 
                 given("the health check passes") {
                     beforeEachTest {
-                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any()))
+                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any(), eq(cancellationContext)))
                             .thenReturn(DockerEvent("health_status: healthy"))
                     }
 
                     on("waiting for that container to become healthy") {
-                        val result by runForEachTest { client.waitForHealthStatus(container) }
+                        val result by runForEachTest { client.waitForHealthStatus(container, cancellationContext) }
 
                         it("waits with a timeout that allows the container time to start and become healthy") {
-                            verify(api).waitForNextEventForContainer(any(), any(), eq(Duration.ofSeconds(10 + (3 * 4) + 1)))
+                            verify(api).waitForNextEventForContainer(any(), any(), eq(Duration.ofSeconds(10 + (3 * 4) + 1)), any())
                         }
 
                         it("reports that the container became healthy") {
@@ -500,12 +502,12 @@ object DockerClientSpec : Spek({
 
                 given("the health check fails") {
                     beforeEachTest {
-                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any()))
+                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any(), eq(cancellationContext)))
                             .thenReturn(DockerEvent("health_status: unhealthy"))
                     }
 
                     on("waiting for that container to become healthy") {
-                        val result by runForEachTest { client.waitForHealthStatus(container) }
+                        val result by runForEachTest { client.waitForHealthStatus(container, cancellationContext) }
 
                         it("reports that the container became unhealthy") {
                             assertThat(result, equalTo(HealthStatus.BecameUnhealthy))
@@ -515,12 +517,12 @@ object DockerClientSpec : Spek({
 
                 given("the container exits before the health check reports") {
                     beforeEachTest {
-                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any()))
+                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any(), eq(cancellationContext)))
                             .thenReturn(DockerEvent("die"))
                     }
 
                     on("waiting for that container to become healthy") {
-                        val result by runForEachTest { client.waitForHealthStatus(container) }
+                        val result by runForEachTest { client.waitForHealthStatus(container, cancellationContext) }
 
                         it("reports that the container exited") {
                             assertThat(result, equalTo(HealthStatus.Exited))
@@ -530,13 +532,13 @@ object DockerClientSpec : Spek({
 
                 given("getting the next event for the container fails") {
                     beforeEachTest {
-                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any()))
+                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any(), eq(cancellationContext)))
                             .thenThrow(DockerException("Something went wrong."))
                     }
 
                     on("waiting for that container to become healthy") {
                         it("throws an appropriate exception") {
-                            assertThat({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Waiting for health status of container 'the-container-id' failed: Something went wrong.")))
+                            assertThat({ client.waitForHealthStatus(container, cancellationContext) }, throws<ContainerHealthCheckException>(withMessage("Waiting for health status of container 'the-container-id' failed: Something went wrong.")))
                         }
                     }
                 }

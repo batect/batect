@@ -380,6 +380,8 @@ object DockerAPISpec : Spek({
             given("a Docker container and a list of event types to listen for") {
                 val container = DockerContainer("the-container-id")
                 val eventTypes = listOf("die", "health_status")
+                val cancellationContext by createForEachTest { mock<CancellationContext>() }
+
                 val expectedUrl = hasScheme("http") and
                     hasHost(dockerHost) and
                     hasPath("/v1.30/events") and
@@ -404,9 +406,8 @@ object DockerAPISpec : Spek({
                         |
                     """.trimMargin()
 
-                    beforeEachTest { clientWithLongTimeout.mock("GET", expectedUrl, responseBody, 200) }
-
-                    val event by runForEachTest { api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123)) }
+                    val call by createForEachTest { clientWithLongTimeout.mock("GET", expectedUrl, responseBody, 200) }
+                    val event by runForEachTest { api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123), cancellationContext) }
 
                     it("returns that event") {
                         assertThat(event, equalTo(DockerEvent("health_status: healthy")))
@@ -414,6 +415,10 @@ object DockerAPISpec : Spek({
 
                     it("configures the HTTP client with the timeout provided") {
                         verify(longTimeoutClientBuilder).readTimeout(123, TimeUnit.NANOSECONDS)
+                    }
+
+                    it("registers the API call with the cancellation context") {
+                        verify(cancellationContext).addCancellationCallback(call::cancel)
                     }
                 }
 
@@ -426,7 +431,7 @@ object DockerAPISpec : Spek({
 
                     beforeEachTest { clientWithLongTimeout.mock("GET", expectedUrl, responseBody, 200) }
 
-                    val event by runForEachTest { api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123)) }
+                    val event by runForEachTest { api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123), cancellationContext) }
 
                     it("returns the first event") {
                         assertThat(event, equalTo(DockerEvent("die")))
@@ -437,7 +442,7 @@ object DockerAPISpec : Spek({
                     beforeEachTest { clientWithLongTimeout.mock("GET", expectedUrl, errorResponse, 418) }
 
                     it("throws an appropriate exception") {
-                        assertThat({ api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123)) }, throws<DockerException>(withMessage("Getting events for container 'the-container-id' failed: $errorMessageWithCorrectLineEndings")))
+                        assertThat({ api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123), cancellationContext) }, throws<DockerException>(withMessage("Getting events for container 'the-container-id' failed: $errorMessageWithCorrectLineEndings")))
                     }
                 }
             }

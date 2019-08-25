@@ -92,7 +92,7 @@ class TaskStepRunner(
             is CreateContainerStep -> handleCreateContainerStep(step, eventSink, runOptions)
             is RunContainerStep -> handleRunContainerStep(step, eventSink)
             is StartContainerStep -> handleStartContainerStep(step, eventSink)
-            is WaitForContainerToBecomeHealthyStep -> handleWaitForContainerToBecomeHealthyStep(step, eventSink)
+            is WaitForContainerToBecomeHealthyStep -> handleWaitForContainerToBecomeHealthyStep(step, eventSink, cancellationContext)
             is StopContainerStep -> handleStopContainerStep(step, eventSink)
             is RemoveContainerStep -> handleRemoveContainerStep(step, eventSink)
             is DeleteTemporaryFileStep -> handleDeleteTemporaryFileStep(step, eventSink)
@@ -192,9 +192,9 @@ class TaskStepRunner(
         }
     }
 
-    private fun handleWaitForContainerToBecomeHealthyStep(step: WaitForContainerToBecomeHealthyStep, eventSink: TaskEventSink) {
+    private fun handleWaitForContainerToBecomeHealthyStep(step: WaitForContainerToBecomeHealthyStep, eventSink: TaskEventSink, cancellationContext: CancellationContext) {
         try {
-            val event = when (dockerClient.waitForHealthStatus(step.dockerContainer)) {
+            val event = when (dockerClient.waitForHealthStatus(step.dockerContainer, cancellationContext)) {
                 HealthStatus.NoHealthCheck -> ContainerBecameHealthyEvent(step.container)
                 HealthStatus.BecameHealthy -> ContainerBecameHealthyEvent(step.container)
                 HealthStatus.BecameUnhealthy -> ContainerDidNotBecomeHealthyEvent(step.container, containerBecameUnhealthyMessage(step.dockerContainer))

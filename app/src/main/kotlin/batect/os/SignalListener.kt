@@ -17,6 +17,7 @@
 package batect.os
 
 import jnr.constants.platform.Signal
+import jnr.posix.LibC
 import jnr.posix.POSIX
 
 class SignalListener(private val posix: POSIX) {
@@ -24,19 +25,18 @@ class SignalListener(private val posix: POSIX) {
         val handlersForSignal = handlers.getOrPut(signal.value(), { mutableListOf() })
         handlersForSignal.add(handler)
 
-        val originalHandler = posix.signal(signal, ::handleSignal)
+        posix.libc().signal(signal.value(), Companion)
 
         return AutoCloseable {
-            posix.signal(signal, originalHandler)
             handlers.getValue(signal.value()).remove(handler)
         }
     }
 
-    companion object {
+    companion object : LibC.LibCSignalHandler {
         private val handlers = mutableMapOf<Int, MutableList<SignalHandler>>()
 
-        private fun handleSignal(signal: Int) {
-            handlers.getValue(signal).last().invoke()
+        override fun signal(sig: Int) {
+            handlers.getValue(sig).lastOrNull()?.invoke()
         }
     }
 }

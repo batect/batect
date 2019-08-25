@@ -58,6 +58,7 @@ class DockerClient(
         buildArgs: Map<String, String>,
         dockerfilePath: String,
         imageTags: Set<String>,
+        cancellationContext: CancellationContext,
         onStatusUpdate: (DockerImageBuildProgress) -> Unit
     ): DockerImage {
         logger.info {
@@ -85,7 +86,7 @@ class DockerClient(
             val reporter = imagePullProgressReporterFactory()
             var lastStepProgressUpdate: DockerImageBuildProgress? = null
 
-            val image = api.buildImage(context, buildArgs, dockerfilePath, imageTags, credentials) { line ->
+            val image = api.buildImage(context, buildArgs, dockerfilePath, imageTags, credentials, cancellationContext) { line ->
                 logger.debug {
                     message("Received output from Docker during image build.")
                     data("outputLine", line.toString())

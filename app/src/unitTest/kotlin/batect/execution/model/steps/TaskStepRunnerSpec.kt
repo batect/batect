@@ -147,10 +147,10 @@ object TaskStepRunnerSpec : Spek({
                         val update2 = DockerImageBuildProgress(2, 2, "Second step", null)
 
                         beforeEachTest {
-                            whenever(dockerClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), any()))
+                            whenever(dockerClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), eq(cancellationContext), any()))
                                 .then { invocation ->
                                     @Suppress("UNCHECKED_CAST")
-                                    val onStatusUpdate = invocation.arguments[4] as (DockerImageBuildProgress) -> Unit
+                                    val onStatusUpdate = invocation.arguments[5] as (DockerImageBuildProgress) -> Unit
 
                                     onStatusUpdate(update1)
                                     onStatusUpdate(update2)
@@ -169,7 +169,7 @@ object TaskStepRunnerSpec : Spek({
                                 "SOME_HOST_VAR" to "some env var value"
                             )
 
-                            verify(dockerClient).build(any(), eq(expectedArgs), any(), any(), any())
+                            verify(dockerClient).build(any(), eq(expectedArgs), any(), any(), any(), any())
                         }
 
                         it("emits a 'image build progress' event for each update received from Docker") {
@@ -187,7 +187,7 @@ object TaskStepRunnerSpec : Spek({
                         val runOptionsWithProxyEnvironmentVariablePropagationDisabled = runOptions.copy(propagateProxyEnvironmentVariables = false)
 
                         beforeEachTest {
-                            whenever(dockerClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), any())).thenReturn(image)
+                            whenever(dockerClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), eq(cancellationContext), any())).thenReturn(image)
                             runner.run(step, eventSink, runOptionsWithProxyEnvironmentVariablePropagationDisabled, cancellationContext)
                         }
 
@@ -198,7 +198,7 @@ object TaskStepRunnerSpec : Spek({
                                 "SOME_HOST_VAR" to "some env var value"
                             )
 
-                            verify(dockerClient).build(any(), eq(expectedArgs), any(), any(), any())
+                            verify(dockerClient).build(any(), eq(expectedArgs), any(), any(), any(), any())
                         }
 
                         it("emits a 'image built' event") {
@@ -209,7 +209,7 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when building the image fails") {
                     beforeEachTest {
-                        whenever(dockerClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), any())).thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
+                        whenever(dockerClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), eq(cancellationContext), any())).thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
                         runner.run(step, eventSink, runOptions, cancellationContext)
                     }
 

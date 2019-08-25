@@ -86,7 +86,7 @@ class TaskStepRunner(
 
     fun run(step: TaskStep, eventSink: TaskEventSink, runOptions: RunOptions, cancellationContext: CancellationContext) {
         when (step) {
-            is BuildImageStep -> handleBuildImageStep(step, eventSink, runOptions)
+            is BuildImageStep -> handleBuildImageStep(step, eventSink, runOptions, cancellationContext)
             is PullImageStep -> handlePullImageStep(step, eventSink, cancellationContext)
             is CreateTaskNetworkStep -> handleCreateTaskNetworkStep(eventSink)
             is CreateContainerStep -> handleCreateContainerStep(step, eventSink, runOptions)
@@ -101,14 +101,14 @@ class TaskStepRunner(
         }
     }
 
-    private fun handleBuildImageStep(step: BuildImageStep, eventSink: TaskEventSink, runOptions: RunOptions) {
+    private fun handleBuildImageStep(step: BuildImageStep, eventSink: TaskEventSink, runOptions: RunOptions, cancellationContext: CancellationContext) {
         try {
             val onStatusUpdate = { p: DockerImageBuildProgress ->
                 eventSink.postEvent(ImageBuildProgressEvent(step.source, p))
             }
 
             val buildArgs = buildTimeProxyEnvironmentVariablesForOptions(runOptions) + substituteBuildArgs(step.source.buildArgs)
-            val image = dockerClient.build(step.source.buildDirectory, buildArgs, step.source.dockerfilePath, step.imageTags, onStatusUpdate)
+            val image = dockerClient.build(step.source.buildDirectory, buildArgs, step.source.dockerfilePath, step.imageTags, cancellationContext, onStatusUpdate)
             eventSink.postEvent(ImageBuiltEvent(step.source, image))
         } catch (e: ImageBuildFailedException) {
             val message = e.message ?: ""

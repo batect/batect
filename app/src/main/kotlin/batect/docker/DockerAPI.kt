@@ -556,6 +556,7 @@ class DockerAPI(
         dockerfilePath: String,
         imageTags: Set<String>,
         registryCredentials: DockerRegistryCredentials?,
+        cancellationContext: CancellationContext,
         onProgressUpdate: (JsonObject) -> Unit
     ): DockerImage {
         logger.info {
@@ -567,52 +568,27 @@ class DockerAPI(
 
         val request = createImageBuildRequest(context, buildArgs, dockerfilePath, imageTags, registryCredentials)
 
-        clientWithNoTimeout().newCall(request).execute().use { response ->
-            checkForFailure(response) { error ->
-                logger.error {
-                    message("Could not build image.")
-                    data("error", error)
+        clientWithNoTimeout()
+            .newCall(request)
+            .executeInCancellationContext(cancellationContext) { response ->
+                checkForFailure(response) { error ->
+                    logger.error {
+                        message("Could not build image.")
+                        data("error", error)
+                    }
+
+                    throw ImageBuildFailedException("Building image failed: ${error.message}")
                 }
 
-                throw ImageBuildFailedException("Building image failed: ${error.message}")
-            }
+                val image = processImageBuildResponse(response, onProgressUpdate)
 
-            var builtImageId: String? = null
-            val outputSoFar = StringBuilder()
-
-            response.body()!!.charStream().forEachLine { line ->
-                val parsedLine = Json.parser.parseJson(line).jsonObject
-                val output = parsedLine.getPrimitiveOrNull("stream")?.content
-                val error = parsedLine.getPrimitiveOrNull("error")?.content
-
-                if (output != null) {
-                    outputSoFar.append(output.correctLineEndings())
+                logger.info {
+                    message("Image built.")
+                    data("image", image.id)
                 }
 
-                if (error != null) {
-                    outputSoFar.append(error.correctLineEndings())
-                    throw ImageBuildFailedException("Building image failed: $error. Output from build process was:" + systemInfo.lineSeparator + outputSoFar.trim().toString())
-                }
-
-                val imageId = parsedLine.getObjectOrNull("aux")?.getPrimitiveOrNull("ID")?.content
-
-                if (imageId != null) {
-                    builtImageId = imageId
-                }
-
-                onProgressUpdate(parsedLine)
+                return image
             }
-
-            if (builtImageId == null) {
-                throw ImageBuildFailedException("Building image failed: daemon never sent built image ID.")
-            }
-
-            logger.info {
-                message("Image built.")
-            }
-
-            return DockerImage(builtImageId!!)
-        }
     }
 
     private fun createImageBuildRequest(
@@ -649,6 +625,40 @@ class DockerAPI(
         }
 
         return this
+    }
+
+    private fun processImageBuildResponse(response: Response, onProgressUpdate: (JsonObject) -> Unit): DockerImage {
+        var builtImageId: String? = null
+        val outputSoFar = StringBuilder()
+
+        response.body()!!.charStream().forEachLine { line ->
+            val parsedLine = Json.parser.parseJson(line).jsonObject
+            val output = parsedLine.getPrimitiveOrNull("stream")?.content
+            val error = parsedLine.getPrimitiveOrNull("error")?.content
+
+            if (output != null) {
+                outputSoFar.append(output.correctLineEndings())
+            }
+
+            if (error != null) {
+                outputSoFar.append(error.correctLineEndings())
+                throw ImageBuildFailedException("Building image failed: $error. Output from build process was:" + systemInfo.lineSeparator + outputSoFar.trim().toString())
+            }
+
+            val imageId = parsedLine.getObjectOrNull("aux")?.getPrimitiveOrNull("ID")?.content
+
+            if (imageId != null) {
+                builtImageId = imageId
+            }
+
+            onProgressUpdate(parsedLine)
+        }
+
+        if (builtImageId == null) {
+            throw ImageBuildFailedException("Building image failed: daemon never sent built image ID.")
+        }
+
+        return DockerImage(builtImageId!!)
     }
 
     fun pullImage(

@@ -20,7 +20,7 @@ import okhttp3.Call
 import okhttp3.Response
 import java.io.IOException
 
-fun <R> Call.executeInCancellationContext(cancellationContext: CancellationContext, operation: (Response) -> R): R {
+inline fun <R> Call.executeInCancellationContext(cancellationContext: CancellationContext, operation: (Response) -> R): R {
     cancellationContext.addCancellationCallback(this::cancel).use {
         try {
             return execute().use(operation)

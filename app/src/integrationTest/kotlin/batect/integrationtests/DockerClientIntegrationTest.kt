@@ -43,6 +43,7 @@ import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerKiller
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
+import batect.execution.CancellationContext
 import batect.logging.Logger
 import batect.os.ConsoleManager
 import batect.os.NativeMethods
@@ -158,7 +159,7 @@ object DockerClientIntegrationTest : Spek({
 
         describe("building, creating, starting, stopping and removing a container") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
-            val image by runBeforeGroup { client.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image")) {} }
+            val image by runBeforeGroup { client.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image"), CancellationContext()) {} }
 
             beforeGroup {
                 withNetwork { network ->
@@ -177,7 +178,7 @@ object DockerClientIntegrationTest : Spek({
 
         describe("pulling an image and then creating, starting, stopping and removing a container") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
-            val image by runBeforeGroup { client.pullImage("alpine:3.7", {}) }
+            val image by runBeforeGroup { client.pullImage("alpine:3.7", CancellationContext(), {}) }
 
             beforeGroup {
                 withNetwork { network ->
@@ -196,7 +197,7 @@ object DockerClientIntegrationTest : Spek({
 
         describe("creating, running and then removing a container") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
-            val image by runBeforeGroup { client.pullImage("alpine:3.7", {}) }
+            val image by runBeforeGroup { client.pullImage("alpine:3.7", CancellationContext(), {}) }
 
             beforeGroup {
                 withNetwork { network ->
@@ -214,7 +215,7 @@ object DockerClientIntegrationTest : Spek({
 
         describe("pulling an image that has not been cached locally already") {
             beforeGroup { removeImage("hello-world:latest") }
-            val image by runBeforeGroup { client.pullImage("hello-world:latest", {}) }
+            val image by runBeforeGroup { client.pullImage("hello-world:latest", CancellationContext(), {}) }
 
             it("pulls the image successfully") {
                 assertThat(image, equalTo(DockerImage("hello-world:latest")))
@@ -223,7 +224,7 @@ object DockerClientIntegrationTest : Spek({
 
         describe("waiting for a container to become healthy") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
-            val image by runBeforeGroup { client.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image")) {} }
+            val image by runBeforeGroup { client.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image"), CancellationContext()) {} }
             data class Result(val healthStatus: HealthStatus, val lastHealthCheckResult: DockerHealthCheckResult)
 
             val result by runBeforeGroup {
@@ -231,7 +232,7 @@ object DockerClientIntegrationTest : Spek({
                     withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
                         try {
                             client.start(container)
-                            val healthStatus = client.waitForHealthStatus(container)
+                            val healthStatus = client.waitForHealthStatus(container, CancellationContext())
                             val lastHealthCheckResult = client.getLastHealthCheckResult(container)
                             Result(healthStatus, lastHealthCheckResult)
                         } finally {
@@ -257,7 +258,7 @@ object DockerClientIntegrationTest : Spek({
             ).forEach { (path, description) ->
                 describe("given $description") {
                     val dockerfilePath by createForGroup { testImagesPath.resolve(path) }
-                    val image by runBeforeGroup { client.build(dockerfilePath, emptyMap(), "Dockerfile", emptySet(), {}) }
+                    val image by runBeforeGroup { client.build(dockerfilePath, emptyMap(), "Dockerfile", emptySet(), CancellationContext(), {}) }
 
                     val response by runBeforeGroup {
                         withNetwork { network ->

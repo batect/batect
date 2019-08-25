@@ -57,7 +57,7 @@ class DockerAPI(
             data("request", creationRequest)
         }
 
-        val url = urlForContainers().newBuilder()
+        val url = urlForContainers.newBuilder()
             .addPathSegment("create")
             .build()
 
@@ -486,7 +486,7 @@ class DockerAPI(
             message("Creating new network.")
         }
 
-        val url = urlForNetworks().newBuilder()
+        val url = urlForNetworks.newBuilder()
             .addPathSegment("create")
             .build()
 
@@ -662,7 +662,7 @@ class DockerAPI(
             data("imageName", imageName)
         }
 
-        val url = urlForImages().newBuilder()
+        val url = urlForImages.newBuilder()
             .addPathSegment("create")
             .addQueryParameter("fromImage", imageName)
             .build()
@@ -725,7 +725,7 @@ class DockerAPI(
             "reference" to listOf(imageName).toJsonArray()
         }
 
-        val url = urlForImages().newBuilder()
+        val url = urlForImages.newBuilder()
             .addPathSegment("json")
             .addQueryParameter("filters", filters.toString())
             .build()
@@ -832,11 +832,11 @@ class DockerAPI(
         .addPathSegment("v$minimumDockerAPIVersion")
         .build()
 
-    private fun urlForContainers(): HttpUrl = baseUrl.newBuilder()
+    private val urlForContainers: HttpUrl = baseUrl.newBuilder()
         .addPathSegment("containers")
         .build()
 
-    private fun urlForContainer(container: DockerContainer): HttpUrl = urlForContainers().newBuilder()
+    private fun urlForContainer(container: DockerContainer): HttpUrl = urlForContainers.newBuilder()
         .addPathSegment(container.id)
         .build()
 
@@ -844,15 +844,15 @@ class DockerAPI(
         .addPathSegment(operation)
         .build()
 
-    private fun urlForNetworks(): HttpUrl = baseUrl.newBuilder()
+    private val urlForNetworks: HttpUrl = baseUrl.newBuilder()
         .addPathSegment("networks")
         .build()
 
-    private fun urlForNetwork(network: DockerNetwork): HttpUrl = urlForNetworks().newBuilder()
+    private fun urlForNetwork(network: DockerNetwork): HttpUrl = urlForNetworks.newBuilder()
         .addPathSegment(network.id)
         .build()
 
-    private fun urlForImages(): HttpUrl = baseUrl.newBuilder()
+    private val urlForImages: HttpUrl = baseUrl.newBuilder()
         .addPathSegment("images")
         .build()
 

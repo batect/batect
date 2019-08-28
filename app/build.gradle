@@ -57,7 +57,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:3.13.1'
     implementation 'com.github.jnr:jnr-unixsocket:0.23'
     implementation 'com.github.jnr:jnr-posix:3.0.50'
-    implementation 'org.apache.commons:commons-compress:1.18'
+    implementation 'org.apache.commons:commons-compress:1.19'
     implementation 'com.charleskorn.kaml:kaml:0.12.0'
 
     testImplementation 'org.araqnid:hamkrest-json:1.0.3'

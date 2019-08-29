@@ -22,6 +22,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * warn when a container used as a dependency does not have a health check defined
 * support for Windows
   * send updated console dimensions to daemon if console is resized while container is running
+  * fix issue where app appears to hang when running on a 32-bit JVM (field size / alignment issue in named pipes calls?)
 * fix #10 (proxies that refer to localhost)
   * Linux:
     * Can get IP of host from `[0].IPAM.Config.Gateway` value from running `docker network inspect <network ID>`

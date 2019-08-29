@@ -101,7 +101,8 @@ function findJava() {
 }
 
 function checkJavaVersion([System.Management.Automation.CommandInfo]$java) {
-    $rawVersion = getJavaVersion $java
+    $versionInfo = getJavaVersionInfo $java
+    $rawVersion = getJavaVersion $versionInfo
     $parsedVersion = New-Object Version -ArgumentList $rawVersion
     $minimumVersion = "1.8"
 
@@ -111,10 +112,16 @@ function checkJavaVersion([System.Management.Automation.CommandInfo]$java) {
         exit 1
     }
 
+    if (-not ($versionInfo -match "64\-[bB]it")) {
+        Write-Host -ForegroundColor Red "The version of Java that is available on your PATH is a 32-bit version, but batect requires a 64-bit Java runtime."
+        Write-Host -ForegroundColor Red "If you have a 64-bit version of Java installed, please make sure your PATH is set correctly."
+        exit 1
+    }
+
     return $parsedVersion
 }
 
-function getJavaVersion([System.Management.Automation.CommandInfo]$java) {
+function getJavaVersionInfo([System.Management.Automation.CommandInfo]$java) {
     $info = New-Object System.Diagnostics.ProcessStartInfo
     $info.FileName = $java.Source
     $info.Arguments = "-version"
@@ -128,7 +135,11 @@ function getJavaVersion([System.Management.Automation.CommandInfo]$java) {
     $process.WaitForExit()
 
     $stderr = $process.StandardError.ReadToEnd()
-    $versionLine = ($stderr -split [Environment]::NewLine)[0]
+    return $stderr
+}
+
+function getJavaVersion([String]$versionInfo) {
+    $versionLine = ($versionInfo -split [Environment]::NewLine)[0]
 
     if (-not ($versionLine -match "version `"([0-9]+)(\.([0-9]+))?.*`"")) {
         Write-Error "Java reported a version that does not match the expected format: $versionLine"

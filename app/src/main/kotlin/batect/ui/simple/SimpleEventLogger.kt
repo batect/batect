@@ -24,6 +24,7 @@ import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePulledEvent
+import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.BuildImageStep
@@ -61,6 +62,7 @@ class SimpleEventLogger(
                 is ImagePulledEvent -> logImagePulled(event.source)
                 is ContainerStartedEvent -> logContainerStarted(event.container)
                 is ContainerBecameHealthyEvent -> logContainerBecameHealthy(event.container)
+                is StepStartingEvent -> logStepStarting(event.step)
             }
         }
     }
@@ -70,16 +72,14 @@ class SimpleEventLogger(
         errorConsole.println(message)
     }
 
-    override fun onStartingTaskStep(step: TaskStep) {
-        synchronized(lock) {
-            when (step) {
-                is BuildImageStep -> logImageBuildStarting(step.source)
-                is PullImageStep -> logImagePullStarting(step.source)
-                is StartContainerStep -> logContainerStarting(step.container)
-                is RunContainerStep -> logCommandStarting(step.container, commands[step.container])
-                is CreateContainerStep -> commands[step.container] = step.command
-                is CleanupStep -> logCleanUpStarting()
-            }
+    private fun logStepStarting(step: TaskStep) {
+        when (step) {
+            is BuildImageStep -> logImageBuildStarting(step.source)
+            is PullImageStep -> logImagePullStarting(step.source)
+            is StartContainerStep -> logContainerStarting(step.container)
+            is RunContainerStep -> logCommandStarting(step.container, commands[step.container])
+            is CreateContainerStep -> commands[step.container] = step.command
+            is CleanupStep -> logCleanUpStarting()
         }
     }
 

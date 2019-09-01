@@ -31,6 +31,7 @@ import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePullProgressEvent
 import batect.execution.model.events.ImagePulledEvent
+import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.execution.model.steps.CreateContainerStep
@@ -78,7 +79,7 @@ object ContainerStartupProgressLineSpec : Spek({
             describe("after receiving an 'image build starting' notification") {
                 on("that notification being for this line's container") {
                     val step = BuildImageStep(imageSource, emptySet())
-                    beforeEachTest { line.onStepStarting(step) }
+                    beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
                     it("prints that the container is building") {
@@ -88,7 +89,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("that notification being for another container") {
                     val step = BuildImageStep(otherImageSource, emptySet())
-                    beforeEachTest { line.onStepStarting(step) }
+                    beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
                     it("prints that the container is still waiting to build its image") {
@@ -133,7 +134,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             on("after receiving an 'image pull starting' notification") {
                 val step = PullImageStep(PullImage("some-image"))
-                beforeEachTest { line.onStepStarting(step) }
+                beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                 val output by runForEachTest { line.print() }
 
                 it("prints that the container is still waiting to build its image") {
@@ -203,7 +204,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("when the image is still building") {
                     beforeEachTest {
-                        line.onStepStarting(BuildImageStep(imageSource, emptySet()))
+                        line.onEventPosted(StepStartingEvent(BuildImageStep(imageSource, emptySet())))
                         line.onEventPosted(event)
                     }
 
@@ -231,7 +232,7 @@ object ContainerStartupProgressLineSpec : Spek({
             describe("after receiving a 'creating container' notification") {
                 on("that notification being for this line's container") {
                     val step = CreateContainerStep(container, Command.parse("some-command"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
-                    beforeEachTest { line.onStepStarting(step) }
+                    beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
                     it("prints that the container is being created") {
@@ -241,7 +242,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("that notification being for another container") {
                     val step = CreateContainerStep(otherContainer, Command.parse("some-command"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
-                    beforeEachTest { line.onStepStarting(step) }
+                    beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
                     it("prints that the container is still waiting to build its image") {
@@ -319,7 +320,7 @@ object ContainerStartupProgressLineSpec : Spek({
             describe("after receiving a 'container starting' notification") {
                 on("that notification being for this line's container") {
                     val step = StartContainerStep(container, DockerContainer("some-id"))
-                    beforeEachTest { line.onStepStarting(step) }
+                    beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
                     it("prints that the container is starting") {
@@ -329,7 +330,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("that notification being for another container") {
                     val step = StartContainerStep(otherContainer, DockerContainer("some-id"))
-                    beforeEachTest { line.onStepStarting(step) }
+                    beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
                     it("prints that the container is still waiting to build its image") {
@@ -388,8 +389,8 @@ object ContainerStartupProgressLineSpec : Spek({
 
                     on("and the container does not have a command specified in the configuration file") {
                         beforeEachTest {
-                            line.onStepStarting(CreateContainerStep(container, null, null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network")))
-                            line.onStepStarting(step)
+                            line.onEventPosted(StepStartingEvent(CreateContainerStep(container, null, null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))))
+                            line.onEventPosted(StepStartingEvent(step))
                         }
 
                         val output by runForEachTest { line.print() }
@@ -401,8 +402,8 @@ object ContainerStartupProgressLineSpec : Spek({
 
                     on("and the container has a command specified in the configuration file") {
                         beforeEachTest {
-                            line.onStepStarting(CreateContainerStep(container, Command.parse("some-command"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network")))
-                            line.onStepStarting(step)
+                            line.onEventPosted(StepStartingEvent(CreateContainerStep(container, Command.parse("some-command"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))))
+                            line.onEventPosted(StepStartingEvent(step))
                         }
 
                         val output by runForEachTest { line.print() }
@@ -414,8 +415,8 @@ object ContainerStartupProgressLineSpec : Spek({
 
                     on("and the container has a command specified in the configuration file that contains line breaks") {
                         beforeEachTest {
-                            line.onStepStarting(CreateContainerStep(container, Command.parse("some-command\ndo-stuff"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network")))
-                            line.onStepStarting(step)
+                            line.onEventPosted(StepStartingEvent(CreateContainerStep(container, Command.parse("some-command\ndo-stuff"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))))
+                            line.onEventPosted(StepStartingEvent(step))
                         }
 
                         val output by runForEachTest { line.print() }
@@ -427,8 +428,8 @@ object ContainerStartupProgressLineSpec : Spek({
 
                     on("and another container has a command specified in the configuration file") {
                         beforeEachTest {
-                            line.onStepStarting(CreateContainerStep(otherContainer, Command.parse("some-command"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network")))
-                            line.onStepStarting(step)
+                            line.onEventPosted(StepStartingEvent(CreateContainerStep(otherContainer, Command.parse("some-command"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))))
+                            line.onEventPosted(StepStartingEvent(step))
                         }
 
                         val output by runForEachTest { line.print() }
@@ -441,7 +442,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("that notification being for another container") {
                     val step = RunContainerStep(otherContainer, DockerContainer("some-id"))
-                    beforeEachTest { line.onStepStarting(step) }
+                    beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
                     it("prints that the container is still waiting to build its image") {
@@ -471,7 +472,7 @@ object ContainerStartupProgressLineSpec : Spek({
             describe("after receiving an 'image pull starting' notification") {
                 on("that notification being for this line's container's image") {
                     val step = PullImageStep(imageSource)
-                    beforeEachTest { line.onStepStarting(step) }
+                    beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
                     it("prints that the image is being pulled") {
@@ -481,7 +482,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("that notification being for another image") {
                     val step = PullImageStep(otherImageSource)
-                    beforeEachTest { line.onStepStarting(step) }
+                    beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
                     it("prints that the container is still waiting to pull its image") {
@@ -492,7 +493,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving an 'image pull progress' notification") {
                 beforeEachTest {
-                    line.onStepStarting(PullImageStep(imageSource))
+                    line.onEventPosted(StepStartingEvent(PullImageStep(imageSource)))
                 }
 
                 on("that notification being for this line's container's image") {
@@ -566,7 +567,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("when the image is still being pulled but no progress information has been received yet") {
                     beforeEachTest {
-                        line.onStepStarting(PullImageStep(imageSource))
+                        line.onEventPosted(StepStartingEvent(PullImageStep(imageSource)))
                         line.onEventPosted(event)
                     }
 
@@ -579,7 +580,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("when the image is being pulled and some progress information has been received") {
                     beforeEachTest {
-                        line.onStepStarting(PullImageStep(imageSource))
+                        line.onEventPosted(StepStartingEvent(PullImageStep(imageSource)))
                         line.onEventPosted(ImagePullProgressEvent(imageSource, DockerImagePullProgress("extracting", 10, 20)))
                         line.onEventPosted(event)
                     }

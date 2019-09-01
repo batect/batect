@@ -18,11 +18,11 @@ package batect.ui.fancy
 
 import batect.execution.RunOptions
 import batect.execution.model.events.RunningContainerExitedEvent
+import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.CleanupStep
 import batect.execution.model.steps.RunContainerStep
-import batect.execution.model.steps.TaskStep
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
@@ -43,26 +43,6 @@ class FancyEventLogger(
     private var keepUpdatingStartupProgress = true
     private var haveStartedCleanup = false
 
-    override fun onStartingTaskStep(step: TaskStep) {
-        synchronized(lock) {
-            if (step is CleanupStep) {
-                displayCleanupStatus()
-                keepUpdatingStartupProgress = false
-                return
-            }
-
-            if (keepUpdatingStartupProgress) {
-                startupProgressDisplay.onStepStarting(step)
-                startupProgressDisplay.print(console)
-            }
-
-            if (step is RunContainerStep) {
-                console.println()
-                keepUpdatingStartupProgress = false
-            }
-        }
-    }
-
     private fun displayCleanupStatus() {
         if (haveStartedCleanup) {
             cleanupProgressDisplay.clear(console)
@@ -82,12 +62,23 @@ class FancyEventLogger(
                 return
             }
 
+            if (event is StepStartingEvent && event.step is CleanupStep) {
+                displayCleanupStatus()
+                keepUpdatingStartupProgress = false
+                return
+            }
+
             if (keepUpdatingStartupProgress) {
                 startupProgressDisplay.onEventPosted(event)
                 startupProgressDisplay.print(console)
             }
 
             cleanupProgressDisplay.onEventPosted(event)
+
+            if (event is StepStartingEvent && event.step is RunContainerStep) {
+                console.println()
+                keepUpdatingStartupProgress = false
+            }
 
             if (haveStartedCleanup || event is RunningContainerExitedEvent) {
                 displayCleanupStatus()

@@ -27,6 +27,7 @@ import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePulledEvent
+import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.execution.model.steps.CleanupStep
@@ -72,128 +73,6 @@ object SimpleEventLoggerSpec : Spek({
 
         val logger by createForEachTest { SimpleEventLogger(containers, failureErrorMessageFormatter, runOptions, console, errorConsole) }
         val container = Container("the-cool-container", imageSourceDoesNotMatter())
-
-        describe("handling when steps start") {
-            on("when a 'build image' step is starting") {
-                beforeEachTest {
-                    val step = BuildImageStep(container1And2ImageSource, emptySet())
-                    logger.onStartingTaskStep(step)
-                }
-
-                it("prints a message to the output for each container that uses that built image") {
-                    verify(console).println(Text.white(Text("Building ") + Text.bold("container-1") + Text("...")))
-                    verify(console).println(Text.white(Text("Building ") + Text.bold("container-2") + Text("...")))
-                }
-            }
-
-            on("when a 'pull image' step is starting") {
-                beforeEachTest {
-                    val step = PullImageStep(PullImage("some-image:1.2.3"))
-                    logger.onStartingTaskStep(step)
-                }
-
-                it("prints a message to the output") {
-                    verify(console).println(Text.white(Text("Pulling ") + Text.bold("some-image:1.2.3") + Text("...")))
-                }
-            }
-
-            on("when a 'start container' step is starting") {
-                beforeEachTest {
-                    val step = StartContainerStep(container, DockerContainer("not-important"))
-                    logger.onStartingTaskStep(step)
-                }
-
-                it("prints a message to the output") {
-                    verify(console).println(Text.white(Text("Starting ") + Text.bold("the-cool-container") + Text("...")))
-                }
-            }
-
-            describe("when a 'run container' step is starting") {
-                on("and no 'create container' step has been seen") {
-                    beforeEachTest {
-                        val step = RunContainerStep(container, DockerContainer("not-important"))
-                        logger.onStartingTaskStep(step)
-                    }
-
-                    it("prints a message to the output without mentioning a command") {
-                        verify(console).println(Text.white(Text("Running ") + Text.bold("the-cool-container") + Text("...")))
-                    }
-                }
-
-                describe("and a 'create container' step has been seen") {
-                    on("and that step did not contain a command") {
-                        beforeEachTest {
-                            val createContainerStep = CreateContainerStep(container, null, null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
-                            val runContainerStep = RunContainerStep(container, DockerContainer("not-important"))
-
-                            logger.onStartingTaskStep(createContainerStep)
-                            logger.onStartingTaskStep(runContainerStep)
-                        }
-
-                        it("prints a message to the output without mentioning a command") {
-                            verify(console).println(Text.white(Text("Running ") + Text.bold("the-cool-container") + Text("...")))
-                        }
-                    }
-
-                    on("and that step contained a command") {
-                        beforeEachTest {
-                            val createContainerStep = CreateContainerStep(container, Command.parse("do-stuff.sh"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
-                            val runContainerStep = RunContainerStep(container, DockerContainer("not-important"))
-
-                            logger.onStartingTaskStep(createContainerStep)
-                            logger.onStartingTaskStep(runContainerStep)
-                        }
-
-                        it("prints a message to the output including the original command") {
-                            verify(console).println(Text.white(Text("Running ") + Text.bold("do-stuff.sh") + Text(" in ") + Text.bold("the-cool-container") + Text("...")))
-                        }
-                    }
-                }
-            }
-
-            describe("when a cleanup step is starting") {
-                val cleanupStep = mock<CleanupStep>()
-
-                given("no cleanup steps have run before") {
-                    on("that step starting") {
-                        beforeEachTest { logger.onStartingTaskStep(cleanupStep) }
-
-                        it("prints a blank line before then printing that clean up has started") {
-                            inOrder(console) {
-                                verify(console).println()
-                                verify(console).println(Text.white("Cleaning up..."))
-                            }
-                        }
-                    }
-                }
-
-                given("and a cleanup step has already been run") {
-                    beforeEachTest {
-                        val previousStep = mock<CleanupStep>()
-                        logger.onStartingTaskStep(previousStep)
-                    }
-
-                    on("that step starting") {
-                        beforeEachTest { logger.onStartingTaskStep(cleanupStep) }
-
-                        it("only prints one message to the output") {
-                            verify(console, times(1)).println(Text.white("Cleaning up..."))
-                        }
-                    }
-                }
-            }
-
-            on("when another kind of step is starting") {
-                beforeEachTest {
-                    val step = CreateTaskNetworkStep
-                    logger.onStartingTaskStep(step)
-                }
-
-                it("does not print anything to the output") {
-                    verifyZeroInteractions(console)
-                }
-            }
-        }
 
         describe("handling when events are posted") {
             on("when a 'task failed' event is posted") {
@@ -252,6 +131,128 @@ object SimpleEventLoggerSpec : Spek({
 
                 it("prints a message to the output") {
                     verify(console).println(Text.white(Text.bold("the-cool-container") + Text(" has become healthy.")))
+                }
+            }
+
+            describe("when a 'step starting' event is posted") {
+                on("when a 'build image' step is starting") {
+                    beforeEachTest {
+                        val step = BuildImageStep(container1And2ImageSource, emptySet())
+                        logger.postEvent(StepStartingEvent(step))
+                    }
+
+                    it("prints a message to the output for each container that uses that built image") {
+                        verify(console).println(Text.white(Text("Building ") + Text.bold("container-1") + Text("...")))
+                        verify(console).println(Text.white(Text("Building ") + Text.bold("container-2") + Text("...")))
+                    }
+                }
+
+                on("when a 'pull image' step is starting") {
+                    beforeEachTest {
+                        val step = PullImageStep(PullImage("some-image:1.2.3"))
+                        logger.postEvent(StepStartingEvent(step))
+                    }
+
+                    it("prints a message to the output") {
+                        verify(console).println(Text.white(Text("Pulling ") + Text.bold("some-image:1.2.3") + Text("...")))
+                    }
+                }
+
+                on("when a 'start container' step is starting") {
+                    beforeEachTest {
+                        val step = StartContainerStep(container, DockerContainer("not-important"))
+                        logger.postEvent(StepStartingEvent(step))
+                    }
+
+                    it("prints a message to the output") {
+                        verify(console).println(Text.white(Text("Starting ") + Text.bold("the-cool-container") + Text("...")))
+                    }
+                }
+
+                describe("when a 'run container' step is starting") {
+                    on("and no 'create container' step has been seen") {
+                        beforeEachTest {
+                            val step = RunContainerStep(container, DockerContainer("not-important"))
+                            logger.postEvent(StepStartingEvent(step))
+                        }
+
+                        it("prints a message to the output without mentioning a command") {
+                            verify(console).println(Text.white(Text("Running ") + Text.bold("the-cool-container") + Text("...")))
+                        }
+                    }
+
+                    describe("and a 'create container' step has been seen") {
+                        on("and that step did not contain a command") {
+                            beforeEachTest {
+                                val createContainerStep = CreateContainerStep(container, null, null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
+                                val runContainerStep = RunContainerStep(container, DockerContainer("not-important"))
+
+                                logger.postEvent(StepStartingEvent(createContainerStep))
+                                logger.postEvent(StepStartingEvent(runContainerStep))
+                            }
+
+                            it("prints a message to the output without mentioning a command") {
+                                verify(console).println(Text.white(Text("Running ") + Text.bold("the-cool-container") + Text("...")))
+                            }
+                        }
+
+                        on("and that step contained a command") {
+                            beforeEachTest {
+                                val createContainerStep = CreateContainerStep(container, Command.parse("do-stuff.sh"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
+                                val runContainerStep = RunContainerStep(container, DockerContainer("not-important"))
+
+                                logger.postEvent(StepStartingEvent(createContainerStep))
+                                logger.postEvent(StepStartingEvent(runContainerStep))
+                            }
+
+                            it("prints a message to the output including the original command") {
+                                verify(console).println(Text.white(Text("Running ") + Text.bold("do-stuff.sh") + Text(" in ") + Text.bold("the-cool-container") + Text("...")))
+                            }
+                        }
+                    }
+                }
+
+                describe("when a cleanup step is starting") {
+                    val cleanupStep = mock<CleanupStep>()
+
+                    given("no cleanup steps have run before") {
+                        on("that step starting") {
+                            beforeEachTest { logger.postEvent(StepStartingEvent(cleanupStep)) }
+
+                            it("prints a blank line before then printing that clean up has started") {
+                                inOrder(console) {
+                                    verify(console).println()
+                                    verify(console).println(Text.white("Cleaning up..."))
+                                }
+                            }
+                        }
+                    }
+
+                    given("and a cleanup step has already been run") {
+                        beforeEachTest {
+                            val previousStep = mock<CleanupStep>()
+                            logger.postEvent(StepStartingEvent(previousStep))
+                        }
+
+                        on("that step starting") {
+                            beforeEachTest { logger.postEvent(StepStartingEvent(cleanupStep)) }
+
+                            it("only prints one message to the output") {
+                                verify(console, times(1)).println(Text.white("Cleaning up..."))
+                            }
+                        }
+                    }
+                }
+
+                on("when another kind of step is starting") {
+                    beforeEachTest {
+                        val step = CreateTaskNetworkStep
+                        logger.postEvent(StepStartingEvent(step))
+                    }
+
+                    it("does not print anything to the output") {
+                        verifyZeroInteractions(console)
+                    }
                 }
             }
         }

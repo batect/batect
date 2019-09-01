@@ -17,8 +17,10 @@
 package batect.execution
 
 import batect.execution.model.events.ExecutionFailedEvent
+import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
+import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.CreateTaskNetworkStep
 import batect.execution.model.steps.TaskStep
 import batect.execution.model.steps.TaskStepRunner
@@ -70,7 +72,7 @@ object ParallelExecutionManagerSpec : Spek({
                         beforeEachTest { executionManager.run() }
 
                         it("logs the step to the event logger") {
-                            verify(eventLogger).onStartingTaskStep(step)
+                            verify(eventLogger).postEvent(StepStartingEvent(step))
                         }
 
                         it("runs the step") {
@@ -79,7 +81,7 @@ object ParallelExecutionManagerSpec : Spek({
 
                         it("logs the step to the event logger and then runs it") {
                             inOrder(eventLogger, taskStepRunner) {
-                                verify(eventLogger).onStartingTaskStep(step)
+                                verify(eventLogger).postEvent(StepStartingEvent(step))
                                 verify(taskStepRunner).run(eq(step), any(), eq(runOptions), eq(cancellationContext))
                             }
                         }
@@ -204,11 +206,11 @@ object ParallelExecutionManagerSpec : Spek({
                     beforeEachTest { executionManager.run() }
 
                     it("does not log a task failure event to the event logger") {
-                        verify(eventLogger, never()).postEvent(any())
+                        verify(eventLogger, never()).postEvent(any<TaskFailedEvent>())
                     }
 
                     it("does not log a task failure event to the state machine") {
-                        verify(stateMachine, never()).postEvent(any())
+                        verify(stateMachine, never()).postEvent(any<TaskFailedEvent>())
                     }
                 }
             }
@@ -249,7 +251,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("logs the first step to the event logger") {
-                verify(eventLogger).onStartingTaskStep(step1)
+                verify(eventLogger).postEvent(StepStartingEvent(step1))
             }
 
             it("runs the first step") {
@@ -257,7 +259,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("logs the second step to the event logger") {
-                verify(eventLogger).onStartingTaskStep(step2)
+                verify(eventLogger).postEvent(StepStartingEvent(step2))
             }
 
             it("runs the second step") {
@@ -307,7 +309,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("logs the first step to the event logger") {
-                verify(eventLogger).onStartingTaskStep(step1)
+                verify(eventLogger).postEvent(StepStartingEvent(step1))
             }
 
             it("runs the first step") {
@@ -315,7 +317,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("logs the second step to the event logger") {
-                verify(eventLogger).onStartingTaskStep(step2)
+                verify(eventLogger).postEvent(StepStartingEvent(step2))
             }
 
             it("runs the second step") {

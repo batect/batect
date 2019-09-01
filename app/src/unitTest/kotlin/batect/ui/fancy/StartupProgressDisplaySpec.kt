@@ -18,7 +18,6 @@ package batect.ui.fancy
 
 import batect.docker.DockerNetwork
 import batect.execution.model.events.TaskNetworkCreatedEvent
-import batect.execution.model.steps.TaskStep
 import batect.os.Dimensions
 import batect.testutils.createForEachTest
 import batect.testutils.given
@@ -66,16 +65,6 @@ object StartupProgressDisplaySpec : Spek({
             it("forwards it to each progress line") {
                 verify(line1).onEventPosted(event)
                 verify(line2).onEventPosted(event)
-            }
-        }
-
-        on("receiving notification that a step is about to start") {
-            val step = mock<TaskStep>()
-            beforeEachTest { display.onStepStarting(step) }
-
-            it("forwards it to each progress line") {
-                verify(line1).onStepStarting(step)
-                verify(line2).onStepStarting(step)
             }
         }
 

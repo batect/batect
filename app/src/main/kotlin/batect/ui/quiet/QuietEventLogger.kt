@@ -19,7 +19,6 @@ package batect.ui.quiet
 import batect.execution.RunOptions
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
-import batect.execution.model.steps.TaskStep
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
@@ -38,7 +37,6 @@ class QuietEventLogger(
         }
     }
 
-    override fun onStartingTaskStep(step: TaskStep) {}
     override fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun) {}
     override fun onTaskStarting(taskName: String) {}
     override fun onTaskFinished(taskName: String, exitCode: Int, duration: Duration) {}

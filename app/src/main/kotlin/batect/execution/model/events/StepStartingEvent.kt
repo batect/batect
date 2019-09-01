@@ -14,15 +14,10 @@
    limitations under the License.
 */
 
-package batect.ui
+package batect.execution.model.events
 
-import batect.execution.model.events.TaskEventSink
-import batect.ui.text.TextRun
-import java.time.Duration
+import batect.execution.model.steps.TaskStep
 
-abstract class EventLogger : TaskEventSink {
-    abstract fun onTaskStarting(taskName: String)
-    abstract fun onTaskFinished(taskName: String, exitCode: Int, duration: Duration)
-    abstract fun onTaskFinishedWithCleanupDisabled(manualCleanupInstructions: TextRun)
-    abstract fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun)
+data class StepStartingEvent(val step: TaskStep) : TaskEvent(true) {
+    override fun toString() = "${this::class.simpleName}(step: $step)"
 }

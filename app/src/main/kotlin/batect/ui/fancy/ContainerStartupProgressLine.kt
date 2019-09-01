@@ -28,6 +28,7 @@ import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePullProgressEvent
 import batect.execution.model.events.ImagePulledEvent
+import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.steps.BuildImageStep
@@ -135,7 +136,21 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
         return Text("running ") + Text.bold(command!!.originalCommand.replace('\n', ' '))
     }
 
-    fun onStepStarting(step: TaskStep) {
+    fun onEventPosted(event: TaskEvent) {
+        when (event) {
+            is ImageBuildProgressEvent -> onImageBuildProgressEventPosted(event)
+            is ImageBuiltEvent -> onImageBuiltEventPosted(event)
+            is ImagePullProgressEvent -> onImagePullProgressEventPosted(event)
+            is ImagePulledEvent -> onImagePulledEventPosted(event)
+            is TaskNetworkCreatedEvent -> networkHasBeenCreated = true
+            is ContainerCreatedEvent -> onContainerCreatedEventPosted(event)
+            is ContainerStartedEvent -> onContainerStartedEventPosted(event)
+            is ContainerBecameHealthyEvent -> onContainerBecameHealthyEventPosted(event)
+            is StepStartingEvent -> onStepStarting(event.step)
+        }
+    }
+
+    private fun onStepStarting(step: TaskStep) {
         when (step) {
             is BuildImageStep -> onBuildImageStepStarting(step)
             is PullImageStep -> onPullImageStepStarting(step)
@@ -173,19 +188,6 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
     private fun onRunContainerStepStarting(step: RunContainerStep) {
         if (step.container == container) {
             isRunning = true
-        }
-    }
-
-    fun onEventPosted(event: TaskEvent) {
-        when (event) {
-            is ImageBuildProgressEvent -> onImageBuildProgressEventPosted(event)
-            is ImageBuiltEvent -> onImageBuiltEventPosted(event)
-            is ImagePullProgressEvent -> onImagePullProgressEventPosted(event)
-            is ImagePulledEvent -> onImagePulledEventPosted(event)
-            is TaskNetworkCreatedEvent -> networkHasBeenCreated = true
-            is ContainerCreatedEvent -> onContainerCreatedEventPosted(event)
-            is ContainerStartedEvent -> onContainerStartedEventPosted(event)
-            is ContainerBecameHealthyEvent -> onContainerBecameHealthyEventPosted(event)
         }
     }
 

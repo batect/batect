@@ -17,6 +17,7 @@
 package batect.execution
 
 import batect.execution.model.events.ExecutionFailedEvent
+import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.TaskStep
@@ -123,7 +124,7 @@ class ParallelExecutionManager(
                     data("step", step.toString())
                 }
 
-                eventLogger.onStartingTaskStep(step)
+                eventLogger.postEvent(StepStartingEvent(step))
                 taskStepRunner.run(step, eventSink, runOptions, stateMachine.cancellationContext)
 
                 logger.info {

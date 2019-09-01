@@ -26,9 +26,9 @@ import batect.execution.model.events.TaskNetworkDeletedEvent
 import batect.execution.model.stages.CleanupStage
 import batect.execution.model.stages.CleanupStagePlanner
 import batect.execution.model.stages.NoStepsReady
-import batect.execution.model.stages.NoStepsRemaining
 import batect.execution.model.stages.RunStage
 import batect.execution.model.stages.RunStagePlanner
+import batect.execution.model.stages.StageComplete
 import batect.execution.model.stages.StepReady
 import batect.execution.model.steps.TaskStep
 import batect.testutils.createForEachTest
@@ -54,6 +54,7 @@ import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
 
 object TaskStateMachineSpec : Spek({
@@ -130,8 +131,8 @@ object TaskStateMachineSpec : Spek({
 
                 given("the cleanup stage is active") {
                     beforeEachTest {
-                        whenever(runStage.popNextStep(emptySet())).doReturn(NoStepsRemaining)
-                        whenever(cleanupStage.popNextStep(emptySet())).doReturn(StepReady(mock()))
+                        whenever(runStage.popNextStep(emptySet(), false)).doReturn(StageComplete)
+                        whenever(cleanupStage.popNextStep(emptySet(), false)).doReturn(StepReady(mock()))
                         stateMachine.popNextStep(false)
                     }
 
@@ -149,12 +150,10 @@ object TaskStateMachineSpec : Spek({
         describe("getting the next step to execute") {
             given("the run stage is active") {
                 given("the task has not failed") {
-                    given("there are steps still running") {
-                        val stepsStillRunning = true
-
-                        given("there is a step ready") {
+                    given("there is a step ready") {
+                        regardlessOfWhetherThereAreStepsRunning { stepsStillRunning ->
                             val step by createForEachTest { mock<TaskStep>() }
-                            beforeEachTest { whenever(runStage.popNextStep(any())).doReturn(StepReady(step)) }
+                            beforeEachTest { whenever(runStage.popNextStep(any(), eq(stepsStillRunning))).doReturn(StepReady(step)) }
 
                             on("getting the next step to execute") {
                                 val events = setOf(TaskNetworkCreatedEvent(DockerNetwork("some-network")), TaskNetworkDeletedEvent)
@@ -168,39 +167,7 @@ object TaskStateMachineSpec : Spek({
                                 }
 
                                 it("sends all previous events to the run stage during evaluation") {
-                                    verify(runStage).popNextStep(events)
-                                }
-
-                                it("does not create the cleanup stage") {
-                                    verify(cleanupStagePlanner, never()).createStage(any(), any())
-                                }
-                            }
-                        }
-
-                        given("there are no steps ready") {
-                            beforeEachTest { whenever(runStage.popNextStep(any())).doReturn(NoStepsReady) }
-
-                            on("getting the next step to execute") {
-                                val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
-
-                                it("returns null") {
-                                    assertThat(result, absent())
-                                }
-
-                                it("does not create the cleanup stage") {
-                                    verify(cleanupStagePlanner, never()).createStage(any(), any())
-                                }
-                            }
-                        }
-
-                        given("there are no steps remaining") {
-                            beforeEachTest { whenever(runStage.popNextStep(any())).doReturn(NoStepsRemaining) }
-
-                            on("getting the next step to execute") {
-                                val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
-
-                                it("returns null") {
-                                    assertThat(result, absent())
+                                    verify(runStage).popNextStep(events, stepsStillRunning)
                                 }
 
                                 it("does not create the cleanup stage") {
@@ -210,25 +177,17 @@ object TaskStateMachineSpec : Spek({
                         }
                     }
 
-                    given("there are no steps still running") {
-                        val stepsStillRunning = false
+                    given("there are no steps ready") {
+                        beforeEachTest { whenever(runStage.popNextStep(any(), any())).doReturn(NoStepsReady) }
 
-                        given("there is a step ready") {
-                            val step by createForEachTest { mock<TaskStep>() }
-                            beforeEachTest { whenever(runStage.popNextStep(any())).doReturn(StepReady(step)) }
+                        given("there are steps still running") {
+                            val stepsStillRunning = true
 
                             on("getting the next step to execute") {
-                                val events = setOf(TaskNetworkCreatedEvent(DockerNetwork("some-network")), TaskNetworkDeletedEvent)
-                                beforeEachTest { events.forEach { stateMachine.postEvent(it) } }
-
                                 val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
 
-                                it("returns that step") {
-                                    assertThat(result, equalTo(step))
-                                }
-
-                                it("sends all previous events to the run stage during evaluation") {
-                                    verify(runStage).popNextStep(events)
+                                it("returns null") {
+                                    assertThat(result, absent())
                                 }
 
                                 it("does not create the cleanup stage") {
@@ -237,8 +196,8 @@ object TaskStateMachineSpec : Spek({
                             }
                         }
 
-                        given("there are no steps ready") {
-                            beforeEachTest { whenever(runStage.popNextStep(any())).doReturn(NoStepsReady) }
+                        given("there are no steps still running") {
+                            val stepsStillRunning = false
 
                             on("getting the next step to execute") {
                                 it("throws an appropriate exception") {
@@ -246,15 +205,17 @@ object TaskStateMachineSpec : Spek({
                                 }
                             }
                         }
+                    }
 
-                        given("there are no steps remaining") {
-                            val event = TaskNetworkCreatedEvent(DockerNetwork("some-network"))
+                    given("the run stage is complete") {
+                        val event = TaskNetworkCreatedEvent(DockerNetwork("some-network"))
 
+                        regardlessOfWhetherThereAreStepsRunning { stepsStillRunning ->
                             beforeEachTest {
                                 val step = mock<TaskStep>()
 
-                                whenever(runStage.popNextStep(emptySet())).doReturn(StepReady(step))
-                                whenever(runStage.popNextStep(setOf(event))).doReturn(NoStepsRemaining)
+                                whenever(runStage.popNextStep(emptySet(), stepsStillRunning)).doReturn(StepReady(step))
+                                whenever(runStage.popNextStep(setOf(event), stepsStillRunning)).doReturn(StageComplete)
 
                                 val firstStep = stateMachine.popNextStep(stepsStillRunning)
                                 assertThat(firstStep, equalTo(step))
@@ -266,7 +227,7 @@ object TaskStateMachineSpec : Spek({
 
                                 on("getting the next step to execute") {
                                     val cleanupStep = mock<TaskStep>()
-                                    beforeEachTest { whenever(cleanupStage.popNextStep(setOf(event))).doReturn(StepReady(cleanupStep)) }
+                                    beforeEachTest { whenever(cleanupStage.popNextStep(setOf(event), stepsStillRunning)).doReturn(StepReady(cleanupStep)) }
 
                                     val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
 
@@ -289,7 +250,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     val cleanupStepThatShouldNeverBeRun = mock<TaskStep>()
-                                    beforeEachTest { whenever(cleanupStage.popNextStep(setOf(event))).doReturn(StepReady(cleanupStepThatShouldNeverBeRun)) }
+                                    beforeEachTest { whenever(cleanupStage.popNextStep(setOf(event), stepsStillRunning)).doReturn(StepReady(cleanupStepThatShouldNeverBeRun)) }
 
                                     val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
 
@@ -329,7 +290,7 @@ object TaskStateMachineSpec : Spek({
                             }
 
                             it("does not pop any steps from the run stage") {
-                                verify(runStage, never()).popNextStep(any())
+                                verify(runStage, never()).popNextStep(any(), any())
                             }
 
                             it("does not create the cleanup stage") {
@@ -348,7 +309,7 @@ object TaskStateMachineSpec : Spek({
                                 val firstCleanupStep = mock<TaskStep>()
                                 val secondCleanupStep = mock<TaskStep>()
 
-                                beforeEachTest { whenever(cleanupStage.popNextStep(setOf(failureEvent))).doReturn(StepReady(firstCleanupStep), StepReady(secondCleanupStep)) }
+                                beforeEachTest { whenever(cleanupStage.popNextStep(setOf(failureEvent), stepsStillRunning)).doReturn(StepReady(firstCleanupStep), StepReady(secondCleanupStep)) }
 
                                 val firstResult by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
                                 val secondResult by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
@@ -362,7 +323,7 @@ object TaskStateMachineSpec : Spek({
                                 }
 
                                 it("does not pop any steps from the run stage") {
-                                    verify(runStage, never()).popNextStep(any())
+                                    verify(runStage, never()).popNextStep(any(), any())
                                 }
 
                                 it("sends all previous events to the cleanup stage planner, and only creates the cleanup stage once") {
@@ -379,7 +340,7 @@ object TaskStateMachineSpec : Spek({
                                     val firstCleanupStep = mock<TaskStep>()
                                     val secondCleanupStep = mock<TaskStep>()
 
-                                    beforeEachTest { whenever(cleanupStage.popNextStep(setOf(failureEvent))).doReturn(StepReady(firstCleanupStep), StepReady(secondCleanupStep)) }
+                                    beforeEachTest { whenever(cleanupStage.popNextStep(setOf(failureEvent), stepsStillRunning)).doReturn(StepReady(firstCleanupStep), StepReady(secondCleanupStep)) }
 
                                     val firstResult by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
                                     val secondResult by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
@@ -393,7 +354,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     it("does not pop any steps from the run stage") {
-                                        verify(runStage, never()).popNextStep(any())
+                                        verify(runStage, never()).popNextStep(any(), any())
                                     }
 
                                     it("sends all previous events to the cleanup stage planner, and only creates the cleanup stage once") {
@@ -420,7 +381,7 @@ object TaskStateMachineSpec : Spek({
 
                                 on("getting the next steps to execute") {
                                     val cleanupStepThatShouldNeverBeRun = mock<TaskStep>()
-                                    beforeEachTest { whenever(cleanupStage.popNextStep(events)).doReturn(StepReady(cleanupStepThatShouldNeverBeRun)) }
+                                    beforeEachTest { whenever(cleanupStage.popNextStep(events, stepsStillRunning)).doReturn(StepReady(cleanupStepThatShouldNeverBeRun)) }
 
                                     val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
 
@@ -429,7 +390,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     it("does not pop any steps from the run stage") {
-                                        verify(runStage, never()).popNextStep(any())
+                                        verify(runStage, never()).popNextStep(any(), any())
                                     }
 
                                     it("sends all previous events to the cleanup stage planner") {
@@ -455,73 +416,46 @@ object TaskStateMachineSpec : Spek({
                     val previousEvents = setOf(TaskNetworkCreatedEvent(DockerNetwork("some-network")), TaskNetworkDeletedEvent)
 
                     beforeEachTest {
-                        whenever(runStage.popNextStep(emptySet())).doReturn(NoStepsRemaining)
-                        whenever(cleanupStage.popNextStep(emptySet())).doReturn(StepReady(mock()))
+                        whenever(runStage.popNextStep(emptySet(), false)).doReturn(StageComplete)
+                        whenever(cleanupStage.popNextStep(emptySet(), false)).doReturn(StepReady(mock()))
                         stateMachine.popNextStep(false)
 
                         previousEvents.forEach { stateMachine.postEvent(it) }
                     }
 
                     given("cleanup has not failed") {
-                        given("there are steps still running") {
-                            val stepsStillRunning = true
-
-                            given("there is a step ready") {
+                        given("there is a step ready") {
+                            regardlessOfWhetherThereAreStepsRunning { stepsStillRunning ->
                                 val step by createForEachTest { mock<TaskStep>() }
-                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEvents)).doReturn(StepReady(step)) }
+                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEvents, stepsStillRunning)).doReturn(StepReady(step)) }
 
                                 on("getting the next step to execute") {
                                     val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
 
                                     it("returns that step") {
                                         assertThat(result, equalTo(step))
-                                    }
-                                }
-                            }
-
-                            given("there are no steps ready") {
-                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEvents)).doReturn(NoStepsReady) }
-
-                                on("getting the next step to execute") {
-                                    val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
-
-                                    it("returns null") {
-                                        assertThat(result, absent())
-                                    }
-                                }
-                            }
-
-                            given("there are no steps remaining") {
-                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEvents)).doReturn(NoStepsRemaining) }
-
-                                on("getting the next step to execute") {
-                                    val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
-
-                                    it("returns null") {
-                                        assertThat(result, absent())
                                     }
                                 }
                             }
                         }
 
-                        given("there are no steps still running") {
-                            val stepsStillRunning = false
+                        given("there are no steps ready") {
+                            beforeEachTest { whenever(cleanupStage.popNextStep(eq(previousEvents), any())).doReturn(NoStepsReady) }
 
-                            given("there is a step ready") {
-                                val step by createForEachTest { mock<TaskStep>() }
-                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEvents)).doReturn(StepReady(step)) }
+                            given("there are steps still running") {
+                                val stepsStillRunning = true
 
                                 on("getting the next step to execute") {
                                     val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
 
-                                    it("returns that step") {
-                                        assertThat(result, equalTo(step))
+                                    it("returns null") {
+                                        assertThat(result, absent())
                                     }
                                 }
                             }
 
-                            given("there are no steps ready") {
-                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEvents)).doReturn(NoStepsReady) }
+                            given("there are no steps still running") {
+                                val stepsStillRunning = false
 
                                 on("getting the next step to execute") {
                                     it("throws an appropriate exception") {
@@ -547,9 +481,11 @@ object TaskStateMachineSpec : Spek({
                                     }
                                 }
                             }
+                        }
 
-                            given("there are no steps remaining") {
-                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEvents)).doReturn(NoStepsRemaining) }
+                        given("the cleanup stage is complete") {
+                            regardlessOfWhetherThereAreStepsRunning { stepsStillRunning ->
+                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEvents, stepsStillRunning)).doReturn(StageComplete) }
 
                                 on("getting the next step to execute") {
                                     val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
@@ -580,67 +516,38 @@ object TaskStateMachineSpec : Spek({
                             stateMachine.postEvent(event)
                         }
 
-                        given("there are steps still running") {
-                            val stepsStillRunning = true
-
-                            given("there is a step ready") {
+                        given("there is a step ready") {
+                            regardlessOfWhetherThereAreStepsRunning { stepsStillRunning ->
                                 val step by createForEachTest { mock<TaskStep>() }
-                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEventsWithFailureEvent)).doReturn(StepReady(step)) }
+                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEventsWithFailureEvent, stepsStillRunning)).doReturn(StepReady(step)) }
 
                                 on("getting the next step to execute") {
                                     val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
 
                                     it("returns that step") {
                                         assertThat(result, equalTo(step))
-                                    }
-                                }
-                            }
-
-                            given("there are no steps ready") {
-                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEventsWithFailureEvent)).doReturn(NoStepsReady) }
-
-                                on("getting the next step to execute") {
-                                    val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
-
-                                    it("returns null") {
-                                        assertThat(result, absent())
-                                    }
-                                }
-                            }
-
-                            given("there are no steps remaining") {
-                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEventsWithFailureEvent)).doReturn(NoStepsRemaining) }
-
-                                on("getting the next step to execute") {
-                                    val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
-
-                                    it("returns null") {
-                                        assertThat(result, absent())
                                     }
                                 }
                             }
                         }
 
-                        given("there are no steps still running") {
-                            val stepsStillRunning = false
+                        given("there are no steps ready") {
+                            beforeEachTest { whenever(cleanupStage.popNextStep(eq(previousEventsWithFailureEvent), any())).doReturn(NoStepsReady) }
 
-                            given("there is a step ready") {
-                                val step by createForEachTest { mock<TaskStep>() }
-                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEventsWithFailureEvent)).doReturn(StepReady(step)) }
+                            given("there are steps still running") {
+                                val stepsStillRunning = true
 
                                 on("getting the next step to execute") {
                                     val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
 
-                                    it("returns that step") {
-                                        assertThat(result, equalTo(step))
+                                    it("returns null") {
+                                        assertThat(result, absent())
                                     }
                                 }
                             }
 
-                            given("there are no steps ready") {
-                                beforeEachTest {
-                                    whenever(cleanupStage.popNextStep(previousEventsWithFailureEvent)).doReturn(NoStepsReady)
-                                }
+                            given("there are no steps still running") {
+                                val stepsStillRunning = false
 
                                 on("getting the next step to execute") {
                                     val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
@@ -654,11 +561,11 @@ object TaskStateMachineSpec : Spek({
                                     }
                                 }
                             }
+                        }
 
-                            given("there are no steps remaining") {
-                                beforeEachTest {
-                                    whenever(cleanupStage.popNextStep(previousEventsWithFailureEvent)).doReturn(NoStepsRemaining)
-                                }
+                        given("the cleanup stage has completed") {
+                            regardlessOfWhetherThereAreStepsRunning { stepsStillRunning ->
+                                beforeEachTest { whenever(cleanupStage.popNextStep(previousEventsWithFailureEvent, stepsStillRunning)).doReturn(StageComplete) }
 
                                 on("getting the next step to execute") {
                                     val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
@@ -686,8 +593,8 @@ object TaskStateMachineSpec : Spek({
 
                     beforeEachTest {
                         stateMachine.postEvent(failureEvent)
-                        whenever(runStage.popNextStep(previousEvents)).doReturn(NoStepsRemaining)
-                        whenever(cleanupStage.popNextStep(previousEvents)).doReturn(StepReady(mock()))
+                        whenever(runStage.popNextStep(previousEvents, false)).doReturn(StageComplete)
+                        whenever(cleanupStage.popNextStep(previousEvents, false)).doReturn(StepReady(mock()))
                         stateMachine.popNextStep(false)
                     }
 
@@ -701,7 +608,7 @@ object TaskStateMachineSpec : Spek({
                             val stepsStillRunning = false
 
                             given("there are no steps ready") {
-                                beforeEachTest { whenever(cleanupStage.popNextStep(events)).doReturn(NoStepsReady) }
+                                beforeEachTest { whenever(cleanupStage.popNextStep(events, stepsStillRunning)).doReturn(NoStepsReady) }
 
                                 on("getting the next step to execute") {
                                     it("throws an appropriate exception") {
@@ -735,7 +642,7 @@ object TaskStateMachineSpec : Spek({
 
                             given("there are no steps ready") {
                                 beforeEachTest {
-                                    whenever(cleanupStage.popNextStep(events)).doReturn(NoStepsReady)
+                                    whenever(cleanupStage.popNextStep(events, stepsStillRunning)).doReturn(NoStepsReady)
                                 }
 
                                 on("getting the next step to execute") {
@@ -761,3 +668,14 @@ object TaskStateMachineSpec : Spek({
         }
     }
 })
+
+fun Suite.regardlessOfWhetherThereAreStepsRunning(check: Suite.(stepsStillRunning: Boolean) -> Unit) {
+    mapOf(
+        "there are steps still running" to true,
+        "there are no steps running" to false
+    ).forEach { (description, stepsStillRunning) ->
+        given(description) {
+            check(stepsStillRunning)
+        }
+    }
+}

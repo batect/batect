@@ -16,6 +16,7 @@
 
 package batect.execution.model.stages
 
+import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskNetworkDeletedEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
@@ -35,16 +36,18 @@ import org.spekframework.spek2.style.specification.describe
 
 object StageSpec : Spek({
     describe("a stage") {
-        fun createStageWithRules(rules: Set<TaskStepRule>): Stage = RunStage(rules)
+        fun createStageWithRules(rules: Set<TaskStepRule>): Stage = object : Stage(rules) {
+            override fun determineIfStageIsComplete(pastEvents: Set<TaskEvent>, stepsStillRunning: Boolean) = true
+        }
 
         given("the stage has no rules") {
             val stage = createStageWithRules(emptySet())
 
             on("getting the next step") {
-                val result = stage.popNextStep(emptySet())
+                val result = stage.popNextStep(emptySet(), false)
 
-                it("returns that there are no steps remaining") {
-                    assertThat(result, equalTo(NoStepsRemaining))
+                it("returns that the stage is complete") {
+                    assertThat(result, equalTo(StageComplete))
                 }
             }
         }
@@ -58,7 +61,7 @@ object StageSpec : Spek({
                 beforeEachTest { whenever(rule.evaluate(events)).doReturn(TaskStepRuleEvaluationResult.NotReady) }
 
                 on("getting the next step") {
-                    val result by runForEachTest { stage.popNextStep(events) }
+                    val result by runForEachTest { stage.popNextStep(events, false) }
 
                     it("returns that there are no steps ready") {
                         assertThat(result, equalTo(NoStepsReady))
@@ -71,7 +74,7 @@ object StageSpec : Spek({
                 beforeEachTest { whenever(rule.evaluate(events)).doReturn(TaskStepRuleEvaluationResult.Ready(step)) }
 
                 on("getting the next step") {
-                    val result by runForEachTest { stage.popNextStep(events) }
+                    val result by runForEachTest { stage.popNextStep(events, false) }
 
                     it("returns that there is a step ready") {
                         assertThat(result, equalTo(StepReady(step)))
@@ -79,15 +82,15 @@ object StageSpec : Spek({
                 }
 
                 on("getting the next two steps") {
-                    val firstResult by runForEachTest { stage.popNextStep(events) }
-                    val secondResult by runForEachTest { stage.popNextStep(events) }
+                    val firstResult by runForEachTest { stage.popNextStep(events, false) }
+                    val secondResult by runForEachTest { stage.popNextStep(events, true) }
 
                     it("returns that there is a step ready for the first request") {
                         assertThat(firstResult, equalTo(StepReady(step)))
                     }
 
-                    it("returns that there are no remaining steps for the second request") {
-                        assertThat(secondResult, equalTo(NoStepsRemaining))
+                    it("returns that the stage is complete for the second request") {
+                        assertThat(secondResult, equalTo(StageComplete))
                     }
                 }
             }
@@ -106,7 +109,7 @@ object StageSpec : Spek({
                 }
 
                 on("getting the next step") {
-                    val result by runForEachTest { stage.popNextStep(events) }
+                    val result by runForEachTest { stage.popNextStep(events, false) }
 
                     it("returns that there are no steps ready") {
                         assertThat(result, equalTo(NoStepsReady))
@@ -123,14 +126,14 @@ object StageSpec : Spek({
                 }
 
                 on("getting the next two steps") {
-                    val firstResult by runForEachTest { stage.popNextStep(events) }
-                    val secondResult by runForEachTest { stage.popNextStep(events) }
+                    val firstResult by runForEachTest { stage.popNextStep(events, false) }
+                    val secondResult by runForEachTest { stage.popNextStep(events, true) }
 
                     it("returns that there is a step ready for the first request") {
                         assertThat(firstResult, equalTo(StepReady(step)))
                     }
 
-                    it("returns that there are no steps ready for the second request") {
+                    it("returns that the stage is complete for the second request") {
                         assertThat(secondResult, equalTo(NoStepsReady))
                     }
                 }
@@ -146,9 +149,9 @@ object StageSpec : Spek({
                 }
 
                 on("getting the next three steps") {
-                    val firstResult by runForEachTest { stage.popNextStep(events) }
-                    val secondResult by runForEachTest { stage.popNextStep(events) }
-                    val thirdResult by runForEachTest { stage.popNextStep(events) }
+                    val firstResult by runForEachTest { stage.popNextStep(events, false) }
+                    val secondResult by runForEachTest { stage.popNextStep(events, true) }
+                    val thirdResult by runForEachTest { stage.popNextStep(events, true) }
 
                     it("returns that there is a step ready for the first request") {
                         assertThat(firstResult, equalTo<NextStepResult, NextStepResult>(StepReady(step1)) or equalTo(StepReady(step2)))
@@ -162,8 +165,8 @@ object StageSpec : Spek({
                         assertThat(firstResult, !equalTo(secondResult))
                     }
 
-                    it("returns that there are no remaining steps for the third request") {
-                        assertThat(thirdResult, equalTo(NoStepsRemaining))
+                    it("returns that the stage is complete for the third request") {
+                        assertThat(thirdResult, equalTo(StageComplete))
                     }
                 }
             }

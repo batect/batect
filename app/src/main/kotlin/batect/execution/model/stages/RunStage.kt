@@ -16,9 +16,21 @@
 
 package batect.execution.model.stages
 
-import batect.execution.model.steps.TaskStep
+import batect.config.Container
+import batect.execution.model.events.RunningContainerExitedEvent
+import batect.execution.model.events.TaskEvent
+import batect.execution.model.rules.TaskStepRule
 
-sealed class NextStepResult
-object StageComplete : NextStepResult()
-object NoStepsReady : NextStepResult()
-data class StepReady(val step: TaskStep) : NextStepResult()
+class RunStage(val rules: Set<TaskStepRule>, val taskContainer: Container) : Stage(rules) {
+    override fun determineIfStageIsComplete(pastEvents: Set<TaskEvent>, stepsStillRunning: Boolean): Boolean {
+        if (!stepsStillRunning) {
+            return true
+        }
+
+        if (pastEvents.any { it is RunningContainerExitedEvent && it.container == taskContainer }) {
+            return true
+        }
+
+        return false
+    }
+}

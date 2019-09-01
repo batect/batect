@@ -19,9 +19,9 @@ package batect.execution.model.stages
 import batect.execution.model.rules.cleanup.CleanupTaskStepRule
 import batect.execution.model.rules.cleanup.ManualCleanupSortOrder
 import batect.os.OperatingSystem
+import batect.testutils.equalTo
 import batect.testutils.given
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isEmpty
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doThrow
@@ -36,6 +36,14 @@ object CleanupStageSpec : Spek({
 
             it("has no manual cleanup commands") {
                 assertThat(stage.manualCleanupInstructions, isEmpty)
+            }
+
+            it("reports as complete when no steps are still running") {
+                assertThat(stage.popNextStep(emptySet(), false), equalTo(StageComplete))
+            }
+
+            it("reports as incomplete when a step is still running") {
+                assertThat(stage.popNextStep(emptySet(), true), equalTo(NoStepsReady))
             }
         }
 

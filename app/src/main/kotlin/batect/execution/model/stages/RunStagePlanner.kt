@@ -46,7 +46,7 @@ class RunStagePlanner(private val logger: Logger) {
             data("rules", rules.map { it.toString() })
         }
 
-        return RunStage(rules)
+        return RunStage(rules, graph.taskContainerNode.container)
     }
 
     private fun stepsFor(node: ContainerDependencyGraphNode, allContainersInNetwork: Set<Container>): Set<TaskStepRule> {

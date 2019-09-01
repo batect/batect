@@ -56,7 +56,9 @@ object TaskRunnerSpec : Spek({
         val config = Configuration("some-project", TaskMap(task), ContainerMap(container))
         val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true)
 
-        val graph = mock<ContainerDependencyGraph>()
+        val graph = mock<ContainerDependencyGraph> {
+            on { taskContainerNode } doReturn ContainerDependencyGraphNode(container, null, null, emptyMap(), emptySet(), true, emptySet(), mock)
+        }
         val graphProvider = mock<ContainerDependencyGraphProvider> {
             on { createGraph(config, task) } doReturn graph
         }
@@ -98,7 +100,8 @@ object TaskRunnerSpec : Spek({
                 beforeEachTest {
                     whenever(stateMachine.taskHasFailed).thenReturn(false)
                     whenever(stateMachine.getAllEvents()).thenReturn(setOf(
-                        RunningContainerExitedEvent(container, 100)
+                        RunningContainerExitedEvent(container, 100),
+                        RunningContainerExitedEvent(Container("some-other-container", imageSourceDoesNotMatter()), 200)
                     ))
                     whenever(executionManager.run()).then { Thread.sleep(50) }
                 }

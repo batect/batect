@@ -21,7 +21,7 @@ import batect.ui.ConsoleDimensions
 
 class StartupProgressDisplayProvider(private val consoleDimensions: ConsoleDimensions) {
     fun createForDependencyGraph(graph: ContainerDependencyGraph): StartupProgressDisplay {
-        val lines = graph.allNodes.map { ContainerStartupProgressLine(it.container, it.dependsOnContainers) }
+        val lines = graph.allNodes.map { ContainerStartupProgressLine(it.container, it.dependsOnContainers, it.isRootNode) }
 
         return StartupProgressDisplay(lines, consoleDimensions)
     }

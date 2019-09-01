@@ -34,10 +34,11 @@ object StartupProgressDisplayProviderSpec : Spek({
         val consoleDimensions = mock<ConsoleDimensions>()
         val provider = StartupProgressDisplayProvider(consoleDimensions)
 
-        fun createNodeFor(container: Container, dependencies: Set<Container>): ContainerDependencyGraphNode {
+        fun createNodeFor(container: Container, dependencies: Set<Container>, isTaskContainer: Boolean): ContainerDependencyGraphNode {
             return mock {
                 on { this.container } doReturn container
                 on { dependsOnContainers } doReturn dependencies
+                on { isRootNode } doReturn isTaskContainer
             }
         }
 
@@ -48,26 +49,20 @@ object StartupProgressDisplayProviderSpec : Spek({
             val container1Dependencies = setOf(container2)
             val container2Dependencies = emptySet<Container>()
 
-            val node1 = createNodeFor(container1, container1Dependencies)
-            val node2 = createNodeFor(container2, container2Dependencies)
+            val node1 = createNodeFor(container1, container1Dependencies, true)
+            val node2 = createNodeFor(container2, container2Dependencies, false)
 
             val graph = mock<ContainerDependencyGraph> {
                 on { allNodes } doReturn setOf(node1, node2)
             }
 
             val display = provider.createForDependencyGraph(graph)
-            val linesForContainers = display.containerLines.associateBy { it.container }
 
-            it("returns progress lines for each node in the graph") {
-                assertThat(display.containerLines.map { it.container }.toSet(), equalTo(setOf(container1, container2)))
-            }
-
-            it("returns a progress line for the first node with its dependencies") {
-                assertThat(linesForContainers[container1]!!.dependencies, equalTo(container1Dependencies))
-            }
-
-            it("returns a progress line for the second node with its dependencies") {
-                assertThat(linesForContainers[container2]!!.dependencies, equalTo(container2Dependencies))
+            it("returns progress lines for each node in the graph with their dependencies") {
+                assertThat(display.containerLines.toSet(), equalTo(setOf(
+                    ContainerStartupProgressLine(container1, container1Dependencies, true),
+                    ContainerStartupProgressLine(container2, container2Dependencies, false)
+                )))
             }
         }
     }

@@ -44,11 +44,14 @@ object EventLoggerProviderSpec : Spek({
         val errorConsole = mock<Console>()
         val container1 = Container("container-1", imageSourceDoesNotMatter())
         val container2 = Container("container-2", imageSourceDoesNotMatter())
+        val taskContainer = Container("task-container", imageSourceDoesNotMatter())
         val graph = mock<ContainerDependencyGraph> {
             on { allNodes } doReturn setOf(
                 ContainerDependencyGraphNode(container1, null, null, emptyMap(), emptySet(), false, emptySet(), mock()),
                 ContainerDependencyGraphNode(container2, null, null, emptyMap(), emptySet(), false, emptySet(), mock())
             )
+
+            on { taskContainerNode } doReturn ContainerDependencyGraphNode(taskContainer, null, null, emptyMap(), emptySet(), true, emptySet(), mock())
         }
 
         val startupProgressDisplay = mock<StartupProgressDisplay>()
@@ -83,6 +86,10 @@ object EventLoggerProviderSpec : Spek({
 
             it("passes the set of containers to the event logger") {
                 assertThat((logger as SimpleEventLogger).containers, equalTo(setOf(container1, container2)))
+            }
+
+            it("passes the task container to the event logger") {
+                assertThat((logger as SimpleEventLogger).taskContainer, equalTo(taskContainer))
             }
 
             it("passes the failure error message formatter to the event logger") {
@@ -125,6 +132,10 @@ object EventLoggerProviderSpec : Spek({
 
             it("passes the startup progress display to the event logger") {
                 assertThat((logger as FancyEventLogger).startupProgressDisplay, equalTo(startupProgressDisplay))
+            }
+
+            it("passes the task container to the event logger") {
+                assertThat((logger as FancyEventLogger).taskContainer, equalTo(taskContainer))
             }
         }
 

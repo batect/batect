@@ -53,10 +53,10 @@ class EventLoggerProvider(
         QuietEventLogger(failureErrorMessageFormatter, runOptions, errorConsole)
 
     private fun createFancyLogger(graph: ContainerDependencyGraph, runOptions: RunOptions): FancyEventLogger =
-        FancyEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole, startupProgressDisplayProvider.createForDependencyGraph(graph), CleanupProgressDisplay())
+        FancyEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole, startupProgressDisplayProvider.createForDependencyGraph(graph), CleanupProgressDisplay(), graph.taskContainerNode.container)
 
     private fun createSimpleLogger(graph: ContainerDependencyGraph, runOptions: RunOptions): SimpleEventLogger {
         val containers = graph.allNodes.mapToSet { it.container }
-        return SimpleEventLogger(containers, failureErrorMessageFormatter, runOptions, console, errorConsole)
+        return SimpleEventLogger(containers, graph.taskContainerNode.container, failureErrorMessageFormatter, runOptions, console, errorConsole)
     }
 }

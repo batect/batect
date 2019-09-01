@@ -16,6 +16,7 @@
 
 package batect.ui.fancy
 
+import batect.config.Container
 import batect.execution.RunOptions
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.StepStartingEvent
@@ -37,7 +38,8 @@ class FancyEventLogger(
     val console: Console,
     val errorConsole: Console,
     val startupProgressDisplay: StartupProgressDisplay,
-    val cleanupProgressDisplay: CleanupProgressDisplay
+    val cleanupProgressDisplay: CleanupProgressDisplay,
+    val taskContainer: Container
 ) : EventLogger() {
     private val lock = Object()
     private var keepUpdatingStartupProgress = true
@@ -75,12 +77,12 @@ class FancyEventLogger(
 
             cleanupProgressDisplay.onEventPosted(event)
 
-            if (event is StepStartingEvent && event.step is RunContainerStep) {
+            if (event is StepStartingEvent && event.step is RunContainerStep && event.step.container == taskContainer) {
                 console.println()
                 keepUpdatingStartupProgress = false
             }
 
-            if (haveStartedCleanup || event is RunningContainerExitedEvent) {
+            if (haveStartedCleanup || (event is RunningContainerExitedEvent && event.container == taskContainer)) {
                 displayCleanupStatus()
             }
         }

@@ -45,6 +45,7 @@ import java.time.Duration
 
 class SimpleEventLogger(
     val containers: Set<Container>,
+    val taskContainer: Container,
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
     val runOptions: RunOptions,
     val console: Console,
@@ -77,7 +78,7 @@ class SimpleEventLogger(
             is BuildImageStep -> logImageBuildStarting(step.source)
             is PullImageStep -> logImagePullStarting(step.source)
             is StartContainerStep -> logContainerStarting(step.container)
-            is RunContainerStep -> logCommandStarting(step.container, commands[step.container])
+            is RunContainerStep -> logContainerRunning(step.container)
             is CreateContainerStep -> commands[step.container] = step.command
             is CleanupStep -> logCleanUpStarting()
         }
@@ -107,7 +108,15 @@ class SimpleEventLogger(
         console.println(Text.white(Text("Pulled ") + Text.bold(source.imageName) + Text(".")))
     }
 
-    private fun logCommandStarting(container: Container, command: Command?) {
+    private fun logContainerRunning(container: Container) {
+        if (container == taskContainer) {
+            logTaskContainerRunning(container, commands[container])
+        } else {
+            logContainerStarting(container)
+        }
+    }
+
+    private fun logTaskContainerRunning(container: Container, command: Command?) {
         val commandText = if (command != null) {
             Text.bold(command.originalCommand) + Text(" in ")
         } else {
@@ -122,6 +131,10 @@ class SimpleEventLogger(
     }
 
     private fun logContainerStarted(container: Container) {
+        if (container == taskContainer) {
+            return
+        }
+
         console.println(Text.white(Text("Started ") + Text.bold(container.name) + Text(".")))
     }
 

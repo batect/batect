@@ -64,9 +64,7 @@ object ContainerStartupProgressLineSpec : Spek({
             val container = Container(containerName, imageSource)
             val otherImageSource = BuildImage(Paths.get("/some-other-image-dir"))
 
-            val line: ContainerStartupProgressLine by createForEachTest {
-                ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC))
-            }
+            val line by createForEachTest { ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC), false) }
 
             on("initial state") {
                 val output by runForEachTest { line.print() }
@@ -340,13 +338,26 @@ object ContainerStartupProgressLineSpec : Spek({
             }
 
             describe("after receiving a 'container started' notification") {
-                on("that notification being for this line's container") {
-                    val event = ContainerStartedEvent(container)
-                    beforeEachTest { line.onEventPosted(event) }
-                    val output by runForEachTest { line.print() }
+                describe("that notification being for this line's container") {
+                    on("when this line's container is the task container") {
+                        val taskContainerLine by createForEachTest { ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC), true) }
+                        val event = ContainerStartedEvent(container)
+                        beforeEachTest { taskContainerLine.onEventPosted(event) }
+                        val output by runForEachTest { taskContainerLine.print() }
 
-                    it("prints that the container is waiting to become healthy") {
-                        assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": container started, waiting for it to become healthy..."))))
+                        it("prints that the container is still waiting to build its image") {
+                            assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": ready to build image"))))
+                        }
+                    }
+
+                    on("when this line's container is a dependency container") {
+                        val event = ContainerStartedEvent(container)
+                        beforeEachTest { line.onEventPosted(event) }
+                        val output by runForEachTest { line.print() }
+
+                        it("prints that the container is waiting to become healthy") {
+                            assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": container started, waiting for it to become healthy..."))))
+                        }
                     }
                 }
 
@@ -387,55 +398,69 @@ object ContainerStartupProgressLineSpec : Spek({
                 describe("that notification being for this line's container") {
                     val step = RunContainerStep(container, DockerContainer("some-id"))
 
-                    on("and the container does not have a command specified in the configuration file") {
-                        beforeEachTest {
-                            line.onEventPosted(StepStartingEvent(CreateContainerStep(container, null, null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))))
-                            line.onEventPosted(StepStartingEvent(step))
+                    describe("this line's container is the task container") {
+                        val taskContainerLine by createForEachTest { ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC), true) }
+
+                        on("and the container does not have a command specified in the configuration file") {
+                            beforeEachTest {
+                                taskContainerLine.onEventPosted(StepStartingEvent(CreateContainerStep(container, null, null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))))
+                                taskContainerLine.onEventPosted(StepStartingEvent(step))
+                            }
+
+                            val output by runForEachTest { taskContainerLine.print() }
+
+                            it("prints that the container has finished starting up") {
+                                assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": running"))))
+                            }
                         }
 
-                        val output by runForEachTest { line.print() }
+                        on("and the container has a command specified in the configuration file") {
+                            beforeEachTest {
+                                taskContainerLine.onEventPosted(StepStartingEvent(CreateContainerStep(container, Command.parse("some-command"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))))
+                                taskContainerLine.onEventPosted(StepStartingEvent(step))
+                            }
 
-                        it("prints that the container has finished starting up") {
-                            assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": running"))))
+                            val output by runForEachTest { taskContainerLine.print() }
+
+                            it("prints that the container has finished starting up and the command that it is running") {
+                                assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": running ") + Text.bold("some-command"))))
+                            }
+                        }
+
+                        on("and the container has a command specified in the configuration file that contains line breaks") {
+                            beforeEachTest {
+                                taskContainerLine.onEventPosted(StepStartingEvent(CreateContainerStep(container, Command.parse("some-command\ndo-stuff"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))))
+                                taskContainerLine.onEventPosted(StepStartingEvent(step))
+                            }
+
+                            val output by runForEachTest { taskContainerLine.print() }
+
+                            it("prints that the container has finished starting up and the command that it is running with the line breaks replaced with spaces") {
+                                assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": running ") + Text.bold("some-command do-stuff"))))
+                            }
+                        }
+
+                        on("and another container has a command specified in the configuration file") {
+                            beforeEachTest {
+                                taskContainerLine.onEventPosted(StepStartingEvent(CreateContainerStep(otherContainer, Command.parse("some-command"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))))
+                                taskContainerLine.onEventPosted(StepStartingEvent(step))
+                            }
+
+                            val output by runForEachTest { taskContainerLine.print() }
+
+                            it("prints that the container has finished starting up") {
+                                assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": running"))))
+                            }
                         }
                     }
 
-                    on("and the container has a command specified in the configuration file") {
-                        beforeEachTest {
-                            line.onEventPosted(StepStartingEvent(CreateContainerStep(container, Command.parse("some-command"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))))
-                            line.onEventPosted(StepStartingEvent(step))
-                        }
+                    on("this line's container is not the task container") {
+                        beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
 
                         val output by runForEachTest { line.print() }
 
-                        it("prints that the container has finished starting up and the command that it is running") {
-                            assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": running ") + Text.bold("some-command"))))
-                        }
-                    }
-
-                    on("and the container has a command specified in the configuration file that contains line breaks") {
-                        beforeEachTest {
-                            line.onEventPosted(StepStartingEvent(CreateContainerStep(container, Command.parse("some-command\ndo-stuff"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))))
-                            line.onEventPosted(StepStartingEvent(step))
-                        }
-
-                        val output by runForEachTest { line.print() }
-
-                        it("prints that the container has finished starting up and the command that it is running with the line breaks replaced with spaces") {
-                            assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": running ") + Text.bold("some-command do-stuff"))))
-                        }
-                    }
-
-                    on("and another container has a command specified in the configuration file") {
-                        beforeEachTest {
-                            line.onEventPosted(StepStartingEvent(CreateContainerStep(otherContainer, Command.parse("some-command"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))))
-                            line.onEventPosted(StepStartingEvent(step))
-                        }
-
-                        val output by runForEachTest { line.print() }
-
-                        it("prints that the container has finished starting up") {
-                            assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": running"))))
+                        it("prints that the container is starting") {
+                            assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": starting container..."))))
                         }
                     }
                 }
@@ -458,7 +483,7 @@ object ContainerStartupProgressLineSpec : Spek({
             val otherImageSource = PullImage("some-other-image")
 
             val line: ContainerStartupProgressLine by createForEachTest {
-                ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC))
+                ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC), false)
             }
 
             on("initial state") {

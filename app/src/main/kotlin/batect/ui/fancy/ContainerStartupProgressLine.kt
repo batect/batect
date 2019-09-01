@@ -41,7 +41,7 @@ import batect.os.Command
 import batect.ui.text.Text
 import batect.ui.text.TextRun
 
-class ContainerStartupProgressLine(val container: Container, val dependencies: Set<Container>) {
+data class ContainerStartupProgressLine(val container: Container, val dependencies: Set<Container>, val isTaskContainer: Boolean) {
     private var isBuilding = false
     private var lastBuildProgressUpdate: DockerImageBuildProgress? = null
     private var isPulling = false
@@ -187,7 +187,11 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
 
     private fun onRunContainerStepStarting(step: RunContainerStep) {
         if (step.container == container) {
-            isRunning = true
+            if (isTaskContainer) {
+                isRunning = true
+            } else {
+                isStarting = true
+            }
         }
     }
 
@@ -224,7 +228,7 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
     }
 
     private fun onContainerStartedEventPosted(event: ContainerStartedEvent) {
-        if (event.container == container) {
+        if (event.container == container && !isTaskContainer) {
             hasStarted = true
         }
     }

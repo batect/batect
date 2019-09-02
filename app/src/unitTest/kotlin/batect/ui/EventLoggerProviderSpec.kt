@@ -20,28 +20,34 @@ import batect.config.Container
 import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerDependencyGraphNode
 import batect.execution.RunOptions
+import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
+import batect.ui.containerio.TaskContainerOnlyIOStreamingOptions
 import batect.ui.fancy.FancyEventLogger
 import batect.ui.fancy.StartupProgressDisplay
 import batect.ui.fancy.StartupProgressDisplayProvider
 import batect.ui.quiet.QuietEventLogger
 import batect.ui.simple.SimpleEventLogger
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
+import java.io.InputStream
+import java.io.PrintStream
 
 object EventLoggerProviderSpec : Spek({
     describe("an event logger provider") {
         val failureErrorMessageFormatter = mock<FailureErrorMessageFormatter>()
         val console = mock<Console>()
         val errorConsole = mock<Console>()
+        val stdout = mock<PrintStream>()
+        val stdin = mock<InputStream>()
+
         val container1 = Container("container-1", imageSourceDoesNotMatter())
         val container2 = Container("container-2", imageSourceDoesNotMatter())
         val taskContainer = Container("task-container", imageSourceDoesNotMatter())
@@ -77,6 +83,10 @@ object EventLoggerProviderSpec : Spek({
             it("passes the error console to the event logger") {
                 assertThat((logger as QuietEventLogger).errorConsole, equalTo(errorConsole))
             }
+
+            it("sets the I/O streaming options to the expected value") {
+                assertThat(logger.ioStreamingOptions, equalTo(TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, stdin)))
+            }
         }
 
         fun Suite.itReturnsASimpleEventLogger(logger: EventLogger) {
@@ -106,6 +116,10 @@ object EventLoggerProviderSpec : Spek({
 
             it("passes the error console to the event logger") {
                 assertThat((logger as SimpleEventLogger).errorConsole, equalTo(errorConsole))
+            }
+
+            it("sets the I/O streaming options to the expected value") {
+                assertThat(logger.ioStreamingOptions, equalTo(TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, stdin)))
             }
         }
 
@@ -137,6 +151,10 @@ object EventLoggerProviderSpec : Spek({
             it("passes the task container to the event logger") {
                 assertThat((logger as FancyEventLogger).taskContainer, equalTo(taskContainer))
             }
+
+            it("sets the I/O streaming options to the expected value") {
+                assertThat(logger.ioStreamingOptions, equalTo(TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, stdin)))
+            }
         }
 
         on("when quiet output has been requested") {
@@ -146,7 +164,7 @@ object EventLoggerProviderSpec : Spek({
                 on { supportsInteractivity } doReturn true
             }
 
-            val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false)
+            val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false)
             val logger = provider.getEventLogger(graph, runOptions)
 
             itReturnsAQuietEventLogger(logger)
@@ -159,7 +177,7 @@ object EventLoggerProviderSpec : Spek({
                 on { supportsInteractivity } doReturn true
             }
 
-            val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false)
+            val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false)
             val logger = provider.getEventLogger(graph, runOptions)
 
             itReturnsASimpleEventLogger(logger)
@@ -172,7 +190,7 @@ object EventLoggerProviderSpec : Spek({
                 on { supportsInteractivity } doReturn true
             }
 
-            val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false)
+            val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false)
             val logger = provider.getEventLogger(graph, runOptions)
 
             itReturnsAFancyEventLogger(logger, startupProgressDisplay)
@@ -188,7 +206,7 @@ object EventLoggerProviderSpec : Spek({
                     on { supportsInteractivity } doReturn true
                 }
 
-                val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput)
+                val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput)
                 val logger = provider.getEventLogger(graph, runOptions)
 
                 itReturnsASimpleEventLogger(logger)
@@ -202,7 +220,7 @@ object EventLoggerProviderSpec : Spek({
                         on { supportsInteractivity } doReturn true
                     }
 
-                    val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput)
+                    val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput)
                     val logger = provider.getEventLogger(graph, runOptions)
 
                     itReturnsAFancyEventLogger(logger, startupProgressDisplay)
@@ -213,7 +231,7 @@ object EventLoggerProviderSpec : Spek({
                         on { supportsInteractivity } doReturn false
                     }
 
-                    val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput)
+                    val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput)
                     val logger = provider.getEventLogger(graph, runOptions)
 
                     itReturnsASimpleEventLogger(logger)

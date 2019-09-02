@@ -59,7 +59,7 @@ object FancyEventLoggerSpec : Spek({
         val taskContainer by createForEachTest { Container("task-container", imageSourceDoesNotMatter()) }
 
         val logger by createForEachTest {
-            FancyEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole, startupProgressDisplay, cleanupProgressDisplay, taskContainer)
+            FancyEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole, startupProgressDisplay, cleanupProgressDisplay, taskContainer, mock())
         }
 
         describe("when logging an event") {

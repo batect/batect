@@ -74,7 +74,7 @@ object SimpleEventLoggerSpec : Spek({
         val console by createForEachTest { mock<Console>() }
         val errorConsole by createForEachTest { mock<Console>() }
 
-        val logger by createForEachTest { SimpleEventLogger(containers, taskContainer, failureErrorMessageFormatter, runOptions, console, errorConsole) }
+        val logger by createForEachTest { SimpleEventLogger(containers, taskContainer, failureErrorMessageFormatter, runOptions, console, errorConsole, mock()) }
         val container = Container("the-cool-container", imageSourceDoesNotMatter())
 
         describe("handling when events are posted") {

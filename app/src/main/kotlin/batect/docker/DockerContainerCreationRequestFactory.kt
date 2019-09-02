@@ -45,6 +45,7 @@ class DockerContainerCreationRequestFactory(
         additionalPortMappings: Set<PortMapping>,
         propagateProxyEnvironmentVariables: Boolean,
         userAndGroup: UserAndGroup?,
+        attachTTY: Boolean,
         allContainersInNetwork: Set<Container>
     ): DockerContainerCreationRequest {
         return DockerContainerCreationRequest(
@@ -62,7 +63,8 @@ class DockerContainerCreationRequestFactory(
             container.privileged,
             container.enableInitProcess,
             container.capabilitiesToAdd,
-            container.capabilitiesToDrop
+            container.capabilitiesToDrop,
+            attachTTY
         )
     }
 

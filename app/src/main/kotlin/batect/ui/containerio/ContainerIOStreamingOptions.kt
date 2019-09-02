@@ -14,18 +14,15 @@
    limitations under the License.
 */
 
-package batect.ui
+package batect.ui.containerio
 
-import batect.execution.model.events.TaskEventSink
-import batect.ui.containerio.ContainerIOStreamingOptions
-import batect.ui.text.TextRun
-import java.time.Duration
+import batect.config.Container
+import okio.Sink
+import okio.Source
 
-interface EventLogger : TaskEventSink {
-    fun onTaskStarting(taskName: String)
-    fun onTaskFinished(taskName: String, exitCode: Int, duration: Duration)
-    fun onTaskFinishedWithCleanupDisabled(manualCleanupInstructions: TextRun)
-    fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun)
+interface ContainerIOStreamingOptions {
+    fun shouldAttachTTY(container: Container): Boolean
 
-    val ioStreamingOptions: ContainerIOStreamingOptions
+    fun stdinForContainer(container: Container): Source?
+    fun stdoutForContainer(container: Container): Sink?
 }

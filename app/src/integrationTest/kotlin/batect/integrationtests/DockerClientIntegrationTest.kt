@@ -105,7 +105,8 @@ object DockerClientIntegrationTest : Spek({
                 privileged = false,
                 init = false,
                 capabilitiesToAdd = emptySet(),
-                capabilitiesToDrop = emptySet()
+                capabilitiesToDrop = emptySet(),
+                attachTTY = true
             )
         }
 

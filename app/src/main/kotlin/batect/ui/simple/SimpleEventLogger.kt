@@ -38,6 +38,7 @@ import batect.os.Command
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
+import batect.ui.containerio.TaskContainerOnlyIOStreamingOptions
 import batect.ui.humanise
 import batect.ui.text.Text
 import batect.ui.text.TextRun
@@ -49,8 +50,9 @@ class SimpleEventLogger(
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
     val runOptions: RunOptions,
     val console: Console,
-    val errorConsole: Console
-) : EventLogger() {
+    val errorConsole: Console,
+    override val ioStreamingOptions: TaskContainerOnlyIOStreamingOptions
+) : EventLogger {
     private val commands = mutableMapOf<Container, Command?>()
     private var haveStartedCleanUp = false
     private val lock = Object()

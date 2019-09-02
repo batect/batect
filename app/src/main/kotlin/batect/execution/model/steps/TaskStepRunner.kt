@@ -36,6 +36,7 @@ import batect.docker.NetworkDeletionFailedException
 import batect.execution.CancellationContext
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
+import batect.execution.TaskStepRunContext
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
@@ -65,6 +66,7 @@ import batect.execution.model.events.TemporaryFileDeletedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
+import batect.ui.containerio.ContainerIOStreamingOptions
 import java.io.IOException
 import java.nio.file.Files
 
@@ -84,20 +86,20 @@ class TaskStepRunner(
         systemInfo: SystemInfo
     ) : this(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, systemInfo, System.getenv())
 
-    fun run(step: TaskStep, eventSink: TaskEventSink, runOptions: RunOptions, cancellationContext: CancellationContext) {
+    fun run(step: TaskStep, context: TaskStepRunContext) {
         when (step) {
-            is BuildImageStep -> handleBuildImageStep(step, eventSink, runOptions, cancellationContext)
-            is PullImageStep -> handlePullImageStep(step, eventSink, cancellationContext)
-            is CreateTaskNetworkStep -> handleCreateTaskNetworkStep(eventSink)
-            is CreateContainerStep -> handleCreateContainerStep(step, eventSink, runOptions)
-            is RunContainerStep -> handleRunContainerStep(step, eventSink)
-            is StartContainerStep -> handleStartContainerStep(step, eventSink)
-            is WaitForContainerToBecomeHealthyStep -> handleWaitForContainerToBecomeHealthyStep(step, eventSink, cancellationContext)
-            is StopContainerStep -> handleStopContainerStep(step, eventSink)
-            is RemoveContainerStep -> handleRemoveContainerStep(step, eventSink)
-            is DeleteTemporaryFileStep -> handleDeleteTemporaryFileStep(step, eventSink)
-            is DeleteTemporaryDirectoryStep -> handleDeleteTemporaryDirectoryStep(step, eventSink)
-            is DeleteTaskNetworkStep -> handleDeleteTaskNetworkStep(step, eventSink)
+            is BuildImageStep -> handleBuildImageStep(step, context.eventSink, context.runOptions, context.cancellationContext)
+            is PullImageStep -> handlePullImageStep(step, context.eventSink, context.cancellationContext)
+            is CreateTaskNetworkStep -> handleCreateTaskNetworkStep(context.eventSink)
+            is CreateContainerStep -> handleCreateContainerStep(step, context.eventSink, context.runOptions, context.ioStreamingOptions)
+            is RunContainerStep -> handleRunContainerStep(step, context.eventSink)
+            is StartContainerStep -> handleStartContainerStep(step, context.eventSink)
+            is WaitForContainerToBecomeHealthyStep -> handleWaitForContainerToBecomeHealthyStep(step, context.eventSink, context.cancellationContext)
+            is StopContainerStep -> handleStopContainerStep(step, context.eventSink)
+            is RemoveContainerStep -> handleRemoveContainerStep(step, context.eventSink)
+            is DeleteTemporaryFileStep -> handleDeleteTemporaryFileStep(step, context.eventSink)
+            is DeleteTemporaryDirectoryStep -> handleDeleteTemporaryDirectoryStep(step, context.eventSink)
+            is DeleteTaskNetworkStep -> handleDeleteTaskNetworkStep(step, context.eventSink)
         }
     }
 
@@ -149,7 +151,7 @@ class TaskStepRunner(
         }
     }
 
-    private fun handleCreateContainerStep(step: CreateContainerStep, eventSink: TaskEventSink, runOptions: RunOptions) {
+    private fun handleCreateContainerStep(step: CreateContainerStep, eventSink: TaskEventSink, runOptions: RunOptions, ioStreamingOptions: ContainerIOStreamingOptions) {
         try {
             val runAsCurrentUserConfiguration = runAsCurrentUserConfigurationProvider.generateConfiguration(step.container, eventSink)
 
@@ -164,6 +166,7 @@ class TaskStepRunner(
                 step.additionalPortMappings,
                 runOptions.propagateProxyEnvironmentVariables,
                 runAsCurrentUserConfiguration.userAndGroup,
+                ioStreamingOptions.shouldAttachTTY(step.container),
                 step.allContainersInNetwork
             )
 

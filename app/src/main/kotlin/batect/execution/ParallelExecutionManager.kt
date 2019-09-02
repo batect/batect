@@ -43,6 +43,7 @@ class ParallelExecutionManager(
     private val logger: Logger
 ) : TaskEventSink {
     private val threadPool = createThreadPool()
+    private val stepRunContext = TaskStepRunContext(this, runOptions, stateMachine.cancellationContext, eventLogger.ioStreamingOptions)
 
     private val startNewWorkLockObject = Object()
     private val finishedSignal = CountDownLatch(1)
@@ -99,7 +100,7 @@ class ParallelExecutionManager(
                     }
 
                     runningSteps++
-                    runStep(step, threadPool, this)
+                    runStep(step, threadPool)
                 }
             } catch (e: Throwable) {
                 logger.error {
@@ -116,7 +117,7 @@ class ParallelExecutionManager(
         }
     }
 
-    private fun runStep(step: TaskStep, threadPool: ThreadPoolExecutor, eventSink: TaskEventSink) {
+    private fun runStep(step: TaskStep, threadPool: ThreadPoolExecutor) {
         threadPool.execute {
             try {
                 logger.info {
@@ -125,7 +126,7 @@ class ParallelExecutionManager(
                 }
 
                 eventLogger.postEvent(StepStartingEvent(step))
-                taskStepRunner.run(step, eventSink, runOptions, stateMachine.cancellationContext)
+                taskStepRunner.run(step, stepRunContext)
 
                 logger.info {
                     message("Step completed.")

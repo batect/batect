@@ -27,6 +27,7 @@ import batect.execution.model.steps.RunContainerStep
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
+import batect.ui.containerio.TaskContainerOnlyIOStreamingOptions
 import batect.ui.humanise
 import batect.ui.text.Text
 import batect.ui.text.TextRun
@@ -39,8 +40,9 @@ class FancyEventLogger(
     val errorConsole: Console,
     val startupProgressDisplay: StartupProgressDisplay,
     val cleanupProgressDisplay: CleanupProgressDisplay,
-    val taskContainer: Container
-) : EventLogger() {
+    val taskContainer: Container,
+    override val ioStreamingOptions: TaskContainerOnlyIOStreamingOptions
+) : EventLogger {
     private val lock = Object()
     private var keepUpdatingStartupProgress = true
     private var haveStartedCleanup = false

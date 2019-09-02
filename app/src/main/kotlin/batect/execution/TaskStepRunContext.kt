@@ -14,18 +14,14 @@
    limitations under the License.
 */
 
-package batect.ui
+package batect.execution
 
 import batect.execution.model.events.TaskEventSink
 import batect.ui.containerio.ContainerIOStreamingOptions
-import batect.ui.text.TextRun
-import java.time.Duration
 
-interface EventLogger : TaskEventSink {
-    fun onTaskStarting(taskName: String)
-    fun onTaskFinished(taskName: String, exitCode: Int, duration: Duration)
-    fun onTaskFinishedWithCleanupDisabled(manualCleanupInstructions: TextRun)
-    fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun)
-
+data class TaskStepRunContext(
+    val eventSink: TaskEventSink,
+    val runOptions: RunOptions,
+    val cancellationContext: CancellationContext,
     val ioStreamingOptions: ContainerIOStreamingOptions
-}
+)

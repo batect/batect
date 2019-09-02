@@ -32,7 +32,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.0.pr1'
+        classpath 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.0.pr2'
         classpath 'com.github.java-json-tools:json-schema-validator:2.2.10'
     }
 }

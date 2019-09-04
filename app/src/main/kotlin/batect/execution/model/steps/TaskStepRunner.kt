@@ -92,7 +92,7 @@ class TaskStepRunner(
             is PullImageStep -> handlePullImageStep(step, context.eventSink, context.cancellationContext)
             is CreateTaskNetworkStep -> handleCreateTaskNetworkStep(context.eventSink)
             is CreateContainerStep -> handleCreateContainerStep(step, context.eventSink, context.runOptions, context.ioStreamingOptions)
-            is RunContainerStep -> handleRunContainerStep(step, context.eventSink)
+            is RunContainerStep -> handleRunContainerStep(step, context.eventSink, context.ioStreamingOptions)
             is StartContainerStep -> handleStartContainerStep(step, context.eventSink)
             is WaitForContainerToBecomeHealthyStep -> handleWaitForContainerToBecomeHealthyStep(step, context.eventSink, context.cancellationContext)
             is StopContainerStep -> handleStopContainerStep(step, context.eventSink)
@@ -177,9 +177,11 @@ class TaskStepRunner(
         }
     }
 
-    private fun handleRunContainerStep(step: RunContainerStep, eventSink: TaskEventSink) {
+    private fun handleRunContainerStep(step: RunContainerStep, eventSink: TaskEventSink, ioStreamingOptions: ContainerIOStreamingOptions) {
         try {
-            val result = dockerClient.run(step.dockerContainer)
+            val stdout = ioStreamingOptions.stdoutForContainer(step.container)
+            val stdin = ioStreamingOptions.stdinForContainer(step.container)
+            val result = dockerClient.run(step.dockerContainer, stdout, stdin)
             eventSink.postEvent(RunningContainerExitedEvent(step.container, result.exitCode))
         } catch (e: DockerException) {
             eventSink.postEvent(ContainerRunFailedEvent(step.container, e.message ?: ""))

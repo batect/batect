@@ -57,6 +57,8 @@ import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import kotlinx.serialization.json.JsonObject
+import okio.Sink
+import okio.Source
 import org.mockito.invocation.InvocationOnMock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -290,6 +292,8 @@ object DockerClientSpec : Spek({
         describe("running a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
+                val stdout by createForEachTest { mock<Sink>() }
+                val stdin by createForEachTest { mock<Source>() }
                 val outputStream by createForEachTest { mock<ContainerOutputStream>() }
                 val inputStream by createForEachTest { mock<ContainerInputStream>() }
                 val terminalRestorer by createForEachTest { mock<AutoCloseable>() }
@@ -304,7 +308,7 @@ object DockerClientSpec : Spek({
                 }
 
                 on("running the container") {
-                    val result by runForEachTest { client.run(container) }
+                    val result by runForEachTest { client.run(container, stdout, stdin) }
 
                     it("returns the exit code from the container") {
                         assertThat(result.exitCode, equalTo(123))

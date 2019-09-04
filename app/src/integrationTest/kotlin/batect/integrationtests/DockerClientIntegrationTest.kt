@@ -71,6 +71,7 @@ import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import okio.Okio
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.FileSystems
@@ -202,7 +203,7 @@ object DockerClientIntegrationTest : Spek({
             beforeGroup {
                 withNetwork { network ->
                     withContainer(creationRequestForContainerThatExits(image, network, fileToCreate)) { container ->
-                        client.run(container)
+                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`))
                     }
                 }
             }

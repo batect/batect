@@ -97,6 +97,8 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
+import okio.Sink
+import okio.Source
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
@@ -382,11 +384,23 @@ object TaskStepRunnerSpec : Spek({
                 val dockerContainer = DockerContainer("some-id")
                 val step = RunContainerStep(container, dockerContainer)
 
+                val stdout = mock<Sink>()
+                val stdin = mock<Source>()
+
+                beforeEachTest {
+                    whenever(ioStreamingOptions.stdoutForContainer(container)).doReturn(stdout)
+                    whenever(ioStreamingOptions.stdinForContainer(container)).doReturn(stdin)
+                }
+
                 on("when running the container succeeds") {
                     beforeEachTest {
-                        whenever(dockerClient.run(dockerContainer)).doReturn(DockerContainerRunResult(123))
+                        whenever(dockerClient.run(any(), any(), any())).doReturn(DockerContainerRunResult(123))
 
                         runner.run(step, stepRunContext)
+                    }
+
+                    it("runs the container with the stdin and stdout provided by the I/O streaming options") {
+                        verify(dockerClient).run(eq(dockerContainer), eq(stdout), eq(stdin))
                     }
 
                     it("emits a 'running container exited' event") {
@@ -396,7 +410,7 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when running the container fails") {
                     beforeEachTest {
-                        whenever(dockerClient.run(dockerContainer)).doThrow(DockerException("Something went wrong"))
+                        whenever(dockerClient.run(any(), any(), any())).doThrow(DockerException("Something went wrong"))
 
                         runner.run(step, stepRunContext)
                     }

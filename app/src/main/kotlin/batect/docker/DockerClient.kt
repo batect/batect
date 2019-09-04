@@ -30,6 +30,8 @@ import batect.os.ConsoleManager
 import batect.utils.Version
 import batect.utils.VersionComparisonMode
 import kotlinx.serialization.json.JsonObject
+import okio.Sink
+import okio.Source
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.LinkOption
@@ -121,7 +123,7 @@ class DockerClient(
     fun stop(container: DockerContainer) = api.stopContainer(container)
     fun remove(container: DockerContainer) = api.removeContainer(container)
 
-    fun run(container: DockerContainer): DockerContainerRunResult {
+    fun run(container: DockerContainer, stdout: Sink?, stdin: Source?): DockerContainerRunResult {
         logger.info {
             message("Running container.")
             data("container", container)

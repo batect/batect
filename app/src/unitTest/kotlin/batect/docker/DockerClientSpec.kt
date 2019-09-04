@@ -321,13 +321,6 @@ object DockerClientSpec : Spek({
                         }
                     }
 
-                    it("starts streaming I/O after starting the container") {
-                        inOrder(api, ioStreamer) {
-                            verify(api).startContainer(container)
-                            verify(ioStreamer).stream(outputStream, inputStream)
-                        }
-                    }
-
                     it("starts streaming I/O after putting the terminal into raw mode and starting the container") {
                         inOrder(api, consoleManager, ioStreamer) {
                             verify(api).startContainer(container)

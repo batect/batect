@@ -40,7 +40,6 @@ import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.pull.DockerRegistryDomainResolver
 import batect.docker.pull.DockerRegistryIndexResolver
 import batect.docker.run.ContainerIOStreamer
-import batect.docker.run.ContainerKiller
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.execution.CancellationContext
@@ -317,10 +316,9 @@ private fun createClient(posix: POSIX, nativeMethods: NativeMethods): DockerClie
     val streamer = ContainerIOStreamer(System.out, System.`in`)
     val signalListener = SignalListener(posix)
     val consoleDimensions = ConsoleDimensions(nativeMethods, signalListener, logger)
-    val killer = ContainerKiller(api, signalListener)
     val ttyManager = ContainerTTYManager(api, consoleInfo, consoleDimensions, logger)
 
-    return DockerClient(api, consoleManager, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, streamer, killer, ttyManager, logger)
+    return DockerClient(api, consoleManager, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, streamer, ttyManager, logger)
 }
 
 private fun getNativeMethodsForPlatform(posix: POSIX): NativeMethods = when (Platform.getNativePlatform().os) {

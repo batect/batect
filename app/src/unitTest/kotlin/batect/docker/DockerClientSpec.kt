@@ -26,7 +26,6 @@ import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerInputStream
-import batect.docker.run.ContainerKiller
 import batect.docker.run.ContainerOutputStream
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
@@ -75,12 +74,11 @@ object DockerClientSpec : Spek({
         val dockerfileParser by createForEachTest { mock<DockerfileParser>() }
         val waiter by createForEachTest { mock<ContainerWaiter>() }
         val ioStreamer by createForEachTest { mock<ContainerIOStreamer>() }
-        val killer by createForEachTest { mock<ContainerKiller>() }
         val ttyManager by createForEachTest { mock<ContainerTTYManager>() }
         val logger by createLoggerForEachTest()
         val imagePullProgressReporter by createForEachTest { mock<DockerImagePullProgressReporter>() }
         val imagePullProgressReporterFactory = { imagePullProgressReporter }
-        val client by createForEachTest { DockerClient(api, consoleManager, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, ioStreamer, killer, ttyManager, logger, imagePullProgressReporterFactory) }
+        val client by createForEachTest { DockerClient(api, consoleManager, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, ioStreamer, ttyManager, logger, imagePullProgressReporterFactory) }
 
         describe("building an image") {
             val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
@@ -295,7 +293,6 @@ object DockerClientSpec : Spek({
                 val outputStream by createForEachTest { mock<ContainerOutputStream>() }
                 val inputStream by createForEachTest { mock<ContainerInputStream>() }
                 val terminalRestorer by createForEachTest { mock<AutoCloseable>() }
-                val signalRestorer by createForEachTest { mock<AutoCloseable>() }
                 val resizingRestorer by createForEachTest { mock<AutoCloseable>() }
 
                 beforeEachTest {
@@ -303,7 +300,6 @@ object DockerClientSpec : Spek({
                     whenever(api.attachToContainerOutput(container)).doReturn(outputStream)
                     whenever(api.attachToContainerInput(container)).doReturn(inputStream)
                     whenever(consoleManager.enterRawMode()).doReturn(terminalRestorer)
-                    whenever(killer.killContainerOnSigint(container)).doReturn(signalRestorer)
                     whenever(ttyManager.monitorForSizeChanges(container)).doReturn(resizingRestorer)
                 }
 
@@ -328,8 +324,9 @@ object DockerClientSpec : Spek({
                         }
                     }
 
-                    it("starts streaming I/O after putting the terminal into raw mode") {
-                        inOrder(consoleManager, ioStreamer) {
+                    it("starts streaming I/O after putting the terminal into raw mode and starting the container") {
+                        inOrder(api, consoleManager, ioStreamer) {
+                            verify(api).startContainer(container)
                             verify(consoleManager).enterRawMode()
                             verify(ioStreamer).stream(outputStream, inputStream)
                         }
@@ -350,19 +347,10 @@ object DockerClientSpec : Spek({
                         }
                     }
 
-                    it("configures killing the container when a SIGINT is received after starting the container but before entering raw mode") {
-                        inOrder(api, killer, consoleManager) {
-                            verify(api).startContainer(container)
-                            verify(killer).killContainerOnSigint(container)
-                            verify(consoleManager).enterRawMode()
-                        }
-                    }
-
-                    it("restores the terminal and signal handling state after streaming completes") {
-                        inOrder(ioStreamer, terminalRestorer, signalRestorer) {
+                    it("restores the terminal after streaming completes") {
+                        inOrder(ioStreamer, terminalRestorer) {
                             verify(ioStreamer).stream(outputStream, inputStream)
                             verify(terminalRestorer).close()
-                            verify(signalRestorer).close()
                         }
                     }
 

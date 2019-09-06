@@ -21,9 +21,9 @@ sourceSets {
 dependencies {
     testCommonImplementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     testCommonImplementation 'com.natpryce:hamkrest:1.7.0.0'
-    testCommonImplementation "org.spekframework.spek2:spek-dsl-jvm:2.0.5"
-    testCommonRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:2.0.5"
-    testCommonRuntimeOnly 'org.junit.platform:junit-platform-engine:1.5.0'
+    testCommonImplementation "org.spekframework.spek2:spek-dsl-jvm:2.0.7"
+    testCommonRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:2.0.7"
+    testCommonRuntimeOnly 'org.junit.platform:junit-platform-engine:1.5.1'
 }
 
 tasks.withType(Test) {

@@ -314,7 +314,7 @@ private fun createClient(posix: POSIX, nativeMethods: NativeMethods): DockerClie
     val imageBuildContextFactory = DockerImageBuildContextFactory(ignoreParser)
     val dockerfileParser = DockerfileParser()
     val waiter = ContainerWaiter(api)
-    val streamer = ContainerIOStreamer(System.out, System.`in`)
+    val streamer = ContainerIOStreamer()
     val signalListener = SignalListener(posix)
     val consoleDimensions = ConsoleDimensions(nativeMethods, signalListener, logger)
     val ttyManager = ContainerTTYManager(api, consoleInfo, consoleDimensions, logger)

@@ -16,10 +16,14 @@
 
 package batect.docker.run
 
+import batect.docker.DockerException
 import batect.testutils.CloseableByteArrayOutputStream
+import batect.testutils.doesNotThrow
 import batect.testutils.equalTo
 import batect.testutils.on
+import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.mock
 import okhttp3.Response
 import okio.Okio
@@ -28,16 +32,16 @@ import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import java.io.PrintStream
 import java.util.concurrent.CountDownLatch
 
 object ContainerIOStreamerSpec : Spek({
     describe("a container I/O streamer") {
-        describe("streaming input and output for a container") {
+        val streamer = ContainerIOStreamer()
+
+        describe("streaming both input and output for a container") {
             on("all of the output being available immediately") {
                 val stdin = ByteArrayInputStream(ByteArray(0))
                 val stdout = ByteArrayOutputStream()
-                val streamer = ContainerIOStreamer(PrintStream(stdout), stdin)
 
                 val response = mock<Response>()
                 val containerOutputStream = ByteArrayInputStream("This is the output".toByteArray())
@@ -46,7 +50,10 @@ object ContainerIOStreamerSpec : Spek({
                 val outputStream = ContainerOutputStream(response, Okio.buffer(Okio.source(containerOutputStream)))
                 val inputStream = ContainerInputStream(response, Okio.buffer(Okio.sink(containerInputStream)))
 
-                streamer.stream(outputStream, inputStream)
+                streamer.stream(
+                    OutputConnection.Connected(outputStream, Okio.sink(stdout)),
+                    InputConnection.Connected(Okio.source(stdin), inputStream)
+                )
 
                 it("writes all of the output from the output stream to stdout") {
                     assertThat(stdout.toString(), equalTo("This is the output"))
@@ -60,7 +67,6 @@ object ContainerIOStreamerSpec : Spek({
             on("stdin closing before the output from the container has finished") {
                 val stdin = ByteArrayInputStream("This is the input".toByteArray())
                 val stdout = ByteArrayOutputStream()
-                val streamer = ContainerIOStreamer(PrintStream(stdout), stdin)
 
                 val response = mock<Response>()
 
@@ -72,12 +78,12 @@ object ContainerIOStreamerSpec : Spek({
                         return super.read()
                     }
 
-                    override fun read(b: ByteArray?, off: Int, len: Int): Int {
+                    override fun read(b: ByteArray, off: Int, len: Int): Int {
                         allInputWritten.await()
                         return super.read(b, off, len)
                     }
 
-                    override fun read(b: ByteArray?): Int {
+                    override fun read(b: ByteArray): Int {
                         allInputWritten.await()
                         return super.read(b)
                     }
@@ -89,12 +95,12 @@ object ContainerIOStreamerSpec : Spek({
                         checkIfInputComplete()
                     }
 
-                    override fun write(b: ByteArray?, off: Int, len: Int) {
+                    override fun write(b: ByteArray, off: Int, len: Int) {
                         super.write(b, off, len)
                         checkIfInputComplete()
                     }
 
-                    override fun write(b: ByteArray?) {
+                    override fun write(b: ByteArray) {
                         super.write(b)
                         checkIfInputComplete()
                     }
@@ -109,7 +115,10 @@ object ContainerIOStreamerSpec : Spek({
                 val outputStream = ContainerOutputStream(response, Okio.buffer(Okio.source(containerOutputStream)))
                 val inputStream = ContainerInputStream(response, Okio.buffer(Okio.sink(containerInputStream)))
 
-                streamer.stream(outputStream, inputStream)
+                streamer.stream(
+                    OutputConnection.Connected(outputStream, Okio.sink(stdout)),
+                    InputConnection.Connected(Okio.source(stdin), inputStream)
+                )
 
                 it("writes all of the input from stdin to the input stream") {
                     assertThat(containerInputStream.toString(), equalTo("This is the input"))
@@ -139,7 +148,6 @@ object ContainerIOStreamerSpec : Spek({
                 }
 
                 val stdout = ByteArrayOutputStream()
-                val streamer = ContainerIOStreamer(PrintStream(stdout), stdin)
 
                 val response = mock<Response>()
 
@@ -150,13 +158,13 @@ object ContainerIOStreamerSpec : Spek({
                         return super.read()
                     }
 
-                    override fun read(b: ByteArray?, off: Int, len: Int): Int {
+                    override fun read(b: ByteArray, off: Int, len: Int): Int {
                         stdin.readStarted.await()
 
                         return super.read(b, off, len)
                     }
 
-                    override fun read(b: ByteArray?): Int {
+                    override fun read(b: ByteArray): Int {
                         stdin.readStarted.await()
 
                         return super.read(b)
@@ -168,7 +176,10 @@ object ContainerIOStreamerSpec : Spek({
                 val outputStream = ContainerOutputStream(response, Okio.buffer(Okio.source(containerOutputStream)))
                 val inputStream = ContainerInputStream(response, Okio.buffer(Okio.sink(containerInputStream)))
 
-                streamer.stream(outputStream, inputStream)
+                streamer.stream(
+                    OutputConnection.Connected(outputStream, Okio.sink(stdout)),
+                    InputConnection.Connected(Okio.source(stdin), inputStream)
+                )
 
                 it("writes all of the output from the output stream to stdout") {
                     assertThat(stdout.toString(), equalTo("This is the output"))
@@ -177,6 +188,37 @@ object ContainerIOStreamerSpec : Spek({
                 it("closes the container's input stream") {
                     assertThat(containerInputStream.isClosed, equalTo(true))
                 }
+            }
+        }
+
+        describe("streaming just output for a container") {
+            val stdout = ByteArrayOutputStream()
+            val response = mock<Response>()
+            val containerOutputStream = ByteArrayInputStream("This is the output".toByteArray())
+            val outputStream = ContainerOutputStream(response, Okio.buffer(Okio.source(containerOutputStream)))
+
+            streamer.stream(
+                OutputConnection.Connected(outputStream, Okio.sink(stdout)),
+                InputConnection.Disconnected
+            )
+
+            it("writes all of the output from the output stream to stdout") {
+                assertThat(stdout.toString(), equalTo("This is the output"))
+            }
+        }
+
+        describe("streaming just input for a container") {
+            val output = OutputConnection.Disconnected
+            val input = InputConnection.Connected(mock(), mock())
+
+            it("throws an appropriate exception") {
+                assertThat({ streamer.stream(output, input) }, throws<DockerException>(withMessage("Cannot stream input to a container when output is disconnected.")))
+            }
+        }
+
+        describe("streaming neither input nor output for a container") {
+            it("does not throw an exception") {
+                assertThat({ streamer.stream(OutputConnection.Disconnected, InputConnection.Disconnected) }, doesNotThrow())
             }
         }
     }

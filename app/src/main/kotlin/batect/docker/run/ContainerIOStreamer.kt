@@ -16,43 +16,56 @@
 
 package batect.docker.run
 
+import batect.docker.DockerException
 import okio.Buffer
 import okio.BufferedSource
 import okio.Okio
 import okio.Sink
-import java.io.InputStream
-import java.io.PrintStream
+import okio.Source
 import java.util.concurrent.CancellationException
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
-class ContainerIOStreamer(private val stdout: PrintStream, private val stdin: InputStream) {
-    fun stream(outputStream: ContainerOutputStream, inputStream: ContainerInputStream) {
+class ContainerIOStreamer() {
+    fun stream(output: OutputConnection, input: InputConnection) {
+        when (output) {
+            is OutputConnection.Disconnected -> when (input) {
+                is InputConnection.Connected -> throw DockerException("Cannot stream input to a container when output is disconnected.")
+                is InputConnection.Disconnected -> return
+            }
+            is OutputConnection.Connected -> streamWithConnectedOutput(output, input)
+        }
+    }
+
+    private fun streamWithConnectedOutput(output: OutputConnection.Connected, input: InputConnection) {
         val executor = Executors.newFixedThreadPool(2)
 
         try {
-            val stdinHandler = executor.submit { streamStdin(inputStream) }
-            val stdoutHandler = executor.submit { streamStdout(outputStream, stdinHandler) }
+            val stdinHandler = if (input is InputConnection.Connected) { executor.submit { streamStdin(input) } } else null
+            val stdoutHandler = executor.submit { streamStdout(output, stdinHandler) }
 
-            stdinHandler.get()
+            stdinHandler?.get()
             stdoutHandler.get()
         } catch (e: CancellationException) {
             // Do nothing - we aborted the task.
         } finally {
             executor.shutdownNow()
-            inputStream.stream.close()
+
+            if (input is InputConnection.Connected) {
+                input.destination.stream.close()
+            }
         }
     }
 
-    private fun streamStdin(inputStream: ContainerInputStream) {
-        val stdinStream = Okio.buffer(Okio.source(stdin))
-        stdinStream.copyTo(inputStream.stream)
+    private fun streamStdin(input: InputConnection) {
+        if (input is InputConnection.Connected) {
+            Okio.buffer(input.source).copyTo(input.destination.stream)
+        }
     }
 
-    private fun streamStdout(outputStream: ContainerOutputStream, stdinHandler: Future<*>) {
-        val stdoutSink = Okio.sink(stdout)
-        outputStream.stream.copyTo(stdoutSink)
-        stdinHandler.cancel(true)
+    private fun streamStdout(output: OutputConnection.Connected, stdinHandler: Future<*>?) {
+        output.source.stream.copyTo(output.destination)
+        stdinHandler?.cancel(true)
     }
 
     // This is similar to BufferedSource.readAll, except that we flush after each read from the source,
@@ -70,5 +83,25 @@ class ContainerIOStreamer(private val stdout: PrintStream, private val stdin: In
             sink.write(readBuffer, bytesRead)
             sink.flush()
         }
+    }
+}
+
+sealed class OutputConnection : AutoCloseable {
+    data class Connected(val source: ContainerOutputStream, val destination: Sink) : OutputConnection() {
+        override fun close() = source.close()
+    }
+
+    object Disconnected : OutputConnection() {
+        override fun close() {}
+    }
+}
+
+sealed class InputConnection : AutoCloseable {
+    data class Connected(val source: Source, val destination: ContainerInputStream) : InputConnection() {
+        override fun close() = destination.close()
+    }
+
+    object Disconnected : InputConnection() {
+        override fun close() {}
     }
 }

@@ -24,6 +24,8 @@ import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
+import batect.docker.run.InputConnection
+import batect.docker.run.OutputConnection
 import batect.execution.CancellationContext
 import batect.logging.Logger
 import batect.os.ConsoleManager
@@ -129,16 +131,18 @@ class DockerClient(
             data("container", container)
         }
 
+        if (stdout == null && stdin != null) {
+            throw DockerException("Attempted to stream input to container without streaming container output.")
+        }
+
         val exitCodeSource = waiter.startWaitingForContainerToExit(container)
 
-        api.attachToContainerOutput(container).use { outputStream ->
-            api.attachToContainerInput(container).use { inputStream ->
+        connectContainerOutput(container, stdout).use { outputConnection ->
+            connectContainerInput(container, stdin).use { inputConnection ->
                 api.startContainer(container)
 
-                ttyManager.monitorForSizeChanges(container).use {
-                    consoleManager.enterRawMode().use {
-                        ioStreamer.stream(outputStream, inputStream)
-                    }
+                startTTYEmulationIfRequired(container, stdin) {
+                    ioStreamer.stream(outputConnection, inputConnection)
                 }
             }
         }
@@ -151,6 +155,35 @@ class DockerClient(
         }
 
         return DockerContainerRunResult(exitCode)
+    }
+
+    private fun connectContainerOutput(container: DockerContainer, stdout: Sink?): OutputConnection {
+        if (stdout == null) {
+            return OutputConnection.Disconnected
+        }
+
+        return OutputConnection.Connected(api.attachToContainerOutput(container), stdout)
+    }
+
+    private fun connectContainerInput(container: DockerContainer, stdin: Source?): InputConnection {
+        if (stdin == null) {
+            return InputConnection.Disconnected
+        }
+
+        return InputConnection.Connected(stdin, api.attachToContainerInput(container))
+    }
+
+    private fun startTTYEmulationIfRequired(container: DockerContainer, stdin: Source?, action: () -> Unit) {
+        if (stdin == null) {
+            action()
+            return
+        }
+
+        ttyManager.monitorForSizeChanges(container).use {
+            consoleManager.enterRawMode().use {
+                action()
+            }
+        }
     }
 
     fun waitForHealthStatus(container: DockerContainer, cancellationContext: CancellationContext): HealthStatus {

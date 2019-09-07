@@ -33,7 +33,3 @@ configurations {
     testImplementation.extendsFrom testCommonImplementation
     testRuntimeOnly.extendsFrom testCommonRuntimeOnly
 }
-
-test {
-    jvmArgs '-Xshare:off'
-}

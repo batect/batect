@@ -27,6 +27,12 @@ dependencies {
 }
 
 tasks.withType(Test) {
+    if (JavaVersion.current() >= JavaVersion.VERSION_1_9) {
+        jvmArgs '-Xshare:off', '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED', '--add-opens', 'java.base/java.io=ALL-UNNAMED'
+    } else {
+        jvmArgs '-Xshare:off'
+    }
+
     useJUnitPlatform {
         includeEngines 'spek2'
     }

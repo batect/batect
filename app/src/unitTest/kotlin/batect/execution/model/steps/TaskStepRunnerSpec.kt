@@ -386,21 +386,23 @@ object TaskStepRunnerSpec : Spek({
 
                 val stdout = mock<Sink>()
                 val stdin = mock<Source>()
+                val attachTTY = true
 
                 beforeEachTest {
                     whenever(ioStreamingOptions.stdoutForContainer(container)).doReturn(stdout)
                     whenever(ioStreamingOptions.stdinForContainer(container)).doReturn(stdin)
+                    whenever(ioStreamingOptions.shouldAttachTTY(container)).doReturn(attachTTY)
                 }
 
                 on("when running the container succeeds") {
                     beforeEachTest {
-                        whenever(dockerClient.run(any(), any(), any())).doReturn(DockerContainerRunResult(123))
+                        whenever(dockerClient.run(any(), any(), any(), any())).doReturn(DockerContainerRunResult(123))
 
                         runner.run(step, stepRunContext)
                     }
 
                     it("runs the container with the stdin and stdout provided by the I/O streaming options") {
-                        verify(dockerClient).run(eq(dockerContainer), eq(stdout), eq(stdin))
+                        verify(dockerClient).run(dockerContainer, stdout, stdin, attachTTY)
                     }
 
                     it("emits a 'running container exited' event") {
@@ -410,7 +412,7 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when running the container fails") {
                     beforeEachTest {
-                        whenever(dockerClient.run(any(), any(), any())).doThrow(DockerException("Something went wrong"))
+                        whenever(dockerClient.run(any(), any(), any(), any())).doThrow(DockerException("Something went wrong"))
 
                         runner.run(step, stepRunContext)
                     }

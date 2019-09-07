@@ -125,7 +125,7 @@ class DockerClient(
     fun stop(container: DockerContainer) = api.stopContainer(container)
     fun remove(container: DockerContainer) = api.removeContainer(container)
 
-    fun run(container: DockerContainer, stdout: Sink?, stdin: Source?): DockerContainerRunResult {
+    fun run(container: DockerContainer, stdout: Sink?, stdin: Source?, ttyConnected: Boolean): DockerContainerRunResult {
         logger.info {
             message("Running container.")
             data("container", container)
@@ -141,7 +141,7 @@ class DockerClient(
             connectContainerInput(container, stdin).use { inputConnection ->
                 api.startContainer(container)
 
-                startTTYEmulationIfRequired(container, stdin) {
+                startTTYEmulationIfRequired(container, stdin, ttyConnected) {
                     ioStreamer.stream(outputConnection, inputConnection)
                 }
             }
@@ -173,8 +173,8 @@ class DockerClient(
         return InputConnection.Connected(stdin, api.attachToContainerInput(container))
     }
 
-    private fun startTTYEmulationIfRequired(container: DockerContainer, stdin: Source?, action: () -> Unit) {
-        if (stdin == null) {
+    private fun startTTYEmulationIfRequired(container: DockerContainer, stdin: Source?, ttyConnected: Boolean, action: () -> Unit) {
+        if (stdin == null || !ttyConnected) {
             action()
             return
         }

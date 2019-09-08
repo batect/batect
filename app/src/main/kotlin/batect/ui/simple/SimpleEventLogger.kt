@@ -32,7 +32,6 @@ import batect.execution.model.steps.CleanupStep
 import batect.execution.model.steps.CreateContainerStep
 import batect.execution.model.steps.PullImageStep
 import batect.execution.model.steps.RunContainerStep
-import batect.execution.model.steps.StartContainerStep
 import batect.execution.model.steps.TaskStep
 import batect.os.Command
 import batect.ui.Console
@@ -79,7 +78,6 @@ class SimpleEventLogger(
         when (step) {
             is BuildImageStep -> logImageBuildStarting(step.source)
             is PullImageStep -> logImagePullStarting(step.source)
-            is StartContainerStep -> logContainerStarting(step.container)
             is RunContainerStep -> logContainerRunning(step.container)
             is CreateContainerStep -> commands[step.container] = step.command
             is CleanupStep -> logCleanUpStarting()
@@ -114,7 +112,7 @@ class SimpleEventLogger(
         if (container == taskContainer) {
             logTaskContainerRunning(container, commands[container])
         } else {
-            logContainerStarting(container)
+            logDependencyContainerStarting(container)
         }
     }
 
@@ -128,7 +126,7 @@ class SimpleEventLogger(
         console.println(Text.white(Text("Running ") + commandText + Text.bold(container.name) + Text("...")))
     }
 
-    private fun logContainerStarting(container: Container) {
+    private fun logDependencyContainerStarting(container: Container) {
         console.println(Text.white(Text("Starting ") + Text.bold(container.name) + Text("...")))
     }
 

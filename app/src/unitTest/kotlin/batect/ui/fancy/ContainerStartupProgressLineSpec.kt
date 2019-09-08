@@ -37,7 +37,6 @@ import batect.execution.model.steps.BuildImageStep
 import batect.execution.model.steps.CreateContainerStep
 import batect.execution.model.steps.PullImageStep
 import batect.execution.model.steps.RunContainerStep
-import batect.execution.model.steps.StartContainerStep
 import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.equivalentTo
@@ -307,28 +306,6 @@ object ContainerStartupProgressLineSpec : Spek({
                 on("that notification being for another container") {
                     val event = ContainerCreatedEvent(otherContainer, DockerContainer("some-id"))
                     beforeEachTest { line.onEventPosted(event) }
-                    val output by runForEachTest { line.print() }
-
-                    it("prints that the container is still waiting to build its image") {
-                        assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": ready to build image"))))
-                    }
-                }
-            }
-
-            describe("after receiving a 'container starting' notification") {
-                on("that notification being for this line's container") {
-                    val step = StartContainerStep(container, DockerContainer("some-id"))
-                    beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
-                    val output by runForEachTest { line.print() }
-
-                    it("prints that the container is starting") {
-                        assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": starting container..."))))
-                    }
-                }
-
-                on("that notification being for another container") {
-                    val step = StartContainerStep(otherContainer, DockerContainer("some-id"))
-                    beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
                     it("prints that the container is still waiting to build its image") {

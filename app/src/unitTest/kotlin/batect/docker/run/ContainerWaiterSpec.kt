@@ -18,6 +18,7 @@ package batect.docker.run
 
 import batect.docker.DockerAPI
 import batect.docker.DockerContainer
+import batect.execution.CancellationContext
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.on
@@ -33,14 +34,15 @@ import java.util.concurrent.TimeUnit
 object ContainerWaiterSpec : Spek({
     describe("a container waiter") {
         val api by createForEachTest { mock<DockerAPI>() }
+        val cancellationContext by createForEachTest { mock<CancellationContext>() }
         val waiter by createForEachTest { ContainerWaiter(api) }
 
         on("starting to wait for a container to exit") {
             val container = DockerContainer("the-container")
 
-            beforeEachTest { whenever(api.waitForExit(container)).doReturn(123) }
+            beforeEachTest { whenever(api.waitForExit(container, cancellationContext)).doReturn(123) }
 
-            val future by runForEachTest { waiter.startWaitingForContainerToExit(container) }
+            val future by runForEachTest { waiter.startWaitingForContainerToExit(container, cancellationContext) }
             val exitCode by runForEachTest { future.get(1, TimeUnit.SECONDS) }
 
             it("returns a future that returns the exit code of the container on completion") {

@@ -18,11 +18,14 @@ package batect.docker.run
 
 import batect.docker.DockerAPI
 import batect.docker.DockerContainer
+import batect.execution.CancellationContext
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
 class ContainerWaiter(private val api: DockerAPI) {
-    fun startWaitingForContainerToExit(container: DockerContainer): Future<Int> {
-        return Executors.newSingleThreadExecutor().submit<Int> { api.waitForExit(container) }
+    fun startWaitingForContainerToExit(container: DockerContainer, cancellationContext: CancellationContext): Future<Int> {
+        return Executors.newSingleThreadExecutor().submit<Int> {
+            api.waitForExit(container, cancellationContext)
+        }
     }
 }

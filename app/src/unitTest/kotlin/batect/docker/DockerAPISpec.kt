@@ -451,6 +451,8 @@ object DockerAPISpec : Spek({
         describe("waiting for a container to exit") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
+                val cancellationContext by createForEachTest { mock<CancellationContext>() }
+
                 val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/wait?condition=next-exit"
 
                 val clientWithNoTimeout by createForEachTest { mock<OkHttpClient>() }
@@ -469,8 +471,8 @@ object DockerAPISpec : Spek({
                     on("the response not containing any error information") {
                         val responseBody = """{"StatusCode": 123}"""
 
-                        beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
-                        val exitCode by runForEachTest { api.waitForExit(container) }
+                        val call by createForEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
+                        val exitCode by runForEachTest { api.waitForExit(container, cancellationContext) }
 
                         it("returns the exit code from the container") {
                             assertThat(exitCode, equalTo(123))
@@ -478,14 +480,18 @@ object DockerAPISpec : Spek({
 
                         it("configures the HTTP client with no timeout") {
                             verify(noTimeoutClientBuilder).readTimeout(eq(0), any())
+                        }
+
+                        it("registers the API call with the cancellation context") {
+                            verify(cancellationContext).addCancellationCallback(call::cancel)
                         }
                     }
 
                     on("the response containing an empty error") {
                         val responseBody = """{"StatusCode": 123, "Error": null}"""
 
-                        beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
-                        val exitCode by runForEachTest { api.waitForExit(container) }
+                        val call by createForEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
+                        val exitCode by runForEachTest { api.waitForExit(container, cancellationContext) }
 
                         it("returns the exit code from the container") {
                             assertThat(exitCode, equalTo(123))
@@ -493,6 +499,10 @@ object DockerAPISpec : Spek({
 
                         it("configures the HTTP client with no timeout") {
                             verify(noTimeoutClientBuilder).readTimeout(eq(0), any())
+                        }
+
+                        it("registers the API call with the cancellation context") {
+                            verify(cancellationContext).addCancellationCallback(call::cancel)
                         }
                     }
                 }
@@ -503,7 +513,7 @@ object DockerAPISpec : Spek({
                     beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
 
                     it("throws an appropriate exception") {
-                        assertThat({ api.waitForExit(container) }, throws<DockerException>(withMessage("Waiting for container 'the-container-id' to exit succeeded but returned an error: Something might have gone wrong.")))
+                        assertThat({ api.waitForExit(container, cancellationContext) }, throws<DockerException>(withMessage("Waiting for container 'the-container-id' to exit succeeded but returned an error: Something might have gone wrong.")))
                     }
                 }
 
@@ -511,7 +521,7 @@ object DockerAPISpec : Spek({
                     beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, errorResponse, 418) }
 
                     it("throws an appropriate exception") {
-                        assertThat({ api.waitForExit(container) }, throws<DockerException>(withMessage("Waiting for container 'the-container-id' to exit failed: $errorMessageWithCorrectLineEndings")))
+                        assertThat({ api.waitForExit(container, cancellationContext) }, throws<DockerException>(withMessage("Waiting for container 'the-container-id' to exit failed: $errorMessageWithCorrectLineEndings")))
                     }
                 }
             }

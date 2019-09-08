@@ -25,6 +25,7 @@ import batect.execution.model.steps.TaskStepRunner
 import batect.logging.Logger
 import batect.ui.EventLogger
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -132,21 +133,29 @@ class ParallelExecutionManager(
                     message("Step completed.")
                     data("step", step.toString())
                 }
-            } catch (ex: CancellationException) {
-                logger.info {
-                    message("Step was cancelled and threw an exception.")
-                    exception(ex)
-                    data("step", step.toString())
-                }
             } catch (t: Throwable) {
-                logger.error {
-                    message("Unhandled exception during task step execution.")
-                    exception(t)
-                    data("step", step.toString())
-                }
+                when {
+                    t is CancellationException -> logCancellationException(step, t)
+                    t is ExecutionException && t.cause is CancellationException -> logCancellationException(step, t)
+                    else -> {
+                        logger.error {
+                            message("Unhandled exception during task step execution.")
+                            exception(t)
+                            data("step", step.toString())
+                        }
 
-                postEvent(ExecutionFailedEvent("During execution of step of kind '${step::class.simpleName}': " + t.toString()))
+                        postEvent(ExecutionFailedEvent("During execution of step of kind '${step::class.simpleName}': " + t.toString()))
+                    }
+                }
             }
+        }
+    }
+
+    private fun logCancellationException(step: TaskStep, ex: Exception) {
+        logger.info {
+            message("Step was cancelled and threw an exception.")
+            exception(ex)
+            data("step", step.toString())
         }
     }
 

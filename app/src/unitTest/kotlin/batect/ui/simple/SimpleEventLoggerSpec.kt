@@ -35,7 +35,6 @@ import batect.execution.model.steps.CreateContainerStep
 import batect.execution.model.steps.CreateTaskNetworkStep
 import batect.execution.model.steps.PullImageStep
 import batect.execution.model.steps.RunContainerStep
-import batect.execution.model.steps.StartContainerStep
 import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.given
@@ -171,17 +170,6 @@ object SimpleEventLoggerSpec : Spek({
 
                     it("prints a message to the output") {
                         verify(console).println(Text.white(Text("Pulling ") + Text.bold("some-image:1.2.3") + Text("...")))
-                    }
-                }
-
-                on("when a 'start container' step is starting") {
-                    beforeEachTest {
-                        val step = StartContainerStep(container, DockerContainer("not-important"))
-                        logger.postEvent(StepStartingEvent(step))
-                    }
-
-                    it("prints a message to the output") {
-                        verify(console).println(Text.white(Text("Starting ") + Text.bold("the-cool-container") + Text("...")))
                     }
                 }
 

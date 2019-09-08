@@ -298,10 +298,11 @@ object DockerClientSpec : Spek({
                 val inputStream by createForEachTest { mock<ContainerInputStream>() }
                 val terminalRestorer by createForEachTest { mock<AutoCloseable>() }
                 val resizingRestorer by createForEachTest { mock<AutoCloseable>() }
+                val cancellationContext by createForEachTest { mock<CancellationContext>() }
                 val onStartedHandler by createForEachTest { mock<() -> Unit>() }
 
                 beforeEachTest {
-                    whenever(waiter.startWaitingForContainerToExit(container)).doReturn(CompletableFuture.completedFuture(123))
+                    whenever(waiter.startWaitingForContainerToExit(container, cancellationContext)).doReturn(CompletableFuture.completedFuture(123))
                     whenever(api.attachToContainerOutput(container)).doReturn(outputStream)
                     whenever(api.attachToContainerInput(container)).doReturn(inputStream)
                     whenever(consoleManager.enterRawMode()).doReturn(terminalRestorer)
@@ -315,7 +316,7 @@ object DockerClientSpec : Spek({
                         val stdin by createForEachTest { mock<Source>() }
 
                         on("running the container") {
-                            val result by runForEachTest { client.run(container, stdout, stdin, onStartedHandler) }
+                            val result by runForEachTest { client.run(container, stdout, stdin, cancellationContext, onStartedHandler) }
 
                             it("returns the exit code from the container") {
                                 assertThat(result.exitCode, equalTo(123))
@@ -323,7 +324,7 @@ object DockerClientSpec : Spek({
 
                             it("starts waiting for the container to exit before starting the container") {
                                 inOrder(api, waiter) {
-                                    verify(waiter).startWaitingForContainerToExit(container)
+                                    verify(waiter).startWaitingForContainerToExit(container, cancellationContext)
                                     verify(api).startContainer(container)
                                 }
                             }
@@ -400,7 +401,7 @@ object DockerClientSpec : Spek({
                         val stdin: Source? = null
 
                         on("running the container") {
-                            val result by runForEachTest { client.run(container, stdout, stdin, onStartedHandler) }
+                            val result by runForEachTest { client.run(container, stdout, stdin, cancellationContext, onStartedHandler) }
 
                             it("returns the exit code from the container") {
                                 assertThat(result.exitCode, equalTo(123))
@@ -440,7 +441,7 @@ object DockerClientSpec : Spek({
                         val stdin by createForEachTest { mock<Source>() }
 
                         it("throws an appropriate exception") {
-                            assertThat({ client.run(container, stdout, stdin, onStartedHandler) }, throws<DockerException>(withMessage("Attempted to stream input to container without streaming container output.")))
+                            assertThat({ client.run(container, stdout, stdin, cancellationContext, onStartedHandler) }, throws<DockerException>(withMessage("Attempted to stream input to container without streaming container output.")))
                         }
                     }
 
@@ -448,7 +449,7 @@ object DockerClientSpec : Spek({
                         val stdin: Source? = null
 
                         on("running the container") {
-                            val result by runForEachTest { client.run(container, stdout, stdin, onStartedHandler) }
+                            val result by runForEachTest { client.run(container, stdout, stdin, cancellationContext, onStartedHandler) }
 
                             it("returns the exit code from the container") {
                                 assertThat(result.exitCode, equalTo(123))
@@ -478,20 +479,6 @@ object DockerClientSpec : Spek({
                                 verify(ttyManager).monitorForSizeChanges(container)
                             }
                         }
-                    }
-                }
-            }
-        }
-
-        describe("starting a container") {
-            given("a Docker container") {
-                val container = DockerContainer("the-container-id")
-
-                on("starting that container") {
-                    beforeEachTest { client.start(container) }
-
-                    it("sends a request to the Docker daemon to start the container") {
-                        verify(api).startContainer(container)
                     }
                 }
             }

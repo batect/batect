@@ -268,7 +268,7 @@ class DockerAPI(
             }
     }
 
-    fun waitForExit(container: DockerContainer): Int {
+    fun waitForExit(container: DockerContainer, cancellationContext: CancellationContext): Int {
         logger.info {
             message("Waiting for container to exit.")
             data("container", container)
@@ -284,31 +284,33 @@ class DockerAPI(
             .url(url)
             .build()
 
-        clientWithNoTimeout().newCall(request).execute().use { response ->
-            checkForFailure(response) { error ->
-                logger.error {
-                    message("Waiting for container to exit failed.")
-                    data("error", error)
+        clientWithNoTimeout()
+            .newCall(request)
+            .executeInCancellationContext(cancellationContext) { response ->
+                checkForFailure(response) { error ->
+                    logger.error {
+                        message("Waiting for container to exit failed.")
+                        data("error", error)
+                    }
+
+                    throw DockerException("Waiting for container '${container.id}' to exit failed: ${error.message}")
                 }
 
-                throw DockerException("Waiting for container '${container.id}' to exit failed: ${error.message}")
-            }
+                val responseBody = response.body()!!.string()
+                val parsedResponse = Json.parser.parseJson(responseBody).jsonObject
 
-            val responseBody = response.body()!!.string()
-            val parsedResponse = Json.parser.parseJson(responseBody).jsonObject
+                logger.info {
+                    message("Container exited.")
+                    data("result", responseBody)
+                }
 
-            logger.info {
-                message("Container exited.")
-                data("result", responseBody)
-            }
+                if (parsedResponse.containsKey("Error") && !parsedResponse.getValue("Error").isNull) {
+                    val message = parsedResponse.getObject("Error").getPrimitive("Message").content
 
-            if (parsedResponse.containsKey("Error") && !parsedResponse.getValue("Error").isNull) {
-                val message = parsedResponse.getObject("Error").getPrimitive("Message").content
+                    throw DockerException("Waiting for container '${container.id}' to exit succeeded but returned an error: $message")
+                }
 
-                throw DockerException("Waiting for container '${container.id}' to exit succeeded but returned an error: $message")
-            }
-
-            return parsedResponse.getValue("StatusCode").primitive.int
+                return parsedResponse.getValue("StatusCode").primitive.int
         }
     }
 

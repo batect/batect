@@ -21,7 +21,6 @@ import batect.config.EnvironmentVariableExpressionEvaluationException
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerHealthCheckException
 import batect.docker.ContainerRemovalFailedException
-import batect.docker.ContainerStartFailedException
 import batect.docker.ContainerStopFailedException
 import batect.docker.DockerClient
 import batect.docker.DockerContainer
@@ -44,7 +43,6 @@ import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
 import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.ContainerRunFailedEvent
-import batect.execution.model.events.ContainerStartFailedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ContainerStopFailedEvent
 import batect.execution.model.events.ContainerStoppedEvent
@@ -92,8 +90,7 @@ class TaskStepRunner(
             is PullImageStep -> handlePullImageStep(step, context.eventSink, context.cancellationContext)
             is CreateTaskNetworkStep -> handleCreateTaskNetworkStep(context.eventSink)
             is CreateContainerStep -> handleCreateContainerStep(step, context.eventSink, context.runOptions, context.ioStreamingOptions)
-            is RunContainerStep -> handleRunContainerStep(step, context.eventSink, context.ioStreamingOptions)
-            is StartContainerStep -> handleStartContainerStep(step, context.eventSink)
+            is RunContainerStep -> handleRunContainerStep(step, context.eventSink, context.ioStreamingOptions, context.cancellationContext)
             is WaitForContainerToBecomeHealthyStep -> handleWaitForContainerToBecomeHealthyStep(step, context.eventSink, context.cancellationContext)
             is StopContainerStep -> handleStopContainerStep(step, context.eventSink)
             is RemoveContainerStep -> handleRemoveContainerStep(step, context.eventSink)
@@ -177,27 +174,18 @@ class TaskStepRunner(
         }
     }
 
-    private fun handleRunContainerStep(step: RunContainerStep, eventSink: TaskEventSink, ioStreamingOptions: ContainerIOStreamingOptions) {
+    private fun handleRunContainerStep(step: RunContainerStep, eventSink: TaskEventSink, ioStreamingOptions: ContainerIOStreamingOptions, cancellationContext: CancellationContext) {
         try {
             val stdout = ioStreamingOptions.stdoutForContainer(step.container)
             val stdin = ioStreamingOptions.stdinForContainer(step.container)
 
-            val result = dockerClient.run(step.dockerContainer, stdout, stdin) {
+            val result = dockerClient.run(step.dockerContainer, stdout, stdin, cancellationContext) {
                 eventSink.postEvent(ContainerStartedEvent(step.container))
             }
 
             eventSink.postEvent(RunningContainerExitedEvent(step.container, result.exitCode))
         } catch (e: DockerException) {
             eventSink.postEvent(ContainerRunFailedEvent(step.container, e.message ?: ""))
-        }
-    }
-
-    private fun handleStartContainerStep(step: StartContainerStep, eventSink: TaskEventSink) {
-        try {
-            dockerClient.start(step.dockerContainer)
-            eventSink.postEvent(ContainerStartedEvent(step.container))
-        } catch (e: ContainerStartFailedException) {
-            eventSink.postEvent(ContainerStartFailedEvent(step.container, e.outputFromDocker))
         }
     }
 

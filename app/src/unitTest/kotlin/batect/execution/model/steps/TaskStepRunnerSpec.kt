@@ -27,7 +27,6 @@ import batect.config.VolumeMount
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerHealthCheckException
 import batect.docker.ContainerRemovalFailedException
-import batect.docker.ContainerStartFailedException
 import batect.docker.ContainerStopFailedException
 import batect.docker.DockerClient
 import batect.docker.DockerContainer
@@ -59,7 +58,6 @@ import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
 import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.ContainerRunFailedEvent
-import batect.execution.model.events.ContainerStartFailedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ContainerStopFailedEvent
 import batect.execution.model.events.ContainerStoppedEvent
@@ -395,9 +393,9 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when running the container succeeds") {
                     beforeEachTest {
-                        whenever(dockerClient.run(any(), any(), any(), any())).doAnswer { invocation ->
+                        whenever(dockerClient.run(any(), any(), any(), any(), any())).doAnswer { invocation ->
                             @Suppress("UNCHECKED_CAST")
-                            val onStartedHandler = invocation.arguments[3] as () -> Unit
+                            val onStartedHandler = invocation.arguments[4] as () -> Unit
 
                             onStartedHandler()
 
@@ -408,7 +406,7 @@ object TaskStepRunnerSpec : Spek({
                     }
 
                     it("runs the container with the stdin and stdout provided by the I/O streaming options") {
-                        verify(dockerClient).run(eq(dockerContainer), eq(stdout), eq(stdin), any())
+                        verify(dockerClient).run(eq(dockerContainer), eq(stdout), eq(stdin), eq(cancellationContext), any())
                     }
 
                     it("emits a 'container started' event") {
@@ -422,43 +420,13 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when running the container fails") {
                     beforeEachTest {
-                        whenever(dockerClient.run(any(), any(), any(), any())).doThrow(DockerException("Something went wrong"))
+                        whenever(dockerClient.run(any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong"))
 
                         runner.run(step, stepRunContext)
                     }
 
                     it("emits a 'container run failed' event") {
                         verify(eventSink).postEvent(ContainerRunFailedEvent(container, "Something went wrong"))
-                    }
-                }
-            }
-
-            describe("running a 'start container' step") {
-                val container = Container("some-container", imageSourceDoesNotMatter())
-                val dockerContainer = DockerContainer("some-id")
-                val step = StartContainerStep(container, dockerContainer)
-
-                on("when starting the container succeeds") {
-                    beforeEachTest { runner.run(step, stepRunContext) }
-
-                    it("starts the container") {
-                        verify(dockerClient).start(dockerContainer)
-                    }
-
-                    it("emits a 'container started' event") {
-                        verify(eventSink).postEvent(ContainerStartedEvent(container))
-                    }
-                }
-
-                on("when starting the container fails") {
-                    beforeEachTest {
-                        whenever(dockerClient.start(dockerContainer)).thenThrow(ContainerStartFailedException("some-id", "Something went wrong"))
-
-                        runner.run(step, stepRunContext)
-                    }
-
-                    it("emits a 'container start failed' event") {
-                        verify(eventSink).postEvent(ContainerStartFailedEvent(container, "Something went wrong"))
                     }
                 }
             }

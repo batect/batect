@@ -35,7 +35,6 @@ import batect.execution.model.steps.BuildImageStep
 import batect.execution.model.steps.CreateContainerStep
 import batect.execution.model.steps.PullImageStep
 import batect.execution.model.steps.RunContainerStep
-import batect.execution.model.steps.StartContainerStep
 import batect.execution.model.steps.TaskStep
 import batect.os.Command
 import batect.ui.text.Text
@@ -155,7 +154,6 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
             is BuildImageStep -> onBuildImageStepStarting(step)
             is PullImageStep -> onPullImageStepStarting(step)
             is CreateContainerStep -> onCreateContainerStepStarting(step)
-            is StartContainerStep -> onStartContainerStepStarting(step)
             is RunContainerStep -> onRunContainerStepStarting(step)
         }
     }
@@ -176,12 +174,6 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
         if (step.container == container) {
             isCreating = true
             command = step.command
-        }
-    }
-
-    private fun onStartContainerStepStarting(step: StartContainerStep) {
-        if (step.container == container) {
-            isStarting = true
         }
     }
 

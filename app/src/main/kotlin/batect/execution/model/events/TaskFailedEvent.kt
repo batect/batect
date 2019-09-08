@@ -43,10 +43,6 @@ data class ContainerCreationFailedEvent(val container: Container, val message: S
     override fun toString() = "${this::class.simpleName}(container: '${container.name}', message: '$message')"
 }
 
-data class ContainerStartFailedEvent(val container: Container, val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', message: '$message')"
-}
-
 data class ContainerDidNotBecomeHealthyEvent(val container: Container, val message: String) : TaskFailedEvent() {
     override fun toString() = "${this::class.simpleName}(container: '${container.name}', message: '$message')"
 }

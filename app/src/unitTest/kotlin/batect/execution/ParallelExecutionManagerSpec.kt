@@ -43,6 +43,7 @@ import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
@@ -190,25 +191,43 @@ object ParallelExecutionManagerSpec : Spek({
 
             given("the exception is not because the step was cancelled") {
                 beforeEachTest {
-                    whenever(taskStepRunner.run(eq(step), eqExpectedRunContext())).thenThrow(RuntimeException("Something went wrong."))
+                    whenever(taskStepRunner.run(eq(step), eqExpectedRunContext())).then { throw ExecutionException("Something went wrong.", null) }
                 }
 
                 on("running the task") {
                     beforeEachTest { executionManager.run() }
 
                     it("logs a task failure event to the event logger") {
-                        verify(eventLogger).postEvent(ExecutionFailedEvent("During execution of step of kind 'CreateTaskNetworkStep': java.lang.RuntimeException: Something went wrong."))
+                        verify(eventLogger).postEvent(ExecutionFailedEvent("During execution of step of kind 'CreateTaskNetworkStep': java.util.concurrent.ExecutionException: Something went wrong."))
                     }
 
                     it("logs a task failure event to the state machine") {
-                        verify(stateMachine).postEvent(ExecutionFailedEvent("During execution of step of kind 'CreateTaskNetworkStep': java.lang.RuntimeException: Something went wrong."))
+                        verify(stateMachine).postEvent(ExecutionFailedEvent("During execution of step of kind 'CreateTaskNetworkStep': java.util.concurrent.ExecutionException: Something went wrong."))
                     }
                 }
             }
 
-            given("the exception signals that the step was cancelled") {
+            given("the exception directly signals that the step was cancelled") {
                 beforeEachTest {
                     whenever(taskStepRunner.run(eq(step), eqExpectedRunContext())).thenThrow(CancellationException("The step was cancelled"))
+                }
+
+                on("running the task") {
+                    beforeEachTest { executionManager.run() }
+
+                    it("does not log a task failure event to the event logger") {
+                        verify(eventLogger, never()).postEvent(any<TaskFailedEvent>())
+                    }
+
+                    it("does not log a task failure event to the state machine") {
+                        verify(stateMachine, never()).postEvent(any<TaskFailedEvent>())
+                    }
+                }
+            }
+
+            given("the exception indirectly signals that the step was cancelled") {
+                beforeEachTest {
+                    whenever(taskStepRunner.run(eq(step), eqExpectedRunContext())).then { throw ExecutionException("Something went wrong", CancellationException("The step was cancelled")) }
                 }
 
                 on("running the task") {

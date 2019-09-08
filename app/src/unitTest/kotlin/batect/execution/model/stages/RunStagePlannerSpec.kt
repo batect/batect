@@ -34,7 +34,6 @@ import batect.execution.model.rules.run.CreateContainerStepRule
 import batect.execution.model.rules.run.CreateTaskNetworkStepRule
 import batect.execution.model.rules.run.PullImageStepRule
 import batect.execution.model.rules.run.RunContainerStepRule
-import batect.execution.model.rules.run.StartContainerStepRule
 import batect.execution.model.rules.run.WaitForContainerToBecomeHealthyStepRule
 import batect.os.Command
 import batect.testutils.createForEachTest
@@ -207,9 +206,9 @@ object RunStagePlannerSpec : Spek({
                         "create the container for container 1" to CreateContainerStepRule(container1, graph.nodeFor(container1).command, graph.nodeFor(container1).workingDirectory, emptyMap(), emptySet(), allContainersInNetwork),
                         "create the container for container 2" to CreateContainerStepRule(container2, graph.nodeFor(container2).command, graph.nodeFor(container2).workingDirectory, emptyMap(), emptySet(), allContainersInNetwork),
                         "create the container for container 3" to CreateContainerStepRule(container3, graph.nodeFor(container3).command, graph.nodeFor(container3).workingDirectory, emptyMap(), emptySet(), allContainersInNetwork),
-                        "start container 1" to StartContainerStepRule(container1, graph.nodeFor(container1).dependsOnContainers),
-                        "start container 2" to StartContainerStepRule(container2, graph.nodeFor(container2).dependsOnContainers),
-                        "start container 3" to StartContainerStepRule(container3, graph.nodeFor(container3).dependsOnContainers),
+                        "run container 1" to RunContainerStepRule(container1, graph.nodeFor(container1).dependsOnContainers),
+                        "run container 2" to RunContainerStepRule(container2, graph.nodeFor(container2).dependsOnContainers),
+                        "run container 3" to RunContainerStepRule(container3, graph.nodeFor(container3).dependsOnContainers),
                         "wait for container 1 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container1),
                         "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2),
                         "wait for container 3 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container3),
@@ -244,8 +243,8 @@ object RunStagePlannerSpec : Spek({
                         ),
                         "create the container for container 1" to CreateContainerStepRule(container1, graph.nodeFor(container1).command, graph.nodeFor(container1).workingDirectory, emptyMap(), emptySet(), allContainersInNetwork),
                         "create the container for container 2" to CreateContainerStepRule(container2, graph.nodeFor(container2).command, graph.nodeFor(container2).workingDirectory, emptyMap(), emptySet(), allContainersInNetwork),
-                        "start container 1" to StartContainerStepRule(container1, graph.nodeFor(container1).dependsOnContainers),
-                        "start container 2" to StartContainerStepRule(container2, graph.nodeFor(container2).dependsOnContainers),
+                        "run container 1" to RunContainerStepRule(container1, graph.nodeFor(container1).dependsOnContainers),
+                        "run container 2" to RunContainerStepRule(container2, graph.nodeFor(container2).dependsOnContainers),
                         "wait for container 1 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container1),
                         "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2),
                         "run the task container" to RunContainerStepRule(taskContainer, graph.nodeFor(taskContainer).dependsOnContainers)
@@ -281,8 +280,8 @@ object RunStagePlannerSpec : Spek({
                                 ),
                                 "create the container for container 1" to CreateContainerStepRule(container1, graph.nodeFor(container1).command, graph.nodeFor(container1).workingDirectory, emptyMap(), emptySet(), allContainersInNetwork),
                                 "create the container for container 2" to CreateContainerStepRule(container2, graph.nodeFor(container2).command, graph.nodeFor(container2).workingDirectory, emptyMap(), emptySet(), allContainersInNetwork),
-                                "start container 1" to StartContainerStepRule(container1, graph.nodeFor(container1).dependsOnContainers),
-                                "start container 2" to StartContainerStepRule(container2, graph.nodeFor(container2).dependsOnContainers),
+                                "run container 1" to RunContainerStepRule(container1, graph.nodeFor(container1).dependsOnContainers),
+                                "run container 2" to RunContainerStepRule(container2, graph.nodeFor(container2).dependsOnContainers),
                                 "wait for container 1 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container1),
                                 "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2),
                                 "run the task container" to RunContainerStepRule(taskContainer, graph.nodeFor(taskContainer).dependsOnContainers)
@@ -318,8 +317,8 @@ object RunStagePlannerSpec : Spek({
                                 ),
                                 "create the container for container 1" to CreateContainerStepRule(container1, graph.nodeFor(container1).command, graph.nodeFor(container1).workingDirectory, emptyMap(), emptySet(), allContainersInNetwork),
                                 "create the container for container 2" to CreateContainerStepRule(container2, graph.nodeFor(container2).command, graph.nodeFor(container2).workingDirectory, emptyMap(), emptySet(), allContainersInNetwork),
-                                "start container 1" to StartContainerStepRule(container1, graph.nodeFor(container1).dependsOnContainers),
-                                "start container 2" to StartContainerStepRule(container2, graph.nodeFor(container2).dependsOnContainers),
+                                "run container 1" to RunContainerStepRule(container1, graph.nodeFor(container1).dependsOnContainers),
+                                "run container 2" to RunContainerStepRule(container2, graph.nodeFor(container2).dependsOnContainers),
                                 "wait for container 1 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container1),
                                 "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2),
                                 "run the task container" to RunContainerStepRule(taskContainer, graph.nodeFor(taskContainer).dependsOnContainers)
@@ -355,8 +354,8 @@ object RunStagePlannerSpec : Spek({
                             ),
                             "create the container for container 1" to CreateContainerStepRule(container1, graph.nodeFor(container1).command, graph.nodeFor(container1).workingDirectory, emptyMap(), emptySet(), allContainersInNetwork),
                             "create the container for container 2" to CreateContainerStepRule(container2, graph.nodeFor(container2).command, graph.nodeFor(container2).workingDirectory, emptyMap(), emptySet(), allContainersInNetwork),
-                            "start container 1" to StartContainerStepRule(container1, graph.nodeFor(container1).dependsOnContainers),
-                            "start container 2" to StartContainerStepRule(container2, graph.nodeFor(container2).dependsOnContainers),
+                            "run container 1" to RunContainerStepRule(container1, graph.nodeFor(container1).dependsOnContainers),
+                            "run container 2" to RunContainerStepRule(container2, graph.nodeFor(container2).dependsOnContainers),
                             "wait for container 1 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container1),
                             "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2),
                             "run the task container" to RunContainerStepRule(taskContainer, graph.nodeFor(taskContainer).dependsOnContainers)

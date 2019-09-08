@@ -67,10 +67,6 @@ data class RunContainerStep(val container: Container, val dockerContainer: Docke
     override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 
-data class StartContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
-    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}')"
-}
-
 data class WaitForContainerToBecomeHealthyStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
     override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }

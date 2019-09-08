@@ -26,6 +26,7 @@ import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
 import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRunFailedEvent
+import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ContainerStopFailedEvent
 import batect.execution.model.events.ExecutionFailedEvent
 import batect.execution.model.events.ImageBuildFailedEvent
@@ -105,8 +106,10 @@ class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
     }
 
     private fun containerOutputAndExecInstructions(container: Container, dockerContainer: DockerContainer, events: Set<TaskEvent>): TextRun {
+        val neverStarted = events.none { it is ContainerStartedEvent && it.container == container }
         val alreadyExited = events.any { it is RunningContainerExitedEvent && it.container == container }
-        val execCommand = if (alreadyExited) {
+
+        val execCommand = if (neverStarted || alreadyExited) {
             "docker start ${dockerContainer.id}; docker exec -it ${dockerContainer.id} <command>"
         } else {
             "docker exec -it ${dockerContainer.id} <command>"

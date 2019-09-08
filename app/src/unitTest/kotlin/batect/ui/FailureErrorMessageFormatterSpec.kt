@@ -27,6 +27,7 @@ import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
 import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRunFailedEvent
+import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ContainerStopFailedEvent
 import batect.execution.model.events.ExecutionFailedEvent
 import batect.execution.model.events.ImageBuildFailedEvent
@@ -218,9 +219,12 @@ object FailureErrorMessageFormatterSpec : Spek({
                 }
 
                 given("a container was created") {
-                    given("the container did not exit") {
+                    given("the container started") {
+                        val container = Container("http-server", imageSourceDoesNotMatter())
+
                         val events = setOf(
-                            ContainerCreatedEvent(Container("http-server", imageSourceDoesNotMatter()), DockerContainer("http-server-container-id"))
+                            ContainerCreatedEvent(container, DockerContainer("http-server-container-id")),
+                            ContainerStartedEvent(container)
                         )
 
                         given("there are no cleanup commands") {
@@ -280,10 +284,38 @@ object FailureErrorMessageFormatterSpec : Spek({
                         }
                     }
 
+                    given("the container never started") {
+                        val container = Container("http-server", imageSourceDoesNotMatter())
+                        val events = setOf(
+                            ContainerCreatedEvent(container, DockerContainer("http-server-container-id"))
+                        )
+
+                        given("there is one cleanup command") {
+                            val cleanupCommands = listOf(
+                                "docker network rm some-network"
+                            )
+
+                            on("formatting the message") {
+                                val message = messageGenerator(events, cleanupCommands)
+                                val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
+                                    Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
+                                    Text("', or run a command in the container with '") + Text.bold("docker start http-server-container-id; docker exec -it http-server-container-id <command>") + Text("'.\n") +
+                                    Text("\n") +
+                                    Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
+                                    Text.bold("docker network rm some-network")
+
+                                it("returns an appropriate message that includes how to start the container") {
+                                    assertThat(message, equivalentTo(expectedMessage.withPlatformSpecificLineSeparator()))
+                                }
+                            }
+                        }
+                    }
+
                     given("the container exited") {
                         val container = Container("http-server", imageSourceDoesNotMatter())
                         val events = setOf(
                             ContainerCreatedEvent(container, DockerContainer("http-server-container-id")),
+                            ContainerStartedEvent(container),
                             RunningContainerExitedEvent(container, 123)
                         )
 
@@ -309,10 +341,15 @@ object FailureErrorMessageFormatterSpec : Spek({
                     }
                 }
 
-                given("some containers were created") {
+                given("some containers were created and started") {
+                    val container1 = Container("http-server", imageSourceDoesNotMatter())
+                    val container2 = Container("database", imageSourceDoesNotMatter())
+
                     val events = setOf(
-                        ContainerCreatedEvent(Container("http-server", imageSourceDoesNotMatter()), DockerContainer("http-server-container-id")),
-                        ContainerCreatedEvent(Container("database", imageSourceDoesNotMatter()), DockerContainer("database-container-id"))
+                        ContainerCreatedEvent(container1, DockerContainer("http-server-container-id")),
+                        ContainerStartedEvent(container1),
+                        ContainerCreatedEvent(container2, DockerContainer("database-container-id")),
+                        ContainerStartedEvent(container2)
                     )
 
                     given("there are no cleanup commands") {

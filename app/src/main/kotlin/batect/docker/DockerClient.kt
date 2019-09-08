@@ -124,7 +124,7 @@ class DockerClient(
     fun stop(container: DockerContainer) = api.stopContainer(container)
     fun remove(container: DockerContainer) = api.removeContainer(container)
 
-    fun run(container: DockerContainer, stdout: Sink?, stdin: Source?, cancellationContext: CancellationContext, onStarted: () -> Unit): DockerContainerRunResult {
+    fun run(container: DockerContainer, stdout: Sink?, stdin: Source?, stopWhenCancelled: Boolean, cancellationContext: CancellationContext, onStarted: () -> Unit): DockerContainerRunResult {
         logger.info {
             message("Running container.")
             data("container", container)
@@ -134,7 +134,7 @@ class DockerClient(
             throw DockerException("Attempted to stream input to container without streaming container output.")
         }
 
-        cancellationContext.addCancellationCallback { api.stopContainer(container) }.use {
+        cancellationContext.addCancellationCallback { onRunCancelled(container, stopWhenCancelled) }.use {
             val exitCodeSource = waiter.startWaitingForContainerToExit(container, cancellationContext)
 
             connectContainerOutput(container, stdout).use { outputConnection ->
@@ -160,6 +160,10 @@ class DockerClient(
 
             return DockerContainerRunResult(exitCode)
         }
+    }
+
+    private fun onRunCancelled(container: DockerContainer, stopWhenCancelled: Boolean) {
+        if (stopWhenCancelled) { api.stopContainer(container) }
     }
 
     private fun connectContainerOutput(container: DockerContainer, stdout: Sink?): OutputConnection {

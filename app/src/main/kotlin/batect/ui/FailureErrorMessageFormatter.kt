@@ -106,9 +106,13 @@ class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
 
     private fun containerOutputAndExecInstructions(container: Container, dockerContainer: DockerContainer, events: Set<TaskEvent>): TextRun {
         val alreadyExited = events.any { it is RunningContainerExitedEvent && it.container == container }
-        val execPart = if (alreadyExited) TextRun() else Text("', or run a command in the container with '") + Text.bold("docker exec -it ${dockerContainer.id} <command>")
+        val execCommand = if (alreadyExited) {
+            "docker start ${dockerContainer.id}; docker exec -it ${dockerContainer.id} <command>"
+        } else {
+            "docker exec -it ${dockerContainer.id} <command>"
+        }
 
-        return Text("For container ") + Text.bold(container.name) + Text(", view its output by running '") + Text.bold("docker logs ${dockerContainer.id}") + execPart + Text("'.$newLine")
+        return Text("For container ") + Text.bold(container.name) + Text(", view its output by running '") + Text.bold("docker logs ${dockerContainer.id}") + Text("', or run a command in the container with '") + Text.bold(execCommand) + Text("'.$newLine")
     }
 
     fun formatManualCleanupMessageAfterCleanupFailure(cleanupCommands: List<String>): TextRun {

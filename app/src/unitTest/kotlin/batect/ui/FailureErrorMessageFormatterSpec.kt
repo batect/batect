@@ -295,12 +295,13 @@ object FailureErrorMessageFormatterSpec : Spek({
                             on("formatting the message") {
                                 val message = messageGenerator(events, cleanupCommands)
                                 val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
-                                    Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") + Text("'.\n") +
+                                    Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
+                                    Text("', or run a command in the container with '") + Text.bold("docker start http-server-container-id; docker exec -it http-server-container-id <command>") + Text("'.\n") +
                                     Text("\n") +
                                     Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
                                     Text.bold("docker network rm some-network")
 
-                                it("returns an appropriate message that does not include how to run a command in the exited container") {
+                                it("returns an appropriate message that includes how to restart the exited container") {
                                     assertThat(message, equivalentTo(expectedMessage.withPlatformSpecificLineSeparator()))
                                 }
                             }

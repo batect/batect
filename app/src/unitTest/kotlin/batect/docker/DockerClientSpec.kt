@@ -426,8 +426,8 @@ object DockerClientSpec : Spek({
                                 verify(consoleManager, never()).enterRawMode()
                             }
 
-                            it("does not start monitoring for console size changes") {
-                                verify(ttyManager, never()).monitorForSizeChanges(container)
+                            it("starts monitoring for console size changes") {
+                                verify(ttyManager).monitorForSizeChanges(container)
                             }
                         }
                     }
@@ -474,8 +474,8 @@ object DockerClientSpec : Spek({
                                 verify(consoleManager, never()).enterRawMode()
                             }
 
-                            it("does not start monitoring for console size changes") {
-                                verify(ttyManager, never()).monitorForSizeChanges(container)
+                            it("starts monitoring for console size changes") {
+                                verify(ttyManager).monitorForSizeChanges(container)
                             }
                         }
                     }

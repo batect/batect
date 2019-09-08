@@ -142,8 +142,10 @@ class DockerClient(
                 api.startContainer(container)
                 onStarted()
 
-                startTTYEmulationIfRequired(container, stdin) {
-                    ioStreamer.stream(outputConnection, inputConnection)
+                ttyManager.monitorForSizeChanges(container).use {
+                    startRawModeIfRequired(stdin).use {
+                        ioStreamer.stream(outputConnection, inputConnection)
+                    }
                 }
             }
         }
@@ -174,17 +176,12 @@ class DockerClient(
         return InputConnection.Connected(stdin, api.attachToContainerInput(container))
     }
 
-    private fun startTTYEmulationIfRequired(container: DockerContainer, stdin: Source?, action: () -> Unit) {
+    private fun startRawModeIfRequired(stdin: Source?): AutoCloseable {
         if (stdin == null) {
-            action()
-            return
+            return AutoCloseable { }
         }
 
-        ttyManager.monitorForSizeChanges(container).use {
-            consoleManager.enterRawMode().use {
-                action()
-            }
-        }
+        return consoleManager.enterRawMode()
     }
 
     fun waitForHealthStatus(container: DockerContainer, cancellationContext: CancellationContext): HealthStatus {

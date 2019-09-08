@@ -91,6 +91,7 @@ import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.eq
@@ -396,13 +397,24 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when running the container succeeds") {
                     beforeEachTest {
-                        whenever(dockerClient.run(any(), any(), any(), any())).doReturn(DockerContainerRunResult(123))
+                        whenever(dockerClient.run(any(), any(), any(), any(), any())).doAnswer { invocation ->
+                            @Suppress("UNCHECKED_CAST")
+                            val onStartedHandler = invocation.arguments[4] as () -> Unit
+
+                            onStartedHandler()
+
+                            DockerContainerRunResult(123)
+                        }
 
                         runner.run(step, stepRunContext)
                     }
 
                     it("runs the container with the stdin and stdout provided by the I/O streaming options") {
-                        verify(dockerClient).run(dockerContainer, stdout, stdin, attachTTY)
+                        verify(dockerClient).run(eq(dockerContainer), eq(stdout), eq(stdin), eq(attachTTY), any())
+                    }
+
+                    it("emits a 'container started' event") {
+                        verify(eventSink).postEvent(ContainerStartedEvent(container))
                     }
 
                     it("emits a 'running container exited' event") {
@@ -412,7 +424,7 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when running the container fails") {
                     beforeEachTest {
-                        whenever(dockerClient.run(any(), any(), any(), any())).doThrow(DockerException("Something went wrong"))
+                        whenever(dockerClient.run(any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong"))
 
                         runner.run(step, stepRunContext)
                     }

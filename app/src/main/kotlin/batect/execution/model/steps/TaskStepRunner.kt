@@ -182,7 +182,11 @@ class TaskStepRunner(
             val stdout = ioStreamingOptions.stdoutForContainer(step.container)
             val stdin = ioStreamingOptions.stdinForContainer(step.container)
             val ttyConnected = ioStreamingOptions.shouldAttachTTY(step.container)
-            val result = dockerClient.run(step.dockerContainer, stdout, stdin, ttyConnected)
+
+            val result = dockerClient.run(step.dockerContainer, stdout, stdin, ttyConnected) {
+                eventSink.postEvent(ContainerStartedEvent(step.container))
+            }
+
             eventSink.postEvent(RunningContainerExitedEvent(step.container, result.exitCode))
         } catch (e: DockerException) {
             eventSink.postEvent(ContainerRunFailedEvent(step.container, e.message ?: ""))

@@ -298,6 +298,7 @@ object DockerClientSpec : Spek({
                 val inputStream by createForEachTest { mock<ContainerInputStream>() }
                 val terminalRestorer by createForEachTest { mock<AutoCloseable>() }
                 val resizingRestorer by createForEachTest { mock<AutoCloseable>() }
+                val onStartedHandler by createForEachTest { mock<() -> Unit>() }
 
                 beforeEachTest {
                     whenever(waiter.startWaitingForContainerToExit(container)).doReturn(CompletableFuture.completedFuture(123))
@@ -317,7 +318,7 @@ object DockerClientSpec : Spek({
                             val ttyConnected = true
 
                             on("running the container") {
-                                val result by runForEachTest { client.run(container, stdout, stdin, ttyConnected) }
+                                val result by runForEachTest { client.run(container, stdout, stdin, ttyConnected, onStartedHandler) }
 
                                 it("returns the exit code from the container") {
                                     assertThat(result.exitCode, equalTo(123))
@@ -374,6 +375,14 @@ object DockerClientSpec : Spek({
                                     }
                                 }
 
+                                it("notifies the caller that the container has started after starting the container but before streaming I/O") {
+                                    inOrder(api, onStartedHandler, ioStreamer) {
+                                        verify(api).startContainer(container)
+                                        verify(onStartedHandler).invoke()
+                                        verify(ioStreamer).stream(any(), any())
+                                    }
+                                }
+
                                 it("closes the output stream after streaming the output completes") {
                                     inOrder(ioStreamer, outputStream) {
                                         verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
@@ -395,7 +404,7 @@ object DockerClientSpec : Spek({
 
                             on("running the container") {
                                 on("running the container") {
-                                    val result by runForEachTest { client.run(container, stdout, stdin, ttyConnected) }
+                                    val result by runForEachTest { client.run(container, stdout, stdin, ttyConnected, onStartedHandler) }
 
                                     it("returns the exit code from the container") {
                                         assertThat(result.exitCode, equalTo(123))
@@ -433,7 +442,7 @@ object DockerClientSpec : Spek({
                         val stdin: Source? = null
 
                         on("running the container") {
-                            val result by runForEachTest { client.run(container, stdout, stdin, true) }
+                            val result by runForEachTest { client.run(container, stdout, stdin, true, onStartedHandler) }
 
                             it("returns the exit code from the container") {
                                 assertThat(result.exitCode, equalTo(123))
@@ -473,7 +482,7 @@ object DockerClientSpec : Spek({
                         val stdin by createForEachTest { mock<Source>() }
 
                         it("throws an appropriate exception") {
-                            assertThat({ client.run(container, stdout, stdin, true) }, throws<DockerException>(withMessage("Attempted to stream input to container without streaming container output.")))
+                            assertThat({ client.run(container, stdout, stdin, true, onStartedHandler) }, throws<DockerException>(withMessage("Attempted to stream input to container without streaming container output.")))
                         }
                     }
 
@@ -481,7 +490,7 @@ object DockerClientSpec : Spek({
                         val stdin: Source? = null
 
                         on("running the container") {
-                            val result by runForEachTest { client.run(container, stdout, stdin, true) }
+                            val result by runForEachTest { client.run(container, stdout, stdin, true, onStartedHandler) }
 
                             it("returns the exit code from the container") {
                                 assertThat(result.exitCode, equalTo(123))

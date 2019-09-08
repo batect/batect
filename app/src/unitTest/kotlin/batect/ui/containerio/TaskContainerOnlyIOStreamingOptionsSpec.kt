@@ -21,8 +21,10 @@ import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.ui.ConsoleInfo
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -34,11 +36,17 @@ object TaskContainerOnlyIOStreamingOptionsSpec : Spek({
         val taskContainer by createForEachTest { Container("task-container", imageSourceDoesNotMatter()) }
         val stdout by createForEachTest { mock<PrintStream>() }
         val stdin by createForEachTest { mock<InputStream>() }
-        val options by createForEachTest { TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, stdin) }
+        val consoleInfo by createForEachTest {
+            mock<ConsoleInfo> {
+                on { terminalType } doReturn "my-terminal"
+            }
+        }
+
+        val options by createForEachTest { TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, stdin, consoleInfo) }
 
         given("the current container is the task container") {
-            it("enables attaching a TTY to the container") {
-                assertThat(options.shouldAttachTTY(taskContainer), equalTo(true))
+            it("returns the current console's terminal type") {
+                assertThat(options.terminalTypeForContainer(taskContainer), equalTo("my-terminal"))
             }
 
             it("returns the system's stdout stream as the stream for the container") {
@@ -55,8 +63,8 @@ object TaskContainerOnlyIOStreamingOptionsSpec : Spek({
         given("the current container is not the task container") {
             val container by createForEachTest { Container("other-container", imageSourceDoesNotMatter()) }
 
-            it("disables attaching a TTY to the container") {
-                assertThat(options.shouldAttachTTY(container), equalTo(false))
+            it("returns the current console's terminal type") {
+                assertThat(options.terminalTypeForContainer(container), equalTo("my-terminal"))
             }
 
             it("does not return a stdout stream for the container") {

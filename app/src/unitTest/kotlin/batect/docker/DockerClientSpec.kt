@@ -273,7 +273,7 @@ object DockerClientSpec : Spek({
                 val image = DockerImage("the-image")
                 val network = DockerNetwork("the-network")
                 val command = listOf("doStuff")
-                val request = DockerContainerCreationRequest(image, network, command, "some-host", "some-host", emptyMap(), "/some-dir", emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet(), false)
+                val request = DockerContainerCreationRequest(image, network, command, "some-host", "some-host", emptyMap(), "/some-dir", emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
 
                 on("creating the container") {
                     beforeEachTest { whenever(api.createContainer(request)).doReturn(DockerContainer("abc123")) }
@@ -314,125 +314,83 @@ object DockerClientSpec : Spek({
                     given("stdin is connected") {
                         val stdin by createForEachTest { mock<Source>() }
 
-                        given("a TTY is connected to the container") {
-                            val ttyConnected = true
+                        on("running the container") {
+                            val result by runForEachTest { client.run(container, stdout, stdin, onStartedHandler) }
 
-                            on("running the container") {
-                                val result by runForEachTest { client.run(container, stdout, stdin, ttyConnected, onStartedHandler) }
+                            it("returns the exit code from the container") {
+                                assertThat(result.exitCode, equalTo(123))
+                            }
 
-                                it("returns the exit code from the container") {
-                                    assertThat(result.exitCode, equalTo(123))
-                                }
-
-                                it("starts waiting for the container to exit before starting the container") {
-                                    inOrder(api, waiter) {
-                                        verify(waiter).startWaitingForContainerToExit(container)
-                                        verify(api).startContainer(container)
-                                    }
-                                }
-
-                                it("starts streaming I/O after putting the terminal into raw mode and starting the container") {
-                                    inOrder(api, consoleManager, ioStreamer) {
-                                        verify(api).startContainer(container)
-                                        verify(consoleManager).enterRawMode()
-                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
-                                    }
-                                }
-
-                                it("starts monitoring for terminal size changes after starting the container but before streaming I/O") {
-                                    inOrder(api, ttyManager, ioStreamer) {
-                                        verify(api).startContainer(container)
-                                        verify(ttyManager).monitorForSizeChanges(container)
-                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
-                                    }
-                                }
-
-                                it("stops monitoring for terminal size changes after the streaming completes") {
-                                    inOrder(ioStreamer, resizingRestorer) {
-                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
-                                        verify(resizingRestorer).close()
-                                    }
-                                }
-
-                                it("restores the terminal after streaming completes") {
-                                    inOrder(ioStreamer, terminalRestorer) {
-                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
-                                        verify(terminalRestorer).close()
-                                    }
-                                }
-
-                                it("attaches to the container output before starting the container") {
-                                    inOrder(api) {
-                                        verify(api).attachToContainerOutput(container)
-                                        verify(api).startContainer(container)
-                                    }
-                                }
-
-                                it("attaches to the container input before starting the container") {
-                                    inOrder(api) {
-                                        verify(api).attachToContainerInput(container)
-                                        verify(api).startContainer(container)
-                                    }
-                                }
-
-                                it("notifies the caller that the container has started after starting the container but before streaming I/O") {
-                                    inOrder(api, onStartedHandler, ioStreamer) {
-                                        verify(api).startContainer(container)
-                                        verify(onStartedHandler).invoke()
-                                        verify(ioStreamer).stream(any(), any())
-                                    }
-                                }
-
-                                it("closes the output stream after streaming the output completes") {
-                                    inOrder(ioStreamer, outputStream) {
-                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
-                                        verify(outputStream).close()
-                                    }
-                                }
-
-                                it("closes the input stream after streaming the output completes") {
-                                    inOrder(ioStreamer, inputStream) {
-                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
-                                        verify(inputStream).close()
-                                    }
+                            it("starts waiting for the container to exit before starting the container") {
+                                inOrder(api, waiter) {
+                                    verify(waiter).startWaitingForContainerToExit(container)
+                                    verify(api).startContainer(container)
                                 }
                             }
-                        }
 
-                        given("a TTY is not connected to the container") {
-                            val ttyConnected = false
+                            it("starts streaming I/O after putting the terminal into raw mode and starting the container") {
+                                inOrder(api, consoleManager, ioStreamer) {
+                                    verify(api).startContainer(container)
+                                    verify(consoleManager).enterRawMode()
+                                    verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
+                                }
+                            }
 
-                            on("running the container") {
-                                on("running the container") {
-                                    val result by runForEachTest { client.run(container, stdout, stdin, ttyConnected, onStartedHandler) }
+                            it("starts monitoring for terminal size changes after starting the container but before streaming I/O") {
+                                inOrder(api, ttyManager, ioStreamer) {
+                                    verify(api).startContainer(container)
+                                    verify(ttyManager).monitorForSizeChanges(container)
+                                    verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
+                                }
+                            }
 
-                                    it("returns the exit code from the container") {
-                                        assertThat(result.exitCode, equalTo(123))
-                                    }
+                            it("stops monitoring for terminal size changes after the streaming completes") {
+                                inOrder(ioStreamer, resizingRestorer) {
+                                    verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
+                                    verify(resizingRestorer).close()
+                                }
+                            }
 
-                                    it("starts the container") {
-                                        verify(api).startContainer(container)
-                                    }
+                            it("restores the terminal after streaming completes") {
+                                inOrder(ioStreamer, terminalRestorer) {
+                                    verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
+                                    verify(terminalRestorer).close()
+                                }
+                            }
 
-                                    it("streams the container input and output") {
-                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
-                                    }
+                            it("attaches to the container output before starting the container") {
+                                inOrder(api) {
+                                    verify(api).attachToContainerOutput(container)
+                                    verify(api).startContainer(container)
+                                }
+                            }
 
-                                    it("attaches to the container output") {
-                                        verify(api).attachToContainerOutput(container)
-                                    }
+                            it("attaches to the container input before starting the container") {
+                                inOrder(api) {
+                                    verify(api).attachToContainerInput(container)
+                                    verify(api).startContainer(container)
+                                }
+                            }
 
-                                    it("attaches to the container input") {
-                                        verify(api).attachToContainerInput(container)
-                                    }
+                            it("notifies the caller that the container has started after starting the container but before streaming I/O") {
+                                inOrder(api, onStartedHandler, ioStreamer) {
+                                    verify(api).startContainer(container)
+                                    verify(onStartedHandler).invoke()
+                                    verify(ioStreamer).stream(any(), any())
+                                }
+                            }
 
-                                    it("does not enter raw mode") {
-                                        verify(consoleManager, never()).enterRawMode()
-                                    }
+                            it("closes the output stream after streaming the output completes") {
+                                inOrder(ioStreamer, outputStream) {
+                                    verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
+                                    verify(outputStream).close()
+                                }
+                            }
 
-                                    it("does not start monitoring for console size changes") {
-                                        verify(ttyManager, never()).monitorForSizeChanges(container)
-                                    }
+                            it("closes the input stream after streaming the output completes") {
+                                inOrder(ioStreamer, inputStream) {
+                                    verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
+                                    verify(inputStream).close()
                                 }
                             }
                         }
@@ -442,7 +400,7 @@ object DockerClientSpec : Spek({
                         val stdin: Source? = null
 
                         on("running the container") {
-                            val result by runForEachTest { client.run(container, stdout, stdin, true, onStartedHandler) }
+                            val result by runForEachTest { client.run(container, stdout, stdin, onStartedHandler) }
 
                             it("returns the exit code from the container") {
                                 assertThat(result.exitCode, equalTo(123))
@@ -482,7 +440,7 @@ object DockerClientSpec : Spek({
                         val stdin by createForEachTest { mock<Source>() }
 
                         it("throws an appropriate exception") {
-                            assertThat({ client.run(container, stdout, stdin, true, onStartedHandler) }, throws<DockerException>(withMessage("Attempted to stream input to container without streaming container output.")))
+                            assertThat({ client.run(container, stdout, stdin, onStartedHandler) }, throws<DockerException>(withMessage("Attempted to stream input to container without streaming container output.")))
                         }
                     }
 
@@ -490,7 +448,7 @@ object DockerClientSpec : Spek({
                         val stdin: Source? = null
 
                         on("running the container") {
-                            val result by runForEachTest { client.run(container, stdout, stdin, true, onStartedHandler) }
+                            val result by runForEachTest { client.run(container, stdout, stdin, onStartedHandler) }
 
                             it("returns the exit code from the container") {
                                 assertThat(result.exitCode, equalTo(123))

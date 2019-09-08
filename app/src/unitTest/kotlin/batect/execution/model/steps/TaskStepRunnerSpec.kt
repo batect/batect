@@ -326,10 +326,10 @@ object TaskStepRunnerSpec : Spek({
                 val network = DockerNetwork("some-network")
 
                 val step = CreateContainerStep(container, command, workingDirectory, additionalEnvironmentVariables, additionalPortMappings, setOf(container, otherContainer), image, network)
-                val request = DockerContainerCreationRequest(image, network, command.parsedCommand, "some-container", "some-container", emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet(), true)
+                val request = DockerContainerCreationRequest(image, network, command.parsedCommand, "some-container", "some-container", emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
 
                 beforeEachTest {
-                    whenever(ioStreamingOptions.shouldAttachTTY(container)).doReturn(true)
+                    whenever(ioStreamingOptions.terminalTypeForContainer(container)).doReturn("some-terminal")
 
                     whenever(
                         creationRequestFactory.create(
@@ -343,7 +343,7 @@ object TaskStepRunnerSpec : Spek({
                             additionalPortMappings,
                             runOptions.propagateProxyEnvironmentVariables,
                             runAsCurrentUserConfiguration.userAndGroup,
-                            true,
+                            "some-terminal",
                             step.allContainersInNetwork
                         )
                     ).doReturn(request)
@@ -387,19 +387,17 @@ object TaskStepRunnerSpec : Spek({
 
                 val stdout = mock<Sink>()
                 val stdin = mock<Source>()
-                val attachTTY = true
 
                 beforeEachTest {
                     whenever(ioStreamingOptions.stdoutForContainer(container)).doReturn(stdout)
                     whenever(ioStreamingOptions.stdinForContainer(container)).doReturn(stdin)
-                    whenever(ioStreamingOptions.shouldAttachTTY(container)).doReturn(attachTTY)
                 }
 
                 on("when running the container succeeds") {
                     beforeEachTest {
-                        whenever(dockerClient.run(any(), any(), any(), any(), any())).doAnswer { invocation ->
+                        whenever(dockerClient.run(any(), any(), any(), any())).doAnswer { invocation ->
                             @Suppress("UNCHECKED_CAST")
-                            val onStartedHandler = invocation.arguments[4] as () -> Unit
+                            val onStartedHandler = invocation.arguments[3] as () -> Unit
 
                             onStartedHandler()
 
@@ -410,7 +408,7 @@ object TaskStepRunnerSpec : Spek({
                     }
 
                     it("runs the container with the stdin and stdout provided by the I/O streaming options") {
-                        verify(dockerClient).run(eq(dockerContainer), eq(stdout), eq(stdin), eq(attachTTY), any())
+                        verify(dockerClient).run(eq(dockerContainer), eq(stdout), eq(stdin), any())
                     }
 
                     it("emits a 'container started' event") {
@@ -424,7 +422,7 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when running the container fails") {
                     beforeEachTest {
-                        whenever(dockerClient.run(any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong"))
+                        whenever(dockerClient.run(any(), any(), any(), any())).doThrow(DockerException("Something went wrong"))
 
                         runner.run(step, stepRunContext)
                     }

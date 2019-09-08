@@ -21,8 +21,7 @@ import okio.Sink
 import okio.Source
 
 interface ContainerIOStreamingOptions {
-    fun shouldAttachTTY(container: Container): Boolean
-
+    fun terminalTypeForContainer(container: Container): String?
     fun stdinForContainer(container: Container): Source?
     fun stdoutForContainer(container: Container): Sink?
 }

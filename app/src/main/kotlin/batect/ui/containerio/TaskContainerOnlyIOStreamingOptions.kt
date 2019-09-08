@@ -17,6 +17,7 @@
 package batect.ui.containerio
 
 import batect.config.Container
+import batect.ui.ConsoleInfo
 import okio.Okio
 import okio.Sink
 import okio.Source
@@ -26,9 +27,10 @@ import java.io.PrintStream
 data class TaskContainerOnlyIOStreamingOptions(
     private val taskContainer: Container,
     private val stdout: PrintStream,
-    private val stdin: InputStream
+    private val stdin: InputStream,
+    private val consoleInfo: ConsoleInfo
 ) : ContainerIOStreamingOptions {
-    override fun shouldAttachTTY(container: Container): Boolean = container == taskContainer
+    override fun terminalTypeForContainer(container: Container): String? = consoleInfo.terminalType
 
     override fun stdinForContainer(container: Container): Source? {
         if (container == taskContainer) {

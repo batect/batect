@@ -45,8 +45,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 privileged = true,
                 init = true,
                 capabilitiesToAdd = setOf(Capability.NET_ADMIN, Capability.KILL),
-                capabilitiesToDrop = setOf(Capability.AUDIT_READ, Capability.CHOWN),
-                attachTTY = true
+                capabilitiesToDrop = setOf(Capability.AUDIT_READ, Capability.CHOWN)
             )
 
             on("converting it to JSON") {
@@ -125,8 +124,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 privileged = false,
                 init = false,
                 capabilitiesToAdd = emptySet(),
-                capabilitiesToDrop = emptySet(),
-                attachTTY = false
+                capabilitiesToDrop = emptySet()
             )
 
             on("converting it to JSON") {
@@ -137,7 +135,7 @@ object DockerContainerCreationRequestSpec : Spek({
                         |   "AttachStdin": true,
                         |   "AttachStdout": true,
                         |   "AttachStderr": true,
-                        |   "Tty": false,
+                        |   "Tty": true,
                         |   "OpenStdin": true,
                         |   "StdinOnce": true,
                         |   "Image": "the-image",

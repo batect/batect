@@ -166,7 +166,7 @@ class TaskStepRunner(
                 step.additionalPortMappings,
                 runOptions.propagateProxyEnvironmentVariables,
                 runAsCurrentUserConfiguration.userAndGroup,
-                ioStreamingOptions.shouldAttachTTY(step.container),
+                ioStreamingOptions.terminalTypeForContainer(step.container),
                 step.allContainersInNetwork
             )
 
@@ -181,9 +181,8 @@ class TaskStepRunner(
         try {
             val stdout = ioStreamingOptions.stdoutForContainer(step.container)
             val stdin = ioStreamingOptions.stdinForContainer(step.container)
-            val ttyConnected = ioStreamingOptions.shouldAttachTTY(step.container)
 
-            val result = dockerClient.run(step.dockerContainer, stdout, stdin, ttyConnected) {
+            val result = dockerClient.run(step.dockerContainer, stdout, stdin) {
                 eventSink.postEvent(ContainerStartedEvent(step.container))
             }
 

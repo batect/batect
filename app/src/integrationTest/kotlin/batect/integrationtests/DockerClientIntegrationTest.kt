@@ -105,8 +105,7 @@ object DockerClientIntegrationTest : Spek({
                 privileged = false,
                 init = false,
                 capabilitiesToAdd = emptySet(),
-                capabilitiesToDrop = emptySet(),
-                attachTTY = true
+                capabilitiesToDrop = emptySet()
             )
         }
 
@@ -203,7 +202,7 @@ object DockerClientIntegrationTest : Spek({
             beforeGroup {
                 withNetwork { network ->
                     withContainer(creationRequestForContainerThatExits(image, network, fileToCreate)) { container ->
-                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), true, {})
+                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), {})
                     }
                 }
             }

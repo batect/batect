@@ -65,5 +65,5 @@ class EventLoggerProvider(
         return SimpleEventLogger(containers, graph.taskContainerNode.container, failureErrorMessageFormatter, runOptions, console, errorConsole, createTaskContainerOnlyIOStreamingOptions(graph))
     }
 
-    private fun createTaskContainerOnlyIOStreamingOptions(graph: ContainerDependencyGraph) = TaskContainerOnlyIOStreamingOptions(graph.taskContainerNode.container, stdout, stdin)
+    private fun createTaskContainerOnlyIOStreamingOptions(graph: ContainerDependencyGraph) = TaskContainerOnlyIOStreamingOptions(graph.taskContainerNode.container, stdout, stdin, consoleInfo)
 }

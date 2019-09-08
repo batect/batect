@@ -20,6 +20,7 @@ import batect.config.Container
 import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerDependencyGraphNode
 import batect.execution.RunOptions
+import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
@@ -34,6 +35,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
@@ -47,6 +49,7 @@ object EventLoggerProviderSpec : Spek({
         val errorConsole = mock<Console>()
         val stdout = mock<PrintStream>()
         val stdin = mock<InputStream>()
+        val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
 
         val container1 = Container("container-1", imageSourceDoesNotMatter())
         val container2 = Container("container-2", imageSourceDoesNotMatter())
@@ -67,7 +70,9 @@ object EventLoggerProviderSpec : Spek({
 
         val runOptions = mock<RunOptions>()
 
-        fun Suite.itReturnsAQuietEventLogger(logger: EventLogger) {
+        fun Suite.itReturnsAQuietEventLogger(loggerCreator: () -> EventLogger) {
+            val logger by createForEachTest(loggerCreator)
+
             it("returns a quiet event logger") {
                 assertThat(logger, isA<QuietEventLogger>())
             }
@@ -85,11 +90,13 @@ object EventLoggerProviderSpec : Spek({
             }
 
             it("sets the I/O streaming options to the expected value") {
-                assertThat(logger.ioStreamingOptions, equalTo(TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, stdin)))
+                assertThat(logger.ioStreamingOptions, equalTo(TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, stdin, consoleInfo)))
             }
         }
 
-        fun Suite.itReturnsASimpleEventLogger(logger: EventLogger) {
+        fun Suite.itReturnsASimpleEventLogger(loggerCreator: () -> EventLogger) {
+            val logger by createForEachTest(loggerCreator)
+
             it("returns a simple event logger") {
                 assertThat(logger, isA<SimpleEventLogger>())
             }
@@ -119,11 +126,13 @@ object EventLoggerProviderSpec : Spek({
             }
 
             it("sets the I/O streaming options to the expected value") {
-                assertThat(logger.ioStreamingOptions, equalTo(TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, stdin)))
+                assertThat(logger.ioStreamingOptions, equalTo(TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, stdin, consoleInfo)))
             }
         }
 
-        fun Suite.itReturnsAFancyEventLogger(logger: EventLogger, startupProgressDisplay: StartupProgressDisplay) {
+        fun Suite.itReturnsAFancyEventLogger(startupProgressDisplay: StartupProgressDisplay, loggerCreator: () -> EventLogger) {
+            val logger by createForEachTest(loggerCreator)
+
             it("returns a fancy event logger") {
                 assertThat(logger, isA<FancyEventLogger>())
             }
@@ -153,47 +162,38 @@ object EventLoggerProviderSpec : Spek({
             }
 
             it("sets the I/O streaming options to the expected value") {
-                assertThat(logger.ioStreamingOptions, equalTo(TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, stdin)))
+                assertThat(logger.ioStreamingOptions, equalTo(TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, stdin, consoleInfo)))
             }
         }
 
         on("when quiet output has been requested") {
             val requestedOutputStyle = OutputStyle.Quiet
 
-            val consoleInfo = mock<ConsoleInfo> {
-                on { supportsInteractivity } doReturn true
-            }
+            beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(true) }
 
-            val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false)
-            val logger = provider.getEventLogger(graph, runOptions)
+            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false) }
 
-            itReturnsAQuietEventLogger(logger)
+            itReturnsAQuietEventLogger { provider.getEventLogger(graph, runOptions) }
         }
 
         on("when simple output has been requested") {
             val requestedOutputStyle = OutputStyle.Simple
 
-            val consoleInfo = mock<ConsoleInfo> {
-                on { supportsInteractivity } doReturn true
-            }
+            beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(true) }
 
-            val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false)
-            val logger = provider.getEventLogger(graph, runOptions)
+            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false) }
 
-            itReturnsASimpleEventLogger(logger)
+            itReturnsASimpleEventLogger { provider.getEventLogger(graph, runOptions) }
         }
 
         on("when fancy output has been requested") {
             val requestedOutputStyle = OutputStyle.Fancy
 
-            val consoleInfo = mock<ConsoleInfo> {
-                on { supportsInteractivity } doReturn true
-            }
+            beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(true) }
 
-            val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false)
-            val logger = provider.getEventLogger(graph, runOptions)
+            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false) }
 
-            itReturnsAFancyEventLogger(logger, startupProgressDisplay)
+            itReturnsAFancyEventLogger(startupProgressDisplay) { provider.getEventLogger(graph, runOptions) }
         }
 
         given("no output style has been requested") {
@@ -202,39 +202,30 @@ object EventLoggerProviderSpec : Spek({
             on("when colored output has been disabled") {
                 val disableColorOutput = true
 
-                val consoleInfo = mock<ConsoleInfo> {
-                    on { supportsInteractivity } doReturn true
-                }
+                beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(true) }
 
-                val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput)
-                val logger = provider.getEventLogger(graph, runOptions)
+                val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput) }
 
-                itReturnsASimpleEventLogger(logger)
+                itReturnsASimpleEventLogger { provider.getEventLogger(graph, runOptions) }
             }
 
             given("colored output has not been disabled") {
                 val disableColorOutput = false
 
                 on("when the console supports interactivity") {
-                    val consoleInfo = mock<ConsoleInfo> {
-                        on { supportsInteractivity } doReturn true
-                    }
+                    beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(true) }
 
-                    val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput)
-                    val logger = provider.getEventLogger(graph, runOptions)
+                    val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput) }
 
-                    itReturnsAFancyEventLogger(logger, startupProgressDisplay)
+                    itReturnsAFancyEventLogger(startupProgressDisplay) { provider.getEventLogger(graph, runOptions) }
                 }
 
                 on("when the console does not support interactivity") {
-                    val consoleInfo = mock<ConsoleInfo> {
-                        on { supportsInteractivity } doReturn false
-                    }
+                    beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(false) }
 
-                    val provider = EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput)
-                    val logger = provider.getEventLogger(graph, runOptions)
+                    val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput) }
 
-                    itReturnsASimpleEventLogger(logger)
+                    itReturnsASimpleEventLogger { provider.getEventLogger(graph, runOptions) }
                 }
             }
         }

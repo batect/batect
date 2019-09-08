@@ -23,16 +23,14 @@ import batect.config.PortMapping
 import batect.config.VolumeMount
 import batect.os.Command
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
-import batect.ui.ConsoleInfo
 import batect.utils.mapToSet
 
 class DockerContainerCreationRequestFactory(
-    private val consoleInfo: ConsoleInfo,
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
     private val hostEnvironmentVariables: Map<String, String>
 ) {
-    constructor(consoleInfo: ConsoleInfo, proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider)
-        : this(consoleInfo, proxyEnvironmentVariablesProvider, System.getenv())
+    constructor(proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider)
+        : this(proxyEnvironmentVariablesProvider, System.getenv())
 
     fun create(
         container: Container,
@@ -45,7 +43,7 @@ class DockerContainerCreationRequestFactory(
         additionalPortMappings: Set<PortMapping>,
         propagateProxyEnvironmentVariables: Boolean,
         userAndGroup: UserAndGroup?,
-        attachTTY: Boolean,
+        terminalType: String?,
         allContainersInNetwork: Set<Container>
     ): DockerContainerCreationRequest {
         return DockerContainerCreationRequest(
@@ -54,7 +52,7 @@ class DockerContainerCreationRequestFactory(
             if (command != null) command.parsedCommand else emptyList(),
             container.name,
             container.name,
-            environmentVariablesFor(container, additionalEnvironmentVariables, propagateProxyEnvironmentVariables, allContainersInNetwork),
+            environmentVariablesFor(container, additionalEnvironmentVariables, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork),
             workingDirectory,
             container.volumeMounts + additionalVolumeMounts,
             container.portMappings + additionalPortMappings,
@@ -63,20 +61,19 @@ class DockerContainerCreationRequestFactory(
             container.privileged,
             container.enableInitProcess,
             container.capabilitiesToAdd,
-            container.capabilitiesToDrop,
-            attachTTY
+            container.capabilitiesToDrop
         )
     }
 
-    private fun environmentVariablesFor(container: Container, additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression>, propagateProxyEnvironmentVariables: Boolean, allContainersInNetwork: Set<Container>): Map<String, String> =
-        terminalEnvironmentVariablesFor(consoleInfo) +
+    private fun environmentVariablesFor(container: Container, additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression>, propagateProxyEnvironmentVariables: Boolean, terminalType: String?, allContainersInNetwork: Set<Container>): Map<String, String> =
+        terminalEnvironmentVariablesFor(terminalType) +
             proxyEnvironmentVariables(propagateProxyEnvironmentVariables, allContainersInNetwork) +
             substituteEnvironmentVariables(container.environment + additionalEnvironmentVariables)
 
-    private fun terminalEnvironmentVariablesFor(consoleInfo: ConsoleInfo): Map<String, String> = if (consoleInfo.terminalType == null) {
+    private fun terminalEnvironmentVariablesFor(terminalType: String?): Map<String, String> = if (terminalType == null) {
         emptyMap()
     } else {
-        mapOf("TERM" to consoleInfo.terminalType)
+        mapOf("TERM" to terminalType)
     }
 
     private fun proxyEnvironmentVariables(propagateProxyEnvironmentVariables: Boolean, allContainersInNetwork: Set<Container>): Map<String, String> = if (propagateProxyEnvironmentVariables) {

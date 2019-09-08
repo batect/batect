@@ -31,6 +31,7 @@ import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.docker.run.InputConnection
 import batect.docker.run.OutputConnection
+import batect.execution.CancellationCallback
 import batect.execution.CancellationContext
 import batect.os.ConsoleManager
 import batect.testutils.createForEachTest
@@ -298,7 +299,13 @@ object DockerClientSpec : Spek({
                 val inputStream by createForEachTest { mock<ContainerInputStream>() }
                 val terminalRestorer by createForEachTest { mock<AutoCloseable>() }
                 val resizingRestorer by createForEachTest { mock<AutoCloseable>() }
-                val cancellationContext by createForEachTest { mock<CancellationContext>() }
+                val cancellationRestorer by createForEachTest { mock<AutoCloseable>() }
+                val cancellationContext by createForEachTest {
+                    mock<CancellationContext> {
+                        on { addCancellationCallback(any()) }.doReturn(cancellationRestorer)
+                    }
+                }
+
                 val onStartedHandler by createForEachTest { mock<() -> Unit>() }
 
                 beforeEachTest {
@@ -393,6 +400,44 @@ object DockerClientSpec : Spek({
                                     verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
                                     verify(inputStream).close()
                                 }
+                            }
+
+                            it("registers a cancellation callback before starting to wait for the container to exit") {
+                                inOrder(cancellationContext, waiter) {
+                                    verify(cancellationContext).addCancellationCallback(any())
+                                    verify(waiter).startWaitingForContainerToExit(container, cancellationContext)
+                                }
+                            }
+
+                            it("removes the cancellation callback after streaming I/O") {
+                                inOrder(cancellationRestorer, ioStreamer) {
+                                    verify(ioStreamer).stream(any(), any())
+                                    verify(cancellationRestorer).close()
+                                }
+                            }
+
+                            it("does not stop the container") {
+                                verify(api, never()).stopContainer(container)
+                            }
+                        }
+
+                        on("cancelling the run") {
+                            beforeEachTest {
+                                lateinit var cancellationCallback: CancellationCallback
+
+                                whenever(cancellationContext.addCancellationCallback(any())).then { invocation ->
+                                    @Suppress("UNCHECKED_CAST")
+                                    cancellationCallback = invocation.arguments[0] as CancellationCallback
+
+                                    cancellationRestorer
+                                }
+
+                                client.run(container, stdout, stdin, cancellationContext, onStartedHandler)
+                                cancellationCallback()
+                            }
+
+                            it("stops the running container") {
+                                verify(api).stopContainer(container)
                             }
                         }
                     }

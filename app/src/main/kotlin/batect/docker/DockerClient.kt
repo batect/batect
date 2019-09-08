@@ -134,30 +134,32 @@ class DockerClient(
             throw DockerException("Attempted to stream input to container without streaming container output.")
         }
 
-        val exitCodeSource = waiter.startWaitingForContainerToExit(container, cancellationContext)
+        cancellationContext.addCancellationCallback { api.stopContainer(container) }.use {
+            val exitCodeSource = waiter.startWaitingForContainerToExit(container, cancellationContext)
 
-        connectContainerOutput(container, stdout).use { outputConnection ->
-            connectContainerInput(container, stdin).use { inputConnection ->
-                api.startContainer(container)
-                onStarted()
+            connectContainerOutput(container, stdout).use { outputConnection ->
+                connectContainerInput(container, stdin).use { inputConnection ->
+                    api.startContainer(container)
+                    onStarted()
 
-                ttyManager.monitorForSizeChanges(container).use {
-                    startRawModeIfRequired(stdin).use {
-                        ioStreamer.stream(outputConnection, inputConnection)
+                    ttyManager.monitorForSizeChanges(container).use {
+                        startRawModeIfRequired(stdin).use {
+                            ioStreamer.stream(outputConnection, inputConnection)
+                        }
                     }
                 }
             }
+
+            val exitCode = exitCodeSource.get()
+
+            logger.info {
+                message("Container exited.")
+                data("container", container)
+                data("exitCode", exitCode)
+            }
+
+            return DockerContainerRunResult(exitCode)
         }
-
-        val exitCode = exitCodeSource.get()
-
-        logger.info {
-            message("Container exited.")
-            data("container", container)
-            data("exitCode", exitCode)
-        }
-
-        return DockerContainerRunResult(exitCode)
     }
 
     private fun connectContainerOutput(container: DockerContainer, stdout: Sink?): OutputConnection {

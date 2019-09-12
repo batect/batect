@@ -30,7 +30,6 @@ import okio.Okio
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.util.concurrent.CountDownLatch
 
@@ -41,7 +40,7 @@ object ContainerIOStreamerSpec : Spek({
         describe("streaming both input and output for a container") {
             on("all of the output being available immediately") {
                 val stdin = ByteArrayInputStream(ByteArray(0))
-                val stdout = ByteArrayOutputStream()
+                val stdout = CloseableByteArrayOutputStream()
 
                 val response = mock<Response>()
                 val containerOutputStream = ByteArrayInputStream("This is the output".toByteArray())
@@ -62,11 +61,15 @@ object ContainerIOStreamerSpec : Spek({
                 it("closes the container's input stream") {
                     assertThat(containerInputStream.isClosed, equalTo(true))
                 }
+
+                it("closes the stdout stream") {
+                    assertThat(stdout.isClosed, equalTo(true))
+                }
             }
 
             on("stdin closing before the output from the container has finished") {
                 val stdin = ByteArrayInputStream("This is the input".toByteArray())
-                val stdout = ByteArrayOutputStream()
+                val stdout = CloseableByteArrayOutputStream()
 
                 val response = mock<Response>()
 
@@ -131,6 +134,10 @@ object ContainerIOStreamerSpec : Spek({
                 it("closes the container's input stream") {
                     assertThat(containerInputStream.isClosed, equalTo(true))
                 }
+
+                it("closes the stdout stream") {
+                    assertThat(stdout.isClosed, equalTo(true))
+                }
             }
 
             on("the output from the container finishing before stdin is closed by the user") {
@@ -147,7 +154,7 @@ object ContainerIOStreamerSpec : Spek({
                     }
                 }
 
-                val stdout = ByteArrayOutputStream()
+                val stdout = CloseableByteArrayOutputStream()
 
                 val response = mock<Response>()
 
@@ -188,11 +195,15 @@ object ContainerIOStreamerSpec : Spek({
                 it("closes the container's input stream") {
                     assertThat(containerInputStream.isClosed, equalTo(true))
                 }
+
+                it("closes the stdout stream") {
+                    assertThat(stdout.isClosed, equalTo(true))
+                }
             }
         }
 
         describe("streaming just output for a container") {
-            val stdout = ByteArrayOutputStream()
+            val stdout = CloseableByteArrayOutputStream()
             val response = mock<Response>()
             val containerOutputStream = ByteArrayInputStream("This is the output".toByteArray())
             val outputStream = ContainerOutputStream(response, Okio.buffer(Okio.source(containerOutputStream)))
@@ -204,6 +215,10 @@ object ContainerIOStreamerSpec : Spek({
 
             it("writes all of the output from the output stream to stdout") {
                 assertThat(stdout.toString(), equalTo("This is the output"))
+            }
+
+            it("closes the stdout stream") {
+                assertThat(stdout.isClosed, equalTo(true))
             }
         }
 

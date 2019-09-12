@@ -14,11 +14,12 @@
    limitations under the License.
 */
 
-package batect.ui
+package batect.ui.containerio
 
-enum class OutputStyle {
-    Quiet,
-    Simple,
-    Fancy,
-    All
+import okio.Okio
+import okio.Sink
+import java.io.PrintStream
+
+data class UncloseableSink(val destination: PrintStream) : Sink by Okio.sink(destination) {
+    override fun close() {}
 }

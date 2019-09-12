@@ -130,10 +130,11 @@ Passing this flag will disable both the update check and notification.
 
 ### Force a particular output style <small>(`--output` or `-o`)</small>
 
-batect offers three styles of output:
+batect offers four styles of output:
 
-* `fancy` is best for interactive use, providing very clean output about the current state of execution
-* `simple` is best for non-interactive use (eg. on CI), providing a log of what happened
+* `fancy` is best for interactive use, providing very clean output about the current state of execution and showing output from only the task container
+* `simple` is best for non-interactive use (eg. on CI), providing a log of what happened and showing output from only the task container
+* `all` displays output from all containers
 * `quiet` displays only the output from the task and error messages from batect
 
 By default, batect will automatically pick an output style that it believes is appropriate for the environment it is running in -

@@ -95,13 +95,13 @@ object ValueConvertersSpec : Spek({
 
             given("an empty string") {
                 it("returns an error") {
-                    assertThat(converter(""), equalTo(ValueConversionResult.ConversionFailed("Value must be one of 'fancy', 'quiet' or 'simple'.")))
+                    assertThat(converter(""), equalTo(ValueConversionResult.ConversionFailed("Value must be one of 'all', 'fancy', 'quiet' or 'simple'.")))
                 }
             }
 
             given("an invalid value") {
                 it("returns an error") {
-                    assertThat(converter("nonsense"), equalTo(ValueConversionResult.ConversionFailed("Value must be one of 'fancy', 'quiet' or 'simple'.")))
+                    assertThat(converter("nonsense"), equalTo(ValueConversionResult.ConversionFailed("Value must be one of 'all', 'fancy', 'quiet' or 'simple'.")))
                 }
             }
         }

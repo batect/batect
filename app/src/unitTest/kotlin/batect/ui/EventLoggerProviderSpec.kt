@@ -17,6 +17,8 @@
 package batect.ui
 
 import batect.config.Container
+import batect.config.Task
+import batect.config.TaskRunConfiguration
 import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerDependencyGraphNode
 import batect.execution.RunOptions
@@ -29,6 +31,9 @@ import batect.ui.containerio.TaskContainerOnlyIOStreamingOptions
 import batect.ui.fancy.FancyEventLogger
 import batect.ui.fancy.StartupProgressDisplay
 import batect.ui.fancy.StartupProgressDisplayProvider
+import batect.ui.interleaved.InterleavedContainerIOStreamingOptions
+import batect.ui.interleaved.InterleavedEventLogger
+import batect.ui.interleaved.InterleavedOutput
 import batect.ui.quiet.QuietEventLogger
 import batect.ui.simple.SimpleEventLogger
 import com.natpryce.hamkrest.assertion.assertThat
@@ -61,6 +66,8 @@ object EventLoggerProviderSpec : Spek({
             )
 
             on { taskContainerNode } doReturn ContainerDependencyGraphNode(taskContainer, null, null, emptyMap(), emptySet(), true, emptySet(), mock())
+
+            on { task } doReturn Task("the-task", TaskRunConfiguration("the-container"))
         }
 
         val startupProgressDisplay = mock<StartupProgressDisplay>()
@@ -166,6 +173,34 @@ object EventLoggerProviderSpec : Spek({
             }
         }
 
+        fun Suite.itReturnsAnInterleavedEventLogger(loggerCreator: () -> EventLogger) {
+            val logger by createForEachTest(loggerCreator)
+
+            it("returns an interleaved event logger") {
+                assertThat(logger, isA<InterleavedEventLogger>())
+            }
+
+            it("passes the task container to the event logger") {
+                assertThat((logger as InterleavedEventLogger).taskContainer, equalTo(taskContainer))
+            }
+
+            it("passes the set of containers to the event logger") {
+                assertThat((logger as InterleavedEventLogger).containers, equalTo(setOf(container1, container2)))
+            }
+
+            it("passes the failure error message formatter to the event logger") {
+                assertThat((logger as InterleavedEventLogger).failureErrorMessageFormatter, equalTo(failureErrorMessageFormatter))
+            }
+
+            it("passes the run options to the event logger") {
+                assertThat((logger as InterleavedEventLogger).runOptions, equalTo(runOptions))
+            }
+
+            it("sets the I/O streaming options to the expected value") {
+                assertThat(logger.ioStreamingOptions, equalTo(InterleavedContainerIOStreamingOptions(InterleavedOutput("the-task", setOf(container1, container2), console))))
+            }
+        }
+
         on("when quiet output has been requested") {
             val requestedOutputStyle = OutputStyle.Quiet
 
@@ -194,6 +229,16 @@ object EventLoggerProviderSpec : Spek({
             val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false) }
 
             itReturnsAFancyEventLogger(startupProgressDisplay) { provider.getEventLogger(graph, runOptions) }
+        }
+
+        on("when interleaved output has been requested") {
+            val requestedOutputStyle = OutputStyle.All
+
+            beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(true) }
+
+            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false) }
+
+            itReturnsAnInterleavedEventLogger { provider.getEventLogger(graph, runOptions) }
         }
 
         given("no output style has been requested") {

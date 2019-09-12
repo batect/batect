@@ -14,11 +14,15 @@
    limitations under the License.
 */
 
-package batect.ui
+package batect.ui.interleaved
 
-enum class OutputStyle {
-    Quiet,
-    Simple,
-    Fancy,
-    All
+import batect.config.Container
+import batect.ui.containerio.ContainerIOStreamingOptions
+import okio.Sink
+import okio.Source
+
+data class InterleavedContainerIOStreamingOptions(private val output: InterleavedOutput) : ContainerIOStreamingOptions {
+    override fun terminalTypeForContainer(container: Container): String? = "dumb"
+    override fun stdinForContainer(container: Container): Source? = null
+    override fun stdoutForContainer(container: Container): Sink? = InterleavedContainerOutputSink(container, output)
 }

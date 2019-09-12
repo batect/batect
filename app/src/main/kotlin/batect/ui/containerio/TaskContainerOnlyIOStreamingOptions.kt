@@ -42,7 +42,7 @@ data class TaskContainerOnlyIOStreamingOptions(
 
     override fun stdoutForContainer(container: Container): Sink? {
         if (container == taskContainer) {
-            return Okio.sink(stdout)
+            return UncloseableSink(stdout)
         }
 
         return null

@@ -50,8 +50,7 @@ object TaskContainerOnlyIOStreamingOptionsSpec : Spek({
             }
 
             it("returns the system's stdout stream as the stream for the container") {
-                // HACK: This is the only way to verify that we got an Okio sink that wraps the stream we gave it.
-                assertThat(options.stdoutForContainer(taskContainer).toString(), equalTo("sink($stdout)"))
+                assertThat(options.stdoutForContainer(taskContainer), equalTo(UncloseableSink(stdout)))
             }
 
             it("returns the system's stdin stream as the stream for the container") {

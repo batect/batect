@@ -54,6 +54,8 @@ class ContainerIOStreamer() {
             if (input is InputConnection.Connected) {
                 input.destination.stream.close()
             }
+
+            output.destination.close()
         }
     }
 

@@ -30,8 +30,15 @@ data class InterleavedOutput(
 ) {
     private val lock = Object()
 
+    private val colours = ConsoleColor.values().filter { it != ConsoleColor.White && it != ConsoleColor.Red }
+
     private val longestNameLength = max(containers.map { it.name.length }.max()!!, taskName.length)
-    private val containerPrefixes = containers.associateWith { prefixFor(it.name, null) }
+
+    private val containerPrefixes = containers
+        .mapIndexed { index, container ->
+            container to prefixFor(container.name, colours[index % colours.size])
+        }.toMap()
+
     private val taskPrefix = prefixFor(taskName, ConsoleColor.White)
 
     fun printForContainer(container: Container, output: TextRun) {

@@ -41,10 +41,14 @@ object InterleavedOutputSpec : Spek({
             val output by createForEachTest { InterleavedOutput(taskName, containers, console) }
 
             on("printing output for a container") {
-                beforeEachTest { output.printForContainer(container1, TextRun("Some container output")) }
+                beforeEachTest {
+                    output.printForContainer(container1, TextRun("Some container output"))
+                    output.printForContainer(container2, TextRun("Some other container output"))
+                }
 
-                it("prints output for each container aligned to the end of the task's name") {
-                    verify(console).println(Text.bold("c1    | ") + Text("Some container output"))
+                it("prints output for each container aligned to the end of the task's name and with a different colour for each container") {
+                    verify(console).println(Text.black(Text.bold("c1    | ")) + Text("Some container output"))
+                    verify(console).println(Text.green(Text.bold("c2    | ")) + Text("Some other container output"))
                 }
             }
 
@@ -69,7 +73,7 @@ object InterleavedOutputSpec : Spek({
                 beforeEachTest { output.printForContainer(container1, TextRun("Some container output")) }
 
                 it("prints output for each container aligned to the end of the longest container name") {
-                    verify(console).println(Text.bold("container1 | ") + Text("Some container output"))
+                    verify(console).println(Text.black(Text.bold("container1 | ")) + Text("Some container output"))
                 }
             }
 

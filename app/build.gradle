@@ -48,7 +48,7 @@ dependencies {
     // We don't use kotlin-reflect directly, but jackson-module-kotlin does refer to it, so
     // override it to match the version of Kotlin used.
     implementation 'org.jetbrains.kotlin:kotlin-reflect:1.3.50'
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.12.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.13.0"
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.10.0.pr2'
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.10.0.pr2'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.10.0.pr2'

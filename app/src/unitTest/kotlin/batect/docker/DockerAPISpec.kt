@@ -675,11 +675,19 @@ object DockerAPISpec : Spek({
                     }
                 }
 
-                on("the container being stopped") {
+                on("the container being stopped on an older version of the Docker daemon") {
                     beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "cannot resize a stopped container: unknown"}""", 418) }
 
                     it("throws an appropriate exception") {
                         assertThat({ api.resizeContainerTTY(container, dimensions) }, throws<ContainerStoppedException>(withMessage("Resizing TTY for container 'the-container-id' failed: cannot resize a stopped container: unknown")))
+                    }
+                }
+
+                on("the container being stopped on a newer version of the Docker daemon") {
+                    beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "Container 4a83bfdf8bc3c6f2c60feb4880ea2319d58c6eeb558a21119f7493d7b95d215b is not running"}""", 418) }
+
+                    it("throws an appropriate exception") {
+                        assertThat({ api.resizeContainerTTY(container, dimensions) }, throws<ContainerStoppedException>(withMessage("Resizing TTY for container 'the-container-id' failed: Container 4a83bfdf8bc3c6f2c60feb4880ea2319d58c6eeb558a21119f7493d7b95d215b is not running")))
                     }
                 }
 

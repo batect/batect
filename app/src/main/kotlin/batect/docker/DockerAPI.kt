@@ -468,7 +468,7 @@ class DockerAPI(
 
                 val message = "Resizing TTY for container '${container.id}' failed: ${error.message}"
 
-                if (error.message.startsWith("cannot resize a stopped container")) {
+                if (error.message.startsWith("cannot resize a stopped container") || error.message.endsWith("is not running")) {
                     throw ContainerStoppedException(message)
                 }
 

@@ -395,9 +395,9 @@ object TaskStepRunnerSpec : Spek({
                 given("cleanup after failure is enabled") {
                     on("when running the container succeeds") {
                         beforeEachTest {
-                            whenever(dockerClient.run(any(), any(), any(), any(), any(), any())).doAnswer { invocation ->
+                            whenever(dockerClient.run(any(), any(), any(), any(), any())).doAnswer { invocation ->
                                 @Suppress("UNCHECKED_CAST")
-                                val onStartedHandler = invocation.arguments[5] as () -> Unit
+                                val onStartedHandler = invocation.arguments[4] as () -> Unit
 
                                 onStartedHandler()
 
@@ -408,7 +408,7 @@ object TaskStepRunnerSpec : Spek({
                         }
 
                         it("runs the container with the stdin and stdout provided by the I/O streaming options and with stopping the container on cancellation enabled") {
-                            verify(dockerClient).run(eq(dockerContainer), eq(stdout), eq(stdin), eq(true), eq(cancellationContext), any())
+                            verify(dockerClient).run(eq(dockerContainer), eq(stdout), eq(stdin), eq(cancellationContext), any())
                         }
 
                         it("emits a 'container started' event") {
@@ -422,7 +422,7 @@ object TaskStepRunnerSpec : Spek({
 
                     on("when running the container fails") {
                         beforeEachTest {
-                            whenever(dockerClient.run(any(), any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong"))
+                            whenever(dockerClient.run(any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong"))
 
                             runner.run(step, stepRunContext)
                         }
@@ -438,13 +438,13 @@ object TaskStepRunnerSpec : Spek({
 
                     on("when running the container succeeds") {
                         beforeEachTest {
-                            whenever(dockerClient.run(any(), any(), any(), any(), any(), any())).doReturn(DockerContainerRunResult(123))
+                            whenever(dockerClient.run(any(), any(), any(), any(), any())).doReturn(DockerContainerRunResult(123))
 
                             runner.run(step, stepRunContext.copy(runOptions = runOptionsWithCleanupOnFailureDisabled))
                         }
 
                         it("runs the container with stopping the container on cancellation disabled") {
-                            verify(dockerClient).run(eq(dockerContainer), eq(stdout), eq(stdin), eq(false), eq(cancellationContext), any())
+                            verify(dockerClient).run(eq(dockerContainer), eq(stdout), eq(stdin), eq(cancellationContext), any())
                         }
                     }
                 }

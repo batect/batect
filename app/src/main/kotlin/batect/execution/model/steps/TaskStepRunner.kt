@@ -33,7 +33,6 @@ import batect.docker.ImagePullFailedException
 import batect.docker.NetworkCreationFailedException
 import batect.docker.NetworkDeletionFailedException
 import batect.execution.CancellationContext
-import batect.execution.CleanupOption
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
 import batect.execution.TaskStepRunContext
@@ -91,7 +90,7 @@ class TaskStepRunner(
             is PullImageStep -> handlePullImageStep(step, context.eventSink, context.cancellationContext)
             is CreateTaskNetworkStep -> handleCreateTaskNetworkStep(context.eventSink)
             is CreateContainerStep -> handleCreateContainerStep(step, context.eventSink, context.runOptions, context.ioStreamingOptions)
-            is RunContainerStep -> handleRunContainerStep(step, context.eventSink, context.runOptions, context.ioStreamingOptions, context.cancellationContext)
+            is RunContainerStep -> handleRunContainerStep(step, context.eventSink, context.ioStreamingOptions, context.cancellationContext)
             is WaitForContainerToBecomeHealthyStep -> handleWaitForContainerToBecomeHealthyStep(step, context.eventSink, context.cancellationContext)
             is StopContainerStep -> handleStopContainerStep(step, context.eventSink)
             is RemoveContainerStep -> handleRemoveContainerStep(step, context.eventSink)
@@ -175,13 +174,12 @@ class TaskStepRunner(
         }
     }
 
-    private fun handleRunContainerStep(step: RunContainerStep, eventSink: TaskEventSink, runOptions: RunOptions, ioStreamingOptions: ContainerIOStreamingOptions, cancellationContext: CancellationContext) {
+    private fun handleRunContainerStep(step: RunContainerStep, eventSink: TaskEventSink, ioStreamingOptions: ContainerIOStreamingOptions, cancellationContext: CancellationContext) {
         try {
             val stdout = ioStreamingOptions.stdoutForContainer(step.container)
             val stdin = ioStreamingOptions.stdinForContainer(step.container)
-            val stopWhenCancelled = runOptions.behaviourAfterFailure == CleanupOption.Cleanup
 
-            val result = dockerClient.run(step.dockerContainer, stdout, stdin, stopWhenCancelled, cancellationContext) {
+            val result = dockerClient.run(step.dockerContainer, stdout, stdin, cancellationContext) {
                 eventSink.postEvent(ContainerStartedEvent(step.container))
             }
 

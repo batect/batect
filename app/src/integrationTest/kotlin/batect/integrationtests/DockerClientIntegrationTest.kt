@@ -157,14 +157,34 @@ object DockerClientIntegrationTest : Spek({
             }
         }
 
-        describe("building, creating, starting, stopping and removing a container") {
+        describe("building, creating, starting, stopping and removing a container that does not exit automatically") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
             val image by runBeforeGroup { client.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image"), CancellationContext()) {} }
 
             beforeGroup {
                 withNetwork { network ->
                     withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
-                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), true, CancellationContext()) {
+                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext()) {
+                            client.stop(container)
+                        }
+                    }
+                }
+            }
+
+            it("starts the container successfully") {
+                assertThat(Files.exists(fileToCreate), equalTo(true))
+                assertThat(Files.readAllLines(fileToCreate), equalTo(listOf("Hello from container")))
+            }
+        }
+
+        describe("building, creating, starting, stopping and removing a container that exits automatically") {
+            val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
+            val image by runBeforeGroup { client.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image"), CancellationContext()) {} }
+
+            beforeGroup {
+                withNetwork { network ->
+                    withContainer(creationRequestForContainerThatExits(image, network, fileToCreate)) { container ->
+                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext()) {
                             client.stop(container)
                         }
                     }
@@ -184,7 +204,7 @@ object DockerClientIntegrationTest : Spek({
             beforeGroup {
                 withNetwork { network ->
                     withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
-                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), true, CancellationContext()) {
+                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext()) {
                             client.stop(container)
                         }
                     }
@@ -214,7 +234,7 @@ object DockerClientIntegrationTest : Spek({
             fun runContainerAndWaitForHealthCheck(container: DockerContainer): Result {
                 lateinit var result: Result
 
-                client.run(container, Okio.sink(System.out), Okio.source(System.`in`), true, CancellationContext()) {
+                client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext()) {
                     val healthStatus = client.waitForHealthStatus(container, CancellationContext())
                     val lastHealthCheckResult = client.getLastHealthCheckResult(container)
                     result = Result(healthStatus, lastHealthCheckResult)
@@ -254,7 +274,7 @@ object DockerClientIntegrationTest : Spek({
                     fun runContainerAndGetHttpResponse(container: DockerContainer): Response {
                         lateinit var response: Response
 
-                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), true, CancellationContext()) {
+                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext()) {
                             response = httpGet("http://localhost:8080")
 
                             client.stop(container)

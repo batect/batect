@@ -41,15 +41,14 @@ data class InterleavedOutput(
 
     private val taskPrefix = prefixFor(taskName, ConsoleColor.White)
 
-    fun printForContainer(container: Container, output: TextRun) {
-        synchronized(lock) {
-            console.println(containerPrefixes.getValue(container) + output)
-        }
-    }
+    fun printForContainer(container: Container, output: TextRun) = printWithPrefix(containerPrefixes.getValue(container), output)
+    fun printForTask(output: TextRun) = printWithPrefix(taskPrefix, output)
 
-    fun printForTask(output: TextRun) {
+    private fun printWithPrefix(prefix: Text, text: TextRun) {
         synchronized(lock) {
-            console.println(taskPrefix + output)
+            text.lines.forEach { line ->
+                console.println(prefix + line)
+            }
         }
     }
 

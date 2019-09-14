@@ -25,6 +25,7 @@ import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.ui.text.Text
 import batect.ui.text.TextRun
+import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import org.spekframework.spek2.Spek
@@ -52,11 +53,33 @@ object InterleavedOutputSpec : Spek({
                 }
             }
 
+            on("printing output for a container with multiple lines") {
+                beforeEachTest { output.printForContainer(container1, TextRun("Line 1\nLine 2")) }
+
+                it("prefixes each line with the container's name") {
+                    inOrder(console) {
+                        verify(console).println(Text.black(Text.bold("c1    | ")) + TextRun("Line 1"))
+                        verify(console).println(Text.black(Text.bold("c1    | ")) + TextRun("Line 2"))
+                    }
+                }
+            }
+
             on("printing output for the task") {
                 beforeEachTest { output.printForTask(TextRun("Some task output")) }
 
                 it("prints output aligned to the end of the task name, with the task name printed in bold white text") {
                     verify(console).println(Text("short | ", ConsoleColor.White, true) + TextRun("Some task output"))
+                }
+            }
+
+            on("printing output for the task with multiple lines") {
+                beforeEachTest { output.printForTask(TextRun("Line 1\nLine 2")) }
+
+                it("prefixes each line with the task's name") {
+                    inOrder(console) {
+                        verify(console).println(Text("short | ", ConsoleColor.White, true) + TextRun("Line 1"))
+                        verify(console).println(Text("short | ", ConsoleColor.White, true) + TextRun("Line 2"))
+                    }
                 }
             }
         }

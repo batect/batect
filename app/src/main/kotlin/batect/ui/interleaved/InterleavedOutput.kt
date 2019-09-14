@@ -39,12 +39,29 @@ data class InterleavedOutput(
             container to prefixFor(container.name, colours[index % colours.size])
         }.toMap()
 
+    private val containerErrorPrefixes = containers
+        .mapIndexed { index, container ->
+            container to errorPrefixFor(container.name, colours[index % colours.size])
+        }.toMap()
+
     private val taskPrefix = prefixFor(taskName, ConsoleColor.White)
+    private val taskErrorPrefix = errorPrefixFor(taskName, ConsoleColor.White)
 
     fun printForContainer(container: Container, output: TextRun) = printWithPrefix(containerPrefixes.getValue(container), output)
     fun printForTask(output: TextRun) = printWithPrefix(taskPrefix, output)
 
+    fun printErrorForContainer(container: Container, output: TextRun) = printWithPrefix(containerErrorPrefixes.getValue(container), output)
+    fun printErrorForTask(output: TextRun) = printWithPrefix(taskErrorPrefix, output)
+
     private fun printWithPrefix(prefix: Text, text: TextRun) {
+        synchronized(lock) {
+            text.lines.forEach { line ->
+                console.println(prefix + line)
+            }
+        }
+    }
+
+    private fun printWithPrefix(prefix: TextRun, text: TextRun) {
         synchronized(lock) {
             text.lines.forEach { line ->
                 console.println(prefix + line)
@@ -56,5 +73,11 @@ data class InterleavedOutput(
         val padding = " ".repeat(longestNameLength - name.length)
 
         return Text.bold(Text("$name$padding | ", color))
+    }
+
+    private fun errorPrefixFor(name: String, color: ConsoleColor?): TextRun {
+        val padding = " ".repeat(longestNameLength - name.length)
+
+        return Text.bold(Text("$name$padding ", color) + Text.red("! "))
     }
 }

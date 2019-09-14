@@ -66,6 +66,16 @@ object InterleavedOutputSpec : Spek({
                 }
             }
 
+            on("printing an error for a container") {
+                beforeEachTest {
+                    output.printErrorForContainer(container1, TextRun("Some container error"))
+                }
+
+                it("prints the output prefixed with a red exclamation mark") {
+                    verify(console).println(Text.bold(Text.black("c1    ") + Text.red("! ")) + Text("Some container error"))
+                }
+            }
+
             on("printing output for the task") {
                 beforeEachTest { output.printForTask(TextRun("Some task output")) }
 
@@ -82,6 +92,16 @@ object InterleavedOutputSpec : Spek({
                         verify(console).println(Text("short | ", ConsoleColor.White, true) + TextRun("Line 1"))
                         verify(console).println(Text("short | ", ConsoleColor.White, true) + TextRun("Line 2"))
                     }
+                }
+            }
+
+            on("printing an error for the task") {
+                beforeEachTest {
+                    output.printErrorForTask(TextRun("Some task error"))
+                }
+
+                it("prints the output prefixed with a red exclamation mark") {
+                    verify(console).println(Text.bold(Text.white("short ") + Text.red("! ")) + Text("Some task error"))
                 }
             }
 

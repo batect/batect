@@ -278,7 +278,7 @@ object InterleavedEventLoggerSpec : Spek({
                                 }
 
                                 it("prints the message to the output for that container") {
-                                    verify(output).printForContainer(container, TextRun("Something went wrong."))
+                                    verify(output).printErrorForContainer(container, TextRun("Something went wrong."))
                                 }
                             }
                         }
@@ -293,7 +293,7 @@ object InterleavedEventLoggerSpec : Spek({
                             }
 
                             it("prints the message to the output for the task") {
-                                verify(output).printForTask(TextRun("Something went wrong."))
+                                verify(output).printErrorForTask(TextRun("Something went wrong."))
                             }
                         }
 
@@ -307,7 +307,7 @@ object InterleavedEventLoggerSpec : Spek({
                             }
 
                             it("prints the message to the output for the task") {
-                                verify(output).printForTask(TextRun("Something went wrong."))
+                                verify(output).printErrorForTask(TextRun("Something went wrong."))
                             }
                         }
                     }
@@ -329,7 +329,7 @@ object InterleavedEventLoggerSpec : Spek({
                                 }
 
                                 it("prints the message to the output") {
-                                    verify(output).printForTask(TextRun("Something went wrong."))
+                                    verify(output).printErrorForTask(TextRun("Something went wrong."))
                                 }
                             }
                         }
@@ -371,7 +371,7 @@ object InterleavedEventLoggerSpec : Spek({
 
             it("prints the cleanup instructions") {
                 inOrder(output) {
-                    verify(output).printForTask(cleanupInstructions)
+                    verify(output).printErrorForTask(cleanupInstructions)
                 }
             }
         }
@@ -383,7 +383,7 @@ object InterleavedEventLoggerSpec : Spek({
 
                     it("prints a message to the output") {
                         inOrder(output) {
-                            verify(output).printForTask(Text.red(Text("The task ") + Text.bold("some-task") + Text(" failed. See above for details.")))
+                            verify(output).printErrorForTask(Text.red(Text("The task ") + Text.bold("some-task") + Text(" failed. See above for details.")))
                         }
                     }
                 }
@@ -395,7 +395,7 @@ object InterleavedEventLoggerSpec : Spek({
 
                     it("prints a message to the output, including the instructions") {
                         inOrder(output) {
-                            verify(output).printForTask(TextRun("Do this to clean up.") + Text("\n\n") + Text.red(Text("The task ") + Text.bold("some-task") + Text(" failed. See above for details.")))
+                            verify(output).printErrorForTask(TextRun("Do this to clean up.") + Text("\n\n") + Text.red(Text("The task ") + Text.bold("some-task") + Text(" failed. See above for details.")))
                         }
                     }
                 }

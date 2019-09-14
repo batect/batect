@@ -75,16 +75,16 @@ class InterleavedEventLogger(
     }
 
     override fun onTaskFinishedWithCleanupDisabled(manualCleanupInstructions: TextRun) {
-        output.printForTask(manualCleanupInstructions)
+        output.printErrorForTask(manualCleanupInstructions)
     }
 
     override fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun) {
         val message = Text.red(Text("The task ") + Text.bold(taskName) + Text(" failed. See above for details."))
 
         if (manualCleanupInstructions != TextRun()) {
-            output.printForTask(manualCleanupInstructions + Text("\n\n") + message)
+            output.printErrorForTask(manualCleanupInstructions + Text("\n\n") + message)
         } else {
-            output.printForTask(message)
+            output.printErrorForTask(message)
         }
     }
 
@@ -213,10 +213,10 @@ class InterleavedEventLogger(
     }
 
     private fun printErrorForContainer(container: Container, event: TaskFailedEvent) {
-        output.printForContainer(container, failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
+        output.printErrorForContainer(container, failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
     }
 
     private fun printErrorForTask(event: TaskFailedEvent) {
-        output.printForTask(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
+        output.printErrorForTask(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
     }
 }

@@ -17,12 +17,14 @@
 package batect.ui.interleaved
 
 import batect.config.Container
+import batect.os.Dimensions
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -30,7 +32,12 @@ import org.spekframework.spek2.style.specification.describe
 object InterleavedContainerIOStreamingOptionsSpec : Spek({
     describe("a set of I/O streaming options for interleaved output") {
         val container = Container("some-container", imageSourceDoesNotMatter())
-        val output by createForEachTest { mock<InterleavedOutput>() }
+        val output by createForEachTest {
+            mock<InterleavedOutput> {
+                on { prefixWidth } doReturn 23
+            }
+        }
+
         val options by createForEachTest { InterleavedContainerIOStreamingOptions(output) }
 
         on("getting the terminal type to use for a container") {
@@ -48,6 +55,12 @@ object InterleavedContainerIOStreamingOptionsSpec : Spek({
         on("getting the stdout stream to use") {
             it("returns an interleaved output stream") {
                 assertThat(options.stdoutForContainer(container), equalTo(InterleavedContainerOutputSink(container, output)))
+            }
+        }
+
+        on("getting the frame dimensions") {
+            it("returns a value that includes the width of the output's prefix") {
+                assertThat(options.frameDimensions, equalTo(Dimensions(height = 0, width = 23)))
             }
         }
     }

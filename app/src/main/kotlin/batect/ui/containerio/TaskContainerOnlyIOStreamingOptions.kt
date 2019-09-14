@@ -17,6 +17,7 @@
 package batect.ui.containerio
 
 import batect.config.Container
+import batect.os.Dimensions
 import batect.ui.ConsoleInfo
 import okio.Okio
 import okio.Sink
@@ -31,6 +32,7 @@ data class TaskContainerOnlyIOStreamingOptions(
     private val consoleInfo: ConsoleInfo
 ) : ContainerIOStreamingOptions {
     override fun terminalTypeForContainer(container: Container): String? = consoleInfo.terminalType
+    override val frameDimensions = Dimensions(0, 0)
 
     override fun stdinForContainer(container: Container): Source? {
         if (container == taskContainer) {

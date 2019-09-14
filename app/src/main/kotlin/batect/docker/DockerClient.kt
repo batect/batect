@@ -29,6 +29,7 @@ import batect.docker.run.OutputConnection
 import batect.execution.CancellationContext
 import batect.logging.Logger
 import batect.os.ConsoleManager
+import batect.os.Dimensions
 import batect.utils.Version
 import batect.utils.VersionComparisonMode
 import kotlinx.serialization.json.JsonObject
@@ -124,7 +125,7 @@ class DockerClient(
     fun stop(container: DockerContainer) = api.stopContainer(container)
     fun remove(container: DockerContainer) = api.removeContainer(container)
 
-    fun run(container: DockerContainer, stdout: Sink?, stdin: Source?, cancellationContext: CancellationContext, onStarted: () -> Unit): DockerContainerRunResult {
+    fun run(container: DockerContainer, stdout: Sink?, stdin: Source?, cancellationContext: CancellationContext, frameDimensions: Dimensions, onStarted: () -> Unit): DockerContainerRunResult {
         logger.info {
             message("Running container.")
             data("container", container)
@@ -141,7 +142,7 @@ class DockerClient(
                 api.startContainer(container)
                 onStarted()
 
-                ttyManager.monitorForSizeChanges(container).use {
+                ttyManager.monitorForSizeChanges(container, frameDimensions).use {
                     startRawModeIfRequired(stdin).use {
                         ioStreamer.stream(outputConnection, inputConnection, cancellationContext)
                     }

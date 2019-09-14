@@ -78,11 +78,11 @@ import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 import batect.os.Command
+import batect.os.Dimensions
 import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
-import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import batect.ui.containerio.ContainerIOStreamingOptions
@@ -386,66 +386,50 @@ object TaskStepRunnerSpec : Spek({
 
                 val stdout = mock<Sink>()
                 val stdin = mock<Source>()
+                val frameDimensions = Dimensions(20, 30)
 
                 beforeEachTest {
                     whenever(ioStreamingOptions.stdoutForContainer(container)).doReturn(stdout)
                     whenever(ioStreamingOptions.stdinForContainer(container)).doReturn(stdin)
+                    whenever(ioStreamingOptions.frameDimensions).doReturn(frameDimensions)
                 }
 
-                given("cleanup after failure is enabled") {
-                    on("when running the container succeeds") {
-                        beforeEachTest {
-                            whenever(dockerClient.run(any(), any(), any(), any(), any())).doAnswer { invocation ->
-                                @Suppress("UNCHECKED_CAST")
-                                val onStartedHandler = invocation.arguments[4] as () -> Unit
+                on("when running the container succeeds") {
+                    beforeEachTest {
+                        whenever(dockerClient.run(any(), any(), any(), any(), any(), any())).doAnswer { invocation ->
+                            @Suppress("UNCHECKED_CAST")
+                            val onStartedHandler = invocation.arguments[5] as () -> Unit
 
-                                onStartedHandler()
+                            onStartedHandler()
 
-                                DockerContainerRunResult(123)
-                            }
-
-                            runner.run(step, stepRunContext)
+                            DockerContainerRunResult(123)
                         }
 
-                        it("runs the container with the stdin and stdout provided by the I/O streaming options and with stopping the container on cancellation enabled") {
-                            verify(dockerClient).run(eq(dockerContainer), eq(stdout), eq(stdin), eq(cancellationContext), any())
-                        }
-
-                        it("emits a 'container started' event") {
-                            verify(eventSink).postEvent(ContainerStartedEvent(container))
-                        }
-
-                        it("emits a 'running container exited' event") {
-                            verify(eventSink).postEvent(RunningContainerExitedEvent(container, 123))
-                        }
+                        runner.run(step, stepRunContext)
                     }
 
-                    on("when running the container fails") {
-                        beforeEachTest {
-                            whenever(dockerClient.run(any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong"))
+                    it("runs the container with the stdin and stdout provided by the I/O streaming options") {
+                        verify(dockerClient).run(eq(dockerContainer), eq(stdout), eq(stdin), eq(cancellationContext), eq(frameDimensions), any())
+                    }
 
-                            runner.run(step, stepRunContext)
-                        }
+                    it("emits a 'container started' event") {
+                        verify(eventSink).postEvent(ContainerStartedEvent(container))
+                    }
 
-                        it("emits a 'container run failed' event") {
-                            verify(eventSink).postEvent(ContainerRunFailedEvent(container, "Something went wrong"))
-                        }
+                    it("emits a 'running container exited' event") {
+                        verify(eventSink).postEvent(RunningContainerExitedEvent(container, 123))
                     }
                 }
 
-                given("cleanup after failure is disabled") {
-                    val runOptionsWithCleanupOnFailureDisabled = runOptions.copy(behaviourAfterFailure = CleanupOption.DontCleanup)
+                on("when running the container fails") {
+                    beforeEachTest {
+                        whenever(dockerClient.run(any(), any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong"))
 
-                    on("when running the container succeeds") {
-                        beforeEachTest {
-                            whenever(dockerClient.run(any(), any(), any(), any(), any())).doReturn(DockerContainerRunResult(123))
+                        runner.run(step, stepRunContext)
+                    }
 
-                            runner.run(step, stepRunContext.copy(runOptions = runOptionsWithCleanupOnFailureDisabled))
-                        }
-
-                        it("runs the container with stopping the container on cancellation disabled") {
-                            verify(dockerClient).run(eq(dockerContainer), eq(stdout), eq(stdin), eq(cancellationContext), any())
-                        }
+                    it("emits a 'container run failed' event") {
+                        verify(eventSink).postEvent(ContainerRunFailedEvent(container, "Something went wrong"))
                     }
                 }
             }

@@ -179,7 +179,7 @@ class TaskStepRunner(
             val stdout = ioStreamingOptions.stdoutForContainer(step.container)
             val stdin = ioStreamingOptions.stdinForContainer(step.container)
 
-            val result = dockerClient.run(step.dockerContainer, stdout, stdin, cancellationContext) {
+            val result = dockerClient.run(step.dockerContainer, stdout, stdin, cancellationContext, ioStreamingOptions.frameDimensions) {
                 eventSink.postEvent(ContainerStartedEvent(step.container))
             }
 

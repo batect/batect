@@ -18,6 +18,7 @@ package batect.ui.interleaved
 
 import batect.config.Container
 import batect.testutils.createForEachTest
+import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
@@ -25,6 +26,7 @@ import batect.ui.Console
 import batect.ui.ConsoleColor
 import batect.ui.text.Text
 import batect.ui.text.TextRun
+import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
@@ -82,6 +84,12 @@ object InterleavedOutputSpec : Spek({
                     }
                 }
             }
+
+            on("getting the prefix width") {
+                it("returns the size of the task's output prefix") {
+                    assertThat(output.prefixWidth, equalTo("short | ".length))
+                }
+            }
         }
 
         given("the task name is shorter than all containers' names") {
@@ -105,6 +113,12 @@ object InterleavedOutputSpec : Spek({
 
                 it("prints output aligned to the end of the longest container name, with the task name printed in bold white text") {
                     verify(console).println(Text("t          | ", ConsoleColor.White, true) + TextRun("Some task output"))
+                }
+            }
+
+            on("getting the prefix width") {
+                it("returns the size of the prefix for the container with the longest name") {
+                    assertThat(output.prefixWidth, equalTo("container1 | ".length))
                 }
             }
         }

@@ -33,6 +33,7 @@ import batect.docker.run.InputConnection
 import batect.docker.run.OutputConnection
 import batect.execution.CancellationContext
 import batect.os.ConsoleManager
+import batect.os.Dimensions
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
@@ -296,6 +297,7 @@ object DockerClientSpec : Spek({
                 val container = DockerContainer("the-container-id")
                 val outputStream by createForEachTest { mock<ContainerOutputStream>() }
                 val inputStream by createForEachTest { mock<ContainerInputStream>() }
+                val frameDimensions = Dimensions(10, 20)
                 val terminalRestorer by createForEachTest { mock<AutoCloseable>() }
                 val resizingRestorer by createForEachTest { mock<AutoCloseable>() }
                 val cancellationContext by createForEachTest { mock<CancellationContext>() }
@@ -307,7 +309,7 @@ object DockerClientSpec : Spek({
                     whenever(api.attachToContainerOutput(container)).doReturn(outputStream)
                     whenever(api.attachToContainerInput(container)).doReturn(inputStream)
                     whenever(consoleManager.enterRawMode()).doReturn(terminalRestorer)
-                    whenever(ttyManager.monitorForSizeChanges(container)).doReturn(resizingRestorer)
+                    whenever(ttyManager.monitorForSizeChanges(container, frameDimensions)).doReturn(resizingRestorer)
                 }
 
                 given("stdout is connected") {
@@ -317,7 +319,7 @@ object DockerClientSpec : Spek({
                         val stdin by createForEachTest { mock<Source>() }
 
                         on("running the container") {
-                            val result by runForEachTest { client.run(container, stdout, stdin, cancellationContext, onStartedHandler) }
+                            val result by runForEachTest { client.run(container, stdout, stdin, cancellationContext, frameDimensions, onStartedHandler) }
 
                             it("returns the exit code from the container") {
                                 assertThat(result.exitCode, equalTo(123))
@@ -341,7 +343,7 @@ object DockerClientSpec : Spek({
                             it("starts monitoring for terminal size changes after starting the container but before streaming I/O") {
                                 inOrder(api, ttyManager, ioStreamer) {
                                     verify(api).startContainer(container)
-                                    verify(ttyManager).monitorForSizeChanges(container)
+                                    verify(ttyManager).monitorForSizeChanges(container, frameDimensions)
                                     verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream), cancellationContext)
                                 }
                             }
@@ -402,7 +404,7 @@ object DockerClientSpec : Spek({
                         val stdin: Source? = null
 
                         on("running the container") {
-                            val result by runForEachTest { client.run(container, stdout, stdin, cancellationContext, onStartedHandler) }
+                            val result by runForEachTest { client.run(container, stdout, stdin, cancellationContext, frameDimensions, onStartedHandler) }
 
                             it("returns the exit code from the container") {
                                 assertThat(result.exitCode, equalTo(123))
@@ -429,7 +431,7 @@ object DockerClientSpec : Spek({
                             }
 
                             it("starts monitoring for console size changes") {
-                                verify(ttyManager).monitorForSizeChanges(container)
+                                verify(ttyManager).monitorForSizeChanges(container, frameDimensions)
                             }
                         }
                     }
@@ -442,7 +444,7 @@ object DockerClientSpec : Spek({
                         val stdin by createForEachTest { mock<Source>() }
 
                         it("throws an appropriate exception") {
-                            assertThat({ client.run(container, stdout, stdin, cancellationContext, onStartedHandler) }, throws<DockerException>(withMessage("Attempted to stream input to container without streaming container output.")))
+                            assertThat({ client.run(container, stdout, stdin, cancellationContext, frameDimensions, onStartedHandler) }, throws<DockerException>(withMessage("Attempted to stream input to container without streaming container output.")))
                         }
                     }
 
@@ -450,7 +452,7 @@ object DockerClientSpec : Spek({
                         val stdin: Source? = null
 
                         on("running the container") {
-                            val result by runForEachTest { client.run(container, stdout, stdin, cancellationContext, onStartedHandler) }
+                            val result by runForEachTest { client.run(container, stdout, stdin, cancellationContext, frameDimensions, onStartedHandler) }
 
                             it("returns the exit code from the container") {
                                 assertThat(result.exitCode, equalTo(123))
@@ -477,7 +479,7 @@ object DockerClientSpec : Spek({
                             }
 
                             it("starts monitoring for console size changes") {
-                                verify(ttyManager).monitorForSizeChanges(container)
+                                verify(ttyManager).monitorForSizeChanges(container, frameDimensions)
                             }
                         }
                     }

@@ -45,6 +45,7 @@ import batect.docker.run.ContainerWaiter
 import batect.execution.CancellationContext
 import batect.logging.Logger
 import batect.os.ConsoleManager
+import batect.os.Dimensions
 import batect.os.NativeMethods
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
@@ -164,7 +165,7 @@ object DockerClientIntegrationTest : Spek({
             beforeGroup {
                 withNetwork { network ->
                     withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
-                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext()) {
+                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext(), Dimensions(0, 0)) {
                             client.stop(container)
                         }
                     }
@@ -184,7 +185,7 @@ object DockerClientIntegrationTest : Spek({
             beforeGroup {
                 withNetwork { network ->
                     withContainer(creationRequestForContainerThatExits(image, network, fileToCreate)) { container ->
-                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext()) {
+                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext(), Dimensions(0, 0)) {
                             client.stop(container)
                         }
                     }
@@ -204,7 +205,7 @@ object DockerClientIntegrationTest : Spek({
             beforeGroup {
                 withNetwork { network ->
                     withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
-                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext()) {
+                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext(), Dimensions(0, 0)) {
                             client.stop(container)
                         }
                     }
@@ -234,7 +235,7 @@ object DockerClientIntegrationTest : Spek({
             fun runContainerAndWaitForHealthCheck(container: DockerContainer): Result {
                 lateinit var result: Result
 
-                client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext()) {
+                client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext(), Dimensions(0, 0)) {
                     val healthStatus = client.waitForHealthStatus(container, CancellationContext())
                     val lastHealthCheckResult = client.getLastHealthCheckResult(container)
                     result = Result(healthStatus, lastHealthCheckResult)
@@ -274,7 +275,7 @@ object DockerClientIntegrationTest : Spek({
                     fun runContainerAndGetHttpResponse(container: DockerContainer): Response {
                         lateinit var response: Response
 
-                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext()) {
+                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext(), Dimensions(0, 0)) {
                             response = httpGet("http://localhost:8080")
 
                             client.stop(container)

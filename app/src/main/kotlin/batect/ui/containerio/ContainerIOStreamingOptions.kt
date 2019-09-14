@@ -17,6 +17,7 @@
 package batect.ui.containerio
 
 import batect.config.Container
+import batect.os.Dimensions
 import okio.Sink
 import okio.Source
 
@@ -24,4 +25,6 @@ interface ContainerIOStreamingOptions {
     fun terminalTypeForContainer(container: Container): String?
     fun stdinForContainer(container: Container): Source?
     fun stdoutForContainer(container: Container): Sink?
+
+    val frameDimensions: Dimensions
 }

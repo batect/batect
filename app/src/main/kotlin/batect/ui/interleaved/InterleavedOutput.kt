@@ -31,8 +31,8 @@ data class InterleavedOutput(
     private val lock = Object()
 
     private val colours = ConsoleColor.values().filter { it != ConsoleColor.White && it != ConsoleColor.Red }
-
     private val longestNameLength = max(containers.map { it.name.length }.max()!!, taskName.length)
+    val prefixWidth = longestNameLength + 3
 
     private val containerPrefixes = containers
         .mapIndexed { index, container ->

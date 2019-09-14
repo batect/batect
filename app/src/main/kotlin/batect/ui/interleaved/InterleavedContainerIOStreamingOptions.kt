@@ -17,6 +17,7 @@
 package batect.ui.interleaved
 
 import batect.config.Container
+import batect.os.Dimensions
 import batect.ui.containerio.ContainerIOStreamingOptions
 import okio.Sink
 import okio.Source
@@ -25,4 +26,6 @@ data class InterleavedContainerIOStreamingOptions(private val output: Interleave
     override fun terminalTypeForContainer(container: Container): String? = "dumb"
     override fun stdinForContainer(container: Container): Source? = null
     override fun stdoutForContainer(container: Container): Sink? = InterleavedContainerOutputSink(container, output)
+
+    override val frameDimensions = Dimensions(0, output.prefixWidth)
 }

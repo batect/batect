@@ -16,17 +16,7 @@
 
 package batect.os
 
-interface NativeMethods {
-    fun getConsoleDimensions(): Dimensions
-
-    fun getUserId(): Int
-    fun getGroupId(): Int
-
-    fun getUserName(): String
-    fun getGroupName(): String
+data class Dimensions(val height: Int, val width: Int) {
+    operator fun plus(other: Dimensions) = Dimensions(height + other.height, width + other.width)
+    operator fun minus(other: Dimensions) = Dimensions(height - other.height, width - other.width)
 }
-
-abstract class NativeMethodException(val method: String, val errorName: String, val errorDescription: String) :
-    RuntimeException("Invoking native method $method failed with error $errorName ($errorDescription).")
-
-class NoConsoleException : RuntimeException("STDOUT is not connected to a console.")

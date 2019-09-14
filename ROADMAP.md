@@ -43,7 +43,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * support for BuildKit
 * shell tab completion for options (eg. `batect --h<tab>` completes to `batect --help`) - #116
 * shell tab completion for tasks (eg. `batect b<tab>` completes to `batect build`) - #116
-* add output format that shows output from all containers, not just main task one - #115
 * Kubernetes-style health checks from outside the container (don't require `curl` / `wget` to be installed in the container, just provide HTTP endpoint)
 * ability to add additional hostnames to a container
 

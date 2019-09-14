@@ -343,7 +343,7 @@ object DockerClientSpec : Spek({
                                     inOrder(api, consoleManager, ioStreamer) {
                                         verify(api).startContainer(container)
                                         verify(consoleManager).enterRawMode()
-                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
+                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream), cancellationContext)
                                     }
                                 }
 
@@ -351,20 +351,20 @@ object DockerClientSpec : Spek({
                                     inOrder(api, ttyManager, ioStreamer) {
                                         verify(api).startContainer(container)
                                         verify(ttyManager).monitorForSizeChanges(container)
-                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
+                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream), cancellationContext)
                                     }
                                 }
 
                                 it("stops monitoring for terminal size changes after the streaming completes") {
                                     inOrder(ioStreamer, resizingRestorer) {
-                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
+                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream), cancellationContext)
                                         verify(resizingRestorer).close()
                                     }
                                 }
 
                                 it("restores the terminal after streaming completes") {
                                     inOrder(ioStreamer, terminalRestorer) {
-                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
+                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream), cancellationContext)
                                         verify(terminalRestorer).close()
                                     }
                                 }
@@ -387,20 +387,20 @@ object DockerClientSpec : Spek({
                                     inOrder(api, onStartedHandler, ioStreamer) {
                                         verify(api).startContainer(container)
                                         verify(onStartedHandler).invoke()
-                                        verify(ioStreamer).stream(any(), any())
+                                        verify(ioStreamer).stream(any(), any(), any())
                                     }
                                 }
 
                                 it("closes the output stream after streaming the output completes") {
                                     inOrder(ioStreamer, outputStream) {
-                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
+                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream), cancellationContext)
                                         verify(outputStream).close()
                                     }
                                 }
 
                                 it("closes the input stream after streaming the output completes") {
                                     inOrder(ioStreamer, inputStream) {
-                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream))
+                                        verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream), cancellationContext)
                                         verify(inputStream).close()
                                     }
                                 }
@@ -414,7 +414,7 @@ object DockerClientSpec : Spek({
 
                                 it("removes the cancellation callback after streaming I/O") {
                                     inOrder(cancellationRestorer, ioStreamer) {
-                                        verify(ioStreamer).stream(any(), any())
+                                        verify(ioStreamer).stream(any(), any(), any())
                                         verify(cancellationRestorer).close()
                                     }
                                 }
@@ -485,7 +485,7 @@ object DockerClientSpec : Spek({
                             }
 
                             it("streams the container output but not the input") {
-                                verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Disconnected)
+                                verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Disconnected, cancellationContext)
                             }
 
                             it("attaches to the container output") {
@@ -533,7 +533,7 @@ object DockerClientSpec : Spek({
                             }
 
                             it("streams neither the container output nor the input") {
-                                verify(ioStreamer).stream(OutputConnection.Disconnected, InputConnection.Disconnected)
+                                verify(ioStreamer).stream(OutputConnection.Disconnected, InputConnection.Disconnected, cancellationContext)
                             }
 
                             it("does not attach to the container output") {

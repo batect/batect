@@ -17,6 +17,7 @@
 package batect.docker.run
 
 import batect.docker.DockerException
+import batect.execution.CancellationContext
 import okio.Buffer
 import okio.BufferedSource
 import okio.Okio
@@ -27,25 +28,27 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
 class ContainerIOStreamer() {
-    fun stream(output: OutputConnection, input: InputConnection) {
+    fun stream(output: OutputConnection, input: InputConnection, cancellationContext: CancellationContext) {
         when (output) {
             is OutputConnection.Disconnected -> when (input) {
                 is InputConnection.Connected -> throw DockerException("Cannot stream input to a container when output is disconnected.")
                 is InputConnection.Disconnected -> return
             }
-            is OutputConnection.Connected -> streamWithConnectedOutput(output, input)
+            is OutputConnection.Connected -> streamWithConnectedOutput(output, input, cancellationContext)
         }
     }
 
-    private fun streamWithConnectedOutput(output: OutputConnection.Connected, input: InputConnection) {
+    private fun streamWithConnectedOutput(output: OutputConnection.Connected, input: InputConnection, cancellationContext: CancellationContext) {
         val executor = Executors.newFixedThreadPool(2)
 
         try {
             val stdinHandler = if (input is InputConnection.Connected) { executor.submit { streamStdin(input) } } else null
             val stdoutHandler = executor.submit { streamStdout(output, stdinHandler) }
 
-            stdinHandler?.get()
-            stdoutHandler.get()
+            cancellationContext.addCancellationCallback { cancel(stdinHandler, stdoutHandler) }.use {
+                stdinHandler?.get()
+                stdoutHandler.get()
+            }
         } catch (e: CancellationException) {
             // Do nothing - we aborted the task.
         } finally {
@@ -57,6 +60,11 @@ class ContainerIOStreamer() {
 
             output.destination.close()
         }
+    }
+
+    private fun cancel(stdinHandler: Future<*>?, stdoutHandler: Future<*>) {
+        stdinHandler?.cancel(true)
+        stdoutHandler.cancel(true)
     }
 
     private fun streamStdin(input: InputConnection) {

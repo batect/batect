@@ -144,7 +144,7 @@ class DockerClient(
 
                     ttyManager.monitorForSizeChanges(container).use {
                         startRawModeIfRequired(stdin).use {
-                            ioStreamer.stream(outputConnection, inputConnection)
+                            ioStreamer.stream(outputConnection, inputConnection, cancellationContext)
                         }
                     }
                 }

@@ -21,15 +21,23 @@ import java.util.concurrent.ConcurrentLinkedQueue
 typealias CancellationCallback = () -> Unit
 
 class CancellationContext {
+    private var cancelled = false
     private val callbacks = ConcurrentLinkedQueue<CancellationCallback>()
 
     fun addCancellationCallback(callback: CancellationCallback): AutoCloseable {
         callbacks.add(callback)
 
+        if (cancelled) {
+            cancel()
+            return AutoCloseable { }
+        }
+
         return AutoCloseable { callbacks.remove(callback) }
     }
 
     fun cancel() {
+        cancelled = true
+
         while (true) {
             val callback = callbacks.poll()
 

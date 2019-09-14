@@ -36,6 +36,12 @@ object CancellationContextSpec : Spek({
                 context.addCancellationCallback { callbackCount++ }
             }
 
+            on("before the context is cancelled") {
+                it("does not call the registered callback") {
+                    assertThat(callbackCount, equalTo(0))
+                }
+            }
+
             on("cancelling the context") {
                 beforeEachTest { context.cancel() }
 
@@ -92,6 +98,23 @@ object CancellationContextSpec : Spek({
                 it("calls both registered callbacks") {
                     assertThat(callback1Count, equalTo(1))
                     assertThat(callback2Count, equalTo(1))
+                }
+            }
+        }
+
+        given("the cancellation context has been cancelled") {
+            beforeEachTest { context.cancel() }
+
+            on("registering a callback") {
+                var callbackCount = 0
+
+                beforeEachTest {
+                    callbackCount = 0
+                    context.addCancellationCallback { callbackCount++ }.use {}
+                }
+
+                it("immediately calls the callback") {
+                    assertThat(callbackCount, equalTo(1))
                 }
             }
         }

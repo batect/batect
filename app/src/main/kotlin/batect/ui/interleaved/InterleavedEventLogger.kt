@@ -26,6 +26,7 @@ import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRunFailedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ContainerStopFailedEvent
+import batect.execution.model.events.ContainerStoppedEvent
 import batect.execution.model.events.ExecutionFailedEvent
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuiltEvent
@@ -95,6 +96,7 @@ class InterleavedEventLogger(
             is ImagePulledEvent -> onImagePulled(event)
             is ContainerStartedEvent -> onContainerStarted(event)
             is ContainerBecameHealthyEvent -> onContainerBecameHealthyEvent(event)
+            is ContainerStoppedEvent -> onContainerStoppedEvent(event)
             is StepStartingEvent -> onStepStarting(event)
             is TaskFailedEvent -> onTaskFailed(event)
         }
@@ -124,6 +126,10 @@ class InterleavedEventLogger(
         if (event.container != taskContainer) {
             output.printForContainer(event.container, TextRun(Text.white("Container started.")))
         }
+    }
+
+    private fun onContainerStoppedEvent(event: ContainerStoppedEvent) {
+        output.printForContainer(event.container, TextRun(Text.white("Container stopped.")))
     }
 
     private fun onStepStarting(event: StepStartingEvent) {

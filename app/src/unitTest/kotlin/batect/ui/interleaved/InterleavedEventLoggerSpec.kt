@@ -30,6 +30,7 @@ import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRunFailedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ContainerStopFailedEvent
+import batect.execution.model.events.ContainerStoppedEvent
 import batect.execution.model.events.ExecutionFailedEvent
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuiltEvent
@@ -145,6 +146,17 @@ object InterleavedEventLoggerSpec : Spek({
 
                 it("prints a message to the output") {
                     verify(output).printForContainer(container1, TextRun(Text.white("Container became healthy.")))
+                }
+            }
+
+            describe("when a 'container stopped' event is posted") {
+                beforeEachTest {
+                    val event = ContainerStoppedEvent(container1)
+                    logger.postEvent(event)
+                }
+
+                it("prints a message to the output") {
+                    verify(output).printForContainer(container1, TextRun(Text.white("Container stopped.")))
                 }
             }
 

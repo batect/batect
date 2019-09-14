@@ -52,6 +52,8 @@ import batect.ui.humanise
 import batect.ui.text.Text
 import batect.ui.text.TextRun
 import java.time.Duration
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 class InterleavedEventLogger(
     val taskContainer: Container,
@@ -60,8 +62,8 @@ class InterleavedEventLogger(
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
     val runOptions: RunOptions
 ) : EventLogger {
-    private var haveStartedCleanup = false
-    private val commands = mutableMapOf<Container, Command?>()
+    private val haveStartedCleanup = AtomicBoolean(false)
+    private val commands = ConcurrentHashMap<Container, Command>()
 
     override fun onTaskStarting(taskName: String) {
         output.printForTask(Text.white(Text("Running ") + Text.bold(taskName) + Text("...")))
@@ -129,7 +131,7 @@ class InterleavedEventLogger(
             is BuildImageStep -> onBuildImageStepStarting(event.step)
             is PullImageStep -> onPullImageStepStarting(event.step)
             is RunContainerStep -> onRunContainerStepStarting(event.step)
-            is CreateContainerStep -> commands[event.step.container] = event.step.command
+            is CreateContainerStep -> onCreateContainerStepStarting(event.step)
             is CleanupStep -> onCleanupStepStarting()
         }
     }
@@ -160,13 +162,20 @@ class InterleavedEventLogger(
         }
     }
 
+    private fun onCreateContainerStepStarting(step: CreateContainerStep) {
+        if (step.command != null) {
+            commands[step.container] = step.command
+        }
+    }
+
     private fun onCleanupStepStarting() {
-        if (haveStartedCleanup) {
+        val haveStartedCleanupAlready = haveStartedCleanup.getAndSet(true)
+
+        if (haveStartedCleanupAlready) {
             return
         }
 
         output.printForTask(TextRun(Text.white("Cleaning up...")))
-        haveStartedCleanup = true
     }
 
     private fun onTaskFailed(event: TaskFailedEvent) {

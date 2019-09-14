@@ -36,7 +36,7 @@ object InterleavedOutputJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--output=all", "--no-color", "the-task")) }
 
             it("prints the output from that task") {
-                assertThat(result.output, containsSubstring("build-env   | Status code for request: 200\r\n"))
+                assertThat(result.output, containsSubstring("build-env   | Status code for request: 200"))
             }
 
             it("returns the exit code from that task") {

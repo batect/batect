@@ -213,10 +213,10 @@ class DockerClient(
                 data("event", event)
             }
 
-            when {
-                event.status == "health_status: healthy" -> return HealthStatus.BecameHealthy
-                event.status == "health_status: unhealthy" -> return HealthStatus.BecameUnhealthy
-                event.status == "die" -> return HealthStatus.Exited
+            return when {
+                event.status == "health_status: healthy" -> HealthStatus.BecameHealthy
+                event.status == "health_status: unhealthy" -> HealthStatus.BecameUnhealthy
+                event.status == "die" -> HealthStatus.Exited
                 else -> throw ContainerHealthCheckException("Unexpected event received: ${event.status}")
             }
         } catch (e: ContainerInspectionFailedException) {

@@ -112,7 +112,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * file I/O and path resolution logic
 * process creation / monitoring
 * HTTP communication
-* logging - need to switch from Jackson to kotlinx.serialization
 
 #### Things blocking move to Kotlin/Native
 * unit testing support and associated library

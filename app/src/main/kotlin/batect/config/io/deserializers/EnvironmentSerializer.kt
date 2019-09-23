@@ -14,15 +14,12 @@
    limitations under the License.
 */
 
-package batect.os
+package batect.config.io.deserializers
 
-import batect.logging.LogMessageBuilder
-import kotlinx.serialization.Serializable
+import batect.config.EnvironmentVariableExpression
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.internal.StringSerializer
+import kotlinx.serialization.map
 
-@Serializable
-data class Dimensions(val height: Int, val width: Int) {
-    operator fun plus(other: Dimensions) = Dimensions(height + other.height, width + other.width)
-    operator fun minus(other: Dimensions) = Dimensions(height - other.height, width - other.width)
-}
-
-fun LogMessageBuilder.data(key: String, value: Dimensions) = this.data(key, value, Dimensions.serializer())
+internal object EnvironmentSerializer :
+    KSerializer<Map<String, EnvironmentVariableExpression>> by (StringSerializer to EnvironmentVariableExpression.serializer()).map

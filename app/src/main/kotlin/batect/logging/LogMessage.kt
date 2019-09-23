@@ -16,13 +16,24 @@
 
 package batect.logging
 
+import batect.utils.Json
+import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.json.JsonElement
 import java.time.ZonedDateTime
 
-data class LogMessage(val severity: Severity, val message: String, val timestamp: ZonedDateTime, val additionalData: Map<String, Any?>)
+data class LogMessage(val severity: Severity, val message: String, val timestamp: ZonedDateTime, val additionalData: Map<String, Jsonable>)
 
 enum class Severity {
     Debug,
     Info,
     Warning,
     Error
+}
+
+interface Jsonable {
+    fun toJSON(): JsonElement
+}
+
+data class JsonableObject<T>(val value: T, val serializer: SerializationStrategy<T>) : Jsonable {
+    override fun toJSON(): JsonElement = Json.parser.toJson(serializer, value)
 }

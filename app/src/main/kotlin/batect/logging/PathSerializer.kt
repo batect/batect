@@ -14,12 +14,21 @@
    limitations under the License.
 */
 
-package batect.config.io.deserializers
+package batect.logging
 
-import batect.config.EnvironmentVariableExpression
+import kotlinx.serialization.Decoder
+import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.internal.StringSerializer
-import kotlinx.serialization.map
+import kotlinx.serialization.SerialDescriptor
+import kotlinx.serialization.internal.StringDescriptor
+import java.nio.file.Path
 
-internal object EnvironmentDeserializer :
-    KSerializer<Map<String, EnvironmentVariableExpression>> by (StringSerializer to EnvironmentVariableExpression.serializer()).map
+class PathSerializer : KSerializer<Path> {
+    override val descriptor: SerialDescriptor = StringDescriptor
+
+    override fun deserialize(decoder: Decoder): Path = throw UnsupportedOperationException()
+
+    override fun serialize(encoder: Encoder, obj: Path) {
+        encoder.encodeString(obj.toString())
+    }
+}

@@ -80,7 +80,7 @@ object HttpLoggingInterceptorSpec : Spek({
                         withSeverity(Severity.Debug) and
                         withAdditionalData("url", "http://www.awesomestuff.com/thing") and
                         withAdditionalData("method", "GET") and
-                        withAdditionalData("contentLength", 0) and
+                        withAdditionalData("contentLength", 0L) and
                         withAdditionalData("contentType", null)
                 ))
             }
@@ -93,7 +93,7 @@ object HttpLoggingInterceptorSpec : Spek({
                         withAdditionalData("method", "GET") and
                         withAdditionalData("code", 418) and
                         withAdditionalData("message", "I'm a teapot") and
-                        withAdditionalData("contentLength", 0) and
+                        withAdditionalData("contentLength", 0L) and
                         withAdditionalData("contentType", null)
                 ))
             }

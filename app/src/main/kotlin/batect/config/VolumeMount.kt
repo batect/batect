@@ -25,6 +25,7 @@ import kotlinx.serialization.CompositeDecoder
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.ElementValueDecoder
+import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
@@ -33,8 +34,10 @@ import kotlinx.serialization.Serializer
 import kotlinx.serialization.decode
 import kotlinx.serialization.internal.SerialClassDescImpl
 import kotlinx.serialization.internal.StringDescriptor
+import kotlinx.serialization.internal.StringSerializer
+import kotlinx.serialization.internal.nullable
 
-@Serializable
+@Serializable(with = VolumeMount.Companion::class)
 data class VolumeMount(
     val localPath: String,
     val containerPath: String,
@@ -148,5 +151,15 @@ data class VolumeMount(
 
         private val YamlInput.localPathDeserializer: DeserializationStrategy<PathResolutionResult>
             get() = context.getContextual(PathResolutionResult::class)!!
+
+        override fun serialize(encoder: Encoder, obj: VolumeMount) {
+            val output = encoder.beginStructure(descriptor)
+
+            output.encodeStringElement(descriptor, localPathFieldIndex, obj.localPath)
+            output.encodeStringElement(descriptor, containerPathFieldIndex, obj.containerPath)
+            output.encodeSerializableElement(descriptor, optionsFieldIndex, StringSerializer.nullable, obj.options)
+
+            output.endStructure(descriptor)
+        }
     }
 }

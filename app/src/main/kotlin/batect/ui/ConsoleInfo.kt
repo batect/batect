@@ -19,6 +19,7 @@ package batect.ui
 import batect.logging.Logger
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
+import batect.os.data
 import jnr.posix.POSIX
 import java.io.FileDescriptor
 

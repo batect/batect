@@ -31,17 +31,22 @@ String versionInfoFileContents() {
     kotlinLicenseHeader +
     """ |package batect
         |
+        |import batect.logging.LogMessageBuilder
         |import batect.utils.Version
+        |import kotlinx.serialization.Serializable
         |
         |// This file is generated automatically by the $generateVersionInfoFile.name Gradle task.
         |// Do not edit it (it will be overwritten on the next build anyway).
         |// Do not commit it.
+        |@Serializable
         |class VersionInfo {
         |    val gitCommitHash = "${rootProject.gitCommitHash}"
         |    val gitCommitDate = "${rootProject.gitCommitHumanDate}"
         |    val version = Version.parse("${rootProject.simpleVersion}")
         |    val buildDate = "${getBuildDate()}"
         |}
+        |
+        |fun LogMessageBuilder.data(key: String, value: VersionInfo) = this.data(key, value, VersionInfo.serializer())
         |""".stripMargin("|")
 }
 

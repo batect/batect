@@ -81,7 +81,22 @@ sealed class RunAsCurrentUserConfig {
             }
         }
 
-        override fun serialize(encoder: Encoder, obj: RunAsCurrentUserConfig) = throw UnsupportedOperationException()
+        override fun serialize(encoder: Encoder, obj: RunAsCurrentUserConfig) {
+            val output = encoder.beginStructure(descriptor)
+
+            val enabled = when (obj) {
+                is RunAsDefaultContainerUser -> false
+                is RunAsCurrentUser -> true
+            }
+
+            output.encodeBooleanElement(descriptor, enabledFieldIndex, enabled)
+
+            if (obj is RunAsCurrentUser) {
+                output.encodeStringElement(descriptor, homeDirectoryFieldIndex, obj.homeDirectory)
+            }
+
+            output.endStructure(descriptor)
+        }
     }
 
     object RunAsDefaultContainerUser : RunAsCurrentUserConfig()

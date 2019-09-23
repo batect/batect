@@ -16,9 +16,14 @@
 
 package batect.os
 
+import batect.logging.LogMessageBuilder
+import kotlinx.serialization.internal.EnumSerializer
+
 enum class OperatingSystem {
     Linux,
     Mac,
     Windows,
     Other
 }
+
+fun LogMessageBuilder.data(key: String, value: OperatingSystem) = this.data(key, value, EnumSerializer(OperatingSystem::class))

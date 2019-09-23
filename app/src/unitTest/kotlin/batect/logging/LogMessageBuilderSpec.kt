@@ -25,6 +25,8 @@ import com.natpryce.hamkrest.hasElement
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import kotlinx.serialization.internal.IntSerializer
+import kotlinx.serialization.internal.StringSerializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.ZoneOffset
@@ -36,7 +38,7 @@ object LogMessageBuilderSpec : Spek({
         val timestampSource = { timestampToUse }
 
         val standardAdditionalDataSource = mock<StandardAdditionalDataSource> {
-            on { getAdditionalData() } doReturn mapOf("@something" to 456)
+            on { getAdditionalData() } doReturn mapOf("@something" to JsonableObject(456, IntSerializer))
         }
 
         on("building a log message with no message or additional information") {
@@ -53,7 +55,7 @@ object LogMessageBuilderSpec : Spek({
 
             it("returns a log message with only the standard additional data") {
                 assertThat(message.additionalData, equalTo(mapOf<String, Any?>(
-                    "@something" to 456
+                    "@something" to JsonableObject(456, IntSerializer)
                 )))
             }
 
@@ -77,8 +79,8 @@ object LogMessageBuilderSpec : Spek({
             }
 
             it("returns a log message with only the standard additional data") {
-                assertThat(message.additionalData, equalTo(mapOf<String, Any?>(
-                    "@something" to 456
+                assertThat(message.additionalData, equalTo(mapOf<String, Jsonable>(
+                    "@something" to JsonableObject(456, IntSerializer)
                 )))
             }
 
@@ -103,10 +105,10 @@ object LogMessageBuilderSpec : Spek({
             }
 
             it("returns a log message with the standard additional data and the user-provided additional data") {
-                assertThat(message.additionalData, equalTo(mapOf<String, Any?>(
-                    "some-key" to 123,
-                    "some-other-data" to "value",
-                    "@something" to 456
+                assertThat(message.additionalData, equalTo(mapOf<String, Jsonable>(
+                    "some-key" to JsonableObject(123, IntSerializer),
+                    "some-other-data" to JsonableObject("value", StringSerializer),
+                    "@something" to JsonableObject(456, IntSerializer)
                 )))
             }
 
@@ -116,7 +118,7 @@ object LogMessageBuilderSpec : Spek({
         }
 
         on("building a log message with some logger-provided additional data") {
-            val builder = LogMessageBuilder(Severity.Info, mapOf("@source" to "some.class.name"))
+            val builder = LogMessageBuilder(Severity.Info, mapOf("@source" to JsonableObject("some.class.name", StringSerializer)))
                 .data("some-key", 123)
                 .data("some-other-data", "value")
 
@@ -131,11 +133,11 @@ object LogMessageBuilderSpec : Spek({
             }
 
             it("returns a log message with the standard additional data, logger-provided additional data and the user-provided additional data") {
-                assertThat(message.additionalData, equalTo(mapOf<String, Any?>(
-                    "some-key" to 123,
-                    "some-other-data" to "value",
-                    "@something" to 456,
-                    "@source" to "some.class.name"
+                assertThat(message.additionalData, equalTo(mapOf<String, Jsonable>(
+                    "some-key" to JsonableObject(123, IntSerializer),
+                    "some-other-data" to JsonableObject("value", StringSerializer),
+                    "@something" to JsonableObject(456, IntSerializer),
+                    "@source" to JsonableObject("some.class.name", StringSerializer)
                 )))
             }
 
@@ -162,8 +164,12 @@ object LogMessageBuilderSpec : Spek({
 
             it("returns a log message with a formatted version of the exception in the additional data") {
                 assertThat(message.additionalData.keys, hasElement("exception"))
-                assertThat(message.additionalData["exception"] as String, containsSubstring("java.lang.RuntimeException: Something went wrong"))
-                assertThat(message.additionalData["exception"] as String, containsSubstring("Caused by: java.lang.RuntimeException: Something else went wrong"))
+
+                @Suppress("UNCHECKED_CAST")
+                val entry = message.additionalData["exception"] as JsonableObject<String>
+
+                assertThat(entry.value, containsSubstring("java.lang.RuntimeException: Something went wrong"))
+                assertThat(entry.value, containsSubstring("Caused by: java.lang.RuntimeException: Something else went wrong"))
             }
         }
     }

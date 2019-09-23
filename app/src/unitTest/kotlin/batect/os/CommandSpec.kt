@@ -16,13 +16,16 @@
 
 package batect.os
 
+import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.withMessage
+import batect.utils.Json
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -114,6 +117,18 @@ object CommandSpec : Spek({
                                 throws<InvalidCommandLineException>(withMessage("Command `$command` is invalid: $expectedErrorMessage")))
                         }
                     }
+                }
+            }
+        }
+
+        describe("converting it to JSON for logging") {
+            given("a command") {
+                val command = Command.parse("the-command --the-arg")
+
+                val json by createForEachTest { Json.parser.stringify(Command.serializer(), command) }
+
+                it("represents the command as an array") {
+                    assertThat(json, equivalentTo("""["the-command", "--the-arg"]"""))
                 }
             }
         }

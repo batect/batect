@@ -18,6 +18,7 @@ package batect.docker
 
 import batect.config.HealthCheckConfig
 import batect.docker.build.DockerImageBuildContext
+import batect.docker.build.DockerImageBuildContextEntry
 import batect.docker.build.DockerImageBuildContextRequestBody
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.pull.TokenDockerRegistryCredentials
@@ -75,6 +76,7 @@ import okio.BufferedSink
 import okio.BufferedSource
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
 import java.time.Duration
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -779,7 +781,7 @@ object DockerAPISpec : Spek({
                 whenever(httpClient.newBuilder()).doReturn(longTimeoutClientBuilder)
             }
 
-            val context = DockerImageBuildContext(emptySet())
+            val context = DockerImageBuildContext(setOf(DockerImageBuildContextEntry(Paths.get("/some/file"), "file")))
             val buildArgs = mapOf("someArg" to "someValue")
             val dockerfilePath = "some-Dockerfile-path"
             val imageTags = setOf("some_image_tag", "some_other_image_tag")

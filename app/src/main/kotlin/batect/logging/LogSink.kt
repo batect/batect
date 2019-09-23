@@ -17,5 +17,5 @@
 package batect.logging
 
 interface LogSink {
-    fun write(severity: Severity, loggerAdditionalData: Map<String, Any>, build: LogMessageBuilder.() -> LogMessageBuilder)
+    fun write(severity: Severity, loggerAdditionalData: Map<String, Jsonable>, build: LogMessageBuilder.() -> LogMessageBuilder)
 }

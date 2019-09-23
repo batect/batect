@@ -25,10 +25,12 @@ import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Serializer
 import kotlinx.serialization.internal.StringDescriptor
+import kotlinx.serialization.internal.StringSerializer
+import kotlinx.serialization.list
 import kotlinx.serialization.withName
 
-@Serializable
-data class Command private constructor(val originalCommand: String, val parsedCommand: Iterable<String>) {
+@Serializable(with = Command.Companion::class)
+data class Command private constructor(val originalCommand: String, val parsedCommand: List<String>) {
     operator fun plus(newArguments: Iterable<String>): Command {
         val formattedCommand = originalCommand + formatNewArguments(newArguments)
         return Command(formattedCommand, parsedCommand + newArguments)
@@ -146,7 +148,7 @@ data class Command private constructor(val originalCommand: String, val parsedCo
             }
         }
 
-        override fun serialize(encoder: Encoder, obj: Command) = throw UnsupportedOperationException()
+        override fun serialize(encoder: Encoder, obj: Command) = StringSerializer.list.serialize(encoder, obj.parsedCommand)
     }
 }
 

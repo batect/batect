@@ -24,12 +24,14 @@ import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputStream
 import batect.execution.CancellationContext
 import batect.execution.executeInCancellationContext
+import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.Dimensions
 import batect.os.SystemInfo
 import batect.utils.Json
 import batect.utils.Version
 import jnr.constants.platform.Signal
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.json
@@ -902,7 +904,12 @@ class DockerAPI(
         errorHandler(DockerAPIError(response.code(), message))
     }
 
+    @Serializable
     private data class DockerAPIError(val statusCode: Int, val message: String)
+
+    private fun LogMessageBuilder.data(key: String, value: DockerAPIError) = this.data(key, value, DockerAPIError.serializer())
+    private fun LogMessageBuilder.data(key: String, value: DockerContainerCreationRequest) = this.data(key, value, DockerContainerCreationRequest.serializer())
+    private fun LogMessageBuilder.data(key: String, value: DockerImageBuildContext) = this.data(key, value, DockerImageBuildContext.serializer())
 
     private fun String.correctLineEndings(): String = this.replace("\n", systemInfo.lineSeparator)
 }

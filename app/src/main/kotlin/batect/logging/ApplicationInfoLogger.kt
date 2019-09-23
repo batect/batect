@@ -17,8 +17,10 @@
 package batect.logging
 
 import batect.VersionInfo
+import batect.data
 import batect.docker.DockerClient
 import batect.os.SystemInfo
+import batect.os.data
 
 class ApplicationInfoLogger(
     private val logger: Logger,

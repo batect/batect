@@ -17,8 +17,8 @@
 package batect.config
 
 import batect.config.io.ConfigurationException
-import batect.config.io.deserializers.DependencySetDeserializer
-import batect.config.io.deserializers.EnvironmentDeserializer
+import batect.config.io.deserializers.DependencySetSerializer
+import batect.config.io.deserializers.EnvironmentSerializer
 import batect.docker.Capability
 import batect.os.Command
 import batect.os.PathResolutionResult
@@ -35,6 +35,8 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
 import kotlinx.serialization.decode
 import kotlinx.serialization.internal.SerialClassDescImpl
+import kotlinx.serialization.internal.StringSerializer
+import kotlinx.serialization.internal.nullable
 import kotlinx.serialization.set
 import java.nio.file.Path
 
@@ -108,7 +110,7 @@ data class Container(
         private val healthCheckConfigFieldIndex = descriptor.getElementIndex(healthCheckConfigFieldName)
         private val runAsCurrentUserConfigFieldIndex = descriptor.getElementIndex(runAsCurrentUserConfigFieldName)
         private val privilegedFieldIndex = descriptor.getElementIndex(privilegedFieldName)
-        private val enableInitProcessConfigFieldIndex = descriptor.getElementIndex(enableInitProcessFieldName)
+        private val enableInitProcessFieldIndex = descriptor.getElementIndex(enableInitProcessFieldName)
         private val capabilitiesToAddFieldIndex = descriptor.getElementIndex(capabilitiesToAddFieldName)
         private val capabilitiesToDropFieldIndex = descriptor.getElementIndex(capabilitiesToDropFieldName)
 
@@ -140,19 +142,19 @@ data class Container(
                 when (val i = input.decodeElementIndex(descriptor)) {
                     CompositeDecoder.READ_DONE -> break@loop
                     buildDirectoryFieldIndex -> buildDirectory = input.decodeBuildDirectory()
-                    buildArgsFieldIndex -> buildArgs = input.decode(EnvironmentDeserializer)
+                    buildArgsFieldIndex -> buildArgs = input.decode(EnvironmentSerializer)
                     dockerfileFieldIndex -> dockerfilePath = input.decodeStringElement(descriptor, i)
                     imageNameFieldIndex -> imageName = input.decodeStringElement(descriptor, i)
                     commandFieldIndex -> command = input.decode(Command.Companion)
-                    environmentFieldIndex -> environment = input.decode(EnvironmentDeserializer)
+                    environmentFieldIndex -> environment = input.decode(EnvironmentSerializer)
                     workingDirectoryFieldIndex -> workingDirectory = input.decodeStringElement(descriptor, i)
                     volumeMountsFieldIndex -> volumeMounts = input.decode(VolumeMount.serializer().set)
                     portMappingsFieldIndex -> portMappings = input.decode(PortMapping.serializer().set)
-                    dependenciesFieldIndex -> dependencies = input.decode(DependencySetDeserializer)
+                    dependenciesFieldIndex -> dependencies = input.decode(DependencySetSerializer)
                     healthCheckConfigFieldIndex -> healthCheckConfig = input.decode(HealthCheckConfig.serializer())
                     runAsCurrentUserConfigFieldIndex -> runAsCurrentUserConfig = input.decode(RunAsCurrentUserConfig.serializer())
                     privilegedFieldIndex -> privileged = input.decodeBooleanElement(descriptor, i)
-                    enableInitProcessConfigFieldIndex -> enableInitProcess = input.decodeBooleanElement(descriptor, i)
+                    enableInitProcessFieldIndex -> enableInitProcess = input.decodeBooleanElement(descriptor, i)
                     capabilitiesToAddFieldIndex -> capabilitiesToAdd = input.decode(Capability.serializer.set)
                     capabilitiesToDropFieldIndex -> capabilitiesToDrop = input.decode(Capability.serializer.set)
 
@@ -227,6 +229,32 @@ data class Container(
             }
         }
 
-        override fun serialize(encoder: Encoder, obj: Container): Unit = throw UnsupportedOperationException()
+        override fun serialize(encoder: Encoder, obj: Container) {
+            val output = encoder.beginStructure(descriptor)
+
+            when (obj.imageSource) {
+                is PullImage -> output.encodeStringElement(descriptor, imageNameFieldIndex, obj.imageSource.imageName)
+                is BuildImage -> {
+                    output.encodeStringElement(descriptor, buildDirectoryFieldIndex, obj.imageSource.buildDirectory.toString())
+                    output.encodeSerializableElement(descriptor, buildArgsFieldIndex, EnvironmentSerializer, obj.imageSource.buildArgs)
+                    output.encodeSerializableElement(descriptor, dockerfileFieldIndex, StringSerializer.nullable, obj.imageSource.dockerfilePath)
+                }
+            }
+
+            output.encodeSerializableElement(descriptor, commandFieldIndex, Command.serializer().nullable, obj.command)
+            output.encodeSerializableElement(descriptor, environmentFieldIndex, EnvironmentSerializer, obj.environment)
+            output.encodeSerializableElement(descriptor, workingDirectoryFieldIndex, StringSerializer.nullable, obj.workingDirectory)
+            output.encodeSerializableElement(descriptor, volumeMountsFieldIndex, VolumeMount.serializer().set, obj.volumeMounts)
+            output.encodeSerializableElement(descriptor, portMappingsFieldIndex, PortMapping.serializer().set, obj.portMappings)
+            output.encodeSerializableElement(descriptor, dependenciesFieldIndex, DependencySetSerializer, obj.dependencies)
+            output.encodeSerializableElement(descriptor, healthCheckConfigFieldIndex, HealthCheckConfig.serializer(), obj.healthCheckConfig)
+            output.encodeSerializableElement(descriptor, runAsCurrentUserConfigFieldIndex, RunAsCurrentUserConfig.serializer(), obj.runAsCurrentUserConfig)
+            output.encodeBooleanElement(descriptor, privilegedFieldIndex, obj.privileged)
+            output.encodeBooleanElement(descriptor, enableInitProcessFieldIndex, obj.enableInitProcess)
+            output.encodeSerializableElement(descriptor, capabilitiesToAddFieldIndex, Capability.serializer.set, obj.capabilitiesToAdd)
+            output.encodeSerializableElement(descriptor, capabilitiesToDropFieldIndex, Capability.serializer.set, obj.capabilitiesToDrop)
+
+            output.endStructure(descriptor)
+        }
     }
 }

@@ -16,6 +16,7 @@
 
 package batect.updates
 
+import batect.logging.LogMessageBuilder
 import batect.utils.Version
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
@@ -47,3 +48,5 @@ object ZonedDateTimeSerializer : KSerializer<ZonedDateTime> {
     override fun deserialize(decoder: Decoder): ZonedDateTime = ZonedDateTime.parse(decoder.decodeString(), formatter)
     override fun serialize(encoder: Encoder, obj: ZonedDateTime) = encoder.encodeString(obj.format(formatter))
 }
+
+fun LogMessageBuilder.data(key: String, value: UpdateInfo) = data(key, value, UpdateInfo.serializer())

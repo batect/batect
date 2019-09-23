@@ -16,36 +16,55 @@
 
 package batect.os
 
+import batect.logging.LogMessageBuilder
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import java.util.Properties
 
-class SystemInfo(private val nativeMethods: NativeMethods, private val systemProperties: Properties = System.getProperties()) {
-    private val jvmVendor = systemProperties.getProperty("java.vm.vendor")
-    private val jvmName = systemProperties.getProperty("java.vm.name")
-    private val javaVersion = systemProperties.getProperty("java.version")
+@Serializable()
+class SystemInfo(
+    val operatingSystem: OperatingSystem,
+    val osVersion: String,
+    val lineSeparator: String,
+    val jvmVersion: String,
+    val userName: String,
+    val homeDirectory: String,
+    val tempDirectory: String
+) {
+    constructor(nativeMethods: NativeMethods, systemProperties: Properties = System.getProperties()) : this(
+        determineOperatingSystem(systemProperties.getProperty("os.name")),
+        "${systemProperties.getProperty("os.name")} ${systemProperties.getProperty("os.version")} (${systemProperties.getProperty("os.arch")})",
+        systemProperties.getProperty("line.separator"),
+        "${systemProperties.getProperty("java.vm.vendor")} ${systemProperties.getProperty("java.vm.name")} ${systemProperties.getProperty("java.version")}",
+        nativeMethods.getUserName(),
+        systemProperties.getProperty("user.home"),
+        systemProperties
+    )
 
-    private val osName = systemProperties.getProperty("os.name")
-    private val osArch = systemProperties.getProperty("os.arch")
-    private val rawOSVersion = systemProperties.getProperty("os.version")
+    constructor(operatingSystem: OperatingSystem, osVersion: String, lineSeparator: String, jvmVersion: String, userName: String, homeDirectory: String, systemProperties: Properties) : this(
+        operatingSystem,
+        osVersion,
+        lineSeparator,
+        jvmVersion,
+        userName,
+        homeDirectory,
+        when (operatingSystem) {
+            OperatingSystem.Mac, OperatingSystem.Linux -> "/tmp"
+            else -> systemProperties.getProperty("java.io.tmpdir")
+        }
+    )
 
-    val operatingSystem = when {
-        osName.equals("Mac OS X", ignoreCase = true) -> OperatingSystem.Mac
-        osName.equals("Linux", ignoreCase = true) -> OperatingSystem.Linux
-        osName.startsWith("Windows", ignoreCase = true) -> OperatingSystem.Windows
-        else -> OperatingSystem.Other
-    }
-
-    val jvmVersion = "$jvmVendor $jvmName $javaVersion"
-    val osVersion = "$osName $rawOSVersion ($osArch)"
-    val homeDirectory: String = systemProperties.getProperty("user.home")
-    val lineSeparator: String = systemProperties.getProperty("line.separator")
-
-    val tempDirectory: String = if (operatingSystem in setOf(OperatingSystem.Mac, OperatingSystem.Linux)) {
-        "/tmp"
-    } else {
-        systemProperties.getProperty("java.io.tmpdir")
-    }
-
+    @Transient
     val isSupportedOperatingSystem = operatingSystem in setOf(OperatingSystem.Mac, OperatingSystem.Linux, OperatingSystem.Windows)
 
-    val userName: String by lazy { nativeMethods.getUserName() }
+    companion object {
+        private fun determineOperatingSystem(osName: String) = when {
+            osName.equals("Mac OS X", ignoreCase = true) -> OperatingSystem.Mac
+            osName.equals("Linux", ignoreCase = true) -> OperatingSystem.Linux
+            osName.startsWith("Windows", ignoreCase = true) -> OperatingSystem.Windows
+            else -> OperatingSystem.Other
+        }
+    }
 }
+
+fun LogMessageBuilder.data(key: String, value: SystemInfo) = this.data(key, value, SystemInfo.serializer())

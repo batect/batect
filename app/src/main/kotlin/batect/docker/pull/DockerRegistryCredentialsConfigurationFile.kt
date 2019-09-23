@@ -71,12 +71,14 @@ class DockerRegistryCredentialsConfigurationFile(
         }
 
         if (config.credsStore != null) {
+            val credsStore = config.credsStore!!
+
             logger.info {
                 message("Configuration file has global credsStore configured and there is no registry-specific credHelper entry.")
-                data("credsStore", config.credsStore)
+                data("credsStore", credsStore)
             }
 
-            return HelperBasedCredentialsSource("docker-credential-${config.credsStore}", registry, processRunner)
+            return HelperBasedCredentialsSource("docker-credential-$credsStore", registry, processRunner)
         }
 
         val authForRegistry = config.auths[registry]

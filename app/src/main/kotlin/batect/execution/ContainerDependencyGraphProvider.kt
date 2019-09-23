@@ -18,8 +18,12 @@ package batect.execution
 
 import batect.config.Configuration
 import batect.config.Task
+import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.utils.mapToSet
+import kotlinx.serialization.internal.StringSerializer
+import kotlinx.serialization.map
+import kotlinx.serialization.set
 
 class ContainerDependencyGraphProvider(private val containerCommandResolver: ContainerCommandResolver, private val logger: Logger) {
     fun createGraph(config: Configuration, task: Task): ContainerDependencyGraph {
@@ -39,3 +43,6 @@ class ContainerDependencyGraphProvider(private val containerCommandResolver: Con
 
     private fun dependencyNames(node: ContainerDependencyGraphNode): Set<String> = node.dependsOnContainers.mapToSet { it.name }
 }
+
+private fun LogMessageBuilder.data(key: String, value: Task) = this.data(key, value, Task.serializer())
+private fun LogMessageBuilder.data(key: String, value: Map<String, Set<String>>) = this.data(key, value, (StringSerializer to StringSerializer.set).map)

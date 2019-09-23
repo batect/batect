@@ -33,7 +33,7 @@ import kotlinx.serialization.Serializer
 import kotlinx.serialization.decode
 import kotlinx.serialization.internal.SerialClassDescImpl
 
-@Serializable
+@Serializable(with = Configuration.Companion::class)
 data class Configuration(
     val projectName: String,
     val tasks: TaskMap = TaskMap(),
@@ -118,6 +118,12 @@ data class Configuration(
             return inferredProjectName
         }
 
-        override fun serialize(encoder: Encoder, obj: Configuration): Unit = throw UnsupportedOperationException()
+        override fun serialize(encoder: Encoder, obj: Configuration) {
+            val output = encoder.beginStructure(descriptor)
+            output.encodeStringElement(descriptor, projectNameFieldIndex, obj.projectName)
+            output.encodeSerializableElement(descriptor, tasksFieldIndex, TaskMap.Companion, obj.tasks)
+            output.encodeSerializableElement(descriptor, containersFieldIndex, ContainerMap.Companion, obj.containers)
+            output.endStructure(descriptor)
+        }
     }
 }

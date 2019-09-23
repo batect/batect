@@ -90,7 +90,7 @@ object DockerClientIntegrationTest : Spek({
         val nativeMethods by createForGroup { getNativeMethodsForPlatform(posix) }
         val client by createForGroup { createClient(posix, nativeMethods) }
 
-        fun creationRequestForContainer(image: DockerImage, network: DockerNetwork, command: Iterable<String>, volumeMounts: Set<VolumeMount> = emptySet(), portMappings: Set<PortMapping> = emptySet(), userAndGroup: UserAndGroup? = null): DockerContainerCreationRequest {
+        fun creationRequestForContainer(image: DockerImage, network: DockerNetwork, command: List<String>, volumeMounts: Set<VolumeMount> = emptySet(), portMappings: Set<PortMapping> = emptySet(), userAndGroup: UserAndGroup? = null): DockerContainerCreationRequest {
             return DockerContainerCreationRequest(
                 image,
                 network,
@@ -110,7 +110,7 @@ object DockerClientIntegrationTest : Spek({
             )
         }
 
-        fun creationRequestForTestContainer(image: DockerImage, network: DockerNetwork, localMountDirectory: Path, containerMountDirectory: String, command: Iterable<String>): DockerContainerCreationRequest {
+        fun creationRequestForTestContainer(image: DockerImage, network: DockerNetwork, localMountDirectory: Path, containerMountDirectory: String, command: List<String>): DockerContainerCreationRequest {
             val volumeMount = VolumeMount(localMountDirectory.toString(), containerMountDirectory, null)
             val userAndGroup = UserAndGroup(getUserId(nativeMethods), getGroupId(nativeMethods))
 

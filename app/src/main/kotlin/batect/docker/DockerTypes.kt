@@ -16,14 +16,23 @@
 
 package batect.docker
 
+import batect.logging.LogMessageBuilder
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.time.Duration
 
+@Serializable
 data class DockerImage(val id: String)
+
+@Serializable
 data class DockerContainer(val id: String)
+
 data class DockerContainerRunResult(val exitCode: Int)
+
+@Serializable
 data class DockerNetwork(val id: String)
+
+@Serializable
 data class DockerEvent(val status: String)
 
 @Serializable
@@ -59,3 +68,8 @@ data class DockerContainerHealthCheckConfig(
     @SerialName("StartPeriod") @Serializable(with = DurationSerializer::class) val startPeriod: Duration = Duration.ZERO,
     @SerialName("Retries") val retries: Int = 3
 )
+
+fun LogMessageBuilder.data(key: String, value: DockerImage) = this.data(key, value, DockerImage.serializer())
+fun LogMessageBuilder.data(key: String, value: DockerContainer) = this.data(key, value, DockerContainer.serializer())
+fun LogMessageBuilder.data(key: String, value: DockerNetwork) = this.data(key, value, DockerNetwork.serializer())
+fun LogMessageBuilder.data(key: String, value: DockerEvent) = this.data(key, value, DockerEvent.serializer())

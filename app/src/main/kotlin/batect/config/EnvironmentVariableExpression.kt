@@ -19,6 +19,7 @@ package batect.config
 import batect.config.io.ConfigurationException
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.Decoder
+import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
@@ -26,7 +27,7 @@ import kotlinx.serialization.Serializer
 import kotlinx.serialization.internal.StringDescriptor
 import kotlinx.serialization.withName
 
-@Serializable
+@Serializable(with = EnvironmentVariableExpression.Companion::class)
 sealed class EnvironmentVariableExpression {
     abstract fun evaluate(hostEnvironmentVariables: Map<String, String>): String
 
@@ -67,6 +68,21 @@ sealed class EnvironmentVariableExpression {
             } else {
                 throw e
             }
+        }
+
+        override fun serialize(encoder: Encoder, obj: EnvironmentVariableExpression) {
+            val representation = when (obj) {
+                is LiteralValue -> obj.value
+                is ReferenceValue -> {
+                    if (obj.default == null) {
+                        '$' + obj.referenceTo
+                    } else {
+                        '$' + "{${obj.referenceTo}:-${obj.default}}"
+                    }
+                }
+            }
+
+            encoder.encodeString(representation)
         }
     }
 }

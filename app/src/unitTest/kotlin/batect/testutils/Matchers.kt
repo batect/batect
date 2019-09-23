@@ -17,6 +17,7 @@
 package batect.testutils
 
 import batect.config.io.ConfigurationException
+import batect.logging.JsonableObject
 import batect.logging.LogMessage
 import batect.logging.Severity
 import batect.ui.text.Text
@@ -95,8 +96,20 @@ fun hasMessage(messageCriteria: Matcher<LogMessage>): Matcher<InMemoryLogSink> {
 
 fun withLogMessage(message: String): Matcher<LogMessage> = has(LogMessage::message, equalTo(message))
 fun withSeverity(severity: Severity): Matcher<LogMessage> = has(LogMessage::severity, equalTo(severity))
-fun withAdditionalData(key: String, value: Any?): Matcher<LogMessage> = has(LogMessage::additionalData, hasKeyWithValue(key, value))
 fun withException(exception: Throwable): Matcher<LogMessage> = withAdditionalData("exception", exception.toDetailedString())
+
+fun withAdditionalData(key: String, value: Any?): Matcher<LogMessage> = object : Matcher.Primitive<LogMessage>() {
+    override fun invoke(actual: LogMessage): MatchResult {
+        if (actual.additionalData.containsKey(key) && (actual.additionalData.get(key) as JsonableObject<*>).value == value) {
+            return MatchResult.Match
+        } else {
+            return MatchResult.Mismatch("was ${describe(actual)}")
+        }
+    }
+
+    override val description: String get() = "contains additional data with key ${describe(key)} and value ${describe(value)}"
+    override val negatedDescription: String get() = "does not contain additional data with key ${describe(key)} and value ${describe(value)}"
+}
 
 fun <K, V> isEmptyMap() = Matcher(Map<K, V>::isEmpty)
 

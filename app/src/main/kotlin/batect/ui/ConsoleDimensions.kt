@@ -22,6 +22,7 @@ import batect.os.NativeMethodException
 import batect.os.NativeMethods
 import batect.os.NoConsoleException
 import batect.os.SignalListener
+import batect.os.data
 import jnr.constants.platform.Signal
 import java.util.concurrent.atomic.AtomicReference
 
@@ -50,11 +51,12 @@ class ConsoleDimensions(
 
     private fun updateCachedDimensions() {
         try {
-            currentDimensions.set(Result.success(nativeMethods.getConsoleDimensions()))
+            val newDimensions = nativeMethods.getConsoleDimensions()
+            currentDimensions.set(Result.success(newDimensions))
 
             logger.info {
                 message("Got console dimensions.")
-                data("dimensions", currentDimensions)
+                data("dimensions", newDimensions)
             }
         } catch (e: NoConsoleException) {
             currentDimensions.set(Result.success(null))

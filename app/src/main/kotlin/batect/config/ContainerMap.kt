@@ -30,8 +30,9 @@ class ContainerMap(contents: Iterable<Container>) : NamedObjectMap<Container>("c
     override fun nameFor(value: Container): String = value.name
 
     @Serializer(forClass = ContainerMap::class)
-    companion object : NamedObjectMapDeserializer<ContainerMap, Container>(Container.serializer()), KSerializer<ContainerMap> {
+    companion object : NamedObjectMapSerializer<ContainerMap, Container>(Container.serializer()), KSerializer<ContainerMap> {
         override fun addName(name: String, element: Container): Container = element.copy(name = name)
+        override fun getName(element: Container): String = element.name
         override fun createCollection(elements: Set<Container>): ContainerMap = ContainerMap(elements)
 
         override fun validateName(name: String, location: Location) {

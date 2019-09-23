@@ -26,9 +26,10 @@ import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
 import kotlinx.serialization.internal.HashSetClassDesc
 import kotlinx.serialization.internal.StringSerializer
+import kotlinx.serialization.set
 
 @Serializer(forClass = Set::class)
-internal object DependencySetDeserializer : KSerializer<Set<String>> {
+internal object DependencySetSerializer : KSerializer<Set<String>> {
     val elementSerializer = StringSerializer
 
     override val descriptor: SerialDescriptor = HashSetClassDesc(elementSerializer.descriptor)
@@ -90,5 +91,5 @@ internal object DependencySetDeserializer : KSerializer<Set<String>> {
 
     private fun getDuplicateValueMessage(value: String) = "The dependency '$value' is given more than once"
 
-    override fun serialize(encoder: Encoder, obj: Set<String>) = throw UnsupportedOperationException()
+    override fun serialize(encoder: Encoder, obj: Set<String>) = StringSerializer.set.serialize(encoder, obj)
 }

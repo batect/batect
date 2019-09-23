@@ -16,6 +16,7 @@
 
 package batect.testutils
 
+import batect.logging.Jsonable
 import batect.logging.LogMessage
 import batect.logging.LogMessageBuilder
 import batect.logging.LogMessageWriter
@@ -41,7 +42,7 @@ class InMemoryLogSink : LogSink {
         on { getAdditionalData() } doReturn emptyMap()
     }
 
-    override fun write(severity: Severity, loggerAdditionalData: Map<String, Any>, build: LogMessageBuilder.() -> LogMessageBuilder) {
+    override fun write(severity: Severity, loggerAdditionalData: Map<String, Jsonable>, build: LogMessageBuilder.() -> LogMessageBuilder) {
         val builder = LogMessageBuilder(severity, loggerAdditionalData)
         build(builder)
 

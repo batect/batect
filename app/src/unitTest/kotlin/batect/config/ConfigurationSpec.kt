@@ -20,12 +20,12 @@ import batect.docker.Capability
 import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.given
+import batect.testutils.osIndependentPath
 import batect.utils.Json
 import com.natpryce.hamkrest.assertion.assertThat
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
 import java.time.Duration
 
 object ConfigurationSpec : Spek({
@@ -156,7 +156,7 @@ object ConfigurationSpec : Spek({
                 val container = Container(
                     "the-container",
                     BuildImage(
-                        Paths.get("/some/build/dir"),
+                        osIndependentPath("/some/build/dir"),
                         mapOf(
                             "SOME_VAR" to LiteralValue("blah"),
                             "SOME_REFERENCE" to ReferenceValue("REFERENCE_TO"),

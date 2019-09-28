@@ -55,23 +55,30 @@ Both of these can be overridden for an individual task by specifying a [`command
     See the Docker docs for [`CMD`](https://docs.docker.com/engine/reference/builder/#cmd) and
     [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint) for more details.
 
-    If you would like to use shell syntax features in your command, you have three options:
+    If you would like to use shell syntax features in your command, you have four options:
 
-    1. Set the entrypoint in the image to a shell. For example:
-       ```dockerfile
-       ENTRYPOINT ["/bin/sh", "-c"]
-       ```
+    1. Create a shell script and invoke that instead of specifying the command directly.
+  
     2. Wrap your command in a shell invocation.
 
         For example, if your command is `echo hello && echo world`, set `command` to `sh -c 'echo hello && echo world'`.
+        
+    3. Set the entrypoint in the image to a shell. For example:
+       ```dockerfile
+       ENTRYPOINT ["/bin/sh", "-c"]
+       ```
 
-    3. Set the [entrypoint](#entrypoint) for the container to a shell. For example:
+    4. Set the [entrypoint](#entrypoint) for the container to a shell. For example:
        ```yaml
        containers:
          container-1:
-            command: echo hello && echo world
-            entrypoint: /bin/sh -c
+           command: "'echo hello && echo world'" # Single quotes so that whole command is treated as a single argument when passed to sh, double quotes so that YAML preserves the single quotes
+           entrypoint: /bin/sh -c
        ```
+
+    Note that for both options 3 and 4, you must quote the command so that it is passed to `sh -c` as a single argument (we want the final command line to be `sh -c 'echo hello && echo world'`, not
+    `sh -c echo hello && echo world`).
+
 
 ## `entrypoint`
 Entrypoint to use to run the [command](#command).

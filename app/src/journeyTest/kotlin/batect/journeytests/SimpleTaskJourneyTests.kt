@@ -35,6 +35,7 @@ object SimpleTaskJourneyTests : Spek({
         "simple-task-using-custom-dockerfile" to "a simple task that uses a Dockerfile in a non-standard location",
         "simple-task-dockerfile-command" to "a simple task with the command specified in the Dockerfile",
         "simple-task-container-command" to "a simple task with the command specified on the container in the configuration file",
+        "simple-task-entrypoint" to "a simple task with an entrypoint specified on the container in the configuration file",
         "simple-task-with-environment" to "a simple task with a task-level environment variable",
         "container-with-health-check-overrides" to "a task with a dependency container that has a batect-specific health check configuration",
         "build-image-dockerignore" to "a task that builds an image with a .dockerignore file"

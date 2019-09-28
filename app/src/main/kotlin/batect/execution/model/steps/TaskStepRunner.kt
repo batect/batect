@@ -21,7 +21,6 @@ import batect.config.EnvironmentVariableExpressionEvaluationException
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerHealthCheckException
 import batect.docker.ContainerRemovalFailedException
-import batect.docker.ContainerStartFailedException
 import batect.docker.ContainerStopFailedException
 import batect.docker.DockerClient
 import batect.docker.DockerContainer
@@ -33,8 +32,10 @@ import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.NetworkCreationFailedException
 import batect.docker.NetworkDeletionFailedException
+import batect.execution.CancellationContext
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
+import batect.execution.TaskStepRunContext
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
@@ -42,7 +43,6 @@ import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
 import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.ContainerRunFailedEvent
-import batect.execution.model.events.ContainerStartFailedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ContainerStopFailedEvent
 import batect.execution.model.events.ContainerStoppedEvent
@@ -62,9 +62,9 @@ import batect.execution.model.events.TemporaryDirectoryDeletedEvent
 import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
-import batect.logging.Logger
 import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
+import batect.ui.containerio.ContainerIOStreamingOptions
 import java.io.IOException
 import java.nio.file.Files
 
@@ -74,7 +74,6 @@ class TaskStepRunner(
     private val creationRequestFactory: DockerContainerCreationRequestFactory,
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
     private val systemInfo: SystemInfo,
-    private val logger: Logger,
     private val hostEnvironmentVariables: Map<String, String>
 ) {
     constructor(
@@ -82,45 +81,33 @@ class TaskStepRunner(
         proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
         creationRequestFactory: DockerContainerCreationRequestFactory,
         runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
-        systemInfo: SystemInfo,
-        logger: Logger
-    ) : this(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, systemInfo, logger, System.getenv())
+        systemInfo: SystemInfo
+    ) : this(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, systemInfo, System.getenv())
 
-    fun run(step: TaskStep, eventSink: TaskEventSink, runOptions: RunOptions) {
-        logger.info {
-            message("Running step.")
-            data("step", step.toString())
-        }
-
+    fun run(step: TaskStep, context: TaskStepRunContext) {
         when (step) {
-            is BuildImageStep -> handleBuildImageStep(step, eventSink, runOptions)
-            is PullImageStep -> handlePullImageStep(step, eventSink)
-            is CreateTaskNetworkStep -> handleCreateTaskNetworkStep(eventSink)
-            is CreateContainerStep -> handleCreateContainerStep(step, eventSink, runOptions)
-            is RunContainerStep -> handleRunContainerStep(step, eventSink)
-            is StartContainerStep -> handleStartContainerStep(step, eventSink)
-            is WaitForContainerToBecomeHealthyStep -> handleWaitForContainerToBecomeHealthyStep(step, eventSink)
-            is StopContainerStep -> handleStopContainerStep(step, eventSink)
-            is RemoveContainerStep -> handleRemoveContainerStep(step, eventSink)
-            is DeleteTemporaryFileStep -> handleDeleteTemporaryFileStep(step, eventSink)
-            is DeleteTemporaryDirectoryStep -> handleDeleteTemporaryDirectoryStep(step, eventSink)
-            is DeleteTaskNetworkStep -> handleDeleteTaskNetworkStep(step, eventSink)
-        }
-
-        logger.info {
-            message("Step completed.")
-            data("step", step.toString())
+            is BuildImageStep -> handleBuildImageStep(step, context.eventSink, context.runOptions, context.cancellationContext)
+            is PullImageStep -> handlePullImageStep(step, context.eventSink, context.cancellationContext)
+            is CreateTaskNetworkStep -> handleCreateTaskNetworkStep(context.eventSink)
+            is CreateContainerStep -> handleCreateContainerStep(step, context.eventSink, context.runOptions, context.ioStreamingOptions)
+            is RunContainerStep -> handleRunContainerStep(step, context.eventSink, context.ioStreamingOptions, context.cancellationContext)
+            is WaitForContainerToBecomeHealthyStep -> handleWaitForContainerToBecomeHealthyStep(step, context.eventSink, context.cancellationContext)
+            is StopContainerStep -> handleStopContainerStep(step, context.eventSink)
+            is RemoveContainerStep -> handleRemoveContainerStep(step, context.eventSink)
+            is DeleteTemporaryFileStep -> handleDeleteTemporaryFileStep(step, context.eventSink)
+            is DeleteTemporaryDirectoryStep -> handleDeleteTemporaryDirectoryStep(step, context.eventSink)
+            is DeleteTaskNetworkStep -> handleDeleteTaskNetworkStep(step, context.eventSink)
         }
     }
 
-    private fun handleBuildImageStep(step: BuildImageStep, eventSink: TaskEventSink, runOptions: RunOptions) {
+    private fun handleBuildImageStep(step: BuildImageStep, eventSink: TaskEventSink, runOptions: RunOptions, cancellationContext: CancellationContext) {
         try {
             val onStatusUpdate = { p: DockerImageBuildProgress ->
                 eventSink.postEvent(ImageBuildProgressEvent(step.source, p))
             }
 
             val buildArgs = buildTimeProxyEnvironmentVariablesForOptions(runOptions) + substituteBuildArgs(step.source.buildArgs)
-            val image = dockerClient.build(step.source.buildDirectory, buildArgs, step.source.dockerfilePath, step.imageTags, onStatusUpdate)
+            val image = dockerClient.build(step.source.buildDirectory, buildArgs, step.source.dockerfilePath, step.imageTags, cancellationContext, onStatusUpdate)
             eventSink.postEvent(ImageBuiltEvent(step.source, image))
         } catch (e: ImageBuildFailedException) {
             val message = e.message ?: ""
@@ -140,9 +127,9 @@ class TaskStepRunner(
         }
     }
 
-    private fun handlePullImageStep(step: PullImageStep, eventSink: TaskEventSink) {
+    private fun handlePullImageStep(step: PullImageStep, eventSink: TaskEventSink, cancellationContext: CancellationContext) {
         try {
-            val image = dockerClient.pullImage(step.source.imageName) { progressUpdate ->
+            val image = dockerClient.pullImage(step.source.imageName, cancellationContext) { progressUpdate ->
                 eventSink.postEvent(ImagePullProgressEvent(step.source, progressUpdate))
             }
 
@@ -161,7 +148,7 @@ class TaskStepRunner(
         }
     }
 
-    private fun handleCreateContainerStep(step: CreateContainerStep, eventSink: TaskEventSink, runOptions: RunOptions) {
+    private fun handleCreateContainerStep(step: CreateContainerStep, eventSink: TaskEventSink, runOptions: RunOptions, ioStreamingOptions: ContainerIOStreamingOptions) {
         try {
             val runAsCurrentUserConfiguration = runAsCurrentUserConfigurationProvider.generateConfiguration(step.container, eventSink)
 
@@ -177,6 +164,7 @@ class TaskStepRunner(
                 step.additionalPortMappings,
                 runOptions.propagateProxyEnvironmentVariables,
                 runAsCurrentUserConfiguration.userAndGroup,
+                ioStreamingOptions.terminalTypeForContainer(step.container),
                 step.allContainersInNetwork
             )
 
@@ -187,27 +175,24 @@ class TaskStepRunner(
         }
     }
 
-    private fun handleRunContainerStep(step: RunContainerStep, eventSink: TaskEventSink) {
+    private fun handleRunContainerStep(step: RunContainerStep, eventSink: TaskEventSink, ioStreamingOptions: ContainerIOStreamingOptions, cancellationContext: CancellationContext) {
         try {
-            val result = dockerClient.run(step.dockerContainer)
+            val stdout = ioStreamingOptions.stdoutForContainer(step.container)
+            val stdin = ioStreamingOptions.stdinForContainer(step.container)
+
+            val result = dockerClient.run(step.dockerContainer, stdout, stdin, cancellationContext, ioStreamingOptions.frameDimensions) {
+                eventSink.postEvent(ContainerStartedEvent(step.container))
+            }
+
             eventSink.postEvent(RunningContainerExitedEvent(step.container, result.exitCode))
         } catch (e: DockerException) {
             eventSink.postEvent(ContainerRunFailedEvent(step.container, e.message ?: ""))
         }
     }
 
-    private fun handleStartContainerStep(step: StartContainerStep, eventSink: TaskEventSink) {
+    private fun handleWaitForContainerToBecomeHealthyStep(step: WaitForContainerToBecomeHealthyStep, eventSink: TaskEventSink, cancellationContext: CancellationContext) {
         try {
-            dockerClient.start(step.dockerContainer)
-            eventSink.postEvent(ContainerStartedEvent(step.container))
-        } catch (e: ContainerStartFailedException) {
-            eventSink.postEvent(ContainerStartFailedEvent(step.container, e.outputFromDocker))
-        }
-    }
-
-    private fun handleWaitForContainerToBecomeHealthyStep(step: WaitForContainerToBecomeHealthyStep, eventSink: TaskEventSink) {
-        try {
-            val event = when (dockerClient.waitForHealthStatus(step.dockerContainer)) {
+            val event = when (dockerClient.waitForHealthStatus(step.dockerContainer, cancellationContext)) {
                 HealthStatus.NoHealthCheck -> ContainerBecameHealthyEvent(step.container)
                 HealthStatus.BecameHealthy -> ContainerBecameHealthyEvent(step.container)
                 HealthStatus.BecameUnhealthy -> ContainerDidNotBecomeHealthyEvent(step.container, containerBecameUnhealthyMessage(step.dockerContainer))

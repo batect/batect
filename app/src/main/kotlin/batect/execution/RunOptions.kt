@@ -21,7 +21,6 @@ import batect.cli.CommandLineOptions
 data class RunOptions(
     val taskName: String,
     val additionalTaskCommandArguments: Iterable<String>,
-    val levelOfParallelism: Int,
     val behaviourAfterSuccess: CleanupOption,
     val behaviourAfterFailure: CleanupOption,
     val propagateProxyEnvironmentVariables: Boolean
@@ -29,7 +28,6 @@ data class RunOptions(
     constructor(options: CommandLineOptions) : this(
         options.taskName!!,
         options.additionalTaskCommandArguments,
-        options.levelOfParallelism,
         if (options.disableCleanupAfterSuccess) CleanupOption.DontCleanup else CleanupOption.Cleanup,
         if (options.disableCleanupAfterFailure) CleanupOption.DontCleanup else CleanupOption.Cleanup,
         !options.dontPropagateProxyEnvironmentVariables

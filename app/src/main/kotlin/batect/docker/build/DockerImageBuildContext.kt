@@ -16,12 +16,20 @@
 
 package batect.docker.build
 
+import batect.logging.PathSerializer
+import kotlinx.serialization.Serializable
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.stream.Collectors
 
+@Serializable
 data class DockerImageBuildContext(val entries: Set<DockerImageBuildContextEntry>)
-data class DockerImageBuildContextEntry(val localPath: Path, val contextPath: String)
+
+@Serializable
+data class DockerImageBuildContextEntry(
+    @Serializable(with = PathSerializer::class) val localPath: Path,
+    val contextPath: String
+)
 
 class DockerImageBuildContextFactory(private val ignoreParser: DockerIgnoreParser) {
     fun createFromDirectory(contextDirectory: Path, dockerfilePath: String): DockerImageBuildContext {

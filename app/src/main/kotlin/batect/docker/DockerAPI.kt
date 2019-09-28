@@ -22,12 +22,16 @@ import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputStream
+import batect.execution.CancellationContext
+import batect.execution.executeInCancellationContext
+import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.Dimensions
 import batect.os.SystemInfo
 import batect.utils.Json
 import batect.utils.Version
 import jnr.constants.platform.Signal
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.json
@@ -55,7 +59,7 @@ class DockerAPI(
             data("request", creationRequest)
         }
 
-        val url = urlForContainers().newBuilder()
+        val url = urlForContainers.newBuilder()
             .addPathSegment("create")
             .build()
 
@@ -219,7 +223,7 @@ class DockerAPI(
         }
     }
 
-    fun waitForNextEventForContainer(container: DockerContainer, eventTypes: Iterable<String>, timeout: Duration): DockerEvent {
+    fun waitForNextEventForContainer(container: DockerContainer, eventTypes: Iterable<String>, timeout: Duration, cancellationContext: CancellationContext): DockerEvent {
         logger.info {
             message("Getting next event for container.")
             data("container", container)
@@ -242,29 +246,31 @@ class DockerAPI(
             .url(url)
             .build()
 
-        clientWithTimeout(timeout.toNanos(), TimeUnit.NANOSECONDS).newCall(request).execute().use { response ->
-            checkForFailure(response) { error ->
-                logger.error {
-                    message("Getting events for container failed.")
-                    data("error", error)
+        clientWithTimeout(timeout.toNanos(), TimeUnit.NANOSECONDS)
+            .newCall(request)
+            .executeInCancellationContext(cancellationContext) { response ->
+                checkForFailure(response) { error ->
+                    logger.error {
+                        message("Getting events for container failed.")
+                        data("error", error)
+                    }
+
+                    throw DockerException("Getting events for container '${container.id}' failed: ${error.message}")
                 }
 
-                throw DockerException("Getting events for container '${container.id}' failed: ${error.message}")
+                val firstEvent = response.body()!!.source().readUtf8LineStrict()
+                val parsedEvent = Json.parser.parseJson(firstEvent).jsonObject
+
+                logger.info {
+                    message("Received event for container.")
+                    data("event", firstEvent)
+                }
+
+                return DockerEvent(parsedEvent.getValue("status").primitive.content)
             }
-
-            val firstEvent = response.body()!!.source().readUtf8LineStrict()
-            val parsedEvent = Json.parser.parseJson(firstEvent).jsonObject
-
-            logger.info {
-                message("Received event for container.")
-                data("event", firstEvent)
-            }
-
-            return DockerEvent(parsedEvent.getValue("status").primitive.content)
-        }
     }
 
-    fun waitForExit(container: DockerContainer): Int {
+    fun waitForExit(container: DockerContainer, cancellationContext: CancellationContext): Int {
         logger.info {
             message("Waiting for container to exit.")
             data("container", container)
@@ -280,31 +286,33 @@ class DockerAPI(
             .url(url)
             .build()
 
-        clientWithNoTimeout().newCall(request).execute().use { response ->
-            checkForFailure(response) { error ->
-                logger.error {
-                    message("Waiting for container to exit failed.")
-                    data("error", error)
+        clientWithNoTimeout()
+            .newCall(request)
+            .executeInCancellationContext(cancellationContext) { response ->
+                checkForFailure(response) { error ->
+                    logger.error {
+                        message("Waiting for container to exit failed.")
+                        data("error", error)
+                    }
+
+                    throw DockerException("Waiting for container '${container.id}' to exit failed: ${error.message}")
                 }
 
-                throw DockerException("Waiting for container '${container.id}' to exit failed: ${error.message}")
-            }
+                val responseBody = response.body()!!.string()
+                val parsedResponse = Json.parser.parseJson(responseBody).jsonObject
 
-            val responseBody = response.body()!!.string()
-            val parsedResponse = Json.parser.parseJson(responseBody).jsonObject
+                logger.info {
+                    message("Container exited.")
+                    data("result", responseBody)
+                }
 
-            logger.info {
-                message("Container exited.")
-                data("result", responseBody)
-            }
+                if (parsedResponse.containsKey("Error") && !parsedResponse.getValue("Error").isNull) {
+                    val message = parsedResponse.getObject("Error").getPrimitive("Message").content
 
-            if (parsedResponse.containsKey("Error") && !parsedResponse.getValue("Error").isNull) {
-                val message = parsedResponse.getObject("Error").getPrimitive("Message").content
+                    throw DockerException("Waiting for container '${container.id}' to exit succeeded but returned an error: $message")
+                }
 
-                throw DockerException("Waiting for container '${container.id}' to exit succeeded but returned an error: $message")
-            }
-
-            return parsedResponse.getValue("StatusCode").primitive.int
+                return parsedResponse.getValue("StatusCode").primitive.int
         }
     }
 
@@ -462,7 +470,7 @@ class DockerAPI(
 
                 val message = "Resizing TTY for container '${container.id}' failed: ${error.message}"
 
-                if (error.message.startsWith("cannot resize a stopped container")) {
+                if (error.message.startsWith("cannot resize a stopped container") || error.message.endsWith("is not running")) {
                     throw ContainerStoppedException(message)
                 }
 
@@ -484,7 +492,7 @@ class DockerAPI(
             message("Creating new network.")
         }
 
-        val url = urlForNetworks().newBuilder()
+        val url = urlForNetworks.newBuilder()
             .addPathSegment("create")
             .build()
 
@@ -554,6 +562,7 @@ class DockerAPI(
         dockerfilePath: String,
         imageTags: Set<String>,
         registryCredentials: DockerRegistryCredentials?,
+        cancellationContext: CancellationContext,
         onProgressUpdate: (JsonObject) -> Unit
     ): DockerImage {
         logger.info {
@@ -565,52 +574,27 @@ class DockerAPI(
 
         val request = createImageBuildRequest(context, buildArgs, dockerfilePath, imageTags, registryCredentials)
 
-        clientWithNoTimeout().newCall(request).execute().use { response ->
-            checkForFailure(response) { error ->
-                logger.error {
-                    message("Could not build image.")
-                    data("error", error)
+        clientWithNoTimeout()
+            .newCall(request)
+            .executeInCancellationContext(cancellationContext) { response ->
+                checkForFailure(response) { error ->
+                    logger.error {
+                        message("Could not build image.")
+                        data("error", error)
+                    }
+
+                    throw ImageBuildFailedException("Building image failed: ${error.message}")
                 }
 
-                throw ImageBuildFailedException("Building image failed: ${error.message}")
-            }
+                val image = processImageBuildResponse(response, onProgressUpdate)
 
-            var builtImageId: String? = null
-            val outputSoFar = StringBuilder()
-
-            response.body()!!.charStream().forEachLine { line ->
-                val parsedLine = Json.parser.parseJson(line).jsonObject
-                val output = parsedLine.getPrimitiveOrNull("stream")?.content
-                val error = parsedLine.getPrimitiveOrNull("error")?.content
-
-                if (output != null) {
-                    outputSoFar.append(output.correctLineEndings())
+                logger.info {
+                    message("Image built.")
+                    data("image", image.id)
                 }
 
-                if (error != null) {
-                    outputSoFar.append(error.correctLineEndings())
-                    throw ImageBuildFailedException("Building image failed: $error. Output from build process was:" + systemInfo.lineSeparator + outputSoFar.trim().toString())
-                }
-
-                val imageId = parsedLine.getObjectOrNull("aux")?.getPrimitiveOrNull("ID")?.content
-
-                if (imageId != null) {
-                    builtImageId = imageId
-                }
-
-                onProgressUpdate(parsedLine)
+                return image
             }
-
-            if (builtImageId == null) {
-                throw ImageBuildFailedException("Building image failed: daemon never sent built image ID.")
-            }
-
-            logger.info {
-                message("Image built.")
-            }
-
-            return DockerImage(builtImageId!!)
-        }
     }
 
     private fun createImageBuildRequest(
@@ -649,13 +633,52 @@ class DockerAPI(
         return this
     }
 
-    fun pullImage(imageName: String, registryCredentials: DockerRegistryCredentials?, onProgressUpdate: (JsonObject) -> Unit) {
+    private fun processImageBuildResponse(response: Response, onProgressUpdate: (JsonObject) -> Unit): DockerImage {
+        var builtImageId: String? = null
+        val outputSoFar = StringBuilder()
+
+        response.body()!!.charStream().forEachLine { line ->
+            val parsedLine = Json.parser.parseJson(line).jsonObject
+            val output = parsedLine.getPrimitiveOrNull("stream")?.content
+            val error = parsedLine.getPrimitiveOrNull("error")?.content
+
+            if (output != null) {
+                outputSoFar.append(output.correctLineEndings())
+            }
+
+            if (error != null) {
+                outputSoFar.append(error.correctLineEndings())
+                throw ImageBuildFailedException("Building image failed: $error. Output from build process was:" + systemInfo.lineSeparator + outputSoFar.trim().toString())
+            }
+
+            val imageId = parsedLine.getObjectOrNull("aux")?.getPrimitiveOrNull("ID")?.content
+
+            if (imageId != null) {
+                builtImageId = imageId
+            }
+
+            onProgressUpdate(parsedLine)
+        }
+
+        if (builtImageId == null) {
+            throw ImageBuildFailedException("Building image failed: daemon never sent built image ID.")
+        }
+
+        return DockerImage(builtImageId!!)
+    }
+
+    fun pullImage(
+        imageName: String,
+        registryCredentials: DockerRegistryCredentials?,
+        cancellationContext: CancellationContext,
+        onProgressUpdate: (JsonObject) -> Unit
+    ) {
         logger.info {
             message("Pulling image.")
             data("imageName", imageName)
         }
 
-        val url = urlForImages().newBuilder()
+        val url = urlForImages.newBuilder()
             .addPathSegment("create")
             .addQueryParameter("fromImage", imageName)
             .build()
@@ -666,29 +689,31 @@ class DockerAPI(
             .addRegistryCredentialsForPull(registryCredentials)
             .build()
 
-        clientWithTimeout(20, TimeUnit.SECONDS).newCall(request).execute().use { response ->
-            checkForFailure(response) { error ->
-                logger.error {
-                    message("Could not pull image.")
-                    data("error", error)
+        clientWithTimeout(20, TimeUnit.SECONDS)
+            .newCall(request)
+            .executeInCancellationContext(cancellationContext) { response ->
+                checkForFailure(response) { error ->
+                    logger.error {
+                        message("Could not pull image.")
+                        data("error", error)
+                    }
+
+                    throw ImagePullFailedException("Pulling image '$imageName' failed: ${error.message}")
                 }
 
-                throw ImagePullFailedException("Pulling image '$imageName' failed: ${error.message}")
-            }
+                response.body()!!.charStream().forEachLine { line ->
+                    val parsedLine = Json.parser.parseJson(line).jsonObject
 
-            response.body()!!.charStream().forEachLine { line ->
-                val parsedLine = Json.parser.parseJson(line).jsonObject
+                    if (parsedLine.containsKey("error")) {
+                        val message = parsedLine.getValue("error").primitive.content
+                            .correctLineEndings()
 
-                if (parsedLine.containsKey("error")) {
-                    val message = parsedLine.getValue("error").primitive.content
-                        .correctLineEndings()
+                        throw ImagePullFailedException("Pulling image '$imageName' failed: $message")
+                    }
 
-                    throw ImagePullFailedException("Pulling image '$imageName' failed: $message")
+                    onProgressUpdate(parsedLine)
                 }
-
-                onProgressUpdate(parsedLine)
             }
-        }
 
         logger.info {
             message("Image pulled.")
@@ -716,7 +741,7 @@ class DockerAPI(
             "reference" to listOf(imageName).toJsonArray()
         }
 
-        val url = urlForImages().newBuilder()
+        val url = urlForImages.newBuilder()
             .addPathSegment("json")
             .addQueryParameter("filters", filters.toString())
             .build()
@@ -823,11 +848,11 @@ class DockerAPI(
         .addPathSegment("v$minimumDockerAPIVersion")
         .build()
 
-    private fun urlForContainers(): HttpUrl = baseUrl.newBuilder()
+    private val urlForContainers: HttpUrl = baseUrl.newBuilder()
         .addPathSegment("containers")
         .build()
 
-    private fun urlForContainer(container: DockerContainer): HttpUrl = urlForContainers().newBuilder()
+    private fun urlForContainer(container: DockerContainer): HttpUrl = urlForContainers.newBuilder()
         .addPathSegment(container.id)
         .build()
 
@@ -835,15 +860,15 @@ class DockerAPI(
         .addPathSegment(operation)
         .build()
 
-    private fun urlForNetworks(): HttpUrl = baseUrl.newBuilder()
+    private val urlForNetworks: HttpUrl = baseUrl.newBuilder()
         .addPathSegment("networks")
         .build()
 
-    private fun urlForNetwork(network: DockerNetwork): HttpUrl = urlForNetworks().newBuilder()
+    private fun urlForNetwork(network: DockerNetwork): HttpUrl = urlForNetworks.newBuilder()
         .addPathSegment(network.id)
         .build()
 
-    private fun urlForImages(): HttpUrl = baseUrl.newBuilder()
+    private val urlForImages: HttpUrl = baseUrl.newBuilder()
         .addPathSegment("images")
         .build()
 
@@ -879,7 +904,12 @@ class DockerAPI(
         errorHandler(DockerAPIError(response.code(), message))
     }
 
+    @Serializable
     private data class DockerAPIError(val statusCode: Int, val message: String)
+
+    private fun LogMessageBuilder.data(key: String, value: DockerAPIError) = this.data(key, value, DockerAPIError.serializer())
+    private fun LogMessageBuilder.data(key: String, value: DockerContainerCreationRequest) = this.data(key, value, DockerContainerCreationRequest.serializer())
+    private fun LogMessageBuilder.data(key: String, value: DockerImageBuildContext) = this.data(key, value, DockerImageBuildContext.serializer())
 
     private fun String.correctLineEndings(): String = this.replace("\n", systemInfo.lineSeparator)
 }

@@ -24,6 +24,7 @@ import batect.updates.ScriptInfo
 import batect.updates.UpdateInfo
 import batect.updates.UpdateInfoDownloadException
 import batect.updates.UpdateInfoDownloader
+import batect.updates.data
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.nio.file.FileSystem

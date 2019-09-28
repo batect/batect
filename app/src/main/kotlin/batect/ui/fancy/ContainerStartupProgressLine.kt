@@ -28,19 +28,19 @@ import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePullProgressEvent
 import batect.execution.model.events.ImagePulledEvent
+import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.execution.model.steps.CreateContainerStep
 import batect.execution.model.steps.PullImageStep
 import batect.execution.model.steps.RunContainerStep
-import batect.execution.model.steps.StartContainerStep
 import batect.execution.model.steps.TaskStep
 import batect.os.Command
 import batect.ui.text.Text
 import batect.ui.text.TextRun
 
-class ContainerStartupProgressLine(val container: Container, val dependencies: Set<Container>) {
+data class ContainerStartupProgressLine(val container: Container, val dependencies: Set<Container>, val isTaskContainer: Boolean) {
     private var isBuilding = false
     private var lastBuildProgressUpdate: DockerImageBuildProgress? = null
     private var isPulling = false
@@ -135,12 +135,25 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
         return Text("running ") + Text.bold(command!!.originalCommand.replace('\n', ' '))
     }
 
-    fun onStepStarting(step: TaskStep) {
+    fun onEventPosted(event: TaskEvent) {
+        when (event) {
+            is ImageBuildProgressEvent -> onImageBuildProgressEventPosted(event)
+            is ImageBuiltEvent -> onImageBuiltEventPosted(event)
+            is ImagePullProgressEvent -> onImagePullProgressEventPosted(event)
+            is ImagePulledEvent -> onImagePulledEventPosted(event)
+            is TaskNetworkCreatedEvent -> networkHasBeenCreated = true
+            is ContainerCreatedEvent -> onContainerCreatedEventPosted(event)
+            is ContainerStartedEvent -> onContainerStartedEventPosted(event)
+            is ContainerBecameHealthyEvent -> onContainerBecameHealthyEventPosted(event)
+            is StepStartingEvent -> onStepStarting(event.step)
+        }
+    }
+
+    private fun onStepStarting(step: TaskStep) {
         when (step) {
             is BuildImageStep -> onBuildImageStepStarting(step)
             is PullImageStep -> onPullImageStepStarting(step)
             is CreateContainerStep -> onCreateContainerStepStarting(step)
-            is StartContainerStep -> onStartContainerStepStarting(step)
             is RunContainerStep -> onRunContainerStepStarting(step)
         }
     }
@@ -164,28 +177,13 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
         }
     }
 
-    private fun onStartContainerStepStarting(step: StartContainerStep) {
-        if (step.container == container) {
-            isStarting = true
-        }
-    }
-
     private fun onRunContainerStepStarting(step: RunContainerStep) {
         if (step.container == container) {
-            isRunning = true
-        }
-    }
-
-    fun onEventPosted(event: TaskEvent) {
-        when (event) {
-            is ImageBuildProgressEvent -> onImageBuildProgressEventPosted(event)
-            is ImageBuiltEvent -> onImageBuiltEventPosted(event)
-            is ImagePullProgressEvent -> onImagePullProgressEventPosted(event)
-            is ImagePulledEvent -> onImagePulledEventPosted(event)
-            is TaskNetworkCreatedEvent -> networkHasBeenCreated = true
-            is ContainerCreatedEvent -> onContainerCreatedEventPosted(event)
-            is ContainerStartedEvent -> onContainerStartedEventPosted(event)
-            is ContainerBecameHealthyEvent -> onContainerBecameHealthyEventPosted(event)
+            if (isTaskContainer) {
+                isRunning = true
+            } else {
+                isStarting = true
+            }
         }
     }
 
@@ -222,7 +220,7 @@ class ContainerStartupProgressLine(val container: Container, val dependencies: S
     }
 
     private fun onContainerStartedEventPosted(event: ContainerStartedEvent) {
-        if (event.container == container) {
+        if (event.container == container && !isTaskContainer) {
             hasStarted = true
         }
     }

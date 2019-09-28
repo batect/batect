@@ -16,26 +16,24 @@
 
 package batect.logging
 
-import com.fasterxml.jackson.core.JsonGenerator
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import batect.updates.ZonedDateTimeSerializer
+import batect.utils.Json
+import kotlinx.serialization.json.json
 import java.io.OutputStream
 
 class LogMessageWriter {
-    private val serializer = jacksonObjectMapper()
-        .registerModule(JavaTimeModule())
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        .disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
-
     fun writeTo(message: LogMessage, outputStream: OutputStream) {
-        val values = mapOf(
-            "@timestamp" to message.timestamp,
-            "@message" to message.message,
+        val json = json {
+            "@timestamp" to Json.parser.toJson(ZonedDateTimeSerializer, message.timestamp)
+            "@message" to message.message
             "@severity" to message.severity.toString().toLowerCase()
-        ) + message.additionalData
 
-        serializer.writeValue(outputStream, values)
+            message.additionalData.forEach { (key, value) ->
+                key to value.toJSON()
+            }
+        }
+
+        outputStream.write(json.toString().toByteArray())
         outputStream.write("\n".toByteArray())
     }
 }

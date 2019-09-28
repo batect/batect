@@ -78,6 +78,17 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertNotIn("The application has started.", result.stdout)
         self.assertNotEqual(result.returncode, 0)
 
+    def test_32bit_java(self):
+        path_dir = self.create_limited_path_for_specific_java_version("8-32bit")
+
+        result = self.run_script([], path=path_dir)
+
+        self.assertIn("The version of Java that is available on your PATH is a 32-bit version, but batect requires a 64-bit Java runtime.\n" +
+                      "If you have a 64-bit version of Java installed, please make sure your PATH is set correctly.", result.stdout)
+
+        self.assertNotIn("The application has started.", result.stdout)
+        self.assertNotEqual(result.returncode, 0)
+
     def test_supported_java(self):
         opens_args = "Args are: \"--add-opens\" \"java.base/sun.nio.ch=ALL-UNNAMED\" \"--add-opens\" \"java.base/java.io=ALL-UNNAMED\""
 

@@ -14,12 +14,17 @@
    limitations under the License.
 */
 
-package batect.cli.options.defaultvalues
+package batect.ui.containerio
 
-object LevelOfParallelismDefaultValueProvider : DefaultValueProvider<Int> {
-    override val value: Int
-        get() = Runtime.getRuntime().availableProcessors() * 2
+import batect.config.Container
+import batect.os.Dimensions
+import okio.Sink
+import okio.Source
 
-    override val description: String
-        get() = "defaults to $value, which is two times the number of CPU cores available"
+interface ContainerIOStreamingOptions {
+    fun terminalTypeForContainer(container: Container): String?
+    fun stdinForContainer(container: Container): Source?
+    fun stdoutForContainer(container: Container): Sink?
+
+    val frameDimensions: Dimensions
 }

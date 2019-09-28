@@ -19,10 +19,14 @@ package batect.logging
 import batect.VersionInfo
 import batect.docker.DockerClient
 import batect.docker.DockerVersionInfoRetrievalResult
+import batect.os.OperatingSystem
 import batect.os.SystemInfo
 import batect.testutils.InMemoryLogSink
-import batect.testutils.hasKeyWithValue
+import batect.testutils.hasMessage
 import batect.testutils.on
+import batect.testutils.withAdditionalData
+import batect.testutils.withLogMessage
+import batect.testutils.withSeverity
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.hasSize
@@ -35,8 +39,8 @@ object ApplicationInfoLoggerSpec : Spek({
     describe("an application info logger") {
         val logSink = InMemoryLogSink()
         val logger = Logger("applicationInfo", logSink)
-        val versionInfo = mock<VersionInfo>()
-        val systemInfo = mock<SystemInfo>()
+        val versionInfo = VersionInfo()
+        val systemInfo = SystemInfo(OperatingSystem.Linux, "1.2.3", "line-separator", "4.5.6", "me", "/home", "/tmp")
         val environmentVariables = mapOf("PATH" to "/bin:/usr/bin:/usr/local/bin")
         val dockerClient = mock<DockerClient> {
             on { getDockerVersionInfo() } doReturn DockerVersionInfoRetrievalResult.Failed("Docker version 1.2.3.4")
@@ -53,31 +57,31 @@ object ApplicationInfoLoggerSpec : Spek({
             }
 
             it("writes the message at info severity") {
-                assertThat(logSink.loggedMessages.single().severity, equalTo(Severity.Info))
+                assertThat(logSink, hasMessage(withSeverity(Severity.Info)))
             }
 
             it("writes the message with an explanatory message") {
-                assertThat(logSink.loggedMessages.single().message, equalTo("Application started."))
+                assertThat(logSink, hasMessage(withLogMessage("Application started.")))
             }
 
             it("includes the application command line") {
-                assertThat(logSink.loggedMessages.single().additionalData, hasKeyWithValue("commandLine", commandLineArgs))
+                assertThat(logSink, hasMessage(withAdditionalData("commandLine", commandLineArgs)))
             }
 
             it("includes application version information") {
-                assertThat(logSink.loggedMessages.single().additionalData, hasKeyWithValue("versionInfo", versionInfo))
+                assertThat(logSink, hasMessage(withAdditionalData("versionInfo", versionInfo)))
             }
 
             it("includes system information") {
-                assertThat(logSink.loggedMessages.single().additionalData, hasKeyWithValue("systemInfo", systemInfo))
+                assertThat(logSink, hasMessage(withAdditionalData("systemInfo", systemInfo)))
             }
 
             it("includes the Docker version") {
-                assertThat(logSink.loggedMessages.single().additionalData, hasKeyWithValue("dockerVersionInfo", "(Docker version 1.2.3.4)"))
+                assertThat(logSink, hasMessage(withAdditionalData("dockerVersionInfo", "(Docker version 1.2.3.4)")))
             }
 
             it("includes environment variables") {
-                assertThat(logSink.loggedMessages.single().additionalData, hasKeyWithValue("environment", environmentVariables))
+                assertThat(logSink, hasMessage(withAdditionalData("environment", environmentVariables)))
             }
         }
     }

@@ -248,5 +248,99 @@ object TextRunSpec : Spek({
                 }
             }
         }
+
+        describe("splitting a single run by new line delimiters") {
+            given("the text run contains a single element") {
+                given("the element contains no new line characters") {
+                    val text = TextRun("some text")
+
+                    it("does not split the text") {
+                        assertThat(text.lines, equalTo(listOf(TextRun("some text"))))
+                    }
+                }
+
+                given("the element ends with a new line character") {
+                    val text = TextRun("some text\n")
+
+                    it("splits the text into two lines") {
+                        assertThat(text.lines, equalTo(listOf(TextRun("some text"), TextRun())))
+                    }
+                }
+
+                given("the element ends with multiple new line characters") {
+                    val text = TextRun("some text\n\n")
+
+                    it("returns two lines") {
+                        assertThat(text.lines, equalTo(listOf(TextRun("some text"), TextRun(), TextRun())))
+                    }
+                }
+
+                given("the element contains a single new line characters") {
+                    val text = TextRun("line 1\nline 2")
+
+                    it("splits the run into multiple parts") {
+                        assertThat(text.lines, equalTo(listOf(TextRun("line 1"), TextRun("line 2"))))
+                    }
+                }
+
+                given("the element contains multiple new line characters") {
+                    val text = TextRun("line 1\nline 2\nline 3\nline 4")
+
+                    it("splits the run into multiple parts") {
+                        assertThat(text.lines, equalTo(listOf(TextRun("line 1"), TextRun("line 2"), TextRun("line 3"), TextRun("line 4"))))
+                    }
+                }
+
+                given("the element contains multiple new line characters in a row") {
+                    val text = TextRun("line 1\n\nline 2")
+
+                    it("splits the run into multiple parts") {
+                        assertThat(text.lines, equalTo(listOf(TextRun("line 1"), TextRun(), TextRun("line 2"))))
+                    }
+                }
+
+                given("the element contains formatted text") {
+                    val text = TextRun(Text.bold("some text"))
+
+                    it("preserves the formatting of the text") {
+                        assertThat(text.lines, equalTo(listOf(TextRun(Text.bold("some text")))))
+                    }
+                }
+            }
+
+            given("the text run contains multiple elements") {
+                given("the elements do not contain any new line characters") {
+                    val text = Text.bold("Hello ") + Text.red("world!")
+
+                    it("returns a single line with both elements") {
+                        assertThat(text.lines, equalTo(listOf(Text.bold("Hello ") + Text.red("world!"))))
+                    }
+                }
+
+                given("there is a new line character at the end of one element") {
+                    val text = Text.bold("Hello\n") + Text("world!")
+
+                    it("returns two lines") {
+                        assertThat(text.lines, equalTo(listOf(TextRun(Text.bold("Hello")), TextRun("world!"))))
+                    }
+                }
+
+                given("there is a new line character in the middle of one element") {
+                    val text = Text.bold("Hey\nHello ") + Text("world!")
+
+                    it("returns two lines") {
+                        assertThat(text.lines, equalTo(listOf(TextRun(Text.bold("Hey")), Text.bold("Hello ") + Text("world!"))))
+                    }
+                }
+
+                given("there is one element that is just a new line character") {
+                    val text = Text.bold("Hello") + Text("\n")
+
+                    it("returns two lines") {
+                        assertThat(text.lines, equalTo(listOf(TextRun(Text.bold("Hello")), TextRun())))
+                    }
+                }
+            }
+        }
     }
 })

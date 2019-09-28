@@ -24,32 +24,41 @@ data class Text(val content: String, val color: ConsoleColor? = null, val bold: 
 
     companion object {
         fun bold(content: String) = Text(content, bold = true)
+        fun bold(content: Text) = content.copy(bold = true)
         fun bold(content: TextRun) = content.map { it.copy(bold = it.bold ?: true) }
 
         private fun colored(content: TextRun, color: ConsoleColor) = content.map { it.copy(color = it.color ?: color) }
 
         fun black(content: String) = Text(content, ConsoleColor.Black)
+        fun black(content: Text) = content.copy(color = ConsoleColor.Black)
         fun black(content: TextRun): TextRun = colored(content, ConsoleColor.Black)
 
         fun red(content: String) = Text(content, ConsoleColor.Red)
+        fun red(content: Text) = content.copy(color = ConsoleColor.Red)
         fun red(content: TextRun): TextRun = colored(content, ConsoleColor.Red)
 
         fun green(content: String) = Text(content, ConsoleColor.Green)
+        fun green(content: Text) = content.copy(color = ConsoleColor.Green)
         fun green(content: TextRun): TextRun = colored(content, ConsoleColor.Green)
 
         fun yellow(content: String) = Text(content, ConsoleColor.Yellow)
+        fun yellow(content: Text) = content.copy(color = ConsoleColor.Yellow)
         fun yellow(content: TextRun): TextRun = colored(content, ConsoleColor.Yellow)
 
         fun blue(content: String) = Text(content, ConsoleColor.Blue)
+        fun blue(content: Text) = content.copy(color = ConsoleColor.Blue)
         fun blue(content: TextRun): TextRun = colored(content, ConsoleColor.Blue)
 
         fun magenta(content: String) = Text(content, ConsoleColor.Magenta)
+        fun magenta(content: Text) = content.copy(color = ConsoleColor.Magenta)
         fun magenta(content: TextRun): TextRun = colored(content, ConsoleColor.Magenta)
 
         fun cyan(content: String) = Text(content, ConsoleColor.Cyan)
+        fun cyan(content: Text) = content.copy(color = ConsoleColor.Cyan)
         fun cyan(content: TextRun): TextRun = colored(content, ConsoleColor.Cyan)
 
         fun white(content: String) = Text(content, ConsoleColor.White)
+        fun white(content: Text) = content.copy(color = ConsoleColor.White)
         fun white(content: TextRun): TextRun = colored(content, ConsoleColor.White)
     }
 }

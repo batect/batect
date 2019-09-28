@@ -21,7 +21,6 @@ import batect.cli.options.OptionParserContainer
 import batect.cli.options.OptionsParsingResult
 import batect.cli.options.ValueConverters
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
-import batect.cli.options.defaultvalues.LevelOfParallelismDefaultValueProvider
 import batect.docker.DockerHttpConfigDefaults
 import batect.os.PathResolverFactory
 import batect.ui.OutputStyle
@@ -48,7 +47,7 @@ class CommandLineOptionsParser(
     private val runUpgrade: Boolean by flagOption(upgradeFlagName, "Upgrade batect to the latest available version.")
     private val listTasks: Boolean by flagOption("list-tasks", "List available tasks and exit.")
 
-    private val disableColorOutput: Boolean by flagOption("no-color", "Disable colored output from batect. Does not affect task command output. (implies --output=simple)")
+    private val disableColorOutput: Boolean by flagOption("no-color", "Disable colored output from batect. Does not affect task command output. (implies --output=simple unless overridden)")
     private val disableUpdateNotification: Boolean by flagOption("no-update-notification", "Disable checking for updates to batect and notifying you when a new version is available.")
 
     private val configurationFileName: Path by valueOption(
@@ -67,17 +66,9 @@ class CommandLineOptionsParser(
 
     private val requestedOutputStyle: OutputStyle? by valueOption(
         "output",
-        "Force a particular style of output from batect (does not affect task command output). Valid values are: fancy (default value if your console supports this), simple (no updating text), or quiet (only error messages).",
+        "Force a particular style of output from batect (does not affect task command output). Valid values are: fancy (default value if your console supports this), simple (no updating text), all (interleaved output from all containers) or quiet (only error messages).",
         ValueConverters.optionalEnum(),
         'o'
-    )
-
-    private val levelOfParallelism: Int by valueOption(
-        "level-of-parallelism",
-        "Maximum number of operations to run in parallel.",
-        LevelOfParallelismDefaultValueProvider,
-        ValueConverters::positiveInteger,
-        'p'
     )
 
     private val disableCleanupAfterFailure: Boolean by flagOption(disableCleanupAfterFailureFlagName, "If an error occurs before any task can start, leave all containers created for that task running so that the issue can be investigated.")
@@ -139,7 +130,6 @@ class CommandLineOptionsParser(
         requestedOutputStyle = requestedOutputStyle,
         disableColorOutput = disableColorOutput,
         disableUpdateNotification = disableUpdateNotification,
-        levelOfParallelism = levelOfParallelism,
         disableCleanupAfterFailure = disableCleanupAfterFailure || disableCleanup,
         disableCleanupAfterSuccess = disableCleanupAfterSuccess || disableCleanup,
         dontPropagateProxyEnvironmentVariables = dontPropagateProxyEnvironmentVariables,

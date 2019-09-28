@@ -22,6 +22,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * warn when a container used as a dependency does not have a health check defined
 * support for Windows
   * send updated console dimensions to daemon if console is resized while container is running
+  * fix issue where app appears to hang when running on a 32-bit JVM (field size / alignment issue in named pipes calls?)
 * fix #10 (proxies that refer to localhost)
   * Linux:
     * Can get IP of host from `[0].IPAM.Config.Gateway` value from running `docker network inspect <network ID>`
@@ -40,10 +41,10 @@ If there's something you're really keen to see, pull requests are always welcome
 * support credentials for multi-stage image builds where each stage takes base image from different protected registry
 * some way to kill a misbehaving task (eg. one that is not responding to Ctrl+C)
 * support for BuildKit
-* interrupt tasks (eg. image build or pull) when the user presses Ctrl-C during startup (currently wait for it to complete then clean up)
 * shell tab completion for options (eg. `batect --h<tab>` completes to `batect --help`) - #116
 * shell tab completion for tasks (eg. `batect b<tab>` completes to `batect build`) - #116
-* add output format that shows output from all containers, not just main task one - #115
+* Kubernetes-style health checks from outside the container (don't require `curl` / `wget` to be installed in the container, just provide HTTP endpoint)
+* ability to add additional hostnames to a container
 
 ### Other
 * switch to Kotlin's built-in `Result` where appropriate
@@ -111,7 +112,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * file I/O and path resolution logic
 * process creation / monitoring
 * HTTP communication
-* logging - need to switch from Jackson to kotlinx.serialization
 
 #### Things blocking move to Kotlin/Native
 * unit testing support and associated library

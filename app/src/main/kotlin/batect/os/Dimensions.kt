@@ -14,15 +14,15 @@
    limitations under the License.
 */
 
-package batect.execution.model.rules.run
+package batect.os
 
-import batect.config.Container
-import batect.docker.DockerContainer
-import batect.execution.model.steps.StartContainerStep
-import batect.execution.model.steps.TaskStep
+import batect.logging.LogMessageBuilder
+import kotlinx.serialization.Serializable
 
-data class StartContainerStepRule(override val container: Container, override val dependencies: Set<Container>) : StartContainerStepRuleBase(container, dependencies) {
-    override fun createStep(dockerContainer: DockerContainer): TaskStep = StartContainerStep(container, dockerContainer)
-
-    override fun toString(): String = super.toString()
+@Serializable
+data class Dimensions(val height: Int, val width: Int) {
+    operator fun plus(other: Dimensions) = Dimensions(height + other.height, width + other.width)
+    operator fun minus(other: Dimensions) = Dimensions(height - other.height, width - other.width)
 }
+
+fun LogMessageBuilder.data(key: String, value: Dimensions) = this.data(key, value, Dimensions.serializer())

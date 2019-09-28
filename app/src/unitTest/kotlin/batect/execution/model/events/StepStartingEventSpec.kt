@@ -14,26 +14,22 @@
    limitations under the License.
 */
 
-package batect.execution.model.steps
+package batect.execution.model.events
 
-import batect.config.Container
-import batect.docker.DockerContainer
-import batect.testutils.imageSourceDoesNotMatter
+import batect.execution.model.steps.CreateTaskNetworkStep
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object StartContainerStepSpec : Spek({
-    describe("a 'start container' step") {
-        val container = Container("the-container", imageSourceDoesNotMatter())
-        val dockerContainer = DockerContainer("the-container-id")
-        val step = StartContainerStep(container, dockerContainer)
+object StepStartingEventSpec : Spek({
+    describe("a 'step starting' event") {
+        val event = StepStartingEvent(CreateTaskNetworkStep)
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(step.toString(), equalTo("StartContainerStep(container: 'the-container', Docker container: 'the-container-id')"))
+                assertThat(event.toString(), equalTo("StepStartingEvent(step: CreateTaskNetworkStep)"))
             }
         }
     }

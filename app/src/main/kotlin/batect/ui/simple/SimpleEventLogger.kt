@@ -24,6 +24,7 @@ import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePulledEvent
+import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.BuildImageStep
@@ -31,12 +32,12 @@ import batect.execution.model.steps.CleanupStep
 import batect.execution.model.steps.CreateContainerStep
 import batect.execution.model.steps.PullImageStep
 import batect.execution.model.steps.RunContainerStep
-import batect.execution.model.steps.StartContainerStep
 import batect.execution.model.steps.TaskStep
 import batect.os.Command
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
+import batect.ui.containerio.TaskContainerOnlyIOStreamingOptions
 import batect.ui.humanise
 import batect.ui.text.Text
 import batect.ui.text.TextRun
@@ -44,11 +45,13 @@ import java.time.Duration
 
 class SimpleEventLogger(
     val containers: Set<Container>,
+    val taskContainer: Container,
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
     val runOptions: RunOptions,
     val console: Console,
-    val errorConsole: Console
-) : EventLogger() {
+    val errorConsole: Console,
+    override val ioStreamingOptions: TaskContainerOnlyIOStreamingOptions
+) : EventLogger {
     private val commands = mutableMapOf<Container, Command?>()
     private var haveStartedCleanUp = false
     private val lock = Object()
@@ -61,6 +64,7 @@ class SimpleEventLogger(
                 is ImagePulledEvent -> logImagePulled(event.source)
                 is ContainerStartedEvent -> logContainerStarted(event.container)
                 is ContainerBecameHealthyEvent -> logContainerBecameHealthy(event.container)
+                is StepStartingEvent -> logStepStarting(event.step)
             }
         }
     }
@@ -70,16 +74,13 @@ class SimpleEventLogger(
         errorConsole.println(message)
     }
 
-    override fun onStartingTaskStep(step: TaskStep) {
-        synchronized(lock) {
-            when (step) {
-                is BuildImageStep -> logImageBuildStarting(step.source)
-                is PullImageStep -> logImagePullStarting(step.source)
-                is StartContainerStep -> logContainerStarting(step.container)
-                is RunContainerStep -> logCommandStarting(step.container, commands[step.container])
-                is CreateContainerStep -> commands[step.container] = step.command
-                is CleanupStep -> logCleanUpStarting()
-            }
+    private fun logStepStarting(step: TaskStep) {
+        when (step) {
+            is BuildImageStep -> logImageBuildStarting(step.source)
+            is PullImageStep -> logImagePullStarting(step.source)
+            is RunContainerStep -> logContainerRunning(step.container)
+            is CreateContainerStep -> commands[step.container] = step.command
+            is CleanupStep -> logCleanUpStarting()
         }
     }
 
@@ -107,7 +108,15 @@ class SimpleEventLogger(
         console.println(Text.white(Text("Pulled ") + Text.bold(source.imageName) + Text(".")))
     }
 
-    private fun logCommandStarting(container: Container, command: Command?) {
+    private fun logContainerRunning(container: Container) {
+        if (container == taskContainer) {
+            logTaskContainerRunning(container, commands[container])
+        } else {
+            logDependencyContainerStarting(container)
+        }
+    }
+
+    private fun logTaskContainerRunning(container: Container, command: Command?) {
         val commandText = if (command != null) {
             Text.bold(command.originalCommand) + Text(" in ")
         } else {
@@ -117,11 +126,15 @@ class SimpleEventLogger(
         console.println(Text.white(Text("Running ") + commandText + Text.bold(container.name) + Text("...")))
     }
 
-    private fun logContainerStarting(container: Container) {
+    private fun logDependencyContainerStarting(container: Container) {
         console.println(Text.white(Text("Starting ") + Text.bold(container.name) + Text("...")))
     }
 
     private fun logContainerStarted(container: Container) {
+        if (container == taskContainer) {
+            return
+        }
+
         console.println(Text.white(Text("Started ") + Text.bold(container.name) + Text(".")))
     }
 

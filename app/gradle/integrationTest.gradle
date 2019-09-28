@@ -34,3 +34,7 @@ task integrationTest(type: Test) {
 
     mustRunAfter test
 }
+
+check.dependsOn(integrationTestClasses)
+
+integrationTestClasses.mustRunAfter(test)

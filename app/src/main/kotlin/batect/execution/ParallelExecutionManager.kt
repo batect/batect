@@ -17,6 +17,7 @@
 package batect.execution
 
 import batect.execution.model.events.ExecutionFailedEvent
+import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.TaskStep
@@ -24,16 +25,17 @@ import batect.execution.model.steps.TaskStepRunner
 import batect.logging.Logger
 import batect.ui.EventLogger
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-// Why do we do all this when a ThreadPoolExecutor would provide us with a 'maximum concurrent threads' limit?
+// Why do we do all this when a ThreadPoolExecutor serves a similar purpose?
 // Because it requires us to just feed it tasks and it internally will manage the queue of work.
 // However, we want to manage the queue of work ourselves (this is what the state machine and the events do), so
-// that we can retract work (steps) that have not been started yet in the event of a failure. This retraction is
-// all handled by the state machine, so all we need to do is only submit work to the thread pool when we there are
-// fewer threads running than our maximum concurrent threads limit.
+// that we can retract work (steps) that have not been started yet in the event of a failure and trigger them when
+// events occur. This is all handled by the state machine, so all we need to do is only submit work to the thread
+// pool when it is ready.
 class ParallelExecutionManager(
     private val eventLogger: EventLogger,
     private val taskStepRunner: TaskStepRunner,
@@ -42,6 +44,7 @@ class ParallelExecutionManager(
     private val logger: Logger
 ) : TaskEventSink {
     private val threadPool = createThreadPool()
+    private val stepRunContext = TaskStepRunContext(this, runOptions, stateMachine.cancellationContext, eventLogger.ioStreamingOptions)
 
     private val startNewWorkLockObject = Object()
     private val finishedSignal = CountDownLatch(1)
@@ -56,7 +59,7 @@ class ParallelExecutionManager(
     }
 
     private fun createThreadPool() =
-        object : ThreadPoolExecutor(runOptions.levelOfParallelism, runOptions.levelOfParallelism, 0, TimeUnit.NANOSECONDS, LinkedBlockingQueue<Runnable>()) {
+        object : ThreadPoolExecutor(Int.MAX_VALUE, Int.MAX_VALUE, Long.MAX_VALUE, TimeUnit.DAYS, LinkedBlockingQueue<Runnable>()) {
             override fun afterExecute(r: Runnable?, t: Throwable?) {
                 super.afterExecute(r, t)
 
@@ -89,7 +92,7 @@ class ParallelExecutionManager(
             }
 
             try {
-                while (runningSteps < runOptions.levelOfParallelism) {
+                while (true) {
                     val stepsStillRunning = runningSteps > 0
                     val step = stateMachine.popNextStep(stepsStillRunning)
 
@@ -98,7 +101,7 @@ class ParallelExecutionManager(
                     }
 
                     runningSteps++
-                    runStep(step, threadPool, this)
+                    runStep(step, threadPool)
                 }
             } catch (e: Throwable) {
                 logger.error {
@@ -115,7 +118,7 @@ class ParallelExecutionManager(
         }
     }
 
-    private fun runStep(step: TaskStep, threadPool: ThreadPoolExecutor, eventSink: TaskEventSink) {
+    private fun runStep(step: TaskStep, threadPool: ThreadPoolExecutor) {
         threadPool.execute {
             try {
                 logger.info {
@@ -123,16 +126,36 @@ class ParallelExecutionManager(
                     data("step", step.toString())
                 }
 
-                eventLogger.onStartingTaskStep(step)
-                taskStepRunner.run(step, eventSink, runOptions)
-            } catch (t: Throwable) {
-                logger.error {
-                    message("Unhandled exception during task step execution.")
-                    exception(t)
-                }
+                eventLogger.postEvent(StepStartingEvent(step))
+                taskStepRunner.run(step, stepRunContext)
 
-                postEvent(ExecutionFailedEvent("During execution of step of kind '${step::class.simpleName}': " + t.toString()))
+                logger.info {
+                    message("Step completed.")
+                    data("step", step.toString())
+                }
+            } catch (t: Throwable) {
+                when {
+                    t is CancellationException -> logCancellationException(step, t)
+                    t is ExecutionException && t.cause is CancellationException -> logCancellationException(step, t)
+                    else -> {
+                        logger.error {
+                            message("Unhandled exception during task step execution.")
+                            exception(t)
+                            data("step", step.toString())
+                        }
+
+                        postEvent(ExecutionFailedEvent("During execution of step of kind '${step::class.simpleName}': " + t.toString()))
+                    }
+                }
             }
+        }
+    }
+
+    private fun logCancellationException(step: TaskStep, ex: Exception) {
+        logger.info {
+            message("Step was cancelled and threw an exception.")
+            exception(ex)
+            data("step", step.toString())
         }
     }
 

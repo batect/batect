@@ -33,9 +33,7 @@ data class BuildImageStep(
     val source: BuildImage,
     val imageTags: Set<String>
 ) : TaskStep() {
-    override fun toString() = "${this.javaClass.simpleName}(" +
-        "source: $source, " +
-        "image tags: $imageTags)"
+    override fun toString() = "${this.javaClass.simpleName}(source: $source, image tags: $imageTags)"
 }
 
 data class PullImageStep(val source: PullImage) : TaskStep() {
@@ -68,10 +66,6 @@ data class CreateContainerStep(
 }
 
 data class RunContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
-    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}')"
-}
-
-data class StartContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
     override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 

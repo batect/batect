@@ -26,7 +26,7 @@ import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
 import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRunFailedEvent
-import batect.execution.model.events.ContainerStartFailedEvent
+import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ContainerStopFailedEvent
 import batect.execution.model.events.ExecutionFailedEvent
 import batect.execution.model.events.ImageBuildFailedEvent
@@ -52,7 +52,6 @@ class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
         is ImageBuildFailedEvent -> formatErrorMessage("Could not build image from directory '${event.source.buildDirectory}'", event.message)
         is ImagePullFailedEvent -> formatErrorMessage(Text("Could not pull image ") + Text.bold(event.source.imageName), event.message)
         is ContainerCreationFailedEvent -> formatErrorMessage(Text("Could not create container ") + Text.bold(event.container.name), event.message)
-        is ContainerStartFailedEvent -> formatErrorMessage(Text("Could not start container ") + Text.bold(event.container.name), event.message) + hintToReRunWithCleanupDisabled(runOptions)
         is ContainerDidNotBecomeHealthyEvent -> formatErrorMessage(Text("Container ") + Text.bold(event.container.name) + Text(" did not become healthy"), event.message) + hintToReRunWithCleanupDisabled(runOptions)
         is ContainerRunFailedEvent -> formatErrorMessage(Text("Could not run container ") + Text.bold(event.container.name), event.message)
         is ContainerStopFailedEvent -> formatErrorMessage(Text("Could not stop container ") + Text.bold(event.container.name), event.message)
@@ -61,11 +60,12 @@ class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
         is TemporaryFileDeletionFailedEvent -> formatErrorMessage("Could not delete temporary file '${event.filePath}'", event.message)
         is TemporaryDirectoryDeletionFailedEvent -> formatErrorMessage("Could not delete temporary directory '${event.directoryPath}'", event.message)
         is ExecutionFailedEvent -> formatErrorMessage("An unexpected exception occurred during execution", event.message)
-        is UserInterruptedExecutionEvent -> formatErrorMessage("Interrupt received during execution", "User interrupted execution.")
+        is UserInterruptedExecutionEvent -> formatMessage("Task cancelled", TextRun("Interrupt received during execution"), "Waiting for outstanding operations to stop or finish before cleaning up...")
     }
 
     private fun formatErrorMessage(headline: String, body: String) = formatErrorMessage(TextRun(headline), body)
-    private fun formatErrorMessage(headline: TextRun, body: String) = Text.red(Text.bold("Error: ") + headline + Text(".$newLine")) + Text(body)
+    private fun formatErrorMessage(headline: TextRun, body: String) = formatMessage("Error", headline, body)
+    private fun formatMessage(type: String, headline: TextRun, body: String) = Text.red(Text.bold("$type: ") + headline + Text(".$newLine")) + Text(body)
 
     private fun hintToReRunWithCleanupDisabled(runOptions: RunOptions): TextRun = when (runOptions.behaviourAfterFailure) {
         CleanupOption.Cleanup -> Text("$newLine${newLine}You can re-run the task with ") + Text.bold("--${CommandLineOptionsParser.disableCleanupAfterFailureFlagName}") + Text(" to leave the created containers running to diagnose the issue.")
@@ -106,10 +106,16 @@ class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
     }
 
     private fun containerOutputAndExecInstructions(container: Container, dockerContainer: DockerContainer, events: Set<TaskEvent>): TextRun {
+        val neverStarted = events.none { it is ContainerStartedEvent && it.container == container }
         val alreadyExited = events.any { it is RunningContainerExitedEvent && it.container == container }
-        val execPart = if (alreadyExited) TextRun() else Text("', or run a command in the container with '") + Text.bold("docker exec -it ${dockerContainer.id} <command>")
 
-        return Text("For container ") + Text.bold(container.name) + Text(", view its output by running '") + Text.bold("docker logs ${dockerContainer.id}") + execPart + Text("'.$newLine")
+        val execCommand = if (neverStarted || alreadyExited) {
+            "docker start ${dockerContainer.id}; docker exec -it ${dockerContainer.id} <command>"
+        } else {
+            "docker exec -it ${dockerContainer.id} <command>"
+        }
+
+        return Text("For container ") + Text.bold(container.name) + Text(", view its output by running '") + Text.bold("docker logs ${dockerContainer.id}") + Text("', or run a command in the container with '") + Text.bold(execCommand) + Text("'.$newLine")
     }
 
     fun formatManualCleanupMessageAfterCleanupFailure(cleanupCommands: List<String>): TextRun {

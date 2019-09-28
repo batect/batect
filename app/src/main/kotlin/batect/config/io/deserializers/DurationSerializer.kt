@@ -28,7 +28,7 @@ import java.time.Duration
 import java.time.temporal.ChronoUnit
 
 @Serializer(forClass = Duration::class)
-object DurationDeserializer : KSerializer<Duration> {
+object DurationSerializer : KSerializer<Duration> {
     override val descriptor: SerialDescriptor = StringDescriptor
 
     private const val valueRegexString = """((\d+)|(\d+\.\d*)|(\d*\.\d+))(ns|\u00b5s|\u03bcs|us|ms|s|m|h)"""
@@ -84,5 +84,37 @@ object DurationDeserializer : KSerializer<Duration> {
 
     private fun Sequence<Duration>.sum(): Duration = this.reduce { acc, item -> acc + item }
 
-    override fun serialize(encoder: Encoder, obj: Duration) = throw UnsupportedOperationException()
+    override fun serialize(encoder: Encoder, obj: Duration) {
+        val builder = StringBuilder()
+        val absoluteDuration = obj.abs()
+        val micros = (absoluteDuration.toNanos() / 1000)
+
+        builder.appendTimeUnit(absoluteDuration.toHours(), "h")
+        builder.appendTimeUnit(absoluteDuration.toMinutes() - (absoluteDuration.toHours() * 60), "m")
+        builder.appendTimeUnit(absoluteDuration.seconds - (absoluteDuration.toMinutes() * 60), "s")
+        builder.appendTimeUnit(absoluteDuration.toMillis() - (absoluteDuration.seconds * 1000), "ms")
+        builder.appendTimeUnit(micros - (absoluteDuration.toMillis() * 1000), "us")
+        builder.appendTimeUnit(absoluteDuration.toNanos() - (micros * 1000), "ns")
+
+        if (obj.isZero) {
+            builder.append("0")
+        }
+
+        if (obj.isNegative) {
+            builder.insert(0, "-")
+        }
+
+        encoder.encodeString(builder.toString())
+    }
+
+    private fun StringBuilder.appendTimeUnit(value: Long, abbreviation: String) {
+        if (value != 0L) {
+            if (this.isNotEmpty()) {
+                this.append(" ")
+            }
+
+            this.append(value)
+            this.append(abbreviation)
+        }
+    }
 }

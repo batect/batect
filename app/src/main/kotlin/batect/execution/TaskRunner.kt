@@ -69,7 +69,7 @@ data class TaskRunner(
 
         val duration = Duration.between(startTime, finishTime)
 
-        return onTaskSucceeded(eventLogger, task, stateMachine, duration, runOptions)
+        return onTaskSucceeded(eventLogger, task, stateMachine, graph, duration, runOptions)
     }
 
     private fun onTaskFailed(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine): Int {
@@ -83,10 +83,10 @@ data class TaskRunner(
         return -1
     }
 
-    private fun onTaskSucceeded(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine, duration: Duration, runOptions: RunOptions): Int {
+    private fun onTaskSucceeded(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine, graph: ContainerDependencyGraph, duration: Duration, runOptions: RunOptions): Int {
         val containerExitedEvent = stateMachine.getAllEvents()
             .filterIsInstance<RunningContainerExitedEvent>()
-            .singleOrNull()
+            .singleOrNull { it.container == graph.taskContainerNode.container }
 
         if (containerExitedEvent == null) {
             throw IllegalStateException("The task neither failed nor succeeded.")

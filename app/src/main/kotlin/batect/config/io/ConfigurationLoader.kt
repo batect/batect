@@ -18,6 +18,7 @@ package batect.config.io
 
 import batect.config.Configuration
 import batect.config.io.deserializers.PathDeserializer
+import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.PathResolutionResult
 import batect.os.PathResolverFactory
@@ -92,3 +93,5 @@ class ConfigurationLoader(
         else -> e.message
     }
 }
+
+private fun LogMessageBuilder.data(key: String, value: Configuration) = this.data(key, value, Configuration.Companion)

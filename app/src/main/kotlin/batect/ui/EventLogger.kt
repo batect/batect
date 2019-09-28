@@ -17,14 +17,15 @@
 package batect.ui
 
 import batect.execution.model.events.TaskEventSink
-import batect.execution.model.steps.TaskStep
+import batect.ui.containerio.ContainerIOStreamingOptions
 import batect.ui.text.TextRun
 import java.time.Duration
 
-abstract class EventLogger : TaskEventSink {
-    abstract fun onStartingTaskStep(step: TaskStep)
-    abstract fun onTaskStarting(taskName: String)
-    abstract fun onTaskFinished(taskName: String, exitCode: Int, duration: Duration)
-    abstract fun onTaskFinishedWithCleanupDisabled(manualCleanupInstructions: TextRun)
-    abstract fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun)
+interface EventLogger : TaskEventSink {
+    fun onTaskStarting(taskName: String)
+    fun onTaskFinished(taskName: String, exitCode: Int, duration: Duration)
+    fun onTaskFinishedWithCleanupDisabled(manualCleanupInstructions: TextRun)
+    fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun)
+
+    val ioStreamingOptions: ContainerIOStreamingOptions
 }

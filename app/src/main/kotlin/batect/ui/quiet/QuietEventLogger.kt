@@ -19,18 +19,19 @@ package batect.ui.quiet
 import batect.execution.RunOptions
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
-import batect.execution.model.steps.TaskStep
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
+import batect.ui.containerio.TaskContainerOnlyIOStreamingOptions
 import batect.ui.text.TextRun
 import java.time.Duration
 
 class QuietEventLogger(
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
     val runOptions: RunOptions,
-    val errorConsole: Console
-) : EventLogger() {
+    val errorConsole: Console,
+    override val ioStreamingOptions: TaskContainerOnlyIOStreamingOptions
+) : EventLogger {
     override fun postEvent(event: TaskEvent) {
         if (event is TaskFailedEvent) {
             errorConsole.println()
@@ -38,7 +39,6 @@ class QuietEventLogger(
         }
     }
 
-    override fun onStartingTaskStep(step: TaskStep) {}
     override fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun) {}
     override fun onTaskStarting(taskName: String) {}
     override fun onTaskFinished(taskName: String, exitCode: Int, duration: Duration) {}

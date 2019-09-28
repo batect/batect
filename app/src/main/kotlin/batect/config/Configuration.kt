@@ -33,7 +33,7 @@ import kotlinx.serialization.Serializer
 import kotlinx.serialization.decode
 import kotlinx.serialization.internal.SerialClassDescImpl
 
-@Serializable
+@Serializable(with = Configuration.Companion::class)
 data class Configuration(
     val projectName: String,
     val tasks: TaskMap = TaskMap(),
@@ -109,7 +109,7 @@ data class Configuration(
                 throw ConfigurationException("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.")
             }
 
-            val inferredProjectName = pathResolver.relativeTo.fileName.toString()
+            val inferredProjectName = pathResolver.relativeTo.fileName.toString().toLowerCase()
 
             if (!DockerImageNameValidator.isValidImageName(inferredProjectName)) {
                 throw ConfigurationException("The inferred project name '$inferredProjectName' is invalid. The project name must be a valid Docker reference: it ${DockerImageNameValidator.validNameDescription}. Provide a valid project name explicitly with '$projectNameFieldName'.")
@@ -118,6 +118,12 @@ data class Configuration(
             return inferredProjectName
         }
 
-        override fun serialize(encoder: Encoder, obj: Configuration): Unit = throw UnsupportedOperationException()
+        override fun serialize(encoder: Encoder, obj: Configuration) {
+            val output = encoder.beginStructure(descriptor)
+            output.encodeStringElement(descriptor, projectNameFieldIndex, obj.projectName)
+            output.encodeSerializableElement(descriptor, tasksFieldIndex, TaskMap.Companion, obj.tasks)
+            output.encodeSerializableElement(descriptor, containersFieldIndex, ContainerMap.Companion, obj.containers)
+            output.endStructure(descriptor)
+        }
     }
 }

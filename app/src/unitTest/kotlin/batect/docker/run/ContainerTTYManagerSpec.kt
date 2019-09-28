@@ -44,6 +44,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object ContainerTTYManagerSpec : Spek({
     describe("a container TTY manager") {
+        val frameDimensions = Dimensions(23, 56)
         val api by createForEachTest { mock<DockerAPI>() }
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
         val dimensionsListenerCleanup by createForEachTest { mock<AutoCloseable>() }
@@ -68,20 +69,20 @@ object ContainerTTYManagerSpec : Spek({
 
                         given("the container is still running") {
                             on("starting to monitor for terminal size changes") {
-                                val returnedCleanup by runForEachTest { manager.monitorForSizeChanges(container) }
+                                val returnedCleanup by runForEachTest { manager.monitorForSizeChanges(container, frameDimensions) }
 
                                 it("registers a listener for terminal size changes") {
                                     verify(consoleDimensions).registerListener(any())
                                 }
 
-                                it("sends the current dimensions to the container") {
-                                    verify(api).resizeContainerTTY(container, Dimensions(123, 456))
+                                it("sends the current dimensions less the frame size to the container") {
+                                    verify(api).resizeContainerTTY(container, Dimensions(100, 400))
                                 }
 
                                 it("registers the listener before sending the current dimensions") {
                                     inOrder(consoleDimensions, api) {
                                         verify(consoleDimensions).registerListener(any())
-                                        verify(api).resizeContainerTTY(container, Dimensions(123, 456))
+                                        verify(api).resizeContainerTTY(container, Dimensions(100, 400))
                                     }
                                 }
 
@@ -96,7 +97,7 @@ object ContainerTTYManagerSpec : Spek({
 
                             on("starting to monitor for terminal size changes") {
                                 it("does not throw an exception") {
-                                    assertThat({ manager.monitorForSizeChanges(container) }, doesNotThrow())
+                                    assertThat({ manager.monitorForSizeChanges(container, frameDimensions) }, doesNotThrow())
                                 }
                             }
                         }
@@ -105,7 +106,7 @@ object ContainerTTYManagerSpec : Spek({
                     on("not being able to retrieve the current terminal dimensions") {
                         beforeEachTest { whenever(consoleDimensions.current).doReturn(null as Dimensions?) }
 
-                        val returnedCleanup by runForEachTest { manager.monitorForSizeChanges(container) }
+                        val returnedCleanup by runForEachTest { manager.monitorForSizeChanges(container, frameDimensions) }
 
                         it("registers a listener for terminal size changes") {
                             verify(consoleDimensions).registerListener(any())
@@ -125,7 +126,7 @@ object ContainerTTYManagerSpec : Spek({
                     val handlerCaptor by createForEachTest { argumentCaptor<() -> Unit>() }
 
                     beforeEachTest {
-                        manager.monitorForSizeChanges(container)
+                        manager.monitorForSizeChanges(container, frameDimensions)
                         verify(consoleDimensions).registerListener(handlerCaptor.capture())
                     }
 
@@ -137,7 +138,7 @@ object ContainerTTYManagerSpec : Spek({
                                 beforeEachTest { handlerCaptor.firstValue.invoke() }
 
                                 it("sends the current dimensions to the container") {
-                                    verify(api).resizeContainerTTY(container, Dimensions(789, 1234))
+                                    verify(api).resizeContainerTTY(container, Dimensions(766, 1178))
                                 }
                             }
                         }
@@ -170,7 +171,7 @@ object ContainerTTYManagerSpec : Spek({
                 beforeEachTest { whenever(consoleInfo.stdinIsTTY).doReturn(false) }
 
                 on("monitoring for terminal size changes") {
-                    beforeEachTest { manager.monitorForSizeChanges(container) }
+                    beforeEachTest { manager.monitorForSizeChanges(container, frameDimensions) }
 
                     it("does not send dimensions to the container") {
                         verify(api, never()).resizeContainerTTY(any(), any())

@@ -38,7 +38,7 @@ object QuietEventLoggerSpec : Spek({
         val runOptions by createForEachTest { mock<RunOptions>() }
         val errorConsole by createForEachTest { mock<Console>() }
 
-        val logger by createForEachTest { QuietEventLogger(failureErrorMessageFormatter, runOptions, errorConsole) }
+        val logger by createForEachTest { QuietEventLogger(failureErrorMessageFormatter, runOptions, errorConsole, mock()) }
 
         on("when a 'task failed' event is posted") {
             beforeEachTest {

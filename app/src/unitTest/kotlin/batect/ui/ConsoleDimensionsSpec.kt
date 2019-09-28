@@ -172,6 +172,8 @@ object ConsoleDimensionsSpec : Spek({
         }
 
         describe("after removing a change listener") {
+            beforeEachTest { whenever(nativeMethods.getConsoleDimensions()).thenReturn(Dimensions(123, 456)) }
+
             val dimensions by createForEachTest { ConsoleDimensions(nativeMethods, signalListener, logger) }
 
             val signalHandler by runForEachTest {

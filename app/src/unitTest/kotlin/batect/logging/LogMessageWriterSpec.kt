@@ -21,6 +21,8 @@ import batect.testutils.on
 import batect.utils.Json
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import kotlinx.serialization.internal.IntSerializer
+import kotlinx.serialization.internal.StringSerializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.ZoneOffset
@@ -73,8 +75,8 @@ object LogMessageWriterSpec : Spek({
                 "This is the message",
                 messageTime,
                 mapOf(
-                    "some-text" to "This is some text",
-                    "some-int" to 123
+                    "some-text" to JsonableObject("This is some text", StringSerializer),
+                    "some-int" to JsonableObject(123, IntSerializer)
                 )
             )
 

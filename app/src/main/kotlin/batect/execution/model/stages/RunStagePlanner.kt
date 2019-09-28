@@ -27,7 +27,6 @@ import batect.execution.model.rules.run.CreateContainerStepRule
 import batect.execution.model.rules.run.CreateTaskNetworkStepRule
 import batect.execution.model.rules.run.PullImageStepRule
 import batect.execution.model.rules.run.RunContainerStepRule
-import batect.execution.model.rules.run.StartContainerStepRule
 import batect.execution.model.rules.run.WaitForContainerToBecomeHealthyStepRule
 import batect.logging.Logger
 import batect.utils.flatMapToSet
@@ -46,7 +45,7 @@ class RunStagePlanner(private val logger: Logger) {
             data("rules", rules.map { it.toString() })
         }
 
-        return RunStage(rules)
+        return RunStage(rules, graph.taskContainerNode.container)
     }
 
     private fun stepsFor(node: ContainerDependencyGraphNode, allContainersInNetwork: Set<Container>): Set<TaskStepRule> {
@@ -82,7 +81,7 @@ class RunStagePlanner(private val logger: Logger) {
         }
 
         return setOf(
-            StartContainerStepRule(node.container, node.dependsOnContainers),
+            RunContainerStepRule(node.container, node.dependsOnContainers),
             WaitForContainerToBecomeHealthyStepRule(node.container)
         )
     }

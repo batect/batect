@@ -29,24 +29,29 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.whenever
 import jnr.constants.platform.Signal
+import jnr.posix.LibC
 import jnr.posix.POSIX
-import jnr.posix.SignalHandler
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object SignalListenerSpec : Spek({
     describe("a signal listener") {
         val signal = Signal.SIGWINCH
-        val posix by createForEachTest { mock<POSIX>() }
+        val libc by createForEachTest { mock<LibC>() }
+        val posix by createForEachTest {
+            mock<POSIX> {
+                on { libc() } doReturn libc
+            }
+        }
+
         val signalListener by createForEachTest { SignalListener(posix) }
 
         on("starting to listen for the signal") {
             beforeEachTest { signalListener.start(signal) {} }
 
             it("registers a signal handler for the SIGINT signal") {
-                verify(posix).signal(eq(signal), any())
+                verify(libc).signal(eq(signal.value()), any())
             }
         }
 
@@ -56,9 +61,9 @@ object SignalListenerSpec : Spek({
 
                 signalListener.start(signal) { signalHandlerCalled = true }
 
-                val handlerCaptor = argumentCaptor<SignalHandler>()
-                verify(posix).signal(eq(signal), handlerCaptor.capture())
-                handlerCaptor.firstValue.handle(signal.value())
+                val handlerCaptor = argumentCaptor<LibC.LibCSignalHandler>()
+                verify(libc).signal(eq(signal.value()), handlerCaptor.capture())
+                handlerCaptor.firstValue.signal(signal.value())
 
                 signalHandlerCalled
             }
@@ -69,16 +74,20 @@ object SignalListenerSpec : Spek({
         }
 
         on("stopping listening for the signal") {
-            val originalHandler by createForEachTest { mock<SignalHandler>() }
+            val signalHandlerCalled by runForEachTest {
+                var signalHandlerCalled = false
 
-            beforeEachTest {
-                whenever(posix.signal(eq(signal), any())).doReturn(originalHandler)
+                signalListener.start(signal) { signalHandlerCalled = true }.use { }
 
-                signalListener.start(signal, {}).use { }
+                val handlerCaptor = argumentCaptor<LibC.LibCSignalHandler>()
+                verify(libc).signal(eq(signal.value()), handlerCaptor.capture())
+                handlerCaptor.firstValue.signal(signal.value())
+
+                signalHandlerCalled
             }
 
-            it("restores the previous signal handler") {
-                verify(posix).signal(signal, originalHandler)
+            it("no longer calls the signal handler") {
+                assertThat(signalHandlerCalled, equalTo(false))
             }
         }
 
@@ -94,9 +103,9 @@ object SignalListenerSpec : Spek({
 
                 on("the signal being received") {
                     beforeEachTest {
-                        val handlerCaptor = argumentCaptor<SignalHandler>()
-                        verify(posix, atLeastOnce()).signal(eq(signal), handlerCaptor.capture())
-                        handlerCaptor.firstValue.handle(signal.value())
+                        val handlerCaptor = argumentCaptor<LibC.LibCSignalHandler>()
+                        verify(libc, atLeastOnce()).signal(eq(signal.value()), handlerCaptor.capture())
+                        handlerCaptor.firstValue.signal(signal.value())
                     }
 
                     it("calls the handler function of the remaining handler") {

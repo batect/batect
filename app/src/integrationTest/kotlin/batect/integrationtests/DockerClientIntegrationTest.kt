@@ -40,11 +40,12 @@ import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.pull.DockerRegistryDomainResolver
 import batect.docker.pull.DockerRegistryIndexResolver
 import batect.docker.run.ContainerIOStreamer
-import batect.docker.run.ContainerKiller
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
+import batect.execution.CancellationContext
 import batect.logging.Logger
 import batect.os.ConsoleManager
+import batect.os.Dimensions
 import batect.os.NativeMethods
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
@@ -71,6 +72,7 @@ import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import okio.Okio
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.FileSystems
@@ -88,11 +90,12 @@ object DockerClientIntegrationTest : Spek({
         val nativeMethods by createForGroup { getNativeMethodsForPlatform(posix) }
         val client by createForGroup { createClient(posix, nativeMethods) }
 
-        fun creationRequestForContainer(image: DockerImage, network: DockerNetwork, command: Iterable<String>, volumeMounts: Set<VolumeMount> = emptySet(), portMappings: Set<PortMapping> = emptySet(), userAndGroup: UserAndGroup? = null): DockerContainerCreationRequest {
+        fun creationRequestForContainer(image: DockerImage, network: DockerNetwork, command: List<String>, volumeMounts: Set<VolumeMount> = emptySet(), portMappings: Set<PortMapping> = emptySet(), userAndGroup: UserAndGroup? = null): DockerContainerCreationRequest {
             return DockerContainerCreationRequest(
                 image,
                 network,
                 command,
+                emptyList(),
                 "test-container",
                 "test-container",
                 emptyMap(),
@@ -108,7 +111,7 @@ object DockerClientIntegrationTest : Spek({
             )
         }
 
-        fun creationRequestForTestContainer(image: DockerImage, network: DockerNetwork, localMountDirectory: Path, containerMountDirectory: String, command: Iterable<String>): DockerContainerCreationRequest {
+        fun creationRequestForTestContainer(image: DockerImage, network: DockerNetwork, localMountDirectory: Path, containerMountDirectory: String, command: List<String>): DockerContainerCreationRequest {
             val volumeMount = VolumeMount(localMountDirectory.toString(), containerMountDirectory, null)
             val userAndGroup = UserAndGroup(getUserId(nativeMethods), getGroupId(nativeMethods))
 
@@ -156,15 +159,36 @@ object DockerClientIntegrationTest : Spek({
             }
         }
 
-        describe("building, creating, starting, stopping and removing a container") {
+        describe("building, creating, starting, stopping and removing a container that does not exit automatically") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
-            val image by runBeforeGroup { client.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image")) {} }
+            val image by runBeforeGroup { client.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image"), CancellationContext()) {} }
 
             beforeGroup {
                 withNetwork { network ->
                     withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
-                        client.start(container)
-                        client.stop(container)
+                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext(), Dimensions(0, 0)) {
+                            client.stop(container)
+                        }
+                    }
+                }
+            }
+
+            it("starts the container successfully") {
+                assertThat(Files.exists(fileToCreate), equalTo(true))
+                assertThat(Files.readAllLines(fileToCreate), equalTo(listOf("Hello from container")))
+            }
+        }
+
+        describe("building, creating, starting, stopping and removing a container that exits automatically") {
+            val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
+            val image by runBeforeGroup { client.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image"), CancellationContext()) {} }
+
+            beforeGroup {
+                withNetwork { network ->
+                    withContainer(creationRequestForContainerThatExits(image, network, fileToCreate)) { container ->
+                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext(), Dimensions(0, 0)) {
+                            client.stop(container)
+                        }
                     }
                 }
             }
@@ -177,31 +201,14 @@ object DockerClientIntegrationTest : Spek({
 
         describe("pulling an image and then creating, starting, stopping and removing a container") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
-            val image by runBeforeGroup { client.pullImage("alpine:3.7", {}) }
+            val image by runBeforeGroup { client.pullImage("alpine:3.7", CancellationContext(), {}) }
 
             beforeGroup {
                 withNetwork { network ->
                     withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
-                        client.start(container)
-                        client.stop(container)
-                    }
-                }
-            }
-
-            it("starts the container successfully") {
-                assertThat(Files.exists(fileToCreate), equalTo(true))
-                assertThat(Files.readAllLines(fileToCreate), equalTo(listOf("Hello from container")))
-            }
-        }
-
-        describe("creating, running and then removing a container") {
-            val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
-            val image by runBeforeGroup { client.pullImage("alpine:3.7", {}) }
-
-            beforeGroup {
-                withNetwork { network ->
-                    withContainer(creationRequestForContainerThatExits(image, network, fileToCreate)) { container ->
-                        client.run(container)
+                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext(), Dimensions(0, 0)) {
+                            client.stop(container)
+                        }
                     }
                 }
             }
@@ -214,7 +221,7 @@ object DockerClientIntegrationTest : Spek({
 
         describe("pulling an image that has not been cached locally already") {
             beforeGroup { removeImage("hello-world:latest") }
-            val image by runBeforeGroup { client.pullImage("hello-world:latest", {}) }
+            val image by runBeforeGroup { client.pullImage("hello-world:latest", CancellationContext(), {}) }
 
             it("pulls the image successfully") {
                 assertThat(image, equalTo(DockerImage("hello-world:latest")))
@@ -223,20 +230,27 @@ object DockerClientIntegrationTest : Spek({
 
         describe("waiting for a container to become healthy") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
-            val image by runBeforeGroup { client.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image")) {} }
+            val image by runBeforeGroup { client.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image"), CancellationContext()) {} }
             data class Result(val healthStatus: HealthStatus, val lastHealthCheckResult: DockerHealthCheckResult)
+
+            fun runContainerAndWaitForHealthCheck(container: DockerContainer): Result {
+                lateinit var result: Result
+
+                client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext(), Dimensions(0, 0)) {
+                    val healthStatus = client.waitForHealthStatus(container, CancellationContext())
+                    val lastHealthCheckResult = client.getLastHealthCheckResult(container)
+                    result = Result(healthStatus, lastHealthCheckResult)
+
+                    client.stop(container)
+                }
+
+                return result
+            }
 
             val result by runBeforeGroup {
                 withNetwork { network ->
                     withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
-                        try {
-                            client.start(container)
-                            val healthStatus = client.waitForHealthStatus(container)
-                            val lastHealthCheckResult = client.getLastHealthCheckResult(container)
-                            Result(healthStatus, lastHealthCheckResult)
-                        } finally {
-                            client.stop(container)
-                        }
+                        runContainerAndWaitForHealthCheck(container)
                     }
                 }
             }
@@ -257,17 +271,24 @@ object DockerClientIntegrationTest : Spek({
             ).forEach { (path, description) ->
                 describe("given $description") {
                     val dockerfilePath by createForGroup { testImagesPath.resolve(path) }
-                    val image by runBeforeGroup { client.build(dockerfilePath, emptyMap(), "Dockerfile", emptySet(), {}) }
+                    val image by runBeforeGroup { client.build(dockerfilePath, emptyMap(), "Dockerfile", emptySet(), CancellationContext(), {}) }
+
+                    fun runContainerAndGetHttpResponse(container: DockerContainer): Response {
+                        lateinit var response: Response
+
+                        client.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext(), Dimensions(0, 0)) {
+                            response = httpGet("http://localhost:8080")
+
+                            client.stop(container)
+                        }
+
+                        return response
+                    }
 
                     val response by runBeforeGroup {
                         withNetwork { network ->
                             withContainer(creationRequestForContainer(image, network, emptyList(), portMappings = setOf(PortMapping(8080, 80)))) { container ->
-                                try {
-                                    client.start(container)
-                                    httpGet("http://localhost:8080")
-                                } finally {
-                                    client.stop(container)
-                                }
+                                runContainerAndGetHttpResponse(container)
                             }
                         }
                     }
@@ -312,13 +333,12 @@ private fun createClient(posix: POSIX, nativeMethods: NativeMethods): DockerClie
     val imageBuildContextFactory = DockerImageBuildContextFactory(ignoreParser)
     val dockerfileParser = DockerfileParser()
     val waiter = ContainerWaiter(api)
-    val streamer = ContainerIOStreamer(System.out, System.`in`)
+    val streamer = ContainerIOStreamer()
     val signalListener = SignalListener(posix)
     val consoleDimensions = ConsoleDimensions(nativeMethods, signalListener, logger)
-    val killer = ContainerKiller(api, signalListener)
     val ttyManager = ContainerTTYManager(api, consoleInfo, consoleDimensions, logger)
 
-    return DockerClient(api, consoleManager, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, streamer, killer, ttyManager, logger)
+    return DockerClient(api, consoleManager, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, streamer, ttyManager, logger)
 }
 
 private fun getNativeMethodsForPlatform(posix: POSIX): NativeMethods = when (Platform.getNativePlatform().os) {

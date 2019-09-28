@@ -17,7 +17,6 @@
 package batect.ui.fancy
 
 import batect.execution.model.events.TaskEvent
-import batect.execution.model.steps.TaskStep
 import batect.os.Dimensions
 import batect.ui.Console
 import batect.ui.ConsoleDimensions
@@ -32,10 +31,6 @@ class StartupProgressDisplay(
 
     fun onEventPosted(event: TaskEvent) {
         containerLines.forEach { it.onEventPosted(event) }
-    }
-
-    fun onStepStarting(step: TaskStep) {
-        containerLines.forEach { it.onStepStarting(step) }
     }
 
     fun print(console: Console) {

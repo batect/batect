@@ -20,6 +20,7 @@ import batect.testutils.createForEachTest
 import batect.testutils.on
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
+import kotlinx.serialization.internal.StringSerializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -28,13 +29,14 @@ object LoggerSpec : Spek({
         val sink by createForEachTest { mock<LogSink>() }
         val logger by createForEachTest { Logger("some.source", sink) }
 
+        val loggerAdditionalInfo = mapOf("@source" to JsonableObject("some.source", StringSerializer))
         val buildFun: LogMessageBuilder.() -> LogMessageBuilder = { this }
 
         on("logging a debug-level message") {
             beforeEachTest { logger.debug(buildFun) }
 
             it("forwards the message to the log sink with the name of the source") {
-                verify(sink).write(Severity.Debug, mapOf("@source" to "some.source"), buildFun)
+                verify(sink).write(Severity.Debug, loggerAdditionalInfo, buildFun)
             }
         }
 
@@ -42,7 +44,7 @@ object LoggerSpec : Spek({
             beforeEachTest { logger.info(buildFun) }
 
             it("forwards the message to the log sink with the name of the source") {
-                verify(sink).write(Severity.Info, mapOf("@source" to "some.source"), buildFun)
+                verify(sink).write(Severity.Info, loggerAdditionalInfo, buildFun)
             }
         }
 
@@ -50,7 +52,7 @@ object LoggerSpec : Spek({
             beforeEachTest { logger.warn(buildFun) }
 
             it("forwards the message to the log sink with the name of the source") {
-                verify(sink).write(Severity.Warning, mapOf("@source" to "some.source"), buildFun)
+                verify(sink).write(Severity.Warning, loggerAdditionalInfo, buildFun)
             }
         }
 
@@ -58,7 +60,7 @@ object LoggerSpec : Spek({
             beforeEachTest { logger.error(buildFun) }
 
             it("forwards the message to the log sink with the name of the source") {
-                verify(sink).write(Severity.Error, mapOf("@source" to "some.source"), buildFun)
+                verify(sink).write(Severity.Error, loggerAdditionalInfo, buildFun)
             }
         }
     }

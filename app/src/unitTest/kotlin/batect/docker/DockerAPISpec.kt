@@ -18,12 +18,14 @@ package batect.docker
 
 import batect.config.HealthCheckConfig
 import batect.docker.build.DockerImageBuildContext
+import batect.docker.build.DockerImageBuildContextEntry
 import batect.docker.build.DockerImageBuildContextRequestBody
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.pull.TokenDockerRegistryCredentials
 import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputStream
+import batect.execution.CancellationContext
 import batect.os.Dimensions
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
@@ -74,6 +76,7 @@ import okio.BufferedSink
 import okio.BufferedSource
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
 import java.time.Duration
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -380,6 +383,8 @@ object DockerAPISpec : Spek({
             given("a Docker container and a list of event types to listen for") {
                 val container = DockerContainer("the-container-id")
                 val eventTypes = listOf("die", "health_status")
+                val cancellationContext by createForEachTest { mock<CancellationContext>() }
+
                 val expectedUrl = hasScheme("http") and
                     hasHost(dockerHost) and
                     hasPath("/v1.30/events") and
@@ -404,9 +409,8 @@ object DockerAPISpec : Spek({
                         |
                     """.trimMargin()
 
-                    beforeEachTest { clientWithLongTimeout.mock("GET", expectedUrl, responseBody, 200) }
-
-                    val event by runForEachTest { api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123)) }
+                    val call by createForEachTest { clientWithLongTimeout.mock("GET", expectedUrl, responseBody, 200) }
+                    val event by runForEachTest { api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123), cancellationContext) }
 
                     it("returns that event") {
                         assertThat(event, equalTo(DockerEvent("health_status: healthy")))
@@ -414,6 +418,10 @@ object DockerAPISpec : Spek({
 
                     it("configures the HTTP client with the timeout provided") {
                         verify(longTimeoutClientBuilder).readTimeout(123, TimeUnit.NANOSECONDS)
+                    }
+
+                    it("registers the API call with the cancellation context") {
+                        verify(cancellationContext).addCancellationCallback(call::cancel)
                     }
                 }
 
@@ -426,7 +434,7 @@ object DockerAPISpec : Spek({
 
                     beforeEachTest { clientWithLongTimeout.mock("GET", expectedUrl, responseBody, 200) }
 
-                    val event by runForEachTest { api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123)) }
+                    val event by runForEachTest { api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123), cancellationContext) }
 
                     it("returns the first event") {
                         assertThat(event, equalTo(DockerEvent("die")))
@@ -437,7 +445,7 @@ object DockerAPISpec : Spek({
                     beforeEachTest { clientWithLongTimeout.mock("GET", expectedUrl, errorResponse, 418) }
 
                     it("throws an appropriate exception") {
-                        assertThat({ api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123)) }, throws<DockerException>(withMessage("Getting events for container 'the-container-id' failed: $errorMessageWithCorrectLineEndings")))
+                        assertThat({ api.waitForNextEventForContainer(container, eventTypes, Duration.ofNanos(123), cancellationContext) }, throws<DockerException>(withMessage("Getting events for container 'the-container-id' failed: $errorMessageWithCorrectLineEndings")))
                     }
                 }
             }
@@ -446,6 +454,8 @@ object DockerAPISpec : Spek({
         describe("waiting for a container to exit") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
+                val cancellationContext by createForEachTest { mock<CancellationContext>() }
+
                 val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/wait?condition=next-exit"
 
                 val clientWithNoTimeout by createForEachTest { mock<OkHttpClient>() }
@@ -464,8 +474,8 @@ object DockerAPISpec : Spek({
                     on("the response not containing any error information") {
                         val responseBody = """{"StatusCode": 123}"""
 
-                        beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
-                        val exitCode by runForEachTest { api.waitForExit(container) }
+                        val call by createForEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
+                        val exitCode by runForEachTest { api.waitForExit(container, cancellationContext) }
 
                         it("returns the exit code from the container") {
                             assertThat(exitCode, equalTo(123))
@@ -473,14 +483,18 @@ object DockerAPISpec : Spek({
 
                         it("configures the HTTP client with no timeout") {
                             verify(noTimeoutClientBuilder).readTimeout(eq(0), any())
+                        }
+
+                        it("registers the API call with the cancellation context") {
+                            verify(cancellationContext).addCancellationCallback(call::cancel)
                         }
                     }
 
                     on("the response containing an empty error") {
                         val responseBody = """{"StatusCode": 123, "Error": null}"""
 
-                        beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
-                        val exitCode by runForEachTest { api.waitForExit(container) }
+                        val call by createForEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
+                        val exitCode by runForEachTest { api.waitForExit(container, cancellationContext) }
 
                         it("returns the exit code from the container") {
                             assertThat(exitCode, equalTo(123))
@@ -488,6 +502,10 @@ object DockerAPISpec : Spek({
 
                         it("configures the HTTP client with no timeout") {
                             verify(noTimeoutClientBuilder).readTimeout(eq(0), any())
+                        }
+
+                        it("registers the API call with the cancellation context") {
+                            verify(cancellationContext).addCancellationCallback(call::cancel)
                         }
                     }
                 }
@@ -498,7 +516,7 @@ object DockerAPISpec : Spek({
                     beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
 
                     it("throws an appropriate exception") {
-                        assertThat({ api.waitForExit(container) }, throws<DockerException>(withMessage("Waiting for container 'the-container-id' to exit succeeded but returned an error: Something might have gone wrong.")))
+                        assertThat({ api.waitForExit(container, cancellationContext) }, throws<DockerException>(withMessage("Waiting for container 'the-container-id' to exit succeeded but returned an error: Something might have gone wrong.")))
                     }
                 }
 
@@ -506,7 +524,7 @@ object DockerAPISpec : Spek({
                     beforeEachTest { clientWithNoTimeout.mockPost(expectedUrl, errorResponse, 418) }
 
                     it("throws an appropriate exception") {
-                        assertThat({ api.waitForExit(container) }, throws<DockerException>(withMessage("Waiting for container 'the-container-id' to exit failed: $errorMessageWithCorrectLineEndings")))
+                        assertThat({ api.waitForExit(container, cancellationContext) }, throws<DockerException>(withMessage("Waiting for container 'the-container-id' to exit failed: $errorMessageWithCorrectLineEndings")))
                     }
                 }
             }
@@ -660,11 +678,19 @@ object DockerAPISpec : Spek({
                     }
                 }
 
-                on("the container being stopped") {
+                on("the container being stopped on an older version of the Docker daemon") {
                     beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "cannot resize a stopped container: unknown"}""", 418) }
 
                     it("throws an appropriate exception") {
                         assertThat({ api.resizeContainerTTY(container, dimensions) }, throws<ContainerStoppedException>(withMessage("Resizing TTY for container 'the-container-id' failed: cannot resize a stopped container: unknown")))
+                    }
+                }
+
+                on("the container being stopped on a newer version of the Docker daemon") {
+                    beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "Container 4a83bfdf8bc3c6f2c60feb4880ea2319d58c6eeb558a21119f7493d7b95d215b is not running"}""", 418) }
+
+                    it("throws an appropriate exception") {
+                        assertThat({ api.resizeContainerTTY(container, dimensions) }, throws<ContainerStoppedException>(withMessage("Resizing TTY for container 'the-container-id' failed: Container 4a83bfdf8bc3c6f2c60feb4880ea2319d58c6eeb558a21119f7493d7b95d215b is not running")))
                     }
                 }
 
@@ -756,7 +782,7 @@ object DockerAPISpec : Spek({
                 whenever(httpClient.newBuilder()).doReturn(longTimeoutClientBuilder)
             }
 
-            val context = DockerImageBuildContext(emptySet())
+            val context = DockerImageBuildContext(setOf(DockerImageBuildContextEntry(Paths.get("/some/file"), "file")))
             val buildArgs = mapOf("someArg" to "someValue")
             val dockerfilePath = "some-Dockerfile-path"
             val imageTags = setOf("some_image_tag", "some_other_image_tag")
@@ -772,6 +798,7 @@ object DockerAPISpec : Spek({
 
             val base64EncodedJSONCredentials = "eyJyZWdpc3RyeS5jb20iOnsiaWRlbnRpdHl0b2tlbiI6InNvbWVfdG9rZW4ifX0="
             val expectedHeadersForAuthentication = Headers.Builder().set("X-Registry-Config", base64EncodedJSONCredentials).build()
+            val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
             val successResponse = """
                 |{"stream":"Step 1/5 : FROM nginx:1.13.0"}
@@ -799,7 +826,7 @@ object DockerAPISpec : Spek({
             on("the build succeeding") {
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForAuthentication) }
                 val progressReceiver by createForEachTest { ProgressReceiver() }
-                val image by runForEachTest { api.buildImage(context, buildArgs, dockerfilePath, imageTags, registryCredentials, progressReceiver::onProgressUpdate) }
+                val image by runForEachTest { api.buildImage(context, buildArgs, dockerfilePath, imageTags, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to build the image") {
                     verify(call).execute()
@@ -817,6 +844,10 @@ object DockerAPISpec : Spek({
                     assertThat(progressReceiver, receivedAllUpdatesFrom(successResponse))
                 }
 
+                it("registers the API call with the cancellation context") {
+                    verify(cancellationContext).addCancellationCallback(call::cancel)
+                }
+
                 it("returns the build image") {
                     assertThat(image, equalTo(DockerImage("sha256:24125bbc6cbe08f530e97c81ee461357fa3ba56f4d7693d7895ec86671cf3540")))
                 }
@@ -825,7 +856,7 @@ object DockerAPISpec : Spek({
             on("the build having no registry credentials") {
                 val expectedHeadersForNoAuthentication = Headers.Builder().build()
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForNoAuthentication) }
-                beforeEachTest { api.buildImage(context, buildArgs, dockerfilePath, imageTags, null, {}) }
+                beforeEachTest { api.buildImage(context, buildArgs, dockerfilePath, imageTags, null, cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to build the image with no authentication header") {
                     verify(call).execute()
@@ -839,7 +870,7 @@ object DockerAPISpec : Spek({
                     hasQueryParameter("buildargs", """{}""")
 
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithNoBuildArgs, successResponse, 200, expectedHeadersForAuthentication) }
-                beforeEachTest { api.buildImage(context, emptyMap(), dockerfilePath, imageTags, registryCredentials, {}) }
+                beforeEachTest { api.buildImage(context, emptyMap(), dockerfilePath, imageTags, registryCredentials, cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to build the image with an empty set of build args") {
                     verify(call).execute()
@@ -852,7 +883,7 @@ object DockerAPISpec : Spek({
                 }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.buildImage(context, buildArgs, dockerfilePath, imageTags, registryCredentials, {}) }, throws<ImageBuildFailedException>(
+                    assertThat({ api.buildImage(context, buildArgs, dockerfilePath, imageTags, registryCredentials, cancellationContext, {}) }, throws<ImageBuildFailedException>(
                         withMessage("Building image failed: $errorMessageWithCorrectLineEndings"))
                     )
                 }
@@ -872,7 +903,7 @@ object DockerAPISpec : Spek({
                 beforeEachTest { clientWithLongTimeout.mock("POST", expectedUrl, response, 200, expectedHeadersForAuthentication) }
 
                 it("throws an appropriate exception with all line endings corrected for the host system") {
-                    assertThat({ api.buildImage(context, buildArgs, dockerfilePath, imageTags, registryCredentials, {}) }, throws<ImageBuildFailedException>(
+                    assertThat({ api.buildImage(context, buildArgs, dockerfilePath, imageTags, registryCredentials, cancellationContext, {}) }, throws<ImageBuildFailedException>(
                         withMessage(
                             "Building image failed: The command '/bin/sh -c exit 1' returned a non-zero code: 1. Output from build process was:SYSTEM_LINE_SEPARATOR" +
                                 "Step 1/6 : FROM nginx:1.13.0SYSTEM_LINE_SEPARATOR" +
@@ -895,7 +926,7 @@ object DockerAPISpec : Spek({
                 }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.buildImage(context, buildArgs, dockerfilePath, imageTags, registryCredentials, {}) }, throws<ImageBuildFailedException>(
+                    assertThat({ api.buildImage(context, buildArgs, dockerfilePath, imageTags, registryCredentials, cancellationContext, {}) }, throws<ImageBuildFailedException>(
                         withMessage("Building image failed: daemon never sent built image ID."))
                     )
                 }
@@ -923,6 +954,7 @@ object DockerAPISpec : Spek({
 
             val base64EncodedJSONCredentials = "InNvbWUganNvbiBjcmVkZW50aWFscyI="
             val expectedHeadersForAuthentication = Headers.Builder().set("X-Registry-Auth", base64EncodedJSONCredentials).build()
+            val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
             on("the pull succeeding because the image is already present") {
                 val response = """
@@ -932,7 +964,7 @@ object DockerAPISpec : Spek({
 
                 val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
                 val progressReceiver by createForEachTest { ProgressReceiver() }
-                beforeEachTest { api.pullImage(imageName, registryCredentials, progressReceiver::onProgressUpdate) }
+                beforeEachTest { api.pullImage(imageName, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to pull the image") {
                     verify(call).execute()
@@ -944,6 +976,10 @@ object DockerAPISpec : Spek({
 
                 it("configures the HTTP client with a longer timeout to allow for the daemon to contact the registry") {
                     verify(longTimeoutClientBuilder).readTimeout(20, TimeUnit.SECONDS)
+                }
+
+                it("registers the API call with the cancellation context") {
+                    verify(cancellationContext).addCancellationCallback(call::cancel)
                 }
             }
 
@@ -959,7 +995,7 @@ object DockerAPISpec : Spek({
 
                 val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
                 val progressReceiver by createForEachTest { ProgressReceiver() }
-                beforeEachTest { api.pullImage(imageName, registryCredentials, progressReceiver::onProgressUpdate) }
+                beforeEachTest { api.pullImage(imageName, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to pull the image") {
                     verify(call).execute()
@@ -972,12 +1008,16 @@ object DockerAPISpec : Spek({
                 it("configures the HTTP client with a longer timeout to allow for the daemon to contact the registry") {
                     verify(longTimeoutClientBuilder).readTimeout(20, TimeUnit.SECONDS)
                 }
+
+                it("registers the API call with the cancellation context") {
+                    verify(cancellationContext).addCancellationCallback(call::cancel)
+                }
             }
 
             on("the pull request having no registry credentials") {
                 val expectedHeadersForNoAuthentication = Headers.Builder().build()
                 val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, "", 200, expectedHeadersForNoAuthentication) }
-                beforeEachTest { api.pullImage(imageName, null, {}) }
+                beforeEachTest { api.pullImage(imageName, null, cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to pull the image with no authentication header") {
                     verify(call).execute()
@@ -988,7 +1028,7 @@ object DockerAPISpec : Spek({
                 beforeEachTest { clientWithLongTimeout.mockPost(expectedUrl, errorResponse, 418, expectedHeadersForAuthentication) }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.pullImage(imageName, registryCredentials, {}) }, throws<ImagePullFailedException>(
+                    assertThat({ api.pullImage(imageName, registryCredentials, cancellationContext, {}) }, throws<ImagePullFailedException>(
                         withMessage("Pulling image 'some-image' failed: $errorMessageWithCorrectLineEndings"))
                     )
                 }
@@ -1008,7 +1048,7 @@ object DockerAPISpec : Spek({
                 val progressReceiver = ProgressReceiver()
 
                 it("throws an appropriate exception with all line endings corrected for the host system") {
-                    assertThat({ api.pullImage(imageName, registryCredentials, progressReceiver::onProgressUpdate) }, throws<ImagePullFailedException>(
+                    assertThat({ api.pullImage(imageName, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }, throws<ImagePullFailedException>(
                         withMessage("Pulling image 'some-image' failed: Server error: 404 trying to fetch remote history for some-image.SYSTEM_LINE_SEPARATORMore details on following line."))
                     )
                 }

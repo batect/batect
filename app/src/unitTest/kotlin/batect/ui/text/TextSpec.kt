@@ -42,6 +42,14 @@ object TextSpec : Spek({
                 }
             }
 
+            on("creating bold text from a single text element") {
+                val text = Text.bold(Text("Some text"))
+
+                it("returns a bold text element") {
+                    assertThat(text, equalTo(Text("Some text", bold = true)))
+                }
+            }
+
             on("creating bold text from a series of unformatted text elements") {
                 val text = Text.bold(Text("Some") + Text("text"))
 
@@ -90,6 +98,27 @@ object TextSpec : Spek({
 
                 on("creating $colorName text from a string") {
                     val text = producer("Some text")
+
+                    it("returns a $colorName text element") {
+                        assertThat(text, equalTo(Text("Some text", color = color)))
+                    }
+                }
+            }
+
+            mapOf<ConsoleColor, (Text) -> Text>(
+                ConsoleColor.Black to ::black,
+                ConsoleColor.Red to ::red,
+                ConsoleColor.Green to ::green,
+                ConsoleColor.Yellow to ::yellow,
+                ConsoleColor.Blue to ::blue,
+                ConsoleColor.Magenta to ::magenta,
+                ConsoleColor.Cyan to ::cyan,
+                ConsoleColor.White to ::white
+            ).forEach { (color, producer) ->
+                val colorName = color.name.toLowerCase()
+
+                on("creating $colorName text from a string") {
+                    val text = producer(Text("Some text"))
 
                     it("returns a $colorName text element") {
                         assertThat(text, equalTo(Text("Some text", color = color)))

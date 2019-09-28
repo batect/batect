@@ -21,6 +21,7 @@ import batect.config.io.deserializers.tryToDeserializeWith
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.CompositeDecoder
 import kotlinx.serialization.Decoder
+import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
@@ -29,7 +30,7 @@ import kotlinx.serialization.Serializer
 import kotlinx.serialization.internal.SerialClassDescImpl
 import kotlinx.serialization.internal.StringDescriptor
 
-@Serializable
+@Serializable(with = PortMapping.Companion::class)
 data class PortMapping(
     val localPort: Int,
     val containerPort: Int
@@ -148,6 +149,15 @@ data class PortMapping(
             }
 
             return PortMapping(localPort, containerPort)
+        }
+
+        override fun serialize(encoder: Encoder, obj: PortMapping) {
+            val output = encoder.beginStructure(descriptor)
+
+            output.encodeIntElement(descriptor, localPortFieldIndex, obj.localPort)
+            output.encodeIntElement(descriptor, containerPortFieldIndex, obj.containerPort)
+
+            output.endStructure(descriptor)
         }
     }
 }

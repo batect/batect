@@ -158,8 +158,6 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--output=fancy", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Fancy, taskName = "some-task", dockerHost = defaultDockerHost),
             listOf("--no-color", "some-task") to CommandLineOptions(disableColorOutput = true, taskName = "some-task", dockerHost = defaultDockerHost),
             listOf("--no-update-notification", "some-task") to CommandLineOptions(disableUpdateNotification = true, taskName = "some-task", dockerHost = defaultDockerHost),
-            listOf("--level-of-parallelism=900", "some-task") to CommandLineOptions(levelOfParallelism = 900, taskName = "some-task", dockerHost = defaultDockerHost),
-            listOf("-p=900", "some-task") to CommandLineOptions(levelOfParallelism = 900, taskName = "some-task", dockerHost = defaultDockerHost),
             listOf("--no-cleanup-after-failure", "some-task") to CommandLineOptions(disableCleanupAfterFailure = true, taskName = "some-task", dockerHost = defaultDockerHost),
             listOf("--no-cleanup-after-success", "some-task") to CommandLineOptions(disableCleanupAfterSuccess = true, taskName = "some-task", dockerHost = defaultDockerHost),
             listOf("--no-cleanup", "some-task") to CommandLineOptions(disableCleanupAfterFailure = true, disableCleanupAfterSuccess = true, taskName = "some-task", dockerHost = defaultDockerHost),

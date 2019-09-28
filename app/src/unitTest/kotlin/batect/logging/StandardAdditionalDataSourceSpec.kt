@@ -22,6 +22,9 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import jnr.posix.POSIX
+import kotlinx.serialization.internal.IntSerializer
+import kotlinx.serialization.internal.LongSerializer
+import kotlinx.serialization.internal.StringSerializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -42,15 +45,15 @@ object StandardAdditionalDataSourceSpec : Spek({
             val data = source.getAdditionalData()
 
             it("includes the current process' ID") {
-                assertThat(data, hasKeyWithValue("@processId", 456))
+                assertThat(data, hasKeyWithValue("@processId", JsonableObject(456, IntSerializer)))
             }
 
             it("includes the current thread's ID") {
-                assertThat(data, hasKeyWithValue("@threadId", 123L))
+                assertThat(data, hasKeyWithValue("@threadId", JsonableObject(123L, LongSerializer)))
             }
 
             it("includes the current thread's name") {
-                assertThat(data, hasKeyWithValue("@threadName", "The awesome thread"))
+                assertThat(data, hasKeyWithValue("@threadName", JsonableObject("The awesome thread", StringSerializer)))
             }
         }
     }

@@ -22,14 +22,19 @@ import batect.docker.pull.DockerImagePullProgress
 import batect.docker.pull.DockerImagePullProgressReporter
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.run.ContainerIOStreamer
-import batect.docker.run.ContainerKiller
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
+import batect.docker.run.InputConnection
+import batect.docker.run.OutputConnection
+import batect.execution.CancellationContext
 import batect.logging.Logger
 import batect.os.ConsoleManager
+import batect.os.Dimensions
 import batect.utils.Version
 import batect.utils.VersionComparisonMode
 import kotlinx.serialization.json.JsonObject
+import okio.Sink
+import okio.Source
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.LinkOption
@@ -47,7 +52,6 @@ class DockerClient(
     private val dockerfileParser: DockerfileParser,
     private val waiter: ContainerWaiter,
     private val ioStreamer: ContainerIOStreamer,
-    private val killer: ContainerKiller,
     private val ttyManager: ContainerTTYManager,
     private val logger: Logger,
     private val imagePullProgressReporterFactory: () -> DockerImagePullProgressReporter = ::DockerImagePullProgressReporter
@@ -57,6 +61,7 @@ class DockerClient(
         buildArgs: Map<String, String>,
         dockerfilePath: String,
         imageTags: Set<String>,
+        cancellationContext: CancellationContext,
         onStatusUpdate: (DockerImageBuildProgress) -> Unit
     ): DockerImage {
         logger.info {
@@ -84,7 +89,7 @@ class DockerClient(
             val reporter = imagePullProgressReporterFactory()
             var lastStepProgressUpdate: DockerImageBuildProgress? = null
 
-            val image = api.buildImage(context, buildArgs, dockerfilePath, imageTags, credentials) { line ->
+            val image = api.buildImage(context, buildArgs, dockerfilePath, imageTags, credentials, cancellationContext) { line ->
                 logger.debug {
                     message("Received output from Docker during image build.")
                     data("outputLine", line.toString())
@@ -117,27 +122,29 @@ class DockerClient(
     }
 
     fun create(creationRequest: DockerContainerCreationRequest): DockerContainer = api.createContainer(creationRequest)
-    fun start(container: DockerContainer) = api.startContainer(container)
     fun stop(container: DockerContainer) = api.stopContainer(container)
     fun remove(container: DockerContainer) = api.removeContainer(container)
 
-    fun run(container: DockerContainer): DockerContainerRunResult {
+    fun run(container: DockerContainer, stdout: Sink?, stdin: Source?, cancellationContext: CancellationContext, frameDimensions: Dimensions, onStarted: () -> Unit): DockerContainerRunResult {
         logger.info {
             message("Running container.")
             data("container", container)
         }
 
-        val exitCodeSource = waiter.startWaitingForContainerToExit(container)
+        if (stdout == null && stdin != null) {
+            throw DockerException("Attempted to stream input to container without streaming container output.")
+        }
 
-        api.attachToContainerOutput(container).use { outputStream ->
-            api.attachToContainerInput(container).use { inputStream ->
+        val exitCodeSource = waiter.startWaitingForContainerToExit(container, cancellationContext)
+
+        connectContainerOutput(container, stdout).use { outputConnection ->
+            connectContainerInput(container, stdin).use { inputConnection ->
                 api.startContainer(container)
+                onStarted()
 
-                ttyManager.monitorForSizeChanges(container).use {
-                    killer.killContainerOnSigint(container).use {
-                        consoleManager.enterRawMode().use {
-                            ioStreamer.stream(outputStream, inputStream)
-                        }
+                ttyManager.monitorForSizeChanges(container, frameDimensions).use {
+                    startRawModeIfRequired(stdin).use {
+                        ioStreamer.stream(outputConnection, inputConnection, cancellationContext)
                     }
                 }
             }
@@ -146,14 +153,39 @@ class DockerClient(
         val exitCode = exitCodeSource.get()
 
         logger.info {
-            message("Container run finished.")
+            message("Container exited.")
+            data("container", container)
             data("exitCode", exitCode)
         }
 
         return DockerContainerRunResult(exitCode)
     }
 
-    fun waitForHealthStatus(container: DockerContainer): HealthStatus {
+    private fun connectContainerOutput(container: DockerContainer, stdout: Sink?): OutputConnection {
+        if (stdout == null) {
+            return OutputConnection.Disconnected
+        }
+
+        return OutputConnection.Connected(api.attachToContainerOutput(container), stdout)
+    }
+
+    private fun connectContainerInput(container: DockerContainer, stdin: Source?): InputConnection {
+        if (stdin == null) {
+            return InputConnection.Disconnected
+        }
+
+        return InputConnection.Connected(stdin, api.attachToContainerInput(container))
+    }
+
+    private fun startRawModeIfRequired(stdin: Source?): AutoCloseable {
+        if (stdin == null) {
+            return AutoCloseable { }
+        }
+
+        return consoleManager.enterRawMode()
+    }
+
+    fun waitForHealthStatus(container: DockerContainer, cancellationContext: CancellationContext): HealthStatus {
         logger.info {
             message("Checking health status of container.")
             data("container", container)
@@ -174,17 +206,17 @@ class DockerClient(
             val checkPeriod = (healthCheckInfo.interval + healthCheckInfo.timeout).multipliedBy(healthCheckInfo.retries.toLong())
             val overheadMargin = Duration.ofSeconds(1)
             val timeout = healthCheckInfo.startPeriod + checkPeriod + overheadMargin
-            val event = api.waitForNextEventForContainer(container, setOf("die", "health_status"), timeout)
+            val event = api.waitForNextEventForContainer(container, setOf("die", "health_status"), timeout, cancellationContext)
 
             logger.info {
                 message("Received event notification from Docker.")
                 data("event", event)
             }
 
-            when {
-                event.status == "health_status: healthy" -> return HealthStatus.BecameHealthy
-                event.status == "health_status: unhealthy" -> return HealthStatus.BecameUnhealthy
-                event.status == "die" -> return HealthStatus.Exited
+            return when {
+                event.status == "health_status: healthy" -> HealthStatus.BecameHealthy
+                event.status == "health_status: unhealthy" -> HealthStatus.BecameUnhealthy
+                event.status == "die" -> HealthStatus.Exited
                 else -> throw ContainerHealthCheckException("Unexpected event received: ${event.status}")
             }
         } catch (e: ContainerInspectionFailedException) {
@@ -231,13 +263,13 @@ class DockerClient(
         }
     }
 
-    fun pullImage(imageName: String, onProgressUpdate: (DockerImagePullProgress) -> Unit): DockerImage {
+    fun pullImage(imageName: String, cancellationContext: CancellationContext, onProgressUpdate: (DockerImagePullProgress) -> Unit): DockerImage {
         try {
             if (!api.hasImage(imageName)) {
                 val credentials = credentialsProvider.getCredentials(imageName)
                 val reporter = imagePullProgressReporterFactory()
 
-                api.pullImage(imageName, credentials) { progress ->
+                api.pullImage(imageName, credentials, cancellationContext) { progress ->
                     val progressUpdate = reporter.processProgressUpdate(progress)
 
                     if (progressUpdate != null) {

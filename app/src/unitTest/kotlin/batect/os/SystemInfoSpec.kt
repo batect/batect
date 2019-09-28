@@ -17,12 +17,14 @@
 package batect.os
 
 import batect.testutils.createForEachTest
+import batect.testutils.equalTo
 import batect.testutils.on
 import batect.testutils.runForEachTest
+import batect.utils.Json
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import kotlinx.serialization.json.JsonLiteral
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.util.Properties
@@ -165,6 +167,42 @@ object SystemInfoSpec : Spek({
 
             it("returns the system's line separator") {
                 assertThat(lineSeparator, equalTo("some-long-line-separator"))
+            }
+        }
+
+        on("serializing system info") {
+            val json by runForEachTest { Json.parser.toJson(SystemInfo.serializer(), SystemInfo(nativeMethods, systemProperties)).jsonObject }
+
+            it("only includes the expected fields") {
+                assertThat(json.keys, equalTo(setOf("operatingSystem", "jvmVersion", "osVersion", "homeDirectory", "lineSeparator", "tempDirectory", "userName")))
+            }
+
+            it("includes the operating system") {
+                assertThat(json["operatingSystem"], equalTo(JsonLiteral("Other")))
+            }
+
+            it("includes the JVM version") {
+                assertThat(json["jvmVersion"], equalTo(JsonLiteral("Awesome JVMs, Inc. Best JVM Ever 1.2.3")))
+            }
+
+            it("includes the operating system version") {
+                assertThat(json["osVersion"], equalTo(JsonLiteral("Best OS Ever 4.5.6 (x86)")))
+            }
+
+            it("includes the home directory") {
+                assertThat(json["homeDirectory"], equalTo(JsonLiteral("/some/home/dir")))
+            }
+
+            it("includes the line separator") {
+                assertThat(json["lineSeparator"], equalTo(JsonLiteral("some-long-line-separator")))
+            }
+
+            it("includes the temp directory") {
+                assertThat(json["tempDirectory"], equalTo(JsonLiteral("/some/temp/dir")))
+            }
+
+            it("includes the user's user name") {
+                assertThat(json["userName"], equalTo(JsonLiteral("awesome-user")))
             }
         }
     }

@@ -27,8 +27,9 @@ class TaskMap(contents: Iterable<Task>) : NamedObjectMap<Task>("task", contents)
     override fun nameFor(value: Task): String = value.name
 
     @Serializer(forClass = TaskMap::class)
-    companion object : NamedObjectMapDeserializer<TaskMap, Task>(Task.serializer()), KSerializer<TaskMap> {
+    companion object : NamedObjectMapSerializer<TaskMap, Task>(Task.serializer()), KSerializer<TaskMap> {
         override fun addName(name: String, element: Task): Task = element.copy(name = name)
+        override fun getName(element: Task): String = element.name
         override fun createCollection(elements: Set<Task>): TaskMap = TaskMap(elements)
 
         override val descriptor: SerialDescriptor = HashMapClassDesc(keySerializer.descriptor, elementSerializer.descriptor)

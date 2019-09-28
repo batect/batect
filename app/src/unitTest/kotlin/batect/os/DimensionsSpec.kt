@@ -14,25 +14,31 @@
    limitations under the License.
 */
 
-package batect.cli.options.defaultvalues
+package batect.os
 
+import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object LevelOfParallelismDefaultValueProviderSpec : Spek({
-    describe("a 'level of parallelism' default value provider") {
-        val numberOfCPUs = Runtime.getRuntime().availableProcessors()
-        val expectedLevelOfParallelism = numberOfCPUs * 2
-        val provider = LevelOfParallelismDefaultValueProvider
+object DimensionsSpec : Spek({
+    describe("a set of dimensions") {
+        describe("adding dimensions") {
+            val first = Dimensions(50, 60)
+            val second = Dimensions(5, 6)
 
-        it("returns two times the number of CPUs as the default value") {
-            assertThat(provider.value, equalTo(expectedLevelOfParallelism))
+            it("adds the widths and heights") {
+                assertThat(first + second, equalTo(Dimensions(55, 66)))
+            }
         }
 
-        it("has a human-readable description of the value") {
-            assertThat(provider.description, equalTo("defaults to $expectedLevelOfParallelism, which is two times the number of CPU cores available"))
+        describe("subtracting dimensions") {
+            val first = Dimensions(50, 60)
+            val second = Dimensions(5, 6)
+
+            it("subtracts the widths and heights") {
+                assertThat(first - second, equalTo(Dimensions(45, 54)))
+            }
         }
     }
 })

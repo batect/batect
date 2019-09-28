@@ -14,18 +14,10 @@
    limitations under the License.
 */
 
-package batect.docker.run
+package batect.execution.model.events
 
-import batect.docker.DockerAPI
-import batect.docker.DockerContainer
-import batect.os.SignalListener
-import jnr.constants.platform.Signal
+import batect.execution.model.steps.TaskStep
 
-class ContainerKiller(
-    private val api: DockerAPI,
-    private val listener: SignalListener
-) {
-    fun killContainerOnSigint(container: DockerContainer): AutoCloseable = listener.start(Signal.SIGINT) {
-        api.sendSignalToContainer(container, Signal.SIGINT)
-    }
+data class StepStartingEvent(val step: TaskStep) : TaskEvent(true) {
+    override fun toString() = "${this::class.simpleName}(step: $step)"
 }

@@ -27,17 +27,6 @@ Example:
 ./batect --no-cleanup-after-failure the-task
 ```
 
-### Override the default level of parallelism <small>(`--level-of-parallelism` or `-p`)</small>
-
-batect runs whatever operations it can in parallel to make tasks run as fast as possible. It automatically detects an appropriate
-number of operations to run in parallel based on your system. Use this option to override this default value.
-
-Example:
-
-```shell
-./batect --level-of-parallelism 10 the-task
-```
-
 ### Disable propagation of proxy-related environment variables <small>(`--no-proxy-vars`)</small>
 
 By default, batect will automatically propagate proxy-related environment variables as described [here](tips/Proxies.md).
@@ -141,11 +130,27 @@ Passing this flag will disable both the update check and notification.
 
 ### Force a particular output style <small>(`--output` or `-o`)</small>
 
-batect offers three styles of output:
+batect offers four styles of output:
 
-* `fancy` is best for interactive use, providing very clean output about the current state of execution
-* `simple` is best for non-interactive use (eg. on CI), providing a log of what happened
+* `fancy` is best for interactive use, providing very clean output about the current state of execution and showing output from only the task container
+
+    ??? example "`fancy` output mode example"
+        <asciinema-player src="/assets/outputstyles/fancy.cast" cols="204" rows="50" preload="true" poster="npt:2.5"></asciinema-player>
+
+* `simple` is best for non-interactive use (eg. on CI), providing a log of what happened and showing output from only the task container
+
+    ??? example "`simple` output mode example"
+        <asciinema-player src="/assets/outputstyles/simple.cast" cols="204" rows="50" preload="true" poster="npt:2.5"></asciinema-player>
+
+* `all` displays output from all containers
+
+    ??? example "`all` output mode example"
+        <asciinema-player src="/assets/outputstyles/interleaved.cast" cols="204" rows="50" preload="true" poster="npt:2.5"></asciinema-player>
+
 * `quiet` displays only the output from the task and error messages from batect
+
+    ??? example "`quiet` output mode example"
+        <asciinema-player src="/assets/outputstyles/quiet.cast" cols="204" rows="50" preload="true" poster="npt:7"></asciinema-player>
 
 By default, batect will automatically pick an output style that it believes is appropriate for the environment it is running in -
 `fancy` if it believes your environment supports it, or `simple` otherwise.

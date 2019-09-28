@@ -21,18 +21,16 @@ import batect.docker.defaultRegistryName
 // The logic for this is based on https://github.com/docker/distribution/blob/master/reference/normalize.go.
 class DockerRegistryDomainResolver {
     fun resolveDomainForImage(imageName: String): String {
-        val parts = imageName.split('/')
+        val possibleRegistryName = imageName.substringBefore("/", defaultRegistryName)
 
-        if (parts.size < 3) {
+        if (possibleRegistryName == "index.docker.io") {
             return defaultRegistryName
         }
 
-        val registryName = parts[0]
-
-        if (registryName == "index.docker.io") {
-            return defaultRegistryName
+        if (possibleRegistryName.contains('.') || possibleRegistryName.contains(':') || possibleRegistryName == "localhost") {
+            return possibleRegistryName
         }
 
-        return registryName
+        return defaultRegistryName
     }
 }

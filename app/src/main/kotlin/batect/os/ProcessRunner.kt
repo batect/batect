@@ -33,7 +33,7 @@ class ProcessRunner(private val logger: Logger) {
     fun runWithStdinAttached(command: Iterable<String>): ProcessOutput {
         logger.debug {
             message("Starting process.")
-            data("command", command)
+            data("command", command.toList())
         }
 
         val process = ProcessBuilder(command.toList())
@@ -47,7 +47,7 @@ class ProcessRunner(private val logger: Logger) {
 
         logger.debug {
             message("Process exited.")
-            data("command", command)
+            data("command", command.toList())
             data("exitCode", exitCode)
             data("output", output)
         }
@@ -58,7 +58,7 @@ class ProcessRunner(private val logger: Logger) {
     fun runAndCaptureOutput(command: Iterable<String>, stdin: String = ""): ProcessOutput {
         logger.debug {
             message("Starting process.")
-            data("command", command)
+            data("command", command.toList())
         }
 
         try {
@@ -75,7 +75,7 @@ class ProcessRunner(private val logger: Logger) {
 
             logger.debug {
                 message("Process exited.")
-                data("command", command)
+                data("command", command.toList())
                 data("exitCode", exitCode)
                 data("output", output)
             }

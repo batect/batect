@@ -16,9 +16,9 @@
 
 package batect.config
 
-import batect.config.io.deserializers.DependencySetDeserializer
-import batect.config.io.deserializers.EnvironmentDeserializer
-import batect.config.io.deserializers.PrerequisiteListDeserializer
+import batect.config.io.deserializers.DependencySetSerializer
+import batect.config.io.deserializers.EnvironmentSerializer
+import batect.config.io.deserializers.PrerequisiteListSerializer
 import batect.os.Command
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -30,15 +30,15 @@ data class Task(
     @SerialName("run") val runConfiguration: TaskRunConfiguration,
     val description: String = "",
     val group: String = "",
-    @SerialName("dependencies") @Serializable(with = DependencySetDeserializer::class) val dependsOnContainers: Set<String> = emptySet(),
-    @SerialName("prerequisites") @Serializable(with = PrerequisiteListDeserializer::class) val prerequisiteTasks: List<String> = emptyList()
+    @SerialName("dependencies") @Serializable(with = DependencySetSerializer::class) val dependsOnContainers: Set<String> = emptySet(),
+    @SerialName("prerequisites") @Serializable(with = PrerequisiteListSerializer::class) val prerequisiteTasks: List<String> = emptyList()
 )
 
 @Serializable
 data class TaskRunConfiguration(
     val container: String,
     val command: Command? = null,
-    @SerialName("environment") @Serializable(with = EnvironmentDeserializer::class) val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression> = emptyMap(),
+    @SerialName("environment") @Serializable(with = EnvironmentSerializer::class) val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression> = emptyMap(),
     @SerialName("ports") val additionalPortMappings: Set<PortMapping> = emptySet(),
     @SerialName("working_directory") val workingDiretory: String? = null
 )

@@ -23,9 +23,9 @@ import batect.execution.RunOptions
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.RunningContainerExitedEvent
+import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.CleanupStep
-import batect.execution.model.steps.CreateTaskNetworkStep
 import batect.execution.model.steps.DeleteTaskNetworkStep
 import batect.execution.model.steps.RunContainerStep
 import batect.testutils.createForEachTest
@@ -56,99 +56,10 @@ object FancyEventLoggerSpec : Spek({
         val errorConsole by createForEachTest { mock<Console>() }
         val startupProgressDisplay by createForEachTest { mock<StartupProgressDisplay>() }
         val cleanupProgressDisplay by createForEachTest { mock<CleanupProgressDisplay>() }
+        val taskContainer by createForEachTest { Container("task-container", imageSourceDoesNotMatter()) }
 
         val logger by createForEachTest {
-            FancyEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole, startupProgressDisplay, cleanupProgressDisplay)
-        }
-
-        describe("when logging that a step is starting") {
-            val container = Container("task-container", imageSourceDoesNotMatter())
-            val dockerContainer = DockerContainer("some-id")
-
-            on("while the task is starting up") {
-                val step = CreateTaskNetworkStep
-                beforeEachTest { logger.onStartingTaskStep(step) }
-
-                it("notifies the startup progress display of the step and then reprints it") {
-                    inOrder(startupProgressDisplay) {
-                        verify(startupProgressDisplay).onStepStarting(step)
-                        verify(startupProgressDisplay).print(console)
-                    }
-                }
-
-                it("does not print the cleanup progress display") {
-                    verify(cleanupProgressDisplay, never()).print(console)
-                }
-            }
-
-            on("and that step is to run the task container") {
-                val step = RunContainerStep(container, dockerContainer)
-                beforeEachTest { logger.onStartingTaskStep(step) }
-
-                it("notifies the startup progress display of the step, reprints it and then prints a blank line") {
-                    inOrder(startupProgressDisplay, console) {
-                        verify(startupProgressDisplay).onStepStarting(step)
-                        verify(startupProgressDisplay).print(console)
-                        verify(console).println()
-                    }
-                }
-
-                it("does not print the cleanup progress display") {
-                    verify(cleanupProgressDisplay, never()).print(console)
-                }
-            }
-
-            given("that step is a cleanup step") {
-                val cleanupStep = mock<CleanupStep>()
-
-                on("and clean up has not started yet") {
-                    beforeEachTest { logger.onStartingTaskStep(cleanupStep) }
-
-                    it("prints a blank line before printing the cleanup progress") {
-                        inOrder(console, cleanupProgressDisplay) {
-                            verify(console).println()
-                            verify(cleanupProgressDisplay).print(console)
-                        }
-                    }
-
-                    it("does not attempt to clear the existing cleanup progress") {
-                        verify(cleanupProgressDisplay, never()).clear(console)
-                    }
-
-                    it("does not notify the startup progress display") {
-                        verify(startupProgressDisplay, never()).onStepStarting(cleanupStep)
-                    }
-
-                    it("does not reprint the startup progress display") {
-                        verify(startupProgressDisplay, never()).print(console)
-                    }
-                }
-
-                on("and clean up has already started") {
-                    beforeEachTest {
-                        val previousCleanupStep = mock<CleanupStep>()
-                        logger.onStartingTaskStep(previousCleanupStep)
-                        reset(cleanupProgressDisplay)
-
-                        logger.onStartingTaskStep(cleanupStep)
-                    }
-
-                    it("clears the existing cleanup progress before reprinting the cleanup progress") {
-                        inOrder(cleanupProgressDisplay) {
-                            verify(cleanupProgressDisplay).clear(console)
-                            verify(cleanupProgressDisplay).print(console)
-                        }
-                    }
-
-                    it("does not notify the startup progress display") {
-                        verify(startupProgressDisplay, never()).onStepStarting(cleanupStep)
-                    }
-
-                    it("does not reprint the startup progress display") {
-                        verify(startupProgressDisplay, never()).print(console)
-                    }
-                }
-            }
+            FancyEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole, startupProgressDisplay, cleanupProgressDisplay, taskContainer, mock())
         }
 
         describe("when logging an event") {
@@ -172,36 +83,96 @@ object FancyEventLoggerSpec : Spek({
                 }
             }
 
-            on("when the task finishes") {
-                val container = Container("task-container", imageSourceDoesNotMatter())
-                val event = RunningContainerExitedEvent(container, 123)
+            describe("when event is a notification that a container is starting") {
+                on("the event being a notification that the task container is starting") {
+                    val dockerContainer = DockerContainer("some-id")
+                    val event by createForEachTest { StepStartingEvent(RunContainerStep(taskContainer, dockerContainer)) }
+                    beforeEachTest { logger.postEvent(event) }
 
-                beforeEachTest {
-                    logger.onStartingTaskStep(RunContainerStep(container, DockerContainer("some-id")))
-                    reset(startupProgressDisplay)
-                    reset(cleanupProgressDisplay)
+                    it("notifies the startup progress display of the event, reprints it and then prints a blank line") {
+                        inOrder(startupProgressDisplay, console) {
+                            verify(startupProgressDisplay).onEventPosted(event)
+                            verify(startupProgressDisplay).print(console)
+                            verify(console).println()
+                        }
+                    }
 
-                    logger.postEvent(event)
-                }
-
-                it("does not reprint the startup progress display") {
-                    verify(startupProgressDisplay, never()).print(any())
-                }
-
-                it("does not notify the startup progress display of the event") {
-                    verify(startupProgressDisplay, never()).onEventPosted(event)
-                }
-
-                it("notifies the cleanup progress display of the event before printing it") {
-                    inOrder(cleanupProgressDisplay, console) {
-                        verify(cleanupProgressDisplay).onEventPosted(event)
-                        verify(console).println()
-                        verify(cleanupProgressDisplay).print(console)
+                    it("does not print the cleanup progress display") {
+                        verify(cleanupProgressDisplay, never()).print(console)
                     }
                 }
 
-                it("does attempt to clear the previous cleanup progress") {
-                    verify(cleanupProgressDisplay, never()).clear(console)
+                on("the event being a notification that another container is starting") {
+                    val container = Container("some-container", imageSourceDoesNotMatter())
+                    val dockerContainer = DockerContainer("some-id")
+                    val event by createForEachTest { StepStartingEvent(RunContainerStep(container, dockerContainer)) }
+                    beforeEachTest { logger.postEvent(event) }
+
+                    it("notifies the startup progress display of the event, reprints it and then prints a blank line") {
+                        inOrder(startupProgressDisplay) {
+                            verify(startupProgressDisplay).onEventPosted(event)
+                            verify(startupProgressDisplay).print(console)
+                        }
+                    }
+
+                    it("does not print a blank line") {
+                        verify(console, never()).println()
+                    }
+
+                    it("does not print the cleanup progress display") {
+                        verify(cleanupProgressDisplay, never()).print(console)
+                    }
+                }
+            }
+
+            describe("the event that a container has exited") {
+                given("the container is the task container") {
+                    val event by createForEachTest { RunningContainerExitedEvent(taskContainer, 123) }
+
+                    beforeEachTest {
+                        logger.postEvent(StepStartingEvent(RunContainerStep(taskContainer, DockerContainer("some-id"))))
+                        reset(startupProgressDisplay)
+                        reset(cleanupProgressDisplay)
+
+                        logger.postEvent(event)
+                    }
+
+                    it("does not reprint the startup progress display") {
+                        verify(startupProgressDisplay, never()).print(any())
+                    }
+
+                    it("does not notify the startup progress display of the event") {
+                        verify(startupProgressDisplay, never()).onEventPosted(event)
+                    }
+
+                    it("notifies the cleanup progress display of the event before printing it") {
+                        inOrder(cleanupProgressDisplay, console) {
+                            verify(cleanupProgressDisplay).onEventPosted(event)
+                            verify(console).println()
+                            verify(cleanupProgressDisplay).print(console)
+                        }
+                    }
+
+                    it("does not attempt to clear the previous cleanup progress") {
+                        verify(cleanupProgressDisplay, never()).clear(console)
+                    }
+                }
+
+                given("the container is not the task container") {
+                    val container by createForEachTest { Container("other-container", imageSourceDoesNotMatter()) }
+                    val event by createForEachTest { RunningContainerExitedEvent(container, 123) }
+
+                    beforeEachTest {
+                        logger.postEvent(StepStartingEvent(RunContainerStep(container, DockerContainer("some-id"))))
+                        reset(startupProgressDisplay)
+                        reset(cleanupProgressDisplay)
+
+                        logger.postEvent(event)
+                    }
+
+                    it("does not print the cleanup progress") {
+                        verify(cleanupProgressDisplay, never()).print(console)
+                    }
                 }
             }
 
@@ -209,9 +180,8 @@ object FancyEventLoggerSpec : Spek({
                 val event = ContainerRemovedEvent(Container("some-container", imageSourceDoesNotMatter()))
 
                 beforeEachTest {
-                    val container = Container("task-container", imageSourceDoesNotMatter())
-                    logger.onStartingTaskStep(RunContainerStep(container, DockerContainer("some-id")))
-                    logger.postEvent(RunningContainerExitedEvent(container, 123))
+                    logger.postEvent(StepStartingEvent(RunContainerStep(taskContainer, DockerContainer("some-id"))))
+                    logger.postEvent(RunningContainerExitedEvent(taskContainer, 123))
                     reset(startupProgressDisplay)
                     reset(cleanupProgressDisplay)
 
@@ -241,10 +211,63 @@ object FancyEventLoggerSpec : Spek({
                 }
             }
 
+            given("the event is a notification that a cleanup step is starting") {
+                val cleanupStep = mock<CleanupStep>()
+                val cleanupStepEvent = StepStartingEvent(cleanupStep)
+
+                on("and clean up has not started yet") {
+                    beforeEachTest { logger.postEvent(cleanupStepEvent) }
+
+                    it("prints a blank line before printing the cleanup progress") {
+                        inOrder(console, cleanupProgressDisplay) {
+                            verify(console).println()
+                            verify(cleanupProgressDisplay).print(console)
+                        }
+                    }
+
+                    it("does not attempt to clear the existing cleanup progress") {
+                        verify(cleanupProgressDisplay, never()).clear(console)
+                    }
+
+                    it("does not notify the startup progress display") {
+                        verify(startupProgressDisplay, never()).onEventPosted(cleanupStepEvent)
+                    }
+
+                    it("does not reprint the startup progress display") {
+                        verify(startupProgressDisplay, never()).print(console)
+                    }
+                }
+
+                on("and clean up has already started") {
+                    beforeEachTest {
+                        val previousCleanupStep = mock<CleanupStep>()
+                        logger.postEvent(StepStartingEvent(previousCleanupStep))
+                        reset(cleanupProgressDisplay)
+
+                        logger.postEvent(cleanupStepEvent)
+                    }
+
+                    it("clears the existing cleanup progress before reprinting the cleanup progress") {
+                        inOrder(cleanupProgressDisplay) {
+                            verify(cleanupProgressDisplay).clear(console)
+                            verify(cleanupProgressDisplay).print(console)
+                        }
+                    }
+
+                    it("does not notify the startup progress display") {
+                        verify(startupProgressDisplay, never()).onEventPosted(cleanupStepEvent)
+                    }
+
+                    it("does not reprint the startup progress display") {
+                        verify(startupProgressDisplay, never()).print(console)
+                    }
+                }
+            }
+
             given("a cleanup step has started") {
                 beforeEachTest {
                     val step = mock<CleanupStep>()
-                    logger.onStartingTaskStep(step)
+                    logger.postEvent(StepStartingEvent(step))
                     reset(startupProgressDisplay)
                     reset(cleanupProgressDisplay)
                 }
@@ -309,7 +332,8 @@ object FancyEventLoggerSpec : Spek({
 
                 given("clean up has already started") {
                     beforeEachTest {
-                        logger.onStartingTaskStep(DeleteTaskNetworkStep(DockerNetwork("some-network-id")))
+                        val step = DeleteTaskNetworkStep(DockerNetwork("some-network-id"))
+                        logger.postEvent(StepStartingEvent(step))
                         reset(errorConsole)
                         reset(console)
                         reset(cleanupProgressDisplay)

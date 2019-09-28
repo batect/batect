@@ -26,11 +26,14 @@ import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerInputStream
-import batect.docker.run.ContainerKiller
 import batect.docker.run.ContainerOutputStream
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
+import batect.docker.run.InputConnection
+import batect.docker.run.OutputConnection
+import batect.execution.CancellationContext
 import batect.os.ConsoleManager
+import batect.os.Dimensions
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
@@ -57,6 +60,8 @@ import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import kotlinx.serialization.json.JsonObject
+import okio.Sink
+import okio.Source
 import org.mockito.invocation.InvocationOnMock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -74,12 +79,11 @@ object DockerClientSpec : Spek({
         val dockerfileParser by createForEachTest { mock<DockerfileParser>() }
         val waiter by createForEachTest { mock<ContainerWaiter>() }
         val ioStreamer by createForEachTest { mock<ContainerIOStreamer>() }
-        val killer by createForEachTest { mock<ContainerKiller>() }
         val ttyManager by createForEachTest { mock<ContainerTTYManager>() }
         val logger by createLoggerForEachTest()
         val imagePullProgressReporter by createForEachTest { mock<DockerImagePullProgressReporter>() }
         val imagePullProgressReporterFactory = { imagePullProgressReporter }
-        val client by createForEachTest { DockerClient(api, consoleManager, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, ioStreamer, killer, ttyManager, logger, imagePullProgressReporterFactory) }
+        val client by createForEachTest { DockerClient(api, consoleManager, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, ioStreamer, ttyManager, logger, imagePullProgressReporterFactory) }
 
         describe("building an image") {
             val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
@@ -91,6 +95,7 @@ object DockerClientSpec : Spek({
 
             val dockerfilePath = "some-Dockerfile-path"
             val imageTags = setOf("some_image_tag", "some_other_image_tag")
+            val cancellationContext by createForEachTest { mock<CancellationContext>() }
             val context = DockerImageBuildContext(emptySet())
 
             given("the Dockerfile exists") {
@@ -140,7 +145,7 @@ object DockerClientSpec : Spek({
 
                         beforeEachTest {
                             stubProgressUpdate(imagePullProgressReporter, output.lines()[0], imagePullProgress)
-                            whenever(api.buildImage(any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
+                            whenever(api.buildImage(any(), any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
                         }
 
                         val statusUpdates by createForEachTest { mutableListOf<DockerImageBuildProgress>() }
@@ -149,10 +154,10 @@ object DockerClientSpec : Spek({
                             statusUpdates.add(p)
                         }
 
-                        val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, onStatusUpdate) }
+                        val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, cancellationContext, onStatusUpdate) }
 
                         it("builds the image") {
-                            verify(api).buildImage(eq(context), eq(buildArgs), eq(dockerfilePath), eq(imageTags), eq(credentials), any())
+                            verify(api).buildImage(eq(context), eq(buildArgs), eq(dockerfilePath), eq(imageTags), eq(credentials), eq(cancellationContext), any())
                         }
 
                         it("returns the ID of the created image") {
@@ -190,13 +195,13 @@ object DockerClientSpec : Spek({
 
                         beforeEachTest {
                             stubProgressUpdate(imagePullProgressReporter, output.lines()[0], imagePullProgress)
-                            whenever(api.buildImage(any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
+                            whenever(api.buildImage(any(), any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
 
                             val onStatusUpdate = fun(p: DockerImageBuildProgress) {
                                 statusUpdates.add(p)
                             }
 
-                            client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, onStatusUpdate)
+                            client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, cancellationContext, onStatusUpdate)
                         }
 
                         it("sends status updates only once the first step is started") {
@@ -223,7 +228,7 @@ object DockerClientSpec : Spek({
                     on("building the image") {
                         it("throws an appropriate exception") {
                             assertThat(
-                                { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, {}) }, throws<ImageBuildFailedException>(
+                                { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, cancellationContext, {}) }, throws<ImageBuildFailedException>(
                                     withMessage("Could not build image: Could not load credentials: something went wrong.")
                                         and withCause(exception)
                                 )
@@ -237,7 +242,7 @@ object DockerClientSpec : Spek({
                 on("building the image") {
                     it("throws an appropriate exception") {
                         assertThat(
-                            { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, {}) },
+                            { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, cancellationContext, {}) },
                             throws<ImageBuildFailedException>(withMessage("Could not build image: the Dockerfile 'some-Dockerfile-path' does not exist in '/path/to/build/dir'"))
                         )
                     }
@@ -256,7 +261,7 @@ object DockerClientSpec : Spek({
                 on("building the image") {
                     it("throws an appropriate exception") {
                         assertThat(
-                            { client.build(buildDirectory, buildArgs, dockerfilePathOutsideBuildDir, imageTags, {}) },
+                            { client.build(buildDirectory, buildArgs, dockerfilePathOutsideBuildDir, imageTags, cancellationContext, {}) },
                             throws<ImageBuildFailedException>(withMessage("Could not build image: the Dockerfile '../some-Dockerfile' is not a child of '/path/to/build/dir'"))
                         )
                     }
@@ -293,118 +298,191 @@ object DockerClientSpec : Spek({
                 val container = DockerContainer("the-container-id")
                 val outputStream by createForEachTest { mock<ContainerOutputStream>() }
                 val inputStream by createForEachTest { mock<ContainerInputStream>() }
+                val frameDimensions = Dimensions(10, 20)
                 val terminalRestorer by createForEachTest { mock<AutoCloseable>() }
-                val signalRestorer by createForEachTest { mock<AutoCloseable>() }
                 val resizingRestorer by createForEachTest { mock<AutoCloseable>() }
+                val cancellationContext by createForEachTest { mock<CancellationContext>() }
+
+                val onStartedHandler by createForEachTest { mock<() -> Unit>() }
 
                 beforeEachTest {
-                    whenever(waiter.startWaitingForContainerToExit(container)).doReturn(CompletableFuture.completedFuture(123))
+                    whenever(waiter.startWaitingForContainerToExit(container, cancellationContext)).doReturn(CompletableFuture.completedFuture(123))
                     whenever(api.attachToContainerOutput(container)).doReturn(outputStream)
                     whenever(api.attachToContainerInput(container)).doReturn(inputStream)
                     whenever(consoleManager.enterRawMode()).doReturn(terminalRestorer)
-                    whenever(killer.killContainerOnSigint(container)).doReturn(signalRestorer)
-                    whenever(ttyManager.monitorForSizeChanges(container)).doReturn(resizingRestorer)
+                    whenever(ttyManager.monitorForSizeChanges(container, frameDimensions)).doReturn(resizingRestorer)
                 }
 
-                on("running the container") {
-                    val result by runForEachTest { client.run(container) }
+                given("stdout is connected") {
+                    val stdout by createForEachTest { mock<Sink>() }
 
-                    it("returns the exit code from the container") {
-                        assertThat(result.exitCode, equalTo(123))
-                    }
+                    given("stdin is connected") {
+                        val stdin by createForEachTest { mock<Source>() }
 
-                    it("starts waiting for the container to exit before starting the container") {
-                        inOrder(api, waiter) {
-                            verify(waiter).startWaitingForContainerToExit(container)
-                            verify(api).startContainer(container)
+                        on("running the container") {
+                            val result by runForEachTest { client.run(container, stdout, stdin, cancellationContext, frameDimensions, onStartedHandler) }
+
+                            it("returns the exit code from the container") {
+                                assertThat(result.exitCode, equalTo(123))
+                            }
+
+                            it("starts waiting for the container to exit before starting the container") {
+                                inOrder(api, waiter) {
+                                    verify(waiter).startWaitingForContainerToExit(container, cancellationContext)
+                                    verify(api).startContainer(container)
+                                }
+                            }
+
+                            it("starts streaming I/O after putting the terminal into raw mode and starting the container") {
+                                inOrder(api, consoleManager, ioStreamer) {
+                                    verify(api).startContainer(container)
+                                    verify(consoleManager).enterRawMode()
+                                    verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream), cancellationContext)
+                                }
+                            }
+
+                            it("starts monitoring for terminal size changes after starting the container but before streaming I/O") {
+                                inOrder(api, ttyManager, ioStreamer) {
+                                    verify(api).startContainer(container)
+                                    verify(ttyManager).monitorForSizeChanges(container, frameDimensions)
+                                    verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream), cancellationContext)
+                                }
+                            }
+
+                            it("stops monitoring for terminal size changes after the streaming completes") {
+                                inOrder(ioStreamer, resizingRestorer) {
+                                    verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream), cancellationContext)
+                                    verify(resizingRestorer).close()
+                                }
+                            }
+
+                            it("restores the terminal after streaming completes") {
+                                inOrder(ioStreamer, terminalRestorer) {
+                                    verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream), cancellationContext)
+                                    verify(terminalRestorer).close()
+                                }
+                            }
+
+                            it("attaches to the container output before starting the container") {
+                                inOrder(api) {
+                                    verify(api).attachToContainerOutput(container)
+                                    verify(api).startContainer(container)
+                                }
+                            }
+
+                            it("attaches to the container input before starting the container") {
+                                inOrder(api) {
+                                    verify(api).attachToContainerInput(container)
+                                    verify(api).startContainer(container)
+                                }
+                            }
+
+                            it("notifies the caller that the container has started after starting the container but before streaming I/O") {
+                                inOrder(api, onStartedHandler, ioStreamer) {
+                                    verify(api).startContainer(container)
+                                    verify(onStartedHandler).invoke()
+                                    verify(ioStreamer).stream(any(), any(), any())
+                                }
+                            }
+
+                            it("closes the output stream after streaming the output completes") {
+                                inOrder(ioStreamer, outputStream) {
+                                    verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream), cancellationContext)
+                                    verify(outputStream).close()
+                                }
+                            }
+
+                            it("closes the input stream after streaming the output completes") {
+                                inOrder(ioStreamer, inputStream) {
+                                    verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream), cancellationContext)
+                                    verify(inputStream).close()
+                                }
+                            }
                         }
                     }
 
-                    it("starts streaming I/O after starting the container") {
-                        inOrder(api, ioStreamer) {
-                            verify(api).startContainer(container)
-                            verify(ioStreamer).stream(outputStream, inputStream)
-                        }
-                    }
+                    given("stdin is not connected") {
+                        val stdin: Source? = null
 
-                    it("starts streaming I/O after putting the terminal into raw mode") {
-                        inOrder(consoleManager, ioStreamer) {
-                            verify(consoleManager).enterRawMode()
-                            verify(ioStreamer).stream(outputStream, inputStream)
-                        }
-                    }
+                        on("running the container") {
+                            val result by runForEachTest { client.run(container, stdout, stdin, cancellationContext, frameDimensions, onStartedHandler) }
 
-                    it("starts monitoring for terminal size changes after starting the container but before streaming I/O") {
-                        inOrder(api, ttyManager, ioStreamer) {
-                            verify(api).startContainer(container)
-                            verify(ttyManager).monitorForSizeChanges(container)
-                            verify(ioStreamer).stream(outputStream, inputStream)
-                        }
-                    }
+                            it("returns the exit code from the container") {
+                                assertThat(result.exitCode, equalTo(123))
+                            }
 
-                    it("stops monitoring for terminal size changes after the streaming completes") {
-                        inOrder(ioStreamer, resizingRestorer) {
-                            verify(ioStreamer).stream(outputStream, inputStream)
-                            verify(resizingRestorer).close()
-                        }
-                    }
+                            it("starts the container") {
+                                verify(api).startContainer(container)
+                            }
 
-                    it("configures killing the container when a SIGINT is received after starting the container but before entering raw mode") {
-                        inOrder(api, killer, consoleManager) {
-                            verify(api).startContainer(container)
-                            verify(killer).killContainerOnSigint(container)
-                            verify(consoleManager).enterRawMode()
-                        }
-                    }
+                            it("streams the container output but not the input") {
+                                verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Disconnected, cancellationContext)
+                            }
 
-                    it("restores the terminal and signal handling state after streaming completes") {
-                        inOrder(ioStreamer, terminalRestorer, signalRestorer) {
-                            verify(ioStreamer).stream(outputStream, inputStream)
-                            verify(terminalRestorer).close()
-                            verify(signalRestorer).close()
-                        }
-                    }
+                            it("attaches to the container output") {
+                                verify(api).attachToContainerOutput(container)
+                            }
 
-                    it("attaches to the container output before starting the container") {
-                        inOrder(api) {
-                            verify(api).attachToContainerOutput(container)
-                            verify(api).startContainer(container)
-                        }
-                    }
+                            it("does not attach to the container input") {
+                                verify(api, never()).attachToContainerInput(container)
+                            }
 
-                    it("attaches to the container input before starting the container") {
-                        inOrder(api) {
-                            verify(api).attachToContainerInput(container)
-                            verify(api).startContainer(container)
-                        }
-                    }
+                            it("does not enter raw mode") {
+                                verify(consoleManager, never()).enterRawMode()
+                            }
 
-                    it("closes the output stream after streaming the output completes") {
-                        inOrder(ioStreamer, outputStream) {
-                            verify(ioStreamer).stream(outputStream, inputStream)
-                            verify(outputStream).close()
-                        }
-                    }
-
-                    it("closes the input stream after streaming the output completes") {
-                        inOrder(ioStreamer, inputStream) {
-                            verify(ioStreamer).stream(outputStream, inputStream)
-                            verify(inputStream).close()
+                            it("starts monitoring for console size changes") {
+                                verify(ttyManager).monitorForSizeChanges(container, frameDimensions)
+                            }
                         }
                     }
                 }
-            }
-        }
 
-        describe("starting a container") {
-            given("a Docker container") {
-                val container = DockerContainer("the-container-id")
+                given("stdout is not connected") {
+                    val stdout: Sink? = null
 
-                on("starting that container") {
-                    beforeEachTest { client.start(container) }
+                    given("stdin is connected") {
+                        val stdin by createForEachTest { mock<Source>() }
 
-                    it("sends a request to the Docker daemon to start the container") {
-                        verify(api).startContainer(container)
+                        it("throws an appropriate exception") {
+                            assertThat({ client.run(container, stdout, stdin, cancellationContext, frameDimensions, onStartedHandler) }, throws<DockerException>(withMessage("Attempted to stream input to container without streaming container output.")))
+                        }
+                    }
+
+                    given("stdin is not connected") {
+                        val stdin: Source? = null
+
+                        on("running the container") {
+                            val result by runForEachTest { client.run(container, stdout, stdin, cancellationContext, frameDimensions, onStartedHandler) }
+
+                            it("returns the exit code from the container") {
+                                assertThat(result.exitCode, equalTo(123))
+                            }
+
+                            it("starts the container") {
+                                verify(api).startContainer(container)
+                            }
+
+                            it("streams neither the container output nor the input") {
+                                verify(ioStreamer).stream(OutputConnection.Disconnected, InputConnection.Disconnected, cancellationContext)
+                            }
+
+                            it("does not attach to the container output") {
+                                verify(api, never()).attachToContainerOutput(container)
+                            }
+
+                            it("does not attach to the container input") {
+                                verify(api, never()).attachToContainerInput(container)
+                            }
+
+                            it("does not enter raw mode") {
+                                verify(consoleManager, never()).enterRawMode()
+                            }
+
+                            it("starts monitoring for console size changes") {
+                                verify(ttyManager).monitorForSizeChanges(container, frameDimensions)
+                            }
+                        }
                     }
                 }
             }
@@ -425,6 +503,8 @@ object DockerClientSpec : Spek({
         }
 
         describe("waiting for a container to report its health status") {
+            val cancellationContext by createForEachTest { mock<CancellationContext>() }
+
             given("a Docker container with no health check") {
                 val container = DockerContainer("the-container-id")
 
@@ -438,7 +518,7 @@ object DockerClientSpec : Spek({
                 }
 
                 on("waiting for that container to become healthy") {
-                    val result by runForEachTest { client.waitForHealthStatus(container) }
+                    val result by runForEachTest { client.waitForHealthStatus(container, cancellationContext) }
 
                     it("reports that the container does not have a health check") {
                         assertThat(result, equalTo(HealthStatus.NoHealthCheck))
@@ -455,7 +535,7 @@ object DockerClientSpec : Spek({
 
                 on("waiting for that container to become healthy") {
                     it("throws an appropriate exception") {
-                        assertThat({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Checking if container 'the-container-id' has a health check failed: Something went wrong")))
+                        assertThat({ client.waitForHealthStatus(container, cancellationContext) }, throws<ContainerHealthCheckException>(withMessage("Checking if container 'the-container-id' has a health check failed: Something went wrong")))
                     }
                 }
             }
@@ -480,15 +560,15 @@ object DockerClientSpec : Spek({
 
                 given("the health check passes") {
                     beforeEachTest {
-                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any()))
+                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any(), eq(cancellationContext)))
                             .thenReturn(DockerEvent("health_status: healthy"))
                     }
 
                     on("waiting for that container to become healthy") {
-                        val result by runForEachTest { client.waitForHealthStatus(container) }
+                        val result by runForEachTest { client.waitForHealthStatus(container, cancellationContext) }
 
                         it("waits with a timeout that allows the container time to start and become healthy") {
-                            verify(api).waitForNextEventForContainer(any(), any(), eq(Duration.ofSeconds(10 + (3 * 4) + 1)))
+                            verify(api).waitForNextEventForContainer(any(), any(), eq(Duration.ofSeconds(10 + (3 * 4) + 1)), any())
                         }
 
                         it("reports that the container became healthy") {
@@ -499,12 +579,12 @@ object DockerClientSpec : Spek({
 
                 given("the health check fails") {
                     beforeEachTest {
-                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any()))
+                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any(), eq(cancellationContext)))
                             .thenReturn(DockerEvent("health_status: unhealthy"))
                     }
 
                     on("waiting for that container to become healthy") {
-                        val result by runForEachTest { client.waitForHealthStatus(container) }
+                        val result by runForEachTest { client.waitForHealthStatus(container, cancellationContext) }
 
                         it("reports that the container became unhealthy") {
                             assertThat(result, equalTo(HealthStatus.BecameUnhealthy))
@@ -514,12 +594,12 @@ object DockerClientSpec : Spek({
 
                 given("the container exits before the health check reports") {
                     beforeEachTest {
-                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any()))
+                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any(), eq(cancellationContext)))
                             .thenReturn(DockerEvent("die"))
                     }
 
                     on("waiting for that container to become healthy") {
-                        val result by runForEachTest { client.waitForHealthStatus(container) }
+                        val result by runForEachTest { client.waitForHealthStatus(container, cancellationContext) }
 
                         it("reports that the container exited") {
                             assertThat(result, equalTo(HealthStatus.Exited))
@@ -529,13 +609,13 @@ object DockerClientSpec : Spek({
 
                 given("getting the next event for the container fails") {
                     beforeEachTest {
-                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any()))
+                        whenever(api.waitForNextEventForContainer(eq(container), eq(setOf("die", "health_status")), any(), eq(cancellationContext)))
                             .thenThrow(DockerException("Something went wrong."))
                     }
 
                     on("waiting for that container to become healthy") {
                         it("throws an appropriate exception") {
-                            assertThat({ client.waitForHealthStatus(container) }, throws<ContainerHealthCheckException>(withMessage("Waiting for health status of container 'the-container-id' failed: Something went wrong.")))
+                            assertThat({ client.waitForHealthStatus(container, cancellationContext) }, throws<ContainerHealthCheckException>(withMessage("Waiting for health status of container 'the-container-id' failed: Something went wrong.")))
                         }
                     }
                 }
@@ -674,6 +754,8 @@ object DockerClientSpec : Spek({
         }
 
         describe("pulling an image") {
+            val cancellationContext by createForEachTest { mock<CancellationContext>() }
+
             given("the image does not exist locally") {
                 beforeEachTest {
                     whenever(api.hasImage("some-image")).thenReturn(false)
@@ -694,9 +776,9 @@ object DockerClientSpec : Spek({
                             whenever(imagePullProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(DockerImagePullProgress("Doing something", 10, 20))
                             whenever(imagePullProgressReporter.processProgressUpdate(secondProgressUpdate)).thenReturn(null)
 
-                            whenever(api.pullImage(any(), any(), any())).then { invocation ->
+                            whenever(api.pullImage(any(), any(), any(), any())).then { invocation ->
                                 @Suppress("UNCHECKED_CAST")
-                                val onProgressUpdate = invocation.arguments[2] as (JsonObject) -> Unit
+                                val onProgressUpdate = invocation.arguments[3] as (JsonObject) -> Unit
                                 onProgressUpdate(firstProgressUpdate)
                                 onProgressUpdate(secondProgressUpdate)
 
@@ -705,10 +787,10 @@ object DockerClientSpec : Spek({
                         }
 
                         val progressUpdatesReceived by createForEachTest { mutableListOf<DockerImagePullProgress>() }
-                        val image by runForEachTest { client.pullImage("some-image") { progressUpdatesReceived.add(it) } }
+                        val image by runForEachTest { client.pullImage("some-image", cancellationContext) { progressUpdatesReceived.add(it) } }
 
                         it("calls the Docker CLI to pull the image") {
-                            verify(api).pullImage(eq("some-image"), eq(credentials), any())
+                            verify(api).pullImage(eq("some-image"), eq(credentials), eq(cancellationContext), any())
                         }
 
                         it("sends notifications for all relevant progress updates") {
@@ -730,7 +812,7 @@ object DockerClientSpec : Spek({
 
                     on("pulling the image") {
                         it("throws an appropriate exception") {
-                            assertThat({ client.pullImage("some-image", {}) }, throws<ImagePullFailedException>(
+                            assertThat({ client.pullImage("some-image", cancellationContext, {}) }, throws<ImagePullFailedException>(
                                 withMessage("Could not pull image 'some-image': Could not load credentials: something went wrong.")
                                     and withCause(exception)
                             ))
@@ -742,10 +824,10 @@ object DockerClientSpec : Spek({
             on("when the image already exists locally") {
                 beforeEachTest { whenever(api.hasImage("some-image")).thenReturn(true) }
 
-                val image by runForEachTest { client.pullImage("some-image", {}) }
+                val image by runForEachTest { client.pullImage("some-image", cancellationContext, {}) }
 
                 it("does not call the Docker CLI to pull the image again") {
-                    verify(api, never()).pullImage(any(), any(), any())
+                    verify(api, never()).pullImage(any(), any(), any(), any())
                 }
 
                 it("returns the Docker image") {

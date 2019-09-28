@@ -19,6 +19,6 @@ package batect.execution.model.stages
 import batect.execution.model.steps.TaskStep
 
 sealed class NextStepResult
-object NoStepsRemaining : NextStepResult()
+object StageComplete : NextStepResult()
 object NoStepsReady : NextStepResult()
 data class StepReady(val step: TaskStep) : NextStepResult()

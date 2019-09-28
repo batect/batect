@@ -17,25 +17,30 @@
 package batect.os
 
 import jnr.constants.platform.Signal
+import jnr.posix.LibC
 import jnr.posix.POSIX
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedDeque
 
 class SignalListener(private val posix: POSIX) {
-    private val handlers = mutableMapOf<Int, MutableList<SignalHandler>>()
-
     fun start(signal: Signal, handler: SignalHandler): AutoCloseable {
-        val handlersForSignal = handlers.getOrPut(signal.value(), { mutableListOf() })
+        val handlersForSignal = handlers.getOrPut(signal.value(), { ConcurrentLinkedDeque() })
         handlersForSignal.add(handler)
 
-        val originalHandler = posix.signal(signal, ::handleSignal)
+        posix.libc().signal(signal.value(), Companion)
 
         return AutoCloseable {
-            posix.signal(signal, originalHandler)
             handlers.getValue(signal.value()).remove(handler)
         }
     }
 
-    private fun handleSignal(signal: Int) {
-        handlers.getValue(signal).last().invoke()
+    // See https://github.com/jnr/jnr-posix/issues/137 for why this is necessary.
+    companion object : LibC.LibCSignalHandler {
+        private val handlers = ConcurrentHashMap<Int, ConcurrentLinkedDeque<SignalHandler>>()
+
+        override fun signal(sig: Int) {
+            handlers.getOrDefault(sig, ConcurrentLinkedDeque()).peekLast()?.invoke()
+        }
     }
 }
 

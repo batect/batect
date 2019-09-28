@@ -32,7 +32,6 @@ object RunOptionsSpec : Spek({
                 additionalTaskCommandArguments = listOf("extra-arg-1", "extra-arg-2"),
                 disableCleanupAfterSuccess = true,
                 disableCleanupAfterFailure = false,
-                levelOfParallelism = 444,
                 dontPropagateProxyEnvironmentVariables = true
             )
 
@@ -45,10 +44,6 @@ object RunOptionsSpec : Spek({
 
                 it("takes the additional task command arguments from the command line options") {
                     assertThat(runOptions.additionalTaskCommandArguments, equalTo(commandLineOptions.additionalTaskCommandArguments))
-                }
-
-                it("takes the level of parallelism from the command line options") {
-                    assertThat(runOptions.levelOfParallelism, equalTo(commandLineOptions.levelOfParallelism))
                 }
 
                 it("enables cleanup after failure") {
@@ -71,7 +66,6 @@ object RunOptionsSpec : Spek({
                 additionalTaskCommandArguments = listOf("extra-arg-1", "extra-arg-2"),
                 disableCleanupAfterSuccess = false,
                 disableCleanupAfterFailure = true,
-                levelOfParallelism = 444,
                 dontPropagateProxyEnvironmentVariables = false
             )
 
@@ -84,10 +78,6 @@ object RunOptionsSpec : Spek({
 
                 it("takes the additional task command arguments from the command line options") {
                     assertThat(runOptions.additionalTaskCommandArguments, equalTo(commandLineOptions.additionalTaskCommandArguments))
-                }
-
-                it("takes the level of parallelism from the command line options") {
-                    assertThat(runOptions.levelOfParallelism, equalTo(commandLineOptions.levelOfParallelism))
                 }
 
                 it("disables cleanup after failure") {

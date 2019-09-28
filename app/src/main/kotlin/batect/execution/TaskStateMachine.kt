@@ -23,10 +23,10 @@ import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.stages.CleanupStage
 import batect.execution.model.stages.CleanupStagePlanner
 import batect.execution.model.stages.NoStepsReady
-import batect.execution.model.stages.NoStepsRemaining
 import batect.execution.model.stages.RunStage
 import batect.execution.model.stages.RunStagePlanner
 import batect.execution.model.stages.Stage
+import batect.execution.model.stages.StageComplete
 import batect.execution.model.stages.StepReady
 import batect.execution.model.steps.TaskStep
 import batect.logging.Logger
@@ -41,6 +41,7 @@ class TaskStateMachine(
     val runStagePlanner: RunStagePlanner,
     val cleanupStagePlanner: CleanupStagePlanner,
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
+    val cancellationContext: CancellationContext,
     val logger: Logger
 ) : TaskEventSink {
     var taskHasFailed: Boolean = false
@@ -66,10 +67,10 @@ class TaskStateMachine(
                 return handleDrainingWorkAfterRunFailure(stepsStillRunning)
             }
 
-            return when (val result = currentStage.popNextStep(events)) {
+            return when (val result = currentStage.popNextStep(events, stepsStillRunning)) {
                 is StepReady -> handleNextStepReady(result)
                 is NoStepsReady -> handleNoStepsReady(stepsStillRunning)
-                is NoStepsRemaining -> handleNoStepsRemaining(stepsStillRunning)
+                is StageComplete -> handleStageComplete(stepsStillRunning)
             }
         }
     }
@@ -87,7 +88,7 @@ class TaskStateMachine(
             message("Task has failed and existing work has finished. Beginning cleanup.")
         }
 
-        return startCleanupStage()
+        return startCleanupStage(stepsStillRunning)
     }
 
     private fun handleNextStepReady(result: StepReady): TaskStep {
@@ -114,34 +115,25 @@ class TaskStateMachine(
         return null
     }
 
-    private fun handleNoStepsRemaining(stepsStillRunning: Boolean): TaskStep? {
-        if (stepsStillRunning) {
+    private fun handleStageComplete(stepsStillRunning: Boolean): TaskStep? = when (currentStage) {
+        is RunStage -> {
             logger.info {
-                message("No steps remaining, but some steps are still running.")
+                message("Run stage complete, switching to cleanup stage.")
             }
 
-            return null
+            startCleanupStage(stepsStillRunning)
         }
-
-        when (currentStage) {
-            is RunStage -> {
-                logger.info {
-                    message("No steps remaining in run stage, switching to cleanup stage.")
-                }
-
-                return startCleanupStage()
+        is CleanupStage -> {
+            logger.info {
+                message("Cleanup stage complete. No work left to do.")
             }
-            is CleanupStage -> {
-                logger.info {
-                    message("No steps remaining in cleanup stage. No work left to do.")
-                }
 
-                return null
-            }
+            null
         }
+        else -> throw IllegalArgumentException("Unknown stage type: ${currentStage::class.qualifiedName}")
     }
 
-    private fun startCleanupStage(): TaskStep? {
+    private fun startCleanupStage(stepsStillRunning: Boolean): TaskStep? {
         val cleanupStage = cleanupStagePlanner.createStage(graph, events)
 
         if (taskHasFailed && shouldLeaveCreatedContainersRunningAfterFailure()) {
@@ -164,7 +156,7 @@ class TaskStateMachine(
             message("Returning first step from cleanup stage.")
         }
 
-        return popNextStep(false)
+        return popNextStep(stepsStillRunning)
     }
 
     override fun postEvent(event: TaskEvent) {
@@ -190,6 +182,8 @@ class TaskStateMachine(
 
             val manualCleanupCommands = (currentStage as CleanupStage).manualCleanupInstructions
             manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessageAfterCleanupFailure(manualCleanupCommands)
+        } else {
+            cancellationContext.cancel()
         }
     }
 

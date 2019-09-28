@@ -24,6 +24,7 @@ import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.internal.StringSerializer
+import kotlinx.serialization.map
 
 abstract class NamedObjectMap<E>(contentName: String, contents: Iterable<E>) : Map<String, E>, Set<E> {
     init {
@@ -67,7 +68,7 @@ abstract class NamedObjectMap<E>(contentName: String, contents: Iterable<E>) : M
     override fun hashCode(): Int = implementation.hashCode()
 }
 
-abstract class NamedObjectMapDeserializer<TCollection, TElement>(val elementSerializer: KSerializer<TElement>) {
+abstract class NamedObjectMapSerializer<TCollection : Iterable<TElement>, TElement>(val elementSerializer: KSerializer<TElement>) {
     val keySerializer = StringSerializer
 
     // We can't just declare the value of this here due to https://github.com/Kotlin/kotlinx.serialization/issues/315#issuecomment-460015206
@@ -131,9 +132,19 @@ abstract class NamedObjectMapDeserializer<TCollection, TElement>(val elementSeri
     }
 
     @Suppress("UNUSED_PARAMETER")
-    fun serialize(encoder: Encoder, obj: TCollection): Unit = throw UnsupportedOperationException()
+    fun serialize(encoder: Encoder, obj: TCollection) {
+        val output = encoder.beginCollection(descriptor, obj.count())
+
+        obj.forEachIndexed { index, element ->
+            output.encodeSerializableElement(descriptor, 2*index, keySerializer, getName(element))
+            output.encodeSerializableElement(descriptor, 2*index + 1, elementSerializer, element)
+        }
+
+        output.endStructure(descriptor)
+    }
 
     open fun validateName(name: String, location: Location) {}
     protected abstract fun addName(name: String, element: TElement): TElement
     protected abstract fun createCollection(elements: Set<TElement>): TCollection
+    protected abstract fun getName(element: TElement): String
 }

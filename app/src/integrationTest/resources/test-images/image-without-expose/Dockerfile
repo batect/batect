@@ -1,6 +1,6 @@
 # This is based (loosely) on https://github.com/nginxinc/docker-nginx/blob/master/mainline/stretch/Dockerfile.
 
-FROM alpine:3.10.1
+FROM alpine:3.10.2
 
 RUN apk --no-cache add nginx
 

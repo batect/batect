@@ -17,12 +17,36 @@
 package batect.execution.model.rules.run
 
 import batect.config.Container
-import batect.docker.DockerContainer
+import batect.execution.model.events.ContainerBecameHealthyEvent
+import batect.execution.model.events.ContainerCreatedEvent
+import batect.execution.model.events.TaskEvent
+import batect.execution.model.rules.TaskStepRule
+import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.RunContainerStep
-import batect.execution.model.steps.TaskStep
 
-data class RunContainerStepRule(override val container: Container, override val dependencies: Set<Container>) : StartContainerStepRuleBase(container, dependencies) {
-    override fun createStep(dockerContainer: DockerContainer): TaskStep = RunContainerStep(container, dockerContainer)
+data class RunContainerStepRule(val container: Container, val dependencies: Set<Container>) : TaskStepRule() {
+    override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
+        val dockerContainer = findDockerContainer(pastEvents)
 
-    override fun toString(): String = super.toString()
+        if (dockerContainer == null || !allDependenciesAreReady(pastEvents)) {
+            return TaskStepRuleEvaluationResult.NotReady
+        }
+
+        return TaskStepRuleEvaluationResult.Ready(RunContainerStep(container, dockerContainer))
+    }
+
+    private fun findDockerContainer(pastEvents: Set<TaskEvent>) =
+        pastEvents
+            .singleInstanceOrNull<ContainerCreatedEvent> { it.container == container }
+            ?.dockerContainer
+
+    private fun allDependenciesAreReady(pastEvents: Set<TaskEvent>): Boolean {
+        val readyContainers = pastEvents
+            .filterIsInstance<ContainerBecameHealthyEvent>()
+            .map { it.container }
+
+        return readyContainers.containsAll(dependencies)
+    }
+
+    override fun toString() = "${this::class.simpleName}(container: '${container.name}', dependencies: ${dependencies.map { "'${it.name}'" }})"
 }

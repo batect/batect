@@ -28,9 +28,10 @@ import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
 import kotlinx.serialization.internal.ArrayListClassDesc
 import kotlinx.serialization.internal.StringSerializer
+import kotlinx.serialization.list
 
 @Serializer(forClass = List::class)
-internal object PrerequisiteListDeserializer : KSerializer<List<String>> {
+internal object PrerequisiteListSerializer : KSerializer<List<String>> {
     val elementSerializer = StringSerializer
 
     override val descriptor: SerialDescriptor = ArrayListClassDesc(elementSerializer.descriptor)
@@ -92,5 +93,5 @@ internal object PrerequisiteListDeserializer : KSerializer<List<String>> {
 
     private fun getDuplicateValueMessage(value: String) = "The prerequisite '$value' is given more than once"
 
-    override fun serialize(encoder: Encoder, obj: List<String>) = throw UnsupportedOperationException()
+    override fun serialize(encoder: Encoder, obj: List<String>) = StringSerializer.list.serialize(encoder, obj)
 }

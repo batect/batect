@@ -16,16 +16,18 @@
 
 package batect.ui.fancy
 
+import batect.config.Container
 import batect.execution.RunOptions
 import batect.execution.model.events.RunningContainerExitedEvent
+import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.CleanupStep
 import batect.execution.model.steps.RunContainerStep
-import batect.execution.model.steps.TaskStep
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
+import batect.ui.containerio.TaskContainerOnlyIOStreamingOptions
 import batect.ui.humanise
 import batect.ui.text.Text
 import batect.ui.text.TextRun
@@ -37,31 +39,13 @@ class FancyEventLogger(
     val console: Console,
     val errorConsole: Console,
     val startupProgressDisplay: StartupProgressDisplay,
-    val cleanupProgressDisplay: CleanupProgressDisplay
-) : EventLogger() {
+    val cleanupProgressDisplay: CleanupProgressDisplay,
+    val taskContainer: Container,
+    override val ioStreamingOptions: TaskContainerOnlyIOStreamingOptions
+) : EventLogger {
     private val lock = Object()
     private var keepUpdatingStartupProgress = true
     private var haveStartedCleanup = false
-
-    override fun onStartingTaskStep(step: TaskStep) {
-        synchronized(lock) {
-            if (step is CleanupStep) {
-                displayCleanupStatus()
-                keepUpdatingStartupProgress = false
-                return
-            }
-
-            if (keepUpdatingStartupProgress) {
-                startupProgressDisplay.onStepStarting(step)
-                startupProgressDisplay.print(console)
-            }
-
-            if (step is RunContainerStep) {
-                console.println()
-                keepUpdatingStartupProgress = false
-            }
-        }
-    }
 
     private fun displayCleanupStatus() {
         if (haveStartedCleanup) {
@@ -82,6 +66,12 @@ class FancyEventLogger(
                 return
             }
 
+            if (event is StepStartingEvent && event.step is CleanupStep) {
+                displayCleanupStatus()
+                keepUpdatingStartupProgress = false
+                return
+            }
+
             if (keepUpdatingStartupProgress) {
                 startupProgressDisplay.onEventPosted(event)
                 startupProgressDisplay.print(console)
@@ -89,7 +79,12 @@ class FancyEventLogger(
 
             cleanupProgressDisplay.onEventPosted(event)
 
-            if (haveStartedCleanup || event is RunningContainerExitedEvent) {
+            if (event is StepStartingEvent && event.step is RunContainerStep && event.step.container == taskContainer) {
+                console.println()
+                keepUpdatingStartupProgress = false
+            }
+
+            if (haveStartedCleanup || (event is RunningContainerExitedEvent && event.container == taskContainer)) {
                 displayCleanupStatus()
             }
         }

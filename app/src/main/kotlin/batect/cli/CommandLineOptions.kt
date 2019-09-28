@@ -16,7 +16,6 @@
 
 package batect.cli
 
-import batect.cli.options.defaultvalues.LevelOfParallelismDefaultValueProvider
 import batect.logging.FileLogSink
 import batect.logging.LogSink
 import batect.logging.NullLogSink
@@ -40,7 +39,6 @@ data class CommandLineOptions(
     val requestedOutputStyle: OutputStyle? = null,
     val disableColorOutput: Boolean = false,
     val disableUpdateNotification: Boolean = false,
-    val levelOfParallelism: Int = LevelOfParallelismDefaultValueProvider.value,
     val disableCleanupAfterFailure: Boolean = false,
     val disableCleanupAfterSuccess: Boolean = false,
     val dontPropagateProxyEnvironmentVariables: Boolean = false,

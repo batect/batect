@@ -19,15 +19,17 @@ package batect.docker
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
 import batect.config.VolumeMount
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.json
 
+@Serializable
 data class DockerContainerCreationRequest(
     val image: DockerImage,
     val network: DockerNetwork,
-    val command: Iterable<String>,
-    val entrypoint: Iterable<String>,
+    val command: List<String>,
+    val entrypoint: List<String>,
     val hostname: String,
     val networkAlias: String,
     val environmentVariables: Map<String, String>,
@@ -127,4 +129,5 @@ data class DockerContainerCreationRequest(
         .toJsonArray()
 }
 
+@Serializable
 data class UserAndGroup(val userId: Int, val groupId: Int)

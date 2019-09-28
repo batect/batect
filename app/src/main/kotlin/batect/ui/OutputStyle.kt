@@ -19,5 +19,6 @@ package batect.ui
 enum class OutputStyle {
     Quiet,
     Simple,
-    Fancy
+    Fancy,
+    All
 }

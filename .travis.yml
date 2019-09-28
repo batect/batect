@@ -79,7 +79,7 @@ jobs:
 
     - stage: Integration and journey test
       name: Wait for Windows build to complete
-      if: (tag IS present OR branch = "master") AND repo = "charleskorn/batect"
+      if: (tag IS present OR branch = "master") AND repo = "charleskorn/batect" AND type != pull_request
       dist: xenial
       script: ./travis/wait_for_appveyor.sh
 

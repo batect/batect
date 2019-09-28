@@ -55,7 +55,7 @@ Both of these can be overridden for an individual task by specifying a [`command
     See the Docker docs for [`CMD`](https://docs.docker.com/engine/reference/builder/#cmd) and
     [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint) for more details.
 
-    If you would like to use shell syntax features in your command, you have two options:
+    If you would like to use shell syntax features in your command, you have three options:
 
     1. Set the entrypoint in the image to a shell. For example:
        ```dockerfile
@@ -64,6 +64,25 @@ Both of these can be overridden for an individual task by specifying a [`command
     2. Wrap your command in a shell invocation.
 
         For example, if your command is `echo hello && echo world`, set `command` to `sh -c 'echo hello && echo world'`.
+
+    3. Set the [entrypoint](#entrypoint) for the container to a shell. For example:
+       ```yaml
+       containers:
+         container-1:
+            command: echo hello && echo world
+            entrypoint: /bin/sh -c
+       ```
+
+## `entrypoint`
+Entrypoint to use to run the [command](#command).
+
+If not provided, the default entrypoint for the container will be used.
+
+See the Docker docs for [`CMD`](https://docs.docker.com/engine/reference/builder/#cmd) and
+[`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint) for more information on how the entrypoint is used.
+batect will always convert the entrypoint provided here to the exec form when passed to Docker.
+
+Available since v0.37.
 
 ## `environment`
 List of environment variables (in `name: value` format) for the container.

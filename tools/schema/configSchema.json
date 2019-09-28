@@ -60,6 +60,11 @@
           "description": "Command to run when the container starts",
           "minLength": 1
         },
+        "entrypoint": {
+          "type": "string",
+          "description": "Entrypoint to use to run the command.",
+          "minLength": 1
+        },
         "environment": {
           "description": "List of environment variables for the container",
           "$ref": "#/definitions/environmentVariableList"

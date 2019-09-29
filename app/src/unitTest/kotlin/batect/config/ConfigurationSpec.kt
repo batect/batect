@@ -37,6 +37,7 @@ object ConfigurationSpec : Spek({
                     TaskRunConfiguration(
                         "the-container",
                         Command.parse("the-command"),
+                        Command.parse("the-entrypoint"),
                         mapOf(
                             "SOME_VAR" to LiteralValue("blah"),
                             "SOME_REFERENCE" to ReferenceValue("REFERENCE_TO"),
@@ -64,6 +65,7 @@ object ConfigurationSpec : Spek({
                                     "run": {
                                         "container": "the-container",
                                         "command": ["the-command"],
+                                        "entrypoint": ["the-entrypoint"],
                                         "environment": {
                                             "SOME_VAR": "blah",
                                             "SOME_REFERENCE": "${'$'}REFERENCE_TO",

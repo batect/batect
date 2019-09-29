@@ -46,17 +46,25 @@ object ContainerDependencyGraphSpec : Spek({
             on { resolveCommand(any(), any()) } doAnswer {
                 val container = it.getArgument<Container>(0)
 
-                container.command
+                Command.parse("${container.name} command")
+            }
+        }
+
+        val entrypointResolver = mock<ContainerEntrypointResolver> {
+            on { resolveEntrypoint(any(), any()) } doAnswer {
+                val container = it.getArgument<Container>(0)
+
+                Command.parse("${container.name} entrypoint")
             }
         }
 
         given("a task with no dependencies") {
             given("the task does not override the container's working directory") {
-                val container = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("some-container-command"), entrypoint = Command.parse("sh"), workingDirectory = "task-working-dir-that-wont-be-used")
-                val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)), "some-task-specific-working-dir")
+                val container = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("some-container-command"), entrypoint = Command.parse("some-task-entrypoint"), workingDirectory = "task-working-dir-that-wont-be-used")
+                val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"), Command.parse("some-entrypoint"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)), "some-task-specific-working-dir")
                 val task = Task("the-task", runConfig, dependsOnContainers = emptySet())
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
-                val graph = ContainerDependencyGraph(config, task, commandResolver)
+                val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
                 on("getting the task container node") {
                     val node = graph.taskContainerNode
@@ -73,8 +81,8 @@ object ContainerDependencyGraphSpec : Spek({
                         assertThat(node.config.command, equalTo(commandResolver.resolveCommand(container, task)))
                     }
 
-                    it("takes its entrypoint from the container") {
-                        assertThat(node.config.entrypoint, equalTo(container.entrypoint))
+                    it("takes its entrypoint from the entrypoint resolver") {
+                        assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(container, task)))
                     }
 
                     it("takes its working directory from the task") {
@@ -109,10 +117,10 @@ object ContainerDependencyGraphSpec : Spek({
 
             given("the task overrides the container's working directory") {
                 val container = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("some-container-command"), entrypoint = Command.parse("sh"), workingDirectory = "task-working-dir")
-                val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)))
+                val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"), Command.parse("some-entrypoint"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)))
                 val task = Task("the-task", runConfig, dependsOnContainers = emptySet())
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
-                val graph = ContainerDependencyGraph(config, task, commandResolver)
+                val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
                 on("getting the task container node") {
                     val node = graph.taskContainerNode
@@ -129,8 +137,8 @@ object ContainerDependencyGraphSpec : Spek({
                         assertThat(node.config.command, equalTo(commandResolver.resolveCommand(container, task)))
                     }
 
-                    it("takes its entrypoint from the container") {
-                        assertThat(node.config.entrypoint, equalTo(container.entrypoint))
+                    it("takes its entrypoint from the entrypoint resolver") {
+                        assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(container, task)))
                     }
 
                     it("takes its working directory from the container") {
@@ -163,7 +171,7 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'some-non-existent-container' referenced by task 'the-task' does not exist.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver, entrypointResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'some-non-existent-container' referenced by task 'the-task' does not exist.")))
                 }
             }
         }
@@ -171,10 +179,10 @@ object ContainerDependencyGraphSpec : Spek({
         given("a task with a dependency") {
             val taskContainer = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("task-command-that-wont-be-used"), entrypoint = Command.parse("sh"), workingDirectory = "task-working-dir-that-wont-be-used")
             val dependencyContainer = Container("dependency-container", imageSourceDoesNotMatter(), command = Command.parse("dependency-command"), workingDirectory = "dependency-working-dir")
-            val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)), "some-task-specific-working-dir")
+            val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"), Command.parse("some-entrypoint"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)), "some-task-specific-working-dir")
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(dependencyContainer.name))
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
-            val graph = ContainerDependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -191,8 +199,8 @@ object ContainerDependencyGraphSpec : Spek({
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
                 }
 
-                it("takes its entrypoint from the container") {
-                    assertThat(node.config.entrypoint, equalTo(taskContainer.entrypoint))
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(taskContainer, task)))
                 }
 
                 it("takes its working directory from the task") {
@@ -231,8 +239,8 @@ object ContainerDependencyGraphSpec : Spek({
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(dependencyContainer, task)))
                 }
 
-                it("takes its entrypoint from the container") {
-                    assertThat(node.config.entrypoint, equalTo(dependencyContainer.entrypoint))
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(dependencyContainer, task)))
                 }
 
                 it("takes its working directory from the container configuration") {
@@ -261,7 +269,7 @@ object ContainerDependencyGraphSpec : Spek({
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(dependencyContainer1.name, dependencyContainer2.name, dependencyContainer3.name))
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, dependencyContainer3))
-            val graph = ContainerDependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -276,6 +284,10 @@ object ContainerDependencyGraphSpec : Spek({
 
                 it("takes its command from the command resolver") {
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                }
+
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(taskContainer, task)))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -301,6 +313,10 @@ object ContainerDependencyGraphSpec : Spek({
 
                     it("takes its command from the command resolver") {
                         assertThat(node.config.command, equalTo(commandResolver.resolveCommand(container, task)))
+                    }
+
+                    it("takes its entrypoint from the entrypoint resolver") {
+                        assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(container, task)))
                     }
 
                     it("indicates that it is not the root node of the graph") {
@@ -318,7 +334,7 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-dependency' referenced by task 'the-task' does not exist.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver, entrypointResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-dependency' referenced by task 'the-task' does not exist.")))
                 }
             }
         }
@@ -331,7 +347,7 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The task 'the-task' cannot start the container 'some-container' and also run it.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver, entrypointResolver) }, throws<DependencyResolutionFailedException>(withMessage("The task 'the-task' cannot start the container 'some-container' and also run it.")))
                 }
             }
         }
@@ -344,7 +360,7 @@ object ContainerDependencyGraphSpec : Spek({
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, dependencyContainer3))
-            val graph = ContainerDependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -359,6 +375,10 @@ object ContainerDependencyGraphSpec : Spek({
 
                 it("takes its command from the command resolver") {
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                }
+
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(taskContainer, task)))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -386,6 +406,10 @@ object ContainerDependencyGraphSpec : Spek({
                         assertThat(node.config.command, equalTo(commandResolver.resolveCommand(container, task)))
                     }
 
+                    it("takes its entrypoint from the entrypoint resolver") {
+                        assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(container, task)))
+                    }
+
                     it("indicates that it is not the root node of the graph") {
                         assertThat(node.isRootNode, equalTo(false))
                     }
@@ -400,7 +424,7 @@ object ContainerDependencyGraphSpec : Spek({
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2))
-            val graph = ContainerDependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -415,6 +439,10 @@ object ContainerDependencyGraphSpec : Spek({
 
                 it("takes its command from the command resolver") {
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                }
+
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(taskContainer, task)))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -441,6 +469,10 @@ object ContainerDependencyGraphSpec : Spek({
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(dependencyContainer2, task)))
                 }
 
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(dependencyContainer2, task)))
+                }
+
                 it("indicates that it is not the root node of the graph") {
                     assertThat(node.isRootNode, equalTo(false))
                 }
@@ -461,6 +493,10 @@ object ContainerDependencyGraphSpec : Spek({
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(dependencyContainer1, task)))
                 }
 
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(dependencyContainer1, task)))
+                }
+
                 it("indicates that it is not the root node of the graph") {
                     assertThat(node.isRootNode, equalTo(false))
                 }
@@ -475,7 +511,7 @@ object ContainerDependencyGraphSpec : Spek({
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, containerWithNoDependencies))
-            val graph = ContainerDependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -490,6 +526,10 @@ object ContainerDependencyGraphSpec : Spek({
 
                 it("takes its command from the command resolver") {
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                }
+
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(taskContainer, task)))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -517,6 +557,10 @@ object ContainerDependencyGraphSpec : Spek({
                         assertThat(node.config.command, equalTo(commandResolver.resolveCommand(container, task)))
                     }
 
+                    it("takes its entrypoint from the entrypoint resolver") {
+                        assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(container, task)))
+                    }
+
                     it("indicates that it is not the root node of the graph") {
                         assertThat(node.isRootNode, equalTo(false))
                     }
@@ -538,6 +582,10 @@ object ContainerDependencyGraphSpec : Spek({
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(containerWithNoDependencies, task)))
                 }
 
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(containerWithNoDependencies, task)))
+                }
+
                 it("indicates that it is not the root node of the graph") {
                     assertThat(node.isRootNode, equalTo(false))
                 }
@@ -551,7 +599,7 @@ object ContainerDependencyGraphSpec : Spek({
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, containerB, containerA))
-            val graph = ContainerDependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -566,6 +614,10 @@ object ContainerDependencyGraphSpec : Spek({
 
                 it("takes its command from the command resolver") {
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                }
+
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(taskContainer, task)))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -592,6 +644,10 @@ object ContainerDependencyGraphSpec : Spek({
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(containerA, task)))
                 }
 
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(containerA, task)))
+                }
+
                 it("indicates that it is not the root node of the graph") {
                     assertThat(node.isRootNode, equalTo(false))
                 }
@@ -612,6 +668,10 @@ object ContainerDependencyGraphSpec : Spek({
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(containerB, task)))
                 }
 
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(containerB, task)))
+                }
+
                 it("indicates that it is not the root node of the graph") {
                     assertThat(node.isRootNode, equalTo(false))
                 }
@@ -625,7 +685,7 @@ object ContainerDependencyGraphSpec : Spek({
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(taskDependencyContainer.name))
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, taskDependencyContainer, otherDependencyContainer))
-            val graph = ContainerDependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -640,6 +700,10 @@ object ContainerDependencyGraphSpec : Spek({
 
                 it("takes its command from the command resolver") {
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                }
+
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(taskContainer, task)))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -666,6 +730,10 @@ object ContainerDependencyGraphSpec : Spek({
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskDependencyContainer, task)))
                 }
 
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(taskDependencyContainer, task)))
+                }
+
                 it("indicates that it is not the root node of the graph") {
                     assertThat(node.isRootNode, equalTo(false))
                 }
@@ -686,6 +754,10 @@ object ContainerDependencyGraphSpec : Spek({
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(otherDependencyContainer, task)))
                 }
 
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(otherDependencyContainer, task)))
+                }
+
                 it("indicates that it is not the root node of the graph") {
                     assertThat(node.isRootNode, equalTo(false))
                 }
@@ -698,7 +770,7 @@ object ContainerDependencyGraphSpec : Spek({
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(dependencyContainer.name))
             val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
-            val graph = ContainerDependencyGraph(config, task, commandResolver)
+            val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
                 val node = graph.taskContainerNode
@@ -713,6 +785,10 @@ object ContainerDependencyGraphSpec : Spek({
 
                 it("takes its command from the command resolver") {
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                }
+
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(taskContainer, task)))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -739,6 +815,10 @@ object ContainerDependencyGraphSpec : Spek({
                     assertThat(node.config.command, equalTo(commandResolver.resolveCommand(dependencyContainer, task)))
                 }
 
+                it("takes its entrypoint from the entrypoint resolver") {
+                    assertThat(node.config.entrypoint, equalTo(entrypointResolver.resolveEntrypoint(dependencyContainer, task)))
+                }
+
                 it("indicates that it is not the root node of the graph") {
                     assertThat(node.isRootNode, equalTo(false))
                 }
@@ -753,7 +833,7 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-container' referenced by container 'some-container' does not exist.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver, entrypointResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-container' referenced by container 'some-container' does not exist.")))
                 }
             }
         }
@@ -767,7 +847,7 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-container' referenced by container 'dependency-container' does not exist.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver, entrypointResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'non-existent-container' referenced by container 'dependency-container' does not exist.")))
                 }
             }
         }
@@ -780,7 +860,7 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'some-container' cannot depend on itself.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver, entrypointResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'some-container' cannot depend on itself.")))
                 }
             }
         }
@@ -794,7 +874,7 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'dependency-container' cannot depend on itself.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver, entrypointResolver) }, throws<DependencyResolutionFailedException>(withMessage("The container 'dependency-container' cannot depend on itself.")))
                 }
             }
         }
@@ -808,7 +888,7 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-a' depends on 'container-b', which depends on 'container-a'.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver, entrypointResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-a' depends on 'container-b', which depends on 'container-a'.")))
                 }
             }
         }
@@ -823,7 +903,7 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-a' depends on 'container-b', which depends on 'container-c', which depends on 'container-a'.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver, entrypointResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-a' depends on 'container-b', which depends on 'container-c', which depends on 'container-a'.")))
                 }
             }
         }
@@ -837,7 +917,7 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on the task container 'container-a'.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver, entrypointResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on the task container 'container-a'.")))
                 }
             }
         }
@@ -852,7 +932,7 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on the task container 'container-a'.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver, entrypointResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on the task container 'container-a'.")))
                 }
             }
         }
@@ -868,7 +948,7 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on 'container-d', and 'container-d' depends on the task container 'container-a'.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver, entrypointResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on 'container-d', and 'container-d' depends on the task container 'container-a'.")))
                 }
             }
         }
@@ -883,7 +963,7 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task, commandResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on 'container-b'.")))
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver, entrypointResolver) }, throws<DependencyResolutionFailedException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on 'container-b'.")))
                 }
             }
         }

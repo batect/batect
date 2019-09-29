@@ -85,6 +85,8 @@ Entrypoint to use to run the [command](#command).
 
 If not provided, the default entrypoint for the container will be used.
 
+Both of these can be overridden for an individual task by specifying an [`entrypoint` at the task level](Tasks.md#entrypoint).
+
 See the Docker docs for [`CMD`](https://docs.docker.com/engine/reference/builder/#cmd) and
 [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint) for more information on how the entrypoint is used.
 batect will always convert the entrypoint provided here to the exec form when passed to Docker.

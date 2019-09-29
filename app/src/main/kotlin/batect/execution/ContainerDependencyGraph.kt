@@ -22,7 +22,12 @@ import batect.config.EnvironmentVariableExpression
 import batect.config.PortMapping
 import batect.config.Task
 
-data class ContainerDependencyGraph(val config: Configuration, val task: Task, val containerCommandResolver: ContainerCommandResolver) {
+data class ContainerDependencyGraph(
+    val config: Configuration,
+    val task: Task,
+    val commandResolver: ContainerCommandResolver,
+    val entrypointResolver: ContainerEntrypointResolver
+) {
     private val nodesMap = createNodes()
 
     val taskContainerNode: ContainerDependencyGraphNode by lazy { nodeFor(config.containers[task.runConfiguration.container]!!) }
@@ -72,8 +77,8 @@ data class ContainerDependencyGraph(val config: Configuration, val task: Task, v
             val dependencyNodes = resolveDependencies(dependencies, nodesAlreadyCreated, newPath)
 
             val overrides = ContainerRuntimeConfiguration(
-                containerCommandResolver.resolveCommand(container, task),
-                container.entrypoint,
+                commandResolver.resolveCommand(container, task),
+                entrypointResolver.resolveEntrypoint(container, task),
                 workingDirectory(isRootNode, container, task),
                 additionalEnvironmentVariables(isRootNode),
                 additionalPortMappings(isRootNode)

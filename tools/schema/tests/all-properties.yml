@@ -133,6 +133,7 @@ tasks:
     run:
       container: build-env
       command: sh -c "echo 'This is some output from task 1' && exit 123"
+      entrypoint: some-entrypoint
       environment:
         VAR: value
       ports:

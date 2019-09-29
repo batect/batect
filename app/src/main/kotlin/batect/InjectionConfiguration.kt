@@ -43,6 +43,7 @@ import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.execution.ContainerCommandResolver
+import batect.execution.ContainerEntrypointResolver
 import batect.execution.ContainerDependencyGraphProvider
 import batect.execution.InterruptionTrap
 import batect.execution.ParallelExecutionManagerProvider
@@ -188,7 +189,8 @@ private val dockerModule = Kodein.Module("docker") {
 private val executionModule = Kodein.Module("execution") {
     bind<CleanupStagePlanner>() with singletonWithLogger { logger -> CleanupStagePlanner(instance(), logger) }
     bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance()) }
-    bind<ContainerDependencyGraphProvider>() with singletonWithLogger { logger -> ContainerDependencyGraphProvider(instance(), logger) }
+    bind<ContainerDependencyGraphProvider>() with singletonWithLogger { logger -> ContainerDependencyGraphProvider(instance(), instance(), logger) }
+    bind<ContainerEntrypointResolver>() with singleton { ContainerEntrypointResolver() }
     bind<InterruptionTrap>() with singleton { InterruptionTrap(instance()) }
     bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance(), instance()) }
     bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance(), instance()) }

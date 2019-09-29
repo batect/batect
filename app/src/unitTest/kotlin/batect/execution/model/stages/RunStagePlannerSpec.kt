@@ -28,6 +28,7 @@ import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerDependencyGraph
+import batect.execution.ContainerEntrypointResolver
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.run.BuildImageStepRule
 import batect.execution.model.rules.run.CreateContainerStepRule
@@ -59,6 +60,10 @@ object RunStagePlannerSpec : Spek({
             on { resolveCommand(any(), any()) } doReturn Command.parse("do-stuff")
         }
 
+        val entrypointResolver = mock<ContainerEntrypointResolver> {
+            on { resolveEntrypoint(any(), any()) } doReturn Command.parse("some-entrypoint")
+        }
+
         val logger by createLoggerForEachTest()
         val planner by createForEachTest { RunStagePlanner(logger) }
 
@@ -87,7 +92,7 @@ object RunStagePlannerSpec : Spek({
                 on("that container pulls an existing image") {
                     val container = Container(task.runConfiguration.container, PullImage("some-image"))
                     val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
-                    val graph = ContainerDependencyGraph(config, task, commandResolver)
+                    val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
                     val allContainersInNetwork = setOf(container)
 
                     itCreatesStageWithRules(
@@ -105,7 +110,7 @@ object RunStagePlannerSpec : Spek({
                     val imageSource = BuildImage(Paths.get("./my-image"), mapOf("some_arg" to LiteralValue("some_value")), "some-Dockerfile")
                     val container = Container(task.runConfiguration.container, imageSource)
                     val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
-                    val graph = ContainerDependencyGraph(config, task, commandResolver)
+                    val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
                     val allContainersInNetwork = setOf(container)
 
                     itCreatesStageWithRules(
@@ -124,7 +129,7 @@ object RunStagePlannerSpec : Spek({
                 val task = Task("the-task", TaskRunConfiguration("the-container", additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value"))))
                 val container = Container(task.runConfiguration.container, PullImage("some-image"))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
-                val graph = ContainerDependencyGraph(config, task, commandResolver)
+                val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
                 val allContainersInNetwork = setOf(container)
 
                 itCreatesStageWithRules(
@@ -142,7 +147,7 @@ object RunStagePlannerSpec : Spek({
                 val task = Task("the-task", TaskRunConfiguration("the-container", additionalPortMappings = setOf(PortMapping(123, 456))))
                 val container = Container(task.runConfiguration.container, PullImage("some-image"))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
-                val graph = ContainerDependencyGraph(config, task, commandResolver)
+                val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
                 val allContainersInNetwork = setOf(container)
 
                 itCreatesStageWithRules(
@@ -170,7 +175,7 @@ object RunStagePlannerSpec : Spek({
                 val taskContainerImageSource = BuildImage(Paths.get("./task-container"))
                 val taskContainer = Container(task.runConfiguration.container, taskContainerImageSource, dependencies = setOf(container1.name, container2.name, container3.name))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2, container3))
-                val graph = ContainerDependencyGraph(config, task, commandResolver)
+                val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
                 val allContainersInNetwork = setOf(taskContainer, container1, container2, container3)
 
                 itCreatesStageWithRules(
@@ -203,7 +208,7 @@ object RunStagePlannerSpec : Spek({
                 val taskContainerImageSource = PullImage("task-image")
                 val taskContainer = Container(task.runConfiguration.container, taskContainerImageSource, dependencies = setOf(container1.name, container2.name))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2))
-                val graph = ContainerDependencyGraph(config, task, commandResolver)
+                val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
                 val allContainersInNetwork = setOf(taskContainer, container1, container2)
 
                 itCreatesStageWithRules(
@@ -233,7 +238,7 @@ object RunStagePlannerSpec : Spek({
                         val container2 = Container("container-2", imageSource)
                         val taskContainer = Container(task.runConfiguration.container, PullImage("task-image"), dependencies = setOf(container1.name, container2.name))
                         val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2))
-                        val graph = ContainerDependencyGraph(config, task, commandResolver)
+                        val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
                         val allContainersInNetwork = setOf(taskContainer, container1, container2)
 
                         itCreatesStageWithRules(
@@ -262,7 +267,7 @@ object RunStagePlannerSpec : Spek({
                         val container2 = Container("container-2", container2ImageSource)
                         val taskContainer = Container(task.runConfiguration.container, PullImage("task-image"), dependencies = setOf(container1.name, container2.name))
                         val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2))
-                        val graph = ContainerDependencyGraph(config, task, commandResolver)
+                        val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
                         val allContainersInNetwork = setOf(taskContainer, container1, container2)
 
                         itCreatesStageWithRules(
@@ -292,7 +297,7 @@ object RunStagePlannerSpec : Spek({
                     val container2 = Container("container-2", container2ImageSource)
                     val taskContainer = Container(task.runConfiguration.container, PullImage("task-image"), dependencies = setOf(container1.name, container2.name))
                     val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2))
-                    val graph = ContainerDependencyGraph(config, task, commandResolver)
+                    val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
                     val allContainersInNetwork = setOf(taskContainer, container1, container2)
 
                     itCreatesStageWithRules(

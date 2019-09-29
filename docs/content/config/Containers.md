@@ -58,11 +58,11 @@ Both of these can be overridden for an individual task by specifying a [`command
     If you would like to use shell syntax features in your command, you have four options:
 
     1. Create a shell script and invoke that instead of specifying the command directly.
-  
+
     2. Wrap your command in a shell invocation.
 
         For example, if your command is `echo hello && echo world`, set `command` to `sh -c 'echo hello && echo world'`.
-        
+
     3. Set the entrypoint in the image to a shell. For example:
        ```dockerfile
        ENTRYPOINT ["/bin/sh", "-c"]

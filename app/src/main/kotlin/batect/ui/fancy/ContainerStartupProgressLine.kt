@@ -173,7 +173,7 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     private fun onCreateContainerStepStarting(step: CreateContainerStep) {
         if (step.container == container) {
             isCreating = true
-            command = step.command
+            command = step.config.command
         }
     }
 

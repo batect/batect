@@ -57,7 +57,7 @@ object TaskRunnerSpec : Spek({
         val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true)
 
         val graph = mock<ContainerDependencyGraph> {
-            on { taskContainerNode } doReturn ContainerDependencyGraphNode(container, null, null, emptyMap(), emptySet(), true, emptySet(), mock)
+            on { taskContainerNode } doReturn ContainerDependencyGraphNode(container, mock(), true, emptySet(), mock)
         }
         val graphProvider = mock<ContainerDependencyGraphProvider> {
             on { createGraph(config, task) } doReturn graph

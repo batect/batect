@@ -45,6 +45,7 @@ data class Container(
     val name: String,
     val imageSource: ImageSource,
     val command: Command? = null,
+    val entrypoint: Command? = null,
     val environment: Map<String, EnvironmentVariableExpression> = emptyMap(),
     val workingDirectory: String? = null,
     val volumeMounts: Set<VolumeMount> = emptySet(),
@@ -64,6 +65,7 @@ data class Container(
         private const val dockerfileFieldName = "dockerfile"
         private const val imageNameFieldName = "image"
         private const val commandFieldName = "command"
+        private const val entrypointFieldName = "entrypoint"
         private const val environmentFieldName = "environment"
         private const val workingDirectoryFieldName = "working_directory"
         private const val volumeMountsFieldName = "volumes"
@@ -83,6 +85,7 @@ data class Container(
                 addElement(dockerfileFieldName, isOptional = true)
                 addElement(imageNameFieldName, isOptional = true)
                 addElement(commandFieldName, isOptional = true)
+                addElement(entrypointFieldName, isOptional = true)
                 addElement(environmentFieldName, isOptional = true)
                 addElement(workingDirectoryFieldName, isOptional = true)
                 addElement(volumeMountsFieldName, isOptional = true)
@@ -102,6 +105,7 @@ data class Container(
         private val dockerfileFieldIndex = descriptor.getElementIndex(dockerfileFieldName)
         private val imageNameFieldIndex = descriptor.getElementIndex(imageNameFieldName)
         private val commandFieldIndex = descriptor.getElementIndex(commandFieldName)
+        private val entrypointFieldIndex = descriptor.getElementIndex(entrypointFieldName)
         private val environmentFieldIndex = descriptor.getElementIndex(environmentFieldName)
         private val workingDirectoryFieldIndex = descriptor.getElementIndex(workingDirectoryFieldName)
         private val volumeMountsFieldIndex = descriptor.getElementIndex(volumeMountsFieldName)
@@ -126,6 +130,7 @@ data class Container(
             var dockerfilePath: String? = null
             var imageName: String? = null
             var command: Command? = null
+            var entrypoint: Command? = null
             var environment = emptyMap<String, EnvironmentVariableExpression>()
             var workingDirectory: String? = null
             var volumeMounts = emptySet<VolumeMount>()
@@ -146,6 +151,7 @@ data class Container(
                     dockerfileFieldIndex -> dockerfilePath = input.decodeStringElement(descriptor, i)
                     imageNameFieldIndex -> imageName = input.decodeStringElement(descriptor, i)
                     commandFieldIndex -> command = input.decode(Command.Companion)
+                    entrypointFieldIndex -> entrypoint = input.decode(Command.Companion)
                     environmentFieldIndex -> environment = input.decode(EnvironmentSerializer)
                     workingDirectoryFieldIndex -> workingDirectory = input.decodeStringElement(descriptor, i)
                     volumeMountsFieldIndex -> volumeMounts = input.decode(VolumeMount.serializer().set)
@@ -166,6 +172,7 @@ data class Container(
                 "UNNAMED-FROM-CONFIG-FILE",
                 resolveImageSource(buildDirectory, buildArgs, dockerfilePath, imageName, input.node.location),
                 command,
+                entrypoint,
                 environment,
                 workingDirectory,
                 volumeMounts,
@@ -242,6 +249,7 @@ data class Container(
             }
 
             output.encodeSerializableElement(descriptor, commandFieldIndex, Command.serializer().nullable, obj.command)
+            output.encodeSerializableElement(descriptor, entrypointFieldIndex, Command.serializer().nullable, obj.entrypoint)
             output.encodeSerializableElement(descriptor, environmentFieldIndex, EnvironmentSerializer, obj.environment)
             output.encodeSerializableElement(descriptor, workingDirectoryFieldIndex, StringSerializer.nullable, obj.workingDirectory)
             output.encodeSerializableElement(descriptor, volumeMountsFieldIndex, VolumeMount.serializer().set, obj.volumeMounts)

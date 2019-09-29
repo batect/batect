@@ -25,9 +25,13 @@ import kotlinx.serialization.internal.StringSerializer
 import kotlinx.serialization.map
 import kotlinx.serialization.set
 
-class ContainerDependencyGraphProvider(private val containerCommandResolver: ContainerCommandResolver, private val logger: Logger) {
+class ContainerDependencyGraphProvider(
+    private val commandResolver: ContainerCommandResolver,
+    private val entrypointResolver: ContainerEntrypointResolver,
+    private val logger: Logger
+) {
     fun createGraph(config: Configuration, task: Task): ContainerDependencyGraph {
-        val graph = ContainerDependencyGraph(config, task, containerCommandResolver)
+        val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
         logger.info {
             val dependenciesList = graph.allNodes

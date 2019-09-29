@@ -169,8 +169,8 @@ class InterleavedEventLogger(
     }
 
     private fun onCreateContainerStepStarting(step: CreateContainerStep) {
-        if (step.command != null) {
-            commands[step.container] = step.command
+        if (step.config.command != null) {
+            commands[step.container] = step.config.command
         }
     }
 

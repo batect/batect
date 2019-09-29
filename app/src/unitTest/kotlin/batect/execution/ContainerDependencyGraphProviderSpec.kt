@@ -42,7 +42,8 @@ object ContainerDependencyGraphProviderSpec : Spek({
         val logSink = InMemoryLogSink()
         val logger = Logger("some.source", logSink)
         val commandResolver = mock<ContainerCommandResolver>()
-        val provider = ContainerDependencyGraphProvider(commandResolver, logger)
+        val entrypointResolver = mock<ContainerEntrypointResolver>()
+        val provider = ContainerDependencyGraphProvider(commandResolver, entrypointResolver, logger)
 
         on("creating a dependency graph") {
             val dependencyForContainer = Container("dependencyForContainer", imageSourceDoesNotMatter())

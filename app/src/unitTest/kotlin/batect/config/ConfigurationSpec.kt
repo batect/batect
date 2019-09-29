@@ -37,6 +37,7 @@ object ConfigurationSpec : Spek({
                     TaskRunConfiguration(
                         "the-container",
                         Command.parse("the-command"),
+                        Command.parse("the-entrypoint"),
                         mapOf(
                             "SOME_VAR" to LiteralValue("blah"),
                             "SOME_REFERENCE" to ReferenceValue("REFERENCE_TO"),
@@ -64,6 +65,7 @@ object ConfigurationSpec : Spek({
                                     "run": {
                                         "container": "the-container",
                                         "command": ["the-command"],
+                                        "entrypoint": ["the-entrypoint"],
                                         "environment": {
                                             "SOME_VAR": "blah",
                                             "SOME_REFERENCE": "${'$'}REFERENCE_TO",
@@ -91,6 +93,7 @@ object ConfigurationSpec : Spek({
                     "the-container",
                     PullImage("the-image"),
                     Command.parse("the-command"),
+                    Command.parse("sh"),
                     mapOf("SOME_VAR" to LiteralValue("some-value")),
                     "/some/working/dir",
                     setOf(VolumeMount("/local/path", "/container/path", "some-options")),
@@ -117,6 +120,7 @@ object ConfigurationSpec : Spek({
                                 "the-container": {
                                     "image": "the-image",
                                     "command": ["the-command"],
+                                    "entrypoint": ["sh"],
                                     "environment": {
                                         "SOME_VAR": "some-value"
                                     },
@@ -186,6 +190,7 @@ object ConfigurationSpec : Spek({
                                     },
                                     "dockerfile": "some-dockerfile",
                                     "command": null,
+                                    "entrypoint": null,
                                     "environment": {},
                                     "working_directory": null,
                                     "volumes": [],

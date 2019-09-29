@@ -95,6 +95,7 @@ object DockerClientIntegrationTest : Spek({
                 image,
                 network,
                 command,
+                emptyList(),
                 "test-container",
                 "test-container",
                 emptyMap(),

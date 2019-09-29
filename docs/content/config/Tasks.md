@@ -24,6 +24,16 @@ Specifies what to do when this task starts:
     shell syntax features like `&&` from working. See the [note about entrypoints in the documentation for containers](Containers.md#command-entrypoint-note)
     for more information.
 
+* `entrypoint` Entrypoint to use to run the command.
+
+    Overrides any entrypoint specified on the container definition and the image's default entrypoint. If no entrypoint is provided here,
+    [the entrypoint specified on the container definition](Containers.md#entrypoint) is used if there is one, otherwise the image's default entrypoint is used.
+
+    Applies to whichever command takes precedence, whether that is the command specified on this task, the [command specified on the container](Containers.md#command),
+    or the image's default command.
+
+    Available since v0.37.
+
 * `environment` List of environment variables (in `name: value` format) to pass to the container, in addition to those defined on the
   container itself.
 

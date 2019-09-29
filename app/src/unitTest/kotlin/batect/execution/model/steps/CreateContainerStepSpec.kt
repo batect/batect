@@ -17,51 +17,34 @@
 package batect.execution.model.steps
 
 import batect.config.Container
-import batect.config.LiteralValue
-import batect.config.PortMapping
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
-import batect.os.Command
-import batect.testutils.given
+import batect.execution.ContainerRuntimeConfiguration
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object CreateContainerStepSpec : Spek({
     describe("a 'create container' step") {
         val container = Container("the-container", imageSourceDoesNotMatter())
+        val config = mock<ContainerRuntimeConfiguration>()
         val otherContainer = Container("the-other-container", imageSourceDoesNotMatter())
-        val workingDirectory = "some-dir"
-        val additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value"))
-        val additionalPortMappings = setOf(PortMapping(123, 456))
+        val allContainersInNetwork = setOf(container, otherContainer)
         val image = DockerImage("the-image")
         val network = DockerNetwork("the-network")
-        val allContainersInNetwork = setOf(container, otherContainer)
 
-        given("there is an explicit command") {
-            val command = Command.parse("the-command some-arg")
-            val step = CreateContainerStep(container, command, workingDirectory, additionalEnvironmentVariables, additionalPortMappings, allContainersInNetwork, image, network)
+        val step = CreateContainerStep(container, config, allContainersInNetwork, image, network)
 
-            on("toString()") {
-                it("returns a human-readable representation of itself") {
-                    assertThat(step.toString(),
-                        equalTo("CreateContainerStep(container: 'the-container', command: [the-command, some-arg], working directory: some-dir, additional environment variables: [SOME_VAR=LiteralValue(value: 'some value')], additional port mappings: [123:456], all containers in network: ['the-container', 'the-other-container'], image: 'the-image', network: 'the-network')"))
-                }
-            }
-        }
-
-        given("there is no explicit command") {
-            val command = null
-            val step = CreateContainerStep(container, command, workingDirectory, additionalEnvironmentVariables, additionalPortMappings, allContainersInNetwork, image, network)
-
-            on("toString()") {
-                it("returns a human-readable representation of itself") {
-                    assertThat(step.toString(),
-                        equalTo("CreateContainerStep(container: 'the-container', command: null, working directory: some-dir, additional environment variables: [SOME_VAR=LiteralValue(value: 'some value')], additional port mappings: [123:456], all containers in network: ['the-container', 'the-other-container'], image: 'the-image', network: 'the-network')"))
-                }
+        on("toString()") {
+            it("returns a human-readable representation of itself") {
+                assertThat(
+                    step.toString(),
+                    equalTo("CreateContainerStep(container: 'the-container', config: $config, all containers in network: ['the-container', 'the-other-container'], image: 'the-image', network: 'the-network')")
+                )
             }
         }
     }

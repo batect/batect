@@ -21,9 +21,13 @@ import batect.config.Container
 import batect.config.EnvironmentVariableExpression
 import batect.config.PortMapping
 import batect.config.Task
-import batect.os.Command
 
-data class ContainerDependencyGraph(val config: Configuration, val task: Task, val containerCommandResolver: ContainerCommandResolver) {
+data class ContainerDependencyGraph(
+    val config: Configuration,
+    val task: Task,
+    val commandResolver: ContainerCommandResolver,
+    val entrypointResolver: ContainerEntrypointResolver
+) {
     private val nodesMap = createNodes()
 
     val taskContainerNode: ContainerDependencyGraphNode by lazy { nodeFor(config.containers[task.runConfiguration.container]!!) }
@@ -71,17 +75,18 @@ data class ContainerDependencyGraph(val config: Configuration, val task: Task, v
             }
 
             val dependencyNodes = resolveDependencies(dependencies, nodesAlreadyCreated, newPath)
-            val command = containerCommandResolver.resolveCommand(container, task)
-            val workingDirectory = workingDirectory(isRootNode, container, task)
-            val additionalEnvironmentVariables = additionalEnvironmentVariables(isRootNode)
-            val additionalPortMappings = additionalPortMappings(isRootNode)
+
+            val overrides = ContainerRuntimeConfiguration(
+                commandResolver.resolveCommand(container, task),
+                entrypointResolver.resolveEntrypoint(container, task),
+                workingDirectory(isRootNode, container, task),
+                additionalEnvironmentVariables(isRootNode),
+                additionalPortMappings(isRootNode)
+            )
 
             ContainerDependencyGraphNode(
                 container,
-                command,
-                workingDirectory,
-                additionalEnvironmentVariables,
-                additionalPortMappings,
+                overrides,
                 isRootNode,
                 dependencyNodes,
                 this
@@ -159,22 +164,6 @@ data class ContainerDependencyGraph(val config: Configuration, val task: Task, v
     } else {
         container.workingDirectory
     }
-}
-
-data class ContainerDependencyGraphNode(
-    val container: Container,
-    val command: Command?,
-    val workingDirectory: String?,
-    val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression>,
-    val additionalPortMappings: Set<PortMapping>,
-    val isRootNode: Boolean,
-    val dependsOn: Set<ContainerDependencyGraphNode>,
-    val graph: ContainerDependencyGraph
-) {
-    val dependedOnBy: Set<ContainerDependencyGraphNode> by lazy { graph.allNodes.filter { it.dependsOn.contains(this) }.toSet() }
-
-    val dependsOnContainers: Set<Container> by lazy { dependsOn.map { it.container }.toSet() }
-    val dependedOnByContainers: Set<Container> by lazy { dependedOnBy.map { it.container }.toSet() }
 }
 
 class DependencyResolutionFailedException(message: String) : Exception(message)

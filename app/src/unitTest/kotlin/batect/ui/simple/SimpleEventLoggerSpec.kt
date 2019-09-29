@@ -22,6 +22,7 @@ import batect.config.PullImage
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.RunOptions
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerStartedEvent
@@ -187,9 +188,10 @@ object SimpleEventLoggerSpec : Spek({
                         }
 
                         describe("and a 'create container' step has been seen") {
+
                             on("and that step did not contain a command") {
                                 beforeEachTest {
-                                    val createContainerStep = CreateContainerStep(taskContainer, null, null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
+                                    val createContainerStep = CreateContainerStep(taskContainer, ContainerRuntimeConfiguration.withCommand(null), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
                                     val runContainerStep = RunContainerStep(taskContainer, DockerContainer("not-important"))
 
                                     logger.postEvent(StepStartingEvent(createContainerStep))
@@ -203,7 +205,7 @@ object SimpleEventLoggerSpec : Spek({
 
                             on("and that step contained a command") {
                                 beforeEachTest {
-                                    val createContainerStep = CreateContainerStep(taskContainer, Command.parse("do-stuff.sh"), null, emptyMap(), emptySet(), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
+                                    val createContainerStep = CreateContainerStep(taskContainer, ContainerRuntimeConfiguration.withCommand(Command.parse("do-stuff.sh")), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
                                     val runContainerStep = RunContainerStep(taskContainer, DockerContainer("not-important"))
 
                                     logger.postEvent(StepStartingEvent(createContainerStep))

@@ -28,6 +28,7 @@ import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
 import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerDependencyGraph
+import batect.execution.ContainerEntrypointResolver
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.TaskEvent
@@ -71,12 +72,16 @@ object CleanupStagePlannerSpec : Spek({
             on { resolveCommand(any(), any()) } doReturn Command.parse("do-stuff")
         }
 
+        val entrypointResolver = mock<ContainerEntrypointResolver> {
+            on { resolveEntrypoint(any(), any()) } doReturn Command.parse("some-entrypoint")
+        }
+
         val task = Task("the-task", TaskRunConfiguration("task-container"))
         val container1 = Container("container-1", BuildImage(Paths.get("./container-1")))
         val container2 = Container("container-2", PullImage("image-2"), dependencies = setOf(container1.name))
         val taskContainer = Container(task.runConfiguration.container, BuildImage(Paths.get("./task-container")), dependencies = setOf(container1.name, container2.name))
         val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2))
-        val graph = ContainerDependencyGraph(config, task, commandResolver)
+        val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
         val events by createForEachTest { mutableSetOf<TaskEvent>() }
         val logger by createLoggerForEachTest()
         val planner by createForEachTest { CleanupStagePlanner(systemInfo, logger) }

@@ -173,6 +173,7 @@ object ConfigurationLoaderSpec : Spek({
                 |    run:
                 |      container: build-env
                 |      command: ./gradlew doStuff
+                |      entrypoint: some-entrypoint
                 |      environment:
                 |        OPTS: -Dthing
                 |        INT_VALUE: 1
@@ -201,6 +202,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.name, equalTo("first_task"))
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, equalTo(Command.parse("./gradlew doStuff")))
+                assertThat(task.runConfiguration.entrypoint, equalTo(Command.parse("some-entrypoint")))
                 assertThat(task.runConfiguration.additionalEnvironmentVariables, equalTo(mapOf(
                     "OPTS" to LiteralValue("-Dthing"),
                     "INT_VALUE" to LiteralValue("1"),
@@ -241,6 +243,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.name, equalTo("first_task"))
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, absent())
+                assertThat(task.runConfiguration.entrypoint, absent())
                 assertThat(task.runConfiguration.workingDiretory, absent())
                 assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.prerequisiteTasks, isEmpty)
@@ -275,6 +278,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.name, equalTo("first_task"))
                 assertThat(task.runConfiguration.container, equalTo("build-env"))
                 assertThat(task.runConfiguration.command, absent())
+                assertThat(task.runConfiguration.entrypoint, absent())
                 assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, equalTo("The very first task."))
@@ -477,6 +481,7 @@ object ConfigurationLoaderSpec : Spek({
                     |  container-1:
                     |    build_directory: container-1-build-dir
                     |    command: do-the-thing.sh some-param
+                    |    entrypoint: sh
                     |    environment:
                     |      OPTS: -Dthing
                     |      INT_VALUE: 1
@@ -514,6 +519,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.name, equalTo("container-1"))
                 assertThat(container.imageSource, equalTo(BuildImage(fileSystem.getPath("/resolved/container-1-build-dir"))))
                 assertThat(container.command, equalTo(Command.parse("do-the-thing.sh some-param")))
+                assertThat(container.entrypoint, equalTo(Command.parse("sh")))
                 assertThat(container.environment, equalTo(mapOf(
                     "OPTS" to LiteralValue("-Dthing"),
                     "INT_VALUE" to LiteralValue("1"),

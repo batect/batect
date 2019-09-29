@@ -113,6 +113,8 @@ containers:
       - SYSLOG
       - WAKE_ALARM
       - ALL
+    additional_hostnames:
+      - my-other-hostname
 
   with-build-dir:
     build_directory: test

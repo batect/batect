@@ -322,7 +322,7 @@ object TaskStepRunnerSpec : Spek({
 
                 val config = mock<ContainerRuntimeConfiguration>()
                 val step = CreateContainerStep(container, config, setOf(container, otherContainer), image, network)
-                val request = DockerContainerCreationRequest(image, network, Command.parse("do-stuff").parsedCommand, Command.parse("sh").parsedCommand, "some-container", "some-container", emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
+                val request = DockerContainerCreationRequest(image, network, Command.parse("do-stuff").parsedCommand, Command.parse("sh").parsedCommand, "some-container", setOf("some-container"), emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
 
                 beforeEachTest {
                     whenever(ioStreamingOptions.terminalTypeForContainer(container)).doReturn("some-terminal")

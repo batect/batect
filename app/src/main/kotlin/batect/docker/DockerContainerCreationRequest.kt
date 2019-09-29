@@ -31,7 +31,7 @@ data class DockerContainerCreationRequest(
     val command: List<String>,
     val entrypoint: List<String>,
     val hostname: String,
-    val networkAlias: String,
+    val networkAliases: Set<String>,
     val environmentVariables: Map<String, String>,
     val workingDirectory: String?,
     val volumeMounts: Set<VolumeMount>,
@@ -92,7 +92,7 @@ data class DockerContainerCreationRequest(
             "NetworkingConfig" to json {
                 "EndpointsConfig" to json {
                     network.id to json {
-                        "Aliases" to listOf(networkAlias).toJsonArray()
+                        "Aliases" to networkAliases.toJsonArray()
                     }
                 }
             }

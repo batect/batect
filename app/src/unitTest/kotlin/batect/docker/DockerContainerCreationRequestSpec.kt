@@ -36,7 +36,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 listOf("do-the-thing"),
                 listOf("sh"),
                 "the-hostname",
-                "the-network-alias",
+                setOf("the-first-network-alias", "the-second-network-alias"),
                 mapOf("SOME_VAR" to "some value"),
                 "/work-dir",
                 setOf(VolumeMount("/local", "/container", "ro")),
@@ -100,7 +100,8 @@ object DockerContainerCreationRequestSpec : Spek({
                         |       "EndpointsConfig": {
                         |           "the-network": {
                         |               "Aliases": [
-                        |                   "the-network-alias"
+                        |                   "the-first-network-alias",
+                        |                   "the-second-network-alias"
                         |               ]
                         |           }
                         |       }
@@ -117,7 +118,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 emptyList(),
                 emptyList(),
                 "the-hostname",
-                "the-network-alias",
+                setOf("the-network-alias"),
                 emptyMap(),
                 null,
                 emptySet(),

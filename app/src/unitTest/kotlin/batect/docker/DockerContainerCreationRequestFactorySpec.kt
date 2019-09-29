@@ -87,7 +87,8 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                                     privileged = false,
                                     enableInitProcess = true,
                                     capabilitiesToAdd = setOf(Capability.NET_ADMIN),
-                                    capabilitiesToDrop = setOf(Capability.KILL)
+                                    capabilitiesToDrop = setOf(Capability.KILL),
+                                    additionalHostnames = setOf("some-alias")
                                 )
 
                                 val userAndGroup = UserAndGroup(123, 456)
@@ -120,9 +121,12 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                                     assertThat(request.entrypoint, equalTo(entrypoint.parsedCommand))
                                 }
 
-                                it("populates the hostname and network alias on the request with the name of the container") {
+                                it("populates the hostname on the request with the name of the container") {
                                     assertThat(request.hostname, equalTo(container.name))
-                                    assertThat(request.networkAlias, equalTo(container.name))
+                                }
+
+                                it("populates the network aliases on the request with the name of the container and additional hostnames from the container") {
+                                    assertThat(request.networkAliases, equalTo(setOf(container.name, "some-alias")))
                                 }
 
                                 it("populates the environment variables on the request with the environment variables from the container") {

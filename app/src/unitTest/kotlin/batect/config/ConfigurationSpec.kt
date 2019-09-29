@@ -104,7 +104,8 @@ object ConfigurationSpec : Spek({
                     true,
                     true,
                     setOf(Capability.AUDIT_CONTROL),
-                    setOf(Capability.BLOCK_SUSPEND)
+                    setOf(Capability.BLOCK_SUSPEND),
+                    setOf("other-name")
                 )
 
                 val configuration = Configuration("the-project", TaskMap(), ContainerMap(container))
@@ -148,7 +149,8 @@ object ConfigurationSpec : Spek({
                                     "privileged": true,
                                     "enable_init_process": true,
                                     "capabilities_to_add": ["AUDIT_CONTROL"],
-                                    "capabilities_to_drop": ["BLOCK_SUSPEND"]
+                                    "capabilities_to_drop": ["BLOCK_SUSPEND"],
+                                    "additional_hostnames": ["other-name"]
                                 }
                             }
                         }
@@ -207,7 +209,8 @@ object ConfigurationSpec : Spek({
                                     "privileged": false,
                                     "enable_init_process": false,
                                     "capabilities_to_add": [],
-                                    "capabilities_to_drop": []
+                                    "capabilities_to_drop": [],
+                                    "additional_hostnames": []
                                 }
                             }
                         }

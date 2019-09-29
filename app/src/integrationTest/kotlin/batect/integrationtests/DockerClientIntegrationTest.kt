@@ -97,7 +97,7 @@ object DockerClientIntegrationTest : Spek({
                 command,
                 emptyList(),
                 "test-container",
-                "test-container",
+                setOf("test-container"),
                 emptyMap(),
                 null,
                 volumeMounts,

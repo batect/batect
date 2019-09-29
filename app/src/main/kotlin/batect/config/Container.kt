@@ -56,7 +56,8 @@ data class Container(
     val privileged: Boolean = false,
     val enableInitProcess: Boolean = false,
     val capabilitiesToAdd: Set<Capability> = emptySet(),
-    val capabilitiesToDrop: Set<Capability> = emptySet()
+    val capabilitiesToDrop: Set<Capability> = emptySet(),
+    val additionalHostnames: Set<String> = emptySet()
 ) {
     @Serializer(forClass = Container::class)
     companion object : KSerializer<Container> {
@@ -77,6 +78,7 @@ data class Container(
         private const val enableInitProcessFieldName = "enable_init_process"
         private const val capabilitiesToAddFieldName = "capabilities_to_add"
         private const val capabilitiesToDropFieldName = "capabilities_to_drop"
+        private const val additionalHostnamesFieldName = "additional_hostnames"
 
         override val descriptor: SerialDescriptor = object : SerialClassDescImpl("ContainerFromFile") {
             init {
@@ -97,6 +99,7 @@ data class Container(
                 addElement(enableInitProcessFieldName, isOptional = true)
                 addElement(capabilitiesToAddFieldName, isOptional = true)
                 addElement(capabilitiesToDropFieldName, isOptional = true)
+                addElement(additionalHostnamesFieldName, isOptional = true)
             }
         }
 
@@ -117,6 +120,7 @@ data class Container(
         private val enableInitProcessFieldIndex = descriptor.getElementIndex(enableInitProcessFieldName)
         private val capabilitiesToAddFieldIndex = descriptor.getElementIndex(capabilitiesToAddFieldName)
         private val capabilitiesToDropFieldIndex = descriptor.getElementIndex(capabilitiesToDropFieldName)
+        private val additionalHostnamesFieldIndex = descriptor.getElementIndex(additionalHostnamesFieldName)
 
         override fun deserialize(decoder: Decoder): Container {
             val input = decoder.beginStructure(descriptor) as YamlInput
@@ -142,6 +146,7 @@ data class Container(
             var enableInitProcess = false
             var capabilitiesToAdd = emptySet<Capability>()
             var capabilitiesToDrop = emptySet<Capability>()
+            var additionalHostnames = emptySet<String>()
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
@@ -163,6 +168,7 @@ data class Container(
                     enableInitProcessFieldIndex -> enableInitProcess = input.decodeBooleanElement(descriptor, i)
                     capabilitiesToAddFieldIndex -> capabilitiesToAdd = input.decode(Capability.serializer.set)
                     capabilitiesToDropFieldIndex -> capabilitiesToDrop = input.decode(Capability.serializer.set)
+                    additionalHostnamesFieldIndex -> additionalHostnames = input.decode(StringSerializer.set)
 
                     else -> throw SerializationException("Unknown index $i")
                 }
@@ -183,7 +189,8 @@ data class Container(
                 privileged,
                 enableInitProcess,
                 capabilitiesToAdd,
-                capabilitiesToDrop
+                capabilitiesToDrop,
+                additionalHostnames
             )
         }
 
@@ -261,6 +268,7 @@ data class Container(
             output.encodeBooleanElement(descriptor, enableInitProcessFieldIndex, obj.enableInitProcess)
             output.encodeSerializableElement(descriptor, capabilitiesToAddFieldIndex, Capability.serializer.set, obj.capabilitiesToAdd)
             output.encodeSerializableElement(descriptor, capabilitiesToDropFieldIndex, Capability.serializer.set, obj.capabilitiesToDrop)
+            output.encodeSerializableElement(descriptor, additionalHostnamesFieldIndex, StringSerializer.set, obj.additionalHostnames)
 
             output.endStructure(descriptor)
         }

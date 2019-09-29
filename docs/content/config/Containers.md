@@ -257,6 +257,11 @@ of different processes running as PID 1 and why this flag was introduced.
 
 Available since v0.30.
 
+## `additional_hostnames`
+List of hostnames to associate with this container, in addition to the default hostname (the name of the container).
+
+Available since v0.37.
+
 ## Examples
 
 For more examples and real-world scenarios, take a look at the [sample projects](../SampleProjects.md).

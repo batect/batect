@@ -226,6 +226,8 @@ object ContainerSpec : Spek({
                   - NET_ADMIN
                 capabilities_to_drop:
                   - KILL
+                additional_hostnames:
+                  - extra-name
             """.trimIndent()
 
             on("loading the configuration from the config file") {
@@ -262,6 +264,7 @@ object ContainerSpec : Spek({
                     assertThat(result.enableInitProcess, equalTo(true))
                     assertThat(result.capabilitiesToAdd, equalTo(setOf(Capability.NET_ADMIN)))
                     assertThat(result.capabilitiesToDrop, equalTo(setOf(Capability.KILL)))
+                    assertThat(result.additionalHostnames, equalTo(setOf("extra-name")))
                 }
             }
         }

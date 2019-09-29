@@ -108,6 +108,10 @@
         "capabilities_to_drop": {
           "description": "List of additional capabilities to remove from the container",
           "$ref": "#/definitions/capabilityList"
+        },
+        "additional_hostnames": {
+          "description": "Hostnames to associate with this container in addition to the default hostname.",
+          "$ref": "#/definitions/additionalHostnamesList"
         }
       },
       "oneOf": [
@@ -210,6 +214,14 @@
       ]
     },
     "containerDependencyList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "additionalHostnamesList": {
       "type": "array",
       "uniqueItems": true,
       "items": {

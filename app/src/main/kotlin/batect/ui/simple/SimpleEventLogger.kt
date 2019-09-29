@@ -79,7 +79,7 @@ class SimpleEventLogger(
             is BuildImageStep -> logImageBuildStarting(step.source)
             is PullImageStep -> logImagePullStarting(step.source)
             is RunContainerStep -> logContainerRunning(step.container)
-            is CreateContainerStep -> commands[step.container] = step.command
+            is CreateContainerStep -> commands[step.container] = step.config.command
             is CleanupStep -> logCleanUpStarting()
         }
     }

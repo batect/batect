@@ -20,7 +20,6 @@ import batect.config.BuildImage
 import batect.config.Container
 import batect.config.HealthCheckConfig
 import batect.config.LiteralValue
-import batect.config.PortMapping
 import batect.config.PullImage
 import batect.config.ReferenceValue
 import batect.config.VolumeMount
@@ -47,6 +46,7 @@ import batect.docker.UserAndGroup
 import batect.docker.pull.DockerImagePullProgress
 import batect.execution.CancellationContext
 import batect.execution.CleanupOption
+import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.RunAsCurrentUserConfiguration
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
@@ -317,16 +317,12 @@ object TaskStepRunnerSpec : Spek({
             describe("running a 'create container' step") {
                 val container = Container("some-container", imageSourceDoesNotMatter())
                 val otherContainer = Container("some-other-container", imageSourceDoesNotMatter())
-                val command = Command.parse("do-stuff")
-                val entrypoint = Command.parse("sh")
-                val workingDirectory = "some-dir"
-                val additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value"))
-                val additionalPortMappings = setOf(PortMapping(123, 456))
                 val image = DockerImage("some-image")
                 val network = DockerNetwork("some-network")
 
-                val step = CreateContainerStep(container, command, entrypoint, workingDirectory, additionalEnvironmentVariables, additionalPortMappings, setOf(container, otherContainer), image, network)
-                val request = DockerContainerCreationRequest(image, network, command.parsedCommand, entrypoint.parsedCommand, "some-container", "some-container", emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
+                val config = mock<ContainerRuntimeConfiguration>()
+                val step = CreateContainerStep(container, config, setOf(container, otherContainer), image, network)
+                val request = DockerContainerCreationRequest(image, network, Command.parse("do-stuff").parsedCommand, Command.parse("sh").parsedCommand, "some-container", "some-container", emptyMap(), "/work-dir", emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
 
                 beforeEachTest {
                     whenever(ioStreamingOptions.terminalTypeForContainer(container)).doReturn("some-terminal")
@@ -336,12 +332,8 @@ object TaskStepRunnerSpec : Spek({
                             container,
                             image,
                             network,
-                            command,
-                            entrypoint,
-                            workingDirectory,
-                            additionalEnvironmentVariables,
+                            config,
                             runAsCurrentUserConfiguration.volumeMounts,
-                            additionalPortMappings,
                             runOptions.propagateProxyEnvironmentVariables,
                             runAsCurrentUserConfiguration.userAndGroup,
                             "some-terminal",

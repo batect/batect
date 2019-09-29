@@ -70,23 +70,23 @@ object ContainerDependencyGraphSpec : Spek({
                     }
 
                     it("takes its command from the command resolver") {
-                        assertThat(node.command, equalTo(commandResolver.resolveCommand(container, task)))
+                        assertThat(node.config.command, equalTo(commandResolver.resolveCommand(container, task)))
                     }
 
                     it("takes its entrypoint from the container") {
-                        assertThat(node.entrypoint, equalTo(container.entrypoint))
+                        assertThat(node.config.entrypoint, equalTo(container.entrypoint))
                     }
 
                     it("takes its working directory from the task") {
-                        assertThat(node.workingDirectory, equalTo(runConfig.workingDiretory))
+                        assertThat(node.config.workingDirectory, equalTo(runConfig.workingDiretory))
                     }
 
                     it("takes the additional environment variables from the task") {
-                        assertThat(node.additionalEnvironmentVariables, equalTo(runConfig.additionalEnvironmentVariables))
+                        assertThat(node.config.additionalEnvironmentVariables, equalTo(runConfig.additionalEnvironmentVariables))
                     }
 
                     it("takes the additional port mappings from the task") {
-                        assertThat(node.additionalPortMappings, equalTo(runConfig.additionalPortMappings))
+                        assertThat(node.config.additionalPortMappings, equalTo(runConfig.additionalPortMappings))
                     }
 
                     it("indicates that it is the root node of the graph") {
@@ -126,23 +126,23 @@ object ContainerDependencyGraphSpec : Spek({
                     }
 
                     it("takes its command from the command resolver") {
-                        assertThat(node.command, equalTo(commandResolver.resolveCommand(container, task)))
+                        assertThat(node.config.command, equalTo(commandResolver.resolveCommand(container, task)))
                     }
 
                     it("takes its entrypoint from the container") {
-                        assertThat(node.entrypoint, equalTo(container.entrypoint))
+                        assertThat(node.config.entrypoint, equalTo(container.entrypoint))
                     }
 
                     it("takes its working directory from the container") {
-                        assertThat(node.workingDirectory, equalTo(container.workingDirectory))
+                        assertThat(node.config.workingDirectory, equalTo(container.workingDirectory))
                     }
 
                     it("takes the additional environment variables from the task") {
-                        assertThat(node.additionalEnvironmentVariables, equalTo(runConfig.additionalEnvironmentVariables))
+                        assertThat(node.config.additionalEnvironmentVariables, equalTo(runConfig.additionalEnvironmentVariables))
                     }
 
                     it("takes the additional port mappings from the task") {
-                        assertThat(node.additionalPortMappings, equalTo(runConfig.additionalPortMappings))
+                        assertThat(node.config.additionalPortMappings, equalTo(runConfig.additionalPortMappings))
                     }
 
                     it("indicates that it is the root node of the graph") {
@@ -188,23 +188,23 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
                 }
 
                 it("takes its entrypoint from the container") {
-                    assertThat(node.entrypoint, equalTo(taskContainer.entrypoint))
+                    assertThat(node.config.entrypoint, equalTo(taskContainer.entrypoint))
                 }
 
                 it("takes its working directory from the task") {
-                    assertThat(node.workingDirectory, equalTo(runConfig.workingDiretory))
+                    assertThat(node.config.workingDirectory, equalTo(runConfig.workingDiretory))
                 }
 
                 it("takes the additional environment variables from the task") {
-                    assertThat(node.additionalEnvironmentVariables, equalTo(runConfig.additionalEnvironmentVariables))
+                    assertThat(node.config.additionalEnvironmentVariables, equalTo(runConfig.additionalEnvironmentVariables))
                 }
 
                 it("takes the additional port mappings from the task") {
-                    assertThat(node.additionalPortMappings, equalTo(runConfig.additionalPortMappings))
+                    assertThat(node.config.additionalPortMappings, equalTo(runConfig.additionalPortMappings))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -228,23 +228,23 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(dependencyContainer, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(dependencyContainer, task)))
                 }
 
                 it("takes its entrypoint from the container") {
-                    assertThat(node.entrypoint, equalTo(dependencyContainer.entrypoint))
+                    assertThat(node.config.entrypoint, equalTo(dependencyContainer.entrypoint))
                 }
 
                 it("takes its working directory from the container configuration") {
-                    assertThat(node.workingDirectory, equalTo(dependencyContainer.workingDirectory))
+                    assertThat(node.config.workingDirectory, equalTo(dependencyContainer.workingDirectory))
                 }
 
                 it("does not take the additional environment variables from the task") {
-                    assertThat(node.additionalEnvironmentVariables, isEmptyMap())
+                    assertThat(node.config.additionalEnvironmentVariables, isEmptyMap())
                 }
 
                 it("does not take the additional port mappings from the task") {
-                    assertThat(node.additionalPortMappings, isEmpty)
+                    assertThat(node.config.additionalPortMappings, isEmpty)
                 }
 
                 it("indicates that it is not the root node of the graph") {
@@ -275,7 +275,7 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -300,7 +300,7 @@ object ContainerDependencyGraphSpec : Spek({
                     }
 
                     it("takes its command from the command resolver") {
-                        assertThat(node.command, equalTo(commandResolver.resolveCommand(container, task)))
+                        assertThat(node.config.command, equalTo(commandResolver.resolveCommand(container, task)))
                     }
 
                     it("indicates that it is not the root node of the graph") {
@@ -358,7 +358,7 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -383,7 +383,7 @@ object ContainerDependencyGraphSpec : Spek({
                     }
 
                     it("takes its command from the command resolver") {
-                        assertThat(node.command, equalTo(commandResolver.resolveCommand(container, task)))
+                        assertThat(node.config.command, equalTo(commandResolver.resolveCommand(container, task)))
                     }
 
                     it("indicates that it is not the root node of the graph") {
@@ -414,7 +414,7 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -438,7 +438,7 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(dependencyContainer2, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(dependencyContainer2, task)))
                 }
 
                 it("indicates that it is not the root node of the graph") {
@@ -458,7 +458,7 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(dependencyContainer1, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(dependencyContainer1, task)))
                 }
 
                 it("indicates that it is not the root node of the graph") {
@@ -489,7 +489,7 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -514,7 +514,7 @@ object ContainerDependencyGraphSpec : Spek({
                     }
 
                     it("takes its command from the command resolver") {
-                        assertThat(node.command, equalTo(commandResolver.resolveCommand(container, task)))
+                        assertThat(node.config.command, equalTo(commandResolver.resolveCommand(container, task)))
                     }
 
                     it("indicates that it is not the root node of the graph") {
@@ -535,7 +535,7 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(containerWithNoDependencies, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(containerWithNoDependencies, task)))
                 }
 
                 it("indicates that it is not the root node of the graph") {
@@ -565,7 +565,7 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -589,7 +589,7 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(containerA, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(containerA, task)))
                 }
 
                 it("indicates that it is not the root node of the graph") {
@@ -609,7 +609,7 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(containerB, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(containerB, task)))
                 }
 
                 it("indicates that it is not the root node of the graph") {
@@ -639,7 +639,7 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -663,7 +663,7 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(taskDependencyContainer, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskDependencyContainer, task)))
                 }
 
                 it("indicates that it is not the root node of the graph") {
@@ -683,7 +683,7 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(otherDependencyContainer, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(otherDependencyContainer, task)))
                 }
 
                 it("indicates that it is not the root node of the graph") {
@@ -712,7 +712,7 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(taskContainer, task)))
                 }
 
                 it("indicates that it is the root node of the graph") {
@@ -736,7 +736,7 @@ object ContainerDependencyGraphSpec : Spek({
                 }
 
                 it("takes its command from the command resolver") {
-                    assertThat(node.command, equalTo(commandResolver.resolveCommand(dependencyContainer, task)))
+                    assertThat(node.config.command, equalTo(commandResolver.resolveCommand(dependencyContainer, task)))
                 }
 
                 it("indicates that it is not the root node of the graph") {

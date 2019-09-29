@@ -19,9 +19,8 @@ package batect.docker
 import batect.config.Container
 import batect.config.EnvironmentVariableExpression
 import batect.config.EnvironmentVariableExpressionEvaluationException
-import batect.config.PortMapping
 import batect.config.VolumeMount
-import batect.os.Command
+import batect.execution.ContainerRuntimeConfiguration
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.utils.mapToSet
 
@@ -36,12 +35,8 @@ class DockerContainerCreationRequestFactory(
         container: Container,
         image: DockerImage,
         network: DockerNetwork,
-        command: Command?,
-        entrypoint: Command?,
-        workingDirectory: String?,
-        additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression>,
+        config: ContainerRuntimeConfiguration,
         additionalVolumeMounts: Set<VolumeMount>,
-        additionalPortMappings: Set<PortMapping>,
         propagateProxyEnvironmentVariables: Boolean,
         userAndGroup: UserAndGroup?,
         terminalType: String?,
@@ -50,14 +45,14 @@ class DockerContainerCreationRequestFactory(
         return DockerContainerCreationRequest(
             image,
             network,
-            if (command != null) command.parsedCommand else emptyList(),
-            if (entrypoint != null) entrypoint.parsedCommand else emptyList(),
+            if (config.command != null) config.command.parsedCommand else emptyList(),
+            if (config.entrypoint != null) config.entrypoint.parsedCommand else emptyList(),
             container.name,
             container.name,
-            environmentVariablesFor(container, additionalEnvironmentVariables, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork),
-            workingDirectory,
+            environmentVariablesFor(container, config.additionalEnvironmentVariables, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork),
+            config.workingDirectory,
             container.volumeMounts + additionalVolumeMounts,
-            container.portMappings + additionalPortMappings,
+            container.portMappings + config.additionalPortMappings,
             container.healthCheckConfig,
             userAndGroup,
             container.privileged,

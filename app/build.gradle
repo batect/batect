@@ -48,7 +48,7 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.13.0"
     implementation 'org.kodein.di:kodein-di-core-jvm:6.4.0'
-    implementation 'org.kodein.di:kodein-di-generic-jvm:6.4.0'
+    implementation 'org.kodein.di:kodein-di-generic-jvm:6.4.1'
     implementation 'com.squareup.okhttp3:okhttp:3.13.1'
     implementation 'com.github.jnr:jnr-unixsocket:0.23'
     implementation 'com.github.jnr:jnr-posix:3.0.50'

@@ -84,9 +84,19 @@ object UnixNativeMethodsSpec : Spek({
                         whenever(libc.ioctl(any(), any(), any())).thenReturn(-1)
                     }
 
-                    given("it failed because stdout is not connected to a TTY") {
+                    given("it failed because stdin is not connected to a TTY") {
                         beforeEachTest {
                             whenever(posix.errno()).thenReturn(Errno.ENOTTY.intValue())
+                        }
+
+                        it("throws an appropriate exception") {
+                            assertThat({ nativeMethods.getConsoleDimensions() }, throws<NoConsoleException>())
+                        }
+                    }
+
+                    given("it failed because stdin is redirected") {
+                        beforeEachTest {
+                            whenever(posix.errno()).thenReturn(Errno.ENODEV.intValue())
                         }
 
                         it("throws an appropriate exception") {

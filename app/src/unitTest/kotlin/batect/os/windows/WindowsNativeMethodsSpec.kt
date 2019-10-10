@@ -47,6 +47,7 @@ import jnr.posix.WindowsLibC
 import jnr.posix.util.WindowsHelpers
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.FileDescriptor
 import java.nio.ByteBuffer
 
 object WindowsNativeMethodsSpec : Spek({
@@ -127,6 +128,86 @@ object WindowsNativeMethodsSpec : Spek({
 
                 it("throws an appropriate exception") {
                     assertThat({ nativeMethods.getConsoleDimensions() }, throws(withMethod("GetStdHandle") and withError(LastError.ERROR_FILE_NOT_FOUND)))
+                }
+            }
+        }
+
+        describe("determining if stdin is a TTY") {
+            given("stdin is not a character device") {
+                beforeEachTest { whenever(posix.isatty(FileDescriptor.`in`)).doReturn(false) }
+
+                it("returns that stdin is not a TTY") {
+                    assertThat(nativeMethods.determineIfStdinIsTTY(), equalTo(false))
+                }
+            }
+
+            given("stdin is a character device") {
+                val stdinHandle = mock<HANDLE> {
+                    on { isValid } doReturn true
+                }
+
+                beforeEachTest {
+                    whenever(posix.isatty(FileDescriptor.`in`)).doReturn(true)
+                    whenever(win32.GetStdHandle(WindowsLibC.STD_INPUT_HANDLE)).doReturn(stdinHandle)
+                }
+
+                given("stdin is a console device") {
+                    beforeEachTest { whenever(win32.GetConsoleMode(eq(stdinHandle), any())).doReturn(true) }
+
+                    it("returns that stdin is a TTY") {
+                        assertThat(nativeMethods.determineIfStdinIsTTY(), equalTo(true))
+                    }
+                }
+
+                given("stdin is not a console device") {
+                    beforeEachTest {
+                        whenever(win32.GetConsoleMode(eq(stdinHandle), any())).doReturn(false)
+                        whenever(posix.errno()).doReturn(LastError.ERROR_INVALID_HANDLE.intValue())
+                    }
+
+                    it("returns that stdin is not a TTY") {
+                        assertThat(nativeMethods.determineIfStdinIsTTY(), equalTo(false))
+                    }
+                }
+            }
+        }
+
+        describe("determining if stdout is a TTY") {
+            given("stdout is not a character device") {
+                beforeEachTest { whenever(posix.isatty(FileDescriptor.out)).doReturn(false) }
+
+                it("returns that stdout is not a TTY") {
+                    assertThat(nativeMethods.determineIfStdoutIsTTY(), equalTo(false))
+                }
+            }
+
+            given("stdout is a character device") {
+                val stdoutHandle = mock<HANDLE> {
+                    on { isValid } doReturn true
+                }
+
+                beforeEachTest {
+                    whenever(posix.isatty(FileDescriptor.out)).doReturn(true)
+                    whenever(win32.GetStdHandle(WindowsLibC.STD_OUTPUT_HANDLE)).doReturn(stdoutHandle)
+                }
+
+                given("stdout is a console device") {
+                    beforeEachTest { whenever(win32.GetConsoleMode(eq(stdoutHandle), any())).doReturn(true) }
+
+                    it("returns that stdout is a TTY") {
+                        assertThat(nativeMethods.determineIfStdoutIsTTY(), equalTo(true))
+                    }
+                }
+
+                given("stdout is not a console device") {
+                    beforeEachTest {
+                        whenever(win32.GetConsoleMode(eq(stdoutHandle), any())).doReturn(false)
+                        whenever(posix.errno()).doReturn(LastError.ERROR_INVALID_HANDLE.intValue())
+                    }
+
+                    it("returns that stdout is not a TTY") {
+                        assertThat(nativeMethods.determineIfStdoutIsTTY(), equalTo(false))
+                    }
                 }
             }
         }

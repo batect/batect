@@ -95,8 +95,35 @@ class WindowsNativeMethods(
         return Dimensions(height, width)
     }
 
-    override fun determineIfStdinIsTTY(): Boolean = posix.isatty(FileDescriptor.`in`)
-    override fun determineIfStdoutIsTTY(): Boolean = posix.isatty(FileDescriptor.out)
+    override fun determineIfStdinIsTTY(): Boolean = isTTY(FileDescriptor.`in`, WindowsLibC.STD_INPUT_HANDLE)
+    override fun determineIfStdoutIsTTY(): Boolean = isTTY(FileDescriptor.out, WindowsLibC.STD_OUTPUT_HANDLE)
+
+    // See http://archives.miloush.net/michkap/archive/2008/03/18/8306597.140100.html for an explanation of this.
+    private fun isTTY(fd: FileDescriptor, stdHandle: Int): Boolean {
+        if (!posix.isatty(fd)) {
+            return false
+        }
+
+        val console = win32.GetStdHandle(stdHandle)
+
+        if (!console.isValid) {
+            throwNativeMethodFailed(Win32::GetStdHandle)
+        }
+
+        val currentConsoleMode = IntByReference()
+
+        if (!win32.GetConsoleMode(console, currentConsoleMode)) {
+            val errno = posix.errno()
+
+            if (errno == ERROR_INVALID_HANDLE) {
+                return false
+            }
+
+            throwNativeMethodFailed(Win32::GetConsoleMode)
+        }
+
+        return true
+    }
 
     fun enableConsoleEscapeSequences() {
         updateConsoleMode(WindowsLibC.STD_OUTPUT_HANDLE) { currentMode ->

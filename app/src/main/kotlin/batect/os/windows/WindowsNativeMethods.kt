@@ -40,6 +40,7 @@ import jnr.posix.HANDLE
 import jnr.posix.POSIX
 import jnr.posix.WindowsLibC
 import jnr.posix.util.WindowsHelpers
+import java.io.FileDescriptor
 import java.io.FileNotFoundException
 import java.net.SocketTimeoutException
 import java.nio.ByteBuffer
@@ -93,6 +94,9 @@ class WindowsNativeMethods(
 
         return Dimensions(height, width)
     }
+
+    override fun determineIfStdinIsTTY(): Boolean = posix.isatty(FileDescriptor.`in`)
+    override fun determineIfStdoutIsTTY(): Boolean = posix.isatty(FileDescriptor.out)
 
     fun enableConsoleEscapeSequences() {
         updateConsoleMode(WindowsLibC.STD_OUTPUT_HANDLE) { currentMode ->

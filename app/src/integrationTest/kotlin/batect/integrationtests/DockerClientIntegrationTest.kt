@@ -325,7 +325,7 @@ private fun createClient(posix: POSIX, nativeMethods: NativeMethods): DockerClie
     val httpDefaults = DockerHttpConfigDefaults(systemInfo)
     val httpConfig = DockerHttpConfig(OkHttpClient(), httpDefaults.defaultDockerHost, systemInfo)
     val api = DockerAPI(httpConfig, systemInfo, logger)
-    val consoleInfo = ConsoleInfo(posix, systemInfo, logger)
+    val consoleInfo = ConsoleInfo(nativeMethods, systemInfo, logger)
     val consoleManager = getConsoleManagerForPlatform(consoleInfo, processRunner, nativeMethods, logger)
     val credentialsConfigurationFile = DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger)
     val credentialsProvider = DockerRegistryCredentialsProvider(DockerRegistryDomainResolver(), DockerRegistryIndexResolver(), credentialsConfigurationFile)

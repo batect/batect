@@ -17,22 +17,21 @@
 package batect.ui
 
 import batect.logging.Logger
+import batect.os.NativeMethods
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
 import batect.os.data
-import jnr.posix.POSIX
-import java.io.FileDescriptor
 
 class ConsoleInfo(
-    private val posix: POSIX,
+    private val nativeMethods: NativeMethods,
     private val systemInfo: SystemInfo,
     private val environment: Map<String, String>,
     private val logger: Logger
 ) {
-    constructor(posix: POSIX, systemInfo: SystemInfo, logger: Logger) : this(posix, systemInfo, System.getenv(), logger)
+    constructor(nativeMethods: NativeMethods, systemInfo: SystemInfo, logger: Logger) : this(nativeMethods, systemInfo, System.getenv(), logger)
 
     val stdinIsTTY: Boolean by lazy {
-        val result = posix.isatty(FileDescriptor.`in`)
+        val result = nativeMethods.determineIfStdinIsTTY()
 
         logger.info {
             message("Called 'isatty' to determine if STDIN is a TTY.")
@@ -43,7 +42,7 @@ class ConsoleInfo(
     }
 
     val stdoutIsTTY: Boolean by lazy {
-        val result = posix.isatty(FileDescriptor.`out`)
+        val result = nativeMethods.determineIfStdoutIsTTY()
 
         logger.info {
             message("Called 'isatty' to determine if STDOUT is a TTY.")

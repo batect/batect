@@ -29,6 +29,7 @@ import jnr.ffi.annotations.Out
 import jnr.ffi.annotations.SaveError
 import jnr.ffi.annotations.Transient
 import jnr.posix.POSIX
+import java.io.FileDescriptor
 
 class UnixNativeMethods(
     private val libc: LibC,
@@ -67,6 +68,9 @@ class UnixNativeMethods(
 
         return Dimensions(size.ws_row.get(), size.ws_col.get())
     }
+
+    override fun determineIfStdinIsTTY(): Boolean = posix.isatty(FileDescriptor.`in`)
+    override fun determineIfStdoutIsTTY(): Boolean = posix.isatty(FileDescriptor.out)
 
     override fun getUserId(): Int = posix.geteuid()
     override fun getGroupId(): Int = posix.getegid()

@@ -18,6 +18,8 @@ package batect.os
 
 interface NativeMethods {
     fun getConsoleDimensions(): Dimensions
+    fun determineIfStdinIsTTY(): Boolean
+    fun determineIfStdoutIsTTY(): Boolean
 
     fun getUserId(): Int
     fun getGroupId(): Int

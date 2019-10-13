@@ -22,8 +22,8 @@ import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.config.io.ConfigurationLoader
-import batect.docker.DockerClient
-import batect.docker.DockerConnectivityCheckResult
+import batect.docker.client.DockerConnectivityCheckResult
+import batect.docker.client.DockerSystemInfoClient
 import batect.execution.CleanupOption
 import batect.execution.RunOptions
 import batect.execution.TaskExecutionOrderResolutionException
@@ -81,7 +81,7 @@ object RunTaskCommandSpec : Spek({
 
             given("configuration file can be loaded") {
                 given("Docker is available") {
-                    val dockerClient = mock<DockerClient> {
+                    val dockerSystemInfoClient = mock<DockerSystemInfoClient> {
                         on { checkConnectivity() } doReturn DockerConnectivityCheckResult.Succeeded
                     }
 
@@ -97,7 +97,7 @@ object RunTaskCommandSpec : Spek({
                                 }
                             }
 
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the task") {
@@ -131,7 +131,7 @@ object RunTaskCommandSpec : Spek({
                                 }
                             }
 
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the task") {
@@ -175,7 +175,7 @@ object RunTaskCommandSpec : Spek({
                                 }
                             }
 
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the dependency task with cleanup on success enabled") {
@@ -217,7 +217,7 @@ object RunTaskCommandSpec : Spek({
                                 }
                             }
 
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the dependency task") {
@@ -252,7 +252,7 @@ object RunTaskCommandSpec : Spek({
                         }
 
                         val taskRunner by createForEachTest { mock<TaskRunner>() }
-                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger) }
+                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
                         val exitCode by runForEachTest { command.run() }
 
                         it("prints a message to the output") {
@@ -272,11 +272,11 @@ object RunTaskCommandSpec : Spek({
                 on("when Docker is not available") {
                     val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver>()
                     val taskRunner = mock<TaskRunner>()
-                    val dockerClient = mock<DockerClient> {
+                    val dockerSystemInfoClient = mock<DockerSystemInfoClient> {
                         on { checkConnectivity() } doReturn DockerConnectivityCheckResult.Failed("Something went wrong.")
                     }
 
-                    val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerClient, console, errorConsole, logger) }
+                    val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, taskRunner, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
                     val exitCode by runForEachTest { command.run() }
 
                     it("prints a message to the output") {

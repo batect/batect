@@ -20,12 +20,12 @@ import batect.config.EnvironmentVariableExpression
 import batect.config.EnvironmentVariableExpressionEvaluationException
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerHealthCheckException
-import batect.docker.DockerClient
+import batect.docker.client.DockerClient
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerException
-import batect.docker.DockerImageBuildProgress
-import batect.docker.HealthStatus
+import batect.docker.client.DockerImageBuildProgress
+import batect.docker.client.HealthStatus
 import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.api.ContainerRemovalFailedException
@@ -107,7 +107,7 @@ class TaskStepRunner(
             }
 
             val buildArgs = buildTimeProxyEnvironmentVariablesForOptions(runOptions) + substituteBuildArgs(step.source.buildArgs)
-            val image = dockerClient.build(step.source.buildDirectory, buildArgs, step.source.dockerfilePath, step.imageTags, cancellationContext, onStatusUpdate)
+            val image = dockerClient.images.build(step.source.buildDirectory, buildArgs, step.source.dockerfilePath, step.imageTags, cancellationContext, onStatusUpdate)
             eventSink.postEvent(ImageBuiltEvent(step.source, image))
         } catch (e: ImageBuildFailedException) {
             val message = e.message ?: ""
@@ -129,7 +129,7 @@ class TaskStepRunner(
 
     private fun handlePullImageStep(step: PullImageStep, eventSink: TaskEventSink, cancellationContext: CancellationContext) {
         try {
-            val image = dockerClient.pullImage(step.source.imageName, cancellationContext) { progressUpdate ->
+            val image = dockerClient.images.pull(step.source.imageName, cancellationContext) { progressUpdate ->
                 eventSink.postEvent(ImagePullProgressEvent(step.source, progressUpdate))
             }
 
@@ -141,7 +141,7 @@ class TaskStepRunner(
 
     private fun handleCreateTaskNetworkStep(eventSink: TaskEventSink) {
         try {
-            val network = dockerClient.createNewBridgeNetwork()
+            val network = dockerClient.networks.create()
             eventSink.postEvent(TaskNetworkCreatedEvent(network))
         } catch (e: NetworkCreationFailedException) {
             eventSink.postEvent(TaskNetworkCreationFailedEvent(e.outputFromDocker))
@@ -164,7 +164,7 @@ class TaskStepRunner(
                 step.allContainersInNetwork
             )
 
-            val dockerContainer = dockerClient.create(creationRequest)
+            val dockerContainer = dockerClient.containers.create(creationRequest)
             eventSink.postEvent(ContainerCreatedEvent(step.container, dockerContainer))
         } catch (e: ContainerCreationFailedException) {
             eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))
@@ -176,7 +176,7 @@ class TaskStepRunner(
             val stdout = ioStreamingOptions.stdoutForContainer(step.container)
             val stdin = ioStreamingOptions.stdinForContainer(step.container)
 
-            val result = dockerClient.run(step.dockerContainer, stdout, stdin, cancellationContext, ioStreamingOptions.frameDimensions) {
+            val result = dockerClient.containers.run(step.dockerContainer, stdout, stdin, cancellationContext, ioStreamingOptions.frameDimensions) {
                 eventSink.postEvent(ContainerStartedEvent(step.container))
             }
 
@@ -188,7 +188,7 @@ class TaskStepRunner(
 
     private fun handleWaitForContainerToBecomeHealthyStep(step: WaitForContainerToBecomeHealthyStep, eventSink: TaskEventSink, cancellationContext: CancellationContext) {
         try {
-            val event = when (dockerClient.waitForHealthStatus(step.dockerContainer, cancellationContext)) {
+            val event = when (dockerClient.containers.waitForHealthStatus(step.dockerContainer, cancellationContext)) {
                 HealthStatus.NoHealthCheck -> ContainerBecameHealthyEvent(step.container)
                 HealthStatus.BecameHealthy -> ContainerBecameHealthyEvent(step.container)
                 HealthStatus.BecameUnhealthy -> ContainerDidNotBecomeHealthyEvent(step.container, containerBecameUnhealthyMessage(step.dockerContainer))
@@ -202,7 +202,7 @@ class TaskStepRunner(
     }
 
     private fun containerBecameUnhealthyMessage(container: DockerContainer): String {
-        val lastHealthCheckResult = dockerClient.getLastHealthCheckResult(container)
+        val lastHealthCheckResult = dockerClient.containers.getLastHealthCheckResult(container)
 
         val message = when {
             lastHealthCheckResult.exitCode == 0 -> "The most recent health check exited with code 0, which usually indicates that the container became healthy just after the timeout period expired."
@@ -215,7 +215,7 @@ class TaskStepRunner(
 
     private fun handleStopContainerStep(step: StopContainerStep, eventSink: TaskEventSink) {
         try {
-            dockerClient.stop(step.dockerContainer)
+            dockerClient.containers.stop(step.dockerContainer)
             eventSink.postEvent(ContainerStoppedEvent(step.container))
         } catch (e: ContainerStopFailedException) {
             eventSink.postEvent(ContainerStopFailedEvent(step.container, e.outputFromDocker))
@@ -224,7 +224,7 @@ class TaskStepRunner(
 
     private fun handleRemoveContainerStep(step: RemoveContainerStep, eventSink: TaskEventSink) {
         try {
-            dockerClient.remove(step.dockerContainer)
+            dockerClient.containers.remove(step.dockerContainer)
             eventSink.postEvent(ContainerRemovedEvent(step.container))
         } catch (e: ContainerRemovalFailedException) {
             eventSink.postEvent(ContainerRemovalFailedEvent(step.container, e.outputFromDocker))
@@ -254,7 +254,7 @@ class TaskStepRunner(
 
     private fun handleDeleteTaskNetworkStep(step: DeleteTaskNetworkStep, eventSink: TaskEventSink) {
         try {
-            dockerClient.deleteNetwork(step.network)
+            dockerClient.networks.delete(step.network)
             eventSink.postEvent(TaskNetworkDeletedEvent)
         } catch (e: NetworkDeletionFailedException) {
             eventSink.postEvent(TaskNetworkDeletionFailedEvent(e.outputFromDocker))

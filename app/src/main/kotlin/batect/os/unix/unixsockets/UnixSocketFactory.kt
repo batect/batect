@@ -26,6 +26,9 @@ import java.net.Socket
 import java.net.SocketAddress
 import javax.net.SocketFactory
 
+// Unix sockets implementation inspired by
+// https://github.com/gesellix/okhttp/blob/master/samples/simple-client/src/main/java/okhttp3/sample/OkDocker.java and
+// https://github.com/square/okhttp/blob/master/samples/unixdomainsockets/src/main/java/okhttp3/unixdomainsockets/UnixDomainSocketFactory.java
 class UnixSocketFactory : SocketFactory() {
     override fun createSocket(): Socket {
         val channel = UnixSocketChannel.create()

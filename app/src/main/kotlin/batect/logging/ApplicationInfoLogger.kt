@@ -18,7 +18,7 @@ package batect.logging
 
 import batect.VersionInfo
 import batect.data
-import batect.docker.DockerClient
+import batect.docker.client.DockerSystemInfoClient
 import batect.os.SystemInfo
 import batect.os.data
 
@@ -26,11 +26,11 @@ class ApplicationInfoLogger(
     private val logger: Logger,
     private val versionInfo: VersionInfo,
     private val systemInfo: SystemInfo,
-    private val dockerClient: DockerClient,
+    private val dockerSystemInfoClient: DockerSystemInfoClient,
     private val environmentVariables: Map<String, String>
 ) {
-    constructor(logger: Logger, versionInfo: VersionInfo, systemInfo: SystemInfo, dockerClient: DockerClient)
-        : this(logger, versionInfo, systemInfo, dockerClient, System.getenv())
+    constructor(logger: Logger, versionInfo: VersionInfo, systemInfo: SystemInfo, dockerSystemInfoClient: DockerSystemInfoClient)
+        : this(logger, versionInfo, systemInfo, dockerSystemInfoClient, System.getenv())
 
     fun logApplicationInfo(commandLineArgs: Iterable<String>) {
         logger.info {
@@ -38,7 +38,7 @@ class ApplicationInfoLogger(
             data("commandLine", commandLineArgs)
             data("versionInfo", versionInfo)
             data("systemInfo", systemInfo)
-            data("dockerVersionInfo", dockerClient.getDockerVersionInfo().toString())
+            data("dockerVersionInfo", dockerSystemInfoClient.getDockerVersionInfo().toString())
             data("environment", environmentVariables)
         }
     }

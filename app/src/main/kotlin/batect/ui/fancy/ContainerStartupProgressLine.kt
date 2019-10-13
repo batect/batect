@@ -19,7 +19,7 @@ package batect.ui.fancy
 import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
-import batect.docker.DockerImageBuildProgress
+import batect.docker.client.DockerImageBuildProgress
 import batect.docker.pull.DockerImagePullProgress
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreatedEvent

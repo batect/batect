@@ -18,7 +18,7 @@ package batect.cli.commands
 
 import batect.VersionInfo
 import batect.cli.CommandLineOptionsParser
-import batect.docker.DockerClient
+import batect.docker.client.DockerSystemInfoClient
 import batect.os.SystemInfo
 import batect.updates.UpdateNotifier
 import java.io.PrintStream
@@ -27,7 +27,7 @@ class VersionInfoCommand(
     private val versionInfo: VersionInfo,
     private val outputStream: PrintStream,
     private val systemInfo: SystemInfo,
-    private val dockerClient: DockerClient,
+    private val dockerSystemInfoClient: DockerSystemInfoClient,
     private val updateNotifier: UpdateNotifier
 ) : Command {
     override fun run(): Int {
@@ -38,7 +38,7 @@ class VersionInfoCommand(
         outputStream.println("Built from commit: ${versionInfo.gitCommitHash} (commit date: ${versionInfo.gitCommitDate})")
         outputStream.println("JVM version:       ${systemInfo.jvmVersion}")
         outputStream.println("OS version:        ${systemInfo.osVersion}")
-        outputStream.println("Docker version:    ${dockerClient.getDockerVersionInfo()}")
+        outputStream.println("Docker version:    ${dockerSystemInfoClient.getDockerVersionInfo()}")
         outputStream.println()
         outputStream.println(CommandLineOptionsParser.helpBlurb)
         outputStream.println()

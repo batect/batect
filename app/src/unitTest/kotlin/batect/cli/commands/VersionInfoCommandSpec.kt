@@ -17,8 +17,8 @@
 package batect.cli.commands
 
 import batect.VersionInfo
-import batect.docker.DockerClient
-import batect.docker.DockerVersionInfoRetrievalResult
+import batect.docker.client.DockerSystemInfoClient
+import batect.docker.client.DockerVersionInfoRetrievalResult
 import batect.os.SystemInfo
 import batect.testutils.on
 import batect.testutils.withPlatformSpecificLineSeparator
@@ -49,13 +49,13 @@ object VersionInfoCommandSpec : Spek({
                 on { osVersion } doReturn "THE OS VERSION"
             }
 
-            val dockerClient = mock<DockerClient> {
+            val dockerSystemInfoClient = mock<DockerSystemInfoClient> {
                 on { getDockerVersionInfo() } doReturn DockerVersionInfoRetrievalResult.Failed("DOCKER VERSION INFO")
             }
 
             val outputStream = ByteArrayOutputStream()
             val updateNotifier = mock<UpdateNotifier>()
-            val command = VersionInfoCommand(versionInfo, PrintStream(outputStream), systemInfo, dockerClient, updateNotifier)
+            val command = VersionInfoCommand(versionInfo, PrintStream(outputStream), systemInfo, dockerSystemInfoClient, updateNotifier)
             val exitCode = command.run()
             val output = outputStream.toString()
 

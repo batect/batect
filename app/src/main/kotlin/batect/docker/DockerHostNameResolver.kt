@@ -16,6 +16,8 @@
 
 package batect.docker
 
+import batect.docker.client.DockerSystemInfoClient
+import batect.docker.client.DockerVersionInfoRetrievalResult
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
 import batect.utils.Version
@@ -23,9 +25,9 @@ import batect.utils.VersionComparisonMode
 
 class DockerHostNameResolver(
     private val systemInfo: SystemInfo,
-    private val dockerClient: DockerClient
+    private val dockerSystemInfoClient: DockerSystemInfoClient
 ) {
-    private val dockerVersionInfoRetrievalResult by lazy { dockerClient.getDockerVersionInfo() }
+    private val dockerVersionInfoRetrievalResult by lazy { dockerSystemInfoClient.getDockerVersionInfo() }
 
     fun resolveNameOfDockerHost(): DockerHostNameResolutionResult = when (systemInfo.operatingSystem) {
         OperatingSystem.Mac -> getDockerHostName("mac")

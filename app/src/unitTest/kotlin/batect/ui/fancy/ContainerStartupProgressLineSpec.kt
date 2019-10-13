@@ -21,7 +21,7 @@ import batect.config.Container
 import batect.config.PullImage
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
-import batect.docker.DockerImageBuildProgress
+import batect.docker.client.DockerImageBuildProgress
 import batect.docker.DockerNetwork
 import batect.docker.pull.DockerImagePullProgress
 import batect.execution.ContainerRuntimeConfiguration

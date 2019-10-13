@@ -17,7 +17,7 @@
 package batect.execution.model.events
 
 import batect.config.BuildImage
-import batect.docker.DockerImageBuildProgress
+import batect.docker.client.DockerImageBuildProgress
 
 data class ImageBuildProgressEvent(val source: BuildImage, val progress: DockerImageBuildProgress) : TaskEvent(isInformationalEvent = true) {
     override fun toString() = "${this::class.simpleName}(source: $source, current step: ${progress.currentStep}, total steps: ${progress.totalSteps}, message: '${progress.message}', pull progress: ${formatPullProgress()})"

@@ -17,7 +17,7 @@
 package batect.execution.model.events
 
 import batect.config.BuildImage
-import batect.docker.DockerImageBuildProgress
+import batect.docker.client.DockerImageBuildProgress
 import batect.docker.pull.DockerImagePullProgress
 import batect.testutils.given
 import batect.testutils.on

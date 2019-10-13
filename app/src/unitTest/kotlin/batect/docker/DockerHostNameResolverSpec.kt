@@ -16,6 +16,8 @@
 
 package batect.docker
 
+import batect.docker.client.DockerSystemInfoClient
+import batect.docker.client.DockerVersionInfoRetrievalResult
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
@@ -34,15 +36,15 @@ import org.spekframework.spek2.style.specification.describe
 object DockerHostNameResolverSpec : Spek({
     describe("a Docker host name resolver") {
         val systemInfo by createForEachTest { mock<SystemInfo>() }
-        val dockerClient by createForEachTest { mock<DockerClient>() }
-        val resolver by createForEachTest { DockerHostNameResolver(systemInfo, dockerClient) }
+        val dockerSystemInfoClient by createForEachTest { mock<DockerSystemInfoClient>() }
+        val resolver by createForEachTest { DockerHostNameResolver(systemInfo, dockerSystemInfoClient) }
 
         given("the local system is running OS X") {
             beforeEachTest { whenever(systemInfo.operatingSystem).doReturn(OperatingSystem.Mac) }
 
             on("the Docker version being less than 17.06") {
                 beforeEachTest {
-                    whenever(dockerClient.getDockerVersionInfo()).doReturn(
+                    whenever(dockerSystemInfoClient.getDockerVersionInfo()).doReturn(
                         DockerVersionInfoRetrievalResult.Succeeded(
                             createDockerVersionInfoWithServerVersion(Version(17, 5, 0))
                         )
@@ -68,7 +70,7 @@ object DockerHostNameResolverSpec : Spek({
             ).forEach { (dockerVersion, expectedHostName, description) ->
                 on(description) {
                     beforeEachTest {
-                        whenever(dockerClient.getDockerVersionInfo()).doReturn(
+                        whenever(dockerSystemInfoClient.getDockerVersionInfo()).doReturn(
                             DockerVersionInfoRetrievalResult.Succeeded(
                                 createDockerVersionInfoWithServerVersion(dockerVersion)
                             )
@@ -85,7 +87,7 @@ object DockerHostNameResolverSpec : Spek({
 
             on("the Docker version not being able to be determined") {
                 beforeEachTest {
-                    whenever(dockerClient.getDockerVersionInfo()).doReturn(DockerVersionInfoRetrievalResult.Failed("Couldn't get version."))
+                    whenever(dockerSystemInfoClient.getDockerVersionInfo()).doReturn(DockerVersionInfoRetrievalResult.Failed("Couldn't get version."))
                 }
 
                 val result by runForEachTest { resolver.resolveNameOfDockerHost() }
@@ -101,7 +103,7 @@ object DockerHostNameResolverSpec : Spek({
 
             on("the Docker version being less than 17.06") {
                 beforeEachTest {
-                    whenever(dockerClient.getDockerVersionInfo()).doReturn(
+                    whenever(dockerSystemInfoClient.getDockerVersionInfo()).doReturn(
                         DockerVersionInfoRetrievalResult.Succeeded(
                             createDockerVersionInfoWithServerVersion(Version(17, 5, 0))
                         )
@@ -127,7 +129,7 @@ object DockerHostNameResolverSpec : Spek({
             ).forEach { (dockerVersion, expectedHostName, description) ->
                 on(description) {
                     beforeEachTest {
-                        whenever(dockerClient.getDockerVersionInfo()).doReturn(
+                        whenever(dockerSystemInfoClient.getDockerVersionInfo()).doReturn(
                             DockerVersionInfoRetrievalResult.Succeeded(
                                 createDockerVersionInfoWithServerVersion(dockerVersion)
                             )
@@ -144,7 +146,7 @@ object DockerHostNameResolverSpec : Spek({
 
             on("the Docker version not being able to be determined") {
                 beforeEachTest {
-                    whenever(dockerClient.getDockerVersionInfo()).doReturn(DockerVersionInfoRetrievalResult.Failed("Couldn't get version."))
+                    whenever(dockerSystemInfoClient.getDockerVersionInfo()).doReturn(DockerVersionInfoRetrievalResult.Failed("Couldn't get version."))
                 }
 
                 val result by runForEachTest { resolver.resolveNameOfDockerHost() }

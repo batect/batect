@@ -19,8 +19,8 @@ package batect.cli.commands
 import batect.config.Configuration
 import batect.config.Task
 import batect.config.io.ConfigurationLoader
-import batect.docker.DockerClient
-import batect.docker.DockerConnectivityCheckResult
+import batect.docker.client.DockerConnectivityCheckResult
+import batect.docker.client.DockerSystemInfoClient
 import batect.execution.CleanupOption
 import batect.execution.RunOptions
 import batect.execution.TaskExecutionOrderResolutionException
@@ -39,7 +39,7 @@ class RunTaskCommand(
     val taskExecutionOrderResolver: TaskExecutionOrderResolver,
     val taskRunner: TaskRunner,
     val updateNotifier: UpdateNotifier,
-    val dockerClient: DockerClient,
+    val dockerSystemInfoClient: DockerSystemInfoClient,
     val console: Console,
     val errorConsole: Console,
     val logger: Logger
@@ -48,7 +48,7 @@ class RunTaskCommand(
     override fun run(): Int {
         val config = configLoader.loadConfig(configFile)
 
-        val connectivityCheckResult = dockerClient.checkConnectivity()
+        val connectivityCheckResult = dockerSystemInfoClient.checkConnectivity()
 
         if (connectivityCheckResult is DockerConnectivityCheckResult.Failed) {
             errorConsole.println(Text.red("Docker is not installed, not running or not compatible with batect: ${connectivityCheckResult.message}"))

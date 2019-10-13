@@ -20,6 +20,7 @@ interface NativeMethods {
     fun getConsoleDimensions(): Dimensions
     fun determineIfStdinIsTTY(): Boolean
     fun determineIfStdoutIsTTY(): Boolean
+    fun determineIfStderrIsTTY(): Boolean
 
     fun getUserId(): Int
     fun getGroupId(): Int

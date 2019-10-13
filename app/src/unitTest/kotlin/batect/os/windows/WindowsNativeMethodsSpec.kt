@@ -212,6 +212,46 @@ object WindowsNativeMethodsSpec : Spek({
             }
         }
 
+        describe("determining if stderr is a TTY") {
+            given("stderr is not a character device") {
+                beforeEachTest { whenever(posix.isatty(FileDescriptor.err)).doReturn(false) }
+
+                it("returns that stderr is not a TTY") {
+                    assertThat(nativeMethods.determineIfStderrIsTTY(), equalTo(false))
+                }
+            }
+
+            given("stderr is a character device") {
+                val stderrHandle = mock<HANDLE> {
+                    on { isValid } doReturn true
+                }
+
+                beforeEachTest {
+                    whenever(posix.isatty(FileDescriptor.err)).doReturn(true)
+                    whenever(win32.GetStdHandle(WindowsLibC.STD_ERROR_HANDLE)).doReturn(stderrHandle)
+                }
+
+                given("stderr is a console device") {
+                    beforeEachTest { whenever(win32.GetConsoleMode(eq(stderrHandle), any())).doReturn(true) }
+
+                    it("returns that stderr is a TTY") {
+                        assertThat(nativeMethods.determineIfStderrIsTTY(), equalTo(true))
+                    }
+                }
+
+                given("stderr is not a console device") {
+                    beforeEachTest {
+                        whenever(win32.GetConsoleMode(eq(stderrHandle), any())).doReturn(false)
+                        whenever(posix.errno()).doReturn(LastError.ERROR_INVALID_HANDLE.intValue())
+                    }
+
+                    it("returns that stderr is not a TTY") {
+                        assertThat(nativeMethods.determineIfStderrIsTTY(), equalTo(false))
+                    }
+                }
+            }
+        }
+
         describe("enabling console raw mode") {
             given("getting the handle for stdin succeeds") {
                 val stdinHandle = mock<HANDLE> {

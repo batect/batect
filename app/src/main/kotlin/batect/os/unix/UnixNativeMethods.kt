@@ -71,6 +71,7 @@ class UnixNativeMethods(
 
     override fun determineIfStdinIsTTY(): Boolean = posix.isatty(FileDescriptor.`in`)
     override fun determineIfStdoutIsTTY(): Boolean = posix.isatty(FileDescriptor.out)
+    override fun determineIfStderrIsTTY(): Boolean = posix.isatty(FileDescriptor.err)
 
     override fun getUserId(): Int = posix.geteuid()
     override fun getGroupId(): Int = posix.getegid()

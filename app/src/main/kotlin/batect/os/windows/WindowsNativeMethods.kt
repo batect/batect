@@ -97,6 +97,7 @@ class WindowsNativeMethods(
 
     override fun determineIfStdinIsTTY(): Boolean = isTTY(FileDescriptor.`in`, WindowsLibC.STD_INPUT_HANDLE)
     override fun determineIfStdoutIsTTY(): Boolean = isTTY(FileDescriptor.out, WindowsLibC.STD_OUTPUT_HANDLE)
+    override fun determineIfStderrIsTTY(): Boolean = isTTY(FileDescriptor.err, WindowsLibC.STD_ERROR_HANDLE)
 
     // See http://archives.miloush.net/michkap/archive/2008/03/18/8306597.140100.html for an explanation of this.
     private fun isTTY(fd: FileDescriptor, stdHandle: Int): Boolean {

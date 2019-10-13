@@ -245,8 +245,8 @@ private val uiModule = Kodein.Module("ui") {
         )
     }
 
-    bind<Console>(StreamType.Output) with singleton { Console(instance(StreamType.Output), enableComplexOutput = !commandLineOptions().disableColorOutput, consoleDimensions = instance()) }
-    bind<Console>(StreamType.Error) with singleton { Console(instance(StreamType.Error), enableComplexOutput = !commandLineOptions().disableColorOutput, consoleDimensions = instance()) }
+    bind<Console>(StreamType.Output) with singleton { Console(instance(StreamType.Output), enableComplexOutput = !commandLineOptions().disableColorOutput && nativeMethods().determineIfStdoutIsTTY(), consoleDimensions = instance()) }
+    bind<Console>(StreamType.Error) with singleton { Console(instance(StreamType.Error), enableComplexOutput = !commandLineOptions().disableColorOutput && nativeMethods().determineIfStderrIsTTY(), consoleDimensions = instance()) }
     bind<ConsoleDimensions>() with singletonWithLogger { logger -> ConsoleDimensions(instance(), instance(), logger) }
     bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), instance(), logger) }
     bind<FailureErrorMessageFormatter>() with singleton { FailureErrorMessageFormatter(instance()) }
@@ -265,3 +265,4 @@ private val coreModule = Kodein.Module("core") {
 }
 
 private fun DKodein.commandLineOptions(): CommandLineOptions = this.instance()
+private fun DKodein.nativeMethods(): NativeMethods = this.instance()

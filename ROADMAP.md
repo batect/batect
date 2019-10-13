@@ -23,6 +23,8 @@ If there's something you're really keen to see, pull requests are always welcome
 * support for Windows
   * send updated console dimensions to daemon if console is resized while container is running
   * fix issue where app appears to hang when running on a 32-bit JVM (field size / alignment issue in named pipes calls?)
+  * show a warning (or just fail) if the daemon is configured to run Windows containers
+  * show more detailed Windows version information by reading it from `kernel32.dll`: https://stackoverflow.com/a/27323983/1668119
 * fix #10 (proxies that refer to localhost)
   * Linux:
     * Can get IP of host from `[0].IPAM.Config.Gateway` value from running `docker network inspect <network ID>`
@@ -46,6 +48,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * Kubernetes-style health checks from outside the container (don't require `curl` / `wget` to be installed in the container, just provide HTTP endpoint)
 
 ### Other
+* logo
 * switch to Kotlin's built-in `Result` where appropriate
 * use Detekt for static analysis
 * PEP8 formatting check for Python code

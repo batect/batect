@@ -18,7 +18,7 @@ package batect.docker.run
 
 import batect.docker.DockerContainer
 import batect.docker.api.ContainerStoppedException
-import batect.docker.api.DockerAPI
+import batect.docker.api.ContainersAPI
 import batect.os.Dimensions
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
@@ -45,7 +45,7 @@ import org.spekframework.spek2.style.specification.describe
 object ContainerTTYManagerSpec : Spek({
     describe("a container TTY manager") {
         val frameDimensions = Dimensions(23, 56)
-        val api by createForEachTest { mock<DockerAPI>() }
+        val api by createForEachTest { mock<ContainersAPI>() }
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
         val dimensionsListenerCleanup by createForEachTest { mock<AutoCloseable>() }
         val consoleDimensions by createForEachTest {
@@ -76,13 +76,13 @@ object ContainerTTYManagerSpec : Spek({
                                 }
 
                                 it("sends the current dimensions less the frame size to the container") {
-                                    verify(api).resizeContainerTTY(container, Dimensions(100, 400))
+                                    verify(api).resizeTTY(container, Dimensions(100, 400))
                                 }
 
                                 it("registers the listener before sending the current dimensions") {
                                     inOrder(consoleDimensions, api) {
                                         verify(consoleDimensions).registerListener(any())
-                                        verify(api).resizeContainerTTY(container, Dimensions(100, 400))
+                                        verify(api).resizeTTY(container, Dimensions(100, 400))
                                     }
                                 }
 
@@ -93,7 +93,7 @@ object ContainerTTYManagerSpec : Spek({
                         }
 
                         given("the container is not still running") {
-                            beforeEachTest { whenever(api.resizeContainerTTY(any(), any())).doThrow(ContainerStoppedException("The container is stopped")) }
+                            beforeEachTest { whenever(api.resizeTTY(any(), any())).doThrow(ContainerStoppedException("The container is stopped")) }
 
                             on("starting to monitor for terminal size changes") {
                                 it("does not throw an exception") {
@@ -113,7 +113,7 @@ object ContainerTTYManagerSpec : Spek({
                         }
 
                         it("does not send any dimensions to the container") {
-                            verify(api, never()).resizeContainerTTY(any(), any())
+                            verify(api, never()).resizeTTY(any(), any())
                         }
 
                         it("returns the cleanup handler from the dimensions listener") {
@@ -138,13 +138,13 @@ object ContainerTTYManagerSpec : Spek({
                                 beforeEachTest { handlerCaptor.firstValue.invoke() }
 
                                 it("sends the current dimensions to the container") {
-                                    verify(api).resizeContainerTTY(container, Dimensions(766, 1178))
+                                    verify(api).resizeTTY(container, Dimensions(766, 1178))
                                 }
                             }
                         }
 
                         given("the container is not still running") {
-                            beforeEachTest { whenever(api.resizeContainerTTY(any(), any())).doThrow(ContainerStoppedException("The container is stopped")) }
+                            beforeEachTest { whenever(api.resizeTTY(any(), any())).doThrow(ContainerStoppedException("The container is stopped")) }
 
                             on("invoking the notification listener") {
                                 it("does not throw an exception") {
@@ -161,7 +161,7 @@ object ContainerTTYManagerSpec : Spek({
                         }
 
                         it("does not send any dimensions to the container") {
-                            verify(api, never()).resizeContainerTTY(any(), any())
+                            verify(api, never()).resizeTTY(any(), any())
                         }
                     }
                 }
@@ -174,7 +174,7 @@ object ContainerTTYManagerSpec : Spek({
                     beforeEachTest { manager.monitorForSizeChanges(container, frameDimensions) }
 
                     it("does not send dimensions to the container") {
-                        verify(api, never()).resizeContainerTTY(any(), any())
+                        verify(api, never()).resizeTTY(any(), any())
                     }
 
                     it("does not install a listener") {

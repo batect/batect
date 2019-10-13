@@ -32,6 +32,10 @@ import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerHostNameResolver
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerHttpConfigDefaults
+import batect.docker.api.ContainersAPI
+import batect.docker.api.ImagesAPI
+import batect.docker.api.NetworksAPI
+import batect.docker.api.SystemInfoAPI
 import batect.docker.build.DockerIgnoreParser
 import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
@@ -168,10 +172,11 @@ private val configModule = Kodein.Module("config") {
 }
 
 private val dockerModule = Kodein.Module("docker") {
+    import(dockerApiModule)
+
     bind<ContainerIOStreamer>() with singleton { ContainerIOStreamer() }
     bind<ContainerTTYManager>() with singletonWithLogger { logger -> ContainerTTYManager(instance(), instance(), instance(), logger) }
     bind<ContainerWaiter>() with singleton { ContainerWaiter(instance()) }
-    bind<DockerAPI>() with singletonWithLogger { logger -> DockerAPI(instance(), instance(), logger) }
     bind<DockerClient>() with singletonWithLogger { logger -> DockerClient(instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(), logger) }
     bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance()) }
     bind<DockerfileParser>() with singleton { DockerfileParser() }
@@ -184,6 +189,14 @@ private val dockerModule = Kodein.Module("docker") {
     bind<DockerRegistryCredentialsProvider>() with singleton { DockerRegistryCredentialsProvider(instance(), instance(), instance()) }
     bind<DockerRegistryDomainResolver>() with singleton { DockerRegistryDomainResolver() }
     bind<DockerRegistryIndexResolver>() with singleton { DockerRegistryIndexResolver() }
+}
+
+private val dockerApiModule = Kodein.Module("docker.api") {
+    bind<ContainersAPI>() with singletonWithLogger { logger -> ContainersAPI(instance(), instance(), logger) }
+    bind<DockerAPI>() with singleton { DockerAPI(instance(), instance(), instance(), instance()) }
+    bind<ImagesAPI>() with singletonWithLogger { logger -> ImagesAPI(instance(), instance(), logger) }
+    bind<NetworksAPI>() with singletonWithLogger { logger -> NetworksAPI(instance(), instance(), logger) }
+    bind<SystemInfoAPI>() with singletonWithLogger { logger -> SystemInfoAPI(instance(), instance(), logger) }
 }
 
 private val executionModule = Kodein.Module("execution") {

@@ -91,7 +91,7 @@ class DockerClient(
             val reporter = imagePullProgressReporterFactory()
             var lastStepProgressUpdate: DockerImageBuildProgress? = null
 
-            val image = api.buildImage(context, buildArgs, dockerfilePath, imageTags, credentials, cancellationContext) { line ->
+            val image = api.images.build(context, buildArgs, dockerfilePath, imageTags, credentials, cancellationContext) { line ->
                 logger.debug {
                     message("Received output from Docker during image build.")
                     data("outputLine", line.toString())
@@ -123,9 +123,9 @@ class DockerClient(
         }
     }
 
-    fun create(creationRequest: DockerContainerCreationRequest): DockerContainer = api.createContainer(creationRequest)
-    fun stop(container: DockerContainer) = api.stopContainer(container)
-    fun remove(container: DockerContainer) = api.removeContainer(container)
+    fun create(creationRequest: DockerContainerCreationRequest): DockerContainer = api.containers.create(creationRequest)
+    fun stop(container: DockerContainer) = api.containers.stop(container)
+    fun remove(container: DockerContainer) = api.containers.remove(container)
 
     fun run(container: DockerContainer, stdout: Sink?, stdin: Source?, cancellationContext: CancellationContext, frameDimensions: Dimensions, onStarted: () -> Unit): DockerContainerRunResult {
         logger.info {
@@ -141,7 +141,7 @@ class DockerClient(
 
         connectContainerOutput(container, stdout).use { outputConnection ->
             connectContainerInput(container, stdin).use { inputConnection ->
-                api.startContainer(container)
+                api.containers.start(container)
                 onStarted()
 
                 ttyManager.monitorForSizeChanges(container, frameDimensions).use {
@@ -168,7 +168,7 @@ class DockerClient(
             return OutputConnection.Disconnected
         }
 
-        return OutputConnection.Connected(api.attachToContainerOutput(container), stdout)
+        return OutputConnection.Connected(api.containers.attachToOutput(container), stdout)
     }
 
     private fun connectContainerInput(container: DockerContainer, stdin: Source?): InputConnection {
@@ -176,7 +176,7 @@ class DockerClient(
             return InputConnection.Disconnected
         }
 
-        return InputConnection.Connected(stdin, api.attachToContainerInput(container))
+        return InputConnection.Connected(stdin, api.containers.attachToInput(container))
     }
 
     private fun startRawModeIfRequired(stdin: Source?): AutoCloseable {
@@ -194,7 +194,7 @@ class DockerClient(
         }
 
         try {
-            val info = api.inspectContainer(container)
+            val info = api.containers.inspect(container)
 
             if (!hasHealthCheck(info)) {
                 logger.warn {
@@ -208,7 +208,7 @@ class DockerClient(
             val checkPeriod = (healthCheckInfo.interval + healthCheckInfo.timeout).multipliedBy(healthCheckInfo.retries.toLong())
             val overheadMargin = Duration.ofSeconds(1)
             val timeout = healthCheckInfo.startPeriod + checkPeriod + overheadMargin
-            val event = api.waitForNextEventForContainer(container, setOf("die", "health_status"), timeout, cancellationContext)
+            val event = api.containers.waitForNextEvent(container, setOf("die", "health_status"), timeout, cancellationContext)
 
             logger.info {
                 message("Received event notification from Docker.")
@@ -232,7 +232,7 @@ class DockerClient(
 
     fun getLastHealthCheckResult(container: DockerContainer): DockerHealthCheckResult {
         try {
-            val info = api.inspectContainer(container)
+            val info = api.containers.inspect(container)
 
             if (info.state.health == null) {
                 throw ContainerHealthCheckException("Could not get the last health check result for container '${container.id}'. The container does not have a health check.")
@@ -244,15 +244,15 @@ class DockerClient(
         }
     }
 
-    fun createNewBridgeNetwork(): DockerNetwork = api.createNetwork()
-    fun deleteNetwork(network: DockerNetwork) = api.deleteNetwork(network)
+    fun createNewBridgeNetwork(): DockerNetwork = api.networks.create()
+    fun deleteNetwork(network: DockerNetwork) = api.networks.delete(network)
 
     // Why does this method not just throw exceptions when things fail, like the other methods in this class do?
     // It's used in a number of places where throwing exceptions would be undesirable or unsafe (eg. during logging startup
     // and when showing version info), so instead we wrap the result.
     fun getDockerVersionInfo(): DockerVersionInfoRetrievalResult {
         try {
-            val info = api.getServerVersionInfo()
+            val info = api.systemInfo.getServerVersionInfo()
 
             return DockerVersionInfoRetrievalResult.Succeeded(info)
         } catch (t: Throwable) {
@@ -267,11 +267,11 @@ class DockerClient(
 
     fun pullImage(imageName: String, cancellationContext: CancellationContext, onProgressUpdate: (DockerImagePullProgress) -> Unit): DockerImage {
         try {
-            if (!api.hasImage(imageName)) {
+            if (!api.images.hasImage(imageName)) {
                 val credentials = credentialsProvider.getCredentials(imageName)
                 val reporter = imagePullProgressReporterFactory()
 
-                api.pullImage(imageName, credentials, cancellationContext) { progress ->
+                api.images.pull(imageName, credentials, cancellationContext) { progress ->
                     val progressUpdate = reporter.processProgressUpdate(progress)
 
                     if (progressUpdate != null) {
@@ -292,13 +292,13 @@ class DockerClient(
         }
 
         try {
-            api.ping()
+            api.systemInfo.ping()
 
             logger.info {
                 message("Ping succeeded.")
             }
 
-            val versionInfo = api.getServerVersionInfo()
+            val versionInfo = api.systemInfo.getServerVersionInfo()
 
             logger.info {
                 message("Getting version info succeeded.")

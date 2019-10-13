@@ -14,18 +14,12 @@
    limitations under the License.
 */
 
-package batect.docker.run
+package batect.docker.api
 
-import batect.docker.DockerContainer
-import batect.docker.api.ContainersAPI
-import batect.execution.CancellationContext
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
+import batect.logging.LogMessageBuilder
+import kotlinx.serialization.Serializable
 
-class ContainerWaiter(private val api: ContainersAPI) {
-    fun startWaitingForContainerToExit(container: DockerContainer, cancellationContext: CancellationContext): Future<Int> {
-        return Executors.newSingleThreadExecutor().submit<Int> {
-            api.waitForExit(container, cancellationContext)
-        }
-    }
-}
+@Serializable
+data class DockerAPIError(val statusCode: Int, val message: String)
+
+internal fun LogMessageBuilder.data(key: String, value: DockerAPIError) = this.data(key, value, DockerAPIError.serializer())

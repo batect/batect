@@ -32,6 +32,10 @@ import batect.docker.DockerNetwork
 import batect.docker.DockerVersionInfoRetrievalResult
 import batect.docker.HealthStatus
 import batect.docker.UserAndGroup
+import batect.docker.api.ContainersAPI
+import batect.docker.api.ImagesAPI
+import batect.docker.api.NetworksAPI
+import batect.docker.api.SystemInfoAPI
 import batect.docker.build.DockerIgnoreParser
 import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
@@ -324,7 +328,11 @@ private fun createClient(posix: POSIX, nativeMethods: NativeMethods): DockerClie
     val systemInfo = SystemInfo(nativeMethods)
     val httpDefaults = DockerHttpConfigDefaults(systemInfo)
     val httpConfig = DockerHttpConfig(OkHttpClient(), httpDefaults.defaultDockerHost, systemInfo)
-    val api = DockerAPI(httpConfig, systemInfo, logger)
+    val containersAPI = ContainersAPI(httpConfig, systemInfo, logger)
+    val imagesAPI = ImagesAPI(httpConfig, systemInfo, logger)
+    val networksAPI = NetworksAPI(httpConfig, systemInfo, logger)
+    val systemInfoAPI = SystemInfoAPI(httpConfig, systemInfo, logger)
+    val api = DockerAPI(containersAPI, imagesAPI, networksAPI, systemInfoAPI)
     val consoleInfo = ConsoleInfo(nativeMethods, systemInfo, logger)
     val consoleManager = getConsoleManagerForPlatform(consoleInfo, processRunner, nativeMethods, logger)
     val credentialsConfigurationFile = DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger)
@@ -332,11 +340,11 @@ private fun createClient(posix: POSIX, nativeMethods: NativeMethods): DockerClie
     val ignoreParser = DockerIgnoreParser()
     val imageBuildContextFactory = DockerImageBuildContextFactory(ignoreParser)
     val dockerfileParser = DockerfileParser()
-    val waiter = ContainerWaiter(api)
+    val waiter = ContainerWaiter(containersAPI)
     val streamer = ContainerIOStreamer()
     val signalListener = SignalListener(posix)
     val consoleDimensions = ConsoleDimensions(nativeMethods, signalListener, logger)
-    val ttyManager = ContainerTTYManager(api, consoleInfo, consoleDimensions, logger)
+    val ttyManager = ContainerTTYManager(containersAPI, consoleInfo, consoleDimensions, logger)
 
     return DockerClient(api, consoleManager, credentialsProvider, imageBuildContextFactory, dockerfileParser, waiter, streamer, ttyManager, logger)
 }

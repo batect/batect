@@ -14,18 +14,14 @@
    limitations under the License.
 */
 
-package batect.docker.run
+package batect.docker.api
 
-import batect.docker.DockerContainer
-import batect.docker.api.ContainersAPI
-import batect.execution.CancellationContext
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
+import kotlinx.serialization.json.JsonObject
+import okhttp3.MediaType
+import okhttp3.RequestBody
 
-class ContainerWaiter(private val api: ContainersAPI) {
-    fun startWaitingForContainerToExit(container: DockerContainer, cancellationContext: CancellationContext): Future<Int> {
-        return Executors.newSingleThreadExecutor().submit<Int> {
-            api.waitForExit(container, cancellationContext)
-        }
-    }
-}
+internal fun emptyRequestBody(): RequestBody = RequestBody.create(MediaType.get("text/plain"), "")
+
+val jsonMediaType = MediaType.get("application/json")
+fun jsonRequestBody(json: JsonObject): RequestBody = jsonRequestBody(json.toString())
+fun jsonRequestBody(json: String): RequestBody = RequestBody.create(jsonMediaType, json)

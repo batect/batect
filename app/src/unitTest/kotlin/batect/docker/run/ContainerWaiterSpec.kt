@@ -16,8 +16,8 @@
 
 package batect.docker.run
 
-import batect.docker.api.DockerAPI
 import batect.docker.DockerContainer
+import batect.docker.api.ContainersAPI
 import batect.execution.CancellationContext
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit
 
 object ContainerWaiterSpec : Spek({
     describe("a container waiter") {
-        val api by createForEachTest { mock<DockerAPI>() }
+        val api by createForEachTest { mock<ContainersAPI>() }
         val cancellationContext by createForEachTest { mock<CancellationContext>() }
         val waiter by createForEachTest { ContainerWaiter(api) }
 

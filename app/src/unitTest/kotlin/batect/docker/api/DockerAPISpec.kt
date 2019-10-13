@@ -14,9 +14,26 @@
    limitations under the License.
 */
 
-package batect.docker
+package batect.docker.api
 
 import batect.config.HealthCheckConfig
+import batect.docker.ContainerCreationFailedException
+import batect.docker.DockerContainer
+import batect.docker.DockerContainerConfiguration
+import batect.docker.DockerContainerCreationRequest
+import batect.docker.DockerContainerHealthCheckConfig
+import batect.docker.DockerContainerHealthCheckState
+import batect.docker.DockerContainerInfo
+import batect.docker.DockerContainerState
+import batect.docker.DockerEvent
+import batect.docker.DockerException
+import batect.docker.DockerHealthCheckResult
+import batect.docker.DockerHttpConfig
+import batect.docker.DockerImage
+import batect.docker.DockerNetwork
+import batect.docker.DockerVersionInfo
+import batect.docker.ImageBuildFailedException
+import batect.docker.ImagePullFailedException
 import batect.docker.build.DockerImageBuildContext
 import batect.docker.build.DockerImageBuildContextEntry
 import batect.docker.build.DockerImageBuildContextRequestBody
@@ -125,7 +142,8 @@ object DockerAPISpec : Spek({
                 val network = DockerNetwork("the-network")
                 val command = listOf("doStuff")
                 val entrypoint = listOf("sh")
-                val request = DockerContainerCreationRequest(image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
+                val request =
+                    DockerContainerCreationRequest(image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
 
                 on("a successful creation") {
                     val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, """{"Id": "abc123"}""", 201) }
@@ -238,22 +256,26 @@ object DockerAPISpec : Spek({
                         val details by runForEachTest { api.inspectContainer(container) }
 
                         it("returns the details of the container") {
-                            assertThat(details, equalTo(DockerContainerInfo(
-                                DockerContainerState(
-                                    DockerContainerHealthCheckState(listOf(
-                                        DockerHealthCheckResult(1, "something went wrong")
-                                    ))
-                                ),
-                                DockerContainerConfiguration(
-                                    DockerContainerHealthCheckConfig(
-                                        listOf("some-test"),
-                                        Duration.ofNanos(20),
-                                        Duration.ofNanos(30),
-                                        Duration.ofNanos(100),
-                                        4
+                            assertThat(details, equalTo(
+                                DockerContainerInfo(
+                                    DockerContainerState(
+                                        DockerContainerHealthCheckState(
+                                            listOf(
+                                                DockerHealthCheckResult(1, "something went wrong")
+                                            )
+                                        )
+                                    ),
+                                    DockerContainerConfiguration(
+                                        DockerContainerHealthCheckConfig(
+                                            listOf("some-test"),
+                                            Duration.ofNanos(20),
+                                            Duration.ofNanos(30),
+                                            Duration.ofNanos(100),
+                                            4
+                                        )
                                     )
                                 )
-                            )))
+                            ))
                         }
                     }
                 }
@@ -273,10 +295,12 @@ object DockerAPISpec : Spek({
                         val details by runForEachTest { api.inspectContainer(container) }
 
                         it("returns the details of the container") {
-                            assertThat(details, equalTo(DockerContainerInfo(
-                                DockerContainerState(health = null),
-                                DockerContainerConfiguration(healthCheck = DockerContainerHealthCheckConfig())
-                            )))
+                            assertThat(details, equalTo(
+                                DockerContainerInfo(
+                                    DockerContainerState(health = null),
+                                    DockerContainerConfiguration(healthCheck = DockerContainerHealthCheckConfig())
+                                )
+                            ))
                         }
                     }
                 }
@@ -1116,9 +1140,11 @@ object DockerAPISpec : Spek({
                 }
 
                 it("returns the version information from Docker") {
-                    assertThat(api.getServerVersionInfo(), equalTo(DockerVersionInfo(
-                        Version(17, 4, 0), "1.27", "1.12", "deadbee"
-                    )))
+                    assertThat(api.getServerVersionInfo(), equalTo(
+                        DockerVersionInfo(
+                            Version(17, 4, 0), "1.27", "1.12", "deadbee"
+                        )
+                    ))
                 }
             }
 

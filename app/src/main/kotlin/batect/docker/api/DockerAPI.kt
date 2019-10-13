@@ -14,14 +14,30 @@
    limitations under the License.
 */
 
-package batect.docker
+package batect.docker.api
 
+import batect.docker.ContainerCreationFailedException
+import batect.docker.DockerContainer
+import batect.docker.DockerContainerCreationRequest
+import batect.docker.DockerContainerInfo
+import batect.docker.DockerEvent
+import batect.docker.DockerException
+import batect.docker.DockerHttpConfig
+import batect.docker.DockerImage
+import batect.docker.DockerNetwork
+import batect.docker.DockerVersionInfo
+import batect.docker.ImageBuildFailedException
+import batect.docker.ImagePullFailedException
 import batect.docker.build.DockerImageBuildContext
 import batect.docker.build.DockerImageBuildContextRequestBody
+import batect.docker.data
+import batect.docker.minimumDockerAPIVersion
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputStream
+import batect.docker.toJsonArray
+import batect.docker.toJsonObject
 import batect.execution.CancellationContext
 import batect.execution.executeInCancellationContext
 import batect.logging.LogMessageBuilder

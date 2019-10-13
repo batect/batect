@@ -16,7 +16,7 @@
 
 package batect.docker.run
 
-import batect.docker.DockerAPI
+import batect.docker.api.DockerAPI
 import batect.docker.DockerContainer
 import batect.execution.CancellationContext
 import java.util.concurrent.Executors

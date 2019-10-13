@@ -26,7 +26,7 @@ import batect.cli.commands.UpgradeCommand
 import batect.cli.commands.VersionInfoCommand
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.config.io.ConfigurationLoader
-import batect.docker.DockerAPI
+import batect.docker.api.DockerAPI
 import batect.docker.DockerClient
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerHostNameResolver

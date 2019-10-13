@@ -20,8 +20,6 @@ import batect.config.EnvironmentVariableExpression
 import batect.config.EnvironmentVariableExpressionEvaluationException
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerHealthCheckException
-import batect.docker.ContainerRemovalFailedException
-import batect.docker.ContainerStopFailedException
 import batect.docker.DockerClient
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequestFactory
@@ -30,8 +28,10 @@ import batect.docker.DockerImageBuildProgress
 import batect.docker.HealthStatus
 import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
-import batect.docker.NetworkCreationFailedException
-import batect.docker.NetworkDeletionFailedException
+import batect.docker.api.ContainerRemovalFailedException
+import batect.docker.api.ContainerStopFailedException
+import batect.docker.api.NetworkCreationFailedException
+import batect.docker.api.NetworkDeletionFailedException
 import batect.execution.CancellationContext
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions

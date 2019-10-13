@@ -16,9 +16,9 @@
 
 package batect.docker.run
 
-import batect.docker.ContainerStoppedException
-import batect.docker.DockerAPI
 import batect.docker.DockerContainer
+import batect.docker.api.ContainerStoppedException
+import batect.docker.api.DockerAPI
 import batect.os.Dimensions
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest

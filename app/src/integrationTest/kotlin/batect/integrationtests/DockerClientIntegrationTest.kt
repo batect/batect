@@ -19,7 +19,7 @@ package batect.integrationtests
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
 import batect.config.VolumeMount
-import batect.docker.DockerAPI
+import batect.docker.api.DockerAPI
 import batect.docker.DockerClient
 import batect.docker.DockerConnectivityCheckResult
 import batect.docker.DockerContainer

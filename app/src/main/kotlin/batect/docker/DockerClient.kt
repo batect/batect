@@ -16,6 +16,8 @@
 
 package batect.docker
 
+import batect.docker.api.ContainerInspectionFailedException
+import batect.docker.api.DockerAPI
 import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
 import batect.docker.pull.DockerImagePullProgress

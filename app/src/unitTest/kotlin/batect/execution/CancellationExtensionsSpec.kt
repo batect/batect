@@ -32,9 +32,13 @@ import com.nhaarman.mockitokotlin2.whenever
 import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.IOException
+import java.util.logging.Level
+import java.util.logging.Logger
 
 object CancellationExtensionsSpec : Spek({
     describe("executing a OkHttp call in a cancellation context") {
@@ -45,9 +49,17 @@ object CancellationExtensionsSpec : Spek({
             }
         }
 
+        val testServer by createForEachTest { MockWebServer() }
+        afterEachTest { testServer.shutdown() }
+
         given("the request is not cancelled") {
             given("the request succeeds") {
-                val call by createForEachTest { createTestCall() }
+                beforeEachTest {
+                    testServer.enqueue(MockResponse())
+                    testServer.startSilently()
+                }
+
+                val call by createForEachTest { createTestCall(testServer) }
 
                 val expectedReturnValue = 8
 
@@ -86,7 +98,12 @@ object CancellationExtensionsSpec : Spek({
 
         given("the request is cancelled") {
             given("the request is cancelled before the response headers are received") {
-                val call by createForEachTest { createTestCall() }
+                beforeEachTest {
+                    testServer.enqueue(MockResponse())
+                    testServer.startSilently()
+                }
+
+                val call by createForEachTest { createTestCall(testServer) }
 
                 beforeEachTest {
                     whenever(cancellationContext.addCancellationCallback(any())).doAnswer { invocation ->
@@ -107,7 +124,15 @@ object CancellationExtensionsSpec : Spek({
             }
 
             given("the request is cancelled after the response headers are received") {
-                val call by createForEachTest { createTestCall("/bytes/20000") }
+                beforeEachTest {
+                    testServer.enqueue(
+                        MockResponse().setBody("a".repeat(20000))
+                    )
+
+                    testServer.startSilently()
+                }
+
+                val call by createForEachTest { createTestCall(testServer) }
 
                 it("throws an exception that indicates that the call failed") {
                     assertThat({
@@ -124,4 +149,9 @@ object CancellationExtensionsSpec : Spek({
     }
 })
 
-private fun createTestCall(path: String = "/get"): Call = OkHttpClient().newCall(Request.Builder().get().url("https://httpbin.org$path").build())
+private fun createTestCall(server: MockWebServer): Call = OkHttpClient().newCall(Request.Builder().get().url(server.url("/")).build())
+
+private fun MockWebServer.startSilently() {
+    Logger.getLogger(this::class.java.name).level = Level.WARNING
+    start()
+}

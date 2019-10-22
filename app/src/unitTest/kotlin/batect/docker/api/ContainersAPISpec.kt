@@ -53,7 +53,6 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
@@ -62,7 +61,6 @@ import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import jnr.constants.platform.Signal
-import okhttp3.ConnectionPool
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -716,11 +714,3 @@ object ContainersAPISpec : Spek({
         }
     }
 })
-
-// HACK: ConnectionPool doesn't expose the keep-alive time, so we have to reach into it to verify that we've set it correctly.
-private fun connectionPoolWithNoEviction(): ConnectionPool = argThat {
-    val field = ConnectionPool::class.java.getDeclaredField("keepAliveDurationNs")
-    field.isAccessible = true
-
-    field.getLong(this) == Long.MAX_VALUE
-}

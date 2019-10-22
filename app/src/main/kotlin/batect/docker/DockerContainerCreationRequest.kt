@@ -53,7 +53,7 @@ data class DockerContainerCreationRequest(
             "StdinOnce" to true
             "Image" to image.id
             "Hostname" to hostname
-            "Env" to formatEnvironmentVariables()
+            "Env" to environmentVariables.toDockerFormatJsonArray()
             "ExposedPorts" to formatExposedPorts()
 
             if (command.count() > 0) {
@@ -98,10 +98,6 @@ data class DockerContainerCreationRequest(
             }
         }.toString()
     }
-
-    private fun formatEnvironmentVariables(): JsonArray = environmentVariables
-        .map { (key, value) -> "$key=$value" }
-        .toJsonArray()
 
     private fun formatVolumeMounts(): JsonArray = volumeMounts
         .map { it.toString() }

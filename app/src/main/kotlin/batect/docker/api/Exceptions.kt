@@ -26,3 +26,4 @@ class DockerVersionInfoRetrievalException(message: String) : DockerException(mes
 class NetworkCreationFailedException(val outputFromDocker: String) : DockerException("Creation of network failed: $outputFromDocker")
 class NetworkDeletionFailedException(val networkId: String, val outputFromDocker: String) : DockerException("Deletion of network '$networkId' failed: $outputFromDocker")
 class ContainerStoppedException(message: String) : DockerException(message)
+class ExecInstanceInspectionFailedException(message: String) : DockerException(message)

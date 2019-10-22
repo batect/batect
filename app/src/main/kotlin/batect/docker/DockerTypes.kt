@@ -69,7 +69,19 @@ data class DockerContainerHealthCheckConfig(
     @SerialName("Retries") val retries: Int = 3
 )
 
+@Serializable
+data class DockerExecInstance(
+    @SerialName("Id") val id: String
+)
+
+@Serializable
+data class DockerExecInstanceInfo(
+    @SerialName("ExitCode") val exitCode: Int?,
+    @SerialName("Running") val running: Boolean
+)
+
 fun LogMessageBuilder.data(key: String, value: DockerImage) = this.data(key, value, DockerImage.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerContainer) = this.data(key, value, DockerContainer.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerNetwork) = this.data(key, value, DockerNetwork.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerEvent) = this.data(key, value, DockerEvent.serializer())
+fun LogMessageBuilder.data(key: String, value: DockerExecInstance) = this.data(key, value, DockerExecInstance.serializer())

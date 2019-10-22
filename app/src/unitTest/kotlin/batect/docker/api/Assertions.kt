@@ -22,7 +22,9 @@ import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
+import com.nhaarman.mockitokotlin2.argThat
 import kotlinx.serialization.json.JsonObject
+import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
 import okhttp3.MediaType
 import okhttp3.Request
@@ -76,4 +78,12 @@ internal fun requestWithJsonBody(predicate: (JsonObject) -> Unit) = com.nhaarman
 
 internal fun requestWithBody(expectedBody: RequestBody) = com.nhaarman.mockitokotlin2.check<Request> { request ->
     assertThat(request.body(), equalTo(expectedBody))
+}
+
+// HACK: ConnectionPool doesn't expose the keep-alive time, so we have to reach into it to verify that we've set it correctly.
+internal fun connectionPoolWithNoEviction(): ConnectionPool = argThat {
+    val field = ConnectionPool::class.java.getDeclaredField("keepAliveDurationNs")
+    field.isAccessible = true
+
+    field.getLong(this) == Long.MAX_VALUE
 }

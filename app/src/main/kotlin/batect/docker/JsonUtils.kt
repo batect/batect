@@ -20,6 +20,10 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-fun Iterable<String>.toJsonArray() = JsonArray(this.map { JsonPrimitive(it) })
+internal fun Iterable<String>.toJsonArray() = JsonArray(this.map { JsonPrimitive(it) })
 
-fun Map<String, String>.toJsonObject() = JsonObject(this.mapValues { JsonPrimitive(it.value) })
+internal fun Map<String, String>.toJsonObject() = JsonObject(this.mapValues { JsonPrimitive(it.value) })
+
+internal fun Map<String, String>.toDockerFormatJsonArray(): JsonArray = this
+    .map { (key, value) -> "$key=$value" }
+    .toJsonArray()

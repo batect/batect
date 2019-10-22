@@ -16,10 +16,10 @@
 
 package batect.ui.containerio
 
-import okio.Okio
 import okio.Sink
+import okio.sink
 import java.io.PrintStream
 
-data class UncloseableSink(val destination: PrintStream) : Sink by Okio.sink(destination) {
+data class UncloseableSink(val destination: PrintStream) : Sink by destination.sink() {
     override fun close() {}
 }

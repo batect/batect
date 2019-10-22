@@ -19,9 +19,9 @@ package batect.ui.containerio
 import batect.config.Container
 import batect.os.Dimensions
 import batect.ui.ConsoleInfo
-import okio.Okio
 import okio.Sink
 import okio.Source
+import okio.source
 import java.io.InputStream
 import java.io.PrintStream
 
@@ -36,7 +36,7 @@ data class TaskContainerOnlyIOStreamingOptions(
 
     override fun stdinForContainer(container: Container): Source? {
         if (container == taskContainer) {
-            return Okio.source(stdin)
+            return stdin.source()
         }
 
         return null

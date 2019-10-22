@@ -33,7 +33,9 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.mock
 import okhttp3.Response
-import okio.Okio
+import okio.buffer
+import okio.sink
+import okio.source
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayInputStream
@@ -54,14 +56,14 @@ object ContainerIOStreamerSpec : Spek({
                 val containerOutputStream by createForEachTest { ByteArrayInputStream("This is the output".toByteArray()) }
                 val containerInputStream by createForEachTest { CloseableByteArrayOutputStream() }
 
-                val outputStream by createForEachTest { ContainerOutputStream(response, Okio.buffer(Okio.source(containerOutputStream))) }
-                val inputStream by createForEachTest { ContainerInputStream(response, Okio.buffer(Okio.sink(containerInputStream))) }
+                val outputStream by createForEachTest { ContainerOutputStream(response, containerOutputStream.source().buffer()) }
+                val inputStream by createForEachTest { ContainerInputStream(response, containerInputStream.sink().buffer()) }
                 val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
                 beforeEachTest {
                     streamer.stream(
-                        OutputConnection.Connected(outputStream, Okio.sink(stdout)),
-                        InputConnection.Connected(Okio.source(stdin), inputStream),
+                        OutputConnection.Connected(outputStream, stdout.sink()),
+                        InputConnection.Connected(stdin.source(), inputStream),
                         cancellationContext
                     )
                 }
@@ -131,14 +133,14 @@ object ContainerIOStreamerSpec : Spek({
                     }
                 }
 
-                val outputStream by createForEachTest { ContainerOutputStream(response, Okio.buffer(Okio.source(containerOutputStream))) }
-                val inputStream by createForEachTest { ContainerInputStream(response, Okio.buffer(Okio.sink(containerInputStream))) }
+                val outputStream by createForEachTest { ContainerOutputStream(response, containerOutputStream.source().buffer()) }
+                val inputStream by createForEachTest { ContainerInputStream(response, containerInputStream.sink().buffer()) }
                 val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
                 beforeEachTest {
                     streamer.stream(
-                        OutputConnection.Connected(outputStream, Okio.sink(stdout)),
-                        InputConnection.Connected(Okio.source(stdin), inputStream),
+                        OutputConnection.Connected(outputStream, stdout.sink()),
+                        InputConnection.Connected(stdin.source(), inputStream),
                         cancellationContext
                     )
                 }
@@ -201,14 +203,14 @@ object ContainerIOStreamerSpec : Spek({
 
                 val containerInputStream by createForEachTest { CloseableByteArrayOutputStream() }
 
-                val outputStream by createForEachTest { ContainerOutputStream(response, Okio.buffer(Okio.source(containerOutputStream))) }
-                val inputStream by createForEachTest { ContainerInputStream(response, Okio.buffer(Okio.sink(containerInputStream))) }
+                val outputStream by createForEachTest { ContainerOutputStream(response, containerOutputStream.source().buffer()) }
+                val inputStream by createForEachTest { ContainerInputStream(response, containerInputStream.sink().buffer()) }
                 val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
                 beforeEachTest {
                     streamer.stream(
-                        OutputConnection.Connected(outputStream, Okio.sink(stdout)),
-                        InputConnection.Connected(Okio.source(stdin), inputStream),
+                        OutputConnection.Connected(outputStream, stdout.sink()),
+                        InputConnection.Connected(stdin.source(), inputStream),
                         cancellationContext
                     )
                 }
@@ -253,8 +255,8 @@ object ContainerIOStreamerSpec : Spek({
 
                 val containerInputStream by createForEachTest { CloseableByteArrayOutputStream() }
 
-                val outputStream by createForEachTest { ContainerOutputStream(response, Okio.buffer(Okio.source(containerOutputStream))) }
-                val inputStream by createForEachTest { ContainerInputStream(response, Okio.buffer(Okio.sink(containerInputStream))) }
+                val outputStream by createForEachTest { ContainerOutputStream(response, containerOutputStream.source().buffer()) }
+                val inputStream by createForEachTest { ContainerInputStream(response, containerInputStream.sink().buffer()) }
                 val cancellationContext by createForEachTest {
                     mock<CancellationContext> {
                         on { addCancellationCallback(any()) } doAnswer { invocation ->
@@ -271,8 +273,8 @@ object ContainerIOStreamerSpec : Spek({
                 val timeTakenToCancel by runForEachTest {
                     measureTimeMillis {
                         streamer.stream(
-                            OutputConnection.Connected(outputStream, Okio.sink(stdout)),
-                            InputConnection.Connected(Okio.source(stdin), inputStream),
+                            OutputConnection.Connected(outputStream, stdout.sink()),
+                            InputConnection.Connected(stdin.source(), inputStream),
                             cancellationContext
                         )
                     }
@@ -296,12 +298,12 @@ object ContainerIOStreamerSpec : Spek({
             val stdout by createForEachTest { CloseableByteArrayOutputStream() }
             val response by createForEachTest { mock<Response>() }
             val containerOutputStream by createForEachTest { ByteArrayInputStream("This is the output".toByteArray()) }
-            val outputStream by createForEachTest { ContainerOutputStream(response, Okio.buffer(Okio.source(containerOutputStream))) }
+            val outputStream by createForEachTest { ContainerOutputStream(response, containerOutputStream.source().buffer()) }
             val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
             beforeEachTest {
                 streamer.stream(
-                    OutputConnection.Connected(outputStream, Okio.sink(stdout)),
+                    OutputConnection.Connected(outputStream, stdout.sink()),
                     InputConnection.Disconnected,
                     cancellationContext
                 )

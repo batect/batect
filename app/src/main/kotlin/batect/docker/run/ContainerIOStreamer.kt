@@ -20,9 +20,9 @@ import batect.docker.DockerException
 import batect.execution.CancellationContext
 import okio.Buffer
 import okio.BufferedSource
-import okio.Okio
 import okio.Sink
 import okio.Source
+import okio.buffer
 import java.util.concurrent.CancellationException
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -69,7 +69,7 @@ class ContainerIOStreamer() {
 
     private fun streamStdin(input: InputConnection) {
         if (input is InputConnection.Connected) {
-            Okio.buffer(input.source).copyTo(input.destination.stream)
+            input.source.buffer().copyTo(input.destination.stream)
         }
     }
 

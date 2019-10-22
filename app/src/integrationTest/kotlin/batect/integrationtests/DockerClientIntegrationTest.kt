@@ -79,7 +79,8 @@ import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
-import okio.Okio
+import okio.sink
+import okio.source
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.FileSystems
@@ -173,7 +174,7 @@ object DockerClientIntegrationTest : Spek({
             beforeGroup {
                 withNetwork { network ->
                     withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
-                        client.containers.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext(), Dimensions(0, 0)) {
+                        client.containers.run(container, System.out.sink(), System.`in`.source(), CancellationContext(), Dimensions(0, 0)) {
                             client.containers.stop(container)
                         }
                     }
@@ -193,7 +194,7 @@ object DockerClientIntegrationTest : Spek({
             beforeGroup {
                 withNetwork { network ->
                     withContainer(creationRequestForContainerThatExits(image, network, fileToCreate)) { container ->
-                        client.containers.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext(), Dimensions(0, 0)) {
+                        client.containers.run(container, System.out.sink(), System.`in`.source(), CancellationContext(), Dimensions(0, 0)) {
                             client.containers.stop(container)
                         }
                     }
@@ -213,7 +214,7 @@ object DockerClientIntegrationTest : Spek({
             beforeGroup {
                 withNetwork { network ->
                     withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
-                        client.containers.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext(), Dimensions(0, 0)) {
+                        client.containers.run(container, System.out.sink(), System.`in`.source(), CancellationContext(), Dimensions(0, 0)) {
                             client.containers.stop(container)
                         }
                     }
@@ -243,7 +244,7 @@ object DockerClientIntegrationTest : Spek({
             fun runContainerAndWaitForHealthCheck(container: DockerContainer): Result {
                 lateinit var result: Result
 
-                client.containers.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext(), Dimensions(0, 0)) {
+                client.containers.run(container, System.out.sink(), System.`in`.source(), CancellationContext(), Dimensions(0, 0)) {
                     val healthStatus = client.containers.waitForHealthStatus(container, CancellationContext())
                     val lastHealthCheckResult = client.containers.getLastHealthCheckResult(container)
                     result = Result(healthStatus, lastHealthCheckResult)
@@ -283,7 +284,7 @@ object DockerClientIntegrationTest : Spek({
                     fun runContainerAndGetHttpResponse(container: DockerContainer): Response {
                         lateinit var response: Response
 
-                        client.containers.run(container, Okio.sink(System.out), Okio.source(System.`in`), CancellationContext(), Dimensions(0, 0)) {
+                        client.containers.run(container, System.out.sink(), System.`in`.source(), CancellationContext(), Dimensions(0, 0)) {
                             response = httpGet("http://localhost:8080")
 
                             client.containers.stop(container)

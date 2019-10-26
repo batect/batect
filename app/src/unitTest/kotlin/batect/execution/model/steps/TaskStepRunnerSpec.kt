@@ -44,6 +44,7 @@ import batect.docker.api.ContainerStopFailedException
 import batect.docker.api.NetworkCreationFailedException
 import batect.docker.api.NetworkDeletionFailedException
 import batect.docker.client.DockerContainersClient
+import batect.docker.client.DockerExecClient
 import batect.docker.client.DockerImagesClient
 import batect.docker.client.DockerNetworksClient
 import batect.docker.client.DockerSystemInfoClient
@@ -117,10 +118,11 @@ object TaskStepRunnerSpec : Spek({
         val stepRunContext by createForEachTest { TaskStepRunContext(eventSink, runOptions, cancellationContext, ioStreamingOptions) }
 
         val containersClient by createForEachTest { mock<DockerContainersClient>() }
+        val execClient by createForEachTest { mock<DockerExecClient>() }
         val imagesClient by createForEachTest { mock<DockerImagesClient>() }
         val networksClient by createForEachTest { mock<DockerNetworksClient>() }
         val systemInfoClient by createForEachTest { mock<DockerSystemInfoClient>() }
-        val dockerClient by createForEachTest { DockerClient(containersClient, imagesClient, networksClient, systemInfoClient) }
+        val dockerClient by createForEachTest { DockerClient(containersClient, execClient, imagesClient, networksClient, systemInfoClient) }
         val creationRequestFactory by createForEachTest { mock<DockerContainerCreationRequestFactory>() }
 
         val proxyVariables = mapOf("SOME_PROXY_CONFIG" to "some_proxy", "SOME_OTHER_PROXY_CONFIG" to "some_other_value")

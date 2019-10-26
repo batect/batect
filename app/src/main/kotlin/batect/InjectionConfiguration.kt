@@ -33,6 +33,7 @@ import batect.docker.DockerHostNameResolver
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerHttpConfigDefaults
 import batect.docker.api.ContainersAPI
+import batect.docker.api.ExecAPI
 import batect.docker.api.ImagesAPI
 import batect.docker.api.NetworksAPI
 import batect.docker.api.SystemInfoAPI
@@ -40,6 +41,7 @@ import batect.docker.build.DockerIgnoreParser
 import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
 import batect.docker.client.DockerContainersClient
+import batect.docker.client.DockerExecClient
 import batect.docker.client.DockerImagesClient
 import batect.docker.client.DockerNetworksClient
 import batect.docker.client.DockerSystemInfoClient
@@ -198,6 +200,7 @@ private val dockerModule = Kodein.Module("docker") {
 private val dockerApiModule = Kodein.Module("docker.api") {
     bind<ContainersAPI>() with singletonWithLogger { logger -> ContainersAPI(instance(), instance(), logger) }
     bind<DockerAPI>() with singleton { DockerAPI(instance(), instance(), instance(), instance()) }
+    bind<ExecAPI>() with singletonWithLogger { logger -> ExecAPI(instance(), instance(), logger) }
     bind<ImagesAPI>() with singletonWithLogger { logger -> ImagesAPI(instance(), instance(), logger) }
     bind<NetworksAPI>() with singletonWithLogger { logger -> NetworksAPI(instance(), instance(), logger) }
     bind<SystemInfoAPI>() with singletonWithLogger { logger -> SystemInfoAPI(instance(), instance(), logger) }
@@ -205,10 +208,11 @@ private val dockerApiModule = Kodein.Module("docker.api") {
 
 private val dockerClientModule = Kodein.Module("docker.client") {
     bind<DockerContainersClient>() with singletonWithLogger { logger -> DockerContainersClient(instance(), instance(), instance(), instance(), instance(), logger) }
+    bind<DockerExecClient>() with singletonWithLogger { logger -> DockerExecClient(instance(), instance(), logger) }
     bind<DockerImagesClient>() with singletonWithLogger { logger -> DockerImagesClient(instance(), instance(), instance(), instance(), logger) }
     bind<DockerNetworksClient>() with singleton { DockerNetworksClient(instance()) }
     bind<DockerSystemInfoClient>() with singletonWithLogger { logger -> DockerSystemInfoClient(instance(), logger) }
-    bind<DockerClient>() with singleton { DockerClient(instance(), instance(), instance(), instance()) }
+    bind<DockerClient>() with singleton { DockerClient(instance(), instance(), instance(), instance(), instance()) }
 }
 
 private val executionModule = Kodein.Module("execution") {

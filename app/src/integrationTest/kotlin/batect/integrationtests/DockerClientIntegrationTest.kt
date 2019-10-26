@@ -21,6 +21,7 @@ import batect.config.PortMapping
 import batect.config.VolumeMount
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequest
+import batect.docker.DockerExecResult
 import batect.docker.DockerHealthCheckResult
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerHttpConfigDefaults
@@ -28,6 +29,7 @@ import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.UserAndGroup
 import batect.docker.api.ContainersAPI
+import batect.docker.api.ExecAPI
 import batect.docker.api.ImagesAPI
 import batect.docker.api.NetworksAPI
 import batect.docker.api.SystemInfoAPI
@@ -37,6 +39,7 @@ import batect.docker.build.DockerfileParser
 import batect.docker.client.DockerClient
 import batect.docker.client.DockerConnectivityCheckResult
 import batect.docker.client.DockerContainersClient
+import batect.docker.client.DockerExecClient
 import batect.docker.client.DockerImagesClient
 import batect.docker.client.DockerNetworksClient
 import batect.docker.client.DockerSystemInfoClient
@@ -308,6 +311,34 @@ object DockerClientIntegrationTest : Spek({
             }
         }
 
+        describe("executing a command in a already running container") {
+            val image by runBeforeGroup { client.images.pull("alpine:3.7", CancellationContext(), {}) }
+
+            val execResult by runBeforeGroup {
+                withNetwork { network ->
+                    // See https://stackoverflow.com/a/21882119/1668119 for an explanation of this - we need something that waits indefinitely but immediately responds to a SIGTERM by quitting (sh and wait don't do this).
+                    val command = listOf("sh", "-c", "trap 'trap - TERM; kill -s TERM -$$' TERM; tail -f /dev/null & wait")
+
+                    withContainer(creationRequestForContainer(image, network, command)) { container ->
+                        lateinit var execResult: DockerExecResult
+
+                        client.containers.run(container, System.out.sink(), System.`in`.source(), CancellationContext(), Dimensions(0, 0)) {
+                            execResult = client.exec.run(listOf("echo", "-n", "Output from exec"), container, emptyMap(), false, null, null, CancellationContext())
+
+                            client.containers.stop(container)
+                        }
+
+                        execResult
+                    }
+                }
+            }
+
+            it("runs the command successfully") {
+                assertThat(execResult.exitCode, equalTo(0))
+                assertThat(execResult.output, equalTo("Output from exec"))
+            }
+        }
+
         describe("checking if Docker is available") {
             val result by runBeforeGroup { client.systemInfo.checkConnectivity() }
 
@@ -333,6 +364,7 @@ private fun createClient(posix: POSIX, nativeMethods: NativeMethods): DockerClie
     val httpDefaults = DockerHttpConfigDefaults(systemInfo)
     val httpConfig = DockerHttpConfig(OkHttpClient(), httpDefaults.defaultDockerHost, systemInfo)
     val containersAPI = ContainersAPI(httpConfig, systemInfo, logger)
+    val execAPI = ExecAPI(httpConfig, systemInfo, logger)
     val imagesAPI = ImagesAPI(httpConfig, systemInfo, logger)
     val networksAPI = NetworksAPI(httpConfig, systemInfo, logger)
     val systemInfoAPI = SystemInfoAPI(httpConfig, systemInfo, logger)
@@ -350,11 +382,12 @@ private fun createClient(posix: POSIX, nativeMethods: NativeMethods): DockerClie
     val ttyManager = ContainerTTYManager(containersAPI, consoleInfo, consoleDimensions, logger)
 
     val containersClient = DockerContainersClient(containersAPI, consoleManager, waiter, streamer, ttyManager, logger)
+    val execClient = DockerExecClient(execAPI, streamer, logger)
     val imagesClient = DockerImagesClient(imagesAPI, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger)
     val networksClient = DockerNetworksClient(networksAPI)
     val systemInfoClient = DockerSystemInfoClient(systemInfoAPI, logger)
 
-    return DockerClient(containersClient, imagesClient, networksClient, systemInfoClient)
+    return DockerClient(containersClient, execClient, imagesClient, networksClient, systemInfoClient)
 }
 
 private fun getNativeMethodsForPlatform(posix: POSIX): NativeMethods = when (Platform.getNativePlatform().os) {

@@ -80,8 +80,15 @@ data class DockerExecInstanceInfo(
     @SerialName("Running") val running: Boolean
 )
 
+@Serializable
+data class DockerExecResult(
+    val exitCode: Int,
+    val output: String
+)
+
 fun LogMessageBuilder.data(key: String, value: DockerImage) = this.data(key, value, DockerImage.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerContainer) = this.data(key, value, DockerContainer.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerNetwork) = this.data(key, value, DockerNetwork.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerEvent) = this.data(key, value, DockerEvent.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerExecInstance) = this.data(key, value, DockerExecInstance.serializer())
+fun LogMessageBuilder.data(key: String, value: DockerExecResult) = this.data(key, value, DockerExecResult.serializer())

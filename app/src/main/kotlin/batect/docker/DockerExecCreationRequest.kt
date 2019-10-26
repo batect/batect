@@ -30,7 +30,7 @@ data class DockerExecCreationRequest(
     val command: List<String>,
     val privileged: Boolean,
     val userAndGroup: UserAndGroup?,
-    val workingDirectory: String
+    val workingDirectory: String?
 ) {
     fun toJson(): String = json {
         "AttachStdin" to attachStdin

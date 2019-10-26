@@ -34,6 +34,11 @@ import okhttp3.HttpUrl
 import okhttp3.Request
 import java.util.concurrent.TimeUnit
 
+// Flow is:
+// - Create exec instance
+// - Start it (streams output and runs to completion)
+// - Inspect it to get exit code
+
 class ExecAPI(
     httpConfig: DockerHttpConfig,
     systemInfo: SystemInfo,

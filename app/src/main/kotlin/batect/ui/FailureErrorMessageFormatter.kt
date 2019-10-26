@@ -32,6 +32,8 @@ import batect.execution.model.events.ExecutionFailedEvent
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImagePullFailedEvent
 import batect.execution.model.events.RunningContainerExitedEvent
+import batect.execution.model.events.SetupCommandExecutionErrorEvent
+import batect.execution.model.events.SetupCommandFailedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
@@ -59,6 +61,8 @@ class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
         is TaskNetworkDeletionFailedEvent -> formatErrorMessage("Could not delete the task network", event.message)
         is TemporaryFileDeletionFailedEvent -> formatErrorMessage("Could not delete temporary file '${event.filePath}'", event.message)
         is TemporaryDirectoryDeletionFailedEvent -> formatErrorMessage("Could not delete temporary directory '${event.directoryPath}'", event.message)
+        is SetupCommandExecutionErrorEvent -> formatErrorMessage(Text("Could not run setup command ") + Text.bold(event.command.originalCommand) + Text(" in container ") + Text.bold(event.container.name), event.message) + hintToReRunWithCleanupDisabled(runOptions)
+        is SetupCommandFailedEvent -> formatErrorMessage(Text("Setup command ") + Text.bold(event.command.originalCommand) + Text(" in container ") + Text.bold(event.container.name) + Text(" failed"), setupCommandFailedBodyText(event.exitCode, event.output)) + hintToReRunWithCleanupDisabled(runOptions)
         is ExecutionFailedEvent -> formatErrorMessage("An unexpected exception occurred during execution", event.message)
         is UserInterruptedExecutionEvent -> formatMessage("Task cancelled", TextRun("Interrupt received during execution"), "Waiting for outstanding operations to stop or finish before cleaning up...")
     }
@@ -70,6 +74,12 @@ class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
     private fun hintToReRunWithCleanupDisabled(runOptions: RunOptions): TextRun = when (runOptions.behaviourAfterFailure) {
         CleanupOption.Cleanup -> Text("$newLine${newLine}You can re-run the task with ") + Text.bold("--${CommandLineOptionsParser.disableCleanupAfterFailureFlagName}") + Text(" to leave the created containers running to diagnose the issue.")
         CleanupOption.DontCleanup -> TextRun("")
+    }
+
+    private fun setupCommandFailedBodyText(exitCode: Int, output: String): String = if (output.isEmpty()) {
+        "The command exited with code $exitCode and did not produce any output."
+    } else {
+        "The command exited with code $exitCode and output:$newLine$output"
     }
 
     fun formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events: Set<TaskEvent>, cleanupCommands: List<String>): TextRun {

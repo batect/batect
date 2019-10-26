@@ -33,6 +33,8 @@ import batect.execution.model.events.ExecutionFailedEvent
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImagePullFailedEvent
 import batect.execution.model.events.RunningContainerExitedEvent
+import batect.execution.model.events.SetupCommandExecutionErrorEvent
+import batect.execution.model.events.SetupCommandFailedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
@@ -41,6 +43,7 @@ import batect.execution.model.events.TaskNetworkDeletionFailedEvent
 import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
 import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 import batect.execution.model.events.UserInterruptedExecutionEvent
+import batect.os.Command
 import batect.os.SystemInfo
 import batect.testutils.equivalentTo
 import batect.testutils.given
@@ -147,38 +150,58 @@ object FailureErrorMessageFormatterSpec : Spek({
                 }
             }
 
-            given("a 'container did not become healthy' event") {
-                val event = ContainerDidNotBecomeHealthyEvent(container, "Something went wrong.")
-                val expectedMessage = Text.red(Text.bold("Error: ") + Text("Container ") + Text.bold("the-container") + Text(" did not become healthy.\n")) + Text("Something went wrong.")
+            setOf(
+                Scenario(
+                    "a 'container did not become healthy' event",
+                    ContainerDidNotBecomeHealthyEvent(container, "Something went wrong."),
+                    Text.red(Text.bold("Error: ") + Text("Container ") + Text.bold("the-container") + Text(" did not become healthy.\n")) + Text("Something went wrong.")
+                ),
+                Scenario(
+                    "a 'setup command execution error' event",
+                    SetupCommandExecutionErrorEvent(container, Command.parse("./do the-thing"), "Something went wrong."),
+                    Text.red(Text.bold("Error: ") + Text("Could not run setup command ") + Text.bold("./do the-thing") + Text(" in container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")
+                ),
+                Scenario(
+                    "a 'setup command failed' event where the command emitted some output",
+                    SetupCommandFailedEvent(container, Command.parse("./do the-thing"), 123, "Something went wrong."),
+                    Text.red(Text.bold("Error: ") + Text("Setup command ") + Text.bold("./do the-thing") + Text(" in container ") + Text.bold("the-container") + Text(" failed.\n")) + Text("The command exited with code 123 and output:\nSomething went wrong.")
+                ),
+                Scenario(
+                    "a 'setup command failed' event where the command did not emit any output",
+                    SetupCommandFailedEvent(container, Command.parse("./do the-thing"), 123, ""),
+                    Text.red(Text.bold("Error: ") + Text("Setup command ") + Text.bold("./do the-thing") + Text(" in container ") + Text.bold("the-container") + Text(" failed.\n")) + Text("The command exited with code 123 and did not produce any output.")
+                )
+            ).forEach { (description, event, expectedMessage) ->
+                given(description) {
+                    given("cleanup after failure is disabled") {
+                        val runOptions = mock<RunOptions> {
+                            on { behaviourAfterFailure } doReturn CleanupOption.DontCleanup
+                        }
 
-                given("cleanup after failure is disabled") {
-                    val runOptions = mock<RunOptions> {
-                        on { behaviourAfterFailure } doReturn CleanupOption.DontCleanup
-                    }
+                        on("getting the message for that event") {
+                            val message = formatter.formatErrorMessage(event, runOptions)
 
-                    on("getting the message for that event") {
-                        val message = formatter.formatErrorMessage(event, runOptions)
-
-                        it("returns an appropriate error message") {
-                            assertThat(message, equivalentTo(expectedMessage.withPlatformSpecificLineSeparator()))
+                            it("returns an appropriate error message") {
+                                assertThat(message, equivalentTo(expectedMessage.withPlatformSpecificLineSeparator()))
+                            }
                         }
                     }
-                }
 
-                given("cleanup after failure is enabled") {
-                    val runOptions = mock<RunOptions> {
-                        on { behaviourAfterFailure } doReturn CleanupOption.Cleanup
-                    }
+                    given("cleanup after failure is enabled") {
+                        val runOptions = mock<RunOptions> {
+                            on { behaviourAfterFailure } doReturn CleanupOption.Cleanup
+                        }
 
-                    on("getting the message for that event") {
-                        val message = formatter.formatErrorMessage(event, runOptions)
-                        val expectedMessageWithCleanupInfo = expectedMessage + Text("\n\nYou can re-run the task with ") + Text.bold("--no-cleanup-after-failure") + Text(" to leave the created containers running to diagnose the issue.")
+                        on("getting the message for that event") {
+                            val message = formatter.formatErrorMessage(event, runOptions)
+                            val expectedMessageWithCleanupInfo = expectedMessage + Text("\n\nYou can re-run the task with ") + Text.bold("--no-cleanup-after-failure") + Text(" to leave the created containers running to diagnose the issue.")
 
-                        it("returns an appropriate error message with a message mentioning that the task can be re-run with cleanup disabled") {
-                            assertThat(
-                                message,
-                                equivalentTo(expectedMessageWithCleanupInfo.withPlatformSpecificLineSeparator())
-                            )
+                            it("returns an appropriate error message with a message mentioning that the task can be re-run with cleanup disabled") {
+                                assertThat(
+                                    message,
+                                    equivalentTo(expectedMessageWithCleanupInfo.withPlatformSpecificLineSeparator())
+                                )
+                            }
                         }
                     }
                 }

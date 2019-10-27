@@ -1,3 +1,4 @@
+version: ~> 1.0
 dist: xenial
 
 language: java
@@ -94,7 +95,7 @@ jobs:
           user: charleskorn
           key:
             secure: "gorxQBTZgKrgQ3Sc/veZX0b+Jh9b6xQxBOjcCPgp51rxXfea+115GrR+I7EG6soA6pnDdawy4TUTlzcKp4uwDlNmhTjWJuaCoVIbVPRfnLhL+wNYgwCeWLv9tocJWyn7RdtmNbfG3W9pSuWE+kaYplC/1I1golMxIIt/0M4OCMfy17oWJCd7LQRSjwPUMHrKgMFOrnQrfliK4fHYlLm35iz3pTvRfyv6AaTIhEstMubt1ljER5HMAtaVVA66rOhwGgUcyht2CqeZf/tonKhTFvsfDK0j2OBZqKetFB6aNorlBNVIr18EKokQmOZPEN1vyUHD0jkJ29w6wXBmeJJJ+nxiKBwiw73B+l9sutQ4DAKiSRfHnhCf5EMGsSKaOPFELCd8F3GoiG806sUtamqq9L7wg6EDd68nfo2gcxoDYYxSTxwBasvN4D8u/mAQkQeelSb5AbKjSSNZp0/umiM8dsVg8JP8oT3zKGBfpo5OUqi/PaDGmYnU32EmV1OYFMk/1BH8w5CXQybaTdY6LNHlEIM5RLiwhbbfUhBa/yNCR2BaZh3IWrq1CXO+3r3HzSE6E21VGcOT9MR0ZdnEpyBQLEGJfBElCkpaoAA6pW9uBEJJ5H4Hb84VoICF4AEN5gzo9KjbFOiz+4a7Wi7+TsqnfL4l/sAVUTa8lawXqX/NsDU="
-          skip_cleanup: true
+          cleanup: false
           on:
             repo: charleskorn/batect
             all_branches: true
@@ -110,7 +111,7 @@ jobs:
         - provider: releases
           api_key:
             secure: wm/dkxB0NC7GWQzbeZBaLpDIEyCR7HhL/+GtWvQjfVDAGveH8mb7mCTiH8oBWB8mV4IRGYEBGq5daJcpVZide/EDDjDV2nLoQlhs0+YIV1vlsfYkOf29XBrV+8VBQlCsOSUqzuwzraOKM13/SMUtqGT4CAtGU0WGa9p3vI1UfevvKi0Ok3N0LLWdwEJ+nBNjDcWnHCfeMUSaFwQg4190iqxtBFphD1AKwAzaDAXHUHtMYjJpga6W0rIQMawEP65y71OWxnYnEYsUmV1RhhMsiVPVZzSsfXBTx81BWqRcTzyjEP18MChKj0Aaix+DJfrKBMYkLposdreicS9uqXTfb9CnMlr5z4EaJGdoIajmg2zLBooeY26EqN7Ub1+zj1HrRI0ORnO9++GHkRNB7dCmWw3BslURk2Z1hYDiHnaSvbG/nn5SmELtU6hipaNnTDHpiTuFli1lInl78feuUi20aTkOB2SRGg0aV/cezKBz/6aVPq2kB9hNzBeel0y/oKdOQlRAsvZbClcqf7Pv61I+zeUAnnHyqYH0pUuTHLzi3BN2gIsgqNUv0H+DxDo8pcAMw/YgAIf2bG88Rh1PODTdtaMJjXCkpcguypOJlrcLRnGQ5bk5/yQcVfT2hLcx9iWmbWKgK3J/fNxO9uxHqtt7u+s130qsgN8ELb4MoTsUAss=
-          skip_cleanup: true
+          cleanup: false
           file_glob: true
           file: build/release/*
           on:
@@ -120,7 +121,7 @@ jobs:
 
         - provider: pages
           local-dir: docs/build/docs
-          skip-cleanup: true
+          cleanup: false
           github-token:
             secure: "vDvsBKorIMunrBkLJ4mjhikxhsL4Va0zqkBaJqkqodyT9nxfwU7OgzK9DyJ/5eqmqriajxYRX28Hc0n/k+YNIhz8kNIYRfKRlubjgZIXqGkclXOqE7lLLo2YlnXZ00pL4G/goOUNtEEtXQLFraD7fcLl9Kwg5A9lKH6fclA3scNlogTdCpS0quJtKVbEEkMDPq3wfBdDV7BFkm3IAjLI7I9HTyANRiVVoOSQtr8oQkVad7IAJn3yTLPPkQ7pC7gMPeL7qOO8cQNehrOyOujpqRh5/YihWVqOMXHjEreHnQDXSgKjz1NL+Xv66LnFRaMzkRNbZNYQ9hU7t2S7Ns9tEqUblK1msXZcNEd7b1EIJdEZgFmn6HytvHiLXE1dLrsczkazqnRIOvEz+sHb+d4ABo2ZqTl4rEapMbQiYjXjXvQAfmDIEjTh4mYepbXdVZcADISFlJ49KSqJdXdjaIM5pfO0IrQ1pFvuFA3XXxf/PQ2RGfq9I+Hv5qXb/U5HPLOa0P9w8LCpBJIbneqQ11JbNlZucgCyNgdsbmTUd6aZ463Lq/OrEXArwPt2x6xD2i8aNc/Lq9tl8cTSZYxGAQqTVp4KLxFQNeDdlSmW+rXINXH2FUiSxiWGdOjjVbMvGY8OfPe0NyWiswI9JQNmp4sxU2lqpgeMJS+lZw53f1uHxg8="
           target-branch: gh-pages

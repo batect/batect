@@ -218,6 +218,30 @@ object DockerImagePullProgressReporterSpec : Spek({
                 }
             }
         }
+
+        given("a single 'downloading' event that is not for a layer") {
+            val json = """{"status":"Downloading","progressDetail":{"current":329,"total":4159}}"""
+
+            on("processing the event") {
+                val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+
+                it("returns an appropriate progress update") {
+                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("downloading", 329, 4159)))
+                }
+            }
+        }
+
+        given("a single 'downloading' event with an unknown number of total bytes") {
+            val json = """{"status":"Downloading","progressDetail":{"current":329,"total":-1}}"""
+
+            on("processing the event") {
+                val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+
+                it("returns an appropriate progress update") {
+                    assertThat(progressUpdate, equalTo(DockerImagePullProgress("downloading", 329, 0)))
+                }
+            }
+        }
     }
 })
 

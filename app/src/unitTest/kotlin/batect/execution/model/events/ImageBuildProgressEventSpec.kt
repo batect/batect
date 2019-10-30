@@ -35,7 +35,7 @@ object ImageBuildProgressEventSpec : Spek({
 
             on("toString()") {
                 it("returns a human-readable representation of itself") {
-                    com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuildProgressEvent(source: $source, current step: 1, total steps: 10, message: 'Something is happening', pull progress: 'downloading 12 B of 20 B (60%)')"))
+                    com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuildProgressEvent(source: $source, current step: 1, total steps: 10, message: 'Something is happening', pull progress: 'downloading: 12 B of 20 B (60%)')"))
                 }
             }
         }

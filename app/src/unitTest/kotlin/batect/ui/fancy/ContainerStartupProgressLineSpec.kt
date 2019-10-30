@@ -104,7 +104,7 @@ object ContainerStartupProgressLineSpec : Spek({
                         val output by runForEachTest { line.print() }
 
                         it("prints detailed build progress") {
-                            assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": building image: step 1 of 5: FROM the-image:1.2.3: downloading 12 B of 20 B (60%)"))))
+                            assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": building image: step 1 of 5: FROM the-image:1.2.3: downloading: 12 B of 20 B (60%)"))))
                         }
                     }
 
@@ -504,7 +504,7 @@ object ContainerStartupProgressLineSpec : Spek({
                     val output by runForEachTest { line.print() }
 
                     it("prints that the image is being pulled with detailed progress information") {
-                        assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": pulling ") + Text.bold("some-image") + Text(": extracting 10 B of 20 B (50%)"))))
+                        assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": pulling ") + Text.bold("some-image") + Text(": extracting: 10 B of 20 B (50%)"))))
                     }
                 }
 
@@ -591,7 +591,7 @@ object ContainerStartupProgressLineSpec : Spek({
                     val output by runForEachTest { line.print() }
 
                     it("prints that the image is being pulled with detailed progress information") {
-                        assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": pulling ") + Text.bold("some-image") + Text(": extracting 10 B of 20 B (50%)"))))
+                        assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": pulling ") + Text.bold("some-image") + Text(": extracting: 10 B of 20 B (50%)"))))
                     }
                 }
 

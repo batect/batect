@@ -39,7 +39,8 @@ object SimpleTaskJourneyTests : Spek({
         "simple-task-entrypoint-on-task" to "a simple task with an entrypoint specified on the task in the configuration file",
         "simple-task-with-environment" to "a simple task with a task-level environment variable",
         "container-with-health-check-overrides" to "a task with a dependency container that has a batect-specific health check configuration",
-        "build-image-dockerignore" to "a task that builds an image with a .dockerignore file"
+        "build-image-dockerignore" to "a task that builds an image with a .dockerignore file",
+        "simple-task-using-dockerfile-with-add-from-url" to "a simple task that uses a Dockerfile with an ADD command that downloads a file from a URL"
     ).forEach { (testName, description) ->
         describe(description) {
             val runner by createForGroup { ApplicationRunner(testName) }

@@ -21,12 +21,15 @@ import kotlin.math.roundToInt
 data class DockerImagePullProgress(val currentOperation: String, val completedBytes: Long, val totalBytes: Long) {
     fun toStringForDisplay(): String {
         if (totalBytes == 0L) {
-            return "$currentOperation (0%)"
+            return when (completedBytes) {
+                0L -> currentOperation
+                else -> "$currentOperation: ${humaniseBytes(completedBytes)}"
+            }
         }
 
         val percentage = (completedBytes.toDouble() / totalBytes * 100).roundToInt()
 
-        return "$currentOperation ${humaniseBytes(completedBytes)} of ${humaniseBytes(totalBytes)} ($percentage%)"
+        return "$currentOperation: ${humaniseBytes(completedBytes)} of ${humaniseBytes(totalBytes)} ($percentage%)"
     }
 
     private fun humaniseBytes(bytes: Long): String = when {

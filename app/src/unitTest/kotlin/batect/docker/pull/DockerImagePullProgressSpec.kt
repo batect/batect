@@ -33,19 +33,31 @@ object DockerImagePullProgressSpec : Spek({
                 val display = progress.toStringForDisplay()
 
                 it("formats the progress in the expected style") {
-                    assertThat(display, equalTo("Downloading 10 B of 100 B (10%)"))
+                    assertThat(display, equalTo("Downloading: 10 B of 100 B (10%)"))
                 }
             }
         }
 
-        given("the total size is unknown") {
+        given("the total size is not known and the download has not started") {
             val progress = DockerImagePullProgress("Downloading", 0, 0)
 
             on("formatting it for display to a user") {
                 val display = progress.toStringForDisplay()
 
                 it("does not display the size and just shows the percentage") {
-                    assertThat(display, equalTo("Downloading (0%)"))
+                    assertThat(display, equalTo("Downloading"))
+                }
+            }
+        }
+
+        given("the total size is not known and the download has started") {
+            val progress = DockerImagePullProgress("Downloading", 100, 0)
+
+            on("formatting it for display to a user") {
+                val display = progress.toStringForDisplay()
+
+                it("does not display the size and just shows the percentage") {
+                    assertThat(display, equalTo("Downloading: 100 B"))
                 }
             }
         }
@@ -57,7 +69,7 @@ object DockerImagePullProgressSpec : Spek({
                 val display = progress.toStringForDisplay()
 
                 it("formats the progress in the expected style") {
-                    assertThat(display, equalTo("Downloading 0 B of 100 B (0%)"))
+                    assertThat(display, equalTo("Downloading: 0 B of 100 B (0%)"))
                 }
             }
         }
@@ -69,7 +81,7 @@ object DockerImagePullProgressSpec : Spek({
                 val display = progress.toStringForDisplay()
 
                 it("formats the progress in the expected style") {
-                    assertThat(display, equalTo("Downloading 100 B of 100 B (100%)"))
+                    assertThat(display, equalTo("Downloading: 100 B of 100 B (100%)"))
                 }
             }
         }
@@ -95,7 +107,7 @@ object DockerImagePullProgressSpec : Spek({
                     val display = progress.toStringForDisplay()
 
                     it("formats the progress in the expected style") {
-                        assertThat(display, startsWith("Downloading $expectedBytesDisplay of 100 B ("))
+                        assertThat(display, startsWith("Downloading: $expectedBytesDisplay of 100 B ("))
                     }
                 }
             }
@@ -107,7 +119,7 @@ object DockerImagePullProgressSpec : Spek({
                     val display = progress.toStringForDisplay()
 
                     it("formats the progress in the expected style") {
-                        assertThat(display, startsWith("Downloading 100 B of $expectedBytesDisplay ("))
+                        assertThat(display, startsWith("Downloading: 100 B of $expectedBytesDisplay ("))
                     }
                 }
             }

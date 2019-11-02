@@ -18,7 +18,7 @@ package batect.execution.model.events
 
 import batect.config.BuildImage
 import batect.docker.client.DockerImageBuildProgress
-import batect.docker.pull.DockerImagePullProgress
+import batect.docker.pull.DockerImageProgress
 import batect.testutils.given
 import batect.testutils.on
 import com.natpryce.hamkrest.equalTo
@@ -31,7 +31,7 @@ object ImageBuildProgressEventSpec : Spek({
         val source = BuildImage(Paths.get("/some-build-dir"))
 
         given("it has some image pull progress information") {
-            val event = ImageBuildProgressEvent(source, DockerImageBuildProgress(1, 10, "Something is happening", DockerImagePullProgress("downloading", 12, 20)))
+            val event = ImageBuildProgressEvent(source, DockerImageBuildProgress(1, 10, "Something is happening", DockerImageProgress("downloading", 12, 20)))
 
             on("toString()") {
                 it("returns a human-readable representation of itself") {

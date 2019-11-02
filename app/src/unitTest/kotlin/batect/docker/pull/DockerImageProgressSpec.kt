@@ -24,10 +24,10 @@ import com.natpryce.hamkrest.startsWith
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object DockerImagePullProgressSpec : Spek({
-    describe("Docker image pull progress information") {
+object DockerImageProgressSpec : Spek({
+    describe("Docker image progress information") {
         given("the image is downloading") {
-            val progress = DockerImagePullProgress("Downloading", 10, 100)
+            val progress = DockerImageProgress("Downloading", 10, 100)
 
             on("formatting it for display to a user") {
                 val display = progress.toStringForDisplay()
@@ -39,7 +39,7 @@ object DockerImagePullProgressSpec : Spek({
         }
 
         given("the total size is not known and the download has not started") {
-            val progress = DockerImagePullProgress("Downloading", 0, 0)
+            val progress = DockerImageProgress("Downloading", 0, 0)
 
             on("formatting it for display to a user") {
                 val display = progress.toStringForDisplay()
@@ -51,7 +51,7 @@ object DockerImagePullProgressSpec : Spek({
         }
 
         given("the total size is not known and the download has started") {
-            val progress = DockerImagePullProgress("Downloading", 100, 0)
+            val progress = DockerImageProgress("Downloading", 100, 0)
 
             on("formatting it for display to a user") {
                 val display = progress.toStringForDisplay()
@@ -63,7 +63,7 @@ object DockerImagePullProgressSpec : Spek({
         }
 
         given("the pull has not started") {
-            val progress = DockerImagePullProgress("Downloading", 0, 100)
+            val progress = DockerImageProgress("Downloading", 0, 100)
 
             on("formatting it for display to a user") {
                 val display = progress.toStringForDisplay()
@@ -75,7 +75,7 @@ object DockerImagePullProgressSpec : Spek({
         }
 
         given("the pull has completed") {
-            val progress = DockerImagePullProgress("Downloading", 100, 100)
+            val progress = DockerImageProgress("Downloading", 100, 100)
 
             on("formatting it for display to a user") {
                 val display = progress.toStringForDisplay()
@@ -101,7 +101,7 @@ object DockerImagePullProgressSpec : Spek({
             2L * 1000 * 1000 * 1000 * 1000 to "2.0 TB"
         ).forEach { (bytes, expectedBytesDisplay) ->
             given("$bytes have been downloaded so far") {
-                val progress = DockerImagePullProgress("Downloading", bytes, 100)
+                val progress = DockerImageProgress("Downloading", bytes, 100)
 
                 on("formatting it for display to a user") {
                     val display = progress.toStringForDisplay()
@@ -113,7 +113,7 @@ object DockerImagePullProgressSpec : Spek({
             }
 
             given("$bytes need to be downloaded in total") {
-                val progress = DockerImagePullProgress("Downloading", 100, bytes)
+                val progress = DockerImageProgress("Downloading", 100, bytes)
 
                 on("formatting it for display to a user") {
                     val display = progress.toStringForDisplay()

@@ -19,12 +19,12 @@ package batect.execution.model.events
 import batect.config.BuildImage
 import batect.docker.client.DockerImageBuildProgress
 
-data class ImageBuildProgressEvent(val source: BuildImage, val progress: DockerImageBuildProgress) : TaskEvent(isInformationalEvent = true) {
-    override fun toString() = "${this::class.simpleName}(source: $source, current step: ${progress.currentStep}, total steps: ${progress.totalSteps}, message: '${progress.message}', pull progress: ${formatPullProgress()})"
+data class ImageBuildProgressEvent(val source: BuildImage, val buildProgress: DockerImageBuildProgress) : TaskEvent(isInformationalEvent = true) {
+    override fun toString() = "${this::class.simpleName}(source: $source, current step: ${buildProgress.currentStep}, total steps: ${buildProgress.totalSteps}, message: '${buildProgress.message}', pull progress: ${formatPullProgress()})"
 
-    private fun formatPullProgress() = if (progress.pullProgress == null) {
+    private fun formatPullProgress() = if (buildProgress.progress == null) {
         "null"
     } else {
-        "'" + progress.pullProgress.toStringForDisplay() + "'"
+        "'" + buildProgress.progress.toStringForDisplay() + "'"
     }
 }

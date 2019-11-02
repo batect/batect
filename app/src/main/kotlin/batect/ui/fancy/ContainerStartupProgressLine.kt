@@ -20,7 +20,7 @@ import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
 import batect.docker.client.DockerImageBuildProgress
-import batect.docker.pull.DockerImagePullProgress
+import batect.docker.pull.DockerImageProgress
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerStartedEvent
@@ -44,7 +44,7 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     private var isBuilding = false
     private var lastBuildProgressUpdate: DockerImageBuildProgress? = null
     private var isPulling = false
-    private var lastPullProgressUpdate: DockerImagePullProgress? = null
+    private var lastProgressUpdate: DockerImageProgress? = null
     private var hasBeenBuilt = false
     private var hasBeenPulled = false
     private var isCreating = false
@@ -90,18 +90,18 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     private val containerImageName by lazy { (container.imageSource as PullImage).imageName }
 
     private fun descriptionWhenPulling(): TextRun {
-        val progressInformation = if (lastPullProgressUpdate == null) {
+        val progressInformation = if (lastProgressUpdate == null) {
             Text("...")
         } else {
-            Text(": " + lastPullProgressUpdate!!.toStringForDisplay())
+            Text(": " + lastProgressUpdate!!.toStringForDisplay())
         }
 
         return Text("pulling ") + Text.bold(containerImageName) + progressInformation
     }
 
     private fun descriptionWhenBuilding(): TextRun {
-        val progressInformation = if (lastBuildProgressUpdate!!.pullProgress != null) {
-            ": " + lastBuildProgressUpdate!!.pullProgress!!.toStringForDisplay()
+        val progressInformation = if (lastBuildProgressUpdate!!.progress != null) {
+            ": " + lastBuildProgressUpdate!!.progress!!.toStringForDisplay()
         } else {
             ""
         }
@@ -190,7 +190,7 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     private fun onImageBuildProgressEventPosted(event: ImageBuildProgressEvent) {
         if (container.imageSource == event.source) {
             isBuilding = true
-            lastBuildProgressUpdate = event.progress
+            lastBuildProgressUpdate = event.buildProgress
         }
     }
 
@@ -203,7 +203,7 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     private fun onImagePullProgressEventPosted(event: ImagePullProgressEvent) {
         if (container.imageSource == event.source) {
             isPulling = true
-            lastPullProgressUpdate = event.progress
+            lastProgressUpdate = event.progress
         }
     }
 

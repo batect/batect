@@ -24,8 +24,8 @@ import batect.docker.api.ImagesAPI
 import batect.docker.build.DockerImageBuildContext
 import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
-import batect.docker.pull.DockerImagePullProgress
-import batect.docker.pull.DockerImagePullProgressReporter
+import batect.docker.pull.DockerImageProgress
+import batect.docker.pull.DockerImageProgressReporter
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.execution.CancellationContext
@@ -64,9 +64,9 @@ object DockerImagesClientSpec : Spek({
         val imageBuildContextFactory by createForEachTest { mock<DockerImageBuildContextFactory>() }
         val dockerfileParser by createForEachTest { mock<DockerfileParser>() }
         val logger by createLoggerForEachTest()
-        val imagePullProgressReporter by createForEachTest { mock<DockerImagePullProgressReporter>() }
-        val imagePullProgressReporterFactory = { imagePullProgressReporter }
-        val client by createForEachTest { DockerImagesClient(api, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger, imagePullProgressReporterFactory) }
+        val imageProgressReporter by createForEachTest { mock<DockerImageProgressReporter>() }
+        val imageProgressReporterFactory = { imageProgressReporter }
+        val client by createForEachTest { DockerImagesClient(api, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger, imageProgressReporterFactory) }
 
         describe("building an image") {
             val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
@@ -124,10 +124,10 @@ object DockerImagesClientSpec : Spek({
                         |{"stream":"Successfully built 24125bbc6cbe\n"}
                     """.trimMargin()
 
-                        val imagePullProgress = DockerImagePullProgress("Doing something", 10, 20)
+                        val imagePullProgress = DockerImageProgress("Doing something", 10, 20)
 
                         beforeEachTest {
-                            stubProgressUpdate(imagePullProgressReporter, output.lines()[0], imagePullProgress)
+                            stubProgressUpdate(imageProgressReporter, output.lines()[0], imagePullProgress)
                             whenever(api.build(any(), any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
                         }
 
@@ -173,11 +173,11 @@ object DockerImagesClientSpec : Spek({
                         |{"stream":"Step 2/5 : RUN apt update \u0026\u0026 apt install -y curl \u0026\u0026 rm -rf /var/lib/apt/lists/*"}
                     """.trimMargin()
 
-                        val imagePullProgress = DockerImagePullProgress("Doing something", 10, 20)
+                        val imagePullProgress = DockerImageProgress("Doing something", 10, 20)
                         val statusUpdates by createForEachTest { mutableListOf<DockerImageBuildProgress>() }
 
                         beforeEachTest {
-                            stubProgressUpdate(imagePullProgressReporter, output.lines()[0], imagePullProgress)
+                            stubProgressUpdate(imageProgressReporter, output.lines()[0], imagePullProgress)
                             whenever(api.build(any(), any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
 
                             val onStatusUpdate = fun(p: DockerImageBuildProgress) {
@@ -272,8 +272,8 @@ object DockerImagesClientSpec : Spek({
                         val secondProgressUpdate = Json.parser.parseJson("""{"thing": "other value"}""").jsonObject
 
                         beforeEachTest {
-                            whenever(imagePullProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(DockerImagePullProgress("Doing something", 10, 20))
-                            whenever(imagePullProgressReporter.processProgressUpdate(secondProgressUpdate)).thenReturn(null)
+                            whenever(imageProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(DockerImageProgress("Doing something", 10, 20))
+                            whenever(imageProgressReporter.processProgressUpdate(secondProgressUpdate)).thenReturn(null)
 
                             whenever(api.pull(any(), any(), any(), any())).then { invocation ->
                                 @Suppress("UNCHECKED_CAST")
@@ -285,7 +285,7 @@ object DockerImagesClientSpec : Spek({
                             }
                         }
 
-                        val progressUpdatesReceived by createForEachTest { mutableListOf<DockerImagePullProgress>() }
+                        val progressUpdatesReceived by createForEachTest { mutableListOf<DockerImageProgress>() }
                         val image by runForEachTest { client.pull("some-image", cancellationContext) { progressUpdatesReceived.add(it) } }
 
                         it("calls the Docker CLI to pull the image") {
@@ -293,7 +293,7 @@ object DockerImagesClientSpec : Spek({
                         }
 
                         it("sends notifications for all relevant progress updates") {
-                            assertThat(progressUpdatesReceived, equalTo(listOf(DockerImagePullProgress("Doing something", 10, 20))))
+                            assertThat(progressUpdatesReceived, equalTo(listOf(DockerImageProgress("Doing something", 10, 20))))
                         }
 
                         it("returns the Docker image") {
@@ -337,7 +337,7 @@ object DockerImagesClientSpec : Spek({
     }
 })
 
-private fun stubProgressUpdate(reporter: DockerImagePullProgressReporter, input: String, update: DockerImagePullProgress) {
+private fun stubProgressUpdate(reporter: DockerImageProgressReporter, input: String, update: DockerImageProgress) {
     val json = Json.parser.parseJson(input).jsonObject
     whenever(reporter.processProgressUpdate(eq(json))).thenReturn(update)
 }

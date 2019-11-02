@@ -48,7 +48,7 @@ import batect.docker.client.DockerExecClient
 import batect.docker.client.DockerImagesClient
 import batect.docker.client.DockerNetworksClient
 import batect.docker.client.DockerSystemInfoClient
-import batect.docker.pull.DockerImagePullProgress
+import batect.docker.pull.DockerImageProgress
 import batect.execution.CancellationContext
 import batect.execution.CleanupOption
 import batect.execution.ContainerRuntimeConfiguration
@@ -254,13 +254,13 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when pulling the image succeeds") {
                     val image = DockerImage("some-image")
-                    val update1 = DockerImagePullProgress("Update 1", 10, 20)
-                    val update2 = DockerImagePullProgress("Update 2", 15, 20)
+                    val update1 = DockerImageProgress("Update 1", 10, 20)
+                    val update2 = DockerImageProgress("Update 2", 15, 20)
 
                     beforeEachTest {
                         whenever(imagesClient.pull(eq("some-image"), eq(cancellationContext), any())).then { invocation ->
                             @Suppress("UNCHECKED_CAST")
-                            val onStatusUpdate = invocation.arguments[2] as (DockerImagePullProgress) -> Unit
+                            val onStatusUpdate = invocation.arguments[2] as (DockerImageProgress) -> Unit
 
                             onStatusUpdate(update1)
                             onStatusUpdate(update2)

@@ -51,7 +51,7 @@ dependencies {
     implementation 'org.kodein.di:kodein-di-generic-jvm:6.4.1'
     implementation 'com.squareup.okio:okio:2.4.1'
     implementation 'com.squareup.okhttp3:okhttp:3.13.1'
-    implementation 'com.github.jnr:jnr-unixsocket:0.23'
+    implementation 'com.github.jnr:jnr-unixsocket:0.24'
     implementation 'com.github.jnr:jnr-posix:3.0.51'
     implementation 'org.apache.commons:commons-compress:1.19'
     implementation 'com.charleskorn.kaml:kaml:0.14.0'

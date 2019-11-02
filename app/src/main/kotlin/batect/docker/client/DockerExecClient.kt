@@ -28,6 +28,7 @@ import batect.docker.run.InputConnection
 import batect.docker.run.OutputConnection
 import batect.execution.CancellationContext
 import batect.logging.Logger
+import batect.os.Command
 import okio.sink
 import java.io.ByteArrayOutputStream
 
@@ -37,7 +38,7 @@ class DockerExecClient(
     private val logger: Logger
 ) {
     fun run(
-        command: List<String>,
+        command: Command,
         container: DockerContainer,
         environmentVariables: Map<String, String>,
         privileged: Boolean,
@@ -47,7 +48,7 @@ class DockerExecClient(
     ): DockerExecResult {
         logger.info {
             message("Executing command in container.")
-            data("command", command)
+            data("command", command.parsedCommand)
             data("container", container)
         }
 
@@ -57,7 +58,7 @@ class DockerExecClient(
             true,
             true,
             environmentVariables,
-            command,
+            command.parsedCommand,
             privileged,
             userAndGroup,
             workingDirectory
@@ -79,7 +80,7 @@ class DockerExecClient(
 
         logger.info {
             message("Finished executing command in container.")
-            data("command", command)
+            data("command", command.parsedCommand)
             data("container", container)
             data("result", result)
         }

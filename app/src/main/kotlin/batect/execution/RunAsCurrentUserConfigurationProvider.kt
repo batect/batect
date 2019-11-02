@@ -39,6 +39,11 @@ class RunAsCurrentUserConfigurationProvider(
 ) {
     private val temporaryDirectory = fileSystem.getPath(systemInfo.tempDirectory)
 
+    fun determineUserAndGroup(container: Container): UserAndGroup? = when (container.runAsCurrentUserConfig) {
+        is RunAsCurrentUserConfig.RunAsDefaultContainerUser -> null
+        is RunAsCurrentUserConfig.RunAsCurrentUser -> UserAndGroup(determineUserId(), determineGroupId())
+    }
+
     fun generateConfiguration(container: Container, eventSink: TaskEventSink): RunAsCurrentUserConfiguration = when (container.runAsCurrentUserConfig) {
         is RunAsCurrentUserConfig.RunAsCurrentUser -> {
             val userId = determineUserId()

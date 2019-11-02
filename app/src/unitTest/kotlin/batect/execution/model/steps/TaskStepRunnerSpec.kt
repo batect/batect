@@ -29,8 +29,10 @@ import batect.docker.client.DockerClient
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerContainerCreationRequestFactory
+import batect.docker.DockerContainerEnvironmentVariableProvider
 import batect.docker.DockerContainerRunResult
 import batect.docker.DockerException
+import batect.docker.DockerExecResult
 import batect.docker.DockerHealthCheckResult
 import batect.docker.DockerImage
 import batect.docker.client.DockerImageBuildProgress
@@ -73,6 +75,10 @@ import batect.execution.model.events.ImagePullFailedEvent
 import batect.execution.model.events.ImagePullProgressEvent
 import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.RunningContainerExitedEvent
+import batect.execution.model.events.RunningSetupCommandEvent
+import batect.execution.model.events.SetupCommandExecutionErrorEvent
+import batect.execution.model.events.SetupCommandFailedEvent
+import batect.execution.model.events.SetupCommandsCompletedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
@@ -88,18 +94,24 @@ import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
+import batect.testutils.withMessage
 import batect.ui.containerio.ContainerIOStreamingOptions
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.eq
+import com.nhaarman.mockitokotlin2.inOrder
+import com.nhaarman.mockitokotlin2.isA
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import okio.Sink
@@ -124,15 +136,17 @@ object TaskStepRunnerSpec : Spek({
         val systemInfoClient by createForEachTest { mock<DockerSystemInfoClient>() }
         val dockerClient by createForEachTest { DockerClient(containersClient, execClient, imagesClient, networksClient, systemInfoClient) }
         val creationRequestFactory by createForEachTest { mock<DockerContainerCreationRequestFactory>() }
+        val environmentVariableProvider by createForEachTest { mock<DockerContainerEnvironmentVariableProvider>() }
 
         val proxyVariables = mapOf("SOME_PROXY_CONFIG" to "some_proxy", "SOME_OTHER_PROXY_CONFIG" to "some_other_value")
         val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider> {
             on { getProxyEnvironmentVariables(emptySet()) } doReturn proxyVariables
         }
 
+        val userAndGroup = UserAndGroup(456, 789)
         val runAsCurrentUserConfiguration = RunAsCurrentUserConfiguration(
             setOf(VolumeMount("/tmp/local-path", "/tmp/remote-path", "rw")),
-            UserAndGroup(456, 789)
+            userAndGroup
         )
 
         val systemInfo = mock<SystemInfo> {
@@ -141,11 +155,12 @@ object TaskStepRunnerSpec : Spek({
 
         val runAsCurrentUserConfigurationProvider = mock<RunAsCurrentUserConfigurationProvider> {
             on { generateConfiguration(any(), any()) } doReturn runAsCurrentUserConfiguration
+            on { determineUserAndGroup(any()) } doReturn userAndGroup
         }
 
         val hostEnvironmentVariables = mapOf("SOME_ENV_VAR" to "some env var value")
 
-        val runner by createForEachTest { TaskStepRunner(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, systemInfo, hostEnvironmentVariables) }
+        val runner by createForEachTest { TaskStepRunner(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, environmentVariableProvider, runAsCurrentUserConfigurationProvider, systemInfo, hostEnvironmentVariables) }
 
         describe("running steps") {
             describe("running a 'build image' step") {
@@ -716,6 +731,223 @@ object TaskStepRunnerSpec : Spek({
 
                     it("emits a 'network deletion failed' event") {
                         verify(eventSink).postEvent(TaskNetworkDeletionFailedEvent("Something went wrong"))
+                    }
+                }
+            }
+
+            describe("running a 'run setup commands' step") {
+                given("the container has no setup commands") {
+                    val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = emptyList())
+                    val config = ContainerRuntimeConfiguration(null, null, null, emptyMap(), emptySet())
+                    val allContainersInNetwork = setOf(container)
+                    val dockerContainer = DockerContainer("some-container-id")
+                    val step = RunContainerSetupCommandsStep(container, config, allContainersInNetwork, dockerContainer)
+
+                    it("throws an exception") {
+                        assertThat({ runner.run(step, stepRunContext) }, throws<UnsupportedOperationException>(withMessage("A RunContainerSetupCommandsStep should not be generated for a container with no setup commands.")))
+                    }
+                }
+
+                given("the container has a single setup command") {
+                    val command = Command.parse("./do the-thing")
+                    val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = listOf(command), workingDirectory = "/some/work/dir")
+                    val config = ContainerRuntimeConfiguration(null, null, null, emptyMap(), emptySet())
+                    val allContainersInNetwork = setOf(container)
+                    val dockerContainer = DockerContainer("some-container-id")
+                    val step = RunContainerSetupCommandsStep(container, config, allContainersInNetwork, dockerContainer)
+
+                    val environmentVariablesToUse = mapOf("SOME_VAR" to "some value")
+
+                    beforeEachTest {
+                        whenever(environmentVariableProvider.environmentVariablesFor(container, config, runOptions.propagateProxyEnvironmentVariables, null, allContainersInNetwork)).doReturn(environmentVariablesToUse)
+                    }
+
+                    given("the command succeeds") {
+                        beforeEachTest {
+                            whenever(execClient.run(any(), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(0, "Some output from the command"))
+                        }
+
+                        beforeEachTest { runner.run(step, stepRunContext) }
+
+                        it("emits a 'running setup command' event") {
+                            verify(eventSink).postEvent(RunningSetupCommandEvent(container, command, 0))
+                        }
+
+                        it("runs the command") {
+                            verify(execClient).run(
+                                command,
+                                dockerContainer,
+                                environmentVariablesToUse,
+                                container.privileged,
+                                userAndGroup,
+                                container.workingDirectory,
+                                cancellationContext
+                            )
+                        }
+
+                        it("emits a 'setup commands completed' event") {
+                            verify(eventSink).postEvent(SetupCommandsCompletedEvent(container))
+                        }
+
+                        it("emits the 'running setup command' event before running the command") {
+                            inOrder(eventSink, execClient) {
+                                verify(eventSink).postEvent(isA<RunningSetupCommandEvent>())
+                                verify(execClient).run(any(), any(), any(), any(), any(), any(), any())
+                            }
+                        }
+
+                        it("emits the 'setup commands completed' event after running the command") {
+                            inOrder(eventSink, execClient) {
+                                verify(execClient).run(any(), any(), any(), any(), any(), any(), any())
+                                verify(eventSink).postEvent(isA<SetupCommandsCompletedEvent>())
+                            }
+                        }
+                    }
+
+                    given("the command returns a non-zero exit code") {
+                        beforeEachTest {
+                            whenever(execClient.run(any(), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(123, "Some output from the command"))
+                        }
+
+                        beforeEachTest { runner.run(step, stepRunContext) }
+
+                        it("emits a 'running setup command' event") {
+                            verify(eventSink).postEvent(RunningSetupCommandEvent(container, command, 0))
+                        }
+
+                        it("emits a 'setup command failed' event") {
+                            verify(eventSink).postEvent(SetupCommandFailedEvent(container, command, 123, "Some output from the command"))
+                        }
+
+                        it("does not emit a 'setup commands completed' event") {
+                            verify(eventSink, never()).postEvent(isA<SetupCommandsCompletedEvent>())
+                        }
+                    }
+
+                    given("the command cannot be run") {
+                        beforeEachTest {
+                            whenever(execClient.run(any(), any(), any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong."))
+                        }
+
+                        beforeEachTest { runner.run(step, stepRunContext) }
+
+                        it("emits a 'running setup command' event") {
+                            verify(eventSink).postEvent(RunningSetupCommandEvent(container, command, 0))
+                        }
+
+                        it("emits a 'setup command execution error' event") {
+                            verify(eventSink).postEvent(SetupCommandExecutionErrorEvent(container, command, "Something went wrong."))
+                        }
+
+                        it("does not emit a 'setup commands completed' event") {
+                            verify(eventSink, never()).postEvent(isA<SetupCommandsCompletedEvent>())
+                        }
+                    }
+                }
+
+                given("the container has multiple setup commands") {
+                    val command1 = Command.parse("./do the-first-thing")
+                    val command2 = Command.parse("./do the-second-thing")
+                    val command3 = Command.parse("./do the-third-thing")
+                    val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = listOf(command1, command2, command3), workingDirectory = "/some/work/dir")
+                    val config = ContainerRuntimeConfiguration(null, null, null, emptyMap(), emptySet())
+                    val allContainersInNetwork = setOf(container)
+                    val dockerContainer = DockerContainer("some-container-id")
+                    val step = RunContainerSetupCommandsStep(container, config, allContainersInNetwork, dockerContainer)
+
+                    val environmentVariablesToUse = mapOf("SOME_VAR" to "some value")
+
+                    beforeEachTest {
+                        whenever(environmentVariableProvider.environmentVariablesFor(container, config, runOptions.propagateProxyEnvironmentVariables, null, allContainersInNetwork)).doReturn(environmentVariablesToUse)
+                    }
+
+                    given("all of them succeed") {
+                        beforeEachTest {
+                            whenever(execClient.run(any(), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(0, "Some output from the command"))
+                        }
+
+                        beforeEachTest { runner.run(step, stepRunContext) }
+
+                        it("emits a 'running setup command' event before running each command in the order provided") {
+                            inOrder(eventSink, execClient) {
+                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, command1, 0))
+                                verify(execClient).run(command1, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, cancellationContext)
+                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, command2, 1))
+                                verify(execClient).run(command2, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, cancellationContext)
+                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, command3, 2))
+                                verify(execClient).run(command3, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, cancellationContext)
+                            }
+                        }
+
+                        it("emits a 'setup commands completed' event after running the last command") {
+                            inOrder(eventSink, execClient) {
+                                verify(execClient).run(command3, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, cancellationContext)
+                                verify(eventSink).postEvent(SetupCommandsCompletedEvent(container))
+                            }
+                        }
+                    }
+
+                    given("one of them fails") {
+                        beforeEachTest {
+                            whenever(execClient.run(eq(command1), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(0, "Some output from the command"))
+                            whenever(execClient.run(eq(command3), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(0, "Some output from the command"))
+                        }
+
+                        given("one of them fails with a non-zero exit code") {
+                            beforeEachTest {
+                                whenever(execClient.run(eq(command2), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(123, "Some output from the failing command"))
+                            }
+
+                            beforeEachTest { runner.run(step, stepRunContext) }
+
+                            it("emits a 'running setup command' event for the commands before the failing command") {
+                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, command1, 0))
+                            }
+
+                            it("emits a 'running setup command' event for the failing command") {
+                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, command2, 1))
+                            }
+
+                            it("emits a 'setup command failed' event for the failing command") {
+                                verify(eventSink).postEvent(SetupCommandFailedEvent(container, command2, 123, "Some output from the failing command"))
+                            }
+
+                            it("does not emit a 'setup commands completed' event") {
+                                verify(eventSink, never()).postEvent(isA<SetupCommandsCompletedEvent>())
+                            }
+
+                            it("does not run subsequent commands") {
+                                verify(execClient, never()).run(command3, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, cancellationContext)
+                            }
+                        }
+
+                        given("one of them fails because the command cannot be run") {
+                            beforeEachTest {
+                                whenever(execClient.run(eq(command2), any(), any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong."))
+                            }
+
+                            beforeEachTest { runner.run(step, stepRunContext) }
+
+                            it("emits a 'running setup command' event for the commands before the failing command") {
+                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, command1, 0))
+                            }
+
+                            it("emits a 'running setup command' event for the failing command") {
+                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, command2, 1))
+                            }
+
+                            it("emits a 'setup command execution error' event") {
+                                verify(eventSink).postEvent(SetupCommandExecutionErrorEvent(container, command2, "Something went wrong."))
+                            }
+
+                            it("does not emit a 'setup commands completed' event") {
+                                verify(eventSink, never()).postEvent(isA<SetupCommandsCompletedEvent>())
+                            }
+
+                            it("does not run subsequent commands") {
+                                verify(execClient, never()).run(command3, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, cancellationContext)
+                            }
+                        }
                     }
                 }
             }

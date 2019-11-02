@@ -57,7 +57,8 @@ data class Container(
     val enableInitProcess: Boolean = false,
     val capabilitiesToAdd: Set<Capability> = emptySet(),
     val capabilitiesToDrop: Set<Capability> = emptySet(),
-    val additionalHostnames: Set<String> = emptySet()
+    val additionalHostnames: Set<String> = emptySet(),
+    val setupCommands: List<Command> = emptyList()
 ) {
     @Serializer(forClass = Container::class)
     companion object : KSerializer<Container> {

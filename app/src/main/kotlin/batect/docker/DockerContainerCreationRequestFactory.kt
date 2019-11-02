@@ -17,20 +17,12 @@
 package batect.docker
 
 import batect.config.Container
-import batect.config.EnvironmentVariableExpression
-import batect.config.EnvironmentVariableExpressionEvaluationException
 import batect.config.VolumeMount
 import batect.execution.ContainerRuntimeConfiguration
-import batect.os.proxies.ProxyEnvironmentVariablesProvider
-import batect.utils.mapToSet
 
 class DockerContainerCreationRequestFactory(
-    private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
-    private val hostEnvironmentVariables: Map<String, String>
+    private val environmentVariableProvider: DockerContainerEnvironmentVariableProvider
 ) {
-    constructor(proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider)
-        : this(proxyEnvironmentVariablesProvider, System.getenv())
-
     fun create(
         container: Container,
         image: DockerImage,
@@ -49,7 +41,7 @@ class DockerContainerCreationRequestFactory(
             if (config.entrypoint != null) config.entrypoint.parsedCommand else emptyList(),
             container.name,
             container.additionalHostnames + container.name,
-            environmentVariablesFor(container, config.additionalEnvironmentVariables, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork),
+            environmentVariableProvider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork),
             config.workingDirectory,
             container.volumeMounts + additionalVolumeMounts,
             container.portMappings + config.additionalPortMappings,
@@ -60,33 +52,5 @@ class DockerContainerCreationRequestFactory(
             container.capabilitiesToAdd,
             container.capabilitiesToDrop
         )
-    }
-
-    private fun environmentVariablesFor(container: Container, additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression>, propagateProxyEnvironmentVariables: Boolean, terminalType: String?, allContainersInNetwork: Set<Container>): Map<String, String> =
-        terminalEnvironmentVariablesFor(terminalType) +
-            proxyEnvironmentVariables(propagateProxyEnvironmentVariables, allContainersInNetwork) +
-            substituteEnvironmentVariables(container.environment + additionalEnvironmentVariables)
-
-    private fun terminalEnvironmentVariablesFor(terminalType: String?): Map<String, String> = if (terminalType == null) {
-        emptyMap()
-    } else {
-        mapOf("TERM" to terminalType)
-    }
-
-    private fun proxyEnvironmentVariables(propagateProxyEnvironmentVariables: Boolean, allContainersInNetwork: Set<Container>): Map<String, String> = if (propagateProxyEnvironmentVariables) {
-        proxyEnvironmentVariablesProvider.getProxyEnvironmentVariables(allContainersInNetwork.mapToSet { it.name })
-    } else {
-        emptyMap()
-    }
-
-    private fun substituteEnvironmentVariables(original: Map<String, EnvironmentVariableExpression>): Map<String, String> =
-        original.mapValues { (name, value) -> evaluateEnvironmentVariableValue(name, value) }
-
-    private fun evaluateEnvironmentVariableValue(name: String, expression: EnvironmentVariableExpression): String {
-        try {
-            return expression.evaluate(hostEnvironmentVariables)
-        } catch (e: EnvironmentVariableExpressionEvaluationException) {
-            throw ContainerCreationFailedException("The value for the environment variable '$name' cannot be evaluated: ${e.message}", e)
-        }
     }
 }

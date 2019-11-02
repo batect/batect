@@ -27,6 +27,7 @@ import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerOutputStream
 import batect.docker.run.OutputConnection
 import batect.execution.CancellationContext
+import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
@@ -49,7 +50,7 @@ object DockerExecClientSpec : Spek({
         val client by createForEachTest { DockerExecClient(api, ioStreamer, logger) }
 
         describe("running a command in a running container") {
-            val command = listOf("do", "the", "thing")
+            val command = Command.parse("do the thing")
             val container = DockerContainer("some-container-id")
             val environmentVariables = mapOf("THING" to "value")
             val privileged = false
@@ -83,7 +84,7 @@ object DockerExecClientSpec : Spek({
                 true,
                 true,
                 environmentVariables,
-                command,
+                command.parsedCommand,
                 privileged,
                 userAndGroup,
                 workingDirectory

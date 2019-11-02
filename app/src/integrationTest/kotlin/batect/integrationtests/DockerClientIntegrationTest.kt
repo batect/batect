@@ -54,6 +54,7 @@ import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.execution.CancellationContext
 import batect.logging.Logger
+import batect.os.Command
 import batect.os.ConsoleManager
 import batect.os.Dimensions
 import batect.os.NativeMethods
@@ -323,7 +324,7 @@ object DockerClientIntegrationTest : Spek({
                         lateinit var execResult: DockerExecResult
 
                         client.containers.run(container, System.out.sink(), System.`in`.source(), CancellationContext(), Dimensions(0, 0)) {
-                            execResult = client.exec.run(listOf("echo", "-n", "Output from exec"), container, emptyMap(), false, null, null, CancellationContext())
+                            execResult = client.exec.run(Command.parse("echo -n 'Output from exec'"), container, emptyMap(), false, null, null, CancellationContext())
 
                             client.containers.stop(container)
                         }

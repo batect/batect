@@ -18,6 +18,7 @@ package batect.execution.model.steps
 
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.execution.ContainerRuntimeConfiguration
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
@@ -28,12 +29,14 @@ import org.spekframework.spek2.style.specification.describe
 object RunContainerSetupCommandsStepSpec : Spek({
     describe("a 'run container setup commands' step") {
         val container = Container("the-container", imageSourceDoesNotMatter())
+        val config = ContainerRuntimeConfiguration(null, null, null, emptyMap(), emptySet())
+        val allContainersInNetwork = setOf(container)
         val dockerContainer = DockerContainer("the-container-id")
-        val step = RunContainerSetupCommandsStep(container, dockerContainer)
+        val step = RunContainerSetupCommandsStep(container, config, allContainersInNetwork, dockerContainer)
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(step.toString(), equalTo("RunContainerSetupCommandsStep(container: 'the-container', Docker container: 'the-container-id')"))
+                assertThat(step.toString(), equalTo("RunContainerSetupCommandsStep(container: 'the-container', config: $config, all containers in network: ['the-container'], Docker container: 'the-container-id')"))
             }
         }
     }

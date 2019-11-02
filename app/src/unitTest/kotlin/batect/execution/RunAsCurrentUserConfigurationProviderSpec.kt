@@ -32,6 +32,7 @@ import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import batect.testutils.runForEachTest
+import batect.testutils.runNullableForEachTest
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.absent
@@ -107,6 +108,14 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                 it("does not create any new directories") {
                     assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(false))
+                }
+            }
+
+            on("determining the user and group to use") {
+                val userAndGroup by runNullableForEachTest { provider.determineUserAndGroup(container) }
+
+                it("returns an empty user and group configuration") {
+                    assertThat(userAndGroup, absent())
                 }
             }
         }
@@ -231,6 +240,14 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     it("creates a directory for the home directory") {
                         val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
                         assertThat(Files.exists(homeDirectoryPath), equalTo(true))
+                    }
+                }
+
+                on("determining the user and group to use") {
+                    val userAndGroup by runNullableForEachTest { provider.determineUserAndGroup(container) }
+
+                    it("returns a user and group configuration with root's UID and GID") {
+                        assertThat(userAndGroup, equalTo(UserAndGroup(0, 0)))
                     }
                 }
             }
@@ -368,6 +385,14 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             assertThat(group.name, equalTo("the-user's-group"))
                         }
                     }
+
+                    on("determining the user and group to use") {
+                        val userAndGroup by runNullableForEachTest { provider.determineUserAndGroup(container) }
+
+                        it("returns a user and group configuration with the current user's user and group IDs") {
+                            assertThat(userAndGroup, equalTo(UserAndGroup(123, 456)))
+                        }
+                    }
                 }
 
                 given("the current user is root") {
@@ -469,6 +494,14 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
                             val group = Files.readAttributes(homeDirectoryPath, PosixFileAttributes::class.java, LinkOption.NOFOLLOW_LINKS).group()
                             assertThat(group.name, equalTo("root"))
+                        }
+                    }
+
+                    on("determining the user and group to use") {
+                        val userAndGroup by runNullableForEachTest { provider.determineUserAndGroup(container) }
+
+                        it("returns a user and group configuration with root's UID and GID") {
+                            assertThat(userAndGroup, equalTo(UserAndGroup(0, 0)))
                         }
                     }
                 }

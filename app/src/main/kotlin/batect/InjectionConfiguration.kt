@@ -29,6 +29,7 @@ import batect.config.io.ConfigurationLoader
 import batect.docker.api.DockerAPI
 import batect.docker.client.DockerClient
 import batect.docker.DockerContainerCreationRequestFactory
+import batect.docker.DockerContainerEnvironmentVariableProvider
 import batect.docker.DockerHostNameResolver
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerHttpConfigDefaults
@@ -185,6 +186,7 @@ private val dockerModule = Kodein.Module("docker") {
     bind<ContainerTTYManager>() with singletonWithLogger { logger -> ContainerTTYManager(instance(), instance(), instance(), logger) }
     bind<ContainerWaiter>() with singleton { ContainerWaiter(instance()) }
     bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance()) }
+    bind<DockerContainerEnvironmentVariableProvider>() with singleton { DockerContainerEnvironmentVariableProvider(instance()) }
     bind<DockerfileParser>() with singleton { DockerfileParser() }
     bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
     bind<DockerImageBuildContextFactory>() with singleton { DockerImageBuildContextFactory(instance()) }
@@ -228,7 +230,7 @@ private val executionModule = Kodein.Module("execution") {
     bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(), instance(), instance(), logger) }
     bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(instance(), logger) }
     bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance(), instance(), instance(), instance()) }
-    bind<TaskStepRunner>() with singleton { TaskStepRunner(instance(), instance(), instance(), instance(), instance()) }
+    bind<TaskStepRunner>() with singleton { TaskStepRunner(instance(), instance(), instance(), instance(), instance(), instance()) }
     bind<TaskSuggester>() with singleton { TaskSuggester() }
 }
 

@@ -23,6 +23,7 @@ import batect.docker.ContainerHealthCheckException
 import batect.docker.client.DockerClient
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequestFactory
+import batect.docker.DockerContainerEnvironmentVariableProvider
 import batect.docker.DockerException
 import batect.docker.client.DockerImageBuildProgress
 import batect.docker.client.HealthStatus
@@ -53,6 +54,10 @@ import batect.execution.model.events.ImagePullFailedEvent
 import batect.execution.model.events.ImagePullProgressEvent
 import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.RunningContainerExitedEvent
+import batect.execution.model.events.RunningSetupCommandEvent
+import batect.execution.model.events.SetupCommandExecutionErrorEvent
+import batect.execution.model.events.SetupCommandFailedEvent
+import batect.execution.model.events.SetupCommandsCompletedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
@@ -72,6 +77,7 @@ class TaskStepRunner(
     private val dockerClient: DockerClient,
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
     private val creationRequestFactory: DockerContainerCreationRequestFactory,
+    private val environmentVariableProvider: DockerContainerEnvironmentVariableProvider,
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
     private val systemInfo: SystemInfo,
     private val hostEnvironmentVariables: Map<String, String>
@@ -80,9 +86,10 @@ class TaskStepRunner(
         dockerClient: DockerClient,
         proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
         creationRequestFactory: DockerContainerCreationRequestFactory,
+        environmentVariableProvider: DockerContainerEnvironmentVariableProvider,
         runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
         systemInfo: SystemInfo
-    ) : this(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, runAsCurrentUserConfigurationProvider, systemInfo, System.getenv())
+    ) : this(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, environmentVariableProvider, runAsCurrentUserConfigurationProvider, systemInfo, System.getenv())
 
     fun run(step: TaskStep, context: TaskStepRunContext) {
         when (step) {
@@ -92,6 +99,7 @@ class TaskStepRunner(
             is CreateContainerStep -> handleCreateContainerStep(step, context.eventSink, context.runOptions, context.ioStreamingOptions)
             is RunContainerStep -> handleRunContainerStep(step, context.eventSink, context.ioStreamingOptions, context.cancellationContext)
             is WaitForContainerToBecomeHealthyStep -> handleWaitForContainerToBecomeHealthyStep(step, context.eventSink, context.cancellationContext)
+            is RunContainerSetupCommandsStep -> handleRunContainerSetupCommandsStep(step, context.eventSink, context.runOptions, context.cancellationContext)
             is StopContainerStep -> handleStopContainerStep(step, context.eventSink)
             is RemoveContainerStep -> handleRemoveContainerStep(step, context.eventSink)
             is DeleteTemporaryFileStep -> handleDeleteTemporaryFileStep(step, context.eventSink)
@@ -199,6 +207,48 @@ class TaskStepRunner(
         } catch (e: ContainerHealthCheckException) {
             eventSink.postEvent(ContainerDidNotBecomeHealthyEvent(step.container, "Waiting for the container's health status failed: ${e.message}"))
         }
+    }
+
+    private fun handleRunContainerSetupCommandsStep(step: RunContainerSetupCommandsStep, eventSink: TaskEventSink, runOptions: RunOptions, cancellationContext: CancellationContext) {
+        if (step.container.setupCommands.isEmpty()) {
+            throw UnsupportedOperationException("A RunContainerSetupCommandsStep should not be generated for a container with no setup commands.")
+        }
+
+        val environmentVariables = environmentVariableProvider.environmentVariablesFor(
+            step.container,
+            step.config,
+            runOptions.propagateProxyEnvironmentVariables,
+            null,
+            step.allContainersInNetwork
+        )
+
+        val userAndGroup = runAsCurrentUserConfigurationProvider.determineUserAndGroup(step.container)
+
+        step.container.setupCommands.forEachIndexed { index, command ->
+            try {
+                eventSink.postEvent(RunningSetupCommandEvent(step.container, command, index))
+
+                val result = dockerClient.exec.run(
+                    command,
+                    step.dockerContainer,
+                    environmentVariables,
+                    step.container.privileged,
+                    userAndGroup,
+                    step.container.workingDirectory,
+                    cancellationContext
+                )
+
+                if (result.exitCode != 0) {
+                    eventSink.postEvent(SetupCommandFailedEvent(step.container, command, result.exitCode, result.output))
+                    return
+                }
+            } catch (e: DockerException) {
+                eventSink.postEvent(SetupCommandExecutionErrorEvent(step.container, command, e.message ?: ""))
+                return
+            }
+        }
+
+        eventSink.postEvent(SetupCommandsCompletedEvent(step.container))
     }
 
     private fun containerBecameUnhealthyMessage(container: DockerContainer): String {

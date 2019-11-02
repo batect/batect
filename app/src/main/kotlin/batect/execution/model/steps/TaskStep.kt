@@ -59,8 +59,16 @@ data class RunContainerStep(val container: Container, val dockerContainer: Docke
     override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}')"
 }
 
-data class RunContainerSetupCommandsStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
-    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}')"
+data class RunContainerSetupCommandsStep(
+    val container: Container,
+    val config: ContainerRuntimeConfiguration,
+    val allContainersInNetwork: Set<Container>,
+    val dockerContainer: DockerContainer
+) : TaskStep() {
+    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', " +
+        "config: $config, " +
+        "all containers in network: ${allContainersInNetwork.map { "'${it.name}'" }}, " +
+        "Docker container: '${dockerContainer.id}')"
 }
 
 data class WaitForContainerToBecomeHealthyStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {

@@ -24,6 +24,8 @@ import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePulledEvent
+import batect.execution.model.events.RunningSetupCommandEvent
+import batect.execution.model.events.SetupCommandsCompletedEvent
 import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
@@ -64,6 +66,8 @@ class SimpleEventLogger(
                 is ImagePulledEvent -> logImagePulled(event.source)
                 is ContainerStartedEvent -> logContainerStarted(event.container)
                 is ContainerBecameHealthyEvent -> logContainerBecameHealthy(event.container)
+                is RunningSetupCommandEvent -> logRunningSetupCommand(event.container, event.command)
+                is SetupCommandsCompletedEvent -> logSetupCommandsCompleted(event.container)
                 is StepStartingEvent -> logStepStarting(event.step)
             }
         }
@@ -140,6 +144,14 @@ class SimpleEventLogger(
 
     private fun logContainerBecameHealthy(container: Container) {
         console.println(Text.white(Text.bold(container.name) + Text(" has become healthy.")))
+    }
+
+    private fun logRunningSetupCommand(container: Container, command: Command) {
+        console.println(Text.white(Text("Running setup command ") + Text.bold(command.originalCommand) + Text(" in ") + Text.bold(container.name) + Text("...")))
+    }
+
+    private fun logSetupCommandsCompleted(container: Container) {
+        console.println(Text.white(Text.bold(container.name) + Text(" has completed all setup commands.")))
     }
 
     private fun logCleanUpStarting() {

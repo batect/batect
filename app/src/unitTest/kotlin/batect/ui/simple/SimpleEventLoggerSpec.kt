@@ -28,6 +28,8 @@ import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePulledEvent
+import batect.execution.model.events.RunningSetupCommandEvent
+import batect.execution.model.events.SetupCommandsCompletedEvent
 import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.BuildImageStep
@@ -147,6 +149,28 @@ object SimpleEventLoggerSpec : Spek({
 
                 it("prints a message to the output") {
                     verify(console).println(Text.white(Text.bold("the-cool-container") + Text(" has become healthy.")))
+                }
+            }
+
+            on("when a 'running setup command' event is posted") {
+                beforeEachTest {
+                    val event = RunningSetupCommandEvent(container, Command.parse("do-the-thing"), 2)
+                    logger.postEvent(event)
+                }
+
+                it("prints a message to the output") {
+                    verify(console).println(Text.white(Text("Running setup command ") + Text.bold("do-the-thing") + Text(" in ") + Text.bold("the-cool-container") + Text("...")))
+                }
+            }
+
+            on("when a 'setup commands complete' event is posted") {
+                beforeEachTest {
+                    val event = SetupCommandsCompletedEvent(container)
+                    logger.postEvent(event)
+                }
+
+                it("prints a message to the output") {
+                    verify(console).println(Text.white(Text.bold("the-cool-container") + Text(" has completed all setup commands.")))
                 }
             }
 

@@ -77,7 +77,7 @@ object SimpleEventLoggerSpec : Spek({
         val errorConsole by createForEachTest { mock<Console>() }
 
         val logger by createForEachTest { SimpleEventLogger(containers, taskContainer, failureErrorMessageFormatter, runOptions, console, errorConsole, mock()) }
-        val container = Container("the-cool-container", imageSourceDoesNotMatter())
+        val container = Container("the-cool-container", imageSourceDoesNotMatter(), setupCommands = listOf(Command.parse("a"), Command.parse("b"), Command.parse("c"), Command.parse("d")))
 
         describe("handling when events are posted") {
             on("when a 'task failed' event is posted") {
@@ -159,7 +159,7 @@ object SimpleEventLoggerSpec : Spek({
                 }
 
                 it("prints a message to the output") {
-                    verify(console).println(Text.white(Text("Running setup command ") + Text.bold("do-the-thing") + Text(" in ") + Text.bold("the-cool-container") + Text("...")))
+                    verify(console).println(Text.white(Text("Running setup command ") + Text.bold("do-the-thing") + Text(" (3 of 4) in ") + Text.bold("the-cool-container") + Text("...")))
                 }
             }
 

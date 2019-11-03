@@ -32,6 +32,8 @@ import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePullFailedEvent
 import batect.execution.model.events.ImagePulledEvent
+import batect.execution.model.events.RunningSetupCommandEvent
+import batect.execution.model.events.SetupCommandsCompletedEvent
 import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
@@ -97,6 +99,8 @@ class InterleavedEventLogger(
             is ContainerStartedEvent -> onContainerStarted(event)
             is ContainerBecameHealthyEvent -> onContainerBecameHealthyEvent(event)
             is ContainerStoppedEvent -> onContainerStoppedEvent(event)
+            is RunningSetupCommandEvent -> onRunningSetupCommandEvent(event)
+            is SetupCommandsCompletedEvent -> onSetupCommandsCompletedEvent(event)
             is StepStartingEvent -> onStepStarting(event)
             is TaskFailedEvent -> onTaskFailed(event)
         }
@@ -130,6 +134,14 @@ class InterleavedEventLogger(
 
     private fun onContainerStoppedEvent(event: ContainerStoppedEvent) {
         output.printForContainer(event.container, TextRun(Text.white("Container stopped.")))
+    }
+
+    private fun onRunningSetupCommandEvent(event: RunningSetupCommandEvent) {
+        output.printForContainer(event.container, Text.white(Text("Running setup command ") + Text.bold(event.command.originalCommand) + Text(" (${event.commandIndex + 1} of ${event.container.setupCommands.size})...")))
+    }
+
+    private fun onSetupCommandsCompletedEvent(event: SetupCommandsCompletedEvent) {
+        output.printForContainer(event.container, TextRun(Text.white("Container has completed all setup commands.")))
     }
 
     private fun onStepStarting(event: StepStartingEvent) {

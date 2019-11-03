@@ -66,7 +66,7 @@ class SimpleEventLogger(
                 is ImagePulledEvent -> logImagePulled(event.source)
                 is ContainerStartedEvent -> logContainerStarted(event.container)
                 is ContainerBecameHealthyEvent -> logContainerBecameHealthy(event.container)
-                is RunningSetupCommandEvent -> logRunningSetupCommand(event.container, event.command)
+                is RunningSetupCommandEvent -> logRunningSetupCommand(event.container, event.command, event.commandIndex)
                 is SetupCommandsCompletedEvent -> logSetupCommandsCompleted(event.container)
                 is StepStartingEvent -> logStepStarting(event.step)
             }
@@ -146,8 +146,8 @@ class SimpleEventLogger(
         console.println(Text.white(Text.bold(container.name) + Text(" has become healthy.")))
     }
 
-    private fun logRunningSetupCommand(container: Container, command: Command) {
-        console.println(Text.white(Text("Running setup command ") + Text.bold(command.originalCommand) + Text(" in ") + Text.bold(container.name) + Text("...")))
+    private fun logRunningSetupCommand(container: Container, command: Command, index: Int) {
+        console.println(Text.white(Text("Running setup command ") + Text.bold(command.originalCommand) + Text(" (${index + 1} of ${container.setupCommands.size}) in ") + Text.bold(container.name) + Text("...")))
     }
 
     private fun logSetupCommandsCompleted(container: Container) {

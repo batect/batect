@@ -37,6 +37,8 @@ import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePullFailedEvent
 import batect.execution.model.events.ImagePulledEvent
+import batect.execution.model.events.RunningSetupCommandEvent
+import batect.execution.model.events.SetupCommandsCompletedEvent
 import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
@@ -78,7 +80,7 @@ object InterleavedEventLoggerSpec : Spek({
         val container4And5ImageSource = PullImage("another-image")
         val taskContainerImageSource = PullImage("some-image")
         val taskContainer = Container("task-container", taskContainerImageSource)
-        val container1 = Container("container-1", container1And2ImageSource)
+        val container1 = Container("container-1", container1And2ImageSource, setupCommands = listOf(Command.parse("a"), Command.parse("b"), Command.parse("c"), Command.parse("d")))
         val container2 = Container("container-2", container1And2ImageSource)
         val container3 = Container("container-3", container3ImageSource)
         val container4 = Container("container-4", container4And5ImageSource)
@@ -158,6 +160,28 @@ object InterleavedEventLoggerSpec : Spek({
 
                 it("prints a message to the output") {
                     verify(output).printForContainer(container1, TextRun(Text.white("Container stopped.")))
+                }
+            }
+
+            on("when a 'running setup command' event is posted") {
+                beforeEachTest {
+                    val event = RunningSetupCommandEvent(container1, Command.parse("do-the-thing"), 2)
+                    logger.postEvent(event)
+                }
+
+                it("prints a message to the output") {
+                    verify(output).printForContainer(container1, Text.white(Text("Running setup command ") + Text.bold("do-the-thing") + Text(" (3 of 4)...")))
+                }
+            }
+
+            on("when a 'setup commands complete' event is posted") {
+                beforeEachTest {
+                    val event = SetupCommandsCompletedEvent(container1)
+                    logger.postEvent(event)
+                }
+
+                it("prints a message to the output") {
+                    verify(output).printForContainer(container1, TextRun(Text.white("Container has completed all setup commands.")))
                 }
             }
 

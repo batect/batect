@@ -34,6 +34,7 @@ import batect.execution.model.rules.run.BuildImageStepRule
 import batect.execution.model.rules.run.CreateContainerStepRule
 import batect.execution.model.rules.run.CreateTaskNetworkStepRule
 import batect.execution.model.rules.run.PullImageStepRule
+import batect.execution.model.rules.run.RunContainerSetupCommandsStepRule
 import batect.execution.model.rules.run.RunContainerStepRule
 import batect.execution.model.rules.run.WaitForContainerToBecomeHealthyStepRule
 import batect.os.Command
@@ -102,7 +103,8 @@ object RunStagePlannerSpec : Spek({
                             "pull the image for the task container" to PullImageStepRule(PullImage("some-image")),
                             "create the task container" to CreateContainerStepRule(container, graph.nodeFor(container).config, allContainersInNetwork),
                             "run the task container" to RunContainerStepRule(container, emptySet()),
-                            "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(container)
+                            "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(container),
+                            "run setup commands for the task container" to RunContainerSetupCommandsStepRule(container, graph.nodeFor(container).config, allContainersInNetwork)
                         )
                     )
                 }
@@ -121,7 +123,8 @@ object RunStagePlannerSpec : Spek({
                             "build the image for the task container" to BuildImageStepRule(imageSource, setOf("the-project-the-container")),
                             "create the task container" to CreateContainerStepRule(container, graph.nodeFor(container).config, allContainersInNetwork),
                             "run the task container" to RunContainerStepRule(container, emptySet()),
-                            "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(container)
+                            "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(container),
+                            "run setup commands for the task container" to RunContainerSetupCommandsStepRule(container, graph.nodeFor(container).config, allContainersInNetwork)
                         )
                     )
                 }
@@ -141,7 +144,8 @@ object RunStagePlannerSpec : Spek({
                         "pull the image for the task container" to PullImageStepRule(PullImage("some-image")),
                         "create the task container with the additional environment variables" to CreateContainerStepRule(container, graph.nodeFor(container).config, allContainersInNetwork),
                         "run the task container" to RunContainerStepRule(container, emptySet()),
-                        "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(container)
+                        "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(container),
+                        "run setup commands for the task container" to RunContainerSetupCommandsStepRule(container, graph.nodeFor(container).config, allContainersInNetwork)
                     )
                 )
             }
@@ -160,7 +164,8 @@ object RunStagePlannerSpec : Spek({
                         "pull the image for the task container" to PullImageStepRule(PullImage("some-image")),
                         "create the task container with the additional environment variables" to CreateContainerStepRule(container, graph.nodeFor(container).config, allContainersInNetwork),
                         "run the task container" to RunContainerStepRule(container, emptySet()),
-                        "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(container)
+                        "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(container),
+                        "run setup commands for the task container" to RunContainerSetupCommandsStepRule(container, graph.nodeFor(container).config, allContainersInNetwork)
                     )
                 )
             }
@@ -201,7 +206,11 @@ object RunStagePlannerSpec : Spek({
                         "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(taskContainer),
                         "wait for container 1 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container1),
                         "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2),
-                        "wait for container 3 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container3)
+                        "wait for container 3 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container3),
+                        "run setup commands for the task container" to RunContainerSetupCommandsStepRule(taskContainer, graph.nodeFor(taskContainer).config, allContainersInNetwork),
+                        "run setup commands for container 1" to RunContainerSetupCommandsStepRule(container1, graph.nodeFor(container1).config, allContainersInNetwork),
+                        "run setup commands for container 2" to RunContainerSetupCommandsStepRule(container2, graph.nodeFor(container2).config, allContainersInNetwork),
+                        "run setup commands for container 3" to RunContainerSetupCommandsStepRule(container3, graph.nodeFor(container3).config, allContainersInNetwork)
                     )
                 )
             }
@@ -230,7 +239,10 @@ object RunStagePlannerSpec : Spek({
                         "run container 2" to RunContainerStepRule(container2, graph.nodeFor(container2).dependsOnContainers),
                         "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(taskContainer),
                         "wait for container 1 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container1),
-                        "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2)
+                        "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2),
+                        "run setup commands for the task container" to RunContainerSetupCommandsStepRule(taskContainer, graph.nodeFor(taskContainer).config, allContainersInNetwork),
+                        "run setup commands for container 1" to RunContainerSetupCommandsStepRule(container1, graph.nodeFor(container1).config, allContainersInNetwork),
+                        "run setup commands for container 2" to RunContainerSetupCommandsStepRule(container2, graph.nodeFor(container2).config, allContainersInNetwork)
                     )
                 )
             }
@@ -261,7 +273,10 @@ object RunStagePlannerSpec : Spek({
                                 "run container 2" to RunContainerStepRule(container2, graph.nodeFor(container2).dependsOnContainers),
                                 "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(taskContainer),
                                 "wait for container 1 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container1),
-                                "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2)
+                                "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2),
+                                "run setup commands for the task container" to RunContainerSetupCommandsStepRule(taskContainer, graph.nodeFor(taskContainer).config, allContainersInNetwork),
+                                "run setup commands for container 1" to RunContainerSetupCommandsStepRule(container1, graph.nodeFor(container1).config, allContainersInNetwork),
+                                "run setup commands for container 2" to RunContainerSetupCommandsStepRule(container2, graph.nodeFor(container2).config, allContainersInNetwork)
                             )
                         )
                     }
@@ -292,7 +307,10 @@ object RunStagePlannerSpec : Spek({
                                 "run container 2" to RunContainerStepRule(container2, graph.nodeFor(container2).dependsOnContainers),
                                 "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(taskContainer),
                                 "wait for container 1 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container1),
-                                "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2)
+                                "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2),
+                                "run setup commands for the task container" to RunContainerSetupCommandsStepRule(taskContainer, graph.nodeFor(taskContainer).config, allContainersInNetwork),
+                                "run setup commands for container 1" to RunContainerSetupCommandsStepRule(container1, graph.nodeFor(container1).config, allContainersInNetwork),
+                                "run setup commands for container 2" to RunContainerSetupCommandsStepRule(container2, graph.nodeFor(container2).config, allContainersInNetwork)
                             )
                         )
                     }
@@ -323,7 +341,10 @@ object RunStagePlannerSpec : Spek({
                             "run container 2" to RunContainerStepRule(container2, graph.nodeFor(container2).dependsOnContainers),
                             "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(taskContainer),
                             "wait for container 1 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container1),
-                            "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2)
+                            "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2),
+                            "run setup commands for the task container" to RunContainerSetupCommandsStepRule(taskContainer, graph.nodeFor(taskContainer).config, allContainersInNetwork),
+                            "run setup commands for container 1" to RunContainerSetupCommandsStepRule(container1, graph.nodeFor(container1).config, allContainersInNetwork),
+                            "run setup commands for container 2" to RunContainerSetupCommandsStepRule(container2, graph.nodeFor(container2).config, allContainersInNetwork)
                         )
                     )
                 }

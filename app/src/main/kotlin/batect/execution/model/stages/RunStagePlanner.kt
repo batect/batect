@@ -26,6 +26,7 @@ import batect.execution.model.rules.run.BuildImageStepRule
 import batect.execution.model.rules.run.CreateContainerStepRule
 import batect.execution.model.rules.run.CreateTaskNetworkStepRule
 import batect.execution.model.rules.run.PullImageStepRule
+import batect.execution.model.rules.run.RunContainerSetupCommandsStepRule
 import batect.execution.model.rules.run.RunContainerStepRule
 import batect.execution.model.rules.run.WaitForContainerToBecomeHealthyStepRule
 import batect.logging.Logger
@@ -49,9 +50,10 @@ class RunStagePlanner(private val logger: Logger) {
     }
 
     private fun executionStepsFor(node: ContainerDependencyGraphNode, allContainersInNetwork: Set<Container>) = setOf(
+        CreateContainerStepRule(node.container, node.config, allContainersInNetwork),
         RunContainerStepRule(node.container, node.dependsOnContainers),
         WaitForContainerToBecomeHealthyStepRule(node.container),
-        CreateContainerStepRule(node.container, node.config, allContainersInNetwork)
+        RunContainerSetupCommandsStepRule(node.container, node.config, allContainersInNetwork)
     )
 
     private fun imageCreationRulesFor(graph: ContainerDependencyGraph): Set<TaskStepRule> {

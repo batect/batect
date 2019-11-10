@@ -17,7 +17,7 @@
 package batect.execution.model.rules.run
 
 import batect.config.Container
-import batect.execution.model.events.ContainerBecameHealthyEvent
+import batect.execution.model.events.ContainerBecameReadyEvent
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRule
@@ -42,7 +42,7 @@ data class RunContainerStepRule(val container: Container, val dependencies: Set<
 
     private fun allDependenciesAreReady(pastEvents: Set<TaskEvent>): Boolean {
         val readyContainers = pastEvents
-            .filterIsInstance<ContainerBecameHealthyEvent>()
+            .filterIsInstance<ContainerBecameReadyEvent>()
             .map { it.container }
 
         return readyContainers.containsAll(dependencies)

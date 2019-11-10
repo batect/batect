@@ -18,7 +18,7 @@ package batect.execution.model.rules.run
 
 import batect.config.Container
 import batect.docker.DockerContainer
-import batect.execution.model.events.ContainerBecameHealthyEvent
+import batect.execution.model.events.ContainerBecameReadyEvent
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
@@ -95,7 +95,7 @@ object RunContainerStepRuleSpec : Spek({
                 val dockerContainer = DockerContainer("some-created-container")
                 beforeEachTest { events.add(ContainerCreatedEvent(container, dockerContainer)) }
 
-                given("none of the dependencies have reported as healthy") {
+                given("none of the dependencies have reported as ready") {
                     on("evaluating the rule") {
                         val result by runForEachTest { rule.evaluate(events) }
 
@@ -105,8 +105,8 @@ object RunContainerStepRuleSpec : Spek({
                     }
                 }
 
-                given("some of the dependencies have reported as healthy") {
-                    beforeEachTest { events.add(ContainerBecameHealthyEvent(dependency1)) }
+                given("some of the dependencies have reported as ready") {
+                    beforeEachTest { events.add(ContainerBecameReadyEvent(dependency1)) }
 
                     on("evaluating the rule") {
                         val result by runForEachTest { rule.evaluate(events) }
@@ -117,9 +117,9 @@ object RunContainerStepRuleSpec : Spek({
                     }
                 }
 
-                given("all of the dependencies have reported as healthy") {
-                    beforeEachTest { events.add(ContainerBecameHealthyEvent(dependency1)) }
-                    beforeEachTest { events.add(ContainerBecameHealthyEvent(dependency2)) }
+                given("all of the dependencies have reported as ready") {
+                    beforeEachTest { events.add(ContainerBecameReadyEvent(dependency1)) }
+                    beforeEachTest { events.add(ContainerBecameReadyEvent(dependency2)) }
 
                     on("evaluating the rule") {
                         val result by runForEachTest { rule.evaluate(events) }

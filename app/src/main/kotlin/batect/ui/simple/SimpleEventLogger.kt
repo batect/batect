@@ -143,14 +143,26 @@ class SimpleEventLogger(
     }
 
     private fun logContainerBecameHealthy(container: Container) {
+        if (container == taskContainer) {
+            return
+        }
+
         console.println(Text.white(Text.bold(container.name) + Text(" has become healthy.")))
     }
 
     private fun logRunningSetupCommand(container: Container, command: Command, index: Int) {
+        if (container == taskContainer) {
+            return
+        }
+
         console.println(Text.white(Text("Running setup command ") + Text.bold(command.originalCommand) + Text(" (${index + 1} of ${container.setupCommands.size}) in ") + Text.bold(container.name) + Text("...")))
     }
 
     private fun logSetupCommandsCompleted(container: Container) {
+        if (container == taskContainer) {
+            return
+        }
+
         console.println(Text.white(Text.bold(container.name) + Text(" has completed all setup commands.")))
     }
 

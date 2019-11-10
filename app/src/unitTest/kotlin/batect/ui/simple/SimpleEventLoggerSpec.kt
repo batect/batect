@@ -142,35 +142,74 @@ object SimpleEventLoggerSpec : Spek({
             }
 
             on("when a 'container became healthy' event is posted") {
-                beforeEachTest {
-                    val event = ContainerBecameHealthyEvent(container)
-                    logger.postEvent(event)
+                on("when the task container has become healthy") {
+                    beforeEachTest {
+                        val event = ContainerBecameHealthyEvent(taskContainer)
+                        logger.postEvent(event)
+                    }
+
+                    it("does not print a message to the output") {
+                        verify(console, never()).println(any<TextRun>())
+                    }
                 }
 
-                it("prints a message to the output") {
-                    verify(console).println(Text.white(Text.bold("the-cool-container") + Text(" has become healthy.")))
+                on("when a dependency container has become healthy") {
+                    beforeEachTest {
+                        val event = ContainerBecameHealthyEvent(container)
+                        logger.postEvent(event)
+                    }
+
+                    it("prints a message to the output") {
+                        verify(console).println(Text.white(Text.bold("the-cool-container") + Text(" has become healthy.")))
+                    }
                 }
             }
 
             on("when a 'running setup command' event is posted") {
-                beforeEachTest {
-                    val event = RunningSetupCommandEvent(container, Command.parse("do-the-thing"), 2)
-                    logger.postEvent(event)
+                on("when the task container is running a setup command") {
+                    beforeEachTest {
+                        val event = RunningSetupCommandEvent(taskContainer, Command.parse("do-the-thing"), 2)
+                        logger.postEvent(event)
+                    }
+
+                    it("does not print a message to the output") {
+                        verify(console, never()).println(any<TextRun>())
+                    }
                 }
 
-                it("prints a message to the output") {
-                    verify(console).println(Text.white(Text("Running setup command ") + Text.bold("do-the-thing") + Text(" (3 of 4) in ") + Text.bold("the-cool-container") + Text("...")))
+                on("when a dependency container is running a setup command") {
+                    beforeEachTest {
+                        val event = RunningSetupCommandEvent(container, Command.parse("do-the-thing"), 2)
+                        logger.postEvent(event)
+                    }
+
+                    it("prints a message to the output") {
+                        verify(console).println(Text.white(Text("Running setup command ") + Text.bold("do-the-thing") + Text(" (3 of 4) in ") + Text.bold("the-cool-container") + Text("...")))
+                    }
                 }
             }
 
             on("when a 'setup commands complete' event is posted") {
-                beforeEachTest {
-                    val event = SetupCommandsCompletedEvent(container)
-                    logger.postEvent(event)
+                on("when the task container has completed all setup commands") {
+                    beforeEachTest {
+                        val event = SetupCommandsCompletedEvent(taskContainer)
+                        logger.postEvent(event)
+                    }
+
+                    it("does not print a message to the output") {
+                        verify(console, never()).println(any<TextRun>())
+                    }
                 }
 
-                it("prints a message to the output") {
-                    verify(console).println(Text.white(Text.bold("the-cool-container") + Text(" has completed all setup commands.")))
+                on("when a dependency container has completed all setup commands") {
+                    beforeEachTest {
+                        val event = SetupCommandsCompletedEvent(container)
+                        logger.postEvent(event)
+                    }
+
+                    it("prints a message to the output") {
+                        verify(console).println(Text.white(Text.bold("the-cool-container") + Text(" has completed all setup commands.")))
+                    }
                 }
             }
 

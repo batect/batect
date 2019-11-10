@@ -18,7 +18,6 @@ plugins {
     id 'com.diffplug.gradle.spotless' version '3.25.0'
     id 'com.github.ben-manes.versions' version '0.27.0'
     id 'org.ajoberstar.reckon' version '0.11.0'
-    id 'com.gradle.build-scan' version '3.0'
 }
 
 apply from: "$rootDir/gradle/bintray.gradle"
@@ -39,9 +38,4 @@ task assembleRelease(type: Copy) {
 
 wrapper {
     distributionType = Wrapper.DistributionType.ALL
-}
-
-buildScan {
-    termsOfServiceUrl = 'https://gradle.com/terms-of-service'
-    termsOfServiceAgree = 'yes'
 }

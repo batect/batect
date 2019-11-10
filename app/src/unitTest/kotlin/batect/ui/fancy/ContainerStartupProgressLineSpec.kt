@@ -26,12 +26,14 @@ import batect.docker.DockerNetwork
 import batect.docker.pull.DockerImageProgress
 import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.model.events.ContainerBecameHealthyEvent
+import batect.execution.model.events.ContainerBecameReadyEvent
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePullProgressEvent
 import batect.execution.model.events.ImagePulledEvent
+import batect.execution.model.events.RunningSetupCommandEvent
 import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.steps.BuildImageStep
@@ -61,7 +63,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
         given("the container's image comes from building an image") {
             val imageSource = BuildImage(Paths.get("/some-image-dir"))
-            val container = Container(containerName, imageSource)
+            val container = Container(containerName, imageSource, setupCommands = listOf(Command.parse("a"), Command.parse("b"), Command.parse("c"), Command.parse("d")))
             val otherImageSource = BuildImage(Paths.get("/some-other-image-dir"))
 
             val line by createForEachTest { ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC), false) }
@@ -264,7 +266,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                     on("and two of the container's dependencies not being ready") {
                         beforeEachTest {
-                            line.onEventPosted(ContainerBecameHealthyEvent(dependencyA))
+                            line.onEventPosted(ContainerBecameReadyEvent(dependencyA))
                             line.onEventPosted(event)
                         }
                         val output by runForEachTest { line.print() }
@@ -276,8 +278,8 @@ object ContainerStartupProgressLineSpec : Spek({
 
                     on("and one of the container's dependencies not being ready") {
                         beforeEachTest {
-                            line.onEventPosted(ContainerBecameHealthyEvent(dependencyA))
-                            line.onEventPosted(ContainerBecameHealthyEvent(dependencyB))
+                            line.onEventPosted(ContainerBecameReadyEvent(dependencyA))
+                            line.onEventPosted(ContainerBecameReadyEvent(dependencyB))
                             line.onEventPosted(event)
                         }
 
@@ -290,9 +292,9 @@ object ContainerStartupProgressLineSpec : Spek({
 
                     on("and all of the container's dependencies are ready") {
                         beforeEachTest {
-                            line.onEventPosted(ContainerBecameHealthyEvent(dependencyA))
-                            line.onEventPosted(ContainerBecameHealthyEvent(dependencyB))
-                            line.onEventPosted(ContainerBecameHealthyEvent(dependencyC))
+                            line.onEventPosted(ContainerBecameReadyEvent(dependencyA))
+                            line.onEventPosted(ContainerBecameReadyEvent(dependencyB))
+                            line.onEventPosted(ContainerBecameReadyEvent(dependencyC))
                             line.onEventPosted(event)
                         }
 
@@ -351,19 +353,103 @@ object ContainerStartupProgressLineSpec : Spek({
             }
 
             describe("after receiving a 'container became healthy' notification") {
-                on("that notification being for this line's container") {
-                    val event = ContainerBecameHealthyEvent(container)
-                    beforeEachTest { line.onEventPosted(event) }
-                    val output by runForEachTest { line.print() }
+                given("that notification is for this line's container") {
+                    given("the container has some setup commands") {
+                        val event = ContainerBecameHealthyEvent(container)
+                        beforeEachTest { line.onEventPosted(event) }
+                        val output by runForEachTest { line.print() }
 
-                    it("prints that the container has finished starting up") {
-                        assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": running"))))
+                        it("prints that the container is about to run the setup commands") {
+                            assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": running setup commands..."))))
+                        }
+                    }
+
+                    given("the container has no setup commands") {
+                        val containerWithoutSetupCommands = container.copy(setupCommands = emptyList())
+                        val lineWithoutSetupCommands by createForEachTest { ContainerStartupProgressLine(containerWithoutSetupCommands, emptySet(), false) }
+
+                        val event = ContainerBecameHealthyEvent(containerWithoutSetupCommands)
+                        beforeEachTest { lineWithoutSetupCommands.onEventPosted(event) }
+                        val output by runForEachTest { lineWithoutSetupCommands.print() }
+
+                        it("prints that the container has finished starting up") {
+                            assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": running"))))
+                        }
                     }
                 }
 
                 on("that notification being for another container") {
                     val event = ContainerBecameHealthyEvent(otherContainer)
                     beforeEachTest { line.onEventPosted(event) }
+                    val output by runForEachTest { line.print() }
+
+                    it("prints that the container is still waiting to build its image") {
+                        assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": ready to build image"))))
+                    }
+                }
+            }
+
+            describe("after receiving a 'running setup command' notification") {
+                on("that notification being for this line's container") {
+                    val event = RunningSetupCommandEvent(container, Command.parse("some command"), 2)
+
+                    beforeEachTest {
+                        line.onEventPosted(ContainerStartedEvent(container))
+                        line.onEventPosted(ContainerBecameHealthyEvent(container))
+                        line.onEventPosted(event)
+                    }
+
+                    val output by runForEachTest { line.print() }
+
+                    it("prints that the container is running that command") {
+                        assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": running setup command ") + Text.bold("some command") + Text(" (3 of 4)..."))))
+                    }
+                }
+
+                on("that notification being for another container") {
+                    val event = RunningSetupCommandEvent(otherContainer, Command.parse("some command"), 2)
+
+                    beforeEachTest {
+                        line.onEventPosted(ContainerStartedEvent(otherContainer))
+                        line.onEventPosted(ContainerBecameHealthyEvent(otherContainer))
+                        line.onEventPosted(event)
+                    }
+
+                    val output by runForEachTest { line.print() }
+
+                    it("prints that the container is still waiting to build its image") {
+                        assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": ready to build image"))))
+                    }
+                }
+            }
+
+            describe("after receiving a 'container became ready' notification") {
+                on("that notification being for this line's container") {
+                    val event = ContainerBecameReadyEvent(container)
+
+                    beforeEachTest {
+                        line.onEventPosted(ContainerStartedEvent(container))
+                        line.onEventPosted(ContainerBecameHealthyEvent(container))
+                        line.onEventPosted(RunningSetupCommandEvent(container, Command.parse("some command"), 2))
+                        line.onEventPosted(event)
+                    }
+
+                    val output by runForEachTest { line.print() }
+
+                    it("prints that the container is running") {
+                        assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": running"))))
+                    }
+                }
+
+                on("that notification being for another container") {
+                    val event = ContainerBecameReadyEvent(otherContainer)
+
+                    beforeEachTest {
+                        line.onEventPosted(ContainerStartedEvent(otherContainer))
+                        line.onEventPosted(ContainerBecameHealthyEvent(otherContainer))
+                        line.onEventPosted(event)
+                    }
+
                     val output by runForEachTest { line.print() }
 
                     it("prints that the container is still waiting to build its image") {

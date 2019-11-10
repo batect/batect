@@ -24,14 +24,14 @@ import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object SetupCommandsCompletedEventSpec : Spek({
-    describe("a 'setup commands completed' event") {
+object ContainerBecameReadyEventSpec : Spek({
+    describe("a 'container became ready' event") {
         val container = Container("container-1", imageSourceDoesNotMatter())
-        val event = SetupCommandsCompletedEvent(container)
+        val event = ContainerBecameReadyEvent(container)
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(event.toString(), equalTo("SetupCommandsCompletedEvent(container: 'container-1')"))
+                assertThat(event.toString(), equalTo("ContainerBecameReadyEvent(container: 'container-1')"))
             }
         }
     }

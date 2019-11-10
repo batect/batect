@@ -22,12 +22,14 @@ import batect.config.PullImage
 import batect.docker.client.DockerImageBuildProgress
 import batect.docker.pull.DockerImageProgress
 import batect.execution.model.events.ContainerBecameHealthyEvent
+import batect.execution.model.events.ContainerBecameReadyEvent
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePullProgressEvent
 import batect.execution.model.events.ImagePulledEvent
+import batect.execution.model.events.RunningSetupCommandEvent
 import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
@@ -51,17 +53,25 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     private var hasBeenCreated = false
     private var isStarting = false
     private var hasStarted = false
+    private var isReady = false
     private var isHealthy = false
     private var isRunning = false
     private var command: Command? = null
-
     private var networkHasBeenCreated = false
 
-    private val healthyContainers = mutableSetOf<Container>()
+    private var setupCommandState: SetupCommandState = if (container.setupCommands.isEmpty()) {
+        SetupCommandState.None
+    } else {
+        SetupCommandState.NotStarted
+    }
+
+    private val readyContainers = mutableSetOf<Container>()
 
     fun print(): TextRun {
         val description = when {
-            isHealthy -> TextRun("running")
+            isReady || (isHealthy && setupCommandState == SetupCommandState.None) -> TextRun("running")
+            setupCommandState is SetupCommandState.Running -> descriptionWhenRunningSetupCommand()
+            isHealthy && setupCommandState == SetupCommandState.NotStarted -> TextRun("running setup commands...")
             isRunning -> descriptionWhenRunning()
             hasStarted -> TextRun("container started, waiting for it to become healthy...")
             isStarting -> TextRun("starting container...")
@@ -78,6 +88,12 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
         }
 
         return Text.white(Text.bold(container.name) + Text(": ") + description)
+    }
+
+    private fun descriptionWhenRunningSetupCommand(): TextRun {
+        val state = setupCommandState as SetupCommandState.Running
+
+        return Text("running setup command ") + Text.bold(state.command.originalCommand) + Text(" (${state.index + 1} of ${container.setupCommands.size})...")
     }
 
     private fun descriptionWhenWaitingToBuildOrPull(): TextRun {
@@ -110,7 +126,7 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     }
 
     private fun descriptionWhenWaitingToStart(): TextRun {
-        val remainingDependencies = dependencies - healthyContainers
+        val remainingDependencies = dependencies - readyContainers
 
         if (remainingDependencies.isEmpty()) {
             return TextRun("ready to start")
@@ -145,6 +161,8 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
             is ContainerCreatedEvent -> onContainerCreatedEventPosted(event)
             is ContainerStartedEvent -> onContainerStartedEventPosted(event)
             is ContainerBecameHealthyEvent -> onContainerBecameHealthyEventPosted(event)
+            is ContainerBecameReadyEvent -> onContainerBecameReadyEventPosted(event)
+            is RunningSetupCommandEvent -> onRunningSetupCommandEventPosted(event)
             is StepStartingEvent -> onStepStarting(event.step)
         }
     }
@@ -226,10 +244,28 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     }
 
     private fun onContainerBecameHealthyEventPosted(event: ContainerBecameHealthyEvent) {
-        healthyContainers.add(event.container)
-
         if (event.container == container) {
             isHealthy = true
         }
+    }
+
+    private fun onContainerBecameReadyEventPosted(event: ContainerBecameReadyEvent) {
+        readyContainers.add(event.container)
+
+        if (event.container == container) {
+            isReady = true
+        }
+    }
+
+    private fun onRunningSetupCommandEventPosted(event: RunningSetupCommandEvent) {
+        if (event.container == container) {
+            setupCommandState = SetupCommandState.Running(event.command, event.commandIndex)
+        }
+    }
+
+    private sealed class SetupCommandState {
+        data class Running(val command: Command, val index: Int) : SetupCommandState()
+        object None : SetupCommandState()
+        object NotStarted : SetupCommandState()
     }
 }

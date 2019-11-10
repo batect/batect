@@ -62,6 +62,7 @@ import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
+import batect.execution.model.events.ContainerBecameReadyEvent
 import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.ContainerRunFailedEvent
@@ -97,12 +98,10 @@ import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
-import batect.testutils.withMessage
 import batect.ui.containerio.ContainerIOStreamingOptions
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
@@ -112,6 +111,7 @@ import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.isA
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
+import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import okio.Sink
@@ -743,8 +743,14 @@ object TaskStepRunnerSpec : Spek({
                     val dockerContainer = DockerContainer("some-container-id")
                     val step = RunContainerSetupCommandsStep(container, config, allContainersInNetwork, dockerContainer)
 
-                    it("throws an exception") {
-                        assertThat({ runner.run(step, stepRunContext) }, throws<UnsupportedOperationException>(withMessage("A RunContainerSetupCommandsStep should not be generated for a container with no setup commands.")))
+                    beforeEachTest { runner.run(step, stepRunContext) }
+
+                    it("emits a 'container ready' event") {
+                        verify(eventSink).postEvent(ContainerBecameReadyEvent(container))
+                    }
+
+                    it("does not emit any other events") {
+                        verify(eventSink, times(1)).postEvent(any())
                     }
                 }
 
@@ -789,6 +795,10 @@ object TaskStepRunnerSpec : Spek({
                             verify(eventSink).postEvent(SetupCommandsCompletedEvent(container))
                         }
 
+                        it("emits a 'container ready' event") {
+                            verify(eventSink).postEvent(ContainerBecameReadyEvent(container))
+                        }
+
                         it("emits the 'running setup command' event before running the command") {
                             inOrder(eventSink, execClient) {
                                 verify(eventSink).postEvent(isA<RunningSetupCommandEvent>())
@@ -822,6 +832,10 @@ object TaskStepRunnerSpec : Spek({
                         it("does not emit a 'setup commands completed' event") {
                             verify(eventSink, never()).postEvent(isA<SetupCommandsCompletedEvent>())
                         }
+
+                        it("does not emit a 'container ready' event") {
+                            verify(eventSink, never()).postEvent(isA<ContainerBecameReadyEvent>())
+                        }
                     }
 
                     given("the command cannot be run") {
@@ -841,6 +855,10 @@ object TaskStepRunnerSpec : Spek({
 
                         it("does not emit a 'setup commands completed' event") {
                             verify(eventSink, never()).postEvent(isA<SetupCommandsCompletedEvent>())
+                        }
+
+                        it("does not emit a 'container ready' event") {
+                            verify(eventSink, never()).postEvent(isA<ContainerBecameReadyEvent>())
                         }
                     }
                 }
@@ -879,10 +897,11 @@ object TaskStepRunnerSpec : Spek({
                             }
                         }
 
-                        it("emits a 'setup commands completed' event after running the last command") {
+                        it("emits 'setup commands completed' and 'container ready' events after running the last command") {
                             inOrder(eventSink, execClient) {
                                 verify(execClient).run(command3, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, cancellationContext)
                                 verify(eventSink).postEvent(SetupCommandsCompletedEvent(container))
+                                verify(eventSink).postEvent(ContainerBecameReadyEvent(container))
                             }
                         }
                     }
@@ -916,6 +935,10 @@ object TaskStepRunnerSpec : Spek({
                                 verify(eventSink, never()).postEvent(isA<SetupCommandsCompletedEvent>())
                             }
 
+                            it("does not emit a 'container ready' event") {
+                                verify(eventSink, never()).postEvent(isA<ContainerBecameReadyEvent>())
+                            }
+
                             it("does not run subsequent commands") {
                                 verify(execClient, never()).run(command3, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, cancellationContext)
                             }
@@ -942,6 +965,10 @@ object TaskStepRunnerSpec : Spek({
 
                             it("does not emit a 'setup commands completed' event") {
                                 verify(eventSink, never()).postEvent(isA<SetupCommandsCompletedEvent>())
+                            }
+
+                            it("does not emit a 'container ready' event") {
+                                verify(eventSink, never()).postEvent(isA<ContainerBecameReadyEvent>())
                             }
 
                             it("does not run subsequent commands") {

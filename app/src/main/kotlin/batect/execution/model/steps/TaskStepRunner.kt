@@ -41,6 +41,7 @@ import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
+import batect.execution.model.events.ContainerBecameReadyEvent
 import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.ContainerRunFailedEvent
@@ -211,7 +212,8 @@ class TaskStepRunner(
 
     private fun handleRunContainerSetupCommandsStep(step: RunContainerSetupCommandsStep, eventSink: TaskEventSink, runOptions: RunOptions, cancellationContext: CancellationContext) {
         if (step.container.setupCommands.isEmpty()) {
-            throw UnsupportedOperationException("A RunContainerSetupCommandsStep should not be generated for a container with no setup commands.")
+            eventSink.postEvent(ContainerBecameReadyEvent(step.container))
+            return
         }
 
         val environmentVariables = environmentVariableProvider.environmentVariablesFor(
@@ -249,6 +251,7 @@ class TaskStepRunner(
         }
 
         eventSink.postEvent(SetupCommandsCompletedEvent(step.container))
+        eventSink.postEvent(ContainerBecameReadyEvent(step.container))
     }
 
     private fun containerBecameUnhealthyMessage(container: DockerContainer): String {

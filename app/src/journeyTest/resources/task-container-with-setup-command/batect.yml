@@ -1,0 +1,19 @@
+project_name: task-container-with-setup-command-test
+
+containers:
+  task-env:
+    build_directory: task-env
+    volumes:
+      - local: .
+        container: /app
+        options: cached
+    working_directory: /app
+    setup_commands:
+      - command: sh -c "echo 'This is some output from the task' > message.txt"
+        working_directory: /
+
+tasks:
+  the-task:
+    run:
+      container: task-env
+      command: ./wait_for_file.sh

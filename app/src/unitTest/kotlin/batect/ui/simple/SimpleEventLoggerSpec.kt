@@ -19,6 +19,7 @@ package batect.ui.simple
 import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
+import batect.config.SetupCommand
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
@@ -77,7 +78,8 @@ object SimpleEventLoggerSpec : Spek({
         val errorConsole by createForEachTest { mock<Console>() }
 
         val logger by createForEachTest { SimpleEventLogger(containers, taskContainer, failureErrorMessageFormatter, runOptions, console, errorConsole, mock()) }
-        val container = Container("the-cool-container", imageSourceDoesNotMatter(), setupCommands = listOf(Command.parse("a"), Command.parse("b"), Command.parse("c"), Command.parse("d")))
+        val setupCommands = listOf("a", "b", "c", "d").map { SetupCommand(Command.parse(it)) }
+        val container = Container("the-cool-container", imageSourceDoesNotMatter(), setupCommands = setupCommands)
 
         describe("handling when events are posted") {
             on("when a 'task failed' event is posted") {
@@ -168,7 +170,7 @@ object SimpleEventLoggerSpec : Spek({
             on("when a 'running setup command' event is posted") {
                 on("when the task container is running a setup command") {
                     beforeEachTest {
-                        val event = RunningSetupCommandEvent(taskContainer, Command.parse("do-the-thing"), 2)
+                        val event = RunningSetupCommandEvent(taskContainer, SetupCommand(Command.parse("do-the-thing")), 2)
                         logger.postEvent(event)
                     }
 
@@ -179,7 +181,7 @@ object SimpleEventLoggerSpec : Spek({
 
                 on("when a dependency container is running a setup command") {
                     beforeEachTest {
-                        val event = RunningSetupCommandEvent(container, Command.parse("do-the-thing"), 2)
+                        val event = RunningSetupCommandEvent(container, SetupCommand(Command.parse("do-the-thing")), 2)
                         logger.postEvent(event)
                     }
 

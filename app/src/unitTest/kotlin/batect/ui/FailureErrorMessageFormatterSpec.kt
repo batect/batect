@@ -19,6 +19,7 @@ package batect.ui
 import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
+import batect.config.SetupCommand
 import batect.docker.DockerContainer
 import batect.execution.CleanupOption
 import batect.execution.RunOptions
@@ -158,17 +159,17 @@ object FailureErrorMessageFormatterSpec : Spek({
                 ),
                 Scenario(
                     "a 'setup command execution error' event",
-                    SetupCommandExecutionErrorEvent(container, Command.parse("./do the-thing"), "Something went wrong."),
+                    SetupCommandExecutionErrorEvent(container, SetupCommand(Command.parse("./do the-thing")), "Something went wrong."),
                     Text.red(Text.bold("Error: ") + Text("Could not run setup command ") + Text.bold("./do the-thing") + Text(" in container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")
                 ),
                 Scenario(
                     "a 'setup command failed' event where the command emitted some output",
-                    SetupCommandFailedEvent(container, Command.parse("./do the-thing"), 123, "Something went wrong."),
+                    SetupCommandFailedEvent(container, SetupCommand(Command.parse("./do the-thing")), 123, "Something went wrong."),
                     Text.red(Text.bold("Error: ") + Text("Setup command ") + Text.bold("./do the-thing") + Text(" in container ") + Text.bold("the-container") + Text(" failed.\n")) + Text("The command exited with code 123 and output:\nSomething went wrong.")
                 ),
                 Scenario(
                     "a 'setup command failed' event where the command did not emit any output",
-                    SetupCommandFailedEvent(container, Command.parse("./do the-thing"), 123, ""),
+                    SetupCommandFailedEvent(container, SetupCommand(Command.parse("./do the-thing")), 123, ""),
                     Text.red(Text.bold("Error: ") + Text("Setup command ") + Text.bold("./do the-thing") + Text(" in container ") + Text.bold("the-container") + Text(" failed.\n")) + Text("The command exited with code 123 and did not produce any output.")
                 )
             ).forEach { (description, event, expectedMessage) ->

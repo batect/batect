@@ -17,6 +17,7 @@
 package batect.execution.model.events
 
 import batect.config.Container
+import batect.config.SetupCommand
 import batect.os.Command
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
@@ -28,11 +29,12 @@ import org.spekframework.spek2.style.specification.describe
 object RunningSetupCommandEventSpec : Spek({
     describe("a 'running setup command' event") {
         val container = Container("container-1", imageSourceDoesNotMatter())
-        val event = RunningSetupCommandEvent(container, Command.parse("./do the-thing"), 2)
+        val setupCommand = SetupCommand(Command.parse("./do the-thing"))
+        val event = RunningSetupCommandEvent(container, setupCommand, 2)
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(event.toString(), equalTo("RunningSetupCommandEvent(container: 'container-1', command: './do the-thing', command index: 2)"))
+                assertThat(event.toString(), equalTo("RunningSetupCommandEvent(container: 'container-1', command: $setupCommand, command index: 2)"))
             }
         }
     }

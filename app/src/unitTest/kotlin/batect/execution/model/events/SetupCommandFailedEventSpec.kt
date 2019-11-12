@@ -17,6 +17,7 @@
 package batect.execution.model.events
 
 import batect.config.Container
+import batect.config.SetupCommand
 import batect.os.Command
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
@@ -28,11 +29,12 @@ import org.spekframework.spek2.style.specification.describe
 object SetupCommandFailedEventSpec : Spek({
     describe("a 'setup command failed' event") {
         val container = Container("the-container", imageSourceDoesNotMatter())
-        val event = SetupCommandFailedEvent(container, Command.parse("./do the-thing"), 123, "Could not do the thing")
+        val command = SetupCommand(Command.parse("./do the-thing"))
+        val event = SetupCommandFailedEvent(container, command, 123, "Could not do the thing")
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(event.toString(), equalTo("SetupCommandFailedEvent(container: 'the-container', command: './do the-thing', exit code: 123, output: 'Could not do the thing')"))
+                assertThat(event.toString(), equalTo("SetupCommandFailedEvent(container: 'the-container', command: $command, exit code: 123, output: 'Could not do the thing')"))
             }
         }
     }

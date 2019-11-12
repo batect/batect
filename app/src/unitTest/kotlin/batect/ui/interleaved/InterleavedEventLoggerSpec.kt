@@ -19,6 +19,7 @@ package batect.ui.interleaved
 import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
+import batect.config.SetupCommand
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
@@ -80,7 +81,8 @@ object InterleavedEventLoggerSpec : Spek({
         val container4And5ImageSource = PullImage("another-image")
         val taskContainerImageSource = PullImage("some-image")
         val taskContainer = Container("task-container", taskContainerImageSource)
-        val container1 = Container("container-1", container1And2ImageSource, setupCommands = listOf(Command.parse("a"), Command.parse("b"), Command.parse("c"), Command.parse("d")))
+        val setupCommands = listOf("a", "b", "c", "d").map { SetupCommand(Command.parse(it)) }
+        val container1 = Container("container-1", container1And2ImageSource, setupCommands = setupCommands)
         val container2 = Container("container-2", container1And2ImageSource)
         val container3 = Container("container-3", container3ImageSource)
         val container4 = Container("container-4", container4And5ImageSource)
@@ -165,7 +167,7 @@ object InterleavedEventLoggerSpec : Spek({
 
             on("when a 'running setup command' event is posted") {
                 beforeEachTest {
-                    val event = RunningSetupCommandEvent(container1, Command.parse("do-the-thing"), 2)
+                    val event = RunningSetupCommandEvent(container1, SetupCommand(Command.parse("do-the-thing")), 2)
                     logger.postEvent(event)
                 }
 

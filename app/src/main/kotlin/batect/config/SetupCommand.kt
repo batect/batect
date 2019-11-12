@@ -14,11 +14,11 @@
    limitations under the License.
 */
 
-package batect.execution.model.events
+package batect.config
 
-import batect.config.Container
-import batect.config.SetupCommand
+import batect.os.Command
 
-data class RunningSetupCommandEvent(val container: Container, val command: SetupCommand, val commandIndex: Int) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', command: $command, command index: $commandIndex)"
-}
+data class SetupCommand(
+    val command: Command,
+    val workingDirectory: String? = null
+)

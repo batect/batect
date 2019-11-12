@@ -61,8 +61,8 @@ class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
         is TaskNetworkDeletionFailedEvent -> formatErrorMessage("Could not delete the task network", event.message)
         is TemporaryFileDeletionFailedEvent -> formatErrorMessage("Could not delete temporary file '${event.filePath}'", event.message)
         is TemporaryDirectoryDeletionFailedEvent -> formatErrorMessage("Could not delete temporary directory '${event.directoryPath}'", event.message)
-        is SetupCommandExecutionErrorEvent -> formatErrorMessage(Text("Could not run setup command ") + Text.bold(event.command.originalCommand) + Text(" in container ") + Text.bold(event.container.name), event.message) + hintToReRunWithCleanupDisabled(runOptions)
-        is SetupCommandFailedEvent -> formatErrorMessage(Text("Setup command ") + Text.bold(event.command.originalCommand) + Text(" in container ") + Text.bold(event.container.name) + Text(" failed"), setupCommandFailedBodyText(event.exitCode, event.output)) + hintToReRunWithCleanupDisabled(runOptions)
+        is SetupCommandExecutionErrorEvent -> formatErrorMessage(Text("Could not run setup command ") + Text.bold(event.command.command.originalCommand) + Text(" in container ") + Text.bold(event.container.name), event.message) + hintToReRunWithCleanupDisabled(runOptions)
+        is SetupCommandFailedEvent -> formatErrorMessage(Text("Setup command ") + Text.bold(event.command.command.originalCommand) + Text(" in container ") + Text.bold(event.container.name) + Text(" failed"), setupCommandFailedBodyText(event.exitCode, event.output)) + hintToReRunWithCleanupDisabled(runOptions)
         is ExecutionFailedEvent -> formatErrorMessage("An unexpected exception occurred during execution", event.message)
         is UserInterruptedExecutionEvent -> formatMessage("Task cancelled", TextRun("Interrupt received during execution"), "Waiting for outstanding operations to stop or finish before cleaning up...")
     }

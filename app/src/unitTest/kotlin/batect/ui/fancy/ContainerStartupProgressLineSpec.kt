@@ -19,6 +19,7 @@ package batect.ui.fancy
 import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
+import batect.config.SetupCommand
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.client.DockerImageBuildProgress
@@ -63,7 +64,8 @@ object ContainerStartupProgressLineSpec : Spek({
 
         given("the container's image comes from building an image") {
             val imageSource = BuildImage(Paths.get("/some-image-dir"))
-            val container = Container(containerName, imageSource, setupCommands = listOf(Command.parse("a"), Command.parse("b"), Command.parse("c"), Command.parse("d")))
+            val setupCommands = listOf("a", "b", "c", "d").map { SetupCommand(Command.parse(it)) }
+            val container = Container(containerName, imageSource, setupCommands = setupCommands)
             val otherImageSource = BuildImage(Paths.get("/some-other-image-dir"))
 
             val line by createForEachTest { ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC), false) }
@@ -390,8 +392,10 @@ object ContainerStartupProgressLineSpec : Spek({
             }
 
             describe("after receiving a 'running setup command' notification") {
+                val setupCommand = SetupCommand(Command.parse("some command"))
+
                 on("that notification being for this line's container") {
-                    val event = RunningSetupCommandEvent(container, Command.parse("some command"), 2)
+                    val event = RunningSetupCommandEvent(container, setupCommand, 2)
 
                     beforeEachTest {
                         line.onEventPosted(ContainerStartedEvent(container))
@@ -407,7 +411,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val event = RunningSetupCommandEvent(otherContainer, Command.parse("some command"), 2)
+                    val event = RunningSetupCommandEvent(otherContainer, setupCommand, 2)
 
                     beforeEachTest {
                         line.onEventPosted(ContainerStartedEvent(otherContainer))
@@ -430,7 +434,7 @@ object ContainerStartupProgressLineSpec : Spek({
                     beforeEachTest {
                         line.onEventPosted(ContainerStartedEvent(container))
                         line.onEventPosted(ContainerBecameHealthyEvent(container))
-                        line.onEventPosted(RunningSetupCommandEvent(container, Command.parse("some command"), 2))
+                        line.onEventPosted(RunningSetupCommandEvent(container, SetupCommand(Command.parse("some command")), 2))
                         line.onEventPosted(event)
                     }
 

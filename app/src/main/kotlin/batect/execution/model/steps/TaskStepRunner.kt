@@ -231,12 +231,12 @@ class TaskStepRunner(
                 eventSink.postEvent(RunningSetupCommandEvent(step.container, command, index))
 
                 val result = dockerClient.exec.run(
-                    command,
+                    command.command,
                     step.dockerContainer,
                     environmentVariables,
                     step.container.privileged,
                     userAndGroup,
-                    step.container.workingDirectory,
+                    command.workingDirectory ?: step.container.workingDirectory,
                     cancellationContext
                 )
 

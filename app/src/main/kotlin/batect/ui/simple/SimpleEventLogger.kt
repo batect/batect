@@ -19,6 +19,7 @@ package batect.ui.simple
 import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
+import batect.config.SetupCommand
 import batect.execution.RunOptions
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerStartedEvent
@@ -150,12 +151,12 @@ class SimpleEventLogger(
         console.println(Text.white(Text.bold(container.name) + Text(" has become healthy.")))
     }
 
-    private fun logRunningSetupCommand(container: Container, command: Command, index: Int) {
+    private fun logRunningSetupCommand(container: Container, command: SetupCommand, index: Int) {
         if (container == taskContainer) {
             return
         }
 
-        console.println(Text.white(Text("Running setup command ") + Text.bold(command.originalCommand) + Text(" (${index + 1} of ${container.setupCommands.size}) in ") + Text.bold(container.name) + Text("...")))
+        console.println(Text.white(Text("Running setup command ") + Text.bold(command.command.originalCommand) + Text(" (${index + 1} of ${container.setupCommands.size}) in ") + Text.bold(container.name) + Text("...")))
     }
 
     private fun logSetupCommandsCompleted(container: Container) {

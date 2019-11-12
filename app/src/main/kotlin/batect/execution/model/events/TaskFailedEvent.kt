@@ -19,7 +19,7 @@ package batect.execution.model.events
 import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
-import batect.os.Command
+import batect.config.SetupCommand
 import java.nio.file.Path
 
 sealed class TaskFailedEvent : TaskEvent()
@@ -76,10 +76,10 @@ object UserInterruptedExecutionEvent : TaskFailedEvent() {
     override fun toString() = this::class.simpleName!!
 }
 
-data class SetupCommandExecutionErrorEvent(val container: Container, val command: Command, val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', command: '${command.originalCommand}', message: '$message')"
+data class SetupCommandExecutionErrorEvent(val container: Container, val command: SetupCommand, val message: String) : TaskFailedEvent() {
+    override fun toString() = "${this::class.simpleName}(container: '${container.name}', command: $command, message: '$message')"
 }
 
-data class SetupCommandFailedEvent(val container: Container, val command: Command, val exitCode: Int, val output: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', command: '${command.originalCommand}', exit code: $exitCode, output: '$output')"
+data class SetupCommandFailedEvent(val container: Container, val command: SetupCommand, val exitCode: Int, val output: String) : TaskFailedEvent() {
+    override fun toString() = "${this::class.simpleName}(container: '${container.name}', command: $command, exit code: $exitCode, output: '$output')"
 }

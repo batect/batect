@@ -19,6 +19,7 @@ package batect.ui.fancy
 import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
+import batect.config.SetupCommand
 import batect.docker.client.DockerImageBuildProgress
 import batect.docker.pull.DockerImageProgress
 import batect.execution.model.events.ContainerBecameHealthyEvent
@@ -93,7 +94,7 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     private fun descriptionWhenRunningSetupCommand(): TextRun {
         val state = setupCommandState as SetupCommandState.Running
 
-        return Text("running setup command ") + Text.bold(state.command.originalCommand) + Text(" (${state.index + 1} of ${container.setupCommands.size})...")
+        return Text("running setup command ") + Text.bold(state.command.command.originalCommand) + Text(" (${state.index + 1} of ${container.setupCommands.size})...")
     }
 
     private fun descriptionWhenWaitingToBuildOrPull(): TextRun {
@@ -264,7 +265,7 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     }
 
     private sealed class SetupCommandState {
-        data class Running(val command: Command, val index: Int) : SetupCommandState()
+        data class Running(val command: SetupCommand, val index: Int) : SetupCommandState()
         object None : SetupCommandState()
         object NotStarted : SetupCommandState()
     }

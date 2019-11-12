@@ -137,7 +137,7 @@ class InterleavedEventLogger(
     }
 
     private fun onRunningSetupCommandEvent(event: RunningSetupCommandEvent) {
-        output.printForContainer(event.container, Text.white(Text("Running setup command ") + Text.bold(event.command.originalCommand) + Text(" (${event.commandIndex + 1} of ${event.container.setupCommands.size})...")))
+        output.printForContainer(event.container, Text.white(Text("Running setup command ") + Text.bold(event.command.command.originalCommand) + Text(" (${event.commandIndex + 1} of ${event.container.setupCommands.size})...")))
     }
 
     private fun onSetupCommandsCompletedEvent(event: SetupCommandsCompletedEvent) {

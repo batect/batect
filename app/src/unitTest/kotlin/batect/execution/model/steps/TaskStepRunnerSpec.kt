@@ -22,6 +22,7 @@ import batect.config.HealthCheckConfig
 import batect.config.LiteralValue
 import batect.config.PullImage
 import batect.config.ReferenceValue
+import batect.config.SetupCommand
 import batect.config.VolumeMount
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerHealthCheckException
@@ -754,9 +755,10 @@ object TaskStepRunnerSpec : Spek({
                     }
                 }
 
-                given("the container has a single setup command") {
+                given("the container has a single setup command with no specific working directory") {
                     val command = Command.parse("./do the-thing")
-                    val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = listOf(command), workingDirectory = "/some/work/dir")
+                    val setupCommand = SetupCommand(command)
+                    val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = listOf(setupCommand), workingDirectory = "/some/work/dir")
                     val config = ContainerRuntimeConfiguration(null, null, null, emptyMap(), emptySet())
                     val allContainersInNetwork = setOf(container)
                     val dockerContainer = DockerContainer("some-container-id")
@@ -776,10 +778,10 @@ object TaskStepRunnerSpec : Spek({
                         beforeEachTest { runner.run(step, stepRunContext) }
 
                         it("emits a 'running setup command' event") {
-                            verify(eventSink).postEvent(RunningSetupCommandEvent(container, command, 0))
+                            verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand, 0))
                         }
 
-                        it("runs the command") {
+                        it("runs the command with the working directory specified on the container") {
                             verify(execClient).run(
                                 command,
                                 dockerContainer,
@@ -822,11 +824,11 @@ object TaskStepRunnerSpec : Spek({
                         beforeEachTest { runner.run(step, stepRunContext) }
 
                         it("emits a 'running setup command' event") {
-                            verify(eventSink).postEvent(RunningSetupCommandEvent(container, command, 0))
+                            verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand, 0))
                         }
 
                         it("emits a 'setup command failed' event") {
-                            verify(eventSink).postEvent(SetupCommandFailedEvent(container, command, 123, "Some output from the command"))
+                            verify(eventSink).postEvent(SetupCommandFailedEvent(container, setupCommand, 123, "Some output from the command"))
                         }
 
                         it("does not emit a 'setup commands completed' event") {
@@ -846,11 +848,11 @@ object TaskStepRunnerSpec : Spek({
                         beforeEachTest { runner.run(step, stepRunContext) }
 
                         it("emits a 'running setup command' event") {
-                            verify(eventSink).postEvent(RunningSetupCommandEvent(container, command, 0))
+                            verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand, 0))
                         }
 
                         it("emits a 'setup command execution error' event") {
-                            verify(eventSink).postEvent(SetupCommandExecutionErrorEvent(container, command, "Something went wrong."))
+                            verify(eventSink).postEvent(SetupCommandExecutionErrorEvent(container, setupCommand, "Something went wrong."))
                         }
 
                         it("does not emit a 'setup commands completed' event") {
@@ -863,11 +865,50 @@ object TaskStepRunnerSpec : Spek({
                     }
                 }
 
+                given("the container has a single setup command with a specific working directory") {
+                    val command = Command.parse("./do the-thing")
+                    val setupCommand = SetupCommand(command, "/some/other/command/work/dir")
+                    val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = listOf(setupCommand), workingDirectory = "/some/container/work/dir")
+                    val config = ContainerRuntimeConfiguration(null, null, null, emptyMap(), emptySet())
+                    val allContainersInNetwork = setOf(container)
+                    val dockerContainer = DockerContainer("some-container-id")
+                    val step = RunContainerSetupCommandsStep(container, config, allContainersInNetwork, dockerContainer)
+
+                    val environmentVariablesToUse = mapOf("SOME_VAR" to "some value")
+
+                    beforeEachTest {
+                        whenever(environmentVariableProvider.environmentVariablesFor(container, config, runOptions.propagateProxyEnvironmentVariables, null, allContainersInNetwork)).doReturn(environmentVariablesToUse)
+                    }
+
+                    given("the command succeeds") {
+                        beforeEachTest {
+                            whenever(execClient.run(any(), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(0, "Some output from the command"))
+                        }
+
+                        beforeEachTest { runner.run(step, stepRunContext) }
+
+                        it("runs the command with the working directory specified on the setup command") {
+                            verify(execClient).run(
+                                command,
+                                dockerContainer,
+                                environmentVariablesToUse,
+                                container.privileged,
+                                userAndGroup,
+                                setupCommand.workingDirectory,
+                                cancellationContext
+                            )
+                        }
+                    }
+                }
+
                 given("the container has multiple setup commands") {
                     val command1 = Command.parse("./do the-first-thing")
                     val command2 = Command.parse("./do the-second-thing")
                     val command3 = Command.parse("./do the-third-thing")
-                    val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = listOf(command1, command2, command3), workingDirectory = "/some/work/dir")
+                    val setupCommand1 = SetupCommand(command1)
+                    val setupCommand2 = SetupCommand(command2)
+                    val setupCommand3 = SetupCommand(command3)
+                    val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = listOf(setupCommand1, setupCommand2, setupCommand3), workingDirectory = "/some/work/dir")
                     val config = ContainerRuntimeConfiguration(null, null, null, emptyMap(), emptySet())
                     val allContainersInNetwork = setOf(container)
                     val dockerContainer = DockerContainer("some-container-id")
@@ -888,11 +929,11 @@ object TaskStepRunnerSpec : Spek({
 
                         it("emits a 'running setup command' event before running each command in the order provided") {
                             inOrder(eventSink, execClient) {
-                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, command1, 0))
+                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand1, 0))
                                 verify(execClient).run(command1, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, cancellationContext)
-                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, command2, 1))
+                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand2, 1))
                                 verify(execClient).run(command2, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, cancellationContext)
-                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, command3, 2))
+                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand3, 2))
                                 verify(execClient).run(command3, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, cancellationContext)
                             }
                         }
@@ -920,15 +961,15 @@ object TaskStepRunnerSpec : Spek({
                             beforeEachTest { runner.run(step, stepRunContext) }
 
                             it("emits a 'running setup command' event for the commands before the failing command") {
-                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, command1, 0))
+                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand1, 0))
                             }
 
                             it("emits a 'running setup command' event for the failing command") {
-                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, command2, 1))
+                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand2, 1))
                             }
 
                             it("emits a 'setup command failed' event for the failing command") {
-                                verify(eventSink).postEvent(SetupCommandFailedEvent(container, command2, 123, "Some output from the failing command"))
+                                verify(eventSink).postEvent(SetupCommandFailedEvent(container, setupCommand2, 123, "Some output from the failing command"))
                             }
 
                             it("does not emit a 'setup commands completed' event") {
@@ -952,15 +993,15 @@ object TaskStepRunnerSpec : Spek({
                             beforeEachTest { runner.run(step, stepRunContext) }
 
                             it("emits a 'running setup command' event for the commands before the failing command") {
-                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, command1, 0))
+                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand1, 0))
                             }
 
                             it("emits a 'running setup command' event for the failing command") {
-                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, command2, 1))
+                                verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand2, 1))
                             }
 
                             it("emits a 'setup command execution error' event") {
-                                verify(eventSink).postEvent(SetupCommandExecutionErrorEvent(container, command2, "Something went wrong."))
+                                verify(eventSink).postEvent(SetupCommandExecutionErrorEvent(container, setupCommand2, "Something went wrong."))
                             }
 
                             it("does not emit a 'setup commands completed' event") {

@@ -112,6 +112,10 @@
         "additional_hostnames": {
           "description": "Hostnames to associate with this container in addition to the default hostname.",
           "$ref": "#/definitions/additionalHostnamesList"
+        },
+        "setup_commands": {
+          "description": "Commands to run after the container reports as healthy but before dependency containers start.",
+          "$ref": "#/definitions/setupCommandsList"
         }
       },
       "oneOf": [
@@ -425,6 +429,28 @@
               "ALL"
             ]
           }
+        ]
+      }
+    },
+    "setupCommandsList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "Command to execute",
+            "minLength": 1
+          },
+          "working_directory": {
+            "type": "string",
+            "description": "Working directory to start the command in (defaults to container working directory if not set)",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "command"
         ]
       }
     }

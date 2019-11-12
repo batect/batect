@@ -228,6 +228,10 @@ object ContainerSpec : Spek({
                   - KILL
                 additional_hostnames:
                   - extra-name
+                setup_commands:
+                  - command: /do/the/thing.sh
+                  - command: /some/other/thing.sh
+                    working_directory: /some/dir
             """.trimIndent()
 
             on("loading the configuration from the config file") {
@@ -265,6 +269,10 @@ object ContainerSpec : Spek({
                     assertThat(result.capabilitiesToAdd, equalTo(setOf(Capability.NET_ADMIN)))
                     assertThat(result.capabilitiesToDrop, equalTo(setOf(Capability.KILL)))
                     assertThat(result.additionalHostnames, equalTo(setOf("extra-name")))
+                    assertThat(result.setupCommands, equalTo(listOf(
+                        SetupCommand(Command.parse("/do/the/thing.sh")),
+                        SetupCommand(Command.parse("/some/other/thing.sh"), "/some/dir")
+                    )))
                 }
             }
         }

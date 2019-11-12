@@ -115,6 +115,10 @@ containers:
       - ALL
     additional_hostnames:
       - my-other-hostname
+    setup_commands:
+      - command: do-the-thing
+        working_directory: /some/dir
+      - command: do-the-other-thing
 
   with-build-dir:
     build_directory: test

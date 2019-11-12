@@ -105,7 +105,8 @@ object ConfigurationSpec : Spek({
                     true,
                     setOf(Capability.AUDIT_CONTROL),
                     setOf(Capability.BLOCK_SUSPEND),
-                    setOf("other-name")
+                    setOf("other-name"),
+                    listOf(SetupCommand(Command.parse("some-command"), "/some/dir"))
                 )
 
                 val configuration = Configuration("the-project", TaskMap(), ContainerMap(container))
@@ -150,7 +151,10 @@ object ConfigurationSpec : Spek({
                                     "enable_init_process": true,
                                     "capabilities_to_add": ["AUDIT_CONTROL"],
                                     "capabilities_to_drop": ["BLOCK_SUSPEND"],
-                                    "additional_hostnames": ["other-name"]
+                                    "additional_hostnames": ["other-name"],
+                                    "setup_commands": [
+                                        { "command": ["some-command"], "working_directory": "/some/dir" }
+                                    ]
                                 }
                             }
                         }
@@ -210,7 +214,8 @@ object ConfigurationSpec : Spek({
                                     "enable_init_process": false,
                                     "capabilities_to_add": [],
                                     "capabilities_to_drop": [],
-                                    "additional_hostnames": []
+                                    "additional_hostnames": [],
+                                    "setup_commands": []
                                 }
                             }
                         }

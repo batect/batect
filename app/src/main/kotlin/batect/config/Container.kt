@@ -37,6 +37,7 @@ import kotlinx.serialization.decode
 import kotlinx.serialization.internal.SerialClassDescImpl
 import kotlinx.serialization.internal.StringSerializer
 import kotlinx.serialization.internal.nullable
+import kotlinx.serialization.list
 import kotlinx.serialization.set
 import java.nio.file.Path
 
@@ -80,6 +81,7 @@ data class Container(
         private const val capabilitiesToAddFieldName = "capabilities_to_add"
         private const val capabilitiesToDropFieldName = "capabilities_to_drop"
         private const val additionalHostnamesFieldName = "additional_hostnames"
+        private const val setupCommandsFieldName = "setup_commands"
 
         override val descriptor: SerialDescriptor = object : SerialClassDescImpl("ContainerFromFile") {
             init {
@@ -101,6 +103,7 @@ data class Container(
                 addElement(capabilitiesToAddFieldName, isOptional = true)
                 addElement(capabilitiesToDropFieldName, isOptional = true)
                 addElement(additionalHostnamesFieldName, isOptional = true)
+                addElement(setupCommandsFieldName, isOptional = true)
             }
         }
 
@@ -122,6 +125,7 @@ data class Container(
         private val capabilitiesToAddFieldIndex = descriptor.getElementIndex(capabilitiesToAddFieldName)
         private val capabilitiesToDropFieldIndex = descriptor.getElementIndex(capabilitiesToDropFieldName)
         private val additionalHostnamesFieldIndex = descriptor.getElementIndex(additionalHostnamesFieldName)
+        private val setupCommandsFieldIndex = descriptor.getElementIndex(setupCommandsFieldName)
 
         override fun deserialize(decoder: Decoder): Container {
             val input = decoder.beginStructure(descriptor) as YamlInput
@@ -148,6 +152,7 @@ data class Container(
             var capabilitiesToAdd = emptySet<Capability>()
             var capabilitiesToDrop = emptySet<Capability>()
             var additionalHostnames = emptySet<String>()
+            var setupCommands = emptyList<SetupCommand>()
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
@@ -170,6 +175,7 @@ data class Container(
                     capabilitiesToAddFieldIndex -> capabilitiesToAdd = input.decode(Capability.serializer.set)
                     capabilitiesToDropFieldIndex -> capabilitiesToDrop = input.decode(Capability.serializer.set)
                     additionalHostnamesFieldIndex -> additionalHostnames = input.decode(StringSerializer.set)
+                    setupCommandsFieldIndex -> setupCommands = input.decode(SetupCommand.serializer().list)
 
                     else -> throw SerializationException("Unknown index $i")
                 }
@@ -191,7 +197,8 @@ data class Container(
                 enableInitProcess,
                 capabilitiesToAdd,
                 capabilitiesToDrop,
-                additionalHostnames
+                additionalHostnames,
+                setupCommands
             )
         }
 
@@ -270,6 +277,7 @@ data class Container(
             output.encodeSerializableElement(descriptor, capabilitiesToAddFieldIndex, Capability.serializer.set, obj.capabilitiesToAdd)
             output.encodeSerializableElement(descriptor, capabilitiesToDropFieldIndex, Capability.serializer.set, obj.capabilitiesToDrop)
             output.encodeSerializableElement(descriptor, additionalHostnamesFieldIndex, StringSerializer.set, obj.additionalHostnames)
+            output.encodeSerializableElement(descriptor, setupCommandsFieldIndex, SetupCommand.serializer().list, obj.setupCommands)
 
             output.endStructure(descriptor)
         }

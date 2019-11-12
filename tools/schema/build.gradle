@@ -87,8 +87,8 @@ void printReport(ProcessingReport report, File sourceFile) {
     }
 }
 
-task validateJourneyTestsAgainstSchema {
-    description 'Checks that all journey test configuration files are acceptable according to the schema.'
+task validateSampleFilesAgainstSchema {
+    description 'Checks that all sample configuration files are acceptable according to the schema.'
     group 'Verification'
 
     def schemaFile = new File("$projectDir/configSchema.json")
@@ -121,5 +121,5 @@ task check {
     description 'Runs all checks.'
     group 'Verification'
 
-    dependsOn validateJourneyTestsAgainstSchema
+    dependsOn validateSampleFilesAgainstSchema
 }

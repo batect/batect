@@ -34,6 +34,7 @@ import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
+import java.nio.channels.AsynchronousCloseException
 import java.nio.channels.SelectionKey
 import java.nio.file.Files
 import java.nio.file.Path
@@ -139,20 +140,24 @@ private fun createSocketServer(socketPath: Path): UnixServerSocketChannel {
     channel.register(selector, SelectionKey.OP_ACCEPT)
 
     thread(isDaemon = true, name = ::createSocketServer.name) {
-        while (selector.isOpen()) {
-            selector.select()
+        try {
+            while (selector.isOpen()) {
+                selector.select()
 
-            val iterator = selector.selectedKeys().iterator()
+                val iterator = selector.selectedKeys().iterator()
 
-            while (iterator.hasNext()) {
-                val key = iterator.next()
-                iterator.remove()
+                while (iterator.hasNext()) {
+                    val key = iterator.next()
+                    iterator.remove()
 
-                if (key.isAcceptable()) {
-                    val client = (key.channel() as UnixServerSocketChannel).accept()
-                    client.write(ByteBuffer.wrap("Hello from the other side\n".toByteArray()))
+                    if (key.isAcceptable()) {
+                        val client = (key.channel() as UnixServerSocketChannel).accept()
+                        client.write(ByteBuffer.wrap("Hello from the other side\n".toByteArray()))
+                    }
                 }
             }
+        } catch (e: AsynchronousCloseException) {
+            // Ignore - we closed the server from the test thread.
         }
     }
 

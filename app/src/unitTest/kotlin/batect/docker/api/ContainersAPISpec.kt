@@ -98,7 +98,7 @@ object ContainersAPISpec : Spek({
         val errorMessageWithCorrectLineEndings = "Something went wrong.SYSTEM_LINE_SEPARATORMore details on next line."
 
         describe("creating a container") {
-            val expectedUrl = "$dockerBaseUrl/v1.30/containers/create"
+            val expectedUrl = "$dockerBaseUrl/v1.35/containers/create"
             val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
             val longTimeoutClientBuilder by createForEachTest {
                 mock<OkHttpClient.Builder> { mock ->
@@ -155,7 +155,7 @@ object ContainersAPISpec : Spek({
         describe("starting a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
-                val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/start"
+                val expectedUrl = "$dockerBaseUrl/v1.35/containers/the-container-id/start"
                 val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
                 val longTimeoutClientBuilder by createForEachTest {
                     mock<OkHttpClient.Builder> { mock ->
@@ -194,7 +194,7 @@ object ContainersAPISpec : Spek({
         describe("inspecting a container") {
             given("an existing container") {
                 val container = DockerContainer("some-container")
-                val expectedUrl = "$dockerBaseUrl/v1.30/containers/some-container/json"
+                val expectedUrl = "$dockerBaseUrl/v1.35/containers/some-container/json"
 
                 given("the container has previous health check results") {
                     val response = """
@@ -296,7 +296,7 @@ object ContainersAPISpec : Spek({
         describe("stopping a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
-                val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/stop?timeout=10"
+                val expectedUrl = "$dockerBaseUrl/v1.35/containers/the-container-id/stop?timeout=10"
                 val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
                 val longTimeoutClientBuilder by createForEachTest {
                     mock<OkHttpClient.Builder> { mock ->
@@ -344,7 +344,7 @@ object ContainersAPISpec : Spek({
         describe("removing a container") {
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
-                val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id?v=true&force=true"
+                val expectedUrl = "$dockerBaseUrl/v1.35/containers/the-container-id?v=true&force=true"
                 val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
                 val longTimeoutClientBuilder by createForEachTest {
                     mock<OkHttpClient.Builder> { mock ->
@@ -388,7 +388,7 @@ object ContainersAPISpec : Spek({
 
                 val expectedUrl = hasScheme("http") and
                     hasHost(dockerHost) and
-                    hasPath("/v1.30/events") and
+                    hasPath("/v1.35/events") and
                     hasQueryParameter("since", "0") and
                     hasQueryParameter("filters", """{"event":["die","health_status"],"container":["the-container-id"]}""")
 
@@ -457,7 +457,7 @@ object ContainersAPISpec : Spek({
                 val container = DockerContainer("the-container-id")
                 val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
-                val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/wait?condition=next-exit"
+                val expectedUrl = "$dockerBaseUrl/v1.35/containers/the-container-id/wait?condition=next-exit"
 
                 val clientWithNoTimeout by createForEachTest { mock<OkHttpClient>() }
                 val noTimeoutClientBuilder by createForEachTest {
@@ -562,7 +562,7 @@ object ContainersAPISpec : Spek({
                     .build()
 
                 describe("attaching to output") {
-                    val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/attach?logs=true&stream=true&stdout=true&stderr=true"
+                    val expectedUrl = "$dockerBaseUrl/v1.35/containers/the-container-id/attach?logs=true&stream=true&stdout=true&stderr=true"
 
                     on("the attach succeeding") {
                         val response = mock<Response> {
@@ -600,7 +600,7 @@ object ContainersAPISpec : Spek({
                 }
 
                 describe("attaching to stdin") {
-                    val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/attach?logs=true&stream=true&stdin=true"
+                    val expectedUrl = "$dockerBaseUrl/v1.35/containers/the-container-id/attach?logs=true&stream=true&stdin=true"
 
                     on("the attach succeeding") {
                         val response = mock<Response> {
@@ -643,7 +643,7 @@ object ContainersAPISpec : Spek({
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
                 val signal = Signal.SIGINT
-                val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/kill?signal=SIGINT"
+                val expectedUrl = "$dockerBaseUrl/v1.35/containers/the-container-id/kill?signal=SIGINT"
 
                 on("the API call succeeding") {
                     val call by createForEachTest { httpClient.mockPost(expectedUrl, "", 204) }
@@ -668,7 +668,7 @@ object ContainersAPISpec : Spek({
             given("a Docker container") {
                 val container = DockerContainer("the-container-id")
                 val dimensions = Dimensions(123, 456)
-                val expectedUrl = "$dockerBaseUrl/v1.30/containers/the-container-id/resize?h=123&w=456"
+                val expectedUrl = "$dockerBaseUrl/v1.35/containers/the-container-id/resize?h=123&w=456"
 
                 on("the API call succeeding") {
                     val call by createForEachTest { httpClient.mockPost(expectedUrl, "", 200) }

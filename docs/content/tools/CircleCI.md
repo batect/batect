@@ -7,7 +7,7 @@ CircleCI's recent machine executor images include everything batect requires, so
 with CircleCI is to configure it to use one of those images.
 
 A list of available images is published in the CircleCI documentation [here](https://circleci.com/docs/2.0/configuration-reference/#machine).
-batect requires an image with a compatible version of Docker - currently version 17.06 or newer.
+batect requires an image with a compatible version of Docker - currently version 17.12 or newer.
 
 Adding the following to your `.circleci/config.yml` file instructs CircleCI to use a machine executor with the 201808-01 image,
 which contains Docker 18.06:

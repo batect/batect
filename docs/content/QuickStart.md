@@ -13,7 +13,7 @@ automatically pull down the correct version of batect for your operating system.
 
 Note that a JVM (version 8 or above) must be installed to use batect. (This requirement will be removed in a future release.)
 
-batect is compatible with Docker 17.06 and higher.
+batect is compatible with Docker 17.12 and higher.
 
 Now you're ready to configure batect for your project - check out the [getting started tutorial](GettingStarted.md), dive into the
 [configuration file reference](config/Overview.md), or take a look at one of the [sample projects](SampleProjects.md).

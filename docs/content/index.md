@@ -23,7 +23,7 @@ The main benefits of batect are:
 
 ## What are batect's system requirements?
 
-batect requires Docker 17.06 or newer, Java 8 or newer (although this requirement will be removed before v1.0), and:
+batect requires Docker 17.12 or newer, Java 8 or newer (although this requirement will be removed before v1.0), and:
 
 * On Linux and OS X: Bash and `curl`
 * On Windows: Windows 10

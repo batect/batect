@@ -61,18 +61,18 @@ jobs:
           - build_workspace
 
     - stage: Integration and journey test
-      name: Integration test against Docker 17.06
+      name: Integration test against Docker 17.12
       dist: trusty
-      before_install: ./travis/install_docker.sh docker-ce=17.06.0~ce-0~ubuntu
+      before_install: ./travis/install_docker.sh docker-ce=17.12.0~ce-0~ubuntu
       script: ./gradlew integrationTest
       workspaces:
         use:
           - build_workspace
 
     - stage: Integration and journey test
-      name: Journey test against Docker 17.06
+      name: Journey test against Docker 17.12
       dist: trusty
-      before_install: ./travis/install_docker.sh docker-ce=17.06.0~ce-0~ubuntu
+      before_install: ./travis/install_docker.sh docker-ce=17.12.0~ce-0~ubuntu
       script: ./gradlew journeyTest
       workspaces:
         use:

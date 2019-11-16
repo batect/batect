@@ -66,7 +66,7 @@ object DockerSystemInfoClientSpec : Spek({
                 given("getting daemon version info succeeds") {
                     given("the daemon reports an API version that is greater than required") {
                         beforeEachTest {
-                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.31", "xxx", "xxx"))
+                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.36", "xxx", "xxx"))
                         }
 
                         it("returns success") {
@@ -76,7 +76,7 @@ object DockerSystemInfoClientSpec : Spek({
 
                     given("the daemon reports an API version that is exactly the required version") {
                         beforeEachTest {
-                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.30", "xxx", "xxx"))
+                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.35", "xxx", "xxx"))
                         }
 
                         it("returns success") {
@@ -86,11 +86,11 @@ object DockerSystemInfoClientSpec : Spek({
 
                     given("the daemon reports an API version that is lower than required") {
                         beforeEachTest {
-                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.29", "xxx", "xxx"))
+                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.34", "xxx", "xxx"))
                         }
 
                         it("returns failure") {
-                            assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Failed("batect requires Docker 17.06 or later, but version 1.2.3 is installed.")))
+                            assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Failed("batect requires Docker 17.12 or later, but version 1.2.3 is installed.")))
                         }
                     }
                 }

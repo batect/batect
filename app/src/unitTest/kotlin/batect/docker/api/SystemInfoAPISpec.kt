@@ -62,7 +62,7 @@ object SystemInfoAPISpec : Spek({
         val errorMessageWithCorrectLineEndings = "Something went wrong.SYSTEM_LINE_SEPARATORMore details on next line."
 
         describe("getting server version information") {
-            val expectedUrl = "$dockerBaseUrl/v1.30/version"
+            val expectedUrl = "$dockerBaseUrl/v1.35/version"
 
             on("the Docker version command invocation succeeding") {
                 beforeEachTest {

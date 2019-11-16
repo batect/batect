@@ -1,0 +1,19 @@
+project_name: dependency-container-with-setup-command-test
+
+containers:
+  server:
+    image: nginx:1.17.5
+    setup_commands:
+      - command: sh -c "echo 'This is some output from the task' > message.txt"
+        working_directory: /usr/share/nginx/html
+
+  task-env:
+    build_directory: task-env
+    dependencies:
+      - server
+
+tasks:
+  the-task:
+    run:
+      container: task-env
+      command: sh -c "curl --fail --show-error --silent http://server/message.txt && exit 123"

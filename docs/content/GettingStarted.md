@@ -47,7 +47,6 @@ tests. This example is for a Java project that uses Gradle, and assumes that you
 
     There's a bit going on here, so let's break it down:
 
-    * `project_name`: the name of your project.
     * `containers`: here we define the different containers that your application needs.
       At the moment, we just have our one build environment container, `build-env`.
          * We tell batect which Docker image to use (`image`).

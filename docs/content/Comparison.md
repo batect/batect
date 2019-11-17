@@ -32,8 +32,8 @@ for this purpose has a number of drawbacks.
 In particular, Docker Compose is geared towards describing an application and its dependencies and starting this whole stack.
 Its CLI is designed with this purpose in mind, making it frustrating to use day-to-day as a development tool and necessitating
 the use of a higher-level script to automate its usage. Furthermore, Docker Compose has no concept of tasks, further cementing
-the need to use a higher-level script to provide the ability to execute different commands, run prerequisite tasks and provide
-the discoverability that comes with a [go script](https://www.thoughtworks.com/insights/blog/praise-go-script-part-i).
+the need to use a higher-level script to provide the ability to execute different commands, run prerequisite tasks or setup commands
+and provide the discoverability that comes with a [go script](https://www.thoughtworks.com/insights/blog/praise-go-script-part-i).
 
 Docker Compose is also significantly slower than batect, as it does not parallelise all operations - in one test, batect was 17%
 faster than Docker Compose. It also does not elegantly support pulling together a set of containers in different configurations

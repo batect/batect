@@ -54,6 +54,8 @@ nav:
 
   - CLI reference: "CLIReference.md"
 
+  - Task lifecycle: "TaskLifecycle.md"
+
   - Language and tool-specific information:
     - CircleCI: "tools/CircleCI.md"
     - Docker: "tools/Docker.md"

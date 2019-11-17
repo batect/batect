@@ -234,6 +234,30 @@ by that user, so this is less of an issue. However, for consistency, the same co
 
 See [this page](../tips/BuildArtifactsOwnedByRoot.md) for more information on the effects of this option and why it is necessary.
 
+## `setup_commands`
+List of commands to run inside the container after it has become healthy but before dependent containers start.
+
+* `command` The command to run. **Required.**
+
+    This command is run in a similar way to the container's [`command`](#command), so the same limitations apply to using shell syntax such as `&&`.
+
+* `working_directory` The working directory to use for the command.
+
+    If no working directory is provided, [`working_directory`](#working_directory) is used if it is set, otherwise the image's default working directory is used.
+    If this container is used as the task container and the task overrides the default working directory, that override is ignored when running setup commands.
+
+The command will inherit the same environment variables as the container's `command` (including any specified on the task if this is the task container), runs as the
+same [user and group](#run_as_current_user) as the container's `command` and inherits the same settings for [privileged status](#privileged) and
+[capabilities](#capabilities_to_add-and-capabilities_to_drop).
+
+See [the task lifecycle](../TaskLifecycle.md) for more information on the effects of this option.
+
+!!! tip
+    It is recommended that you try to include any setup work in your image's Dockerfile wherever possible (and not use setup commands), as setup commands must be
+    run every time the container starts whereas commands included in your image's Dockerfile only run when the image needs to be built.
+
+Available since v0.38.
+
 ## `privileged`
 Set to `true` to run the container in [privileged mode](https://docs.docker.com/engine/reference/commandline/run/#full-container-capabilities---privileged).
 
@@ -405,7 +429,7 @@ containers:
 Running the container `build-env` will launch a container that uses the `ruby:2.4.3` image with [run as current user mode](../tips/BuildArtifactsOwnedByRoot.md)
 enabled.
 
-### Container that runs with a Docker's default init process enabled
+### Container that runs with Docker's default init process enabled
 ```yaml
 containers:
   build-env:
@@ -418,3 +442,22 @@ containers:
 ```
 
 Running the container `build-env` will launch a container that uses the `node:10.10.0-alpine` image with Docker's default init process as PID 1.
+
+### Container that runs a setup command after starting
+```yaml
+containers:
+  database:
+    build_directory: .batect/database
+    setup_commands:
+      - command: ./apply-migrations.sh
+
+  application:
+    build_directory: .batect/application
+    dependencies:
+      - database
+```
+
+Running the container `application` will first build the images for both the `database` and `application` containers.
+
+Once the image for `database` is ready, `database` will start and launch the command specified in the Dockerfile, then batect will wait for the container to report as healthy.
+Once `database` reports as healthy, it will run `./apply-migrations.sh` and wait for it to finish before then starting `application`.

@@ -46,7 +46,7 @@ repositories {
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.13.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.14.0"
     implementation 'org.kodein.di:kodein-di-core-jvm:6.4.1'
     implementation 'org.kodein.di:kodein-di-generic-jvm:6.4.1'
     implementation 'com.squareup.okio:okio:2.4.1'

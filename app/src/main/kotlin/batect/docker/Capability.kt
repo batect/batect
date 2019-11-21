@@ -16,9 +16,10 @@
 
 package batect.docker
 
-import kotlinx.serialization.internal.EnumSerializer
+import kotlinx.serialization.Serializable
 
 // This list is based on http://man7.org/linux/man-pages/man7/capabilities.7.html.
+@Serializable
 enum class Capability {
     AUDIT_CONTROL,
     AUDIT_READ,
@@ -59,8 +60,4 @@ enum class Capability {
     SYSLOG,
     WAKE_ALARM,
     ALL;
-
-    companion object {
-        val serializer = EnumSerializer(Capability::class)
-    }
 }

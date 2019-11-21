@@ -17,8 +17,9 @@
 package batect.os
 
 import batect.logging.LogMessageBuilder
-import kotlinx.serialization.internal.EnumSerializer
+import kotlinx.serialization.Serializable
 
+@Serializable
 enum class OperatingSystem {
     Linux,
     Mac,
@@ -26,4 +27,4 @@ enum class OperatingSystem {
     Other
 }
 
-fun LogMessageBuilder.data(key: String, value: OperatingSystem) = this.data(key, value, EnumSerializer(OperatingSystem::class))
+fun LogMessageBuilder.data(key: String, value: OperatingSystem) = this.data(key, value, OperatingSystem.serializer())

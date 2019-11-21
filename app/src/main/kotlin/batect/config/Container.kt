@@ -172,8 +172,8 @@ data class Container(
                     runAsCurrentUserConfigFieldIndex -> runAsCurrentUserConfig = input.decode(RunAsCurrentUserConfig.serializer())
                     privilegedFieldIndex -> privileged = input.decodeBooleanElement(descriptor, i)
                     enableInitProcessFieldIndex -> enableInitProcess = input.decodeBooleanElement(descriptor, i)
-                    capabilitiesToAddFieldIndex -> capabilitiesToAdd = input.decode(Capability.serializer.set)
-                    capabilitiesToDropFieldIndex -> capabilitiesToDrop = input.decode(Capability.serializer.set)
+                    capabilitiesToAddFieldIndex -> capabilitiesToAdd = input.decode(Capability.serializer().set)
+                    capabilitiesToDropFieldIndex -> capabilitiesToDrop = input.decode(Capability.serializer().set)
                     additionalHostnamesFieldIndex -> additionalHostnames = input.decode(StringSerializer.set)
                     setupCommandsFieldIndex -> setupCommands = input.decode(SetupCommand.serializer().list)
 
@@ -274,8 +274,8 @@ data class Container(
             output.encodeSerializableElement(descriptor, runAsCurrentUserConfigFieldIndex, RunAsCurrentUserConfig.serializer(), obj.runAsCurrentUserConfig)
             output.encodeBooleanElement(descriptor, privilegedFieldIndex, obj.privileged)
             output.encodeBooleanElement(descriptor, enableInitProcessFieldIndex, obj.enableInitProcess)
-            output.encodeSerializableElement(descriptor, capabilitiesToAddFieldIndex, Capability.serializer.set, obj.capabilitiesToAdd)
-            output.encodeSerializableElement(descriptor, capabilitiesToDropFieldIndex, Capability.serializer.set, obj.capabilitiesToDrop)
+            output.encodeSerializableElement(descriptor, capabilitiesToAddFieldIndex, Capability.serializer().set, obj.capabilitiesToAdd)
+            output.encodeSerializableElement(descriptor, capabilitiesToDropFieldIndex, Capability.serializer().set, obj.capabilitiesToDrop)
             output.encodeSerializableElement(descriptor, additionalHostnamesFieldIndex, StringSerializer.set, obj.additionalHostnames)
             output.encodeSerializableElement(descriptor, setupCommandsFieldIndex, SetupCommand.serializer().list, obj.setupCommands)
 

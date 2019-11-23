@@ -32,6 +32,7 @@ jobs:
         create:
           name: build_workspace
           paths:
+            - .gradle/
             - build/
             - app/build/
             - app/src/main/kotlin/batect/VersionInfo.kt

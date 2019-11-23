@@ -46,7 +46,7 @@ jobs:
       name: Integration test against latest Docker
       dist: xenial
       before_install: ./travis/install_docker.sh
-      script: ./gradlew integrationTest
+      script: ./gradlew integrationTest --info
       workspaces:
         use:
           - build_workspace
@@ -55,7 +55,7 @@ jobs:
       name: Journey test against latest Docker
       dist: xenial
       before_install: ./travis/install_docker.sh
-      script: ./gradlew journeyTest
+      script: ./gradlew journeyTest --info
       workspaces:
         use:
           - build_workspace
@@ -64,7 +64,7 @@ jobs:
       name: Integration test against Docker 17.12
       dist: trusty
       before_install: ./travis/install_docker.sh docker-ce=17.12.1~ce-0~ubuntu
-      script: ./gradlew integrationTest
+      script: ./gradlew integrationTest --info
       workspaces:
         use:
           - build_workspace
@@ -73,7 +73,7 @@ jobs:
       name: Journey test against Docker 17.12
       dist: trusty
       before_install: ./travis/install_docker.sh docker-ce=17.12.1~ce-0~ubuntu
-      script: ./gradlew journeyTest
+      script: ./gradlew journeyTest --info
       workspaces:
         use:
           - build_workspace

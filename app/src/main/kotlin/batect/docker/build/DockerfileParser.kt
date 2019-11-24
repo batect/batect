@@ -17,19 +17,19 @@
 package batect.docker.build
 
 import batect.docker.ImageBuildFailedException
+import batect.utils.mapToSet
 import java.nio.file.Files
 import java.nio.file.Path
 
 class DockerfileParser {
-    fun extractBaseImageName(dockerfilePath: Path): String {
+    fun extractBaseImageNames(dockerfilePath: Path): Set<String> {
         val lines = Files.readAllLines(dockerfilePath)
+        val fromInstructions = lines.filter { it.startsWith("FROM") }
 
-        val fromInstruction = lines.firstOrNull { it.startsWith("FROM") }
-
-        if (fromInstruction == null) {
+        if (fromInstructions.isEmpty()) {
             throw ImageBuildFailedException("The Dockerfile '$dockerfilePath' is invalid: there is no FROM instruction.")
         }
 
-        return fromInstruction.substringAfter("FROM ")
+        return fromInstructions.mapToSet { it.substringAfter("FROM ").substringBefore(" AS") }
     }
 }

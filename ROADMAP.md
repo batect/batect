@@ -40,7 +40,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * allow `working_directory` and container side of volume mount to reference home directory (inside container)
 * allow container side of volume mount to use path of local directory (eg. mount current directory at same path inside container)
 * show build context upload progress when building image
-* support credentials for multi-stage image builds where each stage takes base image from different protected registry
 * some way to kill a misbehaving task (eg. one that is not responding to Ctrl+C)
 * support for BuildKit
 * shell tab completion for options (eg. `batect --h<tab>` completes to `batect --help`) - #116

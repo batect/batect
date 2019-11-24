@@ -47,9 +47,9 @@ object DockerfileParserSpec : Spek({
                 Files.createFile(path)
             }
 
-            on("getting the base image") {
+            on("getting the base image names") {
                 it("throws an appropriate exception") {
-                    assertThat({ parser.extractBaseImageName(path) }, throws<ImageBuildFailedException>(withMessage("The Dockerfile '/some-dir/Dockerfile' is invalid: there is no FROM instruction.")))
+                    assertThat({ parser.extractBaseImageNames(path) }, throws<ImageBuildFailedException>(withMessage("The Dockerfile '/some-dir/Dockerfile' is invalid: there is no FROM instruction.")))
                 }
             }
         }
@@ -59,9 +59,9 @@ object DockerfileParserSpec : Spek({
                 Files.write(path, listOf("RUN install-stuff.sh"))
             }
 
-            on("getting the base image") {
+            on("getting the base image names") {
                 it("throws an appropriate exception") {
-                    assertThat({ parser.extractBaseImageName(path) }, throws<ImageBuildFailedException>(withMessage("The Dockerfile '/some-dir/Dockerfile' is invalid: there is no FROM instruction.")))
+                    assertThat({ parser.extractBaseImageNames(path) }, throws<ImageBuildFailedException>(withMessage("The Dockerfile '/some-dir/Dockerfile' is invalid: there is no FROM instruction.")))
                 }
             }
         }
@@ -71,11 +71,11 @@ object DockerfileParserSpec : Spek({
                 Files.write(path, listOf("FROM the-image"))
             }
 
-            on("getting the base image") {
-                val baseImage by runForEachTest { parser.extractBaseImageName(path) }
+            on("getting the base image names") {
+                val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
 
                 it("returns the base image name") {
-                    assertThat(baseImage, equalTo("the-image"))
+                    assertThat(baseImage, equalTo(setOf("the-image")))
                 }
             }
         }
@@ -89,11 +89,59 @@ object DockerfileParserSpec : Spek({
                 ))
             }
 
-            on("getting the base image") {
-                val baseImage by runForEachTest { parser.extractBaseImageName(path) }
+            on("getting the base image names") {
+                val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
 
                 it("returns the base image name") {
-                    assertThat(baseImage, equalTo("some-image"))
+                    assertThat(baseImage, equalTo(setOf("some-image")))
+                }
+            }
+        }
+
+        given("a Dockerfile with a single named build stage") {
+            beforeEachTest {
+                Files.write(path, listOf("FROM the-image AS stage1"))
+            }
+
+            on("getting the base image names") {
+                val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
+
+                it("returns the base image name") {
+                    assertThat(baseImage, equalTo(setOf("the-image")))
+                }
+            }
+        }
+
+        given("a Dockerfile with multiple unnamed build stages") {
+            beforeEachTest {
+                Files.write(path, listOf(
+                    "FROM the-image",
+                    "FROM the-other-image"
+                ))
+            }
+
+            on("getting the base image names") {
+                val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
+
+                it("returns both image names") {
+                    assertThat(baseImage, equalTo(setOf("the-image", "the-other-image")))
+                }
+            }
+        }
+
+        given("a Dockerfile with multiple named build stages") {
+            beforeEachTest {
+                Files.write(path, listOf(
+                    "FROM the-image AS stage1",
+                    "FROM the-other-image AS stage2"
+                ))
+            }
+
+            on("getting the base image names") {
+                val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
+
+                it("returns both image names") {
+                    assertThat(baseImage, equalTo(setOf("the-image", "the-other-image")))
                 }
             }
         }

@@ -100,7 +100,7 @@ object ImagesAPISpec : Spek({
             val buildArgs = mapOf("someArg" to "someValue")
             val dockerfilePath = "some-Dockerfile-path"
             val imageTags = setOf("some_image_tag", "some_other_image_tag")
-            val registryCredentials = TokenDockerRegistryCredentials("some_token", "registry.com")
+            val registryCredentials = setOf(TokenDockerRegistryCredentials("some_token", "registry.com"))
 
             val expectedUrl = hasScheme("http") and
                 hasHost(dockerHost) and
@@ -191,7 +191,7 @@ object ImagesAPISpec : Spek({
             on("the build having no registry credentials") {
                 val expectedHeadersForNoAuthentication = Headers.Builder().build()
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForNoAuthentication) }
-                beforeEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, null, null, cancellationContext, {}) }
+                beforeEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, emptySet(), null, cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to build the image with no authentication header") {
                     verify(call).execute()

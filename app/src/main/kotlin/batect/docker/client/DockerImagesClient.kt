@@ -73,8 +73,9 @@ class DockerImagesClient(
             }
 
             val context = imageBuildContextFactory.createFromDirectory(buildDirectory, dockerfilePath)
-            val baseImageName = dockerfileParser.extractBaseImageName(resolvedDockerfilePath)
-            val credentials = credentialsProvider.getCredentials(baseImageName)
+            val baseImageNames = dockerfileParser.extractBaseImageNames(resolvedDockerfilePath)
+            val credentials = baseImageNames.mapNotNull { credentialsProvider.getCredentials(it) }.toSet()
+
             val reporter = imageProgressReporterFactory()
             var lastStepProgressUpdate: DockerImageBuildProgress? = null
 

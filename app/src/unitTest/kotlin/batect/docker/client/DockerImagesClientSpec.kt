@@ -91,14 +91,16 @@ object DockerImagesClientSpec : Spek({
                     Files.createFile(resolvedDockerfilePath)
 
                     whenever(imageBuildContextFactory.createFromDirectory(buildDirectory, dockerfilePath)).doReturn(context)
-                    whenever(dockerfileParser.extractBaseImageName(resolvedDockerfilePath)).doReturn("nginx:1.13.0")
+                    whenever(dockerfileParser.extractBaseImageNames(resolvedDockerfilePath)).doReturn(setOf("nginx:1.13.0", "some-other-image:2.3.4"))
                 }
 
                 given("getting the credentials for the base image succeeds") {
-                    val credentials = mock<DockerRegistryCredentials>()
+                    val image1Credentials = mock<DockerRegistryCredentials>()
+                    val image2Credentials = mock<DockerRegistryCredentials>()
 
                     beforeEachTest {
-                        whenever(credentialsProvider.getCredentials("nginx:1.13.0")).doReturn(credentials)
+                        whenever(credentialsProvider.getCredentials("nginx:1.13.0")).doReturn(image1Credentials)
+                        whenever(credentialsProvider.getCredentials("some-other-image:2.3.4")).doReturn(image2Credentials)
                     }
 
                     on("a successful build") {
@@ -142,7 +144,7 @@ object DockerImagesClientSpec : Spek({
                         val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, outputSink, cancellationContext, onStatusUpdate) }
 
                         it("builds the image") {
-                            verify(api).build(eq(context), eq(buildArgs), eq(dockerfilePath), eq(imageTags), eq(credentials), eq(outputSink), eq(cancellationContext), any())
+                            verify(api).build(eq(context), eq(buildArgs), eq(dockerfilePath), eq(imageTags), eq(setOf(image1Credentials, image2Credentials)), eq(outputSink), eq(cancellationContext), any())
                         }
 
                         it("returns the ID of the created image") {

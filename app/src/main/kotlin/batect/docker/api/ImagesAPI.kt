@@ -55,7 +55,7 @@ class ImagesAPI(
         buildArgs: Map<String, String>,
         dockerfilePath: String,
         imageTags: Set<String>,
-        registryCredentials: DockerRegistryCredentials?,
+        registryCredentials: Set<DockerRegistryCredentials>,
         outputSink: Sink?,
         cancellationContext: CancellationContext,
         onProgressUpdate: (JsonObject) -> Unit
@@ -97,7 +97,7 @@ class ImagesAPI(
         buildArgs: Map<String, String>,
         dockerfilePath: String,
         imageTags: Set<String>,
-        registryCredentials: DockerRegistryCredentials?
+        registryCredentials: Set<DockerRegistryCredentials>
     ): Request {
         val url = baseUrl.newBuilder()
             .addPathSegment("build")
@@ -113,10 +113,10 @@ class ImagesAPI(
             .build()
     }
 
-    private fun Request.Builder.addRegistryCredentialsForBuild(registryCredentials: DockerRegistryCredentials?): Request.Builder {
-        if (registryCredentials != null) {
+    private fun Request.Builder.addRegistryCredentialsForBuild(registryCredentials: Set<DockerRegistryCredentials>): Request.Builder {
+        if (registryCredentials.isNotEmpty()) {
             val jsonCredentials = json {
-                registryCredentials.serverAddress to registryCredentials.toJSON()
+                registryCredentials.forEach { it.serverAddress to it.toJSON() }
             }
 
             val credentialBytes = jsonCredentials.toString().toByteArray()

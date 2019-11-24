@@ -19,6 +19,7 @@ package batect.ui.interleaved
 import batect.config.Container
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
+import batect.ui.text.Text
 import batect.ui.text.TextRun
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.inOrder
@@ -36,7 +37,8 @@ object InterleavedContainerOutputSinkSpec : Spek({
     describe("a container output sink for interleaved output") {
         val container = Container("some-container", imageSourceDoesNotMatter())
         val output by createForEachTest { mock<InterleavedOutput>() }
-        val sink by createForEachTest { InterleavedContainerOutputSink(container, output) }
+        val prefix = Text.bold(TextRun("Some prefix"))
+        val sink by createForEachTest { InterleavedContainerOutputSink(container, output, prefix) }
 
         describe("writing output") {
             describe("when zero bytes are written") {
@@ -50,18 +52,18 @@ object InterleavedContainerOutputSinkSpec : Spek({
             describe("when bytes ending a new line are written") {
                 beforeEachTest { sink.writeText("Some text\n") }
 
-                it("writes the text to the output without the trailing new line character") {
-                    verify(output).printForContainer(container, TextRun("Some text"))
+                it("writes the text to the output without the trailing new line character and with the prefix prepended") {
+                    verify(output).printForContainer(container, prefix + Text("Some text"))
                 }
             }
 
             describe("when bytes containing multiple new lines are written") {
                 beforeEachTest { sink.writeText("Line 1\nLine 2\n") }
 
-                it("writes both lines to the output") {
+                it("writes both lines to the output with the prefix prepended") {
                     inOrder(output) {
-                        verify(output).printForContainer(container, TextRun("Line 1"))
-                        verify(output).printForContainer(container, TextRun("Line 2"))
+                        verify(output).printForContainer(container, prefix + Text("Line 1"))
+                        verify(output).printForContainer(container, prefix + Text("Line 2"))
                     }
                 }
             }
@@ -69,8 +71,8 @@ object InterleavedContainerOutputSinkSpec : Spek({
             describe("when bytes containing a new line are written") {
                 beforeEachTest { sink.writeText("Line 1\nStart of line 2...") }
 
-                it("writes only the complete lines of text to the output") {
-                    verify(output).printForContainer(container, TextRun("Line 1"))
+                it("writes only the complete lines of text to the output with the prefix prepended") {
+                    verify(output).printForContainer(container, prefix + Text("Line 1"))
                     verifyNoMoreInteractions(output)
                 }
             }
@@ -90,7 +92,7 @@ object InterleavedContainerOutputSinkSpec : Spek({
                 }
 
                 it("writes the text to the output without the trailing new line character") {
-                    verify(output).printForContainer(container, TextRun("Not yet...now!"))
+                    verify(output).printForContainer(container, prefix + Text("Not yet...now!"))
                 }
             }
 
@@ -100,10 +102,10 @@ object InterleavedContainerOutputSinkSpec : Spek({
                     sink.writeText(" 2\n")
                 }
 
-                it("writes both complete lines to the output") {
+                it("writes both complete lines to the output with the prefix prepended") {
                     inOrder(output) {
-                        verify(output).printForContainer(container, TextRun("Line 1"))
-                        verify(output).printForContainer(container, TextRun("Line 2"))
+                        verify(output).printForContainer(container, prefix + Text("Line 1"))
+                        verify(output).printForContainer(container, prefix + Text("Line 2"))
                     }
                 }
             }
@@ -137,8 +139,8 @@ object InterleavedContainerOutputSinkSpec : Spek({
                     sink.close()
                 }
 
-                it("writes the remaining text to the output") {
-                    verify(output).printForContainer(container, TextRun("Wait for it..."))
+                it("writes the remaining text to the output with the prefix prepended") {
+                    verify(output).printForContainer(container, prefix + Text("Wait for it..."))
                 }
             }
         }

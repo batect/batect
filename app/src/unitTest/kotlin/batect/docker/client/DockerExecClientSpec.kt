@@ -39,8 +39,10 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import okio.Buffer
+import okio.sink
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.ByteArrayOutputStream
 
 object DockerExecClientSpec : Spek({
     describe("a Docker exec client") {
@@ -56,14 +58,15 @@ object DockerExecClientSpec : Spek({
             val privileged = false
             val userAndGroup = UserAndGroup(123, 456)
             val workingDirectory = "/some/dir"
+            val outputStream by createForEachTest { ByteArrayOutputStream() }
             val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
             val instance by createForEachTest { DockerExecInstance("some-exec-instance-id") }
-            val outputStream by createForEachTest { mock<ContainerOutputStream>() }
+            val containerOutputStream by createForEachTest { mock<ContainerOutputStream>() }
 
             beforeEachTest {
                 whenever(api.create(any(), any())).thenReturn(instance)
-                whenever(api.start(any(), any())).thenReturn(outputStream)
+                whenever(api.start(any(), any())).thenReturn(containerOutputStream)
                 whenever(api.inspect(any())).thenReturn(DockerExecInstanceInfo(123, false))
 
                 whenever(ioStreamer.stream(any(), any(), any())).thenAnswer { invocation ->
@@ -76,7 +79,7 @@ object DockerExecClientSpec : Spek({
                 }
             }
 
-            val result by runForEachTest { client.run(command, container, environmentVariables, privileged, userAndGroup, workingDirectory, cancellationContext) }
+            val result by runForEachTest { client.run(command, container, environmentVariables, privileged, userAndGroup, workingDirectory, outputStream.sink(), cancellationContext) }
 
             val expectedCreationRequest = DockerExecCreationRequest(
                 false,
@@ -104,6 +107,10 @@ object DockerExecClientSpec : Spek({
 
             it("returns the exit code and output from the command") {
                 assertThat(result, equalTo(DockerExecResult(123, "some output from the command")))
+            }
+
+            it("writes all output from the container to the provided output stream") {
+                assertThat(outputStream.toString(), equalTo("some output from the command"))
             }
         }
     }

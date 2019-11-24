@@ -17,6 +17,7 @@
 package batect.ui.containerio
 
 import batect.config.Container
+import batect.config.SetupCommand
 import batect.os.Dimensions
 import batect.ui.ConsoleInfo
 import okio.Sink
@@ -49,4 +50,6 @@ data class TaskContainerOnlyIOStreamingOptions(
 
         return null
     }
+
+    override fun stdoutForContainerSetupCommand(container: Container, setupCommand: SetupCommand, index: Int): Sink? = null
 }

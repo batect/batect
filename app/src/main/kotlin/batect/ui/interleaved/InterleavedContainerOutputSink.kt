@@ -17,12 +17,13 @@
 package batect.ui.interleaved
 
 import batect.config.Container
+import batect.ui.text.Text
 import batect.ui.text.TextRun
 import okio.Buffer
 import okio.Sink
 import okio.Timeout
 
-data class InterleavedContainerOutputSink(val container: Container, val output: InterleavedOutput) : Sink {
+data class InterleavedContainerOutputSink(val container: Container, val output: InterleavedOutput, val prefix: TextRun = TextRun()) : Sink {
     private val buffer = StringBuilder()
 
     override fun write(source: Buffer, byteCount: Long) {
@@ -33,14 +34,14 @@ data class InterleavedContainerOutputSink(val container: Container, val output: 
             val endOfLine = buffer.indexOf('\n')
             val line = buffer.substring(0, endOfLine)
 
-            output.printForContainer(container, TextRun(line))
+            output.printForContainer(container, prefix + Text(line))
             buffer.delete(0, endOfLine + 1)
         }
     }
 
     override fun close() {
         if (buffer.isNotEmpty()) {
-            output.printForContainer(container, TextRun(buffer.toString()))
+            output.printForContainer(container, prefix + Text(buffer.toString()))
         }
     }
 

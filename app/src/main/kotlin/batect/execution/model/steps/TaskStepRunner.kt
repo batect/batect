@@ -100,7 +100,7 @@ class TaskStepRunner(
             is CreateContainerStep -> handleCreateContainerStep(step, context.eventSink, context.runOptions, context.ioStreamingOptions)
             is RunContainerStep -> handleRunContainerStep(step, context.eventSink, context.ioStreamingOptions, context.cancellationContext)
             is WaitForContainerToBecomeHealthyStep -> handleWaitForContainerToBecomeHealthyStep(step, context.eventSink, context.cancellationContext)
-            is RunContainerSetupCommandsStep -> handleRunContainerSetupCommandsStep(step, context.eventSink, context.runOptions, context.cancellationContext)
+            is RunContainerSetupCommandsStep -> handleRunContainerSetupCommandsStep(step, context.eventSink, context.ioStreamingOptions, context.runOptions, context.cancellationContext)
             is StopContainerStep -> handleStopContainerStep(step, context.eventSink)
             is RemoveContainerStep -> handleRemoveContainerStep(step, context.eventSink)
             is DeleteTemporaryFileStep -> handleDeleteTemporaryFileStep(step, context.eventSink)
@@ -210,7 +210,13 @@ class TaskStepRunner(
         }
     }
 
-    private fun handleRunContainerSetupCommandsStep(step: RunContainerSetupCommandsStep, eventSink: TaskEventSink, runOptions: RunOptions, cancellationContext: CancellationContext) {
+    private fun handleRunContainerSetupCommandsStep(
+        step: RunContainerSetupCommandsStep,
+        eventSink: TaskEventSink,
+        ioStreamingOptions: ContainerIOStreamingOptions,
+        runOptions: RunOptions,
+        cancellationContext: CancellationContext
+    ) {
         if (step.container.setupCommands.isEmpty()) {
             eventSink.postEvent(ContainerBecameReadyEvent(step.container))
             return
@@ -237,6 +243,7 @@ class TaskStepRunner(
                     step.container.privileged,
                     userAndGroup,
                     command.workingDirectory ?: step.container.workingDirectory,
+                    ioStreamingOptions.stdoutForContainerSetupCommand(step.container, command, index),
                     cancellationContext
                 )
 

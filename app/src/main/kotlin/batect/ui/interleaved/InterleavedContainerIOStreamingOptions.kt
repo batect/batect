@@ -17,8 +17,12 @@
 package batect.ui.interleaved
 
 import batect.config.Container
+import batect.config.SetupCommand
 import batect.os.Dimensions
+import batect.ui.ConsoleColor
 import batect.ui.containerio.ContainerIOStreamingOptions
+import batect.ui.text.Text
+import batect.ui.text.TextRun
 import okio.Sink
 import okio.Source
 
@@ -26,6 +30,8 @@ data class InterleavedContainerIOStreamingOptions(private val output: Interleave
     override fun terminalTypeForContainer(container: Container): String? = "dumb"
     override fun stdinForContainer(container: Container): Source? = null
     override fun stdoutForContainer(container: Container): Sink? = InterleavedContainerOutputSink(container, output)
+    override fun stdoutForContainerSetupCommand(container: Container, setupCommand: SetupCommand, index: Int): Sink? =
+        InterleavedContainerOutputSink(container, output, TextRun(Text("Setup command ${index + 1} | ", ConsoleColor.White)))
 
     override val frameDimensions = Dimensions(0, output.prefixWidth)
 }

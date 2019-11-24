@@ -29,6 +29,9 @@ import batect.docker.run.OutputConnection
 import batect.execution.CancellationContext
 import batect.logging.Logger
 import batect.os.Command
+import okio.Buffer
+import okio.Sink
+import okio.Timeout
 import okio.sink
 import java.io.ByteArrayOutputStream
 
@@ -44,6 +47,7 @@ class DockerExecClient(
         privileged: Boolean,
         userAndGroup: UserAndGroup?,
         workingDirectory: String?,
+        outputStream: Sink?,
         cancellationContext: CancellationContext
     ): DockerExecResult {
         logger.info {
@@ -66,9 +70,11 @@ class DockerExecClient(
 
         val instance = api.create(container, creationRequest)
         val stream = api.start(creationRequest, instance)
-        val outputDestination = ByteArrayOutputStream()
+        val output = ByteArrayOutputStream()
 
-        ioStreamer.stream(OutputConnection.Connected(stream, outputDestination.sink()), InputConnection.Disconnected, cancellationContext)
+        val outputDestination = if (outputStream == null) { output.sink() } else { tee(output.sink(), outputStream) }
+
+        ioStreamer.stream(OutputConnection.Connected(stream, outputDestination), InputConnection.Disconnected, cancellationContext)
 
         val state = api.inspect(instance)
 
@@ -76,7 +82,7 @@ class DockerExecClient(
             throw DockerException("Command started with exec is still running after output finished")
         }
 
-        val result = DockerExecResult(state.exitCode!!, outputDestination.toString())
+        val result = DockerExecResult(state.exitCode!!, output.toString())
 
         logger.info {
             message("Finished executing command in container.")
@@ -86,5 +92,12 @@ class DockerExecClient(
         }
 
         return result
+    }
+
+    private fun tee(vararg sinks: Sink): Sink = object : Sink {
+        override fun close() = sinks.forEach { it.close() }
+        override fun flush() = sinks.forEach { it.flush() }
+        override fun write(source: Buffer, byteCount: Long) = sinks.forEach { it.write(source.copy(), byteCount) }
+        override fun timeout(): Timeout = throw UnsupportedOperationException()
     }
 }

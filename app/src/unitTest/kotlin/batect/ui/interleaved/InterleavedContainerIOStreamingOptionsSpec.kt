@@ -17,11 +17,16 @@
 package batect.ui.interleaved
 
 import batect.config.Container
+import batect.config.SetupCommand
+import batect.os.Command
 import batect.os.Dimensions
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
+import batect.testutils.runNullableForEachTest
+import batect.ui.text.Text
+import batect.ui.text.TextRun
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
@@ -61,6 +66,14 @@ object InterleavedContainerIOStreamingOptionsSpec : Spek({
         on("getting the frame dimensions") {
             it("returns a value that includes the width of the output's prefix") {
                 assertThat(options.frameDimensions, equalTo(Dimensions(height = 0, width = 23)))
+            }
+        }
+
+        on("getting the stdout stream to use for a container's setup command") {
+            val stream by runNullableForEachTest { options.stdoutForContainerSetupCommand(container, SetupCommand(Command.parse("blah")), 2) }
+
+            it("returns an interleaved output stream with an appropriate prefix") {
+                assertThat(stream, equalTo(InterleavedContainerOutputSink(container, output, TextRun(Text.white("Setup command 3 | ")))))
             }
         }
     }

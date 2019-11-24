@@ -14,21 +14,15 @@
    limitations under the License.
 */
 
-package batect.ui.containerio
+package batect.utils
 
-import batect.config.BuildImage
-import batect.config.Container
-import batect.config.SetupCommand
-import batect.os.Dimensions
+import okio.Buffer
 import okio.Sink
-import okio.Source
+import okio.Timeout
 
-interface ContainerIOStreamingOptions {
-    fun terminalTypeForContainer(container: Container): String?
-    fun stdinForContainer(container: Container): Source?
-    fun stdoutForContainer(container: Container): Sink?
-    fun stdoutForContainerSetupCommand(container: Container, setupCommand: SetupCommand, index: Int): Sink?
-    fun stdoutForImageBuild(imageSource: BuildImage): Sink?
-
-    val frameDimensions: Dimensions
+fun tee(vararg sinks: Sink): Sink = object : Sink {
+    override fun close() = sinks.forEach { it.close() }
+    override fun flush() = sinks.forEach { it.flush() }
+    override fun write(source: Buffer, byteCount: Long) = sinks.forEach { it.write(source.copy(), byteCount) }
+    override fun timeout(): Timeout = throw UnsupportedOperationException()
 }

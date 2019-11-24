@@ -171,6 +171,9 @@ object TaskStepRunnerSpec : Spek({
                 val imageTags = setOf("some_image_tag", "some_other_image_tag")
                 val imageSource = BuildImage(buildDirectory, buildArgs, dockerfilePath)
                 val step = BuildImageStep(imageSource, imageTags)
+                val outputSink by createForEachTest { mock<Sink>() }
+
+                beforeEachTest { whenever(ioStreamingOptions.stdoutForImageBuild(imageSource)).thenReturn(outputSink) }
 
                 describe("when building the image succeeds") {
                     on("and propagating proxy-related environment variables is enabled") {
@@ -179,10 +182,10 @@ object TaskStepRunnerSpec : Spek({
                         val update2 = DockerImageBuildProgress(2, 2, "Second step", null)
 
                         beforeEachTest {
-                            whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), eq(cancellationContext), any()))
+                            whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), eq(outputSink), eq(cancellationContext), any()))
                                 .then { invocation ->
                                     @Suppress("UNCHECKED_CAST")
-                                    val onStatusUpdate = invocation.arguments[5] as (DockerImageBuildProgress) -> Unit
+                                    val onStatusUpdate = invocation.arguments[6] as (DockerImageBuildProgress) -> Unit
 
                                     onStatusUpdate(update1)
                                     onStatusUpdate(update2)
@@ -201,7 +204,7 @@ object TaskStepRunnerSpec : Spek({
                                 "SOME_HOST_VAR" to "some env var value"
                             )
 
-                            verify(imagesClient).build(any(), eq(expectedArgs), any(), any(), any(), any())
+                            verify(imagesClient).build(any(), eq(expectedArgs), any(), any(), any(), any(), any())
                         }
 
                         it("emits a 'image build progress' event for each update received from Docker") {
@@ -219,7 +222,7 @@ object TaskStepRunnerSpec : Spek({
                         val runOptionsWithProxyEnvironmentVariablePropagationDisabled = runOptions.copy(propagateProxyEnvironmentVariables = false)
 
                         beforeEachTest {
-                            whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), eq(cancellationContext), any())).thenReturn(image)
+                            whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), eq(outputSink), eq(cancellationContext), any())).thenReturn(image)
                             runner.run(step, stepRunContext.copy(runOptions = runOptionsWithProxyEnvironmentVariablePropagationDisabled))
                         }
 
@@ -230,7 +233,7 @@ object TaskStepRunnerSpec : Spek({
                                 "SOME_HOST_VAR" to "some env var value"
                             )
 
-                            verify(imagesClient).build(any(), eq(expectedArgs), any(), any(), any(), any())
+                            verify(imagesClient).build(any(), eq(expectedArgs), any(), any(), any(), any(), any())
                         }
 
                         it("emits a 'image built' event") {
@@ -241,7 +244,7 @@ object TaskStepRunnerSpec : Spek({
 
                 on("when building the image fails") {
                     beforeEachTest {
-                        whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), eq(cancellationContext), any())).thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
+                        whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), eq(outputSink), eq(cancellationContext), any())).thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
                         runner.run(step, stepRunContext)
                     }
 

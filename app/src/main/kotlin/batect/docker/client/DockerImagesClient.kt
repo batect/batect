@@ -30,6 +30,7 @@ import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.execution.CancellationContext
 import batect.logging.Logger
 import kotlinx.serialization.json.JsonObject
+import okio.Sink
 import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.Path
@@ -48,6 +49,7 @@ class DockerImagesClient(
         buildArgs: Map<String, String>,
         dockerfilePath: String,
         imageTags: Set<String>,
+        outputSink: Sink?,
         cancellationContext: CancellationContext,
         onStatusUpdate: (DockerImageBuildProgress) -> Unit
     ): DockerImage {
@@ -76,7 +78,7 @@ class DockerImagesClient(
             val reporter = imageProgressReporterFactory()
             var lastStepProgressUpdate: DockerImageBuildProgress? = null
 
-            val image = api.build(context, buildArgs, dockerfilePath, imageTags, credentials, cancellationContext) { line ->
+            val image = api.build(context, buildArgs, dockerfilePath, imageTags, credentials, outputSink, cancellationContext) { line ->
                 logger.debug {
                     message("Received output from Docker during image build.")
                     data("outputLine", line.toString())

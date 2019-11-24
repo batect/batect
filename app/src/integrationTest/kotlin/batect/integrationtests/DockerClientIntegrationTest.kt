@@ -173,7 +173,7 @@ object DockerClientIntegrationTest : Spek({
 
         describe("building, creating, starting, stopping and removing a container that does not exit automatically") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
-            val image by runBeforeGroup { client.images.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image"), CancellationContext()) {} }
+            val image by runBeforeGroup { client.images.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image"), null, CancellationContext()) {} }
 
             beforeGroup {
                 withNetwork { network ->
@@ -193,7 +193,7 @@ object DockerClientIntegrationTest : Spek({
 
         describe("building, creating, starting, stopping and removing a container that exits automatically") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
-            val image by runBeforeGroup { client.images.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image"), CancellationContext()) {} }
+            val image by runBeforeGroup { client.images.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image"), null, CancellationContext()) {} }
 
             beforeGroup {
                 withNetwork { network ->
@@ -242,7 +242,7 @@ object DockerClientIntegrationTest : Spek({
 
         describe("waiting for a container to become healthy") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
-            val image by runBeforeGroup { client.images.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image"), CancellationContext()) {} }
+            val image by runBeforeGroup { client.images.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image"), null, CancellationContext()) {} }
             data class Result(val healthStatus: HealthStatus, val lastHealthCheckResult: DockerHealthCheckResult)
 
             fun runContainerAndWaitForHealthCheck(container: DockerContainer): Result {
@@ -283,7 +283,7 @@ object DockerClientIntegrationTest : Spek({
             ).forEach { (path, description) ->
                 describe("given $description") {
                     val dockerfilePath by createForGroup { testImagesPath.resolve(path) }
-                    val image by runBeforeGroup { client.images.build(dockerfilePath, emptyMap(), "Dockerfile", emptySet(), CancellationContext(), {}) }
+                    val image by runBeforeGroup { client.images.build(dockerfilePath, emptyMap(), "Dockerfile", emptySet(), null, CancellationContext(), {}) }
 
                     fun runContainerAndGetHttpResponse(container: DockerContainer): Response {
                         lateinit var response: Response

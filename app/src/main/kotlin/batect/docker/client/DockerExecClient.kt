@@ -29,9 +29,8 @@ import batect.docker.run.OutputConnection
 import batect.execution.CancellationContext
 import batect.logging.Logger
 import batect.os.Command
-import okio.Buffer
+import batect.utils.tee
 import okio.Sink
-import okio.Timeout
 import okio.sink
 import java.io.ByteArrayOutputStream
 
@@ -72,7 +71,11 @@ class DockerExecClient(
         val stream = api.start(creationRequest, instance)
         val output = ByteArrayOutputStream()
 
-        val outputDestination = if (outputStream == null) { output.sink() } else { tee(output.sink(), outputStream) }
+        val outputDestination = if (outputStream == null) {
+            output.sink()
+        } else {
+            tee(output.sink(), outputStream)
+        }
 
         ioStreamer.stream(OutputConnection.Connected(stream, outputDestination), InputConnection.Disconnected, cancellationContext)
 
@@ -92,12 +95,5 @@ class DockerExecClient(
         }
 
         return result
-    }
-
-    private fun tee(vararg sinks: Sink): Sink = object : Sink {
-        override fun close() = sinks.forEach { it.close() }
-        override fun flush() = sinks.forEach { it.flush() }
-        override fun write(source: Buffer, byteCount: Long) = sinks.forEach { it.write(source.copy(), byteCount) }
-        override fun timeout(): Timeout = throw UnsupportedOperationException()
     }
 }

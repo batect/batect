@@ -90,7 +90,7 @@ class InterleavedEventLogger(
         }
     }
 
-    override val ioStreamingOptions: ContainerIOStreamingOptions by lazy { InterleavedContainerIOStreamingOptions(output) }
+    override val ioStreamingOptions: ContainerIOStreamingOptions by lazy { InterleavedContainerIOStreamingOptions(output, containers) }
 
     override fun postEvent(event: TaskEvent) {
         when (event) {

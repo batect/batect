@@ -31,12 +31,17 @@ import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.SystemInfo
 import batect.utils.Json
+import batect.utils.tee
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.json
 import okhttp3.HttpUrl
 import okhttp3.Request
 import okhttp3.Response
+import okio.Buffer
+import okio.Sink
+import okio.sink
+import java.io.ByteArrayOutputStream
 import java.util.Base64
 import java.util.concurrent.TimeUnit
 
@@ -51,6 +56,7 @@ class ImagesAPI(
         dockerfilePath: String,
         imageTags: Set<String>,
         registryCredentials: DockerRegistryCredentials?,
+        outputSink: Sink?,
         cancellationContext: CancellationContext,
         onProgressUpdate: (JsonObject) -> Unit
     ): DockerImage {
@@ -75,7 +81,7 @@ class ImagesAPI(
                     throw ImageBuildFailedException("Building image failed: ${error.message}")
                 }
 
-                val image = processBuildResponse(response, onProgressUpdate)
+                val image = processBuildResponse(response, outputSink, onProgressUpdate)
 
                 logger.info {
                     message("Image built.")
@@ -122,38 +128,52 @@ class ImagesAPI(
         return this
     }
 
-    private fun processBuildResponse(response: Response, onProgressUpdate: (JsonObject) -> Unit): DockerImage {
+    private fun processBuildResponse(response: Response, outputStream: Sink?, onProgressUpdate: (JsonObject) -> Unit): DockerImage {
         var builtImageId: String? = null
-        val outputSoFar = StringBuilder()
+        val outputBuffer = ByteArrayOutputStream()
+        val sink = if (outputStream == null) { outputBuffer.sink() } else { tee(outputBuffer.sink(), outputStream) }
 
-        response.body()!!.charStream().forEachLine { line ->
-            val parsedLine = Json.parser.parseJson(line).jsonObject
-            val output = parsedLine.getPrimitiveOrNull("stream")?.content
-            val error = parsedLine.getPrimitiveOrNull("error")?.content
+        sink.use {
+            response.body()!!.charStream().forEachLine { line ->
+                val parsedLine = Json.parser.parseJson(line).jsonObject
+                val output = parsedLine.getPrimitiveOrNull("stream")?.content
+                val error = parsedLine.getPrimitiveOrNull("error")?.content
 
-            if (output != null) {
-                outputSoFar.append(output.correctLineEndings())
+                if (output != null) {
+                    sink.append(output)
+                }
+
+                if (error != null) {
+                    sink.append(error)
+
+                    throw ImageBuildFailedException(
+                        "Building image failed: $error. Output from build process was:" + systemInfo.lineSeparator +
+                            outputBuffer.toString().trim().correctLineEndings()
+                    )
+                }
+
+                val imageId = parsedLine.getObjectOrNull("aux")?.getPrimitiveOrNull("ID")?.content
+
+                if (imageId != null) {
+                    builtImageId = imageId
+                }
+
+                onProgressUpdate(parsedLine)
             }
 
-            if (error != null) {
-                outputSoFar.append(error.correctLineEndings())
-                throw ImageBuildFailedException("Building image failed: $error. Output from build process was:" + systemInfo.lineSeparator + outputSoFar.trim().toString())
+            if (builtImageId == null) {
+                throw ImageBuildFailedException("Building image failed: daemon never sent built image ID.")
             }
 
-            val imageId = parsedLine.getObjectOrNull("aux")?.getPrimitiveOrNull("ID")?.content
-
-            if (imageId != null) {
-                builtImageId = imageId
-            }
-
-            onProgressUpdate(parsedLine)
+            return DockerImage(builtImageId!!)
         }
+    }
 
-        if (builtImageId == null) {
-            throw ImageBuildFailedException("Building image failed: daemon never sent built image ID.")
-        }
+    private fun Sink.append(text: String) {
+        val buffer = Buffer()
+        buffer.writeString(text, Charsets.UTF_8)
 
-        return DockerImage(builtImageId!!)
+        this.write(buffer, buffer.size)
     }
 
     fun pull(

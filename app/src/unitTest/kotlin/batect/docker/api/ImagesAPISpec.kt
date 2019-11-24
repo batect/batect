@@ -52,8 +52,10 @@ import kotlinx.serialization.json.JsonPrimitive
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
+import okio.sink
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.ByteArrayOutputStream
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 
@@ -137,8 +139,9 @@ object ImagesAPISpec : Spek({
 
             on("the build succeeding") {
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForAuthentication) }
+                val output by createForEachTest { ByteArrayOutputStream() }
                 val progressReceiver by createForEachTest { ProgressReceiver() }
-                val image by runForEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }
+                val image by runForEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, registryCredentials, output.sink(), cancellationContext, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to build the image") {
                     verify(call).execute()
@@ -163,12 +166,32 @@ object ImagesAPISpec : Spek({
                 it("returns the build image") {
                     assertThat(image, equalTo(DockerImage("sha256:24125bbc6cbe08f530e97c81ee461357fa3ba56f4d7693d7895ec86671cf3540")))
                 }
+
+                it("writes all output from the build process to the provided output stream") {
+                    assertThat(output.toString(), equalTo("""
+                        |Step 1/5 : FROM nginx:1.13.0
+                        | ---> 3448f27c273f
+                        |Step 2/5 : RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*
+                        | ---> Using cache
+                        | ---> 0ceae477da9d
+                        |Step 3/5 : COPY index.html /usr/share/nginx/html
+                        | ---> b288a67b828c
+                        |Step 4/5 : COPY health-check.sh /tools/
+                        | ---> 951e32ae4f76
+                        |Step 5/5 : HEALTHCHECK --interval=2s --retries=1 CMD /tools/health-check.sh
+                        | ---> Running in 3de7e4521d69
+                        |Removing intermediate container 3de7e4521d69
+                        | ---> 24125bbc6cbe
+                        |Successfully built 24125bbc6cbe
+                        |
+                    """.trimMargin()))
+                }
             }
 
             on("the build having no registry credentials") {
                 val expectedHeadersForNoAuthentication = Headers.Builder().build()
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForNoAuthentication) }
-                beforeEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, null, cancellationContext, {}) }
+                beforeEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, null, null, cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to build the image with no authentication header") {
                     verify(call).execute()
@@ -182,7 +205,7 @@ object ImagesAPISpec : Spek({
                     hasQueryParameter("buildargs", """{}""")
 
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithNoBuildArgs, successResponse, 200, expectedHeadersForAuthentication) }
-                beforeEachTest { api.build(context, emptyMap(), dockerfilePath, imageTags, registryCredentials, cancellationContext, {}) }
+                beforeEachTest { api.build(context, emptyMap(), dockerfilePath, imageTags, registryCredentials, null, cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to build the image with an empty set of build args") {
                     verify(call).execute()
@@ -195,10 +218,9 @@ object ImagesAPISpec : Spek({
                 }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.build(context, buildArgs, dockerfilePath, imageTags, registryCredentials, cancellationContext, {}) }, throws<ImageBuildFailedException>(
+                    assertThat({ api.build(context, buildArgs, dockerfilePath, imageTags, registryCredentials, null, cancellationContext, {}) }, throws<ImageBuildFailedException>(
                         withMessage("Building image failed: $errorMessageWithCorrectLineEndings")
-                    )
-                    )
+                    ))
                 }
             }
 
@@ -213,20 +235,32 @@ object ImagesAPISpec : Spek({
                     |{"errorDetail":{"code":1,"message":"The command '/bin/sh -c exit 1' returned a non-zero code: 1"},"error":"The command '/bin/sh -c exit 1' returned a non-zero code: 1"}
                 """.trimMargin()
 
+                val output by createForEachTest { ByteArrayOutputStream() }
+
                 beforeEachTest { clientWithLongTimeout.mock("POST", expectedUrl, response, 200, expectedHeadersForAuthentication) }
 
                 it("throws an appropriate exception with all line endings corrected for the host system") {
-                    assertThat({ api.build(context, buildArgs, dockerfilePath, imageTags, registryCredentials, cancellationContext, {}) }, throws<ImageBuildFailedException>(
+                    assertThat({ api.build(context, buildArgs, dockerfilePath, imageTags, registryCredentials, output.sink(), cancellationContext, {}) }, throws<ImageBuildFailedException>(
                         withMessage(
                             "Building image failed: The command '/bin/sh -c exit 1' returned a non-zero code: 1. Output from build process was:SYSTEM_LINE_SEPARATOR" +
-                                "Step 1/6 : FROM nginx:1.13.0SYSTEM_LINE_SEPARATOR" +
-                                " ---> 3448f27c273fSYSTEM_LINE_SEPARATOR" +
-                                "Step 2/6 : RUN exit 1SYSTEM_LINE_SEPARATOR" +
-                                " ---> Running in 4427f9f56fadSYSTEM_LINE_SEPARATOR" +
-                                "The command '/bin/sh -c exit 1' returned a non-zero code: 1"
+                            "Step 1/6 : FROM nginx:1.13.0SYSTEM_LINE_SEPARATOR" +
+                            " ---> 3448f27c273fSYSTEM_LINE_SEPARATOR" +
+                            "Step 2/6 : RUN exit 1SYSTEM_LINE_SEPARATOR" +
+                            " ---> Running in 4427f9f56fadSYSTEM_LINE_SEPARATOR" +
+                            "The command '/bin/sh -c exit 1' returned a non-zero code: 1"
                         )
-                    )
-                    )
+                    ))
+                }
+
+                it("writes all output from the build process to the output stream") {
+                    try { api.build(context, buildArgs, dockerfilePath, imageTags, registryCredentials, output.sink(), cancellationContext, {}) } catch (_: Throwable) {}
+                    assertThat(output.toString(), equalTo("""
+                        Step 1/6 : FROM nginx:1.13.0
+                         ---> 3448f27c273f
+                        Step 2/6 : RUN exit 1
+                         ---> Running in 4427f9f56fad
+                        The command '/bin/sh -c exit 1' returned a non-zero code: 1
+                    """.trimIndent()))
                 }
             }
 
@@ -240,10 +274,9 @@ object ImagesAPISpec : Spek({
                 }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.build(context, buildArgs, dockerfilePath, imageTags, registryCredentials, cancellationContext, {}) }, throws<ImageBuildFailedException>(
+                    assertThat({ api.build(context, buildArgs, dockerfilePath, imageTags, registryCredentials, null, cancellationContext, {}) }, throws<ImageBuildFailedException>(
                         withMessage("Building image failed: daemon never sent built image ID.")
-                    )
-                    )
+                    ))
                 }
             }
         }

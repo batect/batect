@@ -52,6 +52,7 @@ import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import kotlinx.serialization.json.JsonObject
+import okio.Sink
 import org.mockito.invocation.InvocationOnMock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -78,6 +79,7 @@ object DockerImagesClientSpec : Spek({
 
             val dockerfilePath = "some-Dockerfile-path"
             val imageTags = setOf("some_image_tag", "some_other_image_tag")
+            val outputSink by createForEachTest { mock<Sink>() }
             val cancellationContext by createForEachTest { mock<CancellationContext>() }
             val context = DockerImageBuildContext(emptySet())
 
@@ -128,7 +130,7 @@ object DockerImagesClientSpec : Spek({
 
                         beforeEachTest {
                             stubProgressUpdate(imageProgressReporter, output.lines()[0], imagePullProgress)
-                            whenever(api.build(any(), any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
+                            whenever(api.build(any(), any(), any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
                         }
 
                         val statusUpdates by createForEachTest { mutableListOf<DockerImageBuildProgress>() }
@@ -137,10 +139,10 @@ object DockerImagesClientSpec : Spek({
                             statusUpdates.add(p)
                         }
 
-                        val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, cancellationContext, onStatusUpdate) }
+                        val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, outputSink, cancellationContext, onStatusUpdate) }
 
                         it("builds the image") {
-                            verify(api).build(eq(context), eq(buildArgs), eq(dockerfilePath), eq(imageTags), eq(credentials), eq(cancellationContext), any())
+                            verify(api).build(eq(context), eq(buildArgs), eq(dockerfilePath), eq(imageTags), eq(credentials), eq(outputSink), eq(cancellationContext), any())
                         }
 
                         it("returns the ID of the created image") {
@@ -178,13 +180,13 @@ object DockerImagesClientSpec : Spek({
 
                         beforeEachTest {
                             stubProgressUpdate(imageProgressReporter, output.lines()[0], imagePullProgress)
-                            whenever(api.build(any(), any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
+                            whenever(api.build(any(), any(), any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
 
                             val onStatusUpdate = fun(p: DockerImageBuildProgress) {
                                 statusUpdates.add(p)
                             }
 
-                            client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, cancellationContext, onStatusUpdate)
+                            client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, outputSink, cancellationContext, onStatusUpdate)
                         }
 
                         it("sends status updates only once the first step is started") {
@@ -211,7 +213,7 @@ object DockerImagesClientSpec : Spek({
                     on("building the image") {
                         it("throws an appropriate exception") {
                             assertThat(
-                                { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, cancellationContext, {}) }, throws<ImageBuildFailedException>(
+                                { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, outputSink, cancellationContext, {}) }, throws<ImageBuildFailedException>(
                                     withMessage("Could not build image: Could not load credentials: something went wrong.")
                                         and withCause(exception)
                                 )
@@ -225,7 +227,7 @@ object DockerImagesClientSpec : Spek({
                 on("building the image") {
                     it("throws an appropriate exception") {
                         assertThat(
-                            { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, cancellationContext, {}) },
+                            { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, outputSink, cancellationContext, {}) },
                             throws<ImageBuildFailedException>(withMessage("Could not build image: the Dockerfile 'some-Dockerfile-path' does not exist in '/path/to/build/dir'"))
                         )
                     }
@@ -244,7 +246,7 @@ object DockerImagesClientSpec : Spek({
                 on("building the image") {
                     it("throws an appropriate exception") {
                         assertThat(
-                            { client.build(buildDirectory, buildArgs, dockerfilePathOutsideBuildDir, imageTags, cancellationContext, {}) },
+                            { client.build(buildDirectory, buildArgs, dockerfilePathOutsideBuildDir, imageTags, outputSink, cancellationContext, {}) },
                             throws<ImageBuildFailedException>(withMessage("Could not build image: the Dockerfile '../some-Dockerfile' is not a child of '/path/to/build/dir'"))
                         )
                     }

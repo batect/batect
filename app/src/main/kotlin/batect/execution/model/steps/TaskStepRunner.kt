@@ -94,13 +94,13 @@ class TaskStepRunner(
 
     fun run(step: TaskStep, context: TaskStepRunContext) {
         when (step) {
-            is BuildImageStep -> handleBuildImageStep(step, context.eventSink, context.runOptions, context.cancellationContext)
+            is BuildImageStep -> handleBuildImageStep(step, context)
             is PullImageStep -> handlePullImageStep(step, context.eventSink, context.cancellationContext)
             is CreateTaskNetworkStep -> handleCreateTaskNetworkStep(context.eventSink)
             is CreateContainerStep -> handleCreateContainerStep(step, context.eventSink, context.runOptions, context.ioStreamingOptions)
             is RunContainerStep -> handleRunContainerStep(step, context.eventSink, context.ioStreamingOptions, context.cancellationContext)
             is WaitForContainerToBecomeHealthyStep -> handleWaitForContainerToBecomeHealthyStep(step, context.eventSink, context.cancellationContext)
-            is RunContainerSetupCommandsStep -> handleRunContainerSetupCommandsStep(step, context.eventSink, context.ioStreamingOptions, context.runOptions, context.cancellationContext)
+            is RunContainerSetupCommandsStep -> handleRunContainerSetupCommandsStep(step, context)
             is StopContainerStep -> handleStopContainerStep(step, context.eventSink)
             is RemoveContainerStep -> handleRemoveContainerStep(step, context.eventSink)
             is DeleteTemporaryFileStep -> handleDeleteTemporaryFileStep(step, context.eventSink)
@@ -109,19 +109,29 @@ class TaskStepRunner(
         }
     }
 
-    private fun handleBuildImageStep(step: BuildImageStep, eventSink: TaskEventSink, runOptions: RunOptions, cancellationContext: CancellationContext) {
+    private fun handleBuildImageStep(step: BuildImageStep, context: TaskStepRunContext) {
         try {
             val onStatusUpdate = { p: DockerImageBuildProgress ->
-                eventSink.postEvent(ImageBuildProgressEvent(step.source, p))
+                context.eventSink.postEvent(ImageBuildProgressEvent(step.source, p))
             }
 
-            val buildArgs = buildTimeProxyEnvironmentVariablesForOptions(runOptions) + substituteBuildArgs(step.source.buildArgs)
-            val image = dockerClient.images.build(step.source.buildDirectory, buildArgs, step.source.dockerfilePath, step.imageTags, cancellationContext, onStatusUpdate)
-            eventSink.postEvent(ImageBuiltEvent(step.source, image))
+            val buildArgs = buildTimeProxyEnvironmentVariablesForOptions(context.runOptions) + substituteBuildArgs(step.source.buildArgs)
+
+            val image = dockerClient.images.build(
+                step.source.buildDirectory,
+                buildArgs,
+                step.source.dockerfilePath,
+                step.imageTags,
+                context.ioStreamingOptions.stdoutForImageBuild(step.source),
+                context.cancellationContext,
+                onStatusUpdate
+            )
+
+            context.eventSink.postEvent(ImageBuiltEvent(step.source, image))
         } catch (e: ImageBuildFailedException) {
             val message = e.message ?: ""
 
-            eventSink.postEvent(ImageBuildFailedEvent(step.source, message.replace("\n", systemInfo.lineSeparator)))
+            context.eventSink.postEvent(ImageBuildFailedEvent(step.source, message.replace("\n", systemInfo.lineSeparator)))
         }
     }
 
@@ -210,22 +220,16 @@ class TaskStepRunner(
         }
     }
 
-    private fun handleRunContainerSetupCommandsStep(
-        step: RunContainerSetupCommandsStep,
-        eventSink: TaskEventSink,
-        ioStreamingOptions: ContainerIOStreamingOptions,
-        runOptions: RunOptions,
-        cancellationContext: CancellationContext
-    ) {
+    private fun handleRunContainerSetupCommandsStep(step: RunContainerSetupCommandsStep, context: TaskStepRunContext) {
         if (step.container.setupCommands.isEmpty()) {
-            eventSink.postEvent(ContainerBecameReadyEvent(step.container))
+            context.eventSink.postEvent(ContainerBecameReadyEvent(step.container))
             return
         }
 
         val environmentVariables = environmentVariableProvider.environmentVariablesFor(
             step.container,
             step.config,
-            runOptions.propagateProxyEnvironmentVariables,
+            context.runOptions.propagateProxyEnvironmentVariables,
             null,
             step.allContainersInNetwork
         )
@@ -234,7 +238,7 @@ class TaskStepRunner(
 
         step.container.setupCommands.forEachIndexed { index, command ->
             try {
-                eventSink.postEvent(RunningSetupCommandEvent(step.container, command, index))
+                context.eventSink.postEvent(RunningSetupCommandEvent(step.container, command, index))
 
                 val result = dockerClient.exec.run(
                     command.command,
@@ -243,22 +247,22 @@ class TaskStepRunner(
                     step.container.privileged,
                     userAndGroup,
                     command.workingDirectory ?: step.container.workingDirectory,
-                    ioStreamingOptions.stdoutForContainerSetupCommand(step.container, command, index),
-                    cancellationContext
+                    context.ioStreamingOptions.stdoutForContainerSetupCommand(step.container, command, index),
+                    context.cancellationContext
                 )
 
                 if (result.exitCode != 0) {
-                    eventSink.postEvent(SetupCommandFailedEvent(step.container, command, result.exitCode, result.output))
+                    context.eventSink.postEvent(SetupCommandFailedEvent(step.container, command, result.exitCode, result.output))
                     return
                 }
             } catch (e: DockerException) {
-                eventSink.postEvent(SetupCommandExecutionErrorEvent(step.container, command, e.message ?: ""))
+                context.eventSink.postEvent(SetupCommandExecutionErrorEvent(step.container, command, e.message ?: ""))
                 return
             }
         }
 
-        eventSink.postEvent(SetupCommandsCompletedEvent(step.container))
-        eventSink.postEvent(ContainerBecameReadyEvent(step.container))
+        context.eventSink.postEvent(SetupCommandsCompletedEvent(step.container))
+        context.eventSink.postEvent(ContainerBecameReadyEvent(step.container))
     }
 
     private fun containerBecameUnhealthyMessage(container: DockerContainer): String {

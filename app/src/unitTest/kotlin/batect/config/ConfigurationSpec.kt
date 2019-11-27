@@ -88,7 +88,7 @@ object ConfigurationSpec : Spek({
                 }
             }
 
-            given("a single container that pulls an image and runs as the current user") {
+            given("a single container with many options that pulls an image and runs as the current user") {
                 val container = Container(
                     "the-container",
                     PullImage("the-image"),
@@ -97,6 +97,7 @@ object ConfigurationSpec : Spek({
                     mapOf("SOME_VAR" to LiteralValue("some-value")),
                     "/some/working/dir",
                     setOf(VolumeMount("/local/path", "/container/path", "some-options")),
+                    setOf(DeviceMount("/dev/local", "/dev/container", "device-options")),
                     setOf(PortMapping(123, 456)),
                     setOf("other-container"),
                     HealthCheckConfig(Duration.ofSeconds(1), 23, Duration.ofSeconds(4)),
@@ -134,6 +135,13 @@ object ConfigurationSpec : Spek({
                                             "options": "some-options"
                                         }
                                     ],
+                                    "devices": [
+                                        {
+                                            "local": "/dev/local",
+                                            "container": "/dev/container",
+                                            "options": "device-options"
+                                        }
+                                    ],
                                     "ports": [
                                         { "local": 123, "container": 456 }
                                     ],
@@ -162,7 +170,7 @@ object ConfigurationSpec : Spek({
                 }
             }
 
-            given("a single container that builds an image and runs as the default container user") {
+            given("a single container with few options that builds an image and runs as the default container user") {
                 val container = Container(
                     "the-container",
                     BuildImage(
@@ -200,6 +208,7 @@ object ConfigurationSpec : Spek({
                                     "environment": {},
                                     "working_directory": null,
                                     "volumes": [],
+                                    "devices": [],
                                     "ports": [],
                                     "dependencies": [],
                                     "health_check": {

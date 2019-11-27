@@ -150,7 +150,7 @@ Relative local paths will be resolved relative to the configuration file's direc
 
 Two formats are supported:
 
-* Standard Docker `local:container` or `local:container:mode` format
+* Standard Docker `local:container` or `local:container:options` format
 
 * An expanded format:
   ```yaml
@@ -168,6 +168,27 @@ On Windows, the local path can use either Windows-style (`path\to\thing`) or Uni
 with users running on other operating systems, using Unix-style paths is recommended.
 
 See [this page](../tips/Performance.md#io-performance) for more information on why using `cached` volume mounts may be worthwhile.
+
+## `devices`
+List of device mounts to create for the container.
+
+Two formats are supported:
+
+* Standard Docker `local:container` or `local:container:options` format
+
+* An expanded format:
+  ```yaml
+  containers:
+    my-container:
+      ...
+      devices:
+      # This is equivalent to /dev/sda:/dev/disk:r
+      - local: /dev/sda
+        container: /dev/disk
+        options: r
+  ```
+
+Note that the `local` device mounts will be different for Windows and Unix-like hosts. See the [Docker guide for adding host devices to containers](https://docs.docker.com/engine/reference/commandline/run/#add-host-device-to-container---device) for more information.
 
 ## `ports`
 List of ports to make available to the host machine.

@@ -101,7 +101,7 @@ object VolumeMountSpec : Spek({
 
                 mapOf(
                     "c:\\local" to "a lowercase drive letter",
-                    "C:\\local" to "a uppercase drive letter"
+                    "C:\\local" to "an uppercase drive letter"
                 ).forEach { (local, description) ->
                     on("parsing a valid Windows volume mount definition with $description") {
                         val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, "'$local:/container'") }

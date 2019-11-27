@@ -16,6 +16,7 @@
 
 package batect.docker
 
+import batect.config.DeviceMount
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
 import batect.config.VolumeMount
@@ -40,6 +41,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 mapOf("SOME_VAR" to "some value"),
                 "/work-dir",
                 setOf(VolumeMount("/local", "/container", "ro")),
+                setOf(DeviceMount("/dev/local", "/dev/container", "rw")),
                 setOf(PortMapping(123, 456)),
                 HealthCheckConfig(Duration.ofNanos(555), 12, Duration.ofNanos(333)),
                 UserAndGroup(789, 222),
@@ -76,6 +78,13 @@ object DockerContainerCreationRequestSpec : Spek({
                         |       "NetworkMode": "the-network",
                         |       "Binds": [
                         |           "/local:/container:ro"
+                        |       ],
+                        |       "Devices": [
+                        |           {
+                        |               "PathOnHost": "/dev/local",
+                        |               "PathInContainer": "/dev/container",
+                        |               "CgroupPermissions": "rw"
+                        |           }
                         |       ],
                         |       "PortBindings": {
                         |           "456/tcp": [
@@ -123,6 +132,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 null,
                 emptySet(),
                 emptySet(),
+                emptySet(),
                 HealthCheckConfig(),
                 null,
                 privileged = false,
@@ -149,6 +159,7 @@ object DockerContainerCreationRequestSpec : Spek({
                         |   "HostConfig": {
                         |       "NetworkMode": "the-network",
                         |       "Binds": [],
+                        |       "Devices": [],
                         |       "PortBindings": {},
                         |       "Privileged": false,
                         |       "Init": false,

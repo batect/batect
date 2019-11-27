@@ -50,6 +50,7 @@ data class Container(
     val environment: Map<String, EnvironmentVariableExpression> = emptyMap(),
     val workingDirectory: String? = null,
     val volumeMounts: Set<VolumeMount> = emptySet(),
+    val deviceMounts: Set<DeviceMount> = emptySet(),
     val portMappings: Set<PortMapping> = emptySet(),
     val dependencies: Set<String> = emptySet(),
     val healthCheckConfig: HealthCheckConfig = HealthCheckConfig(),
@@ -72,6 +73,7 @@ data class Container(
         private const val environmentFieldName = "environment"
         private const val workingDirectoryFieldName = "working_directory"
         private const val volumeMountsFieldName = "volumes"
+        private const val deviceMountsFieldName = "devices"
         private const val portMappingsFieldName = "ports"
         private const val dependenciesFieldName = "dependencies"
         private const val healthCheckConfigFieldName = "health_check"
@@ -94,6 +96,7 @@ data class Container(
                 addElement(environmentFieldName, isOptional = true)
                 addElement(workingDirectoryFieldName, isOptional = true)
                 addElement(volumeMountsFieldName, isOptional = true)
+                addElement(deviceMountsFieldName, isOptional = true)
                 addElement(portMappingsFieldName, isOptional = true)
                 addElement(dependenciesFieldName, isOptional = true)
                 addElement(healthCheckConfigFieldName, isOptional = true)
@@ -116,6 +119,7 @@ data class Container(
         private val environmentFieldIndex = descriptor.getElementIndex(environmentFieldName)
         private val workingDirectoryFieldIndex = descriptor.getElementIndex(workingDirectoryFieldName)
         private val volumeMountsFieldIndex = descriptor.getElementIndex(volumeMountsFieldName)
+        private val deviceMountsFieldIndex = descriptor.getElementIndex(deviceMountsFieldName)
         private val portMappingsFieldIndex = descriptor.getElementIndex(portMappingsFieldName)
         private val dependenciesFieldIndex = descriptor.getElementIndex(dependenciesFieldName)
         private val healthCheckConfigFieldIndex = descriptor.getElementIndex(healthCheckConfigFieldName)
@@ -143,6 +147,7 @@ data class Container(
             var environment = emptyMap<String, EnvironmentVariableExpression>()
             var workingDirectory: String? = null
             var volumeMounts = emptySet<VolumeMount>()
+            var deviceMounts = emptySet<DeviceMount>()
             var portMappings = emptySet<PortMapping>()
             var dependencies = emptySet<String>()
             var healthCheckConfig = HealthCheckConfig()
@@ -166,6 +171,7 @@ data class Container(
                     environmentFieldIndex -> environment = input.decode(EnvironmentSerializer)
                     workingDirectoryFieldIndex -> workingDirectory = input.decodeStringElement(descriptor, i)
                     volumeMountsFieldIndex -> volumeMounts = input.decode(VolumeMount.serializer().set)
+                    deviceMountsFieldIndex -> deviceMounts = input.decode(DeviceMount.serializer().set)
                     portMappingsFieldIndex -> portMappings = input.decode(PortMapping.serializer().set)
                     dependenciesFieldIndex -> dependencies = input.decode(DependencySetSerializer)
                     healthCheckConfigFieldIndex -> healthCheckConfig = input.decode(HealthCheckConfig.serializer())
@@ -189,6 +195,7 @@ data class Container(
                 environment,
                 workingDirectory,
                 volumeMounts,
+                deviceMounts,
                 portMappings,
                 dependencies,
                 healthCheckConfig,
@@ -268,6 +275,7 @@ data class Container(
             output.encodeSerializableElement(descriptor, environmentFieldIndex, EnvironmentSerializer, obj.environment)
             output.encodeSerializableElement(descriptor, workingDirectoryFieldIndex, StringSerializer.nullable, obj.workingDirectory)
             output.encodeSerializableElement(descriptor, volumeMountsFieldIndex, VolumeMount.serializer().set, obj.volumeMounts)
+            output.encodeSerializableElement(descriptor, deviceMountsFieldIndex, DeviceMount.serializer().set, obj.deviceMounts)
             output.encodeSerializableElement(descriptor, portMappingsFieldIndex, PortMapping.serializer().set, obj.portMappings)
             output.encodeSerializableElement(descriptor, dependenciesFieldIndex, DependencySetSerializer, obj.dependencies)
             output.encodeSerializableElement(descriptor, healthCheckConfigFieldIndex, HealthCheckConfig.serializer(), obj.healthCheckConfig)

@@ -18,6 +18,7 @@ package batect.docker
 
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
+import batect.config.DeviceMount
 import batect.config.VolumeMount
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
@@ -35,6 +36,7 @@ data class DockerContainerCreationRequest(
     val environmentVariables: Map<String, String>,
     val workingDirectory: String?,
     val volumeMounts: Set<VolumeMount>,
+    val deviceMounts: Set<DeviceMount>,
     val portMappings: Set<PortMapping>,
     val healthCheckConfig: HealthCheckConfig,
     val userAndGroup: UserAndGroup?,
@@ -75,6 +77,7 @@ data class DockerContainerCreationRequest(
             "HostConfig" to json {
                 "NetworkMode" to network.id
                 "Binds" to formatVolumeMounts()
+                "Devices" to formatDeviceMounts()
                 "PortBindings" to formatPortMappings()
                 "Privileged" to privileged
                 "Init" to init
@@ -102,6 +105,13 @@ data class DockerContainerCreationRequest(
     private fun formatVolumeMounts(): JsonArray = volumeMounts
         .map { it.toString() }
         .toJsonArray()
+
+    private fun formatDeviceMounts(): JsonArray = JsonArray(deviceMounts
+        .map { json {
+            "PathOnHost" to it.localPath
+            "PathInContainer" to it.containerPath
+            "CgroupPermissions" to it.options
+        } })
 
     private fun formatPortMappings(): JsonObject = json {
         portMappings.forEach {

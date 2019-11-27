@@ -210,6 +210,9 @@ object ContainerSpec : Spek({
                 volumes:
                   - /volume1:/here
                   - /somewhere:/else:ro
+                devices:
+                  - /dev/ttyUSB0:/dev/ttyUSB0
+                  - /dev/sda:/dev/xvdc:r
                 ports:
                   - "1234:5678"
                   - "9012:3456"
@@ -258,6 +261,14 @@ object ContainerSpec : Spek({
                             setOf(
                                 VolumeMount("/resolved/volume1", "/here", null),
                                 VolumeMount("/resolved/somewhere", "/else", "ro")
+                            )
+                        )
+                    )
+                    assertThat(
+                        result.deviceMounts, equalTo(
+                            setOf(
+                                DeviceMount("/dev/ttyUSB0", "/dev/ttyUSB0", null),
+                                DeviceMount("/dev/sda", "/dev/xvdc", "r")
                             )
                         )
                     )

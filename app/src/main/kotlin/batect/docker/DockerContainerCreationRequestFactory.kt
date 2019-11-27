@@ -44,6 +44,7 @@ class DockerContainerCreationRequestFactory(
             environmentVariableProvider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork),
             config.workingDirectory,
             container.volumeMounts + additionalVolumeMounts,
+            container.deviceMounts,
             container.portMappings + config.additionalPortMappings,
             container.healthCheckConfig,
             userAndGroup,

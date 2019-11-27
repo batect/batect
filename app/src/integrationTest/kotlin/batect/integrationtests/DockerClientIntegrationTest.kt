@@ -16,6 +16,7 @@
 
 package batect.integrationtests
 
+import batect.config.DeviceMount
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
 import batect.config.VolumeMount
@@ -102,7 +103,15 @@ object DockerClientIntegrationTest : Spek({
         val nativeMethods by createForGroup { getNativeMethodsForPlatform(posix) }
         val client by createForGroup { createClient(posix, nativeMethods) }
 
-        fun creationRequestForContainer(image: DockerImage, network: DockerNetwork, command: List<String>, volumeMounts: Set<VolumeMount> = emptySet(), portMappings: Set<PortMapping> = emptySet(), userAndGroup: UserAndGroup? = null): DockerContainerCreationRequest {
+        fun creationRequestForContainer(
+            image: DockerImage,
+            network: DockerNetwork,
+            command: List<String>,
+            volumeMounts: Set<VolumeMount> = emptySet(),
+            deviceMounts: Set<DeviceMount> = emptySet(),
+            portMappings: Set<PortMapping> = emptySet(),
+            userAndGroup: UserAndGroup? = null
+        ): DockerContainerCreationRequest {
             return DockerContainerCreationRequest(
                 image,
                 network,
@@ -113,6 +122,7 @@ object DockerClientIntegrationTest : Spek({
                 emptyMap(),
                 null,
                 volumeMounts,
+                deviceMounts,
                 portMappings,
                 HealthCheckConfig(),
                 userAndGroup,

@@ -20,6 +20,7 @@ import batect.config.Container
 import batect.config.HealthCheckConfig
 import batect.config.LiteralValue
 import batect.config.PortMapping
+import batect.config.DeviceMount
 import batect.config.VolumeMount
 import batect.execution.ContainerRuntimeConfiguration
 import batect.os.Command
@@ -73,6 +74,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                         entrypoint = Command.parse("some-command-that-wont-be-used"),
                         workingDirectory = "/some-work-dir",
                         volumeMounts = setOf(VolumeMount("local", "remote", "mode")),
+                        deviceMounts = setOf(DeviceMount("/dev/local", "/dev/container", "options")),
                         portMappings = setOf(PortMapping(123, 456)),
                         healthCheckConfig = HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(5)),
                         privileged = false,
@@ -130,6 +132,10 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
                     it("populates the volume mounts on the request with the volume mounts from the container") {
                         assertThat(request.volumeMounts, equalTo(container.volumeMounts))
+                    }
+
+                    it("populates the device mounts on the request with the device mounts from the container") {
+                        assertThat(request.deviceMounts, equalTo(container.deviceMounts))
                     }
 
                     it("populates the port mappings on the request with the port mappings from the container") {

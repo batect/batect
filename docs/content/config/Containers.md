@@ -190,6 +190,8 @@ Two formats are supported:
 
 Note that the `local` device mounts will be different for Windows and Unix-like hosts. See the [Docker guide for adding host devices to containers](https://docs.docker.com/engine/reference/commandline/run/#add-host-device-to-container---device) for more information.
 
+Available since v0.39.
+
 ## `ports`
 List of ports to make available to the host machine.
 

@@ -16,12 +16,8 @@
 
 package batect.config
 
-import batect.config.io.deserializers.PathDeserializer
-import batect.os.PathResolutionResult
-import batect.os.PathType
 import batect.testutils.createForEachTest
 import batect.testutils.on
-import batect.testutils.osIndependentPath
 import batect.testutils.runForEachTest
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
@@ -32,34 +28,17 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.doAnswer
-import com.nhaarman.mockitokotlin2.mock
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.modules.serializersModuleOf
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object DeviceMountSpec : Spek({
     describe("a device mount") {
         describe("deserializing from YAML") {
-            val pathDeserializer by createForEachTest {
-                mock<PathDeserializer> {
-                    on { deserialize(any()) } doAnswer { invocation ->
-                        val input = invocation.arguments[0] as Decoder
 
-                        when (val originalPath = input.decodeString()) {
-                            "/invalid" -> PathResolutionResult.InvalidPath(originalPath)
-                            else -> PathResolutionResult.Resolved(originalPath, osIndependentPath(originalPath), PathType.Other)
-                        }
-                    }
-                }
-            }
-
-            val parser by createForEachTest { Yaml(context = serializersModuleOf(PathResolutionResult::class, pathDeserializer)) }
+            val parser by createForEachTest { Yaml() }
 
             describe("deserializing from compact form") {
-                on("parsing a valid device mount definition") {
+                on("parsing a valid device mount definition without options") {
                     val deviceMount by runForEachTest { parser.parse(DeviceMount.Companion, "'/local:/container'") }
 
                     it("returns the correct local path") {

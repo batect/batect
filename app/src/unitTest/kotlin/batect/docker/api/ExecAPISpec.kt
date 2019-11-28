@@ -98,7 +98,7 @@ object ExecAPISpec : Spek({
             given("a container and exec creation request") {
                 val container = DockerContainer("abc123")
                 val request = DockerExecCreationRequest(false, true, true, true, emptyMap(), emptyList(), false, null, "/some/work/dir")
-                val expectedUrl = "$dockerBaseUrl/v1.35/containers/abc123/exec"
+                val expectedUrl = "$dockerBaseUrl/v1.37/containers/abc123/exec"
 
                 on("a successful creation") {
                     val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, """{"Id": "xyz456"}""", 201) }
@@ -165,7 +165,7 @@ object ExecAPISpec : Spek({
                     .add("Upgrade", "tcp")
                     .build()
 
-                val expectedUrl = "$dockerBaseUrl/v1.35/exec/the-exec-instance/start"
+                val expectedUrl = "$dockerBaseUrl/v1.37/exec/the-exec-instance/start"
 
                 on("starting the exec instance succeeding") {
                     val response = mock<Response> {
@@ -216,7 +216,7 @@ object ExecAPISpec : Spek({
         describe("inspecting an exec instance") {
             given("an exec instance") {
                 val execInstance = DockerExecInstance("some-instance-id")
-                val expectedUrl = "$dockerBaseUrl/v1.35/exec/some-instance-id/json"
+                val expectedUrl = "$dockerBaseUrl/v1.37/exec/some-instance-id/json"
 
                 given("inspecting the exec instance succeeds") {
                     val response = """

@@ -104,7 +104,7 @@ object ImagesAPISpec : Spek({
 
             val expectedUrl = hasScheme("http") and
                 hasHost(dockerHost) and
-                hasPath("/v1.35/build") and
+                hasPath("/v1.37/build") and
                 hasQueryParameter("buildargs", """{"someArg":"someValue"}""") and
                 hasQueryParameter("t", "some_image_tag") and
                 hasQueryParameter("t", "some_other_image_tag") and
@@ -201,7 +201,7 @@ object ImagesAPISpec : Spek({
             on("the build having no build args") {
                 val expectedUrlWithNoBuildArgs = hasScheme("http") and
                     hasHost(dockerHost) and
-                    hasPath("/v1.35/build") and
+                    hasPath("/v1.37/build") and
                     hasQueryParameter("buildargs", """{}""")
 
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithNoBuildArgs, successResponse, 200, expectedHeadersForAuthentication) }
@@ -283,7 +283,7 @@ object ImagesAPISpec : Spek({
 
         describe("pulling an image") {
             val imageName = "some-image"
-            val expectedUrl = "$dockerBaseUrl/v1.35/images/create?fromImage=some-image"
+            val expectedUrl = "$dockerBaseUrl/v1.37/images/create?fromImage=some-image"
             val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
             val longTimeoutClientBuilder by createForEachTest {
                 mock<OkHttpClient.Builder> { mock ->
@@ -413,7 +413,7 @@ object ImagesAPISpec : Spek({
             val imageName = "some:image"
             val expectedUrl = hasScheme("http") and
                 hasHost(dockerHost) and
-                hasPath("/v1.35/images/json") and
+                hasPath("/v1.37/images/json") and
                 hasQueryParameter("filters", """{"reference":["some:image"]}""")
 
             on("the image already having been pulled") {

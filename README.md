@@ -33,7 +33,7 @@
 
 ## System requirements
 
-batect requires Docker 17.12 or newer, Java 8 or newer (although this requirement will be removed before v1.0), and:
+batect requires Docker 18.03.1 or newer, Java 8 or newer (although this requirement will be removed before v1.0), and:
 
 * On Linux and OS X: Bash and `curl`
 * On Windows: Windows 10

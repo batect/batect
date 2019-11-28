@@ -65,7 +65,7 @@ object NetworksAPISpec : Spek({
         val errorMessageWithCorrectLineEndings = "Something went wrong.SYSTEM_LINE_SEPARATORMore details on next line."
 
         describe("creating a network") {
-            val expectedUrl = "$dockerBaseUrl/v1.35/networks/create"
+            val expectedUrl = "$dockerBaseUrl/v1.37/networks/create"
 
             on("a successful creation") {
                 val call by createForEachTest { httpClient.mockPost(expectedUrl, """{"Id": "the-network-ID"}""", 201) }
@@ -100,7 +100,7 @@ object NetworksAPISpec : Spek({
         describe("deleting a network") {
             given("an existing network") {
                 val network = DockerNetwork("abc123")
-                val expectedUrl = "$dockerBaseUrl/v1.35/networks/abc123"
+                val expectedUrl = "$dockerBaseUrl/v1.37/networks/abc123"
 
                 on("a successful deletion") {
                     val call by createForEachTest { httpClient.mockDelete(expectedUrl, "", 204) }

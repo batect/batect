@@ -45,7 +45,6 @@ jobs:
 
     - stage: Integration and journey test
       name: Integration test against latest Docker
-      dist: xenial
       before_install: ./travis/install_docker.sh
       script: ./gradlew integrationTest
       workspaces:
@@ -54,7 +53,6 @@ jobs:
 
     - stage: Integration and journey test
       name: Journey test against latest Docker
-      dist: xenial
       before_install: ./travis/install_docker.sh
       script: ./gradlew journeyTest
       workspaces:
@@ -62,18 +60,16 @@ jobs:
           - build_workspace
 
     - stage: Integration and journey test
-      name: Integration test against Docker 17.12
-      dist: trusty
-      before_install: ./travis/install_docker.sh docker-ce=17.12.1~ce-0~ubuntu
+      name: Integration test against Docker 18.03.1
+      before_install: ./travis/install_docker.sh docker-ce=18.03.1~ce-0~ubuntu
       script: ./gradlew integrationTest
       workspaces:
         use:
           - build_workspace
 
     - stage: Integration and journey test
-      name: Journey test against Docker 17.12
-      dist: trusty
-      before_install: ./travis/install_docker.sh docker-ce=17.12.1~ce-0~ubuntu
+      name: Journey test against Docker 18.03.1
+      before_install: ./travis/install_docker.sh docker-ce=18.03.1~ce-0~ubuntu
       script: ./gradlew journeyTest
       workspaces:
         use:
@@ -82,7 +78,6 @@ jobs:
     - stage: Integration and journey test
       name: Wait for Windows build to complete
       if: (tag IS present OR branch = "master") AND repo = "charleskorn/batect" AND type != pull_request
-      dist: xenial
       script: ./travis/wait_for_appveyor.sh
 
     - stage: Publish

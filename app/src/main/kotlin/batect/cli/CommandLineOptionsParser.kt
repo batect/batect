@@ -81,7 +81,7 @@ class CommandLineOptionsParser(
 
     private val dockerHost: String by valueOption(
         "docker-host",
-        "Docker host to use, in the format 'unix:///var/run/docker.sock', 'npipe:////./pipe/docker_engine', 'tcp://1.2.3.4:5678' or 'http://1.2.3.4:5678'.",
+        "Docker host to use, in the format 'unix:///var/run/docker.sock', 'npipe:////./pipe/docker_engine' or 'tcp://1.2.3.4:5678'.",
         environmentVariableDefaultValueProviderFactory.create("DOCKER_HOST", dockerHttpConfigDefaults.defaultDockerHost, ValueConverters::string)
     )
 

@@ -44,7 +44,7 @@ data class CommandLineOptions(
     val dontPropagateProxyEnvironmentVariables: Boolean = false,
     val taskName: String? = null,
     val additionalTaskCommandArguments: Iterable<String> = emptyList(),
-    val dockerHost: String = "http://set-to-default-value-in/CommandLineOptionsParser",
+    val dockerHost: String = "tcp://set-to-default-value-in/CommandLineOptionsParser",
     val dockerUseTLS: Boolean = false,
     val dockerVerifyTLS: Boolean = false,
     val dockerTlsCACertificatePath: Path? = null,

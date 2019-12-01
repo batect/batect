@@ -158,10 +158,6 @@ object DockerHttpConfigSpec : Spek({
             "tcp://1.2.3.4:1234" to HttpUrl.get("http://1.2.3.4:1234"),
             "tcp://1.2.3.4/somewhere" to HttpUrl.get("http://1.2.3.4/somewhere"),
             "tcp://1.2.3.4:1234/somewhere" to HttpUrl.get("http://1.2.3.4:1234/somewhere"),
-            "http://1.2.3.4" to HttpUrl.get("http://1.2.3.4"),
-            "http://1.2.3.4:1234" to HttpUrl.get("http://1.2.3.4:1234"),
-            "http://1.2.3.4/somewhere" to HttpUrl.get("http://1.2.3.4/somewhere"),
-            "http://1.2.3.4:1234/somewhere" to HttpUrl.get("http://1.2.3.4:1234/somewhere"),
             "1.2.3.4" to HttpUrl.get("http://1.2.3.4"),
             "1.2.3.4:1234" to HttpUrl.get("http://1.2.3.4:1234"),
             ":1234" to HttpUrl.get("http://0.0.0.0:1234")
@@ -198,14 +194,20 @@ object DockerHttpConfigSpec : Spek({
             }
         }
 
-        given("a host address with an invalid scheme") {
-            val systemInfo by createForEachTest { systemInfoFor(OperatingSystem.Other) }
+        listOf(
+            "http",
+            "https",
+            "somethingelse"
+        ).forEach { scheme ->
+            given("a host address with the invalid scheme '$scheme'") {
+                val systemInfo by createForEachTest { systemInfoFor(OperatingSystem.Other) }
 
-            it("throws an appropriate exception") {
-                assertThat(
-                    { DockerHttpConfig(baseClient, "somethingelse://1.2.3.4", systemInfo) },
-                    throws<InvalidDockerConfigurationException>(withMessage("The scheme 'somethingelse' in 'somethingelse://1.2.3.4' is not a valid Docker host scheme."))
-                )
+                it("throws an appropriate exception") {
+                    assertThat(
+                        { DockerHttpConfig(baseClient, "$scheme://1.2.3.4", systemInfo) },
+                        throws<InvalidDockerConfigurationException>(withMessage("The scheme '$scheme' in '$scheme://1.2.3.4' is not a valid Docker host scheme."))
+                    )
+                }
             }
         }
     }

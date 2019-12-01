@@ -92,7 +92,7 @@ class DockerHttpConfig(
         if (dockerHost.contains("://")) {
             val scheme = dockerHost.substringBefore("://")
 
-            if (scheme !in setOf("tcp", "http")) {
+            if (scheme != "tcp") {
                 throw InvalidDockerConfigurationException("The scheme '$scheme' in '$dockerHost' is not a valid Docker host scheme.")
             }
 

@@ -16,7 +16,9 @@
 
 package batect.cli.options.defaultvalues
 
-data class StaticDefaultValueProvider<T>(override val value: T) : DefaultValueProvider<T> {
+data class StaticDefaultValueProvider<T>(val default: T) : DefaultValueProvider<T> {
+    override val value: PossibleValue<T> = PossibleValue.Valid(default)
+
     override val description: String
-        get() = if (value == null) "" else "defaults to '$value' if not set"
+        get() = if (default == null) "" else "defaults to '$default' if not set"
 }

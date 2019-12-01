@@ -65,6 +65,7 @@ object OptionParserSpec : Spek({
                         on { longOption } doReturn "--value"
                         on { shortName } doReturn 'v'
                         on { shortOption } doReturn "-v"
+                        on { checkDefaultValue() } doReturn DefaultApplicationResult.Succeeded
                     }
                 }
 
@@ -73,14 +74,28 @@ object OptionParserSpec : Spek({
                 }
 
                 on("parsing an empty list of arguments") {
-                    val result by runForEachTest { parser.parseOptions(emptyList()) }
+                    given("the default value for the option is valid") {
+                        val result by runForEachTest { parser.parseOptions(emptyList()) }
 
-                    it("indicates that parsing succeeded and that no arguments were consumed") {
-                        assertThat(result, equalTo(OptionsParsingResult.ReadOptions(0)))
+                        it("indicates that parsing succeeded and that no arguments were consumed") {
+                            assertThat(result, equalTo(OptionsParsingResult.ReadOptions(0)))
+                        }
+
+                        it("does not ask the option to parse a value") {
+                            verify(option, never()).parse(any())
+                        }
                     }
 
-                    it("does not ask the option to parse a value") {
-                        verify(option, never()).parse(any())
+                    given("the default value for the option is not valid") {
+                        beforeEachTest {
+                            whenever(option.checkDefaultValue()).doReturn(DefaultApplicationResult.Failed("The default value is not valid"))
+                        }
+
+                        val result by runForEachTest { parser.parseOptions(emptyList()) }
+
+                        it("indicates that parsing failed") {
+                            assertThat(result, equalTo(OptionsParsingResult.InvalidOptions("The default value for the --value option is invalid: The default value is not valid")))
+                        }
                     }
                 }
 

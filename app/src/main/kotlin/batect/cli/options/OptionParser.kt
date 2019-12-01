@@ -17,6 +17,7 @@
 package batect.cli.options
 
 import batect.cli.options.defaultvalues.DefaultValueProvider
+import batect.cli.options.defaultvalues.StandardFlagOptionDefaultValueProvider
 import batect.cli.options.defaultvalues.StaticDefaultValueProvider
 
 class OptionParser {
@@ -30,11 +31,11 @@ class OptionParser {
             when (val optionParsingResult = parseOption(args, argIndex)) {
                 is OptionParsingResult.ReadOption -> argIndex += optionParsingResult.argumentsConsumed
                 is OptionParsingResult.InvalidOption -> return OptionsParsingResult.InvalidOptions(optionParsingResult.message)
-                is OptionParsingResult.NoOption -> return OptionsParsingResult.ReadOptions(argIndex)
+                is OptionParsingResult.NoOption -> return checkDefaults(argIndex)
             }
         }
 
-        return OptionsParsingResult.ReadOptions(argIndex)
+        return checkDefaults(argIndex)
     }
 
     private fun parseOption(args: Iterable<String>, currentIndex: Int): OptionParsingResult {
@@ -51,6 +52,16 @@ class OptionParser {
         }
 
         return option.parse(args.drop(currentIndex))
+    }
+
+    private fun checkDefaults(argumentsConsumed: Int): OptionsParsingResult {
+        options.forEach {
+            when (val result = it.checkDefaultValue()) {
+                is DefaultApplicationResult.Failed -> return OptionsParsingResult.InvalidOptions("The default value for the ${it.longOption} option is invalid: ${result.message}")
+            }
+        }
+
+        return OptionsParsingResult.ReadOptions(argumentsConsumed)
     }
 
     fun addOption(option: OptionDefinition) {
@@ -80,22 +91,25 @@ interface OptionParserContainer {
         valueOption(longName, description, ValueConverters::string, shortName)
 
     fun <V> valueOption(longName: String, description: String, valueConverter: (String) -> ValueConversionResult<V>, shortName: Char? = null) =
-        ValueOption(longName, description, StaticDefaultValueProvider<V?>(null), valueConverter, shortName)
+        valueOption(longName, description, StaticDefaultValueProvider<V?>(null), valueConverter, shortName)
 
     fun valueOption(longName: String, description: String, defaultValue: String, shortName: Char? = null) =
         valueOption(longName, description, defaultValue, ValueConverters::string, shortName)
 
     fun <V> valueOption(longName: String, description: String, defaultValue: V, valueConverter: (String) -> ValueConversionResult<V>, shortName: Char? = null) =
-        ValueOption(longName, description, StaticDefaultValueProvider(defaultValue), valueConverter, shortName)
+        valueOption(longName, description, StaticDefaultValueProvider(defaultValue), valueConverter, shortName)
 
     fun valueOption(longName: String, description: String, defaultValueProvider: DefaultValueProvider<String>, shortName: Char? = null) =
-        ValueOption(longName, description, defaultValueProvider, ValueConverters::string, shortName)
+        valueOption(longName, description, defaultValueProvider, ValueConverters::string, shortName)
 
-    fun valueOption(longName: String, description: String, defaultValueProvider: DefaultValueProvider<Int>, valueConverter: (String) -> ValueConversionResult<Int>, shortName: Char? = null) =
+    fun <StorageType, ValueType : StorageType> valueOption(longName: String, description: String, defaultValueProvider: DefaultValueProvider<StorageType>, valueConverter: (String) -> ValueConversionResult<ValueType>, shortName: Char? = null) =
         ValueOption(longName, description, defaultValueProvider, valueConverter, shortName)
 
     fun flagOption(longName: String, description: String, shortName: Char? = null) =
-        FlagOption(longName, description, shortName)
+        flagOption(longName, description, StandardFlagOptionDefaultValueProvider, shortName)
+
+    fun flagOption(longName: String, description: String, defaultValueProvider: DefaultValueProvider<Boolean>, shortName: Char? = null) =
+        FlagOption(longName, description, defaultValueProvider, shortName)
 }
 
 sealed class OptionsParsingResult {

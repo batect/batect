@@ -14,14 +14,9 @@
    limitations under the License.
 */
 
-package batect.cli.options.defaultvalues
+package batect.cli.options
 
-interface DefaultValueProvider<T> {
-    val value: PossibleValue<T>
-    val description: String
-}
-
-sealed class PossibleValue<V> {
-    data class Valid<V>(val value: V) : PossibleValue<V>()
-    data class Invalid<V>(val message: String) : PossibleValue<V>()
+enum class OptionValueSource {
+    Default,
+    CommandLine
 }

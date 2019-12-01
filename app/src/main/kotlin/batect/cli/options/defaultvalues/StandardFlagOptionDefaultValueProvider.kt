@@ -16,12 +16,7 @@
 
 package batect.cli.options.defaultvalues
 
-interface DefaultValueProvider<T> {
-    val value: PossibleValue<T>
-    val description: String
-}
-
-sealed class PossibleValue<V> {
-    data class Valid<V>(val value: V) : PossibleValue<V>()
-    data class Invalid<V>(val message: String) : PossibleValue<V>()
+object StandardFlagOptionDefaultValueProvider : DefaultValueProvider<Boolean> {
+    override val value: PossibleValue<Boolean> = PossibleValue.Valid(false)
+    override val description: String = ""
 }

@@ -16,15 +16,19 @@
 
 package batect.cli.options
 
+import batect.cli.options.defaultvalues.DefaultValueProvider
+import batect.cli.options.defaultvalues.PossibleValue
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
 class FlagOption(
     longName: String,
     description: String,
+    val defaultValueProvider: DefaultValueProvider<Boolean>,
     shortName: Char? = null
 ) : OptionDefinition(longName, description, false, shortName), ReadOnlyProperty<OptionParserContainer, Boolean> {
-    var value = false
+    private var value: PossibleValue<Boolean> = defaultValueProvider.value
+    override var valueSource: OptionValueSource = OptionValueSource.Default
         private set
 
     override fun parseValue(args: Iterable<String>): OptionParsingResult {
@@ -35,9 +39,15 @@ class FlagOption(
             return OptionParsingResult.InvalidOption("The option '$argName' does not take a value.")
         }
 
-        value = true
+        value = PossibleValue.Valid(true)
+        valueSource = OptionValueSource.CommandLine
 
         return OptionParsingResult.ReadOption(1)
+    }
+
+    override fun checkDefaultValue(): DefaultApplicationResult = when (value) {
+        is PossibleValue.Valid -> DefaultApplicationResult.Succeeded
+        is PossibleValue.Invalid -> DefaultApplicationResult.Failed((value as PossibleValue.Invalid).message)
     }
 
     operator fun provideDelegate(thisRef: OptionParserContainer, property: KProperty<*>): FlagOption {
@@ -45,5 +55,19 @@ class FlagOption(
         return this
     }
 
-    override fun getValue(thisRef: OptionParserContainer, property: KProperty<*>): Boolean = value
+    override fun getValue(thisRef: OptionParserContainer, property: KProperty<*>): Boolean = when (value) {
+        is PossibleValue.Valid -> (value as PossibleValue.Valid<Boolean>).value
+        is PossibleValue.Invalid -> throw IllegalStateException("Cannot get the value for this option: ${(value as PossibleValue.Invalid).message}")
+    }
+
+    override val descriptionForHelp: String
+        get() {
+            val defaultDescription = defaultValueProvider.description
+
+            if (defaultDescription == "") {
+                return description
+            } else {
+                return "$description ($defaultDescription)"
+            }
+        }
 }

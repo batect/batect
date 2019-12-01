@@ -27,6 +27,8 @@ import batect.testutils.on
 import batect.testutils.withAdditionalData
 import batect.testutils.withLogMessage
 import batect.testutils.withSeverity
+import com.google.common.jimfs.Configuration
+import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.hasSize
@@ -40,7 +42,8 @@ object ApplicationInfoLoggerSpec : Spek({
         val logSink = InMemoryLogSink()
         val logger = Logger("applicationInfo", logSink)
         val versionInfo = VersionInfo()
-        val systemInfo = SystemInfo(OperatingSystem.Linux, "1.2.3", "line-separator", "4.5.6", "me", "/home", "/tmp")
+        val fileSystem = Jimfs.newFileSystem(Configuration.unix())
+        val systemInfo = SystemInfo(OperatingSystem.Linux, "1.2.3", "line-separator", "4.5.6", "me", fileSystem.getPath("/home"), "/tmp")
         val environmentVariables = mapOf("PATH" to "/bin:/usr/bin:/usr/local/bin")
         val dockerSystemInfoClient = mock<DockerSystemInfoClient> {
             on { getDockerVersionInfo() } doReturn DockerVersionInfoRetrievalResult.Failed("Docker version 1.2.3.4")

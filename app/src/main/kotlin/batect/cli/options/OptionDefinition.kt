@@ -23,6 +23,7 @@ abstract class OptionDefinition(
     val shortName: Char? = null
 ) {
     private var alreadySeen: Boolean = false
+    abstract val valueSource: OptionValueSource
 
     val longOption = "--$longName"
     val shortOption = if (shortName != null) "-$shortName" else null
@@ -80,6 +81,12 @@ abstract class OptionDefinition(
     }
 
     internal abstract fun parseValue(args: Iterable<String>): OptionParsingResult
+    internal abstract fun checkDefaultValue(): DefaultApplicationResult
 
     open val descriptionForHelp: String = description
+}
+
+sealed class DefaultApplicationResult {
+    object Succeeded : DefaultApplicationResult()
+    data class Failed(val message: String) : DefaultApplicationResult()
 }

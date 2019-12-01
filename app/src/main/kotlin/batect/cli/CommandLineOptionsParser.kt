@@ -18,11 +18,13 @@ package batect.cli
 
 import batect.cli.options.OptionParser
 import batect.cli.options.OptionParserContainer
+import batect.cli.options.OptionValueSource
 import batect.cli.options.OptionsParsingResult
 import batect.cli.options.ValueConverters
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.docker.DockerHttpConfigDefaults
 import batect.os.PathResolverFactory
+import batect.os.SystemInfo
 import batect.ui.OutputStyle
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -30,7 +32,8 @@ import java.nio.file.Paths
 class CommandLineOptionsParser(
     pathResolverFactory: PathResolverFactory,
     environmentVariableDefaultValueProviderFactory: EnvironmentVariableDefaultValueProviderFactory,
-    dockerHttpConfigDefaults: DockerHttpConfigDefaults
+    dockerHttpConfigDefaults: DockerHttpConfigDefaults,
+    systemInfo: SystemInfo
 ) : OptionParserContainer {
     override val optionParser: OptionParser = OptionParser()
 
@@ -54,7 +57,7 @@ class CommandLineOptionsParser(
         "config-file",
         "The configuration file to use.",
         Paths.get("batect.yml"),
-        ValueConverters.pathToFile(pathResolverFactory),
+        ValueConverters.pathToFile(pathResolverFactory, mustExist = true),
         'f'
     )
 
@@ -79,8 +82,61 @@ class CommandLineOptionsParser(
     private val dockerHost: String by valueOption(
         "docker-host",
         "Docker host to use, in the format 'unix:///var/run/docker.sock', 'npipe:////./pipe/docker_engine', 'tcp://1.2.3.4:5678' or 'http://1.2.3.4:5678'.",
-        environmentVariableDefaultValueProviderFactory.create("DOCKER_HOST", dockerHttpConfigDefaults.defaultDockerHost)
+        environmentVariableDefaultValueProviderFactory.create("DOCKER_HOST", dockerHttpConfigDefaults.defaultDockerHost, ValueConverters::string)
     )
+
+    private val dockerUseTLSOption = flagOption(
+        "docker-tls",
+        "Use TLS when communicating with the Docker host, but don't verify the certificate presented by the Docker host."
+    )
+
+    private val dockerUseTLS: Boolean by dockerUseTLSOption
+
+    private val dockerVerifyTLSOption = flagOption(
+        "docker-tls-verify",
+        "Use TLS when communicating with the Docker host and verify the certificate presented by the Docker host. (implies ${dockerUseTLSOption.longOption})",
+        environmentVariableDefaultValueProviderFactory.create("DOCKER_TLS_VERIFY", false, ValueConverters::boolean)
+    )
+
+    private val dockerVerifyTLS: Boolean by dockerVerifyTLSOption
+
+    private val dockerDirectory = systemInfo.homeDirectory.resolve(".docker")
+
+    private val dockerCertificateDirectoryOption = valueOption(
+        "docker-cert-path",
+        "Path to directory containing certificates to use to provide authentication to the Docker host and authenticate the Docker host. Has no effect if ${dockerUseTLSOption.longOption} is not set.",
+        environmentVariableDefaultValueProviderFactory.create("DOCKER_CERT_PATH", null, ValueConverters.pathToDirectory(pathResolverFactory, mustExist = true)),
+        ValueConverters.pathToDirectory(pathResolverFactory, mustExist = true)
+    )
+
+    private val dockerCertificateDirectory: Path? by dockerCertificateDirectoryOption
+
+    private val dockerTLSCACertificatePathOption = valueOption(
+        "docker-tls-ca-cert",
+        "Path to TLS CA certificate file that should be used to verify certificates presented by the Docker host. Has no effect if ${dockerVerifyTLSOption.longOption} is not set, and takes precedence over ${dockerCertificateDirectoryOption.longOption}.",
+        dockerDirectory.resolve("ca.pem"),
+        ValueConverters.pathToFile(pathResolverFactory, mustExist = true)
+    )
+
+    private val dockerTlsCACertificatePath: Path by dockerTLSCACertificatePathOption
+
+    private val dockerTLSCertificatePathOption = valueOption(
+        "docker-tls-cert",
+        "Path to TLS certificate file to use to authenticate to the Docker host. Has no effect if ${dockerUseTLSOption.longOption} is not set, and takes precedence over ${dockerCertificateDirectoryOption.longOption}.",
+        dockerDirectory.resolve("cert.pem"),
+        ValueConverters.pathToFile(pathResolverFactory, mustExist = true)
+    )
+
+    private val dockerTLSCertificatePath: Path by dockerTLSCertificatePathOption
+
+    private val dockerTLSKeyPathOption = valueOption(
+        "docker-tls-key",
+        "Path to TLS key file to use to authenticate to the Docker host. Has no effect if ${dockerUseTLSOption.longOption} is not set, and takes precedence over ${dockerCertificateDirectoryOption.longOption}.",
+        dockerDirectory.resolve("key.pem"),
+        ValueConverters.pathToFile(pathResolverFactory, mustExist = true)
+    )
+
+    private val dockerTLSKeyPath: Path by dockerTLSKeyPathOption
 
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {
         when (val result = optionParser.parseOptions(args)) {
@@ -120,6 +176,14 @@ class CommandLineOptionsParser(
         }
     }
 
+    private fun resolvePathToDockerCertificate(path: Path, valueSource: OptionValueSource, defaultFileName: String): Path {
+        return if (dockerCertificateDirectory == null || valueSource == OptionValueSource.CommandLine) {
+            path
+        } else {
+            dockerCertificateDirectory!!.resolve(defaultFileName)
+        }
+    }
+
     private fun createOptionsObject(taskName: String?, additionalTaskCommandArguments: Iterable<String>) = CommandLineOptions(
         showHelp = showHelp,
         showVersionInfo = showVersionInfo,
@@ -135,7 +199,12 @@ class CommandLineOptionsParser(
         dontPropagateProxyEnvironmentVariables = dontPropagateProxyEnvironmentVariables,
         taskName = taskName,
         additionalTaskCommandArguments = additionalTaskCommandArguments,
-        dockerHost = dockerHost
+        dockerHost = dockerHost,
+        dockerUseTLS = dockerUseTLS || dockerVerifyTLS,
+        dockerVerifyTLS = dockerVerifyTLS,
+        dockerTLSKeyPath = resolvePathToDockerCertificate(dockerTLSKeyPath, dockerTLSKeyPathOption.valueSource, "key.pem"),
+        dockerTLSCertificatePath = resolvePathToDockerCertificate(dockerTLSCertificatePath, dockerTLSCertificatePathOption.valueSource, "cert.pem"),
+        dockerTlsCACertificatePath = resolvePathToDockerCertificate(dockerTlsCACertificatePath, dockerTLSCACertificatePathOption.valueSource, "ca.pem")
     )
 }
 

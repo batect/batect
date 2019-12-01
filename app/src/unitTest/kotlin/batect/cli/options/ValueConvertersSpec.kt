@@ -40,6 +40,42 @@ object ValueConvertersSpec : Spek({
             }
         }
 
+        describe("boolean value converter") {
+            listOf(
+                "1",
+                "yes",
+                "YES",
+                "true",
+                "TRUE"
+            ).forEach { value ->
+                given("the value '$value'") {
+                    it("returns the value 'true'") {
+                        assertThat(ValueConverters.boolean(value), equalTo(ValueConversionResult.ConversionSucceeded(true)))
+                    }
+                }
+            }
+
+            listOf(
+                "0",
+                "no",
+                "NO",
+                "false",
+                "FALSE"
+            ).forEach { value ->
+                given("the value '$value'") {
+                    it("returns the value 'false'") {
+                        assertThat(ValueConverters.boolean(value), equalTo(ValueConversionResult.ConversionSucceeded(false)))
+                    }
+                }
+            }
+
+            given("an invalid value") {
+                it("returns an appropriate error") {
+                    assertThat(ValueConverters.boolean("blah"), equalTo(ValueConversionResult.ConversionFailed("Value is not a recognised boolean value.")))
+                }
+            }
+        }
+
         describe("positive integer value converter") {
             given("a positive integer") {
                 it("returns the parsed representation of that integer") {
@@ -121,35 +157,155 @@ object ValueConvertersSpec : Spek({
                 on { createResolverForCurrentDirectory() } doReturn pathResolver
             }
 
-            val converter = ValueConverters.pathToFile(pathResolverFactory)
+            given("the file is not required to exist") {
+                val converter = ValueConverters.pathToFile(pathResolverFactory, mustExist = false)
 
-            given("a path to a file that exists") {
-                it("returns the resolved path") {
-                    assertThat(converter("file"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/file"))))
+                given("a path to a file that exists") {
+                    it("returns the resolved path") {
+                        assertThat(converter("file"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/file"))))
+                    }
+                }
+
+                given("a path to a directory") {
+                    it("returns an error") {
+                        assertThat(converter("directory"), equalTo(ValueConversionResult.ConversionFailed("The path 'directory' (resolved to '/resolved/directory') refers to a directory.")))
+                    }
+                }
+
+                given("a path to something other than a file or directory") {
+                    it("returns an error") {
+                        assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (resolved to '/resolved/other') refers to something other than a file.")))
+                    }
+                }
+
+                given("a path to a file that does not exist") {
+                    it("returns the resolved path") {
+                        assertThat(converter("does-not-exist"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/does-not-exist"))))
+                    }
+                }
+
+                given("an invalid path") {
+                    it("returns an error") {
+                        assertThat(converter("invalid"), equalTo(ValueConversionResult.ConversionFailed("'invalid' is not a valid path.")))
+                    }
                 }
             }
 
-            given("a path to a directory") {
-                it("returns an error") {
-                    assertThat(converter("directory"), equalTo(ValueConversionResult.ConversionFailed("The path 'directory' refers to a directory.")))
+            given("the file is required to exist") {
+                val converter = ValueConverters.pathToFile(pathResolverFactory, mustExist = true)
+
+                given("a path to a file that exists") {
+                    it("returns the resolved path") {
+                        assertThat(converter("file"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/file"))))
+                    }
+                }
+
+                given("a path to a directory") {
+                    it("returns an error") {
+                        assertThat(converter("directory"), equalTo(ValueConversionResult.ConversionFailed("The path 'directory' (resolved to '/resolved/directory') refers to a directory.")))
+                    }
+                }
+
+                given("a path to something other than a file or directory") {
+                    it("returns an error") {
+                        assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (resolved to '/resolved/other') refers to something other than a file.")))
+                    }
+                }
+
+                given("a path to a file that does not exist") {
+                    it("returns an error") {
+                        assertThat(converter("does-not-exist"), equalTo(ValueConversionResult.ConversionFailed("The file 'does-not-exist' (resolved to '/resolved/does-not-exist') does not exist.")))
+                    }
+                }
+
+                given("an invalid path") {
+                    it("returns an error") {
+                        assertThat(converter("invalid"), equalTo(ValueConversionResult.ConversionFailed("'invalid' is not a valid path.")))
+                    }
+                }
+            }
+        }
+
+        describe("path to directory converter") {
+            val fileSystem = Jimfs.newFileSystem(Configuration.unix())
+
+            val pathResolver = mock<PathResolver> {
+                on { resolve("file") } doReturn PathResolutionResult.Resolved("file", fileSystem.getPath("/resolved/file"), PathType.File)
+                on { resolve("directory") } doReturn PathResolutionResult.Resolved("directory", fileSystem.getPath("/resolved/directory"), PathType.Directory)
+                on { resolve("other") } doReturn PathResolutionResult.Resolved("other", fileSystem.getPath("/resolved/other"), PathType.Other)
+                on { resolve("does-not-exist") } doReturn PathResolutionResult.Resolved("does-not-exist", fileSystem.getPath("/resolved/does-not-exist"), PathType.DoesNotExist)
+                on { resolve("invalid") } doReturn PathResolutionResult.InvalidPath("invalid")
+            }
+
+            val pathResolverFactory = mock<PathResolverFactory> {
+                on { createResolverForCurrentDirectory() } doReturn pathResolver
+            }
+
+            given("the directory is not required to exist") {
+                val converter = ValueConverters.pathToDirectory(pathResolverFactory, mustExist = false)
+
+                given("a path to a file") {
+                    it("returns an error") {
+                        assertThat(converter("file"), equalTo(ValueConversionResult.ConversionFailed("The path 'file' (resolved to '/resolved/file') refers to a file.")))
+                    }
+                }
+
+                given("a path to a directory") {
+                    it("returns the resolved path") {
+                        assertThat(converter("directory"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/directory"))))
+                    }
+                }
+
+                given("a path to something other than a file or directory") {
+                    it("returns an error") {
+                        assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (resolved to '/resolved/other') refers to something other than a directory.")))
+                    }
+                }
+
+                given("a path to a directory that does not exist") {
+                    it("returns the resolved path") {
+                        assertThat(converter("does-not-exist"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/does-not-exist"))))
+                    }
+                }
+
+                given("an invalid path") {
+                    it("returns an error") {
+                        assertThat(converter("invalid"), equalTo(ValueConversionResult.ConversionFailed("'invalid' is not a valid path.")))
+                    }
                 }
             }
 
-            given("a path to something other than a file or directory") {
-                it("returns an error") {
-                    assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' refers to something other than a file.")))
-                }
-            }
+            given("the file is required to exist") {
+                val converter = ValueConverters.pathToDirectory(pathResolverFactory, mustExist = true)
 
-            given("a path to a file that does not exist") {
-                it("returns the resolved path") {
-                    assertThat(converter("does-not-exist"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/does-not-exist"))))
+                given("a path to a file") {
+                    it("returns an error") {
+                        assertThat(converter("file"), equalTo(ValueConversionResult.ConversionFailed("The path 'file' (resolved to '/resolved/file') refers to a file.")))
+                    }
                 }
-            }
 
-            given("an invalid path") {
-                it("returns an error") {
-                    assertThat(converter("invalid"), equalTo(ValueConversionResult.ConversionFailed("'invalid' is not a valid path.")))
+                given("a path to a directory") {
+                    it("returns the resolved path") {
+                        assertThat(converter("directory"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/directory"))))
+                    }
+                }
+
+                given("a path to something other than a file or directory") {
+                    it("returns an error") {
+                        assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (resolved to '/resolved/other') refers to something other than a directory.")))
+                    }
+                }
+
+                given("a path to a directory that does not exist") {
+                    it("returns an error") {
+                        assertThat(converter("does-not-exist"), equalTo(ValueConversionResult.ConversionFailed("The directory 'does-not-exist' (resolved to '/resolved/does-not-exist') does not exist.")))
+                    }
+                }
+
+                given("an invalid path") {
+                    it("returns an error") {
+                        assertThat(converter("invalid"), equalTo(ValueConversionResult.ConversionFailed("'invalid' is not a valid path.")))
+                    }
                 }
             }
         }

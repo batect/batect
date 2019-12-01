@@ -149,7 +149,7 @@ enum class StreamType {
 
 private val cliModule = Kodein.Module("cli") {
     bind<CommandFactory>() with singleton { CommandFactory() }
-    bind<CommandLineOptionsParser>() with singleton { CommandLineOptionsParser(instance(), instance(), instance()) }
+    bind<CommandLineOptionsParser>() with singleton { CommandLineOptionsParser(instance(), instance(), instance(), instance()) }
     bind<EnvironmentVariableDefaultValueProviderFactory>() with singleton { EnvironmentVariableDefaultValueProviderFactory() }
 
     bind<RunTaskCommand>() with singletonWithLogger { logger ->
@@ -247,7 +247,7 @@ private val osModule = Kodein.Module("os") {
     bind<ProxyEnvironmentVariablePreprocessor>() with singletonWithLogger { logger -> ProxyEnvironmentVariablePreprocessor(instance(), logger) }
     bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider(instance()) }
     bind<SignalListener>() with singleton { SignalListener(instance()) }
-    bind<SystemInfo>() with singleton { SystemInfo(instance()) }
+    bind<SystemInfo>() with singleton { SystemInfo(instance(), instance()) }
 }
 
 private val unixModule = Kodein.Module("os.unix") {
@@ -286,7 +286,7 @@ private val uiModule = Kodein.Module("ui") {
 
 private val updatesModule = Kodein.Module("updates") {
     bind<UpdateInfoDownloader>() with singletonWithLogger { logger -> UpdateInfoDownloader(instance(), logger) }
-    bind<UpdateInfoStorage>() with singletonWithLogger { logger -> UpdateInfoStorage(instance(), instance(), logger) }
+    bind<UpdateInfoStorage>() with singletonWithLogger { logger -> UpdateInfoStorage(instance(), logger) }
     bind<UpdateInfoUpdater>() with singletonWithLogger { logger -> UpdateInfoUpdater(instance(), instance(), logger) }
     bind<UpdateNotifier>() with singletonWithLogger { logger -> UpdateNotifier(commandLineOptions().disableUpdateNotification, instance(), instance(), instance(), instance(StreamType.Output), logger) }
 }

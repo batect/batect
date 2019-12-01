@@ -41,17 +41,19 @@ object UpdateInfoStorageSpec : Spek({
     describe("update information storage") {
         val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
 
-        val homeDir = "/some/home/dir"
-        val expectedUpdateInfoDirectory = "$homeDir/.batect/updates/v2"
-        val expectedUpdateInfoPath = "$expectedUpdateInfoDirectory/latestVersion"
+        val homeDir by createForEachTest { fileSystem.getPath("/some/home/dir") }
+        val expectedUpdateInfoDirectory by createForEachTest { fileSystem.getPath("$homeDir/.batect/updates/v2") }
+        val expectedUpdateInfoPath by createForEachTest { fileSystem.getPath("$expectedUpdateInfoDirectory/latestVersion") }
 
-        val systemInfo = mock<SystemInfo> {
-            on { homeDirectory } doReturn homeDir
+        val systemInfo by createForEachTest {
+            mock<SystemInfo> {
+                on { homeDirectory } doReturn homeDir
+            }
         }
 
         val logger by createLoggerForEachTest()
 
-        val storage by createForEachTest { UpdateInfoStorage(fileSystem, systemInfo, logger) }
+        val storage by createForEachTest { UpdateInfoStorage(systemInfo, logger) }
 
         describe("reading update information from disk") {
             on("when no update information has been written to disk") {
@@ -64,9 +66,9 @@ object UpdateInfoStorageSpec : Spek({
 
             on("when some update information has been written to disk already") {
                 beforeEachTest {
-                    Files.createDirectories(fileSystem.getPath(expectedUpdateInfoDirectory))
+                    Files.createDirectories(expectedUpdateInfoDirectory)
                     Files.write(
-                        fileSystem.getPath(expectedUpdateInfoPath),
+                        expectedUpdateInfoPath,
                         """
                             {
                                 "version": "1.2.3",
@@ -120,7 +122,7 @@ object UpdateInfoStorageSpec : Spek({
                 beforeEachTest { storage.write(updateInfo) }
 
                 it("writes the update information to disk") {
-                    val fileContents = Files.readAllLines(fileSystem.getPath(expectedUpdateInfoPath)).joinToString("\n")
+                    val fileContents = Files.readAllLines(expectedUpdateInfoPath).joinToString("\n")
 
                     assertThat(fileContents, equivalentTo(expectedFileContents))
                 }
@@ -128,12 +130,12 @@ object UpdateInfoStorageSpec : Spek({
 
             on("when the update information directory does exist but is empty") {
                 beforeEachTest {
-                    Files.createDirectories(fileSystem.getPath(expectedUpdateInfoDirectory))
+                    Files.createDirectories(expectedUpdateInfoDirectory)
                     storage.write(updateInfo)
                 }
 
                 it("writes the update information to disk") {
-                    val fileContents = Files.readAllLines(fileSystem.getPath(expectedUpdateInfoPath)).joinToString("\n")
+                    val fileContents = Files.readAllLines(expectedUpdateInfoPath).joinToString("\n")
 
                     assertThat(fileContents, equivalentTo(expectedFileContents))
                 }
@@ -141,13 +143,13 @@ object UpdateInfoStorageSpec : Spek({
 
             on("when the update information file has been written previously") {
                 beforeEachTest {
-                    Files.createDirectories(fileSystem.getPath(expectedUpdateInfoDirectory))
-                    Files.write(fileSystem.getPath(expectedUpdateInfoPath), listOf("Some old file content"))
+                    Files.createDirectories(expectedUpdateInfoDirectory)
+                    Files.write(expectedUpdateInfoPath, listOf("Some old file content"))
                     storage.write(updateInfo)
                 }
 
                 it("overwrites the contents of the file") {
-                    val fileContents = Files.readAllLines(fileSystem.getPath(expectedUpdateInfoPath)).joinToString("\n")
+                    val fileContents = Files.readAllLines(expectedUpdateInfoPath).joinToString("\n")
 
                     assertThat(fileContents, equivalentTo(expectedFileContents))
                 }

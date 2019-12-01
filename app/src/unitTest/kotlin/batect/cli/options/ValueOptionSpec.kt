@@ -17,6 +17,7 @@
 package batect.cli.options
 
 import batect.cli.options.defaultvalues.DefaultValueProvider
+import batect.cli.options.defaultvalues.PossibleValue
 import batect.cli.options.defaultvalues.StaticDefaultValueProvider
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
@@ -58,7 +59,11 @@ object ValueOptionSpec : Spek({
                         }
 
                         it("sets the option's value") {
-                            assertThat(option.value, equalTo("thing"))
+                            assertThat(option.getValue(mock(), mock()), equalTo("thing"))
+                        }
+
+                        it("reports that the value is from the command line") {
+                            assertThat(option.valueSource, equalTo(OptionValueSource.CommandLine))
                         }
                     }
 
@@ -70,7 +75,11 @@ object ValueOptionSpec : Spek({
                         }
 
                         it("sets the option's value") {
-                            assertThat(option.value, equalTo("thing"))
+                            assertThat(option.getValue(mock(), mock()), equalTo("thing"))
+                        }
+
+                        it("reports that the value is from the command line") {
+                            assertThat(option.valueSource, equalTo(OptionValueSource.CommandLine))
                         }
                     }
 
@@ -105,7 +114,67 @@ object ValueOptionSpec : Spek({
             val option = ValueOption("value", "The value", StaticDefaultValueProvider(9999), ValueConverters::positiveInteger, 'v')
 
             it("returns the default value") {
-                assertThat(option.value, equalTo(9999))
+                assertThat(option.getValue(mock(), mock()), equalTo(9999))
+            }
+
+            it("reports that the value is the default") {
+                assertThat(option.valueSource, equalTo(OptionValueSource.Default))
+            }
+        }
+
+        describe("checking the default value applied to the option") {
+            given("the default value is valid") {
+                val defaultProvider = mock<DefaultValueProvider<String>> {
+                    onGeneric { value } doReturn PossibleValue.Valid("foo")
+                }
+
+                val option by createForEachTest { ValueOption("value", "The value.", defaultProvider, ValueConverters::string) }
+
+                on("checking the default value for the option") {
+                    it("does not return an error") {
+                        assertThat(option.checkDefaultValue(), equalTo(DefaultApplicationResult.Succeeded))
+                    }
+
+                    it("reports that the value is the default") {
+                        assertThat(option.valueSource, equalTo(OptionValueSource.Default))
+                    }
+                }
+            }
+
+            given("the default value is invalid") {
+                val defaultProvider = mock<DefaultValueProvider<String>> {
+                    onGeneric { value } doReturn PossibleValue.Invalid("The default value is invalid")
+                }
+
+                val option by createForEachTest { ValueOption("value", "The value.", defaultProvider, ValueConverters::string) }
+
+                given("the default value has not been overridden") {
+                    on("checking the default value for the option") {
+                        it("returns an error") {
+                            assertThat(option.checkDefaultValue(), equalTo(DefaultApplicationResult.Failed("The default value is invalid")))
+                        }
+
+                        it("reports that the value is the default") {
+                            assertThat(option.valueSource, equalTo(OptionValueSource.Default))
+                        }
+                    }
+                }
+
+                given("the default value has been overridden") {
+                    beforeEachTest {
+                        option.parseValue(listOf("--value=blah"))
+                    }
+
+                    on("checking the default value for the option") {
+                        it("does not return an error") {
+                            assertThat(option.checkDefaultValue(), equalTo(DefaultApplicationResult.Succeeded))
+                        }
+
+                        it("reports that the value is from the command line") {
+                            assertThat(option.valueSource, equalTo(OptionValueSource.CommandLine))
+                        }
+                    }
+                }
             }
         }
 

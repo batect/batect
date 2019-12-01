@@ -16,10 +16,9 @@
 
 package batect.cli.options.defaultvalues
 
+import batect.testutils.equalTo
 import batect.testutils.given
-import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isEmptyString
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -30,7 +29,7 @@ object StaticDefaultValueProviderSpec : Spek({
             val provider = StaticDefaultValueProvider("some value")
 
             it("provides the given value") {
-                assertThat(provider.value, equalTo("some value"))
+                assertThat(provider.value, equalTo(PossibleValue.Valid("some value")))
             }
 
             it("provides a description of the default value") {
@@ -42,7 +41,7 @@ object StaticDefaultValueProviderSpec : Spek({
             val provider = StaticDefaultValueProvider(null)
 
             it("provides the null as the value") {
-                assertThat(provider.value, absent())
+                assertThat(provider.value, equalTo(PossibleValue.Valid(null)))
             }
 
             it("does not provide a description of the value") {

@@ -21,6 +21,8 @@ import batect.testutils.equalTo
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.utils.Json
+import com.google.common.jimfs.Configuration
+import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
@@ -51,8 +53,10 @@ object SystemInfoSpec : Spek({
             properties
         }
 
+        val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
+
         on("getting the JVM version") {
-            val jvmVersion by runForEachTest { SystemInfo(nativeMethods, systemProperties).jvmVersion }
+            val jvmVersion by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties).jvmVersion }
 
             it("returns a formatted string containing the details of the JVM") {
                 assertThat(jvmVersion, equalTo("Awesome JVMs, Inc. Best JVM Ever 1.2.3"))
@@ -60,7 +64,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the OS version") {
-            val osVersion by runForEachTest { SystemInfo(nativeMethods, systemProperties).osVersion }
+            val osVersion by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties).osVersion }
 
             it("returns a formatted string containing the details of the OS") {
                 assertThat(osVersion, equalTo("Best OS Ever 4.5.6 (x86)"))
@@ -74,7 +78,7 @@ object SystemInfoSpec : Spek({
                     systemProperties.setProperty("java.io.tmpdir", "/var/folders/tf/abc123/T/")
                 }
 
-                val systemInfo by runForEachTest { SystemInfo(nativeMethods, systemProperties) }
+                val systemInfo by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties) }
 
                 it("returns that the operating system is Mac OS X") {
                     assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Mac))
@@ -95,7 +99,7 @@ object SystemInfoSpec : Spek({
                     systemProperties.setProperty("java.io.tmpdir", "/tmp")
                 }
 
-                val systemInfo by runForEachTest { SystemInfo(nativeMethods, systemProperties) }
+                val systemInfo by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties) }
 
                 it("returns that the operating system is Linux") {
                     assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Linux))
@@ -116,7 +120,7 @@ object SystemInfoSpec : Spek({
                     systemProperties.setProperty("java.io.tmpdir", "C:\\some-temp-dir")
                 }
 
-                val systemInfo by runForEachTest { SystemInfo(nativeMethods, systemProperties) }
+                val systemInfo by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties) }
 
                 it("returns that the operating system is Windows") {
                     assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Windows))
@@ -134,7 +138,7 @@ object SystemInfoSpec : Spek({
             on("when running on another operating system") {
                 beforeEachTest { systemProperties.setProperty("os.name", "Something else") }
 
-                val systemInfo by runForEachTest { SystemInfo(nativeMethods, systemProperties) }
+                val systemInfo by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties) }
 
                 it("returns that the operating system is unknown") {
                     assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Other))
@@ -147,15 +151,15 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the home directory") {
-            val homeDir by runForEachTest { SystemInfo(nativeMethods, systemProperties).homeDirectory }
+            val homeDir by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties).homeDirectory }
 
             it("returns the user's home directory") {
-                assertThat(homeDir, equalTo("/some/home/dir"))
+                assertThat(homeDir, equalTo(fileSystem.getPath("/some/home/dir")))
             }
         }
 
         on("getting the current user name") {
-            val userName by runForEachTest { SystemInfo(nativeMethods, systemProperties).userName }
+            val userName by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties).userName }
 
             it("returns the ID given by the `id -un` command") {
                 assertThat(userName, equalTo("awesome-user"))
@@ -163,7 +167,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the line separator") {
-            val lineSeparator by runForEachTest { SystemInfo(nativeMethods, systemProperties).lineSeparator }
+            val lineSeparator by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties).lineSeparator }
 
             it("returns the system's line separator") {
                 assertThat(lineSeparator, equalTo("some-long-line-separator"))
@@ -171,7 +175,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("serializing system info") {
-            val json by runForEachTest { Json.parser.toJson(SystemInfo.serializer(), SystemInfo(nativeMethods, systemProperties)).jsonObject }
+            val json by runForEachTest { Json.parser.toJson(SystemInfo.serializer(), SystemInfo(nativeMethods, fileSystem, systemProperties)).jsonObject }
 
             it("only includes the expected fields") {
                 assertThat(json.keys, equalTo(setOf("operatingSystem", "jvmVersion", "osVersion", "homeDirectory", "lineSeparator", "tempDirectory", "userName")))

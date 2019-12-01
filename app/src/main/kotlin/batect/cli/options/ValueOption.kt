@@ -17,6 +17,7 @@
 package batect.cli.options
 
 import batect.cli.options.defaultvalues.DefaultValueProvider
+import batect.cli.options.defaultvalues.PossibleValue
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
@@ -32,7 +33,8 @@ class ValueOption<StorageType, ValueType : StorageType>(
     shortName: Char? = null
 ) : OptionDefinition(longName, description, true, shortName), ReadOnlyProperty<OptionParserContainer, StorageType> {
 
-    var value: StorageType = defaultValueProvider.value
+    private var value: PossibleValue<StorageType> = defaultValueProvider.value
+    override var valueSource: OptionValueSource = OptionValueSource.Default
         private set
 
     override fun parseValue(args: Iterable<String>): OptionParsingResult {
@@ -52,7 +54,8 @@ class ValueOption<StorageType, ValueType : StorageType>(
         return when (val conversionResult = valueConverter(argValue)) {
             is ValueConversionResult.ConversionFailed -> OptionParsingResult.InvalidOption("The value '$argValue' for option '$arg' is invalid: ${conversionResult.message}")
             is ValueConversionResult.ConversionSucceeded -> {
-                value = conversionResult.value
+                value = PossibleValue.Valid(conversionResult.value)
+                valueSource = OptionValueSource.CommandLine
 
                 if (useNextArgumentForValue) {
                     OptionParsingResult.ReadOption(2)
@@ -63,12 +66,20 @@ class ValueOption<StorageType, ValueType : StorageType>(
         }
     }
 
+    override fun checkDefaultValue(): DefaultApplicationResult = when (value) {
+        is PossibleValue.Valid -> DefaultApplicationResult.Succeeded
+        is PossibleValue.Invalid -> DefaultApplicationResult.Failed((value as PossibleValue.Invalid).message)
+    }
+
     operator fun provideDelegate(thisRef: OptionParserContainer, property: KProperty<*>): ValueOption<StorageType, ValueType> {
         thisRef.optionParser.addOption(this)
         return this
     }
 
-    override fun getValue(thisRef: OptionParserContainer, property: KProperty<*>): StorageType = value
+    override fun getValue(thisRef: OptionParserContainer, property: KProperty<*>): StorageType = when (value) {
+        is PossibleValue.Valid -> (value as PossibleValue.Valid<StorageType>).value
+        is PossibleValue.Invalid -> throw IllegalStateException("Cannot get the value for this option: ${(value as PossibleValue.Invalid).message}")
+    }
 
     override val descriptionForHelp: String
         get() {
@@ -80,9 +91,4 @@ class ValueOption<StorageType, ValueType : StorageType>(
                 return "$description ($defaultDescription)"
             }
         }
-}
-
-sealed class ValueConversionResult<V> {
-    data class ConversionSucceeded<V>(val value: V) : ValueConversionResult<V>()
-    data class ConversionFailed<V>(val message: String) : ValueConversionResult<V>()
 }

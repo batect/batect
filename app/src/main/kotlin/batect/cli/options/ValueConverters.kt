@@ -25,6 +25,18 @@ import java.util.Locale
 object ValueConverters {
     fun string(value: String): ValueConversionResult<String> = ValueConversionResult.ConversionSucceeded(value)
 
+    fun boolean(value: String): ValueConversionResult<Boolean> {
+        if (value in setOf("1", "yes", "true", "YES", "TRUE")) {
+            return ValueConversionResult.ConversionSucceeded(true)
+        }
+
+        if (value in setOf("0", "no", "false", "NO", "FALSE")) {
+            return ValueConversionResult.ConversionSucceeded(false)
+        }
+
+        return ValueConversionResult.ConversionFailed("Value is not a recognised boolean value.")
+    }
+
     fun positiveInteger(value: String): ValueConversionResult<Int> {
         try {
             val parsedValue = Integer.parseInt(value)
@@ -60,15 +72,40 @@ object ValueConverters {
         }
     }
 
-    fun pathToFile(pathResolverFactory: PathResolverFactory): (String) -> ValueConversionResult<Path> {
+    fun pathToFile(pathResolverFactory: PathResolverFactory, mustExist: Boolean = false): (String) -> ValueConversionResult<Path> {
         val resolver = pathResolverFactory.createResolverForCurrentDirectory()
 
         return { value ->
             when (val result = resolver.resolve(value)) {
                 is PathResolutionResult.Resolved -> when (result.pathType) {
-                    PathType.File, PathType.DoesNotExist -> ValueConversionResult.ConversionSucceeded(result.absolutePath)
-                    PathType.Directory -> ValueConversionResult.ConversionFailed("The path '$value' refers to a directory.")
-                    PathType.Other -> ValueConversionResult.ConversionFailed("The path '$value' refers to something other than a file.")
+                    PathType.File -> ValueConversionResult.ConversionSucceeded(result.absolutePath)
+                    PathType.DoesNotExist -> if (mustExist) {
+                        ValueConversionResult.ConversionFailed("The file '$value' (resolved to '${result.absolutePath}') does not exist.")
+                    } else {
+                        ValueConversionResult.ConversionSucceeded(result.absolutePath)
+                    }
+                    PathType.Directory -> ValueConversionResult.ConversionFailed("The path '$value' (resolved to '${result.absolutePath}') refers to a directory.")
+                    PathType.Other -> ValueConversionResult.ConversionFailed("The path '$value' (resolved to '${result.absolutePath}') refers to something other than a file.")
+                }
+                is PathResolutionResult.InvalidPath -> ValueConversionResult.ConversionFailed("'$value' is not a valid path.")
+            }
+        }
+    }
+
+    fun pathToDirectory(pathResolverFactory: PathResolverFactory, mustExist: Boolean = false): (String) -> ValueConversionResult<Path> {
+        val resolver = pathResolverFactory.createResolverForCurrentDirectory()
+
+        return { value ->
+            when (val result = resolver.resolve(value)) {
+                is PathResolutionResult.Resolved -> when (result.pathType) {
+                    PathType.File -> ValueConversionResult.ConversionFailed("The path '$value' (resolved to '${result.absolutePath}') refers to a file.")
+                    PathType.DoesNotExist -> if (mustExist) {
+                        ValueConversionResult.ConversionFailed("The directory '$value' (resolved to '${result.absolutePath}') does not exist.")
+                    } else {
+                        ValueConversionResult.ConversionSucceeded(result.absolutePath)
+                    }
+                    PathType.Directory -> ValueConversionResult.ConversionSucceeded(result.absolutePath)
+                    PathType.Other -> ValueConversionResult.ConversionFailed("The path '$value' (resolved to '${result.absolutePath}') refers to something other than a directory.")
                 }
                 is PathResolutionResult.InvalidPath -> ValueConversionResult.ConversionFailed("'$value' is not a valid path.")
             }

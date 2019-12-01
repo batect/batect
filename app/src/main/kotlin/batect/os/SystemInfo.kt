@@ -17,8 +17,11 @@
 package batect.os
 
 import batect.logging.LogMessageBuilder
+import batect.logging.PathSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import java.nio.file.FileSystem
+import java.nio.file.Path
 import java.util.Properties
 
 @Serializable()
@@ -28,20 +31,20 @@ class SystemInfo(
     val lineSeparator: String,
     val jvmVersion: String,
     val userName: String,
-    val homeDirectory: String,
+    @Serializable(with = PathSerializer::class) val homeDirectory: Path,
     val tempDirectory: String
 ) {
-    constructor(nativeMethods: NativeMethods, systemProperties: Properties = System.getProperties()) : this(
+    constructor(nativeMethods: NativeMethods, fileSystem: FileSystem, systemProperties: Properties = System.getProperties()) : this(
         determineOperatingSystem(systemProperties.getProperty("os.name")),
         "${systemProperties.getProperty("os.name")} ${systemProperties.getProperty("os.version")} (${systemProperties.getProperty("os.arch")})",
         systemProperties.getProperty("line.separator"),
         "${systemProperties.getProperty("java.vm.vendor")} ${systemProperties.getProperty("java.vm.name")} ${systemProperties.getProperty("java.version")}",
         nativeMethods.getUserName(),
-        systemProperties.getProperty("user.home"),
+        fileSystem.getPath(systemProperties.getProperty("user.home")),
         systemProperties
     )
 
-    constructor(operatingSystem: OperatingSystem, osVersion: String, lineSeparator: String, jvmVersion: String, userName: String, homeDirectory: String, systemProperties: Properties) : this(
+    constructor(operatingSystem: OperatingSystem, osVersion: String, lineSeparator: String, jvmVersion: String, userName: String, homeDirectory: Path, systemProperties: Properties) : this(
         operatingSystem,
         osVersion,
         lineSeparator,

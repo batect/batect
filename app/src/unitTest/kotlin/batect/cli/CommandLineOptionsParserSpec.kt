@@ -22,6 +22,7 @@ import batect.os.PathResolutionResult
 import batect.os.PathResolver
 import batect.os.PathResolverFactory
 import batect.os.PathType
+import batect.os.SystemInfo
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
@@ -29,6 +30,8 @@ import batect.ui.OutputStyle
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
@@ -39,8 +42,12 @@ object CommandLineOptionsParserSpec : Spek({
         val fileSystem = Jimfs.newFileSystem(Configuration.unix())
 
         val pathResolver = mock<PathResolver> {
-            on { resolve("somefile.log") } doReturn PathResolutionResult.Resolved("somefile.log", fileSystem.getPath("/resolved/somefile.log"), PathType.File)
-            on { resolve("somefile.yml") } doReturn PathResolutionResult.Resolved("somefile.yml", fileSystem.getPath("/resolved/somefile.yml"), PathType.File)
+            on { resolve(any()) } doAnswer { invocation ->
+                val originalPath = invocation.getArgument<String>(0)
+                val pathType = if (originalPath.contains("dir")) { PathType.Directory } else { PathType.File }
+
+                PathResolutionResult.Resolved(originalPath, fileSystem.getPath("/resolved", originalPath), pathType)
+            }
         }
 
         val pathResolverFactory = mock<PathResolverFactory> {
@@ -54,9 +61,20 @@ object CommandLineOptionsParserSpec : Spek({
             on { this.defaultDockerHost } doReturn defaultDockerHost
         }
 
+        val systemInfo = mock<SystemInfo> {
+            on { homeDirectory } doReturn fileSystem.getPath("home-dir")
+        }
+
+        val defaultCommandLineOptions = CommandLineOptions(
+            dockerHost = defaultDockerHost,
+            dockerTlsCACertificatePath = fileSystem.getPath("home-dir", ".docker", "ca.pem"),
+            dockerTLSCertificatePath = fileSystem.getPath("home-dir", ".docker", "cert.pem"),
+            dockerTLSKeyPath = fileSystem.getPath("home-dir", ".docker", "key.pem")
+        )
+
         given("no arguments") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(emptyList())
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(emptyList())
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("No task name provided.")))
@@ -66,12 +84,11 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a single argument for the task name") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(listOf("some-task"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(listOf("some-task"))
 
                 it("returns a set of options with just the task name populated") {
-                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
-                        taskName = "some-task",
-                        dockerHost = defaultDockerHost
+                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(defaultCommandLineOptions.copy(
+                        taskName = "some-task"
                     ))))
                 }
             }
@@ -79,7 +96,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("multiple arguments without a '--' prefix") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(listOf("some-task", "some-extra-arg"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(listOf("some-task", "some-extra-arg"))
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed(
@@ -92,13 +109,12 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("multiple arguments with a '--' prefix") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(listOf("some-task", "--", "some-extra-arg"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(listOf("some-task", "--", "some-extra-arg"))
 
                 it("returns a set of options with the task name and additional arguments populated") {
-                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
+                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(defaultCommandLineOptions.copy(
                         taskName = "some-task",
-                        additionalTaskCommandArguments = listOf("some-extra-arg"),
-                        dockerHost = defaultDockerHost
+                        additionalTaskCommandArguments = listOf("some-extra-arg")
                     ))))
                 }
             }
@@ -106,13 +122,12 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a flag followed by a single argument") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(listOf("--no-color", "some-task"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(listOf("--no-color", "some-task"))
 
                 it("returns a set of options with the task name populated and the flag set") {
-                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(CommandLineOptions(
+                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(defaultCommandLineOptions.copy(
                         disableColorOutput = true,
-                        taskName = "some-task",
-                        dockerHost = defaultDockerHost
+                        taskName = "some-task"
                     ))))
                 }
             }
@@ -120,7 +135,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a flag followed by multiple arguments") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(listOf("--no-color", "some-task", "some-extra-arg"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(listOf("--no-color", "some-task", "some-extra-arg"))
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed(
@@ -133,7 +148,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("colour output has been disabled and fancy output mode has been selected") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(listOf("--no-color", "--output=fancy", "some-task", "some-extra-arg"))
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(listOf("--no-color", "--output=fancy", "some-task", "some-extra-arg"))
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("Fancy output mode cannot be used when colored output has been disabled.")))
@@ -142,31 +157,48 @@ object CommandLineOptionsParserSpec : Spek({
         }
 
         mapOf(
-            listOf("--help") to CommandLineOptions(showHelp = true, dockerHost = defaultDockerHost),
-            listOf("--help", "some-task") to CommandLineOptions(showHelp = true, dockerHost = defaultDockerHost),
-            listOf("--version") to CommandLineOptions(showVersionInfo = true, dockerHost = defaultDockerHost),
-            listOf("--version", "some-task") to CommandLineOptions(showVersionInfo = true, dockerHost = defaultDockerHost),
-            listOf("--list-tasks") to CommandLineOptions(listTasks = true, dockerHost = defaultDockerHost),
-            listOf("--list-tasks", "some-task") to CommandLineOptions(listTasks = true, dockerHost = defaultDockerHost),
-            listOf("--upgrade") to CommandLineOptions(runUpgrade = true, dockerHost = defaultDockerHost),
-            listOf("--upgrade", "some-task") to CommandLineOptions(runUpgrade = true, dockerHost = defaultDockerHost),
-            listOf("-f=somefile.yml", "some-task") to CommandLineOptions(configurationFileName = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task", dockerHost = defaultDockerHost),
-            listOf("--config-file=somefile.yml", "some-task") to CommandLineOptions(configurationFileName = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task", dockerHost = defaultDockerHost),
-            listOf("--log-file=somefile.log", "some-task") to CommandLineOptions(logFileName = fileSystem.getPath("/resolved/somefile.log"), taskName = "some-task", dockerHost = defaultDockerHost),
-            listOf("--output=simple", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Simple, taskName = "some-task", dockerHost = defaultDockerHost),
-            listOf("--output=quiet", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Quiet, taskName = "some-task", dockerHost = defaultDockerHost),
-            listOf("--output=fancy", "some-task") to CommandLineOptions(requestedOutputStyle = OutputStyle.Fancy, taskName = "some-task", dockerHost = defaultDockerHost),
-            listOf("--no-color", "some-task") to CommandLineOptions(disableColorOutput = true, taskName = "some-task", dockerHost = defaultDockerHost),
-            listOf("--no-update-notification", "some-task") to CommandLineOptions(disableUpdateNotification = true, taskName = "some-task", dockerHost = defaultDockerHost),
-            listOf("--no-cleanup-after-failure", "some-task") to CommandLineOptions(disableCleanupAfterFailure = true, taskName = "some-task", dockerHost = defaultDockerHost),
-            listOf("--no-cleanup-after-success", "some-task") to CommandLineOptions(disableCleanupAfterSuccess = true, taskName = "some-task", dockerHost = defaultDockerHost),
-            listOf("--no-cleanup", "some-task") to CommandLineOptions(disableCleanupAfterFailure = true, disableCleanupAfterSuccess = true, taskName = "some-task", dockerHost = defaultDockerHost),
-            listOf("--no-proxy-vars", "some-task") to CommandLineOptions(dontPropagateProxyEnvironmentVariables = true, taskName = "some-task", dockerHost = defaultDockerHost),
-            listOf("--docker-host=some-host", "some-task") to CommandLineOptions(dockerHost = "some-host", taskName = "some-task")
+            listOf("--help") to defaultCommandLineOptions.copy(showHelp = true),
+            listOf("--help", "some-task") to defaultCommandLineOptions.copy(showHelp = true),
+            listOf("--version") to defaultCommandLineOptions.copy(showVersionInfo = true),
+            listOf("--version", "some-task") to defaultCommandLineOptions.copy(showVersionInfo = true),
+            listOf("--list-tasks") to defaultCommandLineOptions.copy(listTasks = true),
+            listOf("--list-tasks", "some-task") to defaultCommandLineOptions.copy(listTasks = true),
+            listOf("--upgrade") to defaultCommandLineOptions.copy(runUpgrade = true),
+            listOf("--upgrade", "some-task") to defaultCommandLineOptions.copy(runUpgrade = true),
+            listOf("-f=somefile.yml", "some-task") to defaultCommandLineOptions.copy(configurationFileName = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task"),
+            listOf("--config-file=somefile.yml", "some-task") to defaultCommandLineOptions.copy(configurationFileName = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task"),
+            listOf("--log-file=somefile.log", "some-task") to defaultCommandLineOptions.copy(logFileName = fileSystem.getPath("/resolved/somefile.log"), taskName = "some-task"),
+            listOf("--output=simple", "some-task") to defaultCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Simple, taskName = "some-task"),
+            listOf("--output=quiet", "some-task") to defaultCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Quiet, taskName = "some-task"),
+            listOf("--output=fancy", "some-task") to defaultCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Fancy, taskName = "some-task"),
+            listOf("--no-color", "some-task") to defaultCommandLineOptions.copy(disableColorOutput = true, taskName = "some-task"),
+            listOf("--no-update-notification", "some-task") to defaultCommandLineOptions.copy(disableUpdateNotification = true, taskName = "some-task"),
+            listOf("--no-cleanup-after-failure", "some-task") to defaultCommandLineOptions.copy(disableCleanupAfterFailure = true, taskName = "some-task"),
+            listOf("--no-cleanup-after-success", "some-task") to defaultCommandLineOptions.copy(disableCleanupAfterSuccess = true, taskName = "some-task"),
+            listOf("--no-cleanup", "some-task") to defaultCommandLineOptions.copy(disableCleanupAfterFailure = true, disableCleanupAfterSuccess = true, taskName = "some-task"),
+            listOf("--no-proxy-vars", "some-task") to defaultCommandLineOptions.copy(dontPropagateProxyEnvironmentVariables = true, taskName = "some-task"),
+            listOf("--docker-host=some-host", "some-task") to defaultCommandLineOptions.copy(dockerHost = "some-host", taskName = "some-task"),
+            listOf("--docker-tls", "some-task") to defaultCommandLineOptions.copy(dockerUseTLS = true, taskName = "some-task"),
+            listOf("--docker-tls-verify", "some-task") to defaultCommandLineOptions.copy(dockerUseTLS = true, dockerVerifyTLS = true, taskName = "some-task"),
+            listOf("--docker-tls-ca-cert=some-ca-cert", "some-task") to defaultCommandLineOptions.copy(dockerTlsCACertificatePath = fileSystem.getPath("/resolved/some-ca-cert"), taskName = "some-task"),
+            listOf("--docker-tls-cert=some-cert", "some-task") to defaultCommandLineOptions.copy(dockerTLSCertificatePath = fileSystem.getPath("/resolved/some-cert"), taskName = "some-task"),
+            listOf("--docker-tls-key=some-key", "some-task") to defaultCommandLineOptions.copy(dockerTLSKeyPath = fileSystem.getPath("/resolved/some-key"), taskName = "some-task"),
+            listOf("--docker-cert-path=some-cert-dir", "some-task") to defaultCommandLineOptions.copy(
+                dockerTlsCACertificatePath = fileSystem.getPath("/resolved/some-cert-dir/ca.pem"),
+                dockerTLSCertificatePath = fileSystem.getPath("/resolved/some-cert-dir/cert.pem"),
+                dockerTLSKeyPath = fileSystem.getPath("/resolved/some-cert-dir/key.pem"),
+                taskName = "some-task"
+            ),
+            listOf("--docker-cert-path=some-cert-dir", "--docker-tls-ca-cert=some-ca-cert", "--docker-tls-cert=some-cert", "--docker-tls-key=some-key", "some-task") to defaultCommandLineOptions.copy(
+                dockerTlsCACertificatePath = fileSystem.getPath("/resolved/some-ca-cert"),
+                dockerTLSCertificatePath = fileSystem.getPath("/resolved/some-cert"),
+                dockerTLSKeyPath = fileSystem.getPath("/resolved/some-key"),
+                taskName = "some-task"
+            )
         ).forEach { (args, expectedResult) ->
             given("the arguments $args") {
                 on("parsing the command line") {
-                    val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults).parse(args)
+                    val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(args)
 
                     it("returns a set of options with the expected options populated") {
                         assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(expectedResult)))

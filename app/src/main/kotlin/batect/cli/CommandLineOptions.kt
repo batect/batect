@@ -44,7 +44,13 @@ data class CommandLineOptions(
     val dontPropagateProxyEnvironmentVariables: Boolean = false,
     val taskName: String? = null,
     val additionalTaskCommandArguments: Iterable<String> = emptyList(),
-    val dockerHost: String = "http://set-to-default-value-in/CommandLineOptionsParser"
+    val dockerHost: String = "http://set-to-default-value-in/CommandLineOptionsParser",
+    val dockerUseTLS: Boolean = false,
+    val dockerVerifyTLS: Boolean = false,
+    val dockerTlsCACertificatePath: Path? = null,
+    val dockerTLSCertificatePath: Path? = null,
+    val dockerTLSKeyPath: Path? = null,
+    val dockerCertificateDirectory: Path? = null
 ) {
     fun extend(originalKodein: DKodein): DKodein = Kodein.direct {
         extend(originalKodein, copy = Copy.All)

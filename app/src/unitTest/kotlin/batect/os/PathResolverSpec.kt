@@ -28,7 +28,11 @@ import java.util.Properties
 
 object PathResolverSpec : Spek({
     describe("a path resolver") {
-        val fileSystem = Jimfs.newFileSystem(Configuration.unix())
+        val fileSystemConfiguration = Configuration.unix().toBuilder()
+            .setWorkingDirectory("/some-work-dir")
+            .build()
+
+        val fileSystem = Jimfs.newFileSystem(fileSystemConfiguration)
         val homeDir = fileSystem.getPath("/home/username")
         val relativeTo = fileSystem.getPath("/thing/place")
         val systemProperties = Properties()
@@ -146,6 +150,15 @@ object PathResolverSpec : Spek({
 
             it("reports that the path is invalid") {
                 assertThat(resolver.resolve(path), equalTo(PathResolutionResult.InvalidPath("\u0000")))
+            }
+        }
+
+        given("a path resolver with the current directory as the base path") {
+            val currentDirectoryResolver = PathResolver(fileSystem.getPath("."), systemProperties)
+            val path = "somefile.txt"
+
+            it("resolves the path to the absolute path") {
+                assertThat(currentDirectoryResolver.resolve(path), equalTo(PathResolutionResult.Resolved("somefile.txt", fileSystem.getPath("/some-work-dir/somefile.txt"), PathType.DoesNotExist)))
             }
         }
     }

@@ -17,9 +17,11 @@
 package batect.cli.commands
 
 import batect.cli.CommandLineOptionsParser
+import batect.cli.options.DefaultApplicationResult
 import batect.cli.options.OptionDefinition
 import batect.cli.options.OptionParser
 import batect.cli.options.OptionParsingResult
+import batect.cli.options.OptionValueSource
 import batect.testutils.given
 import batect.testutils.withPlatformSpecificLineSeparator
 import com.natpryce.hamkrest.assertion.assertThat
@@ -36,8 +38,12 @@ object HelpCommandSpec : Spek({
         fun createOption(longName: String, description: String, acceptsValue: Boolean, shortName: Char? = null): OptionDefinition =
             object : OptionDefinition(longName, description, acceptsValue, shortName) {
                 override fun parseValue(args: Iterable<String>): OptionParsingResult = throw NotImplementedError()
+                override fun checkDefaultValue(): DefaultApplicationResult = DefaultApplicationResult.Succeeded
+                override val valueSource: OptionValueSource
+                    get() = throw NotImplementedError()
+
                 override val descriptionForHelp: String
-                    get() = description + " (extra help info)"
+                    get() = "$description (extra help info)"
             }
 
         given("and the root parser has some common options") {

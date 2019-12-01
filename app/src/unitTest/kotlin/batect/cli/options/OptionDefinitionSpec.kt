@@ -34,6 +34,9 @@ object OptionDefinitionSpec : Spek({
         fun createOption(longName: String, description: String, shortName: Char? = null): OptionDefinition {
             return object : OptionDefinition(longName, description, false, shortName) {
                 override fun parseValue(args: Iterable<String>): OptionParsingResult = throw NotImplementedError()
+                override fun checkDefaultValue(): DefaultApplicationResult = throw NotImplementedError()
+                override val valueSource: OptionValueSource
+                    get() = throw NotImplementedError()
             }
         }
 
@@ -100,6 +103,9 @@ object OptionDefinitionSpec : Spek({
                 shortName: Char? = null
             ) : OptionDefinition(name, description, false, shortName) {
                 override fun parseValue(args: Iterable<String>): OptionParsingResult = OptionParsingResult.ReadOption(1234)
+                override fun checkDefaultValue(): DefaultApplicationResult = throw NotImplementedError()
+                override val valueSource: OptionValueSource
+                    get() = throw NotImplementedError()
             }
 
             given("an option with short and long names") {

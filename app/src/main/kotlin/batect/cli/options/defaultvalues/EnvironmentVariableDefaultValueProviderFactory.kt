@@ -16,13 +16,36 @@
 
 package batect.cli.options.defaultvalues
 
+import batect.cli.options.ValueConversionResult
+
 class EnvironmentVariableDefaultValueProviderFactory(private val environment: Map<String, String> = System.getenv()) {
-    fun create(name: String, default: String): DefaultValueProvider<String> = object : DefaultValueProvider<String> {
-        override val value: String
-            get() = environment.getOrDefault(name, default)
+    fun <StorageType, ValueType : StorageType> create(
+        name: String,
+        fallback: StorageType,
+        valueConverter: (String) -> ValueConversionResult<ValueType>
+    ): DefaultValueProvider<StorageType> = object : DefaultValueProvider<StorageType> {
+        override val value: PossibleValue<StorageType>
+            get() {
+                val environmentVariableValue = environment[name]
+
+                if (environmentVariableValue == null) {
+                    return PossibleValue.Valid(fallback)
+                }
+
+                return when (val conversionResult = valueConverter(environmentVariableValue)) {
+                    is ValueConversionResult.ConversionSucceeded -> PossibleValue.Valid(conversionResult.value)
+                    is ValueConversionResult.ConversionFailed -> PossibleValue.Invalid("The value of the $name environment variable ('$environmentVariableValue') is invalid: ${conversionResult.message}")
+                }
+            }
 
         override val description: String
-            get() = "defaults to the value of the $name environment variable (which is currently $currentStateDescription) or '$default' if $name is not set"
+            get() = "defaults to the value of the $name environment variable (which is currently $currentStateDescription)$fallbackDescription"
+
+        private val fallbackDescription = if (fallback == null) {
+            ""
+        } else {
+            " or '$fallback' if $name is not set"
+        }
 
         private val currentStateDescription = if (environment.containsKey(name)) {
             "'${environment.getValue(name)}'"

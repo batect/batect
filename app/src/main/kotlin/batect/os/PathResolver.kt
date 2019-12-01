@@ -27,7 +27,7 @@ data class PathResolver(val relativeTo: Path, private val systemProperties: Prop
     fun resolve(path: String): PathResolutionResult {
         try {
             val originalPath = resolveHomeDir(getPath(path))
-            val resolvedPath = relativeTo.resolve(originalPath).normalize()
+            val resolvedPath = relativeTo.resolve(originalPath).normalize().toAbsolutePath()
             return PathResolutionResult.Resolved(path, resolvedPath, pathType(resolvedPath))
         } catch (e: InvalidPathException) {
             return PathResolutionResult.InvalidPath(path)

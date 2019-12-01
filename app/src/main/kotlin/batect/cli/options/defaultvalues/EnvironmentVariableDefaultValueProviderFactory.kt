@@ -39,7 +39,7 @@ class EnvironmentVariableDefaultValueProviderFactory(private val environment: Ma
             }
 
         override val description: String
-            get() = "defaults to the value of the $name environment variable (which is currently $currentStateDescription)$fallbackDescription"
+            get() = "Defaults to the value of the $name environment variable (which is currently $currentStateDescription)$fallbackDescription."
 
         private val fallbackDescription = if (fallback == null) {
             ""

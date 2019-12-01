@@ -71,7 +71,7 @@ object EnvironmentVariableDefaultValueProviderFactorySpec : Spek({
                     val provider = factory.create(sourceVariableName, "the fallback value", ValueConverters::string)
 
                     it("returns a description that includes both the current and fallback values") {
-                        assertThat(provider.description, equalTo("defaults to the value of the SOME_VAR environment variable (which is currently 'some value') or 'the fallback value' if SOME_VAR is not set"))
+                        assertThat(provider.description, equalTo("Defaults to the value of the SOME_VAR environment variable (which is currently 'some value') or 'the fallback value' if SOME_VAR is not set."))
                     }
                 }
 
@@ -79,7 +79,7 @@ object EnvironmentVariableDefaultValueProviderFactorySpec : Spek({
                     val provider = factory.create(sourceVariableName, null, ValueConverters::string)
 
                     it("returns a description that includes only the current value") {
-                        assertThat(provider.description, equalTo("defaults to the value of the SOME_VAR environment variable (which is currently 'some value')"))
+                        assertThat(provider.description, equalTo("Defaults to the value of the SOME_VAR environment variable (which is currently 'some value')."))
                     }
                 }
             }
@@ -91,7 +91,7 @@ object EnvironmentVariableDefaultValueProviderFactorySpec : Spek({
                     val provider = factory.create(sourceVariableName, "the fallback value", ValueConverters::string)
 
                     it("returns a description that includes both the fallback value and an explanation that the variable is not set") {
-                        assertThat(provider.description, equalTo("defaults to the value of the SOME_OTHER_VAR environment variable (which is currently not set) or 'the fallback value' if SOME_OTHER_VAR is not set"))
+                        assertThat(provider.description, equalTo("Defaults to the value of the SOME_OTHER_VAR environment variable (which is currently not set) or 'the fallback value' if SOME_OTHER_VAR is not set."))
                     }
                 }
 
@@ -99,7 +99,7 @@ object EnvironmentVariableDefaultValueProviderFactorySpec : Spek({
                     val provider = factory.create(sourceVariableName, null, ValueConverters::string)
 
                     it("returns a description that includes only an explanation that the variable is not set") {
-                        assertThat(provider.description, equalTo("defaults to the value of the SOME_OTHER_VAR environment variable (which is currently not set)"))
+                        assertThat(provider.description, equalTo("Defaults to the value of the SOME_OTHER_VAR environment variable (which is currently not set)."))
                     }
                 }
             }

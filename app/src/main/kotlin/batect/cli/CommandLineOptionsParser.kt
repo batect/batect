@@ -50,7 +50,7 @@ class CommandLineOptionsParser(
     private val runUpgrade: Boolean by flagOption(upgradeFlagName, "Upgrade batect to the latest available version.")
     private val listTasks: Boolean by flagOption("list-tasks", "List available tasks and exit.")
 
-    private val disableColorOutput: Boolean by flagOption("no-color", "Disable colored output from batect. Does not affect task command output. (implies --output=simple unless overridden)")
+    private val disableColorOutput: Boolean by flagOption("no-color", "Disable colored output from batect. Does not affect task command output. Implies --output=simple unless overridden.")
     private val disableUpdateNotification: Boolean by flagOption("no-update-notification", "Disable checking for updates to batect and notifying you when a new version is available.")
 
     private val configurationFileName: Path by valueOption(
@@ -94,7 +94,7 @@ class CommandLineOptionsParser(
 
     private val dockerVerifyTLSOption = flagOption(
         "docker-tls-verify",
-        "Use TLS when communicating with the Docker host and verify the certificate presented by the Docker host. (implies ${dockerUseTLSOption.longOption})",
+        "Use TLS when communicating with the Docker host and verify the certificate presented by the Docker host. Implies ${dockerUseTLSOption.longOption}.",
         environmentVariableDefaultValueProviderFactory.create("DOCKER_TLS_VERIFY", false, ValueConverters::boolean)
     )
 

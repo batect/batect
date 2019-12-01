@@ -20,5 +20,5 @@ data class StaticDefaultValueProvider<T>(val default: T) : DefaultValueProvider<
     override val value: PossibleValue<T> = PossibleValue.Valid(default)
 
     override val description: String
-        get() = if (default == null) "" else "defaults to '$default' if not set"
+        get() = if (default == null) "" else "Defaults to '$default' if not set."
 }

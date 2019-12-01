@@ -88,7 +88,7 @@ class ValueOption<StorageType, ValueType : StorageType>(
             if (defaultDescription == "") {
                 return description
             } else {
-                return "$description ($defaultDescription)"
+                return "$description $defaultDescription"
             }
         }
 }

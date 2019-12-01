@@ -184,22 +184,22 @@ object ValueOptionSpec : Spek({
                     onGeneric { description } doReturn ""
                 }
 
-                val option = ValueOption("option", "Some integer option", defaultProvider, converter)
+                val option = ValueOption("option", "Some integer option.", defaultProvider, converter)
 
                 it("returns the original description") {
-                    assertThat(option.descriptionForHelp, equalTo("Some integer option"))
+                    assertThat(option.descriptionForHelp, equalTo("Some integer option."))
                 }
             }
 
             on("the default value provider giving extra information") {
                 val defaultProvider = mock<DefaultValueProvider<Int>> {
-                    onGeneric { description } doReturn "defaults to '1234' if not set"
+                    onGeneric { description } doReturn "Defaults to '1234' if not set."
                 }
 
-                val option = ValueOption("option", "Some integer option", defaultProvider, converter)
+                val option = ValueOption("option", "Some integer option.", defaultProvider, converter)
 
                 it("returns the original description with the additional information from the default value provider") {
-                    assertThat(option.descriptionForHelp, equalTo("Some integer option (defaults to '1234' if not set)"))
+                    assertThat(option.descriptionForHelp, equalTo("Some integer option. Defaults to '1234' if not set."))
                 }
             }
         }

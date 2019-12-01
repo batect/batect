@@ -136,13 +136,13 @@ object FlagOptionSpec : Spek({
             on("the default value provider giving extra information") {
                 val defaultProvider = mock<DefaultValueProvider<Boolean>> {
                     onGeneric { value } doReturn PossibleValue.Valid(true)
-                    onGeneric { description } doReturn "defaults to '1234' if not set"
+                    onGeneric { description } doReturn "Defaults to '1234' if not set."
                 }
 
                 val option = FlagOption("enable-extra-awesomeness", "Enable the extra awesome features.", defaultProvider)
 
                 it("returns the original description with the additional information from the default value provider") {
-                    assertThat(option.descriptionForHelp, equalTo("Enable the extra awesome features. (defaults to '1234' if not set)"))
+                    assertThat(option.descriptionForHelp, equalTo("Enable the extra awesome features. Defaults to '1234' if not set."))
                 }
             }
         }

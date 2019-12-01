@@ -33,7 +33,7 @@ object StaticDefaultValueProviderSpec : Spek({
             }
 
             it("provides a description of the default value") {
-                assertThat(provider.description, equalTo("defaults to 'some value' if not set"))
+                assertThat(provider.description, equalTo("Defaults to 'some value' if not set."))
             }
         }
 

@@ -67,7 +67,7 @@ class FlagOption(
             if (defaultDescription == "") {
                 return description
             } else {
-                return "$description ($defaultDescription)"
+                return "$description $defaultDescription"
             }
         }
 }

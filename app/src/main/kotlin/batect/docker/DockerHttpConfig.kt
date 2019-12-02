@@ -31,6 +31,7 @@ import javax.net.SocketFactory
 class DockerHttpConfig(
     private val baseClient: OkHttpClient,
     private val dockerHost: String,
+    private val tlsConfig: DockerTLSConfig,
     private val systemInfo: SystemInfo
 ) {
     private val isUnixSocket = dockerHost.startsWith("unix://")
@@ -42,7 +43,7 @@ class DockerHttpConfig(
     private fun buildClient(): OkHttpClient = when {
         isUnixSocket -> buildUnixSocketClient()
         isNamedPipe -> buildNamedPipeClient()
-        else -> baseClient
+        else -> buildTcpClient()
     }
 
     private fun buildUnixSocketClient(): OkHttpClient = buildNonTcpClient(UnixSocketFactory(), UnixSocketDns())
@@ -51,7 +52,12 @@ class DockerHttpConfig(
     private fun buildNonTcpClient(socketFactory: SocketFactory, dns: Dns): OkHttpClient = baseClient.newBuilder()
         .proxy(Proxy.NO_PROXY)
         .socketFactory(socketFactory)
+        .sslSocketFactory(tlsConfig.sslSocketFactory, tlsConfig.trustManager)
         .dns(dns)
+        .build()
+
+    private fun buildTcpClient(): OkHttpClient = baseClient.newBuilder()
+        .sslSocketFactory(tlsConfig.sslSocketFactory, tlsConfig.trustManager)
         .build()
 
     private fun buildBaseUrl(): HttpUrl = when {
@@ -68,7 +74,7 @@ class DockerHttpConfig(
         val socketPath = dockerHost.replace("^unix://".toRegex(), "")
 
         return HttpUrl.Builder()
-            .scheme("http")
+            .scheme(tlsConfig.scheme)
             .host(UnixSocketDns.encodePath(socketPath))
             .build()
     }
@@ -83,7 +89,7 @@ class DockerHttpConfig(
             .replace('/', '\\')
 
         return HttpUrl.Builder()
-            .scheme("http")
+            .scheme(tlsConfig.scheme)
             .host(NamedPipeDns.encodePath(socketPath))
             .build()
     }
@@ -96,13 +102,13 @@ class DockerHttpConfig(
                 throw InvalidDockerConfigurationException("The scheme '$scheme' in '$dockerHost' is not a valid Docker host scheme.")
             }
 
-            return dockerHost.replace("^tcp://".toRegex(), "http://")
+            return dockerHost.replace("^tcp://".toRegex(), "${tlsConfig.scheme}://")
         }
 
         if (dockerHost.matches(""":\d+""".toRegex())) {
-            return "http://0.0.0.0$dockerHost"
+            return "${tlsConfig.scheme}://0.0.0.0$dockerHost"
         }
 
-        return "http://$dockerHost"
+        return "${tlsConfig.scheme}://$dockerHost"
     }
 }

@@ -33,6 +33,7 @@ import batect.docker.DockerContainerEnvironmentVariableProvider
 import batect.docker.DockerHostNameResolver
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerHttpConfigDefaults
+import batect.docker.DockerTLSConfig
 import batect.docker.api.ContainersAPI
 import batect.docker.api.ExecAPI
 import batect.docker.api.ImagesAPI
@@ -191,12 +192,21 @@ private val dockerModule = Kodein.Module("docker") {
     bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
     bind<DockerImageBuildContextFactory>() with singleton { DockerImageBuildContextFactory(instance()) }
     bind<DockerHostNameResolver>() with singleton { DockerHostNameResolver(instance(), instance()) }
-    bind<DockerHttpConfig>() with singleton { DockerHttpConfig(instance(), commandLineOptions().dockerHost, instance()) }
+    bind<DockerHttpConfig>() with singleton { DockerHttpConfig(instance(), commandLineOptions().dockerHost, instance(), instance()) }
     bind<DockerHttpConfigDefaults>() with singleton { DockerHttpConfigDefaults(instance()) }
     bind<DockerRegistryCredentialsConfigurationFile>() with singletonWithLogger { logger -> DockerRegistryCredentialsConfigurationFile(instance(), instance(), logger) }
     bind<DockerRegistryCredentialsProvider>() with singleton { DockerRegistryCredentialsProvider(instance(), instance(), instance()) }
     bind<DockerRegistryDomainResolver>() with singleton { DockerRegistryDomainResolver() }
     bind<DockerRegistryIndexResolver>() with singleton { DockerRegistryIndexResolver() }
+    bind<DockerTLSConfig>() with singleton {
+        val options = commandLineOptions()
+
+        if (options.dockerUseTLS) {
+            DockerTLSConfig.EnableTLS(options.dockerVerifyTLS, options.dockerTlsCACertificatePath, options.dockerTLSCertificatePath, options.dockerTLSKeyPath)
+        } else {
+            DockerTLSConfig.DisableTLS
+        }
+    }
 }
 
 private val dockerApiModule = Kodein.Module("docker.api") {

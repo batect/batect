@@ -43,6 +43,8 @@ import java.net.Proxy
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import javax.net.SocketFactory
+import javax.net.ssl.SSLSocketFactory
+import javax.net.ssl.X509TrustManager
 
 object DockerHttpConfigSpec : Spek({
     describe("a set of Docker HTTP configuration") {
@@ -55,12 +57,28 @@ object DockerHttpConfigSpec : Spek({
                 .build()
         }
 
+        val tlsConfigScheme = "https"
+        val tlsConfigSSLSocketFactory by createForEachTest { mock<SSLSocketFactory>() }
+        val tlsConfigTrustManager by createForEachTest {
+            mock<X509TrustManager> {
+                on { acceptedIssuers } doReturn emptyArray()
+            }
+        }
+
+        val tlsConfig by createForEachTest {
+            mock<DockerTLSConfig> {
+                on { scheme } doReturn tlsConfigScheme
+                on { sslSocketFactory } doReturn tlsConfigSSLSocketFactory
+                on { trustManager } doReturn tlsConfigTrustManager
+            }
+        }
+
         given("a Unix socket address") {
             val dockerHost = "unix:///var/run/very/very/long/name/docker.sock"
 
             given("the application is running on an operating system that supports Unix sockets") {
                 val systemInfo by createForEachTest { systemInfoFor(OperatingSystem.Linux) }
-                val config by createForEachTest { DockerHttpConfig(baseClient, dockerHost, systemInfo) }
+                val config by createForEachTest { DockerHttpConfig(baseClient, dockerHost, tlsConfig, systemInfo) }
 
                 on("getting a HTTP client configured for use with the Docker API") {
                     val client by runForEachTest { config.client }
@@ -77,6 +95,10 @@ object DockerHttpConfigSpec : Spek({
                         assertThat(client.dns(), isA<UnixSocketDns>())
                     }
 
+                    it("configures the client to use the configured SSL socket factory") {
+                        assertThat(client.sslSocketFactory(), equalTo(tlsConfigSSLSocketFactory))
+                    }
+
                     it("inherits all other settings from the base client provided") {
                         assertThat(client.readTimeoutMillis().toLong(), equalTo(Duration.ofDays(1).toMillis()))
                     }
@@ -86,7 +108,7 @@ object DockerHttpConfigSpec : Spek({
                     val encodedPath = UnixSocketDns.encodePath("/var/run/very/very/long/name/docker.sock")
 
                     it("returns a URL ready for use with the local Unix socket") {
-                        assertThat(config.baseUrl, equalTo(HttpUrl.parse("http://$encodedPath")!!))
+                        assertThat(config.baseUrl, equalTo(HttpUrl.parse("$tlsConfigScheme://$encodedPath")!!))
                     }
                 }
             }
@@ -96,7 +118,7 @@ object DockerHttpConfigSpec : Spek({
 
                 it("throws an appropriate exception") {
                     assertThat(
-                        { DockerHttpConfig(baseClient, dockerHost, systemInfo) },
+                        { DockerHttpConfig(baseClient, dockerHost, tlsConfig, systemInfo) },
                         throws<InvalidDockerConfigurationException>(withMessage("This operating system does not support Unix sockets and so therefore the Docker host 'unix:///var/run/very/very/long/name/docker.sock' cannot be used."))
                     )
                 }
@@ -108,7 +130,7 @@ object DockerHttpConfigSpec : Spek({
 
             given("the application is running on Windows") {
                 val systemInfo by createForEachTest { systemInfoFor(OperatingSystem.Windows) }
-                val config by createForEachTest { DockerHttpConfig(baseClient, dockerHost, systemInfo) }
+                val config by createForEachTest { DockerHttpConfig(baseClient, dockerHost, tlsConfig, systemInfo) }
 
                 on("getting a HTTP client configured for use with the Docker API") {
                     val client by runForEachTest { config.client }
@@ -125,6 +147,10 @@ object DockerHttpConfigSpec : Spek({
                         assertThat(client.dns(), isA<NamedPipeDns>())
                     }
 
+                    it("configures the client to use the configured SSL socket factory") {
+                        assertThat(client.sslSocketFactory(), equalTo(tlsConfigSSLSocketFactory))
+                    }
+
                     it("inherits all other settings from the base client provided") {
                         assertThat(client.readTimeoutMillis().toLong(), equalTo(Duration.ofDays(1).toMillis()))
                     }
@@ -134,7 +160,7 @@ object DockerHttpConfigSpec : Spek({
                     val encodedPath = NamedPipeDns.encodePath("""\\.\pipe\some\very\very\very\long\name\docker_engine""")
 
                     it("returns a URL ready for use with the local Unix socket") {
-                        assertThat(config.baseUrl, equalTo(HttpUrl.parse("http://$encodedPath")!!))
+                        assertThat(config.baseUrl, equalTo(HttpUrl.parse("$tlsConfigScheme://$encodedPath")!!))
                     }
                 }
             }
@@ -144,7 +170,7 @@ object DockerHttpConfigSpec : Spek({
 
                 it("throws an appropriate exception") {
                     assertThat(
-                        { DockerHttpConfig(baseClient, dockerHost, systemInfo) },
+                        { DockerHttpConfig(baseClient, dockerHost, tlsConfig, systemInfo) },
                         throws<InvalidDockerConfigurationException>(withMessage("Named pipes are only supported on Windows and so therefore the Docker host 'npipe:////./pipe/some/very/very/very/long/name/docker_engine' cannot be used."))
                     )
                 }
@@ -154,17 +180,17 @@ object DockerHttpConfigSpec : Spek({
         // See https://docs.docker.com/engine/reference/commandline/dockerd/#daemon-socket-option for reference on the formats
         // that Docker supports.
         mapOf(
-            "tcp://1.2.3.4" to HttpUrl.get("http://1.2.3.4"),
-            "tcp://1.2.3.4:1234" to HttpUrl.get("http://1.2.3.4:1234"),
-            "tcp://1.2.3.4/somewhere" to HttpUrl.get("http://1.2.3.4/somewhere"),
-            "tcp://1.2.3.4:1234/somewhere" to HttpUrl.get("http://1.2.3.4:1234/somewhere"),
-            "1.2.3.4" to HttpUrl.get("http://1.2.3.4"),
-            "1.2.3.4:1234" to HttpUrl.get("http://1.2.3.4:1234"),
-            ":1234" to HttpUrl.get("http://0.0.0.0:1234")
+            "tcp://1.2.3.4" to HttpUrl.get("$tlsConfigScheme://1.2.3.4"),
+            "tcp://1.2.3.4:1234" to HttpUrl.get("$tlsConfigScheme://1.2.3.4:1234"),
+            "tcp://1.2.3.4/somewhere" to HttpUrl.get("$tlsConfigScheme://1.2.3.4/somewhere"),
+            "tcp://1.2.3.4:1234/somewhere" to HttpUrl.get("$tlsConfigScheme://1.2.3.4:1234/somewhere"),
+            "1.2.3.4" to HttpUrl.get("$tlsConfigScheme://1.2.3.4"),
+            "1.2.3.4:1234" to HttpUrl.get("$tlsConfigScheme://1.2.3.4:1234"),
+            ":1234" to HttpUrl.get("$tlsConfigScheme://0.0.0.0:1234")
         ).forEach { (host, expectedBaseUrl) ->
             given("the host address '$host'") {
                 val systemInfo by createForEachTest { systemInfoFor(OperatingSystem.Other) }
-                val config by createForEachTest { DockerHttpConfig(baseClient, host, systemInfo) }
+                val config by createForEachTest { DockerHttpConfig(baseClient, host, tlsConfig, systemInfo) }
 
                 on("getting a HTTP client configured for use with the Docker API") {
                     val client by runForEachTest { config.client }
@@ -179,6 +205,10 @@ object DockerHttpConfigSpec : Spek({
 
                     it("configures the client to use the system DNS service") {
                         assertThat(client.dns(), equalTo(Dns.SYSTEM))
+                    }
+
+                    it("configures the client to use the configured SSL socket factory") {
+                        assertThat(client.sslSocketFactory(), equalTo(tlsConfigSSLSocketFactory))
                     }
 
                     it("inherits all other settings from the base client provided") {
@@ -204,7 +234,7 @@ object DockerHttpConfigSpec : Spek({
 
                 it("throws an appropriate exception") {
                     assertThat(
-                        { DockerHttpConfig(baseClient, "$scheme://1.2.3.4", systemInfo) },
+                        { DockerHttpConfig(baseClient, "$scheme://1.2.3.4", tlsConfig, systemInfo) },
                         throws<InvalidDockerConfigurationException>(withMessage("The scheme '$scheme' in '$scheme://1.2.3.4' is not a valid Docker host scheme."))
                     )
                 }

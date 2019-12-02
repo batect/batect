@@ -47,10 +47,9 @@ data class CommandLineOptions(
     val dockerHost: String = "tcp://set-to-default-value-in/CommandLineOptionsParser",
     val dockerUseTLS: Boolean = false,
     val dockerVerifyTLS: Boolean = false,
-    val dockerTlsCACertificatePath: Path? = null,
-    val dockerTLSCertificatePath: Path? = null,
-    val dockerTLSKeyPath: Path? = null,
-    val dockerCertificateDirectory: Path? = null
+    val dockerTlsCACertificatePath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
+    val dockerTLSCertificatePath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
+    val dockerTLSKeyPath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser")
 ) {
     fun extend(originalKodein: DKodein): DKodein = Kodein.direct {
         extend(originalKodein, copy = Copy.All)

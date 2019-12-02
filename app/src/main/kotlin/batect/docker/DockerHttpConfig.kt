@@ -49,16 +49,17 @@ class DockerHttpConfig(
     private fun buildUnixSocketClient(): OkHttpClient = buildNonTcpClient(UnixSocketFactory(), UnixSocketDns())
     private fun buildNamedPipeClient(): OkHttpClient = buildNonTcpClient(NamedPipeSocketFactory(), NamedPipeDns())
 
-    private fun buildNonTcpClient(socketFactory: SocketFactory, dns: Dns): OkHttpClient = baseClient.newBuilder()
+    private fun buildNonTcpClient(socketFactory: SocketFactory, dns: Dns): OkHttpClient = configureCommonClientSettings()
         .proxy(Proxy.NO_PROXY)
         .socketFactory(socketFactory)
-        .sslSocketFactory(tlsConfig.sslSocketFactory, tlsConfig.trustManager)
         .dns(dns)
         .build()
 
-    private fun buildTcpClient(): OkHttpClient = baseClient.newBuilder()
+    private fun buildTcpClient(): OkHttpClient = configureCommonClientSettings().build()
+
+    private fun configureCommonClientSettings(): OkHttpClient.Builder = baseClient.newBuilder()
         .sslSocketFactory(tlsConfig.sslSocketFactory, tlsConfig.trustManager)
-        .build()
+        .hostnameVerifier(tlsConfig.hostnameVerifier)
 
     private fun buildBaseUrl(): HttpUrl = when {
         isUnixSocket -> buildUnixSocketBaseUrl()

@@ -43,6 +43,7 @@ import java.net.Proxy
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import javax.net.SocketFactory
+import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.X509TrustManager
 
@@ -59,6 +60,7 @@ object DockerHttpConfigSpec : Spek({
 
         val tlsConfigScheme = "https"
         val tlsConfigSSLSocketFactory by createForEachTest { mock<SSLSocketFactory>() }
+        val tlsConfigHostnameVerifier by createForEachTest { mock<HostnameVerifier>() }
         val tlsConfigTrustManager by createForEachTest {
             mock<X509TrustManager> {
                 on { acceptedIssuers } doReturn emptyArray()
@@ -70,6 +72,7 @@ object DockerHttpConfigSpec : Spek({
                 on { scheme } doReturn tlsConfigScheme
                 on { sslSocketFactory } doReturn tlsConfigSSLSocketFactory
                 on { trustManager } doReturn tlsConfigTrustManager
+                on { hostnameVerifier } doReturn tlsConfigHostnameVerifier
             }
         }
 
@@ -97,6 +100,10 @@ object DockerHttpConfigSpec : Spek({
 
                     it("configures the client to use the configured SSL socket factory") {
                         assertThat(client.sslSocketFactory(), equalTo(tlsConfigSSLSocketFactory))
+                    }
+
+                    it("configures the client to use the configured hostname verifier") {
+                        assertThat(client.hostnameVerifier(), equalTo(tlsConfigHostnameVerifier))
                     }
 
                     it("inherits all other settings from the base client provided") {
@@ -149,6 +156,10 @@ object DockerHttpConfigSpec : Spek({
 
                     it("configures the client to use the configured SSL socket factory") {
                         assertThat(client.sslSocketFactory(), equalTo(tlsConfigSSLSocketFactory))
+                    }
+
+                    it("configures the client to use the configured hostname verifier") {
+                        assertThat(client.hostnameVerifier(), equalTo(tlsConfigHostnameVerifier))
                     }
 
                     it("inherits all other settings from the base client provided") {
@@ -209,6 +220,10 @@ object DockerHttpConfigSpec : Spek({
 
                     it("configures the client to use the configured SSL socket factory") {
                         assertThat(client.sslSocketFactory(), equalTo(tlsConfigSSLSocketFactory))
+                    }
+
+                    it("configures the client to use the configured hostname verifier") {
+                        assertThat(client.hostnameVerifier(), equalTo(tlsConfigHostnameVerifier))
                     }
 
                     it("inherits all other settings from the base client provided") {

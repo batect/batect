@@ -16,6 +16,7 @@
 
 package batect.docker
 
+import okhttp3.internal.tls.OkHostnameVerifier
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
 import org.bouncycastle.cert.X509CertificateHolder
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
@@ -30,6 +31,7 @@ import java.security.PrivateKey
 import java.security.cert.X509Certificate
 import java.security.spec.InvalidKeySpecException
 import java.security.spec.PKCS8EncodedKeySpec
+import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.KeyManager
 import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
@@ -41,9 +43,11 @@ sealed class DockerTLSConfig {
     abstract val scheme: String
     abstract val sslSocketFactory: SSLSocketFactory
     abstract val trustManager: X509TrustManager
+    abstract val hostnameVerifier: HostnameVerifier
 
     object DisableTLS : DockerTLSConfig() {
         override val scheme: String = "http"
+        override val hostnameVerifier: HostnameVerifier = OkHostnameVerifier.INSTANCE
 
         // The code for the following is taken from the documentation for OkHttpClient.Builder.sslSocketFactory().
         override val trustManager by lazy {
@@ -67,6 +71,14 @@ sealed class DockerTLSConfig {
         private val clientKeyPath: Path
     ) : DockerTLSConfig() {
         override val scheme: String = "https"
+
+        override val hostnameVerifier: HostnameVerifier by lazy {
+            if (verifyServer) {
+                OkHostnameVerifier.INSTANCE
+            } else {
+                HostnameVerifier { _, _ -> true }
+            }
+        }
 
         private val keyStorePassword = "this-password-doesnt-matter".toCharArray()
 

@@ -105,6 +105,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * tab to show configuration as parsed
 * switch to [MockK](https://github.com/oleksiyp/mockk) - Kotlin specific library with clearer upgrade path to Kotlin/Native
   * remove MockMaker resource file
+* add running integration tests against Minikube to CI - can't currently easily be done as Travis doesn't support nested virtualisation and bare-metal minikube doesn't set up its own Docker daemon like it does when running in a VM
 * move to Kotlin/Native
   * Why? Don't want to require users to install a JVM to use batect, also want to remove as much overhead as possible
 

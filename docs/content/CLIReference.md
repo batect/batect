@@ -85,7 +85,9 @@ Example:
 ./batect --config-file my-other-config-file.yml the-task
 ```
 
-### Use a non-standard Docker host <small>(`--docker-host`)</small>
+### Customise Docker connection options
+
+#### Use a non-standard Docker host <small>(`--docker-host`)</small>
 
 By default, batect will connect to the Docker daemon using the path provided in the `DOCKER_HOST` environment variable, or
 the default path for your operating system if `DOCKER_HOST` is not set. Use this option to instruct batect to use a different path.
@@ -95,6 +97,35 @@ Example:
 ```shell
 ./batect --docker-host unix:///var/run/other-docker.sock the-task
 ```
+
+#### Connect to Docker over TLS <small>(`--docker-tls` and `--docker-tls-verify`)</small>
+
+By default, the Docker daemon only accepts plaintext connections from the local machine. If your daemon requires TLS, use the `--docker-tls-verify` option
+to instruct batect to use TLS. batect will also automatically enable this option if the `DOCKER_TLS_VERIFY` environment variable is set to `1`.
+
+If your daemon presents a certificate that does not match its hostname, use the `--docker-tls` option (without `--docker-tls-verify`) to instruct
+batect to not verify the hostname.
+
+!!! warning
+    Using `--docker-tls` without `--docker-tls-verify` is insecure and should only be used if you understand the implications of this.
+
+These options mirror the behaviour of the `docker` CLI's `--tls` and `--tlsverify` options.
+
+#### Customise certificates used to provide authentication to daemon and to verify daemon's identity <small>(`--docker-cert-path`, `--docker-tls-ca-cert`, `--docker-tls-cert` and `--docker-tls-key`)</small>
+
+If your Docker daemon requires TLS, batect needs three files in order to connect to it:
+
+* the CA certificate that can be used to verify certificates presented by the Docker daemon (`--docker-tls-ca-cert`)
+* the certificate that can be used to prove your identity to the Docker daemon (`--docker-tls-cert`) and corresponding private key (`--docker-tls-key`)
+
+By default, these files are stored in `~/.docker` and are named `ca.pem`, `cert.pem` and `key.pem` respectively.
+
+You can instruct batect use a non-default location for any of these files with the options mentioned above, or override the default directory for these
+files with `--docker-cert-path`. If the `DOCKER_CERT_PATH` environment variable is set, batect will use that as the default directory.
+
+If both `--docker-cert-path` (or `DOCKER_CERT_PATH`) and a path for an individual file is provided, the path for the individual file takes precedence.
+
+These options mirror the behaviour of the `docker` CLI's `--tlscacert`, `--tlscert` and `--tlskey` options.
 
 ### Create a debugging log <small>(`--log-file`)</small>
 

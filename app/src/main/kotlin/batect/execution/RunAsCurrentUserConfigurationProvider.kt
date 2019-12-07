@@ -37,8 +37,6 @@ class RunAsCurrentUserConfigurationProvider(
     private val nativeMethods: NativeMethods,
     private val fileSystem: FileSystem
 ) {
-    private val temporaryDirectory = fileSystem.getPath(systemInfo.tempDirectory)
-
     fun determineUserAndGroup(container: Container): UserAndGroup? = when (container.runAsCurrentUserConfig) {
         is RunAsCurrentUserConfig.RunAsDefaultContainerUser -> null
         is RunAsCurrentUserConfig.RunAsCurrentUser -> UserAndGroup(determineUserId(), determineGroupId())
@@ -141,7 +139,7 @@ class RunAsCurrentUserConfigurationProvider(
     }
 
     private fun createHomeDirectory(): Path {
-        val path = Files.createTempDirectory(temporaryDirectory, "batect-home-")
+        val path = Files.createTempDirectory(systemInfo.tempDirectory, "batect-home-")
 
         if (systemInfo.operatingSystem != OperatingSystem.Windows) {
             val attributeView = Files.getFileAttributeView(path, PosixFileAttributeView::class.java, LinkOption.NOFOLLOW_LINKS)
@@ -154,7 +152,7 @@ class RunAsCurrentUserConfigurationProvider(
         return path
     }
 
-    private fun createTempFile(name: String): Path = Files.createTempFile(temporaryDirectory, "batect-$name-", "")
+    private fun createTempFile(name: String): Path = Files.createTempFile(systemInfo.tempDirectory, "batect-$name-", "")
 
     private fun createMissingVolumeMountDirectories(container: Container) {
         container.volumeMounts.forEach { volumeMount ->

@@ -71,12 +71,6 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 VolumeMount(directoryThatDoesNotExist, "/container/new-directory", null)
             )
 
-            beforeEachTest {
-                Files.createDirectories(fileSystem.getPath("/tmp"))
-                Files.createDirectories(fileSystem.getPath(directoryThatExists))
-                Files.createFile(fileSystem.getPath(fileThatExists))
-            }
-
             val container = Container(
                 "some-container",
                 imageSourceDoesNotMatter(),
@@ -84,12 +78,20 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
             )
 
-            val systemInfo = mock<SystemInfo> {
-                on { tempDirectory } doReturn "/tmp"
+            val systemInfo by createForEachTest {
+                mock<SystemInfo> {
+                    on { tempDirectory } doReturn fileSystem.getPath("/tmp")
+                }
             }
 
             val nativeMethods = mock<NativeMethods>()
             val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem) }
+
+            beforeEachTest {
+                Files.createDirectories(systemInfo.tempDirectory)
+                Files.createDirectories(fileSystem.getPath(directoryThatExists))
+                Files.createFile(fileSystem.getPath(fileThatExists))
+            }
 
             on("generating the configuration") {
                 val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
@@ -125,12 +127,14 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
             val runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsCurrentUser(homeDirectory)
 
             given("the application is running on Windows") {
-                val systemInfo = mock<SystemInfo> {
-                    on { operatingSystem } doReturn OperatingSystem.Windows
-                    on { tempDirectory } doReturn "C:\\temp"
-                }
-
                 val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.windows()) }
+
+                val systemInfo by createForEachTest {
+                    mock<SystemInfo> {
+                        on { operatingSystem } doReturn OperatingSystem.Windows
+                        on { tempDirectory } doReturn fileSystem.getPath("C:\\temp")
+                    }
+                }
 
                 val directoryThatExists = "C:\\existing\\directory"
                 val fileThatExists = "C:\\existing\\file"
@@ -142,7 +146,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 )
 
                 beforeEachTest {
-                    Files.createDirectories(fileSystem.getPath(systemInfo.tempDirectory))
+                    Files.createDirectories(systemInfo.tempDirectory)
                     Files.createDirectories(fileSystem.getPath(directoryThatExists))
                     Files.createFile(fileSystem.getPath(fileThatExists))
                 }
@@ -253,12 +257,14 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
             }
 
             given("the application is not running on Windows") {
-                val systemInfo = mock<SystemInfo> {
-                    on { operatingSystem } doReturn OperatingSystem.Other
-                    on { tempDirectory } doReturn "/tmp"
-                }
-
                 val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix().toBuilder().setAttributeViews("posix").build()) }
+
+                val systemInfo by createForEachTest {
+                    mock<SystemInfo> {
+                        on { operatingSystem } doReturn OperatingSystem.Other
+                        on { tempDirectory } doReturn fileSystem.getPath("/tmp")
+                    }
+                }
 
                 val directoryThatExists = "/existing/directory"
                 val fileThatExists = "/existing/file"
@@ -270,7 +276,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 )
 
                 beforeEachTest {
-                    Files.createDirectories(fileSystem.getPath(systemInfo.tempDirectory))
+                    Files.createDirectories(systemInfo.tempDirectory)
                     Files.createDirectories(fileSystem.getPath(directoryThatExists))
                     Files.createFile(fileSystem.getPath(fileThatExists))
                 }

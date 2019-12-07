@@ -89,7 +89,7 @@ object SystemInfoSpec : Spek({
                 }
 
                 it("returns that the temporary directory is '/tmp'") {
-                    assertThat(systemInfo.tempDirectory, equalTo("/tmp"))
+                    assertThat(systemInfo.tempDirectory, equalTo(fileSystem.getPath("/tmp")))
                 }
             }
 
@@ -110,7 +110,7 @@ object SystemInfoSpec : Spek({
                 }
 
                 it("returns that the temporary directory is '/tmp'") {
-                    assertThat(systemInfo.tempDirectory, equalTo("/tmp"))
+                    assertThat(systemInfo.tempDirectory, equalTo(fileSystem.getPath("/tmp")))
                 }
             }
 
@@ -131,7 +131,7 @@ object SystemInfoSpec : Spek({
                 }
 
                 it("returns that the temporary directory is the value of the 'java.io.tmpdir' system property") {
-                    assertThat(systemInfo.tempDirectory, equalTo("C:\\some-temp-dir"))
+                    assertThat(systemInfo.tempDirectory, equalTo(fileSystem.getPath("C:\\some-temp-dir")))
                 }
             }
 

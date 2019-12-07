@@ -43,7 +43,7 @@ object ApplicationInfoLoggerSpec : Spek({
         val logger = Logger("applicationInfo", logSink)
         val versionInfo = VersionInfo()
         val fileSystem = Jimfs.newFileSystem(Configuration.unix())
-        val systemInfo = SystemInfo(OperatingSystem.Linux, "1.2.3", "line-separator", "4.5.6", "me", fileSystem.getPath("/home"), "/tmp")
+        val systemInfo = SystemInfo(OperatingSystem.Linux, "1.2.3", "line-separator", "4.5.6", "me", fileSystem.getPath("/home"), fileSystem.getPath("/tmp"))
         val environmentVariables = mapOf("PATH" to "/bin:/usr/bin:/usr/local/bin")
         val dockerSystemInfoClient = mock<DockerSystemInfoClient> {
             on { getDockerVersionInfo() } doReturn DockerVersionInfoRetrievalResult.Failed("Docker version 1.2.3.4")

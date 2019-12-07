@@ -19,7 +19,7 @@ package batect.os.proxies
 import batect.docker.DockerHostNameResolutionResult
 import batect.docker.DockerHostNameResolver
 import batect.logging.Logger
-import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 class ProxyEnvironmentVariablePreprocessor(private val hostNameResolver: DockerHostNameResolver, private val logger: Logger) {
     fun process(value: String): String {
@@ -37,7 +37,7 @@ class ProxyEnvironmentVariablePreprocessor(private val hostNameResolver: DockerH
     }
 
     private fun replaceLocalhost(value: String, localhostName: String): String {
-        val parsed = HttpUrl.parse(value)
+        val parsed = value.toHttpUrlOrNull()
 
         if (parsed == null) {
             logger.warn {
@@ -48,7 +48,7 @@ class ProxyEnvironmentVariablePreprocessor(private val hostNameResolver: DockerH
             return value
         }
 
-        if (parsed.host() in setOf("localhost", "127.0.0.1", "::1")) {
+        if (parsed.host in setOf("localhost", "127.0.0.1", "::1")) {
             val newValue = parsed.newBuilder().host(localhostName).toString()
 
             logger.info {

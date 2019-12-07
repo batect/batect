@@ -125,27 +125,27 @@ class UpgradeCommand(
         try {
             logger.info {
                 message("Downloading wrapper script.")
-                data("url", request.url().toString())
+                data("url", request.url.toString())
             }
 
             httpClient.newCall(request).execute().use { response ->
                 logger.info {
                     message("Finished downloading wrapper script.")
                     data("successful", response.isSuccessful)
-                    data("httpResponseCode", response.code())
-                    data("httpResponseMessage", response.message())
+                    data("httpResponseCode", response.code)
+                    data("httpResponseMessage", response.message)
                 }
 
                 if (!response.isSuccessful) {
-                    throw UpdateInfoDownloadException("The server returned HTTP ${response.code()}.")
+                    throw UpdateInfoDownloadException("The server returned HTTP ${response.code}.")
                 }
 
-                return response.body()!!.bytes()
+                return response.body!!.bytes()
             }
         } catch (e: Throwable) {
             logger.error {
                 message("Downloading wrapper script failed with an exception.")
-                data("url", request.url().toString())
+                data("url", request.url.toString())
                 exception(e)
             }
 

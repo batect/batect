@@ -25,22 +25,22 @@ class HttpLoggingInterceptor(private val logger: Logger) : Interceptor {
 
         logger.debug {
             message("HTTP request starting.")
-            data("url", request.url().toString())
-            data("method", request.method())
-            data("contentLength", request.body()?.contentLength() ?: 0)
-            data("contentType", request.body()?.contentType()?.toString())
+            data("url", request.url.toString())
+            data("method", request.method)
+            data("contentLength", request.body?.contentLength() ?: 0)
+            data("contentType", request.body?.contentType()?.toString())
         }
 
         val response = chain.proceed(request)
 
         logger.debug {
             message("HTTP response received.")
-            data("url", request.url().toString())
-            data("method", request.method())
-            data("code", response.code())
-            data("message", response.message())
-            data("contentLength", response.body()?.contentLength() ?: 0)
-            data("contentType", response.body()?.contentType()?.toString())
+            data("url", request.url.toString())
+            data("method", request.method)
+            data("code", response.code)
+            data("message", response.message)
+            data("contentLength", response.body?.contentLength() ?: 0)
+            data("contentType", response.body?.contentType()?.toString())
         }
 
         return response

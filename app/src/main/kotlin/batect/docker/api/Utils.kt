@@ -17,11 +17,12 @@
 package batect.docker.api
 
 import kotlinx.serialization.json.JsonObject
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
-internal fun emptyRequestBody(): RequestBody = RequestBody.create(MediaType.get("text/plain"), "")
+internal fun emptyRequestBody(): RequestBody = "".toRequestBody("text/plain".toMediaType())
 
-val jsonMediaType = MediaType.get("application/json")
+val jsonMediaType = "application/json".toMediaType()
 fun jsonRequestBody(json: JsonObject): RequestBody = jsonRequestBody(json.toString())
-fun jsonRequestBody(json: String): RequestBody = RequestBody.create(jsonMediaType, json)
+fun jsonRequestBody(json: String): RequestBody = json.toRequestBody(jsonMediaType)

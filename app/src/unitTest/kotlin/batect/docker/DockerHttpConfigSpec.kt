@@ -34,7 +34,7 @@ import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import okhttp3.Dns
-import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -87,27 +87,27 @@ object DockerHttpConfigSpec : Spek({
                     val client by runForEachTest { config.client }
 
                     it("overrides any existing proxy settings") {
-                        assertThat(client.proxy(), equalTo(Proxy.NO_PROXY))
+                        assertThat(client.proxy, equalTo(Proxy.NO_PROXY))
                     }
 
                     it("configures the client to use the Unix socket factory") {
-                        assertThat(client.socketFactory(), isA<UnixSocketFactory>())
+                        assertThat(client.socketFactory, isA<UnixSocketFactory>())
                     }
 
                     it("configures the client to use the fake DNS service") {
-                        assertThat(client.dns(), isA<UnixSocketDns>())
+                        assertThat(client.dns, isA<UnixSocketDns>())
                     }
 
                     it("configures the client to use the configured SSL socket factory") {
-                        assertThat(client.sslSocketFactory(), equalTo(tlsConfigSSLSocketFactory))
+                        assertThat(client.sslSocketFactory, equalTo(tlsConfigSSLSocketFactory))
                     }
 
                     it("configures the client to use the configured hostname verifier") {
-                        assertThat(client.hostnameVerifier(), equalTo(tlsConfigHostnameVerifier))
+                        assertThat(client.hostnameVerifier, equalTo(tlsConfigHostnameVerifier))
                     }
 
                     it("inherits all other settings from the base client provided") {
-                        assertThat(client.readTimeoutMillis().toLong(), equalTo(Duration.ofDays(1).toMillis()))
+                        assertThat(client.readTimeoutMillis.toLong(), equalTo(Duration.ofDays(1).toMillis()))
                     }
                 }
 
@@ -115,7 +115,7 @@ object DockerHttpConfigSpec : Spek({
                     val encodedPath = UnixSocketDns.encodePath("/var/run/very/very/long/name/docker.sock")
 
                     it("returns a URL ready for use with the local Unix socket") {
-                        assertThat(config.baseUrl, equalTo(HttpUrl.parse("$tlsConfigScheme://$encodedPath")!!))
+                        assertThat(config.baseUrl, equalTo("$tlsConfigScheme://$encodedPath".toHttpUrl()))
                     }
                 }
             }
@@ -143,27 +143,27 @@ object DockerHttpConfigSpec : Spek({
                     val client by runForEachTest { config.client }
 
                     it("overrides any existing proxy settings") {
-                        assertThat(client.proxy(), equalTo(Proxy.NO_PROXY))
+                        assertThat(client.proxy, equalTo(Proxy.NO_PROXY))
                     }
 
                     it("configures the client to use the named pipe socket factory") {
-                        assertThat(client.socketFactory(), isA<NamedPipeSocketFactory>())
+                        assertThat(client.socketFactory, isA<NamedPipeSocketFactory>())
                     }
 
                     it("configures the client to use the fake DNS service") {
-                        assertThat(client.dns(), isA<NamedPipeDns>())
+                        assertThat(client.dns, isA<NamedPipeDns>())
                     }
 
                     it("configures the client to use the configured SSL socket factory") {
-                        assertThat(client.sslSocketFactory(), equalTo(tlsConfigSSLSocketFactory))
+                        assertThat(client.sslSocketFactory, equalTo(tlsConfigSSLSocketFactory))
                     }
 
                     it("configures the client to use the configured hostname verifier") {
-                        assertThat(client.hostnameVerifier(), equalTo(tlsConfigHostnameVerifier))
+                        assertThat(client.hostnameVerifier, equalTo(tlsConfigHostnameVerifier))
                     }
 
                     it("inherits all other settings from the base client provided") {
-                        assertThat(client.readTimeoutMillis().toLong(), equalTo(Duration.ofDays(1).toMillis()))
+                        assertThat(client.readTimeoutMillis.toLong(), equalTo(Duration.ofDays(1).toMillis()))
                     }
                 }
 
@@ -171,7 +171,7 @@ object DockerHttpConfigSpec : Spek({
                     val encodedPath = NamedPipeDns.encodePath("""\\.\pipe\some\very\very\very\long\name\docker_engine""")
 
                     it("returns a URL ready for use with the local Unix socket") {
-                        assertThat(config.baseUrl, equalTo(HttpUrl.parse("$tlsConfigScheme://$encodedPath")!!))
+                        assertThat(config.baseUrl, equalTo("$tlsConfigScheme://$encodedPath".toHttpUrl()))
                     }
                 }
             }
@@ -191,13 +191,13 @@ object DockerHttpConfigSpec : Spek({
         // See https://docs.docker.com/engine/reference/commandline/dockerd/#daemon-socket-option for reference on the formats
         // that Docker supports.
         mapOf(
-            "tcp://1.2.3.4" to HttpUrl.get("$tlsConfigScheme://1.2.3.4"),
-            "tcp://1.2.3.4:1234" to HttpUrl.get("$tlsConfigScheme://1.2.3.4:1234"),
-            "tcp://1.2.3.4/somewhere" to HttpUrl.get("$tlsConfigScheme://1.2.3.4/somewhere"),
-            "tcp://1.2.3.4:1234/somewhere" to HttpUrl.get("$tlsConfigScheme://1.2.3.4:1234/somewhere"),
-            "1.2.3.4" to HttpUrl.get("$tlsConfigScheme://1.2.3.4"),
-            "1.2.3.4:1234" to HttpUrl.get("$tlsConfigScheme://1.2.3.4:1234"),
-            ":1234" to HttpUrl.get("$tlsConfigScheme://0.0.0.0:1234")
+            "tcp://1.2.3.4" to "$tlsConfigScheme://1.2.3.4".toHttpUrl(),
+            "tcp://1.2.3.4:1234" to "$tlsConfigScheme://1.2.3.4:1234".toHttpUrl(),
+            "tcp://1.2.3.4/somewhere" to "$tlsConfigScheme://1.2.3.4/somewhere".toHttpUrl(),
+            "tcp://1.2.3.4:1234/somewhere" to "$tlsConfigScheme://1.2.3.4:1234/somewhere".toHttpUrl(),
+            "1.2.3.4" to "$tlsConfigScheme://1.2.3.4".toHttpUrl(),
+            "1.2.3.4:1234" to "$tlsConfigScheme://1.2.3.4:1234".toHttpUrl(),
+            ":1234" to "$tlsConfigScheme://0.0.0.0:1234".toHttpUrl()
         ).forEach { (host, expectedBaseUrl) ->
             given("the host address '$host'") {
                 val systemInfo by createForEachTest { systemInfoFor(OperatingSystem.Other) }
@@ -207,27 +207,27 @@ object DockerHttpConfigSpec : Spek({
                     val client by runForEachTest { config.client }
 
                     it("does not override any existing proxy settings") {
-                        assertThat(client.proxy(), equalTo(proxy))
+                        assertThat(client.proxy, equalTo(proxy))
                     }
 
                     it("configures the client to use the default socket factory") {
-                        assertThat(client.socketFactory(), equalTo(SocketFactory.getDefault()))
+                        assertThat(client.socketFactory, equalTo(SocketFactory.getDefault()))
                     }
 
                     it("configures the client to use the system DNS service") {
-                        assertThat(client.dns(), equalTo(Dns.SYSTEM))
+                        assertThat(client.dns, equalTo(Dns.SYSTEM))
                     }
 
                     it("configures the client to use the configured SSL socket factory") {
-                        assertThat(client.sslSocketFactory(), equalTo(tlsConfigSSLSocketFactory))
+                        assertThat(client.sslSocketFactory, equalTo(tlsConfigSSLSocketFactory))
                     }
 
                     it("configures the client to use the configured hostname verifier") {
-                        assertThat(client.hostnameVerifier(), equalTo(tlsConfigHostnameVerifier))
+                        assertThat(client.hostnameVerifier, equalTo(tlsConfigHostnameVerifier))
                     }
 
                     it("inherits all other settings from the base client provided") {
-                        assertThat(client.readTimeoutMillis().toLong(), equalTo(Duration.ofDays(1).toMillis()))
+                        assertThat(client.readTimeoutMillis.toLong(), equalTo(Duration.ofDays(1).toMillis()))
                     }
                 }
 

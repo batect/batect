@@ -18,6 +18,7 @@ package batect.docker.build
 
 import jnr.ffi.Platform
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody
 import okio.BufferedSink
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
@@ -26,7 +27,7 @@ import java.nio.file.Files
 import java.nio.file.LinkOption
 
 data class DockerImageBuildContextRequestBody(val context: DockerImageBuildContext) : RequestBody() {
-    override fun contentType(): MediaType = MediaType.get("application/x-tar")
+    override fun contentType(): MediaType = "application/x-tar".toMediaType()
 
     override fun writeTo(sink: BufferedSink) {
         TarArchiveOutputStream(sink.outputStream()).use { output ->

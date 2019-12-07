@@ -32,7 +32,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -45,7 +45,7 @@ object SystemInfoAPISpec : Spek({
         val httpConfig by createForEachTest {
             mock<DockerHttpConfig> {
                 on { client } doReturn httpClient
-                on { baseUrl } doReturn HttpUrl.get(dockerBaseUrl)
+                on { baseUrl } doReturn dockerBaseUrl.toHttpUrl()
             }
         }
 

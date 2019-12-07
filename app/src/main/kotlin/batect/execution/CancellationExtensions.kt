@@ -25,7 +25,7 @@ inline fun <R> Call.executeInCancellationContext(cancellationContext: Cancellati
         try {
             return execute().use(operation)
         } catch (e: IOException) {
-            if (isCanceled) {
+            if (isCanceled()) {
                 throw CancellationException("Request was cancelled.", e)
             } else {
                 throw e

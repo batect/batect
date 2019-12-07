@@ -24,6 +24,7 @@ import batect.os.windows.namedpipes.NamedPipeDns
 import batect.os.windows.namedpipes.NamedPipeSocketFactory
 import okhttp3.Dns
 import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import java.net.Proxy
 import javax.net.SocketFactory
@@ -64,7 +65,7 @@ class DockerHttpConfig(
     private fun buildBaseUrl(): HttpUrl = when {
         isUnixSocket -> buildUnixSocketBaseUrl()
         isNamedPipe -> buildNamedPipeBaseUrl()
-        else -> HttpUrl.get(cleanUrl())
+        else -> cleanUrl().toHttpUrl()
     }
 
     private fun buildUnixSocketBaseUrl(): HttpUrl {

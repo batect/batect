@@ -138,7 +138,7 @@ object CancellationExtensionsSpec : Spek({
                     assertThat({
                         call.executeInCancellationContext(cancellationContext) { response ->
                             call.cancel()
-                            response.body()!!.bytes()
+                            response.body!!.bytes()
 
                             throw RuntimeException("This should not be reached, reading the body above should trigger an exception from OkHttp because the call is cancelled")
                         }

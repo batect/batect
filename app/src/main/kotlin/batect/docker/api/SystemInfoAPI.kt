@@ -54,7 +54,7 @@ class SystemInfoAPI(
                 throw DockerVersionInfoRetrievalException("The request failed: ${error.message}")
             }
 
-            val parsedResponse = Json.parser.parseJson(response.body()!!.string()).jsonObject
+            val parsedResponse = Json.parser.parseJson(response.body!!.string()).jsonObject
             val version = parsedResponse.getValue("Version").primitive.content
             val apiVersion = parsedResponse.getValue("ApiVersion").primitive.content
             val minAPIVersion = parsedResponse.getValue("MinAPIVersion").primitive.content
@@ -90,13 +90,13 @@ class SystemInfoAPI(
                     data("error", error)
                 }
 
-                throw DockerException("Could not ping Docker daemon, daemon responded with HTTP ${response.code()}: ${error.message}")
+                throw DockerException("Could not ping Docker daemon, daemon responded with HTTP ${response.code}: ${error.message}")
             }
 
-            val responseBody = response.body()!!.string()
+            val responseBody = response.body!!.string()
 
             if (responseBody != "OK") {
-                throw DockerException("Could not ping Docker daemon, daemon responded with HTTP ${response.code()}: $responseBody")
+                throw DockerException("Could not ping Docker daemon, daemon responded with HTTP ${response.code}: $responseBody")
             }
         }
     }

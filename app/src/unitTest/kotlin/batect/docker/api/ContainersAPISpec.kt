@@ -62,7 +62,7 @@ import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import jnr.constants.platform.Signal
 import okhttp3.Headers
-import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Response
 import okio.BufferedSink
@@ -80,7 +80,7 @@ object ContainersAPISpec : Spek({
         val httpConfig by createForEachTest {
             mock<DockerHttpConfig> {
                 on { client } doReturn httpClient
-                on { baseUrl } doReturn HttpUrl.get(dockerBaseUrl)
+                on { baseUrl } doReturn dockerBaseUrl.toHttpUrl()
             }
         }
 
@@ -566,7 +566,7 @@ object ContainersAPISpec : Spek({
 
                     on("the attach succeeding") {
                         val response = mock<Response> {
-                            on { code() } doReturn 101
+                            on { code } doReturn 101
                         }
 
                         beforeEachTest { attachHttpClient.mock("POST", expectedUrl, response, expectedHeaders) }
@@ -604,7 +604,7 @@ object ContainersAPISpec : Spek({
 
                     on("the attach succeeding") {
                         val response = mock<Response> {
-                            on { code() } doReturn 101
+                            on { code } doReturn 101
                         }
 
                         beforeEachTest { attachHttpClient.mock("POST", expectedUrl, response, expectedHeaders) }

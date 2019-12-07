@@ -62,7 +62,7 @@ class NetworksAPI(
                 throw NetworkCreationFailedException(error.message)
             }
 
-            val parsedResponse = Json.parser.parseJson(response.body()!!.string()).jsonObject
+            val parsedResponse = Json.parser.parseJson(response.body!!.string()).jsonObject
             val networkId = parsedResponse.getValue("Id").primitive.content
 
             logger.info {

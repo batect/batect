@@ -47,7 +47,7 @@ sealed class DockerTLSConfig {
 
     object DisableTLS : DockerTLSConfig() {
         override val scheme: String = "http"
-        override val hostnameVerifier: HostnameVerifier = OkHostnameVerifier.INSTANCE
+        override val hostnameVerifier: HostnameVerifier = OkHostnameVerifier
 
         // The code for the following is taken from the documentation for OkHttpClient.Builder.sslSocketFactory().
         override val trustManager by lazy {
@@ -74,7 +74,7 @@ sealed class DockerTLSConfig {
 
         override val hostnameVerifier: HostnameVerifier by lazy {
             if (verifyServer) {
-                OkHostnameVerifier.INSTANCE
+                OkHostnameVerifier
             } else {
                 HostnameVerifier { _, _ -> true }
             }

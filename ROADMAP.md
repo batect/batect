@@ -44,6 +44,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * shell tab completion for options (eg. `batect --h<tab>` completes to `batect --help`) - #116
 * shell tab completion for tasks (eg. `batect b<tab>` completes to `batect build`) - #116
 * Kubernetes-style health checks from outside the container (don't require `curl` / `wget` to be installed in the container, just provide HTTP endpoint)
+* ability to override image tag for a container (eg. `./batect --use-image-tag:my-app=abc123 the-task`)
 
 ### Other
 * logo

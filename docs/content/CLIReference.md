@@ -38,7 +38,7 @@ Example:
 ./batect --no-proxy-vars the-task
 ```
 
-## See a list of available tasks <small>(`--list-tasks`)</small>
+## See a list of available tasks <small>(`--list-tasks` or `-T`)</small>
 
 batect can produce a short summary of all tasks in the current configuration file along with their
 [`description`](config/Tasks.md#description), and grouped by their [`group`](config/Tasks.md#group).

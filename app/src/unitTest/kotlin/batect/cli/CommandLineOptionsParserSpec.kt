@@ -162,6 +162,7 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--version") to defaultCommandLineOptions.copy(showVersionInfo = true),
             listOf("--version", "some-task") to defaultCommandLineOptions.copy(showVersionInfo = true),
             listOf("--list-tasks") to defaultCommandLineOptions.copy(listTasks = true),
+            listOf("-T") to defaultCommandLineOptions.copy(listTasks = true),
             listOf("--list-tasks", "some-task") to defaultCommandLineOptions.copy(listTasks = true),
             listOf("--upgrade") to defaultCommandLineOptions.copy(runUpgrade = true),
             listOf("--upgrade", "some-task") to defaultCommandLineOptions.copy(runUpgrade = true),

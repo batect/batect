@@ -48,7 +48,7 @@ class CommandLineOptionsParser(
     private val showHelp: Boolean by flagOption("help", "Show this help information and exit.")
     private val showVersionInfo: Boolean by flagOption("version", "Show batect version information and exit.")
     private val runUpgrade: Boolean by flagOption(upgradeFlagName, "Upgrade batect to the latest available version.")
-    private val listTasks: Boolean by flagOption("list-tasks", "List available tasks and exit.")
+    private val listTasks: Boolean by flagOption("list-tasks", "List available tasks and exit.", 'T')
 
     private val disableColorOutput: Boolean by flagOption("no-color", "Disable colored output from batect. Does not affect task command output. Implies --output=simple unless overridden.")
     private val disableUpdateNotification: Boolean by flagOption("no-update-notification", "Disable checking for updates to batect and notifying you when a new version is available.")

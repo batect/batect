@@ -52,6 +52,16 @@ jobs:
           - build_workspace
 
     - stage: Integration and journey test
+      name: Integration test against latest Docker (TLS over TCP)
+      before_install:
+        - ./travis/install_docker.sh
+        - ./travis/configure_docker_tls.sh
+      script: DOCKER_CERT_PATH=$HOME/.docker/certs DOCKER_TLS_VERIFY=1 DOCKER_HOST=tcp://localhost:2376 ./gradlew integrationTest
+      workspaces:
+        use:
+          - build_workspace
+
+    - stage: Integration and journey test
       name: Journey test against latest Docker
       before_install: ./travis/install_docker.sh
       script: ./gradlew journeyTest

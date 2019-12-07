@@ -64,7 +64,7 @@ sealed class DockerTLSConfig {
         }
     }
 
-    class EnableTLS(
+    data class EnableTLS(
         private val verifyServer: Boolean,
         private val caCertificatePath: Path,
         private val clientCertificatePath: Path,

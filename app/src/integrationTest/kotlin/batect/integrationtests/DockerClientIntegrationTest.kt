@@ -373,7 +373,9 @@ private fun createClient(posix: POSIX, nativeMethods: NativeMethods): DockerClie
     val logger = mock<Logger>()
     val processRunner = ProcessRunner(logger)
     val systemInfo = SystemInfo(nativeMethods, FileSystems.getDefault())
-    val httpConfig = DockerHttpConfig(OkHttpClient(), getDockerHost(systemInfo, processRunner), getDockerTLSConfig(systemInfo), systemInfo)
+    val dockerHost = getDockerHost(systemInfo)
+    val tlsConfig = getDockerTLSConfig()
+    val httpConfig = DockerHttpConfig(OkHttpClient(), dockerHost, tlsConfig, systemInfo)
     val containersAPI = ContainersAPI(httpConfig, systemInfo, logger)
     val execAPI = ExecAPI(httpConfig, systemInfo, logger)
     val imagesAPI = ImagesAPI(httpConfig, systemInfo, logger)
@@ -439,35 +441,24 @@ private fun removeImage(imageName: String) {
     assertThat(result, has(ProcessOutput::output, containsSubstring("No such image: $imageName")) or has(ProcessOutput::exitCode, equalTo(0)))
 }
 
-private val runAgainstMinikube: Boolean = System.getProperty("minikube", "false") == "true"
+private fun getDockerHost(systemInfo: SystemInfo): String =
+    System.getenv().getOrDefault("DOCKER_HOST", DockerHttpConfigDefaults(systemInfo).defaultDockerHost)
 
-private fun getDockerHost(systemInfo: SystemInfo, processRunner: ProcessRunner): String = if (runAgainstMinikube) {
-    val result = processRunner.runAndCaptureOutput(listOf("minikube", "ip"))
-
-    if (result.exitCode != 0) {
-        throw RuntimeException("Getting minikube IP address failed, 'minikube ip' exited with code ${result.exitCode} and output: ${result.output}")
+private fun getDockerTLSConfig(): DockerTLSConfig {
+    if (System.getenv().getOrDefault("DOCKER_TLS_VERIFY", "0") != "1") {
+        return DockerTLSConfig.DisableTLS
     }
 
-    val ip = result.output.trim()
+    val certsDir = Paths.get(System.getenv().getValue("DOCKER_CERT_PATH"))
 
-    "tcp://$ip:2376"
-} else {
-    println(System.getProperty("minikube"))
-    DockerHttpConfigDefaults(systemInfo).defaultDockerHost
-}
-
-private fun getDockerTLSConfig(systemInfo: SystemInfo): DockerTLSConfig = if (runAgainstMinikube) {
-    val minikubeCertsDir = systemInfo.homeDirectory.resolve(".minikube").resolve("certs")
-
-    DockerTLSConfig.EnableTLS(
+    return DockerTLSConfig.EnableTLS(
         true,
-        minikubeCertsDir.resolve("ca.pem"),
-        minikubeCertsDir.resolve("cert.pem"),
-        minikubeCertsDir.resolve("key.pem")
+        certsDir.resolve("ca.pem"),
+        certsDir.resolve("cert.pem"),
+        certsDir.resolve("key.pem")
     )
-} else {
-    DockerTLSConfig.DisableTLS
 }
+
 
 private fun httpGet(url: String): Response {
     retry(3) {

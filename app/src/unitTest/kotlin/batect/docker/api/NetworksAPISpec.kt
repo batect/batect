@@ -35,7 +35,7 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.content
-import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -48,7 +48,7 @@ object NetworksAPISpec : Spek({
         val httpConfig by createForEachTest {
             mock<DockerHttpConfig> {
                 on { client } doReturn httpClient
-                on { baseUrl } doReturn HttpUrl.get(dockerBaseUrl)
+                on { baseUrl } doReturn dockerBaseUrl.toHttpUrl()
             }
         }
 

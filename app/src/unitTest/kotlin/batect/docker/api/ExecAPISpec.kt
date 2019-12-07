@@ -48,7 +48,7 @@ import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import kotlinx.serialization.json.json
 import okhttp3.Headers
-import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Response
 import okio.BufferedSink
@@ -65,7 +65,7 @@ object ExecAPISpec : Spek({
         val httpConfig by createForEachTest {
             mock<DockerHttpConfig> {
                 on { client } doReturn httpClient
-                on { baseUrl } doReturn HttpUrl.get(dockerBaseUrl)
+                on { baseUrl } doReturn dockerBaseUrl.toHttpUrl()
             }
         }
 
@@ -169,7 +169,7 @@ object ExecAPISpec : Spek({
 
                 on("starting the exec instance succeeding") {
                     val response = mock<Response> {
-                        on { code() } doReturn 200
+                        on { code } doReturn 200
                         on { isSuccessful } doReturn true
                     }
 

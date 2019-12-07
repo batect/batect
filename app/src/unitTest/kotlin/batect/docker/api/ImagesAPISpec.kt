@@ -50,7 +50,7 @@ import com.nhaarman.mockitokotlin2.whenever
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import okhttp3.Headers
-import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okio.sink
 import org.spekframework.spek2.Spek
@@ -67,7 +67,7 @@ object ImagesAPISpec : Spek({
         val httpConfig by createForEachTest {
             mock<DockerHttpConfig> {
                 on { client } doReturn httpClient
-                on { baseUrl } doReturn HttpUrl.get(dockerBaseUrl)
+                on { baseUrl } doReturn dockerBaseUrl.toHttpUrl()
             }
         }
 

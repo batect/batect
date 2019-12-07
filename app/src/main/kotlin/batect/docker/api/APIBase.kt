@@ -42,21 +42,21 @@ abstract class APIBase(
     protected fun clientWithNoTimeout() = clientWithTimeout(0, TimeUnit.NANOSECONDS)
 
     protected inline fun checkForFailure(response: Response, errorHandler: (DockerAPIError) -> Unit) {
-        if (response.isSuccessful || response.code() == 101) {
+        if (response.isSuccessful || response.code == 101) {
             return
         }
 
-        val responseBody = response.body()!!.string().trim()
-        val contentType = response.body()!!.contentType()!!
+        val responseBody = response.body!!.string().trim()
+        val contentType = response.body!!.contentType()!!
 
-        if (contentType.type() != jsonMediaType.type() || contentType.subtype() != jsonMediaType.subtype()) {
+        if (contentType.type != jsonMediaType.type || contentType.subtype != jsonMediaType.subtype) {
             logger.warn {
                 message("Error response from Docker daemon was not in JSON format.")
-                data("statusCode", response.code())
+                data("statusCode", response.code)
                 data("message", responseBody)
             }
 
-            errorHandler(DockerAPIError(response.code(), responseBody))
+            errorHandler(DockerAPIError(response.code, responseBody))
             return
         }
 
@@ -64,7 +64,7 @@ abstract class APIBase(
         val message = parsedError.getValue("message").primitive.content
             .correctLineEndings()
 
-        errorHandler(DockerAPIError(response.code(), message))
+        errorHandler(DockerAPIError(response.code, message))
     }
 
     protected fun String.correctLineEndings(): String = this.replace("\n", systemInfo.lineSeparator)

@@ -27,33 +27,34 @@ import com.nhaarman.mockitokotlin2.whenever
 import okhttp3.Call
 import okhttp3.Headers
 import okhttp3.HttpUrl
-import okhttp3.MediaType
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
-import okhttp3.ResponseBody
+import okhttp3.ResponseBody.Companion.toResponseBody
 
 fun OkHttpClient.mockGet(url: String, responseBody: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call = mock("GET", url, responseBody, statusCode, headers)
 fun OkHttpClient.mockPost(url: String, responseBody: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call = mock("POST", url, responseBody, statusCode, headers)
 fun OkHttpClient.mockDelete(url: String, responseBody: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call = mock("DELETE", url, responseBody, statusCode, headers)
 
 fun OkHttpClient.mock(method: String, url: String, responseBody: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call {
-    val parsedUrl = HttpUrl.get(url)
+    val parsedUrl = url.toHttpUrl()
 
     return this.mock(method, equalTo(parsedUrl), responseBody, statusCode, headers)
 }
 
 fun OkHttpClient.mock(method: String, urlMatcher: Matcher<HttpUrl>, responseBody: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call {
-    val jsonMediaType = MediaType.get("application/json; charset=utf-8")
-    val parsedResponseBody = ResponseBody.create(jsonMediaType, responseBody)
+    val jsonMediaType = "application/json; charset=utf-8".toMediaType()
+    val parsedResponseBody = responseBody.toResponseBody(jsonMediaType)
     val call = mock<Call>()
 
-    whenever(this.newCall(argThat { urlMatcher.invoke(url()) == MatchResult.Match })).then { invocation ->
+    whenever(this.newCall(argThat { urlMatcher.invoke(url) == MatchResult.Match })).then { invocation ->
         val request = invocation.getArgument<Request>(0)
 
-        assertThat(request, has(Request::method, equalTo(method)))
-        assertThat(request, has(Request::url, urlMatcher))
+        assertThat(request, has(Request::methodValue, equalTo(method)))
+        assertThat(request, has(Request::urlValue, urlMatcher))
         assertThat(request, has(Request::headerSet, equalTo(headers)))
 
         whenever(call.execute()).doReturn(
@@ -73,14 +74,14 @@ fun OkHttpClient.mock(method: String, urlMatcher: Matcher<HttpUrl>, responseBody
 }
 
 fun OkHttpClient.mock(method: String, url: String, response: Response, headers: Headers = Headers.Builder().build()): Call {
-    val parsedUrl = HttpUrl.get(url)
+    val parsedUrl = url.toHttpUrl()
     val call = mock<Call>()
 
-    whenever(this.newCall(argThat { url().toString() == url })).then { invocation ->
+    whenever(this.newCall(argThat { this.url.toString() == url })).then { invocation ->
         val request = invocation.getArgument<Request>(0)
 
-        assertThat(request, has(Request::method, equalTo(method)))
-        assertThat(request, has(Request::url, equalTo(parsedUrl)))
+        assertThat(request, has(Request::methodValue, equalTo(method)))
+        assertThat(request, has(Request::urlValue, equalTo(parsedUrl)))
         assertThat(request, has(Request::headerSet, equalTo(headers)))
 
         whenever(call.execute()).doReturn(response)
@@ -91,5 +92,7 @@ fun OkHttpClient.mock(method: String, url: String, response: Response, headers: 
     return call
 }
 
-// This is to resolve the ambiguity when referring to Request::headers() above in the has() call.
-private fun Request.headerSet() = this.headers()
+// These exist to resolve the ambiguity when referring to deprecated methods and their new property counterparts above.
+private fun Request.headerSet() = this.headers
+private fun Request.urlValue() = this.url
+private fun Request.methodValue() = this.method

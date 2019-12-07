@@ -30,12 +30,12 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import okhttp3.Interceptor
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Protocol
 import okhttp3.Request
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
-import okhttp3.ResponseBody
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -103,7 +103,7 @@ object HttpLoggingInterceptorSpec : Spek({
             beforeEachTest {
                 val request = Request.Builder()
                     .url("http://www.awesomestuff.com/thing")
-                    .post(RequestBody.create(MediaType.get("text/plain; charset=utf-8"), "Some body content"))
+                    .post("Some body content".toRequestBody("text/plain; charset=utf-8".toMediaType()))
                     .build()
 
                 val expectedResponse = Response.Builder()
@@ -141,7 +141,7 @@ object HttpLoggingInterceptorSpec : Spek({
                     .protocol(Protocol.HTTP_1_1)
                     .code(418)
                     .message("I'm a teapot")
-                    .body(ResponseBody.create(MediaType.get("text/plain; charset=utf-8"), "Some body content"))
+                    .body("Some body content".toResponseBody("text/plain; charset=utf-8".toMediaType()))
                     .build()
 
                 val chain = mock<Interceptor.Chain> {

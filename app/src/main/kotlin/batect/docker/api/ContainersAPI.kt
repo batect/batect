@@ -76,7 +76,7 @@ class ContainersAPI(
                 throw ContainerCreationFailedException("Output from Docker was: ${error.message}")
             }
 
-            val parsedResponse = Json.parser.parseJson(response.body()!!.string()).jsonObject
+            val parsedResponse = Json.parser.parseJson(response.body!!.string()).jsonObject
             val containerId = parsedResponse.getValue("Id").primitive.content
 
             logger.info {
@@ -142,7 +142,7 @@ class ContainersAPI(
                 throw ContainerInspectionFailedException("Could not inspect container '${container.id}': ${error.message}")
             }
 
-            return Json.nonstrictParser.parse(DockerContainerInfo.serializer(), response.body()!!.string())
+            return Json.nonstrictParser.parse(DockerContainerInfo.serializer(), response.body!!.string())
         }
     }
 
@@ -164,7 +164,7 @@ class ContainersAPI(
             .build()
 
         clientWithTimeout(timeoutInSeconds + 10, TimeUnit.SECONDS).newCall(request).execute().use { response ->
-            if (response.code() == 304) {
+            if (response.code == 304) {
                 logger.warn {
                     message("Container has already stopped.")
                 }
@@ -254,7 +254,7 @@ class ContainersAPI(
                     throw DockerException("Getting events for container '${container.id}' failed: ${error.message}")
                 }
 
-                val firstEvent = response.body()!!.source().readUtf8LineStrict()
+                val firstEvent = response.body!!.source().readUtf8LineStrict()
                 val parsedEvent = Json.parser.parseJson(firstEvent).jsonObject
 
                 logger.info {
@@ -294,7 +294,7 @@ class ContainersAPI(
                     throw DockerException("Waiting for container '${container.id}' to exit failed: ${error.message}")
                 }
 
-                val responseBody = response.body()!!.string()
+                val responseBody = response.body!!.string()
                 val parsedResponse = Json.parser.parseJson(responseBody).jsonObject
 
                 logger.info {

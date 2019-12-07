@@ -16,19 +16,20 @@
 
 package batect.docker.api
 
-import batect.testutils.equalTo
 import batect.utils.Json
 import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.nhaarman.mockitokotlin2.argThat
 import kotlinx.serialization.json.JsonObject
 import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.internal.connection.RealConnectionPool
 import okio.Buffer
 import java.util.UUID
 
@@ -42,9 +43,14 @@ internal fun validUUID(value: String): Boolean {
     }
 }
 
-internal fun hasScheme(expectedScheme: String) = has(HttpUrl::scheme, equalTo(expectedScheme))
-internal fun hasHost(expectedHost: String) = has(HttpUrl::host, equalTo(expectedHost))
-internal fun hasPath(expectedPath: String) = has(HttpUrl::encodedPath, equalTo(expectedPath))
+internal fun hasScheme(expectedScheme: String) = has(HttpUrl::schemeValue, equalTo(expectedScheme))
+internal fun hasHost(expectedHost: String) = has(HttpUrl::hostValue, equalTo(expectedHost))
+internal fun hasPath(expectedPath: String) = has(HttpUrl::encodedPathValue, equalTo(expectedPath))
+
+// These exist to resolve the ambiguity when referring to deprecated methods and their new property counterparts above.
+private fun HttpUrl.schemeValue() = this.scheme
+private fun HttpUrl.hostValue() = this.host
+private fun HttpUrl.encodedPathValue() = this.encodedPath
 
 internal fun hasQueryParameter(key: String, expectedValue: String) = object : Matcher<HttpUrl> {
     override fun invoke(actual: HttpUrl): MatchResult {
@@ -68,22 +74,25 @@ internal fun hasQueryParameter(key: String, expectedValue: String) = object : Ma
 }
 
 internal fun requestWithJsonBody(predicate: (JsonObject) -> Unit) = com.nhaarman.mockitokotlin2.check<Request> { request ->
-    assertThat(request.body()!!.contentType(), equalTo(MediaType.get("application/json; charset=utf-8")))
+    assertThat(request.body!!.contentType(), equalTo("application/json; charset=utf-8".toMediaType()))
 
     val buffer = Buffer()
-    request.body()!!.writeTo(buffer)
+    request.body!!.writeTo(buffer)
     val parsedBody = Json.parser.parseJson(buffer.readUtf8()).jsonObject
     predicate(parsedBody)
 }
 
 internal fun requestWithBody(expectedBody: RequestBody) = com.nhaarman.mockitokotlin2.check<Request> { request ->
-    assertThat(request.body(), equalTo(expectedBody))
+    assertThat(request.body, equalTo(expectedBody))
 }
 
 // HACK: ConnectionPool doesn't expose the keep-alive time, so we have to reach into it to verify that we've set it correctly.
 internal fun connectionPoolWithNoEviction(): ConnectionPool = argThat {
-    val field = ConnectionPool::class.java.getDeclaredField("keepAliveDurationNs")
-    field.isAccessible = true
+    val delegate = ConnectionPool::class.java.getDeclaredField("delegate")
+    delegate.isAccessible = true
 
-    field.getLong(this) == Long.MAX_VALUE
+    val keepAliveDuration = RealConnectionPool::class.java.getDeclaredField("keepAliveDurationNs")
+    keepAliveDuration.isAccessible = true
+
+    keepAliveDuration.getLong(delegate.get(this)) == Long.MAX_VALUE
 }

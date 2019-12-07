@@ -28,7 +28,7 @@ import com.natpryce.hamkrest.hasSize
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.isEmptyString
 import jnr.ffi.Platform
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okio.buffer
 import okio.sink
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
@@ -51,7 +51,7 @@ object DockerImageBuildContextRequestBodySpec : Spek({
             val requestBody = DockerImageBuildContextRequestBody(DockerImageBuildContext(emptySet()))
 
             it("returns the TAR content type") {
-                assertThat(requestBody.contentType(), equalTo(MediaType.get("application/x-tar")))
+                assertThat(requestBody.contentType(), equalTo("application/x-tar".toMediaType()))
             }
         }
 

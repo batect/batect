@@ -134,7 +134,7 @@ class ImagesAPI(
         val sink = if (outputStream == null) { outputBuffer.sink() } else { tee(outputBuffer.sink(), outputStream) }
 
         sink.use {
-            response.body()!!.charStream().forEachLine { line ->
+            response.body!!.charStream().forEachLine { line ->
                 val parsedLine = Json.parser.parseJson(line).jsonObject
                 val output = parsedLine.getPrimitiveOrNull("stream")?.content
                 val error = parsedLine.getPrimitiveOrNull("error")?.content
@@ -210,7 +210,7 @@ class ImagesAPI(
                     throw ImagePullFailedException("Pulling image '$imageName' failed: ${error.message}")
                 }
 
-                response.body()!!.charStream().forEachLine { line ->
+                response.body!!.charStream().forEachLine { line ->
                     val parsedLine = Json.parser.parseJson(line).jsonObject
 
                     if (parsedLine.containsKey("error")) {
@@ -269,7 +269,7 @@ class ImagesAPI(
                 throw ImagePullFailedException("Checking if image '$imageName' has already been pulled failed: ${error.message}")
             }
 
-            val body = response.body()!!.string()
+            val body = response.body!!.string()
             val parsedBody = Json.parser.parseJson(body) as JsonArray
 
             return parsedBody.isNotEmpty()

@@ -317,7 +317,7 @@ object DockerClientIntegrationTest : Spek({
                     }
 
                     it("successfully starts the container and exposes the port") {
-                        assertThat(response, has(Response::code, equalTo(200)))
+                        assertThat(response, has(Response::codeValue, equalTo(200)))
                     }
                 }
             }
@@ -491,3 +491,5 @@ private inline fun <T> retry(retries: Int, operation: () -> T): T {
 
     throw RuntimeException("Could not execute operation after $retries attempts. Exceptions were:\n$exceptionDetails")
 }
+
+private fun Response.codeValue() = this.code

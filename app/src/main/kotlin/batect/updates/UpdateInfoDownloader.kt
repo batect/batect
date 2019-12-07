@@ -38,22 +38,22 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
         try {
             logger.info {
                 message("Downloading latest version information.")
-                data("url", request.url().toString())
+                data("url", request.url.toString())
             }
 
             client.newCall(request).execute().use { response ->
                 logger.info {
                     message("Finished downloading latest version information.")
                     data("successful", response.isSuccessful)
-                    data("httpResponseCode", response.code())
-                    data("httpResponseMessage", response.message())
+                    data("httpResponseCode", response.code)
+                    data("httpResponseMessage", response.message)
                 }
 
                 if (!response.isSuccessful) {
-                    throw UpdateInfoDownloadException("The server returned HTTP ${response.code()}.")
+                    throw UpdateInfoDownloadException("The server returned HTTP ${response.code}.")
                 }
 
-                val releaseInfo = Json.nonstrictParser.parse(GitHubReleaseInfo.serializer(), response.body()!!.string())
+                val releaseInfo = Json.nonstrictParser.parse(GitHubReleaseInfo.serializer(), response.body!!.string())
                 val scripts = extractScriptInfo(releaseInfo)
                 val updateInfo = UpdateInfo(Version.parse(releaseInfo.tagName), releaseInfo.htmlUrl, dateTimeProvider(), scripts)
 
@@ -67,7 +67,7 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
         } catch (e: Throwable) {
             logger.info {
                 message("Downloading latest version information failed with an exception.")
-                data("url", request.url().toString())
+                data("url", request.url.toString())
                 exception(e)
             }
 

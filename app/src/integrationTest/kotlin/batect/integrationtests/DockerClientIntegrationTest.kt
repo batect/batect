@@ -459,7 +459,6 @@ private fun getDockerTLSConfig(): DockerTLSConfig {
     )
 }
 
-
 private fun httpGet(url: String): Response {
     retry(3) {
         val client = OkHttpClient.Builder().build()

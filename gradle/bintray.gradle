@@ -58,7 +58,6 @@ task generateBintrayDescriptor {
                |        "gpgSign": false
                |    },
                |    "files": [
-               |        {"includePattern": "docs/build/docs/(.*)", "uploadPattern": "$rootProject.version/docs/\$1"},
                |        {"includePattern": "build/release/(.*)", "uploadPattern": "$rootProject.version/bin/\$1"}
                |    ],
                |    "publish": true

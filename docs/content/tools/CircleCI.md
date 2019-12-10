@@ -27,3 +27,46 @@ jobs:
 
 You can see a full example of using batect with CircleCI in
 [the Golang sample project](https://github.com/charleskorn/batect-sample-golang).
+
+## Simplifying configuration with CircleCI
+
+CircleCI supports [defining reusable commands](https://circleci.com/docs/2.0/reusing-config/#authoring-reusable-commands) within your configuration file.
+This can be useful if you find yourself running the same series of commands over and over again. For example, if you have a series of jobs, each of which
+checks out your code, restores the cache, runs a batect task and then saves the cache, you can define a command that contains all of these steps:
+
+```yaml
+commands:
+  batect:
+    description: "Run a task in batect"
+    parameters:
+      task:
+        type: string
+    steps:
+      - checkout
+      - restore_cache:
+          key: myproject-{{ checksum "yarn.lock" }}
+      - run:
+          command: ./batect << parameters.task >>
+      - save_cache:
+          key: myproject-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules/
+```
+
+...and then reuse it in each job:
+
+```yaml
+  build:
+    machine: true
+    image: circleci/classic:201808-01
+    steps:
+      - batect:
+          task: build
+
+  test:
+    machine: true
+    image: circleci/classic:201808-01
+    steps:
+      - batect:
+          task: test
+```

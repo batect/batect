@@ -84,13 +84,15 @@ If there's something you're really keen to see, pull requests are always welcome
 * analytics / metrics
   * no personally-identifiable information
   * no potentially sensitive information (eg. paths, file names, task names, project names etc.)
-  * need a way to opt-out
+  * need a way to opt-out - CLI flag, environment variable, file or known domain name
   * need to show a message the first time this is enabled for someone so they can opt-out if they want
   * probably need a privacy policy?
   * need somewhere to securely store this data and analyse it
+  * disable during tests
+  * batch up and send in background
   * events:
     * invocations - command (task run, help, upgrade, version info or task list), duration, success or failure
-    * errors - type only (no further details due to privacy issues)
+    * errors - type and stacktrace only (no further details due to privacy issues)
     * shape of task / container dependency graph (numbers only)
     * timing for task execution - at least startup / run / cleanup times, information about task steps (eg. image pull vs create vs wait for healthy) would be good too
     * when a 'update is available' message is shown
@@ -99,6 +101,8 @@ If there's something you're really keen to see, pull requests are always welcome
     * batect version
     * JVM version
     * Docker version
+    * output mode used
+    * Docker daemon connection type
     * some way to anonymously identify users (to understand usage patterns) and projects (to understand upgrade and usage patterns regardless of user)
 * security scanning for Docker images in tests and sample projects
 * use batect to build batect (self-hosting)

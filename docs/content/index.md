@@ -28,6 +28,8 @@ batect requires Docker 18.03.1 or newer, Java 8 or newer (although this requirem
 * On Linux and OS X: Bash and `curl`
 * On Windows: Windows 10
 
+batect does not yet support running Windows containers - follow [this issue](https://github.com/charleskorn/batect/issues/275) for updates.
+
 ## Why would you use batect?
 
 Every application has a build environment - the tools and configuration needed to take the source code and produce an artifact

@@ -72,6 +72,10 @@ class DockerSystemInfoClient(
                 return DockerConnectivityCheckResult.Failed("batect requires Docker $minimumDockerVersion or later, but version ${versionInfo.version} is installed.")
             }
 
+            if (!versionInfo.operatingSystem.equals("linux", ignoreCase = true)) {
+                return DockerConnectivityCheckResult.Failed("batect requires Docker to be running in Linux containers mode.")
+            }
+
             return DockerConnectivityCheckResult.Succeeded
         } catch (e: DockerException) {
             logger.warn {

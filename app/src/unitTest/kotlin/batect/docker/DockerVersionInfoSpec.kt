@@ -24,13 +24,13 @@ import org.spekframework.spek2.style.specification.describe
 
 object DockerVersionInfoSpec : Spek({
     describe("a set of Docker version information") {
-        val info = DockerVersionInfo(Version(17, 9, 1, "ce"), "serverApi", "serverMinApi", "serverCommit")
+        val info = DockerVersionInfo(Version(17, 9, 1, "ce"), "serverApi", "serverMinApi", "serverCommit", "my_cool_os")
 
         describe("converting it to a string") {
             val result = info.toString()
 
             it("returns a human-readable representation of itself") {
-                assertThat(result, equalTo("17.9.1-ce (API version: serverApi, minimum supported API version: serverMinApi, commit: serverCommit)"))
+                assertThat(result, equalTo("17.9.1-ce (API version: serverApi, minimum supported API version: serverMinApi, commit: serverCommit, operating system: 'my_cool_os')"))
             }
         }
     }

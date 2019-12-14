@@ -70,7 +70,7 @@ object SystemInfoAPISpec : Spek({
                         expectedUrl, """
                         |{
                         |  "Version": "17.04.0",
-                        |  "Os": "linux",
+                        |  "Os": "my_cool_os",
                         |  "KernelVersion": "3.19.0-23-generic",
                         |  "GoVersion": "go1.7.5",
                         |  "GitCommit": "deadbee",
@@ -88,7 +88,7 @@ object SystemInfoAPISpec : Spek({
                     assertThat(
                         api.getServerVersionInfo(), equalTo(
                             DockerVersionInfo(
-                                Version(17, 4, 0), "1.27", "1.12", "deadbee"
+                                Version(17, 4, 0), "1.27", "1.12", "deadbee", "my_cool_os"
                             )
                         )
                     )

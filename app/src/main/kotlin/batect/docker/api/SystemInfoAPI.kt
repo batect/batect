@@ -59,12 +59,14 @@ class SystemInfoAPI(
             val apiVersion = parsedResponse.getValue("ApiVersion").primitive.content
             val minAPIVersion = parsedResponse.getValue("MinAPIVersion").primitive.content
             val gitCommit = parsedResponse.getValue("GitCommit").primitive.content
+            val operatingSystem = parsedResponse.getValue("Os").primitive.content
 
             return DockerVersionInfo(
                 Version.parse(version),
                 apiVersion,
                 minAPIVersion,
-                gitCommit
+                gitCommit,
+                operatingSystem
             )
         }
     }

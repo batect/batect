@@ -43,7 +43,7 @@ object DockerSystemInfoClientSpec : Spek({
 
         describe("getting Docker version information") {
             on("the Docker version command invocation succeeding") {
-                val versionInfo = DockerVersionInfo(Version(17, 4, 0), "1.27", "1.12", "deadbee")
+                val versionInfo = DockerVersionInfo(Version(17, 4, 0), "1.27", "1.12", "deadbee", "my_cool_os")
 
                 beforeEachTest { whenever(api.getServerVersionInfo()).doReturn(versionInfo) }
 
@@ -64,33 +64,47 @@ object DockerSystemInfoClientSpec : Spek({
         describe("checking connectivity to the Docker daemon") {
             given("pinging the daemon succeeds") {
                 given("getting daemon version info succeeds") {
-                    given("the daemon reports an API version that is greater than required") {
-                        beforeEachTest {
-                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.38", "xxx", "xxx"))
+                    given("the daemon is running on Linux") {
+                        val operatingSystem = "linux"
+
+                        given("the daemon reports an API version that is greater than required") {
+                            beforeEachTest {
+                                whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.38", "xxx", "xxx", operatingSystem))
+                            }
+
+                            it("returns success") {
+                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded))
+                            }
                         }
 
-                        it("returns success") {
-                            assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded))
+                        given("the daemon reports an API version that is exactly the required version") {
+                            beforeEachTest {
+                                whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.37", "xxx", "xxx", operatingSystem))
+                            }
+
+                            it("returns success") {
+                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded))
+                            }
+                        }
+
+                        given("the daemon reports an API version that is lower than required") {
+                            beforeEachTest {
+                                whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.36", "xxx", "xxx", operatingSystem))
+                            }
+
+                            it("returns failure") {
+                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Failed("batect requires Docker 18.03.1 or later, but version 1.2.3 is installed.")))
+                            }
                         }
                     }
 
-                    given("the daemon reports an API version that is exactly the required version") {
+                    given("the daemon is running in Windows mode") {
                         beforeEachTest {
-                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.37", "xxx", "xxx"))
-                        }
-
-                        it("returns success") {
-                            assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded))
-                        }
-                    }
-
-                    given("the daemon reports an API version that is lower than required") {
-                        beforeEachTest {
-                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.36", "xxx", "xxx"))
+                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "2.0", "xxx", "xxx", "windows"))
                         }
 
                         it("returns failure") {
-                            assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Failed("batect requires Docker 18.03.1 or later, but version 1.2.3 is installed.")))
+                            assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Failed("batect requires Docker to be running in Linux containers mode.")))
                         }
                     }
                 }

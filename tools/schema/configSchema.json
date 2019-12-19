@@ -116,6 +116,10 @@
         "setup_commands": {
           "description": "Commands to run after the container reports as healthy but before dependency containers start.",
           "$ref": "#/definitions/setupCommandsList"
+        },
+        "log_config_type": {
+          "type": "string",
+          "description": "The log config used for launched containers. Default is json-file.  Note that 'awslogs' will not work as it is not readable."
         }
       },
       "oneOf": [

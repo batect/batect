@@ -51,7 +51,8 @@ class DockerContainerCreationRequestFactory(
             container.privileged,
             container.enableInitProcess,
             container.capabilitiesToAdd,
-            container.capabilitiesToDrop
+            container.capabilitiesToDrop,
+            container.logConfigType
         )
     }
 }

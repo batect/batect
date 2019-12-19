@@ -20,6 +20,7 @@ import batect.config.io.ConfigurationException
 import batect.config.io.deserializers.DependencySetSerializer
 import batect.config.io.deserializers.EnvironmentSerializer
 import batect.docker.Capability
+import batect.docker.defaultLogConfigType
 import batect.os.Command
 import batect.os.PathResolutionResult
 import batect.os.PathType
@@ -60,7 +61,8 @@ data class Container(
     val capabilitiesToAdd: Set<Capability> = emptySet(),
     val capabilitiesToDrop: Set<Capability> = emptySet(),
     val additionalHostnames: Set<String> = emptySet(),
-    val setupCommands: List<SetupCommand> = emptyList()
+    val setupCommands: List<SetupCommand> = emptyList(),
+    val logConfigType: String? = defaultLogConfigType
 ) {
     @Serializer(forClass = Container::class)
     companion object : KSerializer<Container> {
@@ -84,6 +86,7 @@ data class Container(
         private const val capabilitiesToDropFieldName = "capabilities_to_drop"
         private const val additionalHostnamesFieldName = "additional_hostnames"
         private const val setupCommandsFieldName = "setup_commands"
+        private const val logConfigTypeFieldName = "log_config_type"
 
         override val descriptor: SerialDescriptor = object : SerialClassDescImpl("ContainerFromFile") {
             init {
@@ -107,6 +110,7 @@ data class Container(
                 addElement(capabilitiesToDropFieldName, isOptional = true)
                 addElement(additionalHostnamesFieldName, isOptional = true)
                 addElement(setupCommandsFieldName, isOptional = true)
+                addElement(logConfigTypeFieldName, isOptional = true)
             }
         }
 
@@ -130,6 +134,7 @@ data class Container(
         private val capabilitiesToDropFieldIndex = descriptor.getElementIndex(capabilitiesToDropFieldName)
         private val additionalHostnamesFieldIndex = descriptor.getElementIndex(additionalHostnamesFieldName)
         private val setupCommandsFieldIndex = descriptor.getElementIndex(setupCommandsFieldName)
+        private val logConfigTypeFieldIndex = descriptor.getElementIndex(logConfigTypeFieldName)
 
         override fun deserialize(decoder: Decoder): Container {
             val input = decoder.beginStructure(descriptor) as YamlInput
@@ -158,6 +163,7 @@ data class Container(
             var capabilitiesToDrop = emptySet<Capability>()
             var additionalHostnames = emptySet<String>()
             var setupCommands = emptyList<SetupCommand>()
+            var logConfigType: String? = defaultLogConfigType
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
@@ -182,6 +188,7 @@ data class Container(
                     capabilitiesToDropFieldIndex -> capabilitiesToDrop = input.decode(Capability.serializer().set)
                     additionalHostnamesFieldIndex -> additionalHostnames = input.decode(StringSerializer.set)
                     setupCommandsFieldIndex -> setupCommands = input.decode(SetupCommand.serializer().list)
+                    logConfigTypeFieldIndex -> logConfigType = input.decodeStringElement(descriptor, i)
 
                     else -> throw SerializationException("Unknown index $i")
                 }
@@ -205,7 +212,8 @@ data class Container(
                 capabilitiesToAdd,
                 capabilitiesToDrop,
                 additionalHostnames,
-                setupCommands
+                setupCommands,
+                logConfigType
             )
         }
 
@@ -286,6 +294,7 @@ data class Container(
             output.encodeSerializableElement(descriptor, capabilitiesToDropFieldIndex, Capability.serializer().set, obj.capabilitiesToDrop)
             output.encodeSerializableElement(descriptor, additionalHostnamesFieldIndex, StringSerializer.set, obj.additionalHostnames)
             output.encodeSerializableElement(descriptor, setupCommandsFieldIndex, SetupCommand.serializer().list, obj.setupCommands)
+            output.encodeSerializableElement(descriptor, logConfigTypeFieldIndex, StringSerializer.nullable, obj.logConfigType)
 
             output.endStructure(descriptor)
         }

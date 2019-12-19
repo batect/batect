@@ -43,7 +43,8 @@ data class DockerContainerCreationRequest(
     val privileged: Boolean,
     val init: Boolean,
     val capabilitiesToAdd: Set<Capability>,
-    val capabilitiesToDrop: Set<Capability>
+    val capabilitiesToDrop: Set<Capability>,
+    val logConfigType: String?
 ) {
     fun toJson(): String {
         return json {
@@ -83,6 +84,9 @@ data class DockerContainerCreationRequest(
                 "Init" to init
                 "CapAdd" to formatCapabilitySet(capabilitiesToAdd)
                 "CapDrop" to formatCapabilitySet(capabilitiesToDrop)
+                "LogConfig" to json {
+                    "Type" to logConfigType
+                }
             }
 
             "Healthcheck" to json {

@@ -19,3 +19,4 @@ package batect.docker
 const val defaultRegistryName = "docker.io"
 const val minimumDockerAPIVersion = "1.37"
 const val minimumDockerVersion = "18.03.1" // This should be kept in sync with the above API version (see https://docs.docker.com/develop/sdk/#api-version-matrix for table)
+const val defaultLogConfigType = "json-file"

@@ -117,7 +117,7 @@ object ContainersAPISpec : Spek({
                 val command = listOf("doStuff")
                 val entrypoint = listOf("sh")
                 val request =
-                    DockerContainerCreationRequest(image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
+                    DockerContainerCreationRequest(image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet(), "json-file")
 
                 on("a successful creation") {
                     val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, """{"Id": "abc123"}""", 201) }

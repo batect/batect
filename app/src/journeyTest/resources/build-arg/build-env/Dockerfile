@@ -1,4 +1,4 @@
-FROM alpine:3.11.0
+FROM alpine:3.11.2
 
 ARG SOME_BUILD_ARG
 

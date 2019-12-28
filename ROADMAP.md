@@ -37,7 +37,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * support setting `ulimit` values (`--ulimit` - https://docs.docker.com/engine/reference/commandline/run/#set-ulimits-in-container---ulimit)
 * allow `home_directory` to match local user's home directory path
 * allow `working_directory` and container side of volume mount to reference home directory (inside container)
-* allow container side of volume mount to use path of local directory (eg. mount current directory at same path inside container)
+* allow container side of volume mount to use path of local directory (eg. mount current directory at same path inside container) - will be tricky on Windows
 * show build context upload progress when building image
 * some way to kill a misbehaving task (eg. one that is not responding to Ctrl+C)
 * support for BuildKit
@@ -45,6 +45,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * shell tab completion for tasks (eg. `batect b<tab>` completes to `batect build`) - #116
 * Kubernetes-style health checks from outside the container (don't require `curl` / `wget` to be installed in the container, just provide HTTP endpoint)
 * ability to override image tag for a container (eg. `./batect --use-image-tag:my-app=abc123 the-task`)
+* ability to build one or more container images separate to running a task (two use cases: build and push an application image, and pre-build all CI environment images in parallel rather than waiting until they're needed and building them effectively serially)
 
 ### Other
 * logo
@@ -95,6 +96,7 @@ If there's something you're really keen to see, pull requests are always welcome
     * errors - type and stacktrace only (no further details due to privacy issues)
     * shape of task / container dependency graph (numbers only)
     * timing for task execution - at least startup / run / cleanup times, information about task steps (eg. image pull vs create vs wait for healthy) would be good too
+    * time taken for JVM to start app
     * when a 'update is available' message is shown
   * metadata:
     * OS type and version
@@ -104,6 +106,7 @@ If there's something you're really keen to see, pull requests are always welcome
     * output mode used
     * Docker daemon connection type
     * some way to anonymously identify users (to understand usage patterns) and projects (to understand upgrade and usage patterns regardless of user)
+    * whether build is running on CI or not (detect through `CI` environment variable?)
 * security scanning for Docker images in tests and sample projects
 * use batect to build batect (self-hosting)
 * tool to visualise execution on a timeline

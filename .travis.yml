@@ -90,11 +90,13 @@ jobs:
       if: (tag IS present OR branch = "master") AND repo = "charleskorn/batect" AND type != pull_request
       script: ./travis/wait_for_appveyor.sh
 
-    - stage: Publish
+    - stage: Release
       script: skip
+      if: tag IS present AND repo = "charleskorn/batect"
       workspaces:
         use:
-          - build_workspace
+        - build_workspace
+      before_deploy: ./gradlew --parallel validateRelease
       deploy:
         - provider: bintray
           file: build/bintray/descriptor.json
@@ -106,14 +108,6 @@ jobs:
             repo: charleskorn/batect
             all_branches: true
 
-    - stage: Release
-      script: skip
-      if: tag IS present AND repo = "charleskorn/batect"
-      workspaces:
-        use:
-        - build_workspace
-      before_deploy: ./gradlew --parallel validateRelease
-      deploy:
         - provider: releases
           api_key:
             secure: wm/dkxB0NC7GWQzbeZBaLpDIEyCR7HhL/+GtWvQjfVDAGveH8mb7mCTiH8oBWB8mV4IRGYEBGq5daJcpVZide/EDDjDV2nLoQlhs0+YIV1vlsfYkOf29XBrV+8VBQlCsOSUqzuwzraOKM13/SMUtqGT4CAtGU0WGa9p3vI1UfevvKi0Ok3N0LLWdwEJ+nBNjDcWnHCfeMUSaFwQg4190iqxtBFphD1AKwAzaDAXHUHtMYjJpga6W0rIQMawEP65y71OWxnYnEYsUmV1RhhMsiVPVZzSsfXBTx81BWqRcTzyjEP18MChKj0Aaix+DJfrKBMYkLposdreicS9uqXTfb9CnMlr5z4EaJGdoIajmg2zLBooeY26EqN7Ub1+zj1HrRI0ORnO9++GHkRNB7dCmWw3BslURk2Z1hYDiHnaSvbG/nn5SmELtU6hipaNnTDHpiTuFli1lInl78feuUi20aTkOB2SRGg0aV/cezKBz/6aVPq2kB9hNzBeel0y/oKdOQlRAsvZbClcqf7Pv61I+zeUAnnHyqYH0pUuTHLzi3BN2gIsgqNUv0H+DxDo8pcAMw/YgAIf2bG88Rh1PODTdtaMJjXCkpcguypOJlrcLRnGQ5bk5/yQcVfT2hLcx9iWmbWKgK3J/fNxO9uxHqtt7u+s130qsgN8ELb4MoTsUAss=

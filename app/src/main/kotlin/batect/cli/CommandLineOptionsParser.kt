@@ -42,6 +42,7 @@ class CommandLineOptionsParser(
         const val disableCleanupAfterSuccessFlagName = "no-cleanup-after-success"
         const val disableCleanupFlagName = "no-cleanup"
         const val upgradeFlagName = "upgrade"
+        const val configVariableOptionName = "config-var"
         const val helpBlurb = "For documentation and further information on batect, visit https://github.com/charleskorn/batect."
     }
 

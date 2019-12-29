@@ -32,14 +32,17 @@ object VariableExpressionSpec : Spek({
                 "some literal value" to LiteralValue("some literal value"),
                 "a" to LiteralValue("a"),
                 "\\\$some literal value" to LiteralValue("\$some literal value"),
-                "\$SOME_VAR" to ReferenceValue("SOME_VAR"),
-                "\$a" to ReferenceValue("a"),
-                "\$ab" to ReferenceValue("ab"),
-                "\${SOME_VAR}" to ReferenceValue("SOME_VAR"),
-                "\${a}" to ReferenceValue("a"),
-                "\${SOME_VAR:-}" to ReferenceValue("SOME_VAR", ""),
-                "\${SOME_VAR:-default}" to ReferenceValue("SOME_VAR", "default"),
-                "\${SOME_VAR:-some value}" to ReferenceValue("SOME_VAR", "some value")
+                "\\#some literal value" to LiteralValue("#some literal value"),
+                "\$SOME_VAR" to EnvironmentVariableReference("SOME_VAR"),
+                "\$a" to EnvironmentVariableReference("a"),
+                "\$ab" to EnvironmentVariableReference("ab"),
+                "\${SOME_VAR}" to EnvironmentVariableReference("SOME_VAR"),
+                "\${a}" to EnvironmentVariableReference("a"),
+                "\${SOME_VAR:-}" to EnvironmentVariableReference("SOME_VAR", ""),
+                "\${SOME_VAR:-default}" to EnvironmentVariableReference("SOME_VAR", "default"),
+                "\${SOME_VAR:-some value}" to EnvironmentVariableReference("SOME_VAR", "some value"),
+                "#SOME_VAR" to ConfigVariableReference("SOME_VAR"),
+                "#{SOME_VAR}" to ConfigVariableReference("SOME_VAR")
             ).forEach { (source, expectedExpression) ->
                 on("parsing the input '$source'") {
                     val expression = VariableExpression.parse(source)
@@ -58,7 +61,11 @@ object VariableExpressionSpec : Spek({
                 "\${some:",
                 "\${some:}",
                 "\${:-}",
-                "\${:-default}"
+                "\${:-default}",
+                "#",
+                "#{",
+                "#{some",
+                "#{}"
             ).forEach { source ->
                 on("parsing the input '$source'") {
                     it("throws an appropriate exception") {
@@ -73,7 +80,7 @@ object VariableExpressionSpec : Spek({
         val expression = LiteralValue("abc123")
 
         on("evaluating the expression") {
-            val value = expression.evaluate(emptyMap())
+            val value = expression.evaluate(emptyMap(), emptyMap())
 
             it("returns the value") {
                 assertThat(value, equalTo("abc123"))
@@ -81,15 +88,15 @@ object VariableExpressionSpec : Spek({
         }
     }
 
-    describe("an expression that refers to another environment variable") {
+    describe("an expression that refers to an environment variable") {
         given("the expression has no default value") {
-            val expression = ReferenceValue("THE_VAR")
+            val expression = EnvironmentVariableReference("THE_VAR")
 
             given("the referenced environment variable is set") {
                 val hostEnvironmentVariables = mapOf("THE_VAR" to "some value")
 
                 on("evaluating the expression") {
-                    val value = expression.evaluate(hostEnvironmentVariables)
+                    val value = expression.evaluate(hostEnvironmentVariables, emptyMap())
 
                     it("returns the value from the host") {
                         assertThat(value, equalTo("some value"))
@@ -102,21 +109,21 @@ object VariableExpressionSpec : Spek({
 
                 on("evaluating the expression") {
                     it("throws an appropriate exception") {
-                        assertThat({ expression.evaluate(hostEnvironmentVariables) },
-                            throws<EnvironmentVariableExpressionEvaluationException>(withMessage("The host environment variable 'THE_VAR' is not set, and no default value has been provided.")))
+                        assertThat({ expression.evaluate(hostEnvironmentVariables, emptyMap()) },
+                            throws<VariableExpressionEvaluationException>(withMessage("The host environment variable 'THE_VAR' is not set, and no default value has been provided.")))
                     }
                 }
             }
         }
 
         given("the expression has a default value") {
-            val expression = ReferenceValue("THE_VAR", "the default value")
+            val expression = EnvironmentVariableReference("THE_VAR", "the default value")
 
             given("the referenced environment variable is set") {
                 val hostEnvironmentVariables = mapOf("THE_VAR" to "some value")
 
                 on("evaluating the expression") {
-                    val value = expression.evaluate(hostEnvironmentVariables)
+                    val value = expression.evaluate(hostEnvironmentVariables, emptyMap())
 
                     it("returns the value from the host") {
                         assertThat(value, equalTo("some value"))
@@ -128,11 +135,49 @@ object VariableExpressionSpec : Spek({
                 val hostEnvironmentVariables = mapOf("SOME_OTHER_VAR" to "some value")
 
                 on("evaluating the expression") {
-                    val value = expression.evaluate(hostEnvironmentVariables)
+                    val value = expression.evaluate(hostEnvironmentVariables, emptyMap())
 
                     it("returns the default value") {
                         assertThat(value, equalTo("the default value"))
                     }
+                }
+            }
+        }
+    }
+
+    describe("an expression that refers to a config variable") {
+        val expression = ConfigVariableReference("THE_VAR")
+
+        given("the config variable has not been defined") {
+            val configVariables = emptyMap<String, String?>()
+
+            on("evaluating the expression") {
+                it("throws an appropriate exception") {
+                    assertThat({ expression.evaluate(emptyMap(), configVariables) },
+                        throws<VariableExpressionEvaluationException>(withMessage("The config variable 'THE_VAR' has not been defined.")))
+                }
+            }
+        }
+
+        given("the config variable has been defined but has not been set and has no default value") {
+            val configVariables = mapOf("THE_VAR" to null as String?)
+
+            on("evaluating the expression") {
+                it("throws an appropriate exception") {
+                    assertThat({ expression.evaluate(emptyMap(), configVariables) },
+                        throws<VariableExpressionEvaluationException>(withMessage("The config variable 'THE_VAR' is not set and has no default value.")))
+                }
+            }
+        }
+
+        given("the config variable has a value") {
+            val configVariables = mapOf("THE_VAR" to "the value")
+
+            on("evaluating the expression") {
+                val value = expression.evaluate(emptyMap(), configVariables)
+
+                it("returns the default value") {
+                    assertThat(value, equalTo("the value"))
                 }
             }
         }

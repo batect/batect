@@ -40,8 +40,9 @@ object ConfigurationSpec : Spek({
                         Command.parse("the-entrypoint"),
                         mapOf(
                             "SOME_VAR" to LiteralValue("blah"),
-                            "SOME_REFERENCE" to ReferenceValue("REFERENCE_TO"),
-                            "SOME_REFERENCE_WITH_DEFAULT" to ReferenceValue("REF_2", "the-default")
+                            "SOME_REFERENCE" to EnvironmentVariableReference("REFERENCE_TO"),
+                            "SOME_REFERENCE_WITH_DEFAULT" to EnvironmentVariableReference("REF_2", "the-default"),
+                            "SOME_CONFIG_VAR" to ConfigVariableReference("REF_3")
                         ),
                         setOf(PortMapping(123, 456)),
                         "/some/work/dir"
@@ -69,7 +70,8 @@ object ConfigurationSpec : Spek({
                                         "environment": {
                                             "SOME_VAR": "blah",
                                             "SOME_REFERENCE": "${'$'}REFERENCE_TO",
-                                            "SOME_REFERENCE_WITH_DEFAULT": "${'$'}{REF_2:-the-default}"
+                                            "SOME_REFERENCE_WITH_DEFAULT": "${'$'}{REF_2:-the-default}",
+                                            "SOME_CONFIG_VAR": "#REF_3"
                                         },
                                         "ports": [
                                             { "local": 123, "container": 456 }
@@ -179,8 +181,9 @@ object ConfigurationSpec : Spek({
                         osIndependentPath("/some/build/dir"),
                         mapOf(
                             "SOME_VAR" to LiteralValue("blah"),
-                            "SOME_REFERENCE" to ReferenceValue("REFERENCE_TO"),
-                            "SOME_REFERENCE_WITH_DEFAULT" to ReferenceValue("REF_2", "the-default")
+                            "SOME_REFERENCE" to EnvironmentVariableReference("REFERENCE_TO"),
+                            "SOME_REFERENCE_WITH_DEFAULT" to EnvironmentVariableReference("REF_2", "the-default"),
+                            "SOME_CONFIG_VAR" to ConfigVariableReference("REF_3")
                         ),
                         "some-dockerfile"
                     ),
@@ -202,7 +205,8 @@ object ConfigurationSpec : Spek({
                                     "build_args": {
                                         "SOME_VAR": "blah",
                                         "SOME_REFERENCE": "${'$'}REFERENCE_TO",
-                                        "SOME_REFERENCE_WITH_DEFAULT": "${'$'}{REF_2:-the-default}"
+                                        "SOME_REFERENCE_WITH_DEFAULT": "${'$'}{REF_2:-the-default}",
+                                        "SOME_CONFIG_VAR": "#REF_3"
                                     },
                                     "dockerfile": "some-dockerfile",
                                     "command": null,

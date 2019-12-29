@@ -29,16 +29,18 @@ import kotlinx.serialization.withName
 
 @Serializable(with = VariableExpression.Companion::class)
 sealed class VariableExpression {
-    abstract fun evaluate(hostEnvironmentVariables: Map<String, String>): String
+    abstract fun evaluate(hostEnvironmentVariables: Map<String, String>, configVariables: Map<String, String?>): String
 
     @Serializer(forClass = VariableExpression::class)
     companion object : KSerializer<VariableExpression> {
         private val patterns = listOf(
-            Regex("\\$\\{(.+):-(.*)}") to { match: MatchResult -> ReferenceValue(match.groupValues[1], match.groupValues[2]) },
-            Regex("\\$\\{([^:]+)}") to { match: MatchResult -> ReferenceValue(match.groupValues[1]) },
-            Regex("\\$([^{](.*[^}])?)") to { match: MatchResult -> ReferenceValue(match.groupValues[1]) },
-            Regex("[^$].*") to { match: MatchResult ->
-                if (match.value.startsWith("\\$")) {
+            Regex("\\$\\{(.+):-(.*)}") to { match: MatchResult -> EnvironmentVariableReference(match.groupValues[1], match.groupValues[2]) },
+            Regex("\\$\\{([^:]+)}") to { match: MatchResult -> EnvironmentVariableReference(match.groupValues[1]) },
+            Regex("\\$([^{](.*[^}])?)") to { match: MatchResult -> EnvironmentVariableReference(match.groupValues[1]) },
+            Regex("#\\{(.+)}") to { match: MatchResult -> ConfigVariableReference(match.groupValues[1]) },
+            Regex("#([^{](.*[^}])?)") to { match: MatchResult -> ConfigVariableReference(match.groupValues[1]) },
+            Regex("[^$#].*") to { match: MatchResult ->
+                if (match.value.startsWith("\\$") || match.value.startsWith("\\#")) {
                     LiteralValue(match.value.drop(1))
                 } else {
                     LiteralValue(match.value)
@@ -73,13 +75,14 @@ sealed class VariableExpression {
         override fun serialize(encoder: Encoder, obj: VariableExpression) {
             val representation = when (obj) {
                 is LiteralValue -> obj.value
-                is ReferenceValue -> {
+                is EnvironmentVariableReference -> {
                     if (obj.default == null) {
                         '$' + obj.referenceTo
                     } else {
                         '$' + "{${obj.referenceTo}:-${obj.default}}"
                     }
                 }
+                is ConfigVariableReference -> "#${obj.referenceTo}"
             }
 
             encoder.encodeString(representation)
@@ -88,18 +91,18 @@ sealed class VariableExpression {
 }
 
 data class LiteralValue(val value: String) : VariableExpression() {
-    override fun evaluate(hostEnvironmentVariables: Map<String, String>) = value
+    override fun evaluate(hostEnvironmentVariables: Map<String, String>, configVariables: Map<String, String?>) = value
     override fun toString() = "${this::class.simpleName}(value: '$value')"
 }
 
-data class ReferenceValue(val referenceTo: String, val default: String? = null) : VariableExpression() {
-    override fun evaluate(hostEnvironmentVariables: Map<String, String>): String {
+data class EnvironmentVariableReference(val referenceTo: String, val default: String? = null) : VariableExpression() {
+    override fun evaluate(hostEnvironmentVariables: Map<String, String>, configVariables: Map<String, String?>): String {
         val hostValue = hostEnvironmentVariables.get(referenceTo)
 
         return when {
             hostValue != null -> hostValue
             default != null -> default
-            else -> throw EnvironmentVariableExpressionEvaluationException("The host environment variable '$referenceTo' is not set, and no default value has been provided.")
+            else -> throw VariableExpressionEvaluationException("The host environment variable '$referenceTo' is not set, and no default value has been provided.")
         }
     }
 
@@ -112,4 +115,22 @@ data class ReferenceValue(val referenceTo: String, val default: String? = null) 
     }
 }
 
-class EnvironmentVariableExpressionEvaluationException(message: String) : RuntimeException(message)
+data class ConfigVariableReference(val referenceTo: String) : VariableExpression() {
+    override fun evaluate(hostEnvironmentVariables: Map<String, String>, configVariables: Map<String, String?>): String {
+        if (!configVariables.containsKey(referenceTo)) {
+            throw VariableExpressionEvaluationException("The config variable '$referenceTo' has not been defined.")
+        }
+
+        val value = configVariables.getValue(referenceTo)
+
+        if (value == null) {
+            throw VariableExpressionEvaluationException("The config variable '$referenceTo' is not set and has no default value.")
+        }
+
+        return value
+    }
+
+    override fun toString() = "${this::class.simpleName}(reference to: '$referenceTo')"
+}
+
+class VariableExpressionEvaluationException(message: String) : RuntimeException(message)

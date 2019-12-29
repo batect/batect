@@ -21,8 +21,10 @@ import batect.config.Container
 import batect.config.HealthCheckConfig
 import batect.config.LiteralValue
 import batect.config.PullImage
-import batect.config.ReferenceValue
+import batect.config.EnvironmentVariableReference
 import batect.config.SetupCommand
+import batect.config.VariableExpression
+import batect.config.VariableExpressionEvaluationException
 import batect.config.VolumeMount
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerHealthCheckException
@@ -54,6 +56,7 @@ import batect.docker.client.DockerSystemInfoClient
 import batect.docker.pull.DockerImageProgress
 import batect.execution.CancellationContext
 import batect.execution.CleanupOption
+import batect.execution.ConfigVariablesProvider
 import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.RunAsCurrentUserConfiguration
 import batect.execution.RunAsCurrentUserConfigurationProvider
@@ -161,12 +164,16 @@ object TaskStepRunnerSpec : Spek({
 
         val hostEnvironmentVariables = mapOf("SOME_ENV_VAR" to "some env var value")
 
-        val runner by createForEachTest { TaskStepRunner(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, environmentVariableProvider, runAsCurrentUserConfigurationProvider, systemInfo, hostEnvironmentVariables) }
+        val configVariablesProvider = mock<ConfigVariablesProvider> {
+            on { configVariableValues } doReturn emptyMap()
+        }
+
+        val runner by createForEachTest { TaskStepRunner(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, environmentVariableProvider, runAsCurrentUserConfigurationProvider, systemInfo, hostEnvironmentVariables, configVariablesProvider) }
 
         describe("running steps") {
             describe("running a 'build image' step") {
                 val buildDirectory = Paths.get("/some-build-dir")
-                val buildArgs = mapOf("some_arg" to LiteralValue("some_value"), "SOME_PROXY_CONFIG" to LiteralValue("overridden"), "SOME_HOST_VAR" to ReferenceValue("SOME_ENV_VAR"))
+                val buildArgs = mapOf("some_arg" to LiteralValue("some_value"), "SOME_PROXY_CONFIG" to LiteralValue("overridden"), "SOME_HOST_VAR" to EnvironmentVariableReference("SOME_ENV_VAR"))
                 val dockerfilePath = "some-Dockerfile-path"
                 val imageTags = setOf("some_image_tag", "some_other_image_tag")
                 val imageSource = BuildImage(buildDirectory, buildArgs, dockerfilePath)
@@ -253,16 +260,20 @@ object TaskStepRunnerSpec : Spek({
                     }
                 }
 
-                on("when a build arg refers to a host environment variable that does not exist") {
-                    val imageSourceWithNonExistentHostVariable = BuildImage(buildDirectory, mapOf("SOME_HOST_VAR" to ReferenceValue("SOME_ENV_VAR_THAT_DOES_NOT_EXIST")), dockerfilePath)
-                    val stepWithNonExistentHostVariable = BuildImageStep(imageSourceWithNonExistentHostVariable, imageTags)
+                on("when a build arg is an invalid reference") {
+                    val invalidReference = mock<VariableExpression> {
+                        on { evaluate(hostEnvironmentVariables, emptyMap()) } doThrow VariableExpressionEvaluationException("Couldn't evaluate expression.")
+                    }
+
+                    val imageSourceWithInvalidBuildArgReference = BuildImage(buildDirectory, mapOf("SOME_HOST_VAR" to invalidReference), dockerfilePath)
+                    val stepWithInvalidBuildArgReference = BuildImageStep(imageSourceWithInvalidBuildArgReference, imageTags)
 
                     beforeEachTest {
-                        runner.run(stepWithNonExistentHostVariable, stepRunContext)
+                        runner.run(stepWithInvalidBuildArgReference, stepRunContext)
                     }
 
                     it("emits a 'image build failed' event") {
-                        verify(eventSink).postEvent(ImageBuildFailedEvent(imageSourceWithNonExistentHostVariable, "The value for the build arg 'SOME_HOST_VAR' cannot be evaluated: The host environment variable 'SOME_ENV_VAR_THAT_DOES_NOT_EXIST' is not set, and no default value has been provided."))
+                        verify(eventSink).postEvent(ImageBuildFailedEvent(imageSourceWithInvalidBuildArgReference, "The value for the build arg 'SOME_HOST_VAR' cannot be evaluated: Couldn't evaluate expression."))
                     }
                 }
             }

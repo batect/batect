@@ -17,7 +17,7 @@
 package batect.execution.model.steps
 
 import batect.config.VariableExpression
-import batect.config.EnvironmentVariableExpressionEvaluationException
+import batect.config.VariableExpressionEvaluationException
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerHealthCheckException
 import batect.docker.client.DockerClient
@@ -34,6 +34,7 @@ import batect.docker.api.ContainerStopFailedException
 import batect.docker.api.NetworkCreationFailedException
 import batect.docker.api.NetworkDeletionFailedException
 import batect.execution.CancellationContext
+import batect.execution.ConfigVariablesProvider
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
 import batect.execution.TaskStepRunContext
@@ -81,7 +82,8 @@ class TaskStepRunner(
     private val environmentVariableProvider: DockerContainerEnvironmentVariableProvider,
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
     private val systemInfo: SystemInfo,
-    private val hostEnvironmentVariables: Map<String, String>
+    private val hostEnvironmentVariables: Map<String, String>,
+    private val configVariablesProvider: ConfigVariablesProvider
 ) {
     constructor(
         dockerClient: DockerClient,
@@ -89,8 +91,9 @@ class TaskStepRunner(
         creationRequestFactory: DockerContainerCreationRequestFactory,
         environmentVariableProvider: DockerContainerEnvironmentVariableProvider,
         runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
+        configVariablesProvider: ConfigVariablesProvider,
         systemInfo: SystemInfo
-    ) : this(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, environmentVariableProvider, runAsCurrentUserConfigurationProvider, systemInfo, System.getenv())
+    ) : this(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, environmentVariableProvider, runAsCurrentUserConfigurationProvider, systemInfo, System.getenv(), configVariablesProvider)
 
     fun run(step: TaskStep, context: TaskStepRunContext) {
         when (step) {
@@ -140,8 +143,8 @@ class TaskStepRunner(
 
     private fun evaluateBuildArgValue(name: String, expression: VariableExpression): String {
         try {
-            return expression.evaluate(hostEnvironmentVariables)
-        } catch (e: EnvironmentVariableExpressionEvaluationException) {
+            return expression.evaluate(hostEnvironmentVariables, configVariablesProvider.configVariableValues)
+        } catch (e: VariableExpressionEvaluationException) {
             throw ImageBuildFailedException("The value for the build arg '$name' cannot be evaluated: ${e.message}", e)
         }
     }

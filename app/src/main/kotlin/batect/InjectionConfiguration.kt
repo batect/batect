@@ -54,6 +54,7 @@ import batect.docker.pull.DockerRegistryIndexResolver
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
+import batect.execution.ConfigVariablesProvider
 import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerEntrypointResolver
 import batect.execution.ContainerDependencyGraphProvider
@@ -187,7 +188,7 @@ private val dockerModule = Kodein.Module("docker") {
     bind<ContainerTTYManager>() with singletonWithLogger { logger -> ContainerTTYManager(instance(), instance(), instance(), logger) }
     bind<ContainerWaiter>() with singleton { ContainerWaiter(instance()) }
     bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance()) }
-    bind<DockerContainerEnvironmentVariableProvider>() with singleton { DockerContainerEnvironmentVariableProvider(instance()) }
+    bind<DockerContainerEnvironmentVariableProvider>() with singleton { DockerContainerEnvironmentVariableProvider(instance(), instance()) }
     bind<DockerfileParser>() with singleton { DockerfileParser() }
     bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
     bind<DockerImageBuildContextFactory>() with singleton { DockerImageBuildContextFactory(instance()) }
@@ -229,6 +230,7 @@ private val dockerClientModule = Kodein.Module("docker.client") {
 
 private val executionModule = Kodein.Module("execution") {
     bind<CleanupStagePlanner>() with singletonWithLogger { logger -> CleanupStagePlanner(instance(), logger) }
+    bind<ConfigVariablesProvider>() with singleton { ConfigVariablesProvider() }
     bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance()) }
     bind<ContainerDependencyGraphProvider>() with singletonWithLogger { logger -> ContainerDependencyGraphProvider(instance(), instance(), logger) }
     bind<ContainerEntrypointResolver>() with singleton { ContainerEntrypointResolver() }
@@ -240,7 +242,7 @@ private val executionModule = Kodein.Module("execution") {
     bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(), instance(), instance(), logger) }
     bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(instance(), logger) }
     bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance(), instance(), instance(), instance()) }
-    bind<TaskStepRunner>() with singleton { TaskStepRunner(instance(), instance(), instance(), instance(), instance(), instance()) }
+    bind<TaskStepRunner>() with singleton { TaskStepRunner(instance(), instance(), instance(), instance(), instance(), instance(), instance()) }
     bind<TaskSuggester>() with singleton { TaskSuggester() }
 }
 

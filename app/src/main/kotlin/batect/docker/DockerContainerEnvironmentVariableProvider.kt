@@ -18,17 +18,19 @@ package batect.docker
 
 import batect.config.Container
 import batect.config.VariableExpression
-import batect.config.EnvironmentVariableExpressionEvaluationException
+import batect.config.VariableExpressionEvaluationException
+import batect.execution.ConfigVariablesProvider
 import batect.execution.ContainerRuntimeConfiguration
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.utils.mapToSet
 
 class DockerContainerEnvironmentVariableProvider(
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
-    private val hostEnvironmentVariables: Map<String, String>
+    private val hostEnvironmentVariables: Map<String, String>,
+    private val configVariablesProvider: ConfigVariablesProvider
 ) {
-    constructor(proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider)
-        : this(proxyEnvironmentVariablesProvider, System.getenv())
+    constructor(proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider, configVariablesProvider: ConfigVariablesProvider)
+        : this(proxyEnvironmentVariablesProvider, System.getenv(), configVariablesProvider)
 
     fun environmentVariablesFor(
         container: Container,
@@ -58,8 +60,8 @@ class DockerContainerEnvironmentVariableProvider(
 
     private fun evaluateEnvironmentVariableValue(name: String, expression: VariableExpression): String {
         try {
-            return expression.evaluate(hostEnvironmentVariables)
-        } catch (e: EnvironmentVariableExpressionEvaluationException) {
+            return expression.evaluate(hostEnvironmentVariables, configVariablesProvider.configVariableValues)
+        } catch (e: VariableExpressionEvaluationException) {
             throw ContainerCreationFailedException("The value for the environment variable '$name' cannot be evaluated: ${e.message}", e)
         }
     }

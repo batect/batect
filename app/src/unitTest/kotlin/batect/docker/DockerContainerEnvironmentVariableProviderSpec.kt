@@ -19,7 +19,8 @@ package batect.docker
 import batect.config.Container
 import batect.config.VariableExpression
 import batect.config.LiteralValue
-import batect.config.ReferenceValue
+import batect.config.VariableExpressionEvaluationException
+import batect.execution.ConfigVariablesProvider
 import batect.execution.ContainerRuntimeConfiguration
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.testutils.given
@@ -31,6 +32,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -52,7 +54,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                     on { getProxyEnvironmentVariables(setOf("container-1", "container-2")) } doReturn mapOf("SOME_PROXY_VAR" to "this should not be used")
                 }
 
-                val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, hostEnvironmentVariables)
+                val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, hostEnvironmentVariables, configVariablesProviderFor(emptyMap()))
 
                 given("there are no additional environment variables") {
                     val container = Container(
@@ -131,7 +133,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
             val terminalType = "some-term"
             val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider>()
             val hostEnvironmentVariables = emptyMap<String, String>()
-            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, hostEnvironmentVariables)
+            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, hostEnvironmentVariables, configVariablesProviderFor(emptyMap()))
             val propagateProxyEnvironmentVariables = false
 
             given("a container with no override for the TERM environment variable") {
@@ -234,12 +236,17 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
             }
         }
 
-        given("there are references to host environment variables") {
+        given("there are references to config variables or host environment variables") {
             val terminalType = null as String?
             val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider>()
             val hostEnvironmentVariables = mapOf("SOME_HOST_VARIABLE" to "SOME_HOST_VALUE")
-            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, hostEnvironmentVariables)
+            val configVariables = mapOf("SOME_CONFIG_VARIABLE" to "SOME_CONFIG_VALUE")
+            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, hostEnvironmentVariables, configVariablesProviderFor(configVariables))
             val propagateProxyEnvironmentVariables = false
+
+            val invalidReference = mock<VariableExpression> {
+                on { evaluate(hostEnvironmentVariables, configVariables) } doThrow VariableExpressionEvaluationException("Couldn't evaluate expression.")
+            }
 
             given("and those references are on the container") {
                 val additionalEnvironmentVariables = emptyMap<String, VariableExpression>()
@@ -248,26 +255,26 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                     val container = Container(
                         "some-container",
                         imageSourceDoesNotMatter(),
-                        environment = mapOf("SOME_VAR" to ReferenceValue("SOME_HOST_VARIABLE"))
+                        environment = mapOf("SOME_VAR" to LiteralValue("SOME_VALID_VALUE"))
                     )
 
                     on("getting environment variables for the container") {
                         val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
                         val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
 
-                        it("returns the environment variables' values from the host") {
+                        it("returns the value of the reference") {
                             assertThat(environmentVariables, equalTo(mapOf(
-                                "SOME_VAR" to "SOME_HOST_VALUE"
+                                "SOME_VAR" to "SOME_VALID_VALUE"
                             )))
                         }
                     }
                 }
 
-                given("and the reference is to an environment variable that does not exist on the host") {
+                given("and the reference is not valid") {
                     val container = Container(
                         "some-container",
                         imageSourceDoesNotMatter(),
-                        environment = mapOf("SOME_VAR" to ReferenceValue("SOME_HOST_VARIABLE_THAT_ISNT_DEFINED"))
+                        environment = mapOf("SOME_VAR" to invalidReference)
                     )
 
                     on("getting environment variables for the container") {
@@ -275,7 +282,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
                         it("throws an appropriate exception") {
                             assertThat({ provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork) },
-                                throws<ContainerCreationFailedException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: The host environment variable 'SOME_HOST_VARIABLE_THAT_ISNT_DEFINED' is not set, and no default value has been provided."))
+                                throws<ContainerCreationFailedException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: Couldn't evaluate expression."))
                             )
                         }
                     }
@@ -289,58 +296,56 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         imageSourceDoesNotMatter()
                     )
 
-                    val additionalEnvironmentVariables = mapOf("SOME_VAR" to ReferenceValue("SOME_HOST_VARIABLE"))
+                    val additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("SOME_VALID_VALUE"))
 
                     on("getting environment variables for the container") {
                         val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
                         val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
 
-                        it("returns the environment variables' values from the host") {
+                        it("returns the overridden value") {
                             assertThat(environmentVariables, equalTo(mapOf(
-                                "SOME_VAR" to "SOME_HOST_VALUE"
-                            ))
-                            )
+                                "SOME_VAR" to "SOME_VALID_VALUE"
+                            )))
                         }
                     }
                 }
 
-                given("and the references is to an environment variable that does not exist on the host") {
+                given("and the references is invalid") {
                     val container = Container(
                         "some-container",
                         imageSourceDoesNotMatter()
                     )
 
-                    val additionalEnvironmentVariables = mapOf("SOME_VAR" to ReferenceValue("SOME_HOST_VARIABLE_THAT_ISNT_DEFINED"))
+                    val additionalEnvironmentVariables = mapOf("SOME_VAR" to invalidReference)
 
                     on("getting environment variables for the container") {
                         val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
 
                         it("throws an appropriate exception") {
                             assertThat({ provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork) },
-                                throws<ContainerCreationFailedException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: The host environment variable 'SOME_HOST_VARIABLE_THAT_ISNT_DEFINED' is not set, and no default value has been provided."))
+                                throws<ContainerCreationFailedException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: Couldn't evaluate expression."))
                             )
                         }
                     }
                 }
 
-                given("and the reference overrides a container-level environment variable that does not exist on the host") {
+                given("and the reference overrides a container-level environment variable that is invalid") {
                     val container = Container(
                         "some-container",
                         imageSourceDoesNotMatter(),
-                        environment = mapOf("SOME_VAR" to ReferenceValue("SOME_HOST_VARIABLE_THAT_ISNT_DEFINED"))
+                        environment = mapOf("SOME_VAR" to invalidReference)
                     )
 
-                    val additionalEnvironmentVariables = mapOf("SOME_VAR" to ReferenceValue("SOME_HOST_VARIABLE"))
+                    val additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("SOME_VALID_VALUE"))
 
                     on("getting environment variables for the container") {
                         val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
                         val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
 
-                        it("returns the environment variables' values from the host and does not throw an exception") {
+                        it("returns the overridden value") {
                             assertThat(environmentVariables, equalTo(mapOf(
-                                "SOME_VAR" to "SOME_HOST_VALUE"
-                            ))
-                            )
+                                "SOME_VAR" to "SOME_VALID_VALUE"
+                            )))
                         }
                     }
                 }
@@ -357,7 +362,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                 )
             }
 
-            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, hostEnvironmentVariables)
+            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, hostEnvironmentVariables, configVariablesProviderFor(emptyMap()))
 
             given("propagating proxy environment variables is enabled") {
                 val propagateProxyEnvironmentVariables = true
@@ -461,3 +466,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
 private fun configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables: Map<String, VariableExpression>) =
     ContainerRuntimeConfiguration(null, null, null, additionalEnvironmentVariables, emptySet())
+
+private fun configVariablesProviderFor(variables: Map<String, String?>) = mock<ConfigVariablesProvider> {
+    on { configVariableValues } doReturn variables
+}

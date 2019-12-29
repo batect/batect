@@ -17,7 +17,7 @@
 package batect.docker
 
 import batect.config.Container
-import batect.config.EnvironmentVariableExpression
+import batect.config.VariableExpression
 import batect.config.EnvironmentVariableExpressionEvaluationException
 import batect.execution.ContainerRuntimeConfiguration
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
@@ -53,10 +53,10 @@ class DockerContainerEnvironmentVariableProvider(
         emptyMap()
     }
 
-    private fun substituteEnvironmentVariables(original: Map<String, EnvironmentVariableExpression>): Map<String, String> =
+    private fun substituteEnvironmentVariables(original: Map<String, VariableExpression>): Map<String, String> =
         original.mapValues { (name, value) -> evaluateEnvironmentVariableValue(name, value) }
 
-    private fun evaluateEnvironmentVariableValue(name: String, expression: EnvironmentVariableExpression): String {
+    private fun evaluateEnvironmentVariableValue(name: String, expression: VariableExpression): String {
         try {
             return expression.evaluate(hostEnvironmentVariables)
         } catch (e: EnvironmentVariableExpressionEvaluationException) {

@@ -17,7 +17,7 @@
 package batect.docker
 
 import batect.config.Container
-import batect.config.EnvironmentVariableExpression
+import batect.config.VariableExpression
 import batect.config.LiteralValue
 import batect.config.ReferenceValue
 import batect.execution.ContainerRuntimeConfiguration
@@ -61,7 +61,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         environment = mapOf("SOME_VAR" to LiteralValue("SOME_VALUE"))
                     )
 
-                    val additionalEnvironmentVariables = emptyMap<String, EnvironmentVariableExpression>()
+                    val additionalEnvironmentVariables = emptyMap<String, VariableExpression>()
                     val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
                     val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
 
@@ -141,7 +141,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                     environment = mapOf("SOME_VAR" to LiteralValue("SOME_VALUE"))
                 )
 
-                val additionalEnvironmentVariables = emptyMap<String, EnvironmentVariableExpression>()
+                val additionalEnvironmentVariables = emptyMap<String, VariableExpression>()
 
                 on("getting environment variables for the container") {
                     val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
@@ -167,7 +167,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                     )
                 )
 
-                val additionalEnvironmentVariables = emptyMap<String, EnvironmentVariableExpression>()
+                val additionalEnvironmentVariables = emptyMap<String, VariableExpression>()
 
                 on("getting environment variables for the container") {
                     val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
@@ -242,7 +242,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
             val propagateProxyEnvironmentVariables = false
 
             given("and those references are on the container") {
-                val additionalEnvironmentVariables = emptyMap<String, EnvironmentVariableExpression>()
+                val additionalEnvironmentVariables = emptyMap<String, VariableExpression>()
 
                 given("and the reference is valid") {
                     val container = Container(
@@ -368,7 +368,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         imageSourceDoesNotMatter()
                     )
 
-                    val additionalEnvironmentVariables = emptyMap<String, EnvironmentVariableExpression>()
+                    val additionalEnvironmentVariables = emptyMap<String, VariableExpression>()
 
                     on("getting environment variables for the container") {
                         val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
@@ -393,7 +393,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         )
                     )
 
-                    val additionalEnvironmentVariables = emptyMap<String, EnvironmentVariableExpression>()
+                    val additionalEnvironmentVariables = emptyMap<String, VariableExpression>()
 
                     on("getting environment variables for the container") {
                         val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
@@ -446,7 +446,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         imageSourceDoesNotMatter()
                     )
 
-                    val additionalEnvironmentVariables = emptyMap<String, EnvironmentVariableExpression>()
+                    val additionalEnvironmentVariables = emptyMap<String, VariableExpression>()
                     val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
                     val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
 
@@ -459,5 +459,5 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
     }
 })
 
-private fun configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression>) =
+private fun configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables: Map<String, VariableExpression>) =
     ContainerRuntimeConfiguration(null, null, null, additionalEnvironmentVariables, emptySet())

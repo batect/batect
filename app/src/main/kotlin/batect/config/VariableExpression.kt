@@ -27,12 +27,12 @@ import kotlinx.serialization.Serializer
 import kotlinx.serialization.internal.StringDescriptor
 import kotlinx.serialization.withName
 
-@Serializable(with = EnvironmentVariableExpression.Companion::class)
-sealed class EnvironmentVariableExpression {
+@Serializable(with = VariableExpression.Companion::class)
+sealed class VariableExpression {
     abstract fun evaluate(hostEnvironmentVariables: Map<String, String>): String
 
-    @Serializer(forClass = EnvironmentVariableExpression::class)
-    companion object : KSerializer<EnvironmentVariableExpression> {
+    @Serializer(forClass = VariableExpression::class)
+    companion object : KSerializer<VariableExpression> {
         private val patterns = listOf(
             Regex("\\$\\{(.+):-(.*)}") to { match: MatchResult -> ReferenceValue(match.groupValues[1], match.groupValues[2]) },
             Regex("\\$\\{([^:]+)}") to { match: MatchResult -> ReferenceValue(match.groupValues[1]) },
@@ -46,7 +46,7 @@ sealed class EnvironmentVariableExpression {
             }
         )
 
-        fun parse(source: String): EnvironmentVariableExpression {
+        fun parse(source: String): VariableExpression {
             patterns.forEach { (pattern, generator) ->
                 val result = pattern.matchEntire(source)
 
@@ -60,7 +60,7 @@ sealed class EnvironmentVariableExpression {
 
         override val descriptor: SerialDescriptor = StringDescriptor.withName("expression")
 
-        override fun deserialize(decoder: Decoder): EnvironmentVariableExpression = try {
+        override fun deserialize(decoder: Decoder): VariableExpression = try {
             parse(decoder.decodeString())
         } catch (e: IllegalArgumentException) {
             if (decoder is YamlInput) {
@@ -70,7 +70,7 @@ sealed class EnvironmentVariableExpression {
             }
         }
 
-        override fun serialize(encoder: Encoder, obj: EnvironmentVariableExpression) {
+        override fun serialize(encoder: Encoder, obj: VariableExpression) {
             val representation = when (obj) {
                 is LiteralValue -> obj.value
                 is ReferenceValue -> {
@@ -87,12 +87,12 @@ sealed class EnvironmentVariableExpression {
     }
 }
 
-data class LiteralValue(val value: String) : EnvironmentVariableExpression() {
+data class LiteralValue(val value: String) : VariableExpression() {
     override fun evaluate(hostEnvironmentVariables: Map<String, String>) = value
     override fun toString() = "${this::class.simpleName}(value: '$value')"
 }
 
-data class ReferenceValue(val referenceTo: String, val default: String? = null) : EnvironmentVariableExpression() {
+data class ReferenceValue(val referenceTo: String, val default: String? = null) : VariableExpression() {
     override fun evaluate(hostEnvironmentVariables: Map<String, String>): String {
         val hostValue = hostEnvironmentVariables.get(referenceTo)
 

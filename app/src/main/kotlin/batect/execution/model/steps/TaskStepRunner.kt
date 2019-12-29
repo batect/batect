@@ -16,7 +16,7 @@
 
 package batect.execution.model.steps
 
-import batect.config.EnvironmentVariableExpression
+import batect.config.VariableExpression
 import batect.config.EnvironmentVariableExpressionEvaluationException
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerHealthCheckException
@@ -135,10 +135,10 @@ class TaskStepRunner(
         }
     }
 
-    private fun substituteBuildArgs(original: Map<String, EnvironmentVariableExpression>): Map<String, String> =
+    private fun substituteBuildArgs(original: Map<String, VariableExpression>): Map<String, String> =
         original.mapValues { (name, value) -> evaluateBuildArgValue(name, value) }
 
-    private fun evaluateBuildArgValue(name: String, expression: EnvironmentVariableExpression): String {
+    private fun evaluateBuildArgValue(name: String, expression: VariableExpression): String {
         try {
             return expression.evaluate(hostEnvironmentVariables)
         } catch (e: EnvironmentVariableExpressionEvaluationException) {

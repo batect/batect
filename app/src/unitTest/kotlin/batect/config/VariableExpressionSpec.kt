@@ -25,8 +25,8 @@ import com.natpryce.hamkrest.throws
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object EnvironmentVariableExpressionSpec : Spek({
-    describe("an environment variable expression") {
+object VariableExpressionSpec : Spek({
+    describe("a variable expression") {
         describe("parsing from a string") {
             mapOf(
                 "some literal value" to LiteralValue("some literal value"),
@@ -42,7 +42,7 @@ object EnvironmentVariableExpressionSpec : Spek({
                 "\${SOME_VAR:-some value}" to ReferenceValue("SOME_VAR", "some value")
             ).forEach { (source, expectedExpression) ->
                 on("parsing the input '$source'") {
-                    val expression = EnvironmentVariableExpression.parse(source)
+                    val expression = VariableExpression.parse(source)
 
                     it("returns the expected expression") {
                         assertThat(expression, equalTo(expectedExpression))
@@ -62,14 +62,14 @@ object EnvironmentVariableExpressionSpec : Spek({
             ).forEach { source ->
                 on("parsing the input '$source'") {
                     it("throws an appropriate exception") {
-                        assertThat({ EnvironmentVariableExpression.parse(source) }, throws<IllegalArgumentException>(withMessage("Invalid expression '$source'")))
+                        assertThat({ VariableExpression.parse(source) }, throws<IllegalArgumentException>(withMessage("Invalid expression '$source'")))
                     }
                 }
             }
         }
     }
 
-    describe("a literal environment variable expression") {
+    describe("a literal expression") {
         val expression = LiteralValue("abc123")
 
         on("evaluating the expression") {
@@ -81,7 +81,7 @@ object EnvironmentVariableExpressionSpec : Spek({
         }
     }
 
-    describe("an environment variable expression that refers to another environment variable") {
+    describe("an expression that refers to another environment variable") {
         given("the expression has no default value") {
             val expression = ReferenceValue("THE_VAR")
 

@@ -146,3 +146,9 @@ tasks:
         - 222:333
         - local: 444
           container: 555
+
+config_variables:
+  my_empty_var: {}
+  my_fully_featured_var:
+    description: The description
+    default: Some default value

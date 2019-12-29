@@ -15,6 +15,9 @@
     "tasks": {
       "$ref": "#/definitions/tasks"
     },
+    "config_variables": {
+      "$ref": "#/definitions/configVariablesList"
+    },
     "project_name": {
       "type": "string",
       "description": "The name of your project. Used to label any images built.",
@@ -452,6 +455,30 @@
         "required": [
           "command"
         ]
+      }
+    },
+    "configVariablesList": {
+      "type": "object",
+      "description": "Definitions for each of the config variables used to configure your tasks and containers",
+      "additionalProperties": {
+        "$ref": "#/definitions/configVariable"
+      }
+    },
+    "configVariable": {
+      "type": "object",
+      "description": "Definition of a single config variable",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of the purpose of the variable",
+          "minLength": 1
+        },
+        "default": {
+          "type": "string",
+          "description": "Default value of the variable if one is not provided elsewhere",
+          "minLength": 1
+        }
       }
     }
   }

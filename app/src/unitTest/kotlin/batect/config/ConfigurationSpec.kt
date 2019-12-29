@@ -82,7 +82,8 @@ object ConfigurationSpec : Spek({
                                     "prerequisites": ["task-1"]
                                 }
                             },
-                            "containers": {}
+                            "containers": {},
+                            "config_variables": {}
                         }
                     """.trimIndent()))
                 }
@@ -164,7 +165,8 @@ object ConfigurationSpec : Spek({
                                         { "command": ["some-command"], "working_directory": "/some/dir" }
                                     ]
                                 }
-                            }
+                            },
+                            "config_variables": {}
                         }
                     """.trimIndent()))
                 }
@@ -225,6 +227,29 @@ object ConfigurationSpec : Spek({
                                     "capabilities_to_drop": [],
                                     "additional_hostnames": [],
                                     "setup_commands": []
+                                }
+                            },
+                            "config_variables": {}
+                        }
+                    """.trimIndent()))
+                }
+            }
+
+            given("a single config variable") {
+                val configVariable = ConfigVariableDefinition("some-variable", "Some description", "Some default")
+                val configuration = Configuration("the-project", TaskMap(), ContainerMap(), ConfigVariableMap(configVariable))
+                val json by createForEachTest { Json.parser.stringify(Configuration.serializer(), configuration) }
+
+                it("serializes the configuration to the expected value") {
+                    assertThat(json, equivalentTo("""
+                        {
+                            "project_name": "the-project",
+                            "tasks": {},
+                            "containers": {},
+                            "config_variables": {
+                                "some-variable": {
+                                    "description": "Some description",
+                                    "default": "Some default"
                                 }
                             }
                         }

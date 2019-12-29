@@ -37,25 +37,29 @@ import kotlinx.serialization.internal.SerialClassDescImpl
 data class Configuration(
     val projectName: String,
     val tasks: TaskMap = TaskMap(),
-    val containers: ContainerMap = ContainerMap()
+    val containers: ContainerMap = ContainerMap(),
+    val configVariables: ConfigVariableMap = ConfigVariableMap()
 ) {
     @Serializer(forClass = Configuration::class)
     companion object : KSerializer<Configuration> {
         private const val projectNameFieldName = "project_name"
         private const val tasksFieldName = "tasks"
         private const val containersFieldName = "containers"
+        private const val configVariablesFieldName = "config_variables"
 
         override val descriptor: SerialDescriptor = object : SerialClassDescImpl("Configuration") {
             init {
                 addElement(projectNameFieldName, isOptional = true)
                 addElement(tasksFieldName, isOptional = true)
                 addElement(containersFieldName, isOptional = true)
+                addElement(configVariablesFieldName, isOptional = true)
             }
         }
 
         private val projectNameFieldIndex = descriptor.getElementIndex(projectNameFieldName)
         private val tasksFieldIndex = descriptor.getElementIndex(tasksFieldName)
         private val containersFieldIndex = descriptor.getElementIndex(containersFieldName)
+        private val configVariablesFieldIndex = descriptor.getElementIndex(configVariablesFieldName)
 
         override fun deserialize(decoder: Decoder): Configuration {
             val input = decoder.beginStructure(descriptor) as YamlInput
@@ -67,6 +71,7 @@ data class Configuration(
             var projectName: String? = null
             var tasks = TaskMap()
             var containers = ContainerMap()
+            var configVariables = ConfigVariableMap()
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
@@ -74,6 +79,7 @@ data class Configuration(
                     projectNameFieldIndex -> projectName = input.decodeProjectName(i)
                     tasksFieldIndex -> tasks = input.decode(TaskMap.Companion)
                     containersFieldIndex -> containers = input.decode(ContainerMap.Companion)
+                    configVariablesFieldIndex -> configVariables = input.decode(ConfigVariableMap.Companion)
                     else -> throw SerializationException("Unknown index $i")
                 }
             }
@@ -85,7 +91,7 @@ data class Configuration(
                 projectName = inferProjectName(pathResolver)
             }
 
-            return Configuration(projectName, tasks, containers)
+            return Configuration(projectName, tasks, containers, configVariables)
         }
 
         private fun YamlInput.decodeProjectName(index: Int): String {
@@ -123,6 +129,7 @@ data class Configuration(
             output.encodeStringElement(descriptor, projectNameFieldIndex, obj.projectName)
             output.encodeSerializableElement(descriptor, tasksFieldIndex, TaskMap.Companion, obj.tasks)
             output.encodeSerializableElement(descriptor, containersFieldIndex, ContainerMap.Companion, obj.containers)
+            output.encodeSerializableElement(descriptor, configVariablesFieldIndex, ConfigVariableMap.Companion, obj.configVariables)
             output.endStructure(descriptor)
         }
     }

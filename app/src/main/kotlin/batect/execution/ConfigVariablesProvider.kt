@@ -19,8 +19,11 @@ package batect.execution
 import batect.config.Configuration
 import java.nio.file.Path
 
-class ConfigVariablesProvider {
-    fun build(config: Configuration, commandLineOverrides: Map<String, String>, sourceFile: Path?) {
+class ConfigVariablesProvider(
+    private val commandLineOverrides: Map<String, String>,
+    private val sourceFile: Path?
+) {
+    fun build(config: Configuration) {
     }
 
     val configVariableValues: Map<String, String?> = emptyMap()

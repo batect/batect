@@ -17,6 +17,7 @@
 package batect
 
 import batect.cli.CommandLineOptions
+import batect.execution.ConfigVariablesProvider
 import batect.logging.LogSink
 import batect.testutils.InMemoryLogSink
 import batect.testutils.doesNotThrow
@@ -38,6 +39,7 @@ object InjectionConfigurationSpec : Spek({
         val configuration = Kodein.direct {
             extend(originalConfiguration, copy = Copy.All)
             bind<CommandLineOptions>() with instance(CommandLineOptions(taskName = "test-task"))
+            bind<ConfigVariablesProvider>() with instance(ConfigVariablesProvider(emptyMap(), null))
             bind<LogSink>() with instance(InMemoryLogSink())
         }
 

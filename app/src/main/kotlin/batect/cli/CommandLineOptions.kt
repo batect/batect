@@ -16,6 +16,7 @@
 
 package batect.cli
 
+import batect.execution.ConfigVariablesProvider
 import batect.logging.FileLogSink
 import batect.logging.LogSink
 import batect.logging.NullLogSink
@@ -54,6 +55,7 @@ data class CommandLineOptions(
     fun extend(originalKodein: DKodein): DKodein = Kodein.direct {
         extend(originalKodein, copy = Copy.All)
         bind<CommandLineOptions>() with instance(this@CommandLineOptions)
+        bind<ConfigVariablesProvider>() with instance(ConfigVariablesProvider(emptyMap(), null))
 
         bind<LogSink>() with singleton {
             if (logFileName == null) {

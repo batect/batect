@@ -54,7 +54,6 @@ import batect.docker.pull.DockerRegistryIndexResolver
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
-import batect.execution.ConfigVariablesProvider
 import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerEntrypointResolver
 import batect.execution.ContainerDependencyGraphProvider
@@ -230,7 +229,6 @@ private val dockerClientModule = Kodein.Module("docker.client") {
 
 private val executionModule = Kodein.Module("execution") {
     bind<CleanupStagePlanner>() with singletonWithLogger { logger -> CleanupStagePlanner(instance(), logger) }
-    bind<ConfigVariablesProvider>() with singleton { ConfigVariablesProvider() }
     bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance()) }
     bind<ContainerDependencyGraphProvider>() with singletonWithLogger { logger -> ContainerDependencyGraphProvider(instance(), instance(), logger) }
     bind<ContainerEntrypointResolver>() with singleton { ContainerEntrypointResolver() }

@@ -37,10 +37,10 @@ sealed class VariableExpression {
             Regex("\\$\\{(.+):-(.*)}") to { match: MatchResult -> EnvironmentVariableReference(match.groupValues[1], match.groupValues[2]) },
             Regex("\\$\\{([^:]+)}") to { match: MatchResult -> EnvironmentVariableReference(match.groupValues[1]) },
             Regex("\\$([^{](.*[^}])?)") to { match: MatchResult -> EnvironmentVariableReference(match.groupValues[1]) },
-            Regex("#\\{(.+)}") to { match: MatchResult -> ConfigVariableReference(match.groupValues[1]) },
-            Regex("#([^{](.*[^}])?)") to { match: MatchResult -> ConfigVariableReference(match.groupValues[1]) },
-            Regex("[^$#].*") to { match: MatchResult ->
-                if (match.value.startsWith("\\$") || match.value.startsWith("\\#")) {
+            Regex("%\\{(.+)}") to { match: MatchResult -> ConfigVariableReference(match.groupValues[1]) },
+            Regex("%([^{](.*[^}])?)") to { match: MatchResult -> ConfigVariableReference(match.groupValues[1]) },
+            Regex("[^$%].*") to { match: MatchResult ->
+                if (match.value.startsWith("\\$") || match.value.startsWith("\\%")) {
                     LiteralValue(match.value.drop(1))
                 } else {
                     LiteralValue(match.value)
@@ -82,7 +82,7 @@ sealed class VariableExpression {
                         '$' + "{${obj.referenceTo}:-${obj.default}}"
                     }
                 }
-                is ConfigVariableReference -> "#${obj.referenceTo}"
+                is ConfigVariableReference -> "%${obj.referenceTo}"
             }
 
             encoder.encodeString(representation)

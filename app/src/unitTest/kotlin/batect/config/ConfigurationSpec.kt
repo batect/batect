@@ -71,7 +71,7 @@ object ConfigurationSpec : Spek({
                                             "SOME_VAR": "blah",
                                             "SOME_REFERENCE": "${'$'}REFERENCE_TO",
                                             "SOME_REFERENCE_WITH_DEFAULT": "${'$'}{REF_2:-the-default}",
-                                            "SOME_CONFIG_VAR": "#REF_3"
+                                            "SOME_CONFIG_VAR": "%REF_3"
                                         },
                                         "ports": [
                                             { "local": 123, "container": 456 }
@@ -206,7 +206,7 @@ object ConfigurationSpec : Spek({
                                         "SOME_VAR": "blah",
                                         "SOME_REFERENCE": "${'$'}REFERENCE_TO",
                                         "SOME_REFERENCE_WITH_DEFAULT": "${'$'}{REF_2:-the-default}",
-                                        "SOME_CONFIG_VAR": "#REF_3"
+                                        "SOME_CONFIG_VAR": "%REF_3"
                                     },
                                     "dockerfile": "some-dockerfile",
                                     "command": null,

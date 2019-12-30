@@ -32,7 +32,7 @@ object VariableExpressionSpec : Spek({
                 "some literal value" to LiteralValue("some literal value"),
                 "a" to LiteralValue("a"),
                 "\\\$some literal value" to LiteralValue("\$some literal value"),
-                "\\#some literal value" to LiteralValue("#some literal value"),
+                "\\%some literal value" to LiteralValue("%some literal value"),
                 "\$SOME_VAR" to EnvironmentVariableReference("SOME_VAR"),
                 "\$a" to EnvironmentVariableReference("a"),
                 "\$ab" to EnvironmentVariableReference("ab"),
@@ -41,8 +41,8 @@ object VariableExpressionSpec : Spek({
                 "\${SOME_VAR:-}" to EnvironmentVariableReference("SOME_VAR", ""),
                 "\${SOME_VAR:-default}" to EnvironmentVariableReference("SOME_VAR", "default"),
                 "\${SOME_VAR:-some value}" to EnvironmentVariableReference("SOME_VAR", "some value"),
-                "#SOME_VAR" to ConfigVariableReference("SOME_VAR"),
-                "#{SOME_VAR}" to ConfigVariableReference("SOME_VAR")
+                "%SOME_VAR" to ConfigVariableReference("SOME_VAR"),
+                "%{SOME_VAR}" to ConfigVariableReference("SOME_VAR")
             ).forEach { (source, expectedExpression) ->
                 on("parsing the input '$source'") {
                     val expression = VariableExpression.parse(source)
@@ -62,10 +62,10 @@ object VariableExpressionSpec : Spek({
                 "\${some:}",
                 "\${:-}",
                 "\${:-default}",
-                "#",
-                "#{",
-                "#{some",
-                "#{}"
+                "%",
+                "%{",
+                "%{some",
+                "%{}"
             ).forEach { source ->
                 on("parsing the input '$source'") {
                     it("throws an appropriate exception") {

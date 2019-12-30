@@ -42,8 +42,8 @@ class ProcessRunner(private val logger: Logger) {
             .redirectInput(ProcessBuilder.Redirect.INHERIT)
             .start()
 
-        val exitCode = process.waitFor()
         val output = InputStreamReader(process.inputStream).readText()
+        val exitCode = process.waitFor()
 
         logger.debug {
             message("Process exited.")
@@ -70,8 +70,8 @@ class ProcessRunner(private val logger: Logger) {
             process.outputStream.write(stdin.toByteArray(Charset.defaultCharset()))
             process.outputStream.close()
 
-            val exitCode = process.waitFor()
             val output = InputStreamReader(process.inputStream).readText()
+            val exitCode = process.waitFor()
 
             logger.debug {
                 message("Process exited.")

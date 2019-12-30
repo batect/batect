@@ -25,8 +25,8 @@ object DockerUtils {
             .redirectErrorStream(true)
             .start()
 
-        val exitCode = process.waitFor()
         val output = InputStreamReader(process.inputStream).readText()
+        val exitCode = process.waitFor()
 
         if (exitCode != 0) {
             throw Exception("Retrieving list of containers from Docker failed with exit code $exitCode. Output from Docker was: $output")
@@ -41,8 +41,8 @@ object DockerUtils {
             .redirectErrorStream(true)
             .start()
 
-        val exitCode = process.waitFor()
         val output = InputStreamReader(process.inputStream).readText()
+        val exitCode = process.waitFor()
 
         if (exitCode != 0) {
             throw Exception("Retrieving list of networks from Docker failed with exit code $exitCode. Output from Docker was: $output")

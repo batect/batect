@@ -379,8 +379,8 @@ private fun createSymbolicLinkOnWindows(source: Path, target: Path) {
         .redirectOutput(ProcessBuilder.Redirect.PIPE)
         .start()
 
-    val exitCode = process.waitFor()
     val output = InputStreamReader(process.inputStream).readText()
+    val exitCode = process.waitFor()
 
     if (exitCode != 0) {
         throw RuntimeException("Creating symbolic link failed: $output")

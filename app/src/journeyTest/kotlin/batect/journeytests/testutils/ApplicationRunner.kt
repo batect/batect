@@ -49,8 +49,8 @@ data class ApplicationRunner(val testName: String) {
         val process = builder.start()
         afterStart(process)
 
-        process.waitFor()
         val output = InputStreamReader(process.inputStream).readText()
+        process.waitFor()
 
         val containersAfter = DockerUtils.getAllCreatedContainers()
         val potentiallyOrphanedContainers = containersAfter - containersBefore

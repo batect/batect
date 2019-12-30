@@ -97,10 +97,11 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
                     .redirectErrorStream(true)
                     .start()
 
+                val output = InputStreamReader(inspectProcess.inputStream).readText().trim()
                 inspectProcess.waitFor()
 
                 assertThat(inspectProcess.exitValue(), equalTo(0))
-                assertThat(InputStreamReader(inspectProcess.inputStream).readText().trim(), equalTo("running"))
+                assertThat(output, equalTo("running"))
             }
 
             it("the command given to view the logs displays the logs from the container") {
@@ -112,9 +113,10 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
                     .redirectErrorStream(true)
                     .start()
 
+                val output = InputStreamReader(logsProcess.inputStream).readText().trim()
                 logsProcess.waitFor()
 
-                assertThat(InputStreamReader(logsProcess.inputStream).readText().trim(), equalTo("This is some output from the HTTP server"))
+                assertThat(output, equalTo("This is some output from the HTTP server"))
                 assertThat(logsProcess.exitValue(), equalTo(0))
             }
 

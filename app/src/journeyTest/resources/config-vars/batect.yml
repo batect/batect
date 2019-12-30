@@ -1,0 +1,26 @@
+project_name: config-vars-test
+
+containers:
+  build-env:
+    image: alpine:3.6
+    command: sh -c 'echo $FROM_FILE && echo $FROM_COMMAND_LINE && echo $FROM_DEFAULT && exit 123'
+    environment:
+      FROM_FILE: <FROM_FILE
+      FROM_COMMAND_LINE: <FROM_COMMAND_LINE
+      FROM_DEFAULT: <FROM_DEFAULT
+
+tasks:
+  the-task:
+    run:
+      container: build-env
+
+config_variables:
+  FROM_FILE:
+    description: A variable that will be set in the config file.
+
+  FROM_COMMAND_LINE:
+    description: A variable that will be set on the command line.
+
+  FROM_DEFAULT:
+    description: A variable that will take its default value.
+    default: Hello from the default value

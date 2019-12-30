@@ -34,8 +34,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 class ConfigVariablesProvider(
-    private val commandLineOverrides: Map<String, String>,
-    private val sourceFile: Path?
+    val commandLineOverrides: Map<String, String>,
+    val sourceFile: Path?
 ) {
     lateinit var configVariableValues: Map<String, String?>
 

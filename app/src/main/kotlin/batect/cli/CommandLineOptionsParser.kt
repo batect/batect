@@ -22,6 +22,7 @@ import batect.cli.options.OptionValueSource
 import batect.cli.options.OptionsParsingResult
 import batect.cli.options.ValueConverters
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
+import batect.cli.options.defaultvalues.FileDefaultValueProvider
 import batect.docker.DockerHttpConfigDefaults
 import batect.os.PathResolverFactory
 import batect.os.SystemInfo
@@ -60,6 +61,13 @@ class CommandLineOptionsParser(
         Paths.get("batect.yml"),
         ValueConverters.pathToFile(pathResolverFactory, mustExist = true),
         'f'
+    )
+
+    private val configVariablesSourceFileName: Path? by valueOption(
+        "config-vars-file",
+        "YAML file containing values for config variables.",
+        FileDefaultValueProvider("batect.local.yml", pathResolverFactory),
+        ValueConverters.pathToFile(pathResolverFactory, mustExist = true)
     )
 
     private val logFileName: Path? by valueOption(
@@ -191,6 +199,7 @@ class CommandLineOptionsParser(
         runUpgrade = runUpgrade,
         listTasks = listTasks,
         configurationFileName = configurationFileName,
+        configVariablesSourceFile = configVariablesSourceFileName,
         logFileName = logFileName,
         requestedOutputStyle = requestedOutputStyle,
         disableColorOutput = disableColorOutput,

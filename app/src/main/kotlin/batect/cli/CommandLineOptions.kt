@@ -36,6 +36,7 @@ data class CommandLineOptions(
     val runUpgrade: Boolean = false,
     val listTasks: Boolean = false,
     val configurationFileName: Path = Paths.get("batect.yml"),
+    val configVariablesSourceFile: Path? = null,
     val logFileName: Path? = null,
     val requestedOutputStyle: OutputStyle? = null,
     val disableColorOutput: Boolean = false,
@@ -55,7 +56,7 @@ data class CommandLineOptions(
     fun extend(originalKodein: DKodein): DKodein = Kodein.direct {
         extend(originalKodein, copy = Copy.All)
         bind<CommandLineOptions>() with instance(this@CommandLineOptions)
-        bind<ConfigVariablesProvider>() with instance(ConfigVariablesProvider(emptyMap(), null))
+        bind<ConfigVariablesProvider>() with instance(ConfigVariablesProvider(emptyMap(), configVariablesSourceFile))
 
         bind<LogSink>() with singleton {
             if (logFileName == null) {

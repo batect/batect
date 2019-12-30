@@ -66,6 +66,7 @@ object CommandLineOptionsParserSpec : Spek({
         }
 
         val defaultCommandLineOptions = CommandLineOptions(
+            configVariablesSourceFile = fileSystem.getPath("/resolved/batect.local.yml"),
             dockerHost = defaultDockerHost,
             dockerTlsCACertificatePath = fileSystem.getPath("home-dir", ".docker", "ca.pem"),
             dockerTLSCertificatePath = fileSystem.getPath("home-dir", ".docker", "cert.pem"),
@@ -168,6 +169,7 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--upgrade", "some-task") to defaultCommandLineOptions.copy(runUpgrade = true),
             listOf("-f=somefile.yml", "some-task") to defaultCommandLineOptions.copy(configurationFileName = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task"),
             listOf("--config-file=somefile.yml", "some-task") to defaultCommandLineOptions.copy(configurationFileName = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task"),
+            listOf("--config-vars-file=somefile.yml", "some-task") to defaultCommandLineOptions.copy(configVariablesSourceFile = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task"),
             listOf("--log-file=somefile.log", "some-task") to defaultCommandLineOptions.copy(logFileName = fileSystem.getPath("/resolved/somefile.log"), taskName = "some-task"),
             listOf("--output=simple", "some-task") to defaultCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Simple, taskName = "some-task"),
             listOf("--output=quiet", "some-task") to defaultCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Quiet, taskName = "some-task"),

@@ -26,6 +26,7 @@ import batect.testutils.given
 import batect.testutils.on
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
+import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
@@ -41,7 +42,11 @@ import java.nio.file.Paths
 object CommandLineOptionsSpec : Spek({
     describe("a set of command line options") {
         given("no log file name has been provided") {
-            val options = CommandLineOptions(taskName = "some-task", configVariablesSourceFile = Paths.get("somefile.yml"))
+            val options = CommandLineOptions(
+                taskName = "some-task",
+                configVariablesSourceFile = Paths.get("somefile.yml"),
+                configVariableOverrides = mapOf("a" to "b")
+            )
 
             on("extending an existing Kodein configuration") {
                 val originalKodein = Kodein.direct {
@@ -59,7 +64,10 @@ object CommandLineOptionsSpec : Spek({
                 }
 
                 it("creates a config variables provider to use") {
-                    assertThat(extendedKodein.instance<ConfigVariablesProvider>(), has(ConfigVariablesProvider::sourceFile, equalTo(options.configVariablesSourceFile)))
+                    assertThat(extendedKodein.instance<ConfigVariablesProvider>(),
+                        has(ConfigVariablesProvider::sourceFile, equalTo(options.configVariablesSourceFile))
+                        and has(ConfigVariablesProvider::commandLineOverrides, equalTo(options.configVariableOverrides))
+                    )
                 }
 
                 it("creates a null log sink to use") {

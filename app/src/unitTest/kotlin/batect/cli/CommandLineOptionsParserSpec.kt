@@ -180,6 +180,7 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--no-cleanup-after-success", "some-task") to defaultCommandLineOptions.copy(disableCleanupAfterSuccess = true, taskName = "some-task"),
             listOf("--no-cleanup", "some-task") to defaultCommandLineOptions.copy(disableCleanupAfterFailure = true, disableCleanupAfterSuccess = true, taskName = "some-task"),
             listOf("--no-proxy-vars", "some-task") to defaultCommandLineOptions.copy(dontPropagateProxyEnvironmentVariables = true, taskName = "some-task"),
+            listOf("--config-var", "a=b", "--config-var", "c=d", "some-task") to defaultCommandLineOptions.copy(configVariableOverrides = mapOf("a" to "b", "c" to "d"), taskName = "some-task"),
             listOf("--docker-host=some-host", "some-task") to defaultCommandLineOptions.copy(dockerHost = "some-host", taskName = "some-task"),
             listOf("--docker-tls", "some-task") to defaultCommandLineOptions.copy(dockerUseTLS = true, taskName = "some-task"),
             listOf("--docker-tls-verify", "some-task") to defaultCommandLineOptions.copy(dockerUseTLS = true, dockerVerifyTLS = true, taskName = "some-task"),

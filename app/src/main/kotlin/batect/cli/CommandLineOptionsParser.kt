@@ -63,11 +63,18 @@ class CommandLineOptionsParser(
         'f'
     )
 
-    private val configVariablesSourceFileName: Path? by valueOption(
+    private val configVariablesSourceFileNameOption = valueOption(
         "config-vars-file",
-        "YAML file containing values for config variables.",
+        "YAML file containing values for config variables. Values in file take precedence over default values.",
         FileDefaultValueProvider("batect.local.yml", pathResolverFactory),
         ValueConverters.pathToFile(pathResolverFactory, mustExist = true)
+    )
+
+    private val configVariablesSourceFileName: Path? by configVariablesSourceFileNameOption
+
+    private val configVariableOverrides: Map<String, String> by mapOption(
+        configVariableOptionName,
+        "Set a value for a config variable. Takes precedence over default values and values in file provided to ${configVariablesSourceFileNameOption.longOption}. Format is <name>=<value>."
     )
 
     private val logFileName: Path? by valueOption(
@@ -209,6 +216,7 @@ class CommandLineOptionsParser(
         dontPropagateProxyEnvironmentVariables = dontPropagateProxyEnvironmentVariables,
         taskName = taskName,
         additionalTaskCommandArguments = additionalTaskCommandArguments,
+        configVariableOverrides = configVariableOverrides,
         dockerHost = dockerHost,
         dockerUseTLS = dockerUseTLS || dockerVerifyTLS,
         dockerVerifyTLS = dockerVerifyTLS,

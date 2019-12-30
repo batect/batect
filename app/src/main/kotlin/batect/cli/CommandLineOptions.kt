@@ -46,6 +46,7 @@ data class CommandLineOptions(
     val dontPropagateProxyEnvironmentVariables: Boolean = false,
     val taskName: String? = null,
     val additionalTaskCommandArguments: Iterable<String> = emptyList(),
+    val configVariableOverrides: Map<String, String> = emptyMap(),
     val dockerHost: String = "tcp://set-to-default-value-in/CommandLineOptionsParser",
     val dockerUseTLS: Boolean = false,
     val dockerVerifyTLS: Boolean = false,
@@ -56,7 +57,7 @@ data class CommandLineOptions(
     fun extend(originalKodein: DKodein): DKodein = Kodein.direct {
         extend(originalKodein, copy = Copy.All)
         bind<CommandLineOptions>() with instance(this@CommandLineOptions)
-        bind<ConfigVariablesProvider>() with instance(ConfigVariablesProvider(emptyMap(), configVariablesSourceFile))
+        bind<ConfigVariablesProvider>() with instance(ConfigVariablesProvider(configVariableOverrides, configVariablesSourceFile))
 
         bind<LogSink>() with singleton {
             if (logFileName == null) {

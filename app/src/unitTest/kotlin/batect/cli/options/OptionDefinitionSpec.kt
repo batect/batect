@@ -31,8 +31,8 @@ import org.spekframework.spek2.style.specification.describe
 
 object OptionDefinitionSpec : Spek({
     describe("a option definition") {
-        fun createOption(longName: String, description: String, shortName: Char? = null): OptionDefinition {
-            return object : OptionDefinition(longName, description, false, shortName) {
+        fun createOption(longName: String, description: String, shortName: Char? = null, allowMultiple: Boolean = false): OptionDefinition {
+            return object : OptionDefinition(longName, description, false, shortName, allowMultiple) {
                 override fun parseValue(args: Iterable<String>): OptionParsingResult = throw NotImplementedError()
                 override fun checkDefaultValue(): DefaultApplicationResult = throw NotImplementedError()
                 override val valueSource: OptionValueSource
@@ -100,15 +100,16 @@ object OptionDefinitionSpec : Spek({
             class TestOptionDefinition(
                 name: String,
                 description: String,
-                shortName: Char? = null
-            ) : OptionDefinition(name, description, false, shortName) {
+                shortName: Char? = null,
+                allowMultiple: Boolean = false
+            ) : OptionDefinition(name, description, false, shortName, allowMultiple) {
                 override fun parseValue(args: Iterable<String>): OptionParsingResult = OptionParsingResult.ReadOption(1234)
                 override fun checkDefaultValue(): DefaultApplicationResult = throw NotImplementedError()
                 override val valueSource: OptionValueSource
                     get() = throw NotImplementedError()
             }
 
-            given("an option with short and long names") {
+            given("an option with short and long names that does not allow being specified multiple times") {
                 val option by createForEachTest { TestOptionDefinition("value", "The value", 'v') }
 
                 on("parsing an empty list of arguments") {
@@ -150,7 +151,7 @@ object OptionDefinitionSpec : Spek({
                 }
             }
 
-            given("an option without a short name") {
+            given("an option without a short name that does not allow being specified multiple times") {
                 val option = TestOptionDefinition("value", "The value")
 
                 given("and the option has already parsed a valid value") {
@@ -163,6 +164,24 @@ object OptionDefinitionSpec : Spek({
 
                         it("indicates that parsing failed") {
                             assertThat(result, equalTo(OptionParsingResult.InvalidOption("Option '--value' cannot be specified multiple times.")))
+                        }
+                    }
+                }
+            }
+
+            given("an option that does allow being specified multiple times") {
+                val option = TestOptionDefinition("value", "The value", allowMultiple = true)
+
+                given("and the option has already parsed a valid value") {
+                    beforeEachTest {
+                        option.parse(listOf("--value=thing", "--value=other-thing", "do-stuff"))
+                    }
+
+                    on("parsing another list of arguments where the option is specified again") {
+                        val result by runForEachTest { option.parse(listOf("--value=other-thing", "do-stuff")) }
+
+                        it("returns the parsing result from the concrete implementation") {
+                            assertThat(result, equalTo(OptionParsingResult.ReadOption(1234)))
                         }
                     }
                 }

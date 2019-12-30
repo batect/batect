@@ -20,7 +20,8 @@ abstract class OptionDefinition(
     val longName: String,
     val description: String,
     val acceptsValue: Boolean,
-    val shortName: Char? = null
+    val shortName: Char? = null,
+    val allowMultiple: Boolean = false
 ) {
     private var alreadySeen: Boolean = false
     abstract val valueSource: OptionValueSource
@@ -55,7 +56,7 @@ abstract class OptionDefinition(
             throw IllegalArgumentException("List of arguments cannot be empty.")
         }
 
-        if (alreadySeen) {
+        if (alreadySeen && !allowMultiple) {
             return specifiedMultipleTimesError()
         }
 

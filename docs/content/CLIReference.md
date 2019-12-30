@@ -12,6 +12,44 @@ Run a task by running `./batect <task-name>`. For example, to run `the-task`, ru
 You can also pass arguments to the task command by passing those arguments by running `./batect <task-name> -- <args...>`.
 For example, to run the task `the-task` with the arguments `arg1 arg2`, run `./batect the-task -- arg1 arg2`.
 
+### Set config variables from a file <small>(`--config-vars-file`)</small>
+
+By default, batect will automatically apply values for [config variables](config/ConfigVariables.md) from the YAML file `batect.local.yml`
+if it exists.
+
+Use `--config-vars-file` to specify a different file to use.
+
+Values provided with [`--config-var`](#set-a-config-variable-config-var) take precedence over values provided in any file.
+
+Example:
+
+```shell
+./batect --config-vars-file batect.ci.yml the-task
+```
+
+Example `batect.ci.yml` contents:
+
+```yaml
+log_level: debug
+user_name: alex
+```
+
+### Set a config variable <small>(`--config-var`)</small>
+
+Use `--config-vars` to specify values for an individual [config variable](config/ConfigVariables.md).
+
+Values must be in the format `<variable name>=<variable value>`.
+
+Values provided with `--config-var` take precedence over values provided in a file (either explicitly with
+[`--config-vars-file`](#set-config-variables-from-a-file-config-vars-file) or from the default `batect.local.yml` file)
+and default values defined in the configuration file.
+
+Example:
+
+```shell
+./batect --config-var log_level=debug the-task
+```
+
 ### Disable cleaning up <small>(`--no-cleanup`, `--no-cleanup-after-failure` and `--no-cleanup-after-success`)</small>
 
 By default, batect will automatically cleanup all containers and other resources it creates while running a task.
@@ -165,23 +203,19 @@ batect offers four styles of output:
 
 * `fancy` is best for interactive use, providing very clean output about the current state of execution and showing output from only the task container
 
-    ??? example "`fancy` output mode example"
-        <asciinema-player src="/assets/outputstyles/fancy.cast" cols="204" rows="50" preload="true" poster="npt:2.5"></asciinema-player>
+    <asciinema-player src="/assets/outputstyles/fancy.cast" cols="204" rows="20" preload="true" poster="npt:2.5"></asciinema-player>
 
 * `simple` is best for non-interactive use (eg. on CI), providing a log of what happened and showing output from only the task container
 
-    ??? example "`simple` output mode example"
-        <asciinema-player src="/assets/outputstyles/simple.cast" cols="204" rows="50" preload="true" poster="npt:2.5"></asciinema-player>
+    <asciinema-player src="/assets/outputstyles/simple.cast" cols="204" rows="20" preload="true" poster="npt:2.5"></asciinema-player>
 
 * `all` displays output from all containers
 
-    ??? example "`all` output mode example"
-        <asciinema-player src="/assets/outputstyles/interleaved.cast" cols="204" rows="50" preload="true" poster="npt:2.5"></asciinema-player>
+    <asciinema-player src="/assets/outputstyles/interleaved.cast" cols="204" rows="20" preload="true" poster="npt:4"></asciinema-player>
 
 * `quiet` displays only the output from the task and error messages from batect
 
-    ??? example "`quiet` output mode example"
-        <asciinema-player src="/assets/outputstyles/quiet.cast" cols="204" rows="50" preload="true" poster="npt:7"></asciinema-player>
+    <asciinema-player src="/assets/outputstyles/quiet.cast" cols="204" rows="20" preload="true" poster="npt:7"></asciinema-player>
 
 By default, batect will automatically pick an output style that it believes is appropriate for the environment it is running in -
 `fancy` if it believes your environment supports it, or `simple` otherwise.

@@ -21,7 +21,8 @@ List of build args (in `name: value` format) to use when building the image in [
 
 Each build arg must be defined in the Dockerfile with an `ARG` instruction otherwise the value provided will have no effect.
 
-The value of environment variables from the host can be passed as build args using [the same syntax as for `environment`](#environment-variable-substitution).
+The values of environment variables from the host and [config variables](ConfigVariables.md) can be passed as build args
+using [the same syntax as for `environment`](#expressions).
 
 !!! warning
     Use caution when using build args for secret values. Build arg values can be revealed by anyone with a copy of the image with the `docker history` command.
@@ -98,22 +99,25 @@ List of environment variables (in `name: value` format) for the container.
 
 Prior to v0.21, environment variables were required to be supplied in `name=value` format.
 
-### Environment variable substitution
-You can pass environment variables from the host (ie. where you run batect) to the container by using any of the following formats:
+### Expressions
+In addition to providing a literal value, you can pass environment variables from the host
+(ie. where you run batect) to the container by using any of the following formats:
 
-* `$<name>` or `${<name>}`: use the value of `<name>` from the host as the value inside the container.
+* `$name` or `${name}`: use the value of `name` from the host as the value inside the container.
 
     If the referenced host variable is not present, batect will show an error message and not start the task.
 
-* `${<name>:-<default>}`: use the value of `<name>` from the host as the value inside the container.
+* `${name:-default}`: use the value of `name` from the host as the value inside the container.
 
-    If the referenced host variable is not present, `<default>` is used instead.
+    If the referenced host variable is not present, `default` is used instead.
 
-    `<default>` can be empty, so `${<name>:-}` will use the value of `<name>` from the host if it is
+    `default` can be empty, so `${name:-}` will use the value of `name` from the host if it is
     set, or a blank value if it is not set.
 
-For example, to set `SUPER_SECRET_PASSWORD` in the container to the value of the `MY_PASSWORD` variable on the host, use
-`SUPER_SECRET_PASSWORD: $MY_PASSWORD` or `SUPER_SECRET_PASSWORD: ${MY_PASSWORD}`. Or, to default it to `insecure` if
+You can also refer to the value of a [config variable](ConfigVariables.md) with `<name` or `<{name}`.
+
+For example, to set `SUPER_SECRET_PASSWORD` in the container to the value of the `MY_PASSWORD` environment variable on the host,
+use `SUPER_SECRET_PASSWORD: $MY_PASSWORD` or `SUPER_SECRET_PASSWORD: ${MY_PASSWORD}`. Or, to default it to `insecure` if
 `MY_PASSWORD` is not set, use `SUPER_SECRET_PASSWORD: ${MY_PASSWORD:-insecure}`.
 
 Substitution in the middle of values is not supported (eg. `SUPER_SECRET_PASSWORD: My password is $MY_PASSWORD` will not work).
@@ -123,7 +127,7 @@ Substitution in the middle of values is not supported (eg. `SUPER_SECRET_PASSWOR
     runs between hosts, which is something you generally want to avoid.
 
 The curly brace syntax for environment variables, including the ability to specify default values for environment variables,
-was added in v0.21.
+was added in v0.21. [Config variables](ConfigVariables.md) were added in v0.40.
 
 ### `TERM`
 The `TERM` environment variable, if set on the host, is always automatically passed through to the container. This ensures that features such as

@@ -24,6 +24,12 @@ Project names must be valid Docker references:
     * one or two consecutive underscores (`_`)
 * they must not start or end with dashes, periods or underscores
 
+## `config_variables`
+
+Definitions for each of the config variables that are used throughout your configuration, in `name: options` format..
+
+[Detailed reference for `config_variables`](ConfigVariables.md)
+
 ## `containers`
 
 Definitions for each of the containers that make up your various environments, in `name: options` format.
@@ -105,6 +111,6 @@ value in `map-1` is used.)
 
 ## Examples
 
-Examples are provided in the reference for [`containers`](Containers.md#examples) and [`tasks`](Tasks.md#examples).
+Examples are provided in the reference for [`config_variables`](ConfigVariables.md#examples), [`containers`](Containers.md#examples) and [`tasks`](Tasks.md#examples).
 
 For further examples and real-world scenarios, take a look at the [sample projects](../SampleProjects.md).

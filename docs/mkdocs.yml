@@ -49,6 +49,7 @@ nav:
 
   - Configuration file reference:
     - Overview: "config/Overview.md"
+    - Config Variables: "config/ConfigVariables.md"
     - Containers: "config/Containers.md"
     - Tasks: "config/Tasks.md"
 

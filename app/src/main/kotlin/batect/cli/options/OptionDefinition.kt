@@ -85,6 +85,7 @@ abstract class OptionDefinition(
     internal abstract fun checkDefaultValue(): DefaultApplicationResult
 
     open val descriptionForHelp: String = description
+    open val valueFormatForHelp: String = "value"
 }
 
 sealed class DefaultApplicationResult {

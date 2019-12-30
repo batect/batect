@@ -42,7 +42,7 @@ class HelpCommand(val optionsParser: CommandLineOptionsParser, val outputStream:
     }
 
     private fun nameFor(option: OptionDefinition): String {
-        val longNamePart = if (option.acceptsValue) "${option.longOption}=value" else option.longOption
+        val longNamePart = if (option.acceptsValue) "${option.longOption}=${option.valueFormatForHelp}" else option.longOption
 
         return when {
             option.shortName == null -> "    $longNamePart"

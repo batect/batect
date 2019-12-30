@@ -42,8 +42,8 @@ object HelpCommandSpec : Spek({
                 override val valueSource: OptionValueSource
                     get() = throw NotImplementedError()
 
-                override val descriptionForHelp: String
-                    get() = "$description (extra help info)"
+                override val descriptionForHelp: String = "$description (extra help info)"
+                override val valueFormatForHelp: String = "some_custom_value_format"
             }
 
         given("and the root parser has some common options") {
@@ -71,10 +71,10 @@ object HelpCommandSpec : Spek({
                         |Usage: batect [options] task [-- additional arguments to pass to task]
                         |
                         |Options:
-                        |      --awesomeness-level=value    Level of awesomeness to use. (extra help info)
-                        |      --booster-level=value        Level of boosters to use. (extra help info)
-                        |      --enable-extra-stuff         Something you can enable if you want. (extra help info)
-                        |  -f, --file=value                 File name to use. (extra help info)
+                        |      --awesomeness-level=some_custom_value_format    Level of awesomeness to use. (extra help info)
+                        |      --booster-level=some_custom_value_format        Level of boosters to use. (extra help info)
+                        |      --enable-extra-stuff                            Something you can enable if you want. (extra help info)
+                        |  -f, --file=some_custom_value_format                 File name to use. (extra help info)
                         |
                         |For documentation and further information on batect, visit https://github.com/charleskorn/batect.
                         |

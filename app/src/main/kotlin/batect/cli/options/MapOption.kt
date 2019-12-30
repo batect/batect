@@ -73,6 +73,7 @@ class MapOption(
     override fun getValue(thisRef: OptionParserContainer, property: KProperty<*>): Map<String, String> = values
     override fun checkDefaultValue(): DefaultApplicationResult = DefaultApplicationResult.Succeeded
     override val descriptionForHelp: String = "${super.descriptionForHelp} Can be given multiple times."
+    override val valueFormatForHelp: String = "<name>=<value>"
 
     companion object {
         private val parsingRegex = """(.+)=(.+)""".toRegex()

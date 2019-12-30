@@ -74,7 +74,7 @@ class CommandLineOptionsParser(
 
     private val configVariableOverrides: Map<String, String> by mapOption(
         configVariableOptionName,
-        "Set a value for a config variable. Takes precedence over default values and values in file provided to ${configVariablesSourceFileNameOption.longOption}. Format is <name>=<value>."
+        "Set a value for a config variable. Takes precedence over default values and values in file provided to ${configVariablesSourceFileNameOption.longOption}."
     )
 
     private val logFileName: Path? by valueOption(

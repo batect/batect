@@ -50,6 +50,20 @@ Example:
 ./batect --config-var log_level=debug the-task
 ```
 
+### Override the image used by a container <small>(`--override-image`)</small>
+
+By default, batect will use the image defined in the configuration file (either with [`image`](config/Containers.md#image) or [`build_directory`](config/Containers.md#build_directory)).
+
+Use this option to override the value in the configuration file and use a different image for a specific container.
+
+Values must be in the format `<container name>=<image>`.
+
+Example:
+
+```shell
+./batect --override-image build-env=ruby:2.7.0 the-task
+```
+
 ### Disable cleaning up <small>(`--no-cleanup`, `--no-cleanup-after-failure` and `--no-cleanup-after-success`)</small>
 
 By default, batect will automatically cleanup all containers and other resources it creates while running a task.

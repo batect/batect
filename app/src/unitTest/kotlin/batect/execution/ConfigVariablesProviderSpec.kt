@@ -193,4 +193,4 @@ object ConfigVariablesProviderSpec : Spek({
 })
 
 private fun configWithVariables(vararg variables: ConfigVariableDefinition): Configuration =
-    Configuration("the_project", configVariables = ConfigVariableMap(variables.asIterable()))
+    Configuration("the_project", configVariables = ConfigVariableMap(*variables))

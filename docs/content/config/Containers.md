@@ -5,6 +5,8 @@ Each container definition is made up of:
 ## `image`
 Image name (in standard Docker image reference format) to use for this container. **One of `image` or `build_directory` is required.**
 
+The image can be overridden when running a task with [`--override-image`](../CLIReference.md#override-the-image-used-by-a-container-override-image).
+
 !!! tip
     It is highly recommended that you specify a specific image version, and not use `latest`, to ensure that the same image is used
     everywhere. For example, use `alpine:3.7`, not `alpine` or `alpine:latest`.
@@ -15,6 +17,8 @@ Path (relative to the configuration file's directory) to a directory containing 
 
 On Windows, `build_directory` can use either Windows-style (`path\to\thing`) or Unix-style (`path/to/thing`) paths, but for compatibility
 with users running on other operating systems, using Unix-style paths is recommended.
+
+The image can be overridden when running a task with [`--override-image`](../CLIReference.md#override-the-image-used-by-a-container-override-image).
 
 ## `build_args`
 List of build args (in `name: value` format) to use when building the image in [`build_directory`](#build_directory).

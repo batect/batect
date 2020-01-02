@@ -23,7 +23,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * support for Windows
   * send updated console dimensions to daemon if console is resized while container is running
   * fix issue where app appears to hang when running on a 32-bit JVM (field size / alignment issue in named pipes calls?)
-  * show a warning (or just fail) if the daemon is configured to run Windows containers
   * show more detailed Windows version information by reading it from `kernel32.dll`: https://stackoverflow.com/a/27323983/1668119
 * fix #10 (proxies that refer to localhost)
   * Linux:
@@ -44,7 +43,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * shell tab completion for options (eg. `batect --h<tab>` completes to `batect --help`) - #116
 * shell tab completion for tasks (eg. `batect b<tab>` completes to `batect build`) - #116
 * Kubernetes-style health checks from outside the container (don't require `curl` / `wget` to be installed in the container, just provide HTTP endpoint)
-* ability to override image tag for a container (eg. `./batect --use-image-tag:my-app=abc123 the-task`)
 * ability to build one or more container images separate to running a task (two use cases: build and push an application image, and pre-build all CI environment images in parallel rather than waiting until they're needed and building them effectively serially)
 
 ### Other

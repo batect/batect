@@ -17,6 +17,7 @@
 package batect.cli.commands
 
 import batect.config.Configuration
+import batect.config.PullImage
 import batect.config.Task
 import batect.config.io.ConfigurationLoader
 import batect.docker.client.DockerConnectivityCheckResult
@@ -48,7 +49,7 @@ class RunTaskCommand(
 ) : Command {
 
     override fun run(): Int {
-        val config = configLoader.loadConfig(configFile)
+        val config = loadConfig()
         configVariablesProvider.build(config)
 
         val connectivityCheckResult = dockerSystemInfoClient.checkConnectivity()
@@ -59,6 +60,13 @@ class RunTaskCommand(
         }
 
         return runFromConfig(config)
+    }
+
+    private fun loadConfig(): Configuration {
+        val configFromFile = configLoader.loadConfig(configFile)
+        val overrides = runOptions.imageOverrides.mapValues { PullImage(it.value) }
+
+        return configFromFile.applyImageOverrides(overrides)
     }
 
     private fun runFromConfig(config: Configuration): Int {

@@ -112,6 +112,7 @@ interface OptionParserContainer {
         FlagOption(longName, description, defaultValueProvider, shortName)
 
     fun mapOption(longName: String, description: String, shortName: Char? = null) = MapOption(longName, description, shortName)
+    fun mapOption(longName: String, description: String, valueFormatForHelp: String, shortName: Char? = null) = MapOption(longName, description, shortName, valueFormatForHelp)
 }
 
 sealed class OptionsParsingResult {

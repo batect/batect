@@ -64,7 +64,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
         }
 
-        val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true)
+        val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true, emptyMap())
         val logger by createLoggerForEachTest()
         val executionManager by createForEachTest {
             ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, runOptions, logger)

@@ -17,7 +17,9 @@
 package batect.cli.commands
 
 import batect.config.Configuration
+import batect.config.Container
 import batect.config.ContainerMap
+import batect.config.PullImage
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
@@ -66,9 +68,11 @@ object RunTaskCommandSpec : Spek({
             val configFile = fileSystem.getPath("config.yml")
             val taskName = "the-task"
             val mainTask = Task(taskName, TaskRunConfiguration("the-container"))
-            val config = Configuration("the_project", TaskMap(), ContainerMap())
+            val config = Configuration("the_project", TaskMap(), ContainerMap(Container("the-container", PullImage("the-image"))))
+            val configWithImageOverrides = Configuration("the_project", TaskMap(), ContainerMap(Container("the-container", PullImage("the-new-image"))))
             val expectedTaskExitCode = 123
-            val runOptions = RunOptions(taskName, emptyList(), CleanupOption.DontCleanup, CleanupOption.Cleanup, true)
+            val imageOverrides = mapOf("the-container" to "the-new-image")
+            val runOptions = RunOptions(taskName, emptyList(), CleanupOption.DontCleanup, CleanupOption.Cleanup, true, imageOverrides)
             val logSink = InMemoryLogSink()
             val logger = Logger("test.source", logSink)
 
@@ -89,13 +93,13 @@ object RunTaskCommandSpec : Spek({
 
                     given("the task has no prerequisites") {
                         val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {
-                            on { resolveExecutionOrder(config, taskName) } doReturn listOf(mainTask)
+                            on { resolveExecutionOrder(configWithImageOverrides, taskName) } doReturn listOf(mainTask)
                         }
 
                         on("and that task returns a non-zero exit code") {
                             val taskRunner by createForEachTest {
                                 mock<TaskRunner> {
-                                    on { run(config, mainTask, runOptions) } doReturn expectedTaskExitCode
+                                    on { run(configWithImageOverrides, mainTask, runOptions) } doReturn expectedTaskExitCode
                                 }
                             }
 
@@ -103,7 +107,7 @@ object RunTaskCommandSpec : Spek({
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the task") {
-                                verify(taskRunner).run(config, mainTask, runOptions)
+                                verify(taskRunner).run(configWithImageOverrides, mainTask, runOptions)
                             }
 
                             it("returns the exit code of the task") {
@@ -123,7 +127,7 @@ object RunTaskCommandSpec : Spek({
 
                             it("loads any config variables before running the task") {
                                 inOrder(taskRunner, configVariablesProvider) {
-                                    verify(configVariablesProvider).build(config)
+                                    verify(configVariablesProvider).build(configWithImageOverrides)
                                     verify(taskRunner).run(any(), any(), any())
                                 }
                             }
@@ -136,7 +140,7 @@ object RunTaskCommandSpec : Spek({
                         on("and that task returns a zero exit code") {
                             val taskRunner by createForEachTest {
                                 mock<TaskRunner> {
-                                    on { run(config, mainTask, runOptions) } doReturn 0
+                                    on { run(configWithImageOverrides, mainTask, runOptions) } doReturn 0
                                 }
                             }
 
@@ -144,7 +148,7 @@ object RunTaskCommandSpec : Spek({
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the task") {
-                                verify(taskRunner).run(config, mainTask, runOptions)
+                                verify(taskRunner).run(configWithImageOverrides, mainTask, runOptions)
                             }
 
                             it("returns the exit code of the task") {
@@ -164,7 +168,7 @@ object RunTaskCommandSpec : Spek({
 
                             it("loads any config variables before running the task") {
                                 inOrder(taskRunner, configVariablesProvider) {
-                                    verify(configVariablesProvider).build(config)
+                                    verify(configVariablesProvider).build(configWithImageOverrides)
                                     verify(taskRunner).run(any(), any(), any())
                                 }
                             }
@@ -180,14 +184,14 @@ object RunTaskCommandSpec : Spek({
                         val runOptionsForOtherTask = runOptions.copy(behaviourAfterSuccess = CleanupOption.Cleanup)
 
                         val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {
-                            on { resolveExecutionOrder(config, taskName) } doReturn listOf(otherTask, mainTask)
+                            on { resolveExecutionOrder(configWithImageOverrides, taskName) } doReturn listOf(otherTask, mainTask)
                         }
 
                         on("and the dependency finishes with an exit code of 0") {
                             val taskRunner by createForEachTest {
                                 mock<TaskRunner> {
-                                    on { run(config, otherTask, runOptionsForOtherTask) } doReturn 0
-                                    on { run(config, mainTask, runOptions) } doReturn expectedTaskExitCode
+                                    on { run(configWithImageOverrides, otherTask, runOptionsForOtherTask) } doReturn 0
+                                    on { run(configWithImageOverrides, mainTask, runOptions) } doReturn expectedTaskExitCode
                                 }
                             }
 
@@ -195,18 +199,18 @@ object RunTaskCommandSpec : Spek({
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the dependency task with cleanup on success enabled") {
-                                verify(taskRunner).run(config, otherTask, runOptionsForOtherTask)
+                                verify(taskRunner).run(configWithImageOverrides, otherTask, runOptionsForOtherTask)
                             }
 
                             it("runs the main task with cleanup on success matching the preference provided by the user") {
-                                verify(taskRunner).run(config, mainTask, runOptions)
+                                verify(taskRunner).run(configWithImageOverrides, mainTask, runOptions)
                             }
 
                             it("runs the dependency before the main task, and prints a blank line in between") {
                                 inOrder(taskRunner, console) {
-                                    verify(taskRunner).run(config, otherTask, runOptionsForOtherTask)
+                                    verify(taskRunner).run(configWithImageOverrides, otherTask, runOptionsForOtherTask)
                                     verify(console).println()
-                                    verify(taskRunner).run(config, mainTask, runOptions)
+                                    verify(taskRunner).run(configWithImageOverrides, mainTask, runOptions)
                                 }
                             }
 
@@ -223,7 +227,7 @@ object RunTaskCommandSpec : Spek({
 
                             it("loads any config variables before running the task") {
                                 inOrder(taskRunner, configVariablesProvider) {
-                                    verify(configVariablesProvider).build(config)
+                                    verify(configVariablesProvider).build(configWithImageOverrides)
                                     verify(taskRunner, atLeastOnce()).run(any(), any(), any())
                                 }
                             }
@@ -236,7 +240,7 @@ object RunTaskCommandSpec : Spek({
                         on("and the dependency finishes with a non-zero exit code") {
                             val taskRunner by createForEachTest {
                                 mock<TaskRunner> {
-                                    on { run(config, otherTask, runOptionsForOtherTask) } doReturn 1
+                                    on { run(configWithImageOverrides, otherTask, runOptionsForOtherTask) } doReturn 1
                                 }
                             }
 
@@ -244,11 +248,11 @@ object RunTaskCommandSpec : Spek({
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the dependency task") {
-                                verify(taskRunner).run(config, otherTask, runOptionsForOtherTask)
+                                verify(taskRunner).run(configWithImageOverrides, otherTask, runOptionsForOtherTask)
                             }
 
                             it("does not run the main task") {
-                                verify(taskRunner, never()).run(config, mainTask, runOptions)
+                                verify(taskRunner, never()).run(configWithImageOverrides, mainTask, runOptions)
                             }
 
                             it("returns the exit code of the dependency task") {
@@ -264,7 +268,7 @@ object RunTaskCommandSpec : Spek({
 
                             it("loads any config variables before running the task") {
                                 inOrder(taskRunner, configVariablesProvider) {
-                                    verify(configVariablesProvider).build(config)
+                                    verify(configVariablesProvider).build(configWithImageOverrides)
                                     verify(taskRunner).run(any(), any(), any())
                                 }
                             }
@@ -278,7 +282,7 @@ object RunTaskCommandSpec : Spek({
                     on("when determining the task execution order fails") {
                         val exception = TaskExecutionOrderResolutionException("Something went wrong.")
                         val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {
-                            on { resolveExecutionOrder(config, taskName) } doThrow exception
+                            on { resolveExecutionOrder(configWithImageOverrides, taskName) } doThrow exception
                         }
 
                         val taskRunner by createForEachTest { mock<TaskRunner>() }

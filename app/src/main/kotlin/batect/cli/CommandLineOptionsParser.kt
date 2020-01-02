@@ -77,6 +77,12 @@ class CommandLineOptionsParser(
         "Set a value for a config variable. Takes precedence over default values and values in file provided to ${configVariablesSourceFileNameOption.longOption}."
     )
 
+    private val imageOverrides: Map<String, String> by mapOption(
+        "override-image",
+        "Override the image used by a container.",
+        "<container>=<image>"
+    )
+
     private val logFileName: Path? by valueOption(
         "log-file",
         "Write internal batect logs to file.",
@@ -207,6 +213,7 @@ class CommandLineOptionsParser(
         listTasks = listTasks,
         configurationFileName = configurationFileName,
         configVariablesSourceFile = configVariablesSourceFileName,
+        imageOverrides = imageOverrides,
         logFileName = logFileName,
         requestedOutputStyle = requestedOutputStyle,
         disableColorOutput = disableColorOutput,

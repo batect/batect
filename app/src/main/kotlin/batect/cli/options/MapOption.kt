@@ -22,7 +22,8 @@ import kotlin.reflect.KProperty
 class MapOption(
     longName: String,
     description: String,
-    shortName: Char? = null
+    shortName: Char? = null,
+    override val valueFormatForHelp: String = "<name>=<value>"
 ) : OptionDefinition(longName, description, true, shortName, true), ReadOnlyProperty<OptionParserContainer, Map<String, String>> {
     private val values: MutableMap<String, String> = mutableMapOf()
     override var valueSource: OptionValueSource = OptionValueSource.Default
@@ -73,7 +74,6 @@ class MapOption(
     override fun getValue(thisRef: OptionParserContainer, property: KProperty<*>): Map<String, String> = values
     override fun checkDefaultValue(): DefaultApplicationResult = DefaultApplicationResult.Succeeded
     override val descriptionForHelp: String = "${super.descriptionForHelp} Can be given multiple times."
-    override val valueFormatForHelp: String = "<name>=<value>"
 
     companion object {
         private val parsingRegex = """(.+)=(.+)""".toRegex()

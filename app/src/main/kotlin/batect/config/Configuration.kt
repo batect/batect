@@ -40,6 +40,21 @@ data class Configuration(
     val containers: ContainerMap = ContainerMap(),
     val configVariables: ConfigVariableMap = ConfigVariableMap()
 ) {
+    fun applyImageOverrides(overrides: Map<String, ImageSource>): Configuration {
+        val updatedContainers = overrides.entries.fold(containers.values) { updatedContainers, override ->
+            val containerName = override.key
+            val oldContainer = containers[containerName]
+
+            if (oldContainer == null) {
+                throw ConfigurationException("Cannot override image for container '${override.key}' because there is no container named '${override.key}' defined.")
+            }
+
+            updatedContainers - oldContainer + oldContainer.copy(imageSource = override.value)
+        }
+
+        return this.copy(containers = ContainerMap(updatedContainers))
+    }
+
     @Serializer(forClass = Configuration::class)
     companion object : KSerializer<Configuration> {
         private const val projectNameFieldName = "project_name"

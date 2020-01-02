@@ -23,13 +23,15 @@ data class RunOptions(
     val additionalTaskCommandArguments: Iterable<String>,
     val behaviourAfterSuccess: CleanupOption,
     val behaviourAfterFailure: CleanupOption,
-    val propagateProxyEnvironmentVariables: Boolean
+    val propagateProxyEnvironmentVariables: Boolean,
+    val imageOverrides: Map<String, String>
 ) {
     constructor(options: CommandLineOptions) : this(
         options.taskName!!,
         options.additionalTaskCommandArguments,
         if (options.disableCleanupAfterSuccess) CleanupOption.DontCleanup else CleanupOption.Cleanup,
         if (options.disableCleanupAfterFailure) CleanupOption.DontCleanup else CleanupOption.Cleanup,
-        !options.dontPropagateProxyEnvironmentVariables
+        !options.dontPropagateProxyEnvironmentVariables,
+        options.imageOverrides
     )
 }

@@ -128,7 +128,7 @@ import java.nio.file.Paths
 object TaskStepRunnerSpec : Spek({
     describe("a task step runner") {
         val eventSink by createForEachTest { mock<TaskEventSink>() }
-        val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true)
+        val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true, emptyMap())
         val cancellationContext by createForEachTest { mock<CancellationContext>() }
         val ioStreamingOptions by createForEachTest { mock<ContainerIOStreamingOptions>() }
         val stepRunContext by createForEachTest { TaskStepRunContext(eventSink, runOptions, cancellationContext, ioStreamingOptions) }

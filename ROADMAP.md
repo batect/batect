@@ -156,7 +156,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * when starting up containers and displaying progress, show countdown to health check (eg. 'waiting for container to become healthy, next check in 3 seconds, will timeout after 2 more retries')
 * default to just terminating all containers at clean up time with option to gracefully shut down on individual containers
   (eg. database where data is shared between invocations and we don't want to corrupt it)
-* group display of options shown when running `batect --help`
 * add dependency relationship between containers and tasks (eg. running the app container requires running the build first - removes the need to specify
   build task as a prerequisite on every task that starts the app)
 * allow piping files into tasks (eg. `cat thefile.txt | ./batect the-task`)

@@ -28,9 +28,11 @@ import org.spekframework.spek2.style.specification.describe
 
 object MapOptionSpec : Spek({
     describe("a map option") {
+        val group = OptionGroup("the group")
+
         describe("parsing") {
             given("an option with short and long names") {
-                val option by createForEachTest { MapOption("option", "Some option.", 'o') }
+                val option by createForEachTest { MapOption(group, "option", "Some option.", 'o') }
 
                 listOf("--option", "-o").forEach { format ->
                     on("parsing a list of arguments where the option is specified in the form '$format key=value'") {
@@ -123,7 +125,7 @@ object MapOptionSpec : Spek({
             }
 
             on("not applying a value for the option") {
-                val option = MapOption("option", "Some option.")
+                val option = MapOption(group, "option", "Some option.")
 
                 it("returns an empty map") {
                     assertThat(option.getValue(mock(), mock()), equalTo(emptyMap()))
@@ -132,7 +134,7 @@ object MapOptionSpec : Spek({
         }
 
         describe("checking the default value applied to the option") {
-            val option by createForEachTest { MapOption("option", "Some option.") }
+            val option by createForEachTest { MapOption(group, "option", "Some option.") }
 
             given("the default value has not been overridden") {
                 on("checking the default value for the option") {
@@ -164,7 +166,7 @@ object MapOptionSpec : Spek({
         }
 
         describe("getting the help description for an option") {
-            val option = MapOption("option", "Some option.")
+            val option = MapOption(group, "option", "Some option.")
 
             it("returns the provided description") {
                 assertThat(option.descriptionForHelp, equalTo("Some option. Can be given multiple times."))

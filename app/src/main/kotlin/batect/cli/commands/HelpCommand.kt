@@ -18,27 +18,32 @@ package batect.cli.commands
 
 import batect.cli.CommandLineOptionsParser
 import batect.cli.options.OptionDefinition
+import batect.cli.options.OptionGroup
 import java.io.PrintStream
 
 class HelpCommand(val optionsParser: CommandLineOptionsParser, val outputStream: PrintStream) : Command {
     override fun run(): Int {
         outputStream.println("Usage: batect [options] task [-- additional arguments to pass to task]")
         outputStream.println()
-        outputStream.println("Options:")
 
-        val options = formatListOfOptions(optionsParser.optionParser.getOptions())
-        printInColumns(options)
+        val options = optionsParser.optionParser.getOptions().associateWith { nameFor(it) }
+        val alignToColumn = determineColumnSize(options.values)
+        val lines = options.map { (option, name) -> OptionLine(option.group, option.longName, formatInColumn(name, option.descriptionForHelp, alignToColumn)) }
 
-        outputStream.println()
+        lines
+            .sortedBy { it.group.name }
+            .groupBy { it.group }
+            .forEach { (group, options) ->
+                outputStream.println(group.name + ":")
+
+                options.sortedBy { it.longName }.forEach { outputStream.println(it.text) }
+                outputStream.println()
+            }
+
         outputStream.println(CommandLineOptionsParser.helpBlurb)
         outputStream.println()
 
         return 1
-    }
-
-    private fun formatListOfOptions(options: Iterable<OptionDefinition>): Map<String, String> {
-        return options.sortedBy { it.longName }
-            .associate { nameFor(it) to it.descriptionForHelp }
     }
 
     private fun nameFor(option: OptionDefinition): String {
@@ -50,13 +55,13 @@ class HelpCommand(val optionsParser: CommandLineOptionsParser, val outputStream:
         }
     }
 
-    private fun printInColumns(items: Map<String, String>) {
-        val alignToColumn = items.keys.map { it.length }.max() ?: 0
+    private fun determineColumnSize(optionNames: Iterable<String>): Int = optionNames.map { it.length }.max() ?: 0
 
-        items.forEach { (firstColumn, secondColumn) ->
-            val indentationCount = 4 + alignToColumn - firstColumn.length
-            val indentation = " ".repeat(indentationCount)
-            outputStream.println("  $firstColumn$indentation$secondColumn")
-        }
+    private fun formatInColumn(first: String, second: String, alignToColumn: Int): String {
+        val indentationCount = 4 + alignToColumn - first.length
+        val indentation = " ".repeat(indentationCount)
+        return "  $first$indentation$second"
     }
+
+    data class OptionLine(val group: OptionGroup, val longName: String, val text: String)
 }

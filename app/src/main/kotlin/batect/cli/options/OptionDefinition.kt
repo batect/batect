@@ -17,6 +17,7 @@
 package batect.cli.options
 
 abstract class OptionDefinition(
+    val group: OptionGroup,
     val longName: String,
     val description: String,
     val acceptsValue: Boolean,

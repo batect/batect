@@ -22,11 +22,12 @@ import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
 class FlagOption(
+    group: OptionGroup,
     longName: String,
     description: String,
     val defaultValueProvider: DefaultValueProvider<Boolean>,
     shortName: Char? = null
-) : OptionDefinition(longName, description, false, shortName), ReadOnlyProperty<OptionParserContainer, Boolean> {
+) : OptionDefinition(group, longName, description, false, shortName), ReadOnlyProperty<OptionParserContainer, Boolean> {
     private var value: PossibleValue<Boolean> = defaultValueProvider.value
     override var valueSource: OptionValueSource = OptionValueSource.Default
         private set

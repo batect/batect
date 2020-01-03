@@ -32,7 +32,7 @@ import org.spekframework.spek2.style.specification.describe
 object OptionDefinitionSpec : Spek({
     describe("a option definition") {
         fun createOption(longName: String, description: String, shortName: Char? = null, allowMultiple: Boolean = false): OptionDefinition {
-            return object : OptionDefinition(longName, description, false, shortName, allowMultiple) {
+            return object : OptionDefinition(OptionGroup("the group"), longName, description, false, shortName, allowMultiple) {
                 override fun parseValue(args: Iterable<String>): OptionParsingResult = throw NotImplementedError()
                 override fun checkDefaultValue(): DefaultApplicationResult = throw NotImplementedError()
                 override val valueSource: OptionValueSource
@@ -102,7 +102,7 @@ object OptionDefinitionSpec : Spek({
                 description: String,
                 shortName: Char? = null,
                 allowMultiple: Boolean = false
-            ) : OptionDefinition(name, description, false, shortName, allowMultiple) {
+            ) : OptionDefinition(OptionGroup("the group"), name, description, false, shortName, allowMultiple) {
                 override fun parseValue(args: Iterable<String>): OptionParsingResult = OptionParsingResult.ReadOption(1234)
                 override fun checkDefaultValue(): DefaultApplicationResult = throw NotImplementedError()
                 override val valueSource: OptionValueSource

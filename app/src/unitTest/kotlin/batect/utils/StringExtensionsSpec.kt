@@ -50,37 +50,37 @@ object StringExtensionsSpec : Spek({
 
         given("a string longer than the maximum width with two words where the first word fits within the maximum width") {
             it("moves the second word to a new line") {
-                assertThat("the foo".breakAt(4), equalTo("the\nfoo"))
+                assertThat("the foo".breakAt(4).lines(), equalTo(listOf("the", "foo")))
             }
         }
 
         given("a string longer than the maximum width with two words where the first word is exactly the maximum width") {
             it("moves the second word to a new line") {
-                assertThat("the foo".breakAt(3), equalTo("the\nfoo"))
+                assertThat("the foo".breakAt(3).lines(), equalTo(listOf("the", "foo")))
             }
         }
 
         given("a string longer than the maximum width with many words that must be broken into multiple lines to fit within the maximum width") {
             it("moves the words to new lines as required to fit in the maximum line width") {
-                assertThat("abc def ghi".breakAt(4), equalTo("abc\ndef\nghi"))
+                assertThat("abc def ghi".breakAt(4).lines(), equalTo(listOf("abc", "def", "ghi")))
             }
         }
 
         given("a string longer than the maximum width with multiple words that fit within the maximum width on the first line") {
             it("keeps as many words as possible on the first line") {
-                assertThat("a bc def".breakAt(4), equalTo("a bc\ndef"))
+                assertThat("a bc def".breakAt(4).lines(), equalTo(listOf("a bc", "def")))
             }
         }
 
         given("a string longer than the maximum width with multiple words that fit within the maximum width on the second line") {
             it("keeps as many words as possible on the first and second lines") {
-                assertThat("a bc de f".breakAt(4), equalTo("a bc\nde f"))
+                assertThat("a bc de f".breakAt(4).lines(), equalTo(listOf("a bc", "de f")))
             }
         }
 
         given("a string longer than the maximum width with a word longer than the maximum width") {
             it("puts the word longer than the maximum width on its own line") {
-                assertThat("abc defgh ijk".breakAt(4), equalTo("abc\ndefgh\nijk"))
+                assertThat("abc defgh ijk".breakAt(4).lines(), equalTo(listOf("abc", "defgh", "ijk")))
             }
         }
     }

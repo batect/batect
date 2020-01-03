@@ -59,7 +59,7 @@ class CommandLineOptionsParser(
     private val listTasks: Boolean by flagOption(helpOptionsGroup, "list-tasks", "List available tasks and exit.", 'T')
 
     private val disableColorOutput: Boolean by flagOption(outputOptionsGroup, "no-color", "Disable colored output from batect. Does not affect task command output. Implies --output=simple unless overridden.")
-    private val disableUpdateNotification: Boolean by flagOption(helpOptionsGroup, "no-update-notification", "Disable checking for updates to batect and notifying you when a new version is available.")
+    private val disableUpdateNotification: Boolean by flagOption(executionOptionsGroup, "no-update-notification", "Disable checking for updates to batect and notifying you when a new version is available.")
 
     private val configurationFileName: Path by valueOption(
         executionOptionsGroup,

@@ -1,4 +1,4 @@
-FROM nginx:1.17.6
+FROM nginx:1.17.7
 
 RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*
 

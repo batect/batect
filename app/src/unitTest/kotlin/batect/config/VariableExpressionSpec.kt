@@ -31,6 +31,7 @@ object VariableExpressionSpec : Spek({
             mapOf(
                 "some literal value" to LiteralValue("some literal value"),
                 "a" to LiteralValue("a"),
+                "" to LiteralValue(""),
                 "\\\$some literal value" to LiteralValue("\$some literal value"),
                 "\\<some literal value" to LiteralValue("<some literal value"),
                 "\$SOME_VAR" to EnvironmentVariableReference("SOME_VAR"),

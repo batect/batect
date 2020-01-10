@@ -34,6 +34,7 @@ sealed class VariableExpression {
     @Serializer(forClass = VariableExpression::class)
     companion object : KSerializer<VariableExpression> {
         private val patterns = listOf(
+            Regex("") to { _: MatchResult -> LiteralValue("") },
             Regex("\\$\\{(.+):-(.*)}") to { match: MatchResult -> EnvironmentVariableReference(match.groupValues[1], match.groupValues[2]) },
             Regex("\\$\\{([^:]+)}") to { match: MatchResult -> EnvironmentVariableReference(match.groupValues[1]) },
             Regex("\\$([^{](.*[^}])?)") to { match: MatchResult -> EnvironmentVariableReference(match.groupValues[1]) },

@@ -21,6 +21,7 @@ import batect.config.PullImage
 import batect.config.Task
 import batect.config.io.ConfigurationLoader
 import batect.docker.client.DockerConnectivityCheckResult
+import batect.docker.client.DockerContainerType
 import batect.docker.client.DockerSystemInfoClient
 import batect.execution.CleanupOption
 import batect.execution.ConfigVariablesProvider
@@ -52,14 +53,15 @@ class RunTaskCommand(
         val config = loadConfig()
         configVariablesProvider.build(config)
 
-        val connectivityCheckResult = dockerSystemInfoClient.checkConnectivity()
-
-        if (connectivityCheckResult is DockerConnectivityCheckResult.Failed) {
-            errorConsole.println(Text.red("Docker is not installed, not running or not compatible with batect: ${connectivityCheckResult.message}"))
-            return -1
+        return when (val connectivityCheckResult = dockerSystemInfoClient.checkConnectivity()) {
+            is DockerConnectivityCheckResult.Failed -> {
+                errorConsole.println(Text.red("Docker is not installed, not running or not compatible with batect: ${connectivityCheckResult.message}"))
+                -1
+            }
+            is DockerConnectivityCheckResult.Succeeded -> {
+                runFromConfig(config, connectivityCheckResult.containerType)
+            }
         }
-
-        return runFromConfig(config)
     }
 
     private fun loadConfig(): Configuration {
@@ -69,13 +71,13 @@ class RunTaskCommand(
         return configFromFile.applyImageOverrides(overrides)
     }
 
-    private fun runFromConfig(config: Configuration): Int {
+    private fun runFromConfig(config: Configuration, containerType: DockerContainerType): Int {
         try {
             val tasks = taskExecutionOrderResolver.resolveExecutionOrder(config, runOptions.taskName)
 
             updateNotifier.run()
 
-            return runTasks(config, tasks)
+            return runTasks(config, tasks, containerType)
         } catch (e: TaskExecutionOrderResolutionException) {
             logger.error {
                 message("Could not resolve task execution order.")
@@ -87,13 +89,13 @@ class RunTaskCommand(
         }
     }
 
-    private fun runTasks(config: Configuration, tasks: List<Task>): Int {
+    private fun runTasks(config: Configuration, tasks: List<Task>, containerType: DockerContainerType): Int {
         for (task in tasks) {
             val isMainTask = task == tasks.last()
             val behaviourAfterSuccess = if (isMainTask) runOptions.behaviourAfterSuccess else CleanupOption.Cleanup
             val runOptionsForThisTask = runOptions.copy(behaviourAfterSuccess = behaviourAfterSuccess)
 
-            val exitCode = taskRunner.run(config, task, runOptionsForThisTask)
+            val exitCode = taskRunner.run(config, task, runOptionsForThisTask, containerType)
 
             if (exitCode != 0) {
                 return exitCode

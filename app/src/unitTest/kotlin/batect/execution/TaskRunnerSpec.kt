@@ -22,6 +22,7 @@ import batect.config.ContainerMap
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
+import batect.docker.client.DockerContainerType
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
@@ -72,10 +73,11 @@ object TaskRunnerSpec : Spek({
 
         val stateMachine by createForEachTest { mock<TaskStateMachine>() }
         val executionManager by createForEachTest { mock<ParallelExecutionManager>() }
+        val containerType = DockerContainerType.Windows
 
         val stateMachineProvider by createForEachTest {
             mock<TaskStateMachineProvider> {
-                on { createStateMachine(graph, runOptions) } doReturn stateMachine
+                on { createStateMachine(graph, runOptions, containerType) } doReturn stateMachine
             }
         }
 
@@ -108,7 +110,7 @@ object TaskRunnerSpec : Spek({
 
                 given("cleanup after success is enabled") {
                     on("running the task") {
-                        val exitCode by runForEachTest { taskRunner.run(config, task, runOptions) }
+                        val exitCode by runForEachTest { taskRunner.run(config, task, runOptions, containerType) }
 
                         it("logs that the task is starting") {
                             verify(eventLogger).onTaskStarting("some-task")
@@ -151,14 +153,14 @@ object TaskRunnerSpec : Spek({
 
                     beforeEachTest {
                         whenever(eventLoggerProvider.getEventLogger(graph, runOptionsWithCleanupDisabled)).doReturn(eventLogger)
-                        whenever(stateMachineProvider.createStateMachine(graph, runOptionsWithCleanupDisabled)).doReturn(stateMachine)
+                        whenever(stateMachineProvider.createStateMachine(graph, runOptionsWithCleanupDisabled, containerType)).doReturn(stateMachine)
                         whenever(executionManagerProvider.createParallelExecutionManager(eventLogger, stateMachine, runOptionsWithCleanupDisabled)).doReturn(executionManager)
 
                         whenever(stateMachine.manualCleanupInstructions).doReturn(TextRun("Do this to clean up"))
                     }
 
                     on("running the task") {
-                        val exitCode by runForEachTest { taskRunner.run(config, task, runOptionsWithCleanupDisabled) }
+                        val exitCode by runForEachTest { taskRunner.run(config, task, runOptionsWithCleanupDisabled, containerType) }
 
                         it("logs that the task finished after running the task, then logs the manual cleanup instructions") {
                             inOrder(eventLogger, executionManager) {
@@ -182,7 +184,7 @@ object TaskRunnerSpec : Spek({
                 }
 
                 on("running the task") {
-                    val exitCode by runForEachTest { taskRunner.run(config, task, runOptions) }
+                    val exitCode by runForEachTest { taskRunner.run(config, task, runOptions, containerType) }
 
                     it("logs that the task is starting") {
                         verify(eventLogger).onTaskStarting("some-task")
@@ -218,7 +220,7 @@ object TaskRunnerSpec : Spek({
 
                 on("running the task") {
                     it("throws an appropriate exception") {
-                        assertThat({ taskRunner.run(config, task, runOptions) }, throws<IllegalStateException>(withMessage("The task neither failed nor succeeded.")))
+                        assertThat({ taskRunner.run(config, task, runOptions, containerType) }, throws<IllegalStateException>(withMessage("The task neither failed nor succeeded.")))
                     }
                 }
             }

@@ -20,7 +20,6 @@ import batect.execution.model.events.ExecutionFailedEvent
 import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
-import batect.execution.model.steps.CreateTaskNetworkStep
 import batect.execution.model.steps.TaskStep
 import batect.execution.model.steps.TaskStepRunner
 import batect.testutils.createForEachTest
@@ -183,7 +182,7 @@ object ParallelExecutionManagerSpec : Spek({
         }
 
         given("a step throws an exception during execution") {
-            val step = CreateTaskNetworkStep
+            val step = mock<TaskStep>()
 
             beforeEachTest {
                 whenever(stateMachine.popNextStep(false)).doReturn(step, null)
@@ -198,11 +197,11 @@ object ParallelExecutionManagerSpec : Spek({
                     beforeEachTest { executionManager.run() }
 
                     it("logs a task failure event to the event logger") {
-                        verify(eventLogger).postEvent(ExecutionFailedEvent("During execution of step of kind 'CreateTaskNetworkStep': java.util.concurrent.ExecutionException: Something went wrong."))
+                        verify(eventLogger).postEvent(ExecutionFailedEvent("During execution of step of kind '${step::class.simpleName}': java.util.concurrent.ExecutionException: Something went wrong."))
                     }
 
                     it("logs a task failure event to the state machine") {
-                        verify(stateMachine).postEvent(ExecutionFailedEvent("During execution of step of kind 'CreateTaskNetworkStep': java.util.concurrent.ExecutionException: Something went wrong."))
+                        verify(stateMachine).postEvent(ExecutionFailedEvent("During execution of step of kind '${step::class.simpleName}': java.util.concurrent.ExecutionException: Something went wrong."))
                     }
                 }
             }

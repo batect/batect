@@ -20,6 +20,6 @@ import batect.docker.DockerNetwork
 import batect.docker.api.NetworksAPI
 
 class DockerNetworksClient(private val api: NetworksAPI) {
-    fun create(): DockerNetwork = api.create("bridge")
+    fun create(driver: String): DockerNetwork = api.create(driver)
     fun delete(network: DockerNetwork) = api.delete(network)
 }

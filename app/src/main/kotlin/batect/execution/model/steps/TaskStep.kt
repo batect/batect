@@ -22,6 +22,7 @@ import batect.config.PullImage
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.docker.client.DockerContainerType
 import batect.execution.ContainerRuntimeConfiguration
 import java.nio.file.Path
 
@@ -38,8 +39,8 @@ data class PullImageStep(val source: PullImage) : TaskStep() {
     override fun toString() = "${this.javaClass.simpleName}(source: $source)"
 }
 
-object CreateTaskNetworkStep : TaskStep() {
-    override fun toString(): String = this.javaClass.simpleName
+data class CreateTaskNetworkStep(val containerType: DockerContainerType) : TaskStep() {
+    override fun toString(): String = "${this.javaClass.simpleName}(container type: $containerType)"
 }
 
 data class CreateContainerStep(

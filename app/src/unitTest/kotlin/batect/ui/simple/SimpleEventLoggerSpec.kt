@@ -36,9 +36,9 @@ import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.execution.model.steps.CleanupStep
 import batect.execution.model.steps.CreateContainerStep
-import batect.execution.model.steps.CreateTaskNetworkStep
 import batect.execution.model.steps.PullImageStep
 import batect.execution.model.steps.RunContainerStep
+import batect.execution.model.steps.TaskStep
 import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.given
@@ -330,7 +330,7 @@ object SimpleEventLoggerSpec : Spek({
 
                 on("when another kind of step is starting") {
                     beforeEachTest {
-                        val step = CreateTaskNetworkStep
+                        val step = mock<TaskStep>()
                         logger.postEvent(StepStartingEvent(step))
                     }
 

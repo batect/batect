@@ -18,6 +18,7 @@ package batect.execution
 
 import batect.config.Configuration
 import batect.config.Task
+import batect.docker.client.DockerContainerType
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.logging.Logger
 import batect.ui.EventLogger
@@ -33,7 +34,7 @@ data class TaskRunner(
     private val interruptionTrap: InterruptionTrap,
     private val logger: Logger
 ) {
-    fun run(config: Configuration, task: Task, runOptions: RunOptions): Int {
+    fun run(config: Configuration, task: Task, runOptions: RunOptions, containerType: DockerContainerType): Int {
         logger.info {
             message("Preparing task.")
             data("taskName", task.name)
@@ -44,7 +45,7 @@ data class TaskRunner(
         val eventLogger = eventLoggerProvider.getEventLogger(graph, runOptions)
         eventLogger.onTaskStarting(task.name)
 
-        val stateMachine = stateMachineProvider.createStateMachine(graph, runOptions)
+        val stateMachine = stateMachineProvider.createStateMachine(graph, runOptions, containerType)
         val executionManager = executionManagerProvider.createParallelExecutionManager(eventLogger, stateMachine, runOptions)
 
         logger.info {

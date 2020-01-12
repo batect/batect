@@ -163,7 +163,7 @@ object DockerClientIntegrationTest : Spek({
         }
 
         fun <T> withNetwork(action: (DockerNetwork) -> T): T {
-            val network = client.networks.create()
+            val network = client.networks.create("bridge")
 
             try {
                 return action(network)

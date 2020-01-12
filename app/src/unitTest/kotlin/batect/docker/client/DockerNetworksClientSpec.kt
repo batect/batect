@@ -40,10 +40,10 @@ object DockerNetworksClientSpec : Spek({
         on("creating a network") {
             beforeEachTest { whenever(api.create(any())).doReturn(DockerNetwork("the-network-id")) }
 
-            val result by runForEachTest { client.create() }
+            val result by runForEachTest { client.create("the-driver") }
 
             it("creates the network") {
-                verify(api).create("bridge")
+                verify(api).create("the-driver")
             }
 
             it("returns the ID of the created network") {

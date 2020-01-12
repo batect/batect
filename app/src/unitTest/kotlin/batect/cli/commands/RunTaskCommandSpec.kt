@@ -88,8 +88,9 @@ object RunTaskCommandSpec : Spek({
 
             given("configuration file can be loaded") {
                 given("Docker is available") {
+                    val containerType = DockerContainerType.Windows
                     val dockerSystemInfoClient = mock<DockerSystemInfoClient> {
-                        on { checkConnectivity() } doReturn DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux)
+                        on { checkConnectivity() } doReturn DockerConnectivityCheckResult.Succeeded(containerType)
                     }
 
                     given("the task has no prerequisites") {
@@ -100,7 +101,7 @@ object RunTaskCommandSpec : Spek({
                         on("and that task returns a non-zero exit code") {
                             val taskRunner by createForEachTest {
                                 mock<TaskRunner> {
-                                    on { run(configWithImageOverrides, mainTask, runOptions) } doReturn expectedTaskExitCode
+                                    on { run(configWithImageOverrides, mainTask, runOptions, containerType) } doReturn expectedTaskExitCode
                                 }
                             }
 
@@ -108,7 +109,7 @@ object RunTaskCommandSpec : Spek({
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the task") {
-                                verify(taskRunner).run(configWithImageOverrides, mainTask, runOptions)
+                                verify(taskRunner).run(configWithImageOverrides, mainTask, runOptions, containerType)
                             }
 
                             it("returns the exit code of the task") {
@@ -122,14 +123,14 @@ object RunTaskCommandSpec : Spek({
                             it("displays any update notifications before running the task") {
                                 inOrder(taskRunner, updateNotifier) {
                                     verify(updateNotifier).run()
-                                    verify(taskRunner).run(any(), any(), any())
+                                    verify(taskRunner).run(any(), any(), any(), any())
                                 }
                             }
 
                             it("loads any config variables before running the task") {
                                 inOrder(taskRunner, configVariablesProvider) {
                                     verify(configVariablesProvider).build(configWithImageOverrides)
-                                    verify(taskRunner).run(any(), any(), any())
+                                    verify(taskRunner).run(any(), any(), any(), any())
                                 }
                             }
 
@@ -141,7 +142,7 @@ object RunTaskCommandSpec : Spek({
                         on("and that task returns a zero exit code") {
                             val taskRunner by createForEachTest {
                                 mock<TaskRunner> {
-                                    on { run(configWithImageOverrides, mainTask, runOptions) } doReturn 0
+                                    on { run(configWithImageOverrides, mainTask, runOptions, containerType) } doReturn 0
                                 }
                             }
 
@@ -149,7 +150,7 @@ object RunTaskCommandSpec : Spek({
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the task") {
-                                verify(taskRunner).run(configWithImageOverrides, mainTask, runOptions)
+                                verify(taskRunner).run(configWithImageOverrides, mainTask, runOptions, containerType)
                             }
 
                             it("returns the exit code of the task") {
@@ -163,14 +164,14 @@ object RunTaskCommandSpec : Spek({
                             it("displays any update notifications before running the task") {
                                 inOrder(taskRunner, updateNotifier) {
                                     verify(updateNotifier).run()
-                                    verify(taskRunner).run(any(), any(), any())
+                                    verify(taskRunner).run(any(), any(), any(), any())
                                 }
                             }
 
                             it("loads any config variables before running the task") {
                                 inOrder(taskRunner, configVariablesProvider) {
                                     verify(configVariablesProvider).build(configWithImageOverrides)
-                                    verify(taskRunner).run(any(), any(), any())
+                                    verify(taskRunner).run(any(), any(), any(), any())
                                 }
                             }
 
@@ -191,8 +192,8 @@ object RunTaskCommandSpec : Spek({
                         on("and the dependency finishes with an exit code of 0") {
                             val taskRunner by createForEachTest {
                                 mock<TaskRunner> {
-                                    on { run(configWithImageOverrides, otherTask, runOptionsForOtherTask) } doReturn 0
-                                    on { run(configWithImageOverrides, mainTask, runOptions) } doReturn expectedTaskExitCode
+                                    on { run(configWithImageOverrides, otherTask, runOptionsForOtherTask, containerType) } doReturn 0
+                                    on { run(configWithImageOverrides, mainTask, runOptions, containerType) } doReturn expectedTaskExitCode
                                 }
                             }
 
@@ -200,18 +201,18 @@ object RunTaskCommandSpec : Spek({
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the dependency task with cleanup on success enabled") {
-                                verify(taskRunner).run(configWithImageOverrides, otherTask, runOptionsForOtherTask)
+                                verify(taskRunner).run(configWithImageOverrides, otherTask, runOptionsForOtherTask, containerType)
                             }
 
                             it("runs the main task with cleanup on success matching the preference provided by the user") {
-                                verify(taskRunner).run(configWithImageOverrides, mainTask, runOptions)
+                                verify(taskRunner).run(configWithImageOverrides, mainTask, runOptions, containerType)
                             }
 
                             it("runs the dependency before the main task, and prints a blank line in between") {
                                 inOrder(taskRunner, console) {
-                                    verify(taskRunner).run(configWithImageOverrides, otherTask, runOptionsForOtherTask)
+                                    verify(taskRunner).run(configWithImageOverrides, otherTask, runOptionsForOtherTask, containerType)
                                     verify(console).println()
-                                    verify(taskRunner).run(configWithImageOverrides, mainTask, runOptions)
+                                    verify(taskRunner).run(configWithImageOverrides, mainTask, runOptions, containerType)
                                 }
                             }
 
@@ -222,14 +223,14 @@ object RunTaskCommandSpec : Spek({
                             it("displays any update notifications before running the task") {
                                 inOrder(taskRunner, updateNotifier) {
                                     verify(updateNotifier).run()
-                                    verify(taskRunner, atLeastOnce()).run(any(), any(), any())
+                                    verify(taskRunner, atLeastOnce()).run(any(), any(), any(), any())
                                 }
                             }
 
                             it("loads any config variables before running the task") {
                                 inOrder(taskRunner, configVariablesProvider) {
                                     verify(configVariablesProvider).build(configWithImageOverrides)
-                                    verify(taskRunner, atLeastOnce()).run(any(), any(), any())
+                                    verify(taskRunner, atLeastOnce()).run(any(), any(), any(), any())
                                 }
                             }
 
@@ -241,7 +242,7 @@ object RunTaskCommandSpec : Spek({
                         on("and the dependency finishes with a non-zero exit code") {
                             val taskRunner by createForEachTest {
                                 mock<TaskRunner> {
-                                    on { run(configWithImageOverrides, otherTask, runOptionsForOtherTask) } doReturn 1
+                                    on { run(configWithImageOverrides, otherTask, runOptionsForOtherTask, containerType) } doReturn 1
                                 }
                             }
 
@@ -249,11 +250,11 @@ object RunTaskCommandSpec : Spek({
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the dependency task") {
-                                verify(taskRunner).run(configWithImageOverrides, otherTask, runOptionsForOtherTask)
+                                verify(taskRunner).run(configWithImageOverrides, otherTask, runOptionsForOtherTask, containerType)
                             }
 
                             it("does not run the main task") {
-                                verify(taskRunner, never()).run(configWithImageOverrides, mainTask, runOptions)
+                                verify(taskRunner, never()).run(configWithImageOverrides, mainTask, runOptions, containerType)
                             }
 
                             it("returns the exit code of the dependency task") {
@@ -263,14 +264,14 @@ object RunTaskCommandSpec : Spek({
                             it("displays any update notifications before running the task") {
                                 inOrder(taskRunner, updateNotifier) {
                                     verify(updateNotifier).run()
-                                    verify(taskRunner).run(any(), any(), any())
+                                    verify(taskRunner).run(any(), any(), any(), any())
                                 }
                             }
 
                             it("loads any config variables before running the task") {
                                 inOrder(taskRunner, configVariablesProvider) {
                                     verify(configVariablesProvider).build(configWithImageOverrides)
-                                    verify(taskRunner).run(any(), any(), any())
+                                    verify(taskRunner).run(any(), any(), any(), any())
                                 }
                             }
 

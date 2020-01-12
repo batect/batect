@@ -33,6 +33,7 @@ import batect.docker.api.ContainerRemovalFailedException
 import batect.docker.api.ContainerStopFailedException
 import batect.docker.api.NetworkCreationFailedException
 import batect.docker.api.NetworkDeletionFailedException
+import batect.docker.client.DockerContainerType
 import batect.execution.CancellationContext
 import batect.execution.ConfigVariablesProvider
 import batect.execution.RunAsCurrentUserConfigurationProvider
@@ -99,7 +100,7 @@ class TaskStepRunner(
         when (step) {
             is BuildImageStep -> handleBuildImageStep(step, context)
             is PullImageStep -> handlePullImageStep(step, context.eventSink, context.cancellationContext)
-            is CreateTaskNetworkStep -> handleCreateTaskNetworkStep(context.eventSink)
+            is CreateTaskNetworkStep -> handleCreateTaskNetworkStep(step, context.eventSink)
             is CreateContainerStep -> handleCreateContainerStep(step, context.eventSink, context.runOptions, context.ioStreamingOptions)
             is RunContainerStep -> handleRunContainerStep(step, context.eventSink, context.ioStreamingOptions, context.cancellationContext)
             is WaitForContainerToBecomeHealthyStep -> handleWaitForContainerToBecomeHealthyStep(step, context.eventSink, context.cancellationContext)
@@ -161,9 +162,14 @@ class TaskStepRunner(
         }
     }
 
-    private fun handleCreateTaskNetworkStep(eventSink: TaskEventSink) {
+    private fun handleCreateTaskNetworkStep(step: CreateTaskNetworkStep, eventSink: TaskEventSink) {
         try {
-            val network = dockerClient.networks.create()
+            val driver = when (step.containerType) {
+                DockerContainerType.Linux -> "bridge"
+                DockerContainerType.Windows -> "nat"
+            }
+
+            val network = dockerClient.networks.create(driver)
             eventSink.postEvent(TaskNetworkCreatedEvent(network))
         } catch (e: NetworkCreationFailedException) {
             eventSink.postEvent(TaskNetworkCreationFailedEvent(e.outputFromDocker))

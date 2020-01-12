@@ -16,20 +16,26 @@
 
 package batect.execution.model.events
 
-import batect.execution.model.steps.CreateTaskNetworkStep
+import batect.execution.model.steps.TaskStep
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object StepStartingEventSpec : Spek({
     describe("a 'step starting' event") {
-        val event = StepStartingEvent(CreateTaskNetworkStep)
+        val step = mock<TaskStep> {
+            on { toString() } doReturn "TheStepThatIsStarting"
+        }
+
+        val event = StepStartingEvent(step)
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(event.toString(), equalTo("StepStartingEvent(step: CreateTaskNetworkStep)"))
+                assertThat(event.toString(), equalTo("StepStartingEvent(step: TheStepThatIsStarting)"))
             }
         }
     }

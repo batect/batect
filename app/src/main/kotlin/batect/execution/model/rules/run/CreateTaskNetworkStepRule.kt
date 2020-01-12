@@ -16,15 +16,16 @@
 
 package batect.execution.model.rules.run
 
+import batect.docker.client.DockerContainerType
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.CreateTaskNetworkStep
 
-object CreateTaskNetworkStepRule : TaskStepRule() {
+data class CreateTaskNetworkStepRule(val containerType: DockerContainerType) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
-        return TaskStepRuleEvaluationResult.Ready(CreateTaskNetworkStep)
+        return TaskStepRuleEvaluationResult.Ready(CreateTaskNetworkStep(containerType))
     }
 
-    override fun toString(): String = this::class.simpleName!!
+    override fun toString(): String = "${this::class.simpleName!!}(container type: $containerType)"
 }

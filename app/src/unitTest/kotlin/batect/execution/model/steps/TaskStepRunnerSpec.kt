@@ -48,6 +48,7 @@ import batect.docker.api.ContainerRemovalFailedException
 import batect.docker.api.ContainerStopFailedException
 import batect.docker.api.NetworkCreationFailedException
 import batect.docker.api.NetworkDeletionFailedException
+import batect.docker.client.DockerContainerType
 import batect.docker.client.DockerContainersClient
 import batect.docker.client.DockerExecClient
 import batect.docker.client.DockerImagesClient
@@ -325,25 +326,51 @@ object TaskStepRunnerSpec : Spek({
             }
 
             describe("running a 'create task network' step") {
-                val step = CreateTaskNetworkStep
-
-                on("when creating the network succeeds") {
+                given("creating the network succeeds") {
                     val network = DockerNetwork("some-network")
 
                     beforeEachTest {
-                        whenever(networksClient.create()).doReturn(network)
-
-                        runner.run(step, stepRunContext)
+                        whenever(networksClient.create(any())).doReturn(network)
                     }
 
-                    it("emits a 'network created' event") {
-                        verify(eventSink).postEvent(TaskNetworkCreatedEvent(network))
+                    given("the active container type is Linux") {
+                        val step = CreateTaskNetworkStep(DockerContainerType.Linux)
+
+                        beforeEachTest {
+                            runner.run(step, stepRunContext)
+                        }
+
+                        it("emits a 'network created' event") {
+                            verify(eventSink).postEvent(TaskNetworkCreatedEvent(network))
+                        }
+
+                        it("creates the network with the 'bridge' driver") {
+                            verify(networksClient).create("bridge")
+                        }
+                    }
+
+                    given("the active container type is Windows") {
+                        val step = CreateTaskNetworkStep(DockerContainerType.Windows)
+
+                        beforeEachTest {
+                            runner.run(step, stepRunContext)
+                        }
+
+                        it("emits a 'network created' event") {
+                            verify(eventSink).postEvent(TaskNetworkCreatedEvent(network))
+                        }
+
+                        it("creates the network with the 'nat' driver") {
+                            verify(networksClient).create("nat")
+                        }
                     }
                 }
 
-                on("when creating the network fails") {
+                given("creating the network fails") {
+                    val step = CreateTaskNetworkStep(DockerContainerType.Linux)
+
                     beforeEachTest {
-                        whenever(networksClient.create()).doThrow(NetworkCreationFailedException("Something went wrong."))
+                        whenever(networksClient.create(any())).doThrow(NetworkCreationFailedException("Something went wrong."))
 
                         runner.run(step, stepRunContext)
                     }

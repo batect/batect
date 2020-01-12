@@ -16,6 +16,7 @@
 
 package batect.execution
 
+import batect.docker.client.DockerContainerType
 import batect.logging.Logger
 import batect.logging.LoggerFactory
 import batect.testutils.InMemoryLogSink
@@ -39,7 +40,7 @@ object TaskStateMachineProviderSpec : Spek({
 
             val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true, emptyMap())
             val provider = TaskStateMachineProvider(mock(), mock(), mock(), loggerFactory)
-            val stateMachine = provider.createStateMachine(graph, runOptions)
+            val stateMachine = provider.createStateMachine(graph, runOptions, DockerContainerType.Linux)
 
             it("creates a state machine with the correct logger") {
                 assertThat(stateMachine.logger, equalTo(logger))

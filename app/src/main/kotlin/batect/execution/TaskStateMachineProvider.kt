@@ -16,6 +16,7 @@
 
 package batect.execution
 
+import batect.docker.client.DockerContainerType
 import batect.execution.model.stages.CleanupStagePlanner
 import batect.execution.model.stages.RunStagePlanner
 import batect.logging.LoggerFactory
@@ -27,7 +28,7 @@ class TaskStateMachineProvider(
     private val failureErrorMessageFormatter: FailureErrorMessageFormatter,
     private val loggerFactory: LoggerFactory
 ) {
-    fun createStateMachine(graph: ContainerDependencyGraph, runOptions: RunOptions): TaskStateMachine =
+    fun createStateMachine(graph: ContainerDependencyGraph, runOptions: RunOptions, containerType: DockerContainerType): TaskStateMachine =
         TaskStateMachine(
             graph,
             runOptions,
@@ -35,6 +36,7 @@ class TaskStateMachineProvider(
             cleanupStagePlanner,
             failureErrorMessageFormatter,
             CancellationContext(),
+            containerType,
             loggerFactory.createLoggerForClass(TaskStateMachine::class)
         )
 }

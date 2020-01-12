@@ -19,6 +19,7 @@ package batect.execution.model.stages
 import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
+import batect.docker.client.DockerContainerType
 import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerDependencyGraphNode
 import batect.execution.model.rules.TaskStepRule
@@ -34,12 +35,12 @@ import batect.utils.flatMapToSet
 import batect.utils.mapToSet
 
 class RunStagePlanner(private val logger: Logger) {
-    fun createStage(graph: ContainerDependencyGraph): RunStage {
+    fun createStage(graph: ContainerDependencyGraph, containerType: DockerContainerType): RunStage {
         val allContainersInNetwork = graph.allNodes.mapToSet { it.container }
 
         val rules = imageCreationRulesFor(graph) +
             graph.allNodes.flatMapToSet { executionStepsFor(it, allContainersInNetwork) } +
-            CreateTaskNetworkStepRule
+            CreateTaskNetworkStepRule(containerType)
 
         logger.info {
             message("Created run plan.")

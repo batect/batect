@@ -703,6 +703,14 @@ object ContainersAPISpec : Spek({
                     }
                 }
 
+                on("the container being stopped when running a Windows container") {
+                    beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "process 2676 in container e766a7947b2e03a5bc02103a9a88b8c1ab914c9ed488205134f3fcc98e77a877 encountered an error during hcsshim::Process::ResizeConsole: hcsshim: the handle has already been closed"}""", 500) }
+
+                    it("throws an appropriate exception") {
+                        assertThat({ api.resizeTTY(container, dimensions) }, throws<ContainerStoppedException>(withMessage("Resizing TTY for container 'the-container-id' failed: process 2676 in container e766a7947b2e03a5bc02103a9a88b8c1ab914c9ed488205134f3fcc98e77a877 encountered an error during hcsshim::Process::ResizeConsole: hcsshim: the handle has already been closed (the container may have stopped quickly after starting)")))
+                    }
+                }
+
                 on("the API call failing") {
                     beforeEachTest { httpClient.mockPost(expectedUrl, errorResponse, 418) }
 

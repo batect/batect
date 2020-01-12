@@ -470,7 +470,7 @@ class ContainersAPI(
                     throw ContainerStoppedException(message)
                 }
 
-                if (error.statusCode == 500 && error.message.trim() == "bad file descriptor: unknown") {
+                if (error.statusCode == 500 && (error.message.trim() == "bad file descriptor: unknown" || error.message.endsWith("the handle has already been closed"))) {
                     throw ContainerStoppedException("$message (the container may have stopped quickly after starting)")
                 }
 

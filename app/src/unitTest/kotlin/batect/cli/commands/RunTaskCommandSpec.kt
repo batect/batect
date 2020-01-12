@@ -25,6 +25,7 @@ import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.config.io.ConfigurationLoader
 import batect.docker.client.DockerConnectivityCheckResult
+import batect.docker.client.DockerContainerType
 import batect.docker.client.DockerSystemInfoClient
 import batect.execution.CleanupOption
 import batect.execution.ConfigVariablesProvider
@@ -88,7 +89,7 @@ object RunTaskCommandSpec : Spek({
             given("configuration file can be loaded") {
                 given("Docker is available") {
                     val dockerSystemInfoClient = mock<DockerSystemInfoClient> {
-                        on { checkConnectivity() } doReturn DockerConnectivityCheckResult.Succeeded
+                        on { checkConnectivity() } doReturn DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux)
                     }
 
                     given("the task has no prerequisites") {

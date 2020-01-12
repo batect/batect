@@ -355,7 +355,7 @@ object DockerClientIntegrationTest : Spek({
             val result by runBeforeGroup { client.systemInfo.checkConnectivity() }
 
             it("returns that Docker is available") {
-                assertThat(result, equalTo<DockerConnectivityCheckResult>(DockerConnectivityCheckResult.Succeeded))
+                assertThat(result, isA<DockerConnectivityCheckResult.Succeeded>())
             }
         }
 

@@ -32,7 +32,7 @@ class NetworksAPI(
     systemInfo: SystemInfo,
     logger: Logger
 ) : APIBase(httpConfig, systemInfo, logger) {
-    fun create(): DockerNetwork {
+    fun create(driver: String): DockerNetwork {
         logger.info {
             message("Creating new network.")
         }
@@ -44,7 +44,7 @@ class NetworksAPI(
         val body = json {
             "Name" to UUID.randomUUID().toString()
             "CheckDuplicate" to true
-            "Driver" to "bridge"
+            "Driver" to driver
         }
 
         val request = Request.Builder()

@@ -69,7 +69,7 @@ object NetworksAPISpec : Spek({
 
             on("a successful creation") {
                 val call by createForEachTest { httpClient.mockPost(expectedUrl, """{"Id": "the-network-ID"}""", 201) }
-                val result by runForEachTest { api.create() }
+                val result by runForEachTest { api.create("the-driver") }
 
                 it("creates the network") {
                     verify(call).execute()
@@ -79,7 +79,7 @@ object NetworksAPISpec : Spek({
                     verify(httpClient).newCall(requestWithJsonBody { body ->
                         assertThat(body.getValue("Name").content, isUUID)
                         assertThat(body.getValue("CheckDuplicate").boolean, equalTo(true))
-                        assertThat(body.getValue("Driver").content, equalTo("bridge"))
+                        assertThat(body.getValue("Driver").content, equalTo("the-driver"))
                     })
                 }
 
@@ -92,7 +92,7 @@ object NetworksAPISpec : Spek({
                 beforeEachTest { httpClient.mockPost(expectedUrl, errorResponse, 418) }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.create() }, throws<NetworkCreationFailedException>(withMessage("Creation of network failed: $errorMessageWithCorrectLineEndings")))
+                    assertThat({ api.create("the-driver") }, throws<NetworkCreationFailedException>(withMessage("Creation of network failed: $errorMessageWithCorrectLineEndings")))
                 }
             }
         }

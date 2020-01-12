@@ -24,6 +24,7 @@ import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
@@ -37,12 +38,12 @@ object DockerNetworksClientSpec : Spek({
         val client by createForEachTest { DockerNetworksClient(api) }
 
         on("creating a network") {
-            beforeEachTest { whenever(api.create()).doReturn(DockerNetwork("the-network-id")) }
+            beforeEachTest { whenever(api.create(any())).doReturn(DockerNetwork("the-network-id")) }
 
             val result by runForEachTest { client.create() }
 
             it("creates the network") {
-                verify(api).create()
+                verify(api).create("bridge")
             }
 
             it("returns the ID of the created network") {

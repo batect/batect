@@ -22,7 +22,6 @@ import batect.config.PortMapping
 import batect.config.VolumeMount
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequest
-import batect.docker.DockerExecResult
 import batect.docker.DockerHealthCheckResult
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerImage
@@ -52,7 +51,6 @@ import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.execution.CancellationContext
 import batect.logging.Logger
-import batect.os.Command
 import batect.os.ConsoleManager
 import batect.os.Dimensions
 import batect.os.NativeMethods
@@ -98,36 +96,6 @@ object DockerClientIntegrationTest : Spek({
         val nativeMethods by createForGroup { getNativeMethodsForPlatform(posix) }
         val client by createForGroup { createClient(posix, nativeMethods) }
 
-        fun creationRequestForContainer(
-            image: DockerImage,
-            network: DockerNetwork,
-            command: List<String>,
-            volumeMounts: Set<VolumeMount> = emptySet(),
-            deviceMounts: Set<DeviceMount> = emptySet(),
-            portMappings: Set<PortMapping> = emptySet(),
-            userAndGroup: UserAndGroup? = null
-        ): DockerContainerCreationRequest {
-            return DockerContainerCreationRequest(
-                image,
-                network,
-                command,
-                emptyList(),
-                "test-container",
-                setOf("test-container"),
-                emptyMap(),
-                null,
-                volumeMounts,
-                deviceMounts,
-                portMappings,
-                HealthCheckConfig(),
-                userAndGroup,
-                privileged = false,
-                init = false,
-                capabilitiesToAdd = emptySet(),
-                capabilitiesToDrop = emptySet()
-            )
-        }
-
         fun creationRequestForTestContainer(image: DockerImage, network: DockerNetwork, localMountDirectory: Path, containerMountDirectory: String, command: List<String>): DockerContainerCreationRequest {
             val volumeMount = VolumeMount(localMountDirectory.toString(), containerMountDirectory, null)
             val userAndGroup = UserAndGroup(getUserId(nativeMethods), getGroupId(nativeMethods))
@@ -156,33 +124,13 @@ object DockerClientIntegrationTest : Spek({
             return creationRequestForTestContainer(image, network, localMountDirectory, containerMountDirectory, command)
         }
 
-        fun <T> withNetwork(action: (DockerNetwork) -> T): T {
-            val network = client.networks.create("bridge")
-
-            try {
-                return action(network)
-            } finally {
-                client.networks.delete(network)
-            }
-        }
-
-        fun <T> withContainer(creationRequest: DockerContainerCreationRequest, action: (DockerContainer) -> T): T {
-            val container = client.containers.create(creationRequest)
-
-            try {
-                return action(container)
-            } finally {
-                client.containers.remove(container)
-            }
-        }
-
         describe("building, creating, starting, stopping and removing a container that does not exit automatically") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
             val image by runBeforeGroup { client.images.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image"), null, CancellationContext()) {} }
 
             beforeGroup {
-                withNetwork { network ->
-                    withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
+                client.withNetwork { network ->
+                    client.withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
                         client.containers.run(container, System.out.sink(), System.`in`.source(), CancellationContext(), Dimensions(0, 0)) {
                             client.containers.stop(container)
                         }
@@ -201,8 +149,8 @@ object DockerClientIntegrationTest : Spek({
             val image by runBeforeGroup { client.images.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image"), null, CancellationContext()) {} }
 
             beforeGroup {
-                withNetwork { network ->
-                    withContainer(creationRequestForContainerThatExits(image, network, fileToCreate)) { container ->
+                client.withNetwork { network ->
+                    client.withContainer(creationRequestForContainerThatExits(image, network, fileToCreate)) { container ->
                         client.containers.run(container, System.out.sink(), System.`in`.source(), CancellationContext(), Dimensions(0, 0)) {
                             client.containers.stop(container)
                         }
@@ -221,8 +169,8 @@ object DockerClientIntegrationTest : Spek({
             val image by runBeforeGroup { client.images.pull("alpine:3.7", CancellationContext(), {}) }
 
             beforeGroup {
-                withNetwork { network ->
-                    withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
+                client.withNetwork { network ->
+                    client.withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
                         client.containers.run(container, System.out.sink(), System.`in`.source(), CancellationContext(), Dimensions(0, 0)) {
                             client.containers.stop(container)
                         }
@@ -266,8 +214,8 @@ object DockerClientIntegrationTest : Spek({
             }
 
             val result by runBeforeGroup {
-                withNetwork { network ->
-                    withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
+                client.withNetwork { network ->
+                    client.withContainer(creationRequestForContainerThatWaits(image, network, fileToCreate)) { container ->
                         runContainerAndWaitForHealthCheck(container)
                     }
                 }
@@ -304,8 +252,8 @@ object DockerClientIntegrationTest : Spek({
                     }
 
                     val response by runBeforeGroup {
-                        withNetwork { network ->
-                            withContainer(creationRequestForContainer(image, network, emptyList(), portMappings = setOf(PortMapping(8080, 80)))) { container ->
+                        client.withNetwork { network ->
+                            client.withContainer(creationRequestForContainer(image, network, emptyList(), portMappings = setOf(PortMapping(8080, 80)))) { container ->
                                 runContainerAndGetHttpResponse(container)
                             }
                         }
@@ -317,40 +265,10 @@ object DockerClientIntegrationTest : Spek({
                 }
             }
         }
-
-        describe("executing a command in a already running container") {
-            val image by runBeforeGroup { client.images.pull("alpine:3.7", CancellationContext(), {}) }
-
-            val execResult by runBeforeGroup {
-                withNetwork { network ->
-                    // See https://stackoverflow.com/a/21882119/1668119 for an explanation of this - we need something that waits indefinitely but immediately responds to a SIGTERM by quitting (sh and wait don't do this).
-                    val command = listOf("sh", "-c", "trap 'trap - TERM; kill -s TERM -$$' TERM; tail -f /dev/null & wait")
-
-                    withContainer(creationRequestForContainer(image, network, command)) { container ->
-                        lateinit var execResult: DockerExecResult
-
-                        client.containers.run(container, System.out.sink(), System.`in`.source(), CancellationContext(), Dimensions(0, 0)) {
-                            execResult = client.exec.run(Command.parse("echo -n 'Output from exec'"), container, emptyMap(), false, null, null, null, CancellationContext())
-
-                            client.containers.stop(container)
-                        }
-
-                        execResult
-                    }
-                }
-            }
-
-            it("runs the command successfully") {
-                assertThat(execResult.exitCode, equalTo(0))
-                assertThat(execResult.output, equalTo("Output from exec"))
-            }
-        }
-
-
     }
 })
 
-private fun createClient(posix: POSIX, nativeMethods: NativeMethods): DockerClient {
+fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: NativeMethods = getNativeMethodsForPlatform(posix)): DockerClient {
     val logger = mock<Logger>()
     val processRunner = ProcessRunner(logger)
     val systemInfo = SystemInfo(nativeMethods, FileSystems.getDefault())
@@ -451,3 +369,53 @@ private inline fun <T> retry(retries: Int, operation: () -> T): T {
 }
 
 private fun Response.codeValue() = this.code
+
+fun <T> DockerClient.withNetwork(action: (DockerNetwork) -> T): T {
+    val network = this.networks.create("bridge")
+
+    try {
+        return action(network)
+    } finally {
+        this.networks.delete(network)
+    }
+}
+
+fun <T> DockerClient.withContainer(creationRequest: DockerContainerCreationRequest, action: (DockerContainer) -> T): T {
+    val container = this.containers.create(creationRequest)
+
+    try {
+        return action(container)
+    } finally {
+        this.containers.remove(container)
+    }
+}
+
+fun creationRequestForContainer(
+    image: DockerImage,
+    network: DockerNetwork,
+    command: List<String>,
+    volumeMounts: Set<VolumeMount> = emptySet(),
+    deviceMounts: Set<DeviceMount> = emptySet(),
+    portMappings: Set<PortMapping> = emptySet(),
+    userAndGroup: UserAndGroup? = null
+): DockerContainerCreationRequest {
+    return DockerContainerCreationRequest(
+        image,
+        network,
+        command,
+        emptyList(),
+        "test-container",
+        setOf("test-container"),
+        emptyMap(),
+        null,
+        volumeMounts,
+        deviceMounts,
+        portMappings,
+        HealthCheckConfig(),
+        userAndGroup,
+        privileged = false,
+        init = false,
+        capabilitiesToAdd = emptySet(),
+        capabilitiesToDrop = emptySet()
+    )
+}

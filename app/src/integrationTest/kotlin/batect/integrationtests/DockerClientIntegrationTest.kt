@@ -25,10 +25,8 @@ import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerExecResult
 import batect.docker.DockerHealthCheckResult
 import batect.docker.DockerHttpConfig
-import batect.docker.DockerHttpConfigDefaults
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
-import batect.docker.DockerTLSConfig
 import batect.docker.UserAndGroup
 import batect.docker.api.ContainersAPI
 import batect.docker.api.ExecAPI
@@ -39,13 +37,11 @@ import batect.docker.build.DockerIgnoreParser
 import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
 import batect.docker.client.DockerClient
-import batect.docker.client.DockerConnectivityCheckResult
 import batect.docker.client.DockerContainersClient
 import batect.docker.client.DockerExecClient
 import batect.docker.client.DockerImagesClient
 import batect.docker.client.DockerNetworksClient
 import batect.docker.client.DockerSystemInfoClient
-import batect.docker.client.DockerVersionInfoRetrievalResult
 import batect.docker.client.HealthStatus
 import batect.docker.pull.DockerRegistryCredentialsConfigurationFile
 import batect.docker.pull.DockerRegistryCredentialsProvider
@@ -65,7 +61,6 @@ import batect.os.ProcessRunner
 import batect.os.SignalListener
 import batect.os.SystemInfo
 import batect.os.unix.UnixConsoleManager
-import batect.os.unix.UnixNativeMethods
 import batect.os.windows.WindowsConsoleManager
 import batect.os.windows.WindowsNativeMethods
 import batect.testutils.createForGroup
@@ -76,7 +71,6 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
-import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.or
 import com.nhaarman.mockitokotlin2.mock
 import jnr.ffi.Platform
@@ -254,6 +248,7 @@ object DockerClientIntegrationTest : Spek({
         describe("waiting for a container to become healthy") {
             val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
             val image by runBeforeGroup { client.images.build(basicTestImagePath, emptyMap(), "Dockerfile", setOf("batect-integration-tests-image"), null, CancellationContext()) {} }
+
             data class Result(val healthStatus: HealthStatus, val lastHealthCheckResult: DockerHealthCheckResult)
 
             fun runContainerAndWaitForHealthCheck(container: DockerContainer): Result {
@@ -351,21 +346,7 @@ object DockerClientIntegrationTest : Spek({
             }
         }
 
-        describe("checking if Docker is available") {
-            val result by runBeforeGroup { client.systemInfo.checkConnectivity() }
 
-            it("returns that Docker is available") {
-                assertThat(result, isA<DockerConnectivityCheckResult.Succeeded>())
-            }
-        }
-
-        describe("getting Docker version info") {
-            val versionInfoRetrievalResult by runBeforeGroup { client.systemInfo.getDockerVersionInfo() }
-
-            it("succeeds") {
-                assertThat(versionInfoRetrievalResult, isA<DockerVersionInfoRetrievalResult.Succeeded>())
-            }
-        }
     }
 })
 
@@ -403,11 +384,6 @@ private fun createClient(posix: POSIX, nativeMethods: NativeMethods): DockerClie
     return DockerClient(containersClient, execClient, imagesClient, networksClient, systemInfoClient)
 }
 
-private fun getNativeMethodsForPlatform(posix: POSIX): NativeMethods = when (Platform.getNativePlatform().os) {
-    Platform.OS.WINDOWS -> WindowsNativeMethods(posix)
-    else -> UnixNativeMethods(posix)
-}
-
 private fun getConsoleManagerForPlatform(consoleInfo: ConsoleInfo, processRunner: ProcessRunner, nativeMethods: NativeMethods, logger: Logger): ConsoleManager =
     when (Platform.getNativePlatform().os) {
         Platform.OS.WINDOWS -> WindowsConsoleManager(consoleInfo, nativeMethods as WindowsNativeMethods, logger)
@@ -439,24 +415,6 @@ private fun removeImage(imageName: String) {
     val result = processRunner.runAndCaptureOutput(listOf("docker", "rmi", "-f", imageName))
 
     assertThat(result, has(ProcessOutput::output, containsSubstring("No such image: $imageName")) or has(ProcessOutput::exitCode, equalTo(0)))
-}
-
-private fun getDockerHost(systemInfo: SystemInfo): String =
-    System.getenv().getOrDefault("DOCKER_HOST", DockerHttpConfigDefaults(systemInfo).defaultDockerHost)
-
-private fun getDockerTLSConfig(): DockerTLSConfig {
-    if (System.getenv().getOrDefault("DOCKER_TLS_VERIFY", "0") != "1") {
-        return DockerTLSConfig.DisableTLS
-    }
-
-    val certsDir = Paths.get(System.getenv().getValue("DOCKER_CERT_PATH"))
-
-    return DockerTLSConfig.EnableTLS(
-        true,
-        certsDir.resolve("ca.pem"),
-        certsDir.resolve("cert.pem"),
-        certsDir.resolve("key.pem")
-    )
 }
 
 private fun httpGet(url: String): Response {

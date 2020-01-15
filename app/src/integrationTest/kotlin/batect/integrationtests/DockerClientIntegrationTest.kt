@@ -23,56 +23,20 @@ import batect.config.VolumeMount
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerHealthCheckResult
-import batect.docker.DockerHttpConfig
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.UserAndGroup
-import batect.docker.api.ContainersAPI
-import batect.docker.api.ExecAPI
-import batect.docker.api.ImagesAPI
-import batect.docker.api.NetworksAPI
-import batect.docker.api.SystemInfoAPI
-import batect.docker.build.DockerIgnoreParser
-import batect.docker.build.DockerImageBuildContextFactory
-import batect.docker.build.DockerfileParser
-import batect.docker.client.DockerClient
-import batect.docker.client.DockerContainersClient
-import batect.docker.client.DockerExecClient
-import batect.docker.client.DockerImagesClient
-import batect.docker.client.DockerNetworksClient
-import batect.docker.client.DockerSystemInfoClient
 import batect.docker.client.HealthStatus
-import batect.docker.pull.DockerRegistryCredentialsConfigurationFile
-import batect.docker.pull.DockerRegistryCredentialsProvider
-import batect.docker.pull.DockerRegistryDomainResolver
-import batect.docker.pull.DockerRegistryIndexResolver
-import batect.docker.run.ContainerIOStreamer
-import batect.docker.run.ContainerTTYManager
-import batect.docker.run.ContainerWaiter
 import batect.execution.CancellationContext
-import batect.logging.Logger
-import batect.os.ConsoleManager
 import batect.os.NativeMethods
-import batect.os.ProcessRunner
-import batect.os.SignalListener
-import batect.os.SystemInfo
-import batect.os.unix.UnixConsoleManager
-import batect.os.windows.WindowsConsoleManager
-import batect.os.windows.WindowsNativeMethods
 import batect.testutils.createForGroup
 import batect.testutils.runBeforeGroup
-import batect.ui.ConsoleDimensions
-import batect.ui.ConsoleInfo
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.nhaarman.mockitokotlin2.mock
 import jnr.ffi.Platform
-import jnr.posix.POSIX
 import jnr.posix.POSIXFactory
-import okhttp3.OkHttpClient
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -198,46 +162,6 @@ object DockerClientIntegrationTest : Spek({
         }
     }
 })
-
-fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: NativeMethods = getNativeMethodsForPlatform(posix)): DockerClient {
-    val logger = mock<Logger>()
-    val processRunner = ProcessRunner(logger)
-    val systemInfo = SystemInfo(nativeMethods, FileSystems.getDefault())
-    val dockerHost = getDockerHost(systemInfo)
-    val tlsConfig = getDockerTLSConfig()
-    val httpConfig = DockerHttpConfig(OkHttpClient(), dockerHost, tlsConfig, systemInfo)
-    val containersAPI = ContainersAPI(httpConfig, systemInfo, logger)
-    val execAPI = ExecAPI(httpConfig, systemInfo, logger)
-    val imagesAPI = ImagesAPI(httpConfig, systemInfo, logger)
-    val networksAPI = NetworksAPI(httpConfig, systemInfo, logger)
-    val systemInfoAPI = SystemInfoAPI(httpConfig, systemInfo, logger)
-    val consoleInfo = ConsoleInfo(nativeMethods, systemInfo, logger)
-    val consoleManager = getConsoleManagerForPlatform(consoleInfo, processRunner, nativeMethods, logger)
-    val credentialsConfigurationFile = DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger)
-    val credentialsProvider = DockerRegistryCredentialsProvider(DockerRegistryDomainResolver(), DockerRegistryIndexResolver(), credentialsConfigurationFile)
-    val ignoreParser = DockerIgnoreParser()
-    val imageBuildContextFactory = DockerImageBuildContextFactory(ignoreParser)
-    val dockerfileParser = DockerfileParser()
-    val waiter = ContainerWaiter(containersAPI)
-    val streamer = ContainerIOStreamer()
-    val signalListener = SignalListener(posix)
-    val consoleDimensions = ConsoleDimensions(nativeMethods, signalListener, logger)
-    val ttyManager = ContainerTTYManager(containersAPI, consoleInfo, consoleDimensions, logger)
-
-    val containersClient = DockerContainersClient(containersAPI, consoleManager, waiter, streamer, ttyManager, logger)
-    val execClient = DockerExecClient(execAPI, streamer, logger)
-    val imagesClient = DockerImagesClient(imagesAPI, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger)
-    val networksClient = DockerNetworksClient(networksAPI)
-    val systemInfoClient = DockerSystemInfoClient(systemInfoAPI, logger)
-
-    return DockerClient(containersClient, execClient, imagesClient, networksClient, systemInfoClient)
-}
-
-private fun getConsoleManagerForPlatform(consoleInfo: ConsoleInfo, processRunner: ProcessRunner, nativeMethods: NativeMethods, logger: Logger): ConsoleManager =
-    when (Platform.getNativePlatform().os) {
-        Platform.OS.WINDOWS -> WindowsConsoleManager(consoleInfo, nativeMethods as WindowsNativeMethods, logger)
-        else -> UnixConsoleManager(consoleInfo, processRunner, logger)
-    }
 
 private fun getUserId(nativeMethods: NativeMethods): Int = when (Platform.getNativePlatform().os) {
     Platform.OS.WINDOWS -> 0

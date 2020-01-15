@@ -38,7 +38,7 @@ import org.spekframework.spek2.style.specification.describe
 object HealthCheckEndToEndIntegrationTest : Spek({
     describe("waiting for a container to become healthy") {
         val client by createForGroup { createClient() }
-        val integrationTestImage by runBeforeGroup { client.build(testImagesDirectory.resolve("basic-image"), "batect-integration-tests-image") }
+        val image by runBeforeGroup { client.build(testImagesDirectory.resolve("basic-image"), "batect-integration-tests-image") }
 
         data class Result(val healthStatus: HealthStatus, val lastHealthCheckResult: DockerHealthCheckResult)
 
@@ -55,7 +55,7 @@ object HealthCheckEndToEndIntegrationTest : Spek({
         given("a container that immediately reports as healthy") {
             val result by runBeforeGroup {
                 client.withNetwork { network ->
-                    client.withContainer(creationRequestForContainer(integrationTestImage, network, ContainerCommands.waitIndefinitely)) { container ->
+                    client.withContainer(creationRequestForContainer(image, network, ContainerCommands.waitIndefinitely)) { container ->
                         runContainerAndWaitForHealthCheck(container)
                     }
                 }

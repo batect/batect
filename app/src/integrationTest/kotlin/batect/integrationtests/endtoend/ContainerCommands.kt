@@ -17,6 +17,8 @@
 package batect.integrationtests.endtoend
 
 object ContainerCommands {
+    val exitImmediately = listOf("echo", "Hello from the container")
+
     // See https://stackoverflow.com/a/21882119/1668119 for an explanation of this - we need something that waits indefinitely but immediately responds to a SIGTERM by quitting (sh and wait don't do this).
     val waitIndefinitely = listOf("sh", "-c", "trap 'trap - TERM; kill -s TERM -$$' TERM; tail -f /dev/null & wait")
 }

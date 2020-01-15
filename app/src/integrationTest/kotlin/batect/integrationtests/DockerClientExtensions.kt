@@ -23,6 +23,7 @@ import batect.docker.DockerNetwork
 import batect.docker.client.DockerClient
 import batect.execution.CancellationContext
 import batect.os.Dimensions
+import okio.Sink
 import okio.sink
 import okio.source
 import java.nio.file.Path
@@ -50,16 +51,18 @@ fun <T> DockerClient.withContainer(creationRequest: DockerContainerCreationReque
 fun DockerClient.build(imageDirectory: Path, tag: String): DockerImage =
     this.images.build(imageDirectory, emptyMap(), "Dockerfile", setOf(tag), null, CancellationContext()) {}
 
-fun DockerClient.runContainerAndStopImmediately(container: DockerContainer) = this.runContainer(container) {
-    this.containers.stop(container)
-}
+fun DockerClient.runContainerAndStopImmediately(container: DockerContainer, stdout: Sink = System.out.sink()) =
+    this.runContainer(container, stdout) {
+        this.containers.stop(container)
+    }
 
-fun DockerClient.runContainerAndWaitForCompletion(container: DockerContainer) = this.runContainer(container) {}
+fun DockerClient.runContainerAndWaitForCompletion(container: DockerContainer, stdout: Sink = System.out.sink()) =
+    this.runContainer(container, stdout) {}
 
-fun <T : Any> DockerClient.runContainer(container: DockerContainer, action: () -> T): T {
+fun <T : Any> DockerClient.runContainer(container: DockerContainer, stdout: Sink = System.out.sink(), action: () -> T): T {
     lateinit var result: T
 
-    this.containers.run(container, System.out.sink(), System.`in`.source(), CancellationContext(), Dimensions(0, 0)) {
+    this.containers.run(container, stdout, System.`in`.source(), CancellationContext(), Dimensions(0, 0)) {
         result = action()
     }
 

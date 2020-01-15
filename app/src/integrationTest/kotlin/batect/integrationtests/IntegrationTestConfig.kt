@@ -26,7 +26,10 @@ import batect.os.windows.WindowsNativeMethods
 import jnr.ffi.Platform
 import jnr.posix.POSIX
 import okhttp3.OkHttpClient
+import java.nio.file.Path
 import java.nio.file.Paths
+
+val testImagesDirectory: Path = Paths.get("src", "integrationTest", "resources", "test-images").toAbsolutePath()
 
 fun getDockerHost(systemInfo: SystemInfo): String =
     System.getenv().getOrDefault("DOCKER_HOST", DockerHttpConfigDefaults(systemInfo).defaultDockerHost)

@@ -20,13 +20,10 @@ import batect.config.DeviceMount
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
 import batect.config.VolumeMount
-import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequest
-import batect.docker.DockerHealthCheckResult
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.UserAndGroup
-import batect.docker.client.HealthStatus
 import batect.execution.CancellationContext
 import batect.os.NativeMethods
 import batect.testutils.createForGroup
@@ -126,38 +123,6 @@ object DockerClientIntegrationTest : Spek({
             it("starts the container successfully") {
                 assertThat(Files.exists(fileToCreate), equalTo(true))
                 assertThat(Files.readAllLines(fileToCreate), equalTo(listOf("Hello from container")))
-            }
-        }
-
-        describe("waiting for a container to become healthy") {
-            val fileToCreate by runBeforeGroup { getRandomTemporaryFilePath() }
-
-            data class Result(val healthStatus: HealthStatus, val lastHealthCheckResult: DockerHealthCheckResult)
-
-            fun runContainerAndWaitForHealthCheck(container: DockerContainer): Result {
-                return client.runContainer(container) {
-                    val healthStatus = client.containers.waitForHealthStatus(container, CancellationContext())
-                    val lastHealthCheckResult = client.containers.getLastHealthCheckResult(container)
-                    Result(healthStatus, lastHealthCheckResult).also {
-                        client.containers.stop(container)
-                    }
-                }
-            }
-
-            val result by runBeforeGroup {
-                client.withNetwork { network ->
-                    client.withContainer(creationRequestForContainerThatWaits(integrationTestImage, network, fileToCreate)) { container ->
-                        runContainerAndWaitForHealthCheck(container)
-                    }
-                }
-            }
-
-            it("reports that the container became healthy") {
-                assertThat(result.healthStatus, equalTo(HealthStatus.BecameHealthy))
-            }
-
-            it("reports the result of the last health check") {
-                assertThat(result.lastHealthCheckResult, equalTo(DockerHealthCheckResult(0, "Hello from the healthcheck")))
             }
         }
     }

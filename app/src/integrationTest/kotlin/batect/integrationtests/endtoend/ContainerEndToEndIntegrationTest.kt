@@ -16,6 +16,7 @@
 
 package batect.integrationtests.endtoend
 
+import batect.execution.CancellationContext
 import batect.integrationtests.build
 import batect.integrationtests.createClient
 import batect.integrationtests.creationRequestForContainer
@@ -32,27 +33,35 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayOutputStream
 
-object BuiltImageEndToEndIntegrationTest : Spek({
-    describe("using a built image") {
+object ContainerEndToEndIntegrationTest : Spek({
+    describe("running containers") {
         val client by createForGroup { createClient() }
-        val image by runBeforeGroup { client.build(testImagesDirectory.resolve("basic-image"), "batect-integration-tests-image") }
 
-        describe("using that image to create and run a container") {
-            val output by runBeforeGroup {
-                val outputStream = ByteArrayOutputStream()
-                val stdout = outputStream.sink()
+        mapOf(
+            "using a pulled image" to { client.images.pull("alpine:3.7", CancellationContext(), {}) },
+            "using a built image" to { client.build(testImagesDirectory.resolve("basic-image"), "batect-integration-tests-image") }
+        ).forEach { (description, imageSource) ->
+            describe(description) {
+                val image by runBeforeGroup { imageSource() }
 
-                client.withNetwork { network ->
-                    client.withContainer(creationRequestForContainer(image, network, ContainerCommands.exitImmediately)) { container ->
-                        client.runContainerAndWaitForCompletion(container, stdout)
+                describe("using that image to create and run a container") {
+                    val output by runBeforeGroup {
+                        val outputStream = ByteArrayOutputStream()
+                        val stdout = outputStream.sink()
+
+                        client.withNetwork { network ->
+                            client.withContainer(creationRequestForContainer(image, network, ContainerCommands.exitImmediately)) { container ->
+                                client.runContainerAndWaitForCompletion(container, stdout)
+                            }
+                        }
+
+                        outputStream.toString()
+                    }
+
+                    it("starts the container successfully") {
+                        assertThat(output.trim(), equalTo("Hello from the container"))
                     }
                 }
-
-                outputStream.toString()
-            }
-
-            it("starts the container successfully") {
-                assertThat(output.trim(), equalTo("Hello from the container"))
             }
         }
     }

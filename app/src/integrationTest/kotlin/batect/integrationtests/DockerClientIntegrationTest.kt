@@ -54,7 +54,6 @@ import batect.logging.Logger
 import batect.os.ConsoleManager
 import batect.os.Dimensions
 import batect.os.NativeMethods
-import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.os.SignalListener
 import batect.os.SystemInfo
@@ -66,10 +65,8 @@ import batect.testutils.runBeforeGroup
 import batect.ui.ConsoleDimensions
 import batect.ui.ConsoleInfo
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
-import com.natpryce.hamkrest.or
 import com.nhaarman.mockitokotlin2.mock
 import jnr.ffi.Platform
 import jnr.posix.POSIX
@@ -181,15 +178,6 @@ object DockerClientIntegrationTest : Spek({
             it("starts the container successfully") {
                 assertThat(Files.exists(fileToCreate), equalTo(true))
                 assertThat(Files.readAllLines(fileToCreate), equalTo(listOf("Hello from container")))
-            }
-        }
-
-        describe("pulling an image that has not been cached locally already") {
-            beforeGroup { removeImage("hello-world:latest") }
-            val image by runBeforeGroup { client.images.pull("hello-world:latest", CancellationContext(), {}) }
-
-            it("pulls the image successfully") {
-                assertThat(image, equalTo(DockerImage("hello-world:latest")))
             }
         }
 
@@ -326,13 +314,6 @@ private fun getRandomTemporaryFilePath(): Path {
     Files.deleteIfExists(path)
 
     return path
-}
-
-private fun removeImage(imageName: String) {
-    val processRunner = ProcessRunner(mock())
-    val result = processRunner.runAndCaptureOutput(listOf("docker", "rmi", "-f", imageName))
-
-    assertThat(result, has(ProcessOutput::output, containsSubstring("No such image: $imageName")) or has(ProcessOutput::exitCode, equalTo(0)))
 }
 
 private fun httpGet(url: String): Response {

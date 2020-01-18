@@ -36,4 +36,10 @@ task journeyTest(type: Test) {
     dependsOn installShadowDist
 
     inputs.files installShadowDist
+
+    if (project.properties.containsKey("windowsContainers")) {
+        include 'batect/journeytests/windowscontainers/**'
+    } else {
+        exclude 'batect/journeytests/windowscontainers/**'
+    }
 }

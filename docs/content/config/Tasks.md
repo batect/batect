@@ -21,8 +21,8 @@ Specifies what to do when this task starts:
     [the command specified on the container definition](Containers.md#command) is used if there is one, otherwise the image's default command is used.
 
     Just like when specifying a command for a container, this command is passed to the image's `ENTRYPOINT`, if there is one. This can prevent
-    shell syntax features like `&&` from working. See the [note about entrypoints in the documentation for containers](Containers.md#command-entrypoint-note)
-    for more information.
+    shell syntax features like `$MY_ENVIRONMENT_VARIABLE` and `&&` from working. See the
+    [note about entrypoints in the documentation for containers](Containers.md#command-entrypoint-note) for more information.
 
 * `entrypoint` Entrypoint to use to run the command.
 

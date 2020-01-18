@@ -55,7 +55,7 @@ Both of these can be overridden for an individual task by specifying a [`command
     Keep in mind that this command is passed to the image's `ENTRYPOINT`, just like it would when using `docker run <image> <command>`
     directly.
 
-    This means that if the entrypoint is not set or is not a shell, standard shell syntax features like `&&` might not work.
+    This means that if the entrypoint is not set or is not a shell, standard shell syntax features like `$MY_ENVIRONMENT_VARIABLE` and `&&` might not work.
 
     See the Docker docs for [`CMD`](https://docs.docker.com/engine/reference/builder/#cmd) and
     [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint) for more details.

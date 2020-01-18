@@ -60,6 +60,7 @@ nav:
   - Language and tool-specific information:
     - CircleCI: "tools/CircleCI.md"
     - Docker: "tools/Docker.md"
+    - GitHub Actions: "tools/GitHubActions.md"
     - Golang: "tools/Golang.md"
     - Java: "tools/Java.md"
     - Node.js: "tools/Node.md"

@@ -26,6 +26,7 @@ build_script:
   - ./gradlew journeyTest -PwindowsContainers
 
 after_test:
+  - ./gradlew --stop
   - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\modules-2\modules-2.lock
   - ps: Remove-Item -ErrorAction SilentlyContinue -Recurse ${env:USERPROFILE}\.gradle\caches\*\plugin-resolution\
   - ps: Remove-Item -ErrorAction SilentlyContinue -Recurse ${env:USERPROFILE}\.gradle\caches\*\scripts\

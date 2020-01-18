@@ -8,8 +8,6 @@ environment:
 
 install:
   - ver
-  - ps: ./appveyor/enable-docker.ps1
-  - docker version
   - java -version
   - python --version
   - bash --version
@@ -19,8 +17,12 @@ build_script:
   - ps: |
       $env:Path = "C:\Program Files\Git\usr\bin;" + $env:Path
       bash -c 'export CI=True && export APPVEYOR=True && curl -s --show-error --fail --retry-connrefused --retry 10 https://codecov.io/bash | bash -s -- -F windows'
+  - ps: ./appveyor/Enable-LinuxContainers.ps1
+  - docker version
   - ./gradlew integrationTest
   - ./gradlew journeyTest
+  - ps: ./appveyor/Enable-WindowsContainers.ps1
+  - docker version
 
 after_test:
   - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\modules-2\modules-2.lock

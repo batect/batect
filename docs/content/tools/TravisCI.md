@@ -16,4 +16,4 @@ services:
 ```
 
 You can see a full example of using batect with Travis CI in
-[the Java sample project](https://github.com/charleskorn/batect-sample-java).
+[the Java sample project](https://github.com/batect/batect-sample-java).

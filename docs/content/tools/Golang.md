@@ -1,6 +1,6 @@
 # Golang
 
-You can see a full example of using batect with Golang in [the Golang sample project](https://github.com/charleskorn/batect-sample-golang).
+You can see a full example of using batect with Golang in [the Golang sample project](https://github.com/batect/batect-sample-golang).
 
 ## Caching dependencies
 

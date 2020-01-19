@@ -2,7 +2,7 @@
 
 ## Bundler
 
-You can see an example of configuring and using Ruby and Bundler with batect in the [Ruby sample project](https://github.com/charleskorn/batect-sample-ruby).
+You can see an example of configuring and using Ruby and Bundler with batect in the [Ruby sample project](https://github.com/batect/batect-sample-ruby).
 
 ### Caching dependencies
 

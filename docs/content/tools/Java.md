@@ -2,7 +2,7 @@
 
 ## Gradle
 
-You can see an example of configuring and using Java and Gradle with batect in the [Java sample project](https://github.com/charleskorn/batect-sample-java).
+You can see an example of configuring and using Java and Gradle with batect in the [Java sample project](https://github.com/batect/batect-sample-java).
 
 ### Caching dependencies
 

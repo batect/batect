@@ -1,0 +1,187 @@
+# Generated with https://github.com/charleskorn/dependabot-config-generator
+
+version: 1
+update_configs:
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/integrationTest/test-images/basic-image
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/integrationTest/test-images/image-with-expose
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/integrationTest/test-images/image-without-expose
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/build-arg/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/container-with-additional-hostname/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/container-with-additional-hostname/http-server
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/container-with-dependency-chain/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/container-with-dependency-chain/http-server
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/container-with-dependency-chain/proxy
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/container-with-dependency/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/container-with-dependency/http-server
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/container-with-health-check-overrides/dependency
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/dependency-container-with-setup-command/task-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/proxy-variables/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/simple-task-dockerfile-command/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/simple-task-using-dockerfile-with-add-from-url/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/simple-task-using-dockerfile/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/symlinks-in-build-context/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/task-container-with-setup-command/task-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/task-with-explicit-dependency/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/task-with-explicit-dependency/http-server
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/task-with-healthy-dependency/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/task-with-healthy-dependency/http-server
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/task-with-slow-healthy-dependency/dependency
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/build/resources/journeyTest/task-with-unhealthy-dependency/http-server
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/integrationTest/resources/test-images/basic-image
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/integrationTest/resources/test-images/image-with-expose
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/integrationTest/resources/test-images/image-without-expose
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/build-arg/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/container-with-additional-hostname/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/container-with-additional-hostname/http-server
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/container-with-dependency-chain/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/container-with-dependency-chain/http-server
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/container-with-dependency-chain/proxy
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/container-with-dependency/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/container-with-dependency/http-server
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/container-with-health-check-overrides/dependency
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/dependency-container-with-setup-command/task-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/proxy-variables/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/simple-task-dockerfile-command/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/simple-task-using-dockerfile-with-add-from-url/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/simple-task-using-dockerfile/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/symlinks-in-build-context/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/task-container-with-setup-command/task-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/task-with-explicit-dependency/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/task-with-explicit-dependency/http-server
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/task-with-healthy-dependency/build-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/task-with-healthy-dependency/http-server
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/task-with-slow-healthy-dependency/dependency
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/task-with-unhealthy-dependency/http-server
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/performanceTest/resources/single-container-built-image/containers/test-env
+  - package_manager: docker
+    update_schedule: daily
+    directory: wrapper/unix/test/test-env
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: app
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: /
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: buildSrc
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: docs
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: tools/schema
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: wrapper
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: wrapper/testapp
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: wrapper/unix
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: wrapper/windows

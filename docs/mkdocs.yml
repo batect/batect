@@ -1,5 +1,5 @@
 site_name: batect documentation
-site_url: https://batect.charleskorn.com
+site_url: https://batect.dev
 site_description: Documentation for batect, the build and testing environments as code tool
 site_author: Charles Korn
 copyright: Copyright &copy; 2017-2019 Charles Korn.

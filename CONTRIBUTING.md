@@ -12,8 +12,8 @@ It's entirely up to you, do whatever you're most interested in. Some suggestions
 * take a look at any open [issues](https://github.com/batect/batect/issues?q=is%3Aopen+is%3Aissue), especially those tagged with
   ['good first issue'](https://github.com/batect/batect/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 * take a look at the [roadmap](https://github.com/batect/batect/blob/master/ROADMAP.md) and pick a feature you'd like to implement
-* improve the [documentation](https://batect.charleskorn.com/) - add further examples, tips and tricks or clarify sections
-* create a [sample project](https://batect.charleskorn.com/SampleProjects.html) for a language or framework that doesn't already have one
+* improve the [documentation](https://batect.dev/) - add further examples, tips and tricks or clarify sections
+* create a [sample project](https://batect.dev/SampleProjects.html) for a language or framework that doesn't already have one
 
 ## Prerequisites
 

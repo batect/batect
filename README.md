@@ -25,8 +25,8 @@
    into the root folder of your project.
 2. If you're on Linux or OS X, make sure the script is executable: run `chmod +x batect`.
 3. Create your `batect.yml` to define your environment:
-    * Take a look at the [sample projects](https://batect.charleskorn.com/SampleProjects.html) for inspiration
-    * Dive straight into [the configuration file reference](https://batect.charleskorn.com/config/Overview.html)
+    * Take a look at the [sample projects](https://batect.dev/SampleProjects.html) for inspiration
+    * Dive straight into [the configuration file reference](https://batect.dev/config/Overview.html)
     * Or, if you're using another tool already and want to switch to batect,
       [batectify](https://batectify.enchanting.dev/) by [@ineffyble](https://github.com/ineffyble) can convert files from
       other tools to batect's format
@@ -42,13 +42,13 @@ batect supports both Linux and Windows containers.
 
 ## Documentation
 
-All documentation is available on [the documentation site](https://batect.charleskorn.com). Highlights include:
+All documentation is available on [the documentation site](https://batect.dev). Highlights include:
 
-* [Introduction](https://batect.charleskorn.com)
-* [Getting started guide](https://batect.charleskorn.com/GettingStarted.html)
-* [Configuration file reference](https://batect.charleskorn.com/config/Overview.html)
-* [Sample projects](https://batect.charleskorn.com/SampleProjects.html)
-* [Comparison with other tools](https://batect.charleskorn.com/Comparison.html)
+* [Introduction](https://batect.dev)
+* [Getting started guide](https://batect.dev/GettingStarted.html)
+* [Configuration file reference](https://batect.dev/config/Overview.html)
+* [Sample projects](https://batect.dev/SampleProjects.html)
+* [Comparison with other tools](https://batect.dev/Comparison.html)
 
 If you prefer watching videos to reading documentation, you can also watch Charles introduce batect and the rationale behind it
 at the [Evolution by ThoughtWorks conference](https://www.thoughtworks.com/evolution-by-thoughtworks/content#Presentations).

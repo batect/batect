@@ -1,7 +1,7 @@
 {
   "title": "JSON schema for batect configuration files",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "id": "https://batect.charleskorn.com/configSchema.json",
+  "id": "https://batect.dev/configSchema.json",
   "type": "object",
   "additionalProperties": false,
   "required": [

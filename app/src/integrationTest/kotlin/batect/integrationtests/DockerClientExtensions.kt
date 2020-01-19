@@ -48,13 +48,12 @@ fun <T> DockerClient.withContainer(creationRequest: DockerContainerCreationReque
     }
 }
 
+fun DockerClient.pull(imageName: String): DockerImage = retry(3) {
+    this.images.pull(imageName, CancellationContext(), {})
+}
+
 fun DockerClient.build(imageDirectory: Path, tag: String): DockerImage =
     this.images.build(imageDirectory, emptyMap(), "Dockerfile", setOf(tag), null, CancellationContext()) {}
-
-fun DockerClient.runContainerAndStopImmediately(container: DockerContainer, stdout: Sink = System.out.sink()) =
-    this.runContainer(container, stdout) {
-        this.containers.stop(container)
-    }
 
 fun DockerClient.runContainerAndWaitForCompletion(container: DockerContainer, stdout: Sink = System.out.sink()) =
     this.runContainer(container, stdout) {}

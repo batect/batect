@@ -21,6 +21,7 @@ import batect.docker.DockerContainer
 import batect.integrationtests.build
 import batect.integrationtests.createClient
 import batect.integrationtests.creationRequestForContainer
+import batect.integrationtests.retry
 import batect.integrationtests.runContainer
 import batect.integrationtests.testImagesDirectory
 import batect.integrationtests.withContainer
@@ -87,24 +88,6 @@ private fun httpGet(url: String): Response {
 
         return response
     }
-}
-
-private inline fun <T> retry(retries: Int, operation: () -> T): T {
-    val exceptions = mutableListOf<Throwable>()
-
-    for (retry in 1..retries) {
-        try {
-            return operation()
-        } catch (e: Throwable) {
-            exceptions.add(e)
-        }
-    }
-
-    val exceptionDetails = exceptions
-        .mapIndexed { i, e -> "Attempt ${i + 1}: $e\n" }
-        .joinToString("\n")
-
-    throw RuntimeException("Could not execute operation after $retries attempts. Exceptions were:\n$exceptionDetails")
 }
 
 private fun Response.codeValue() = this.code

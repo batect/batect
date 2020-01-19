@@ -54,3 +54,21 @@ fun creationRequestForContainer(
         capabilitiesToDrop = emptySet()
     )
 }
+
+inline fun <T> retry(retries: Int, operation: () -> T): T {
+    val exceptions = mutableListOf<Throwable>()
+
+    for (retry in 1..retries) {
+        try {
+            return operation()
+        } catch (e: Throwable) {
+            exceptions.add(e)
+        }
+    }
+
+    val exceptionDetails = exceptions
+        .mapIndexed { i, e -> "Attempt ${i + 1}: $e\n" }
+        .joinToString("\n")
+
+    throw RuntimeException("Could not execute operation after $retries attempts. Exceptions were:\n$exceptionDetails")
+}

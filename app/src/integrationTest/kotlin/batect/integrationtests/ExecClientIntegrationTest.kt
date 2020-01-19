@@ -34,7 +34,7 @@ object ExecClientIntegrationTest : Spek({
         val client by createForGroup { createClient() }
 
         describe("executing a command in a already running container") {
-            val image by runBeforeGroup { client.images.pull("alpine:3.7", CancellationContext(), {}) }
+            val image by runBeforeGroup { client.pull("alpine:3.7") }
 
             val execResult by runBeforeGroup {
                 client.withNetwork { network ->

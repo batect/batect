@@ -20,6 +20,7 @@ import batect.execution.CancellationContext
 import batect.integrationtests.build
 import batect.integrationtests.createClient
 import batect.integrationtests.creationRequestForContainer
+import batect.integrationtests.pull
 import batect.integrationtests.runContainerAndWaitForCompletion
 import batect.integrationtests.testImagesDirectory
 import batect.integrationtests.withContainer
@@ -38,7 +39,7 @@ object ContainerEndToEndIntegrationTest : Spek({
         val client by createForGroup { createClient() }
 
         mapOf(
-            "using a pulled image" to { client.images.pull("alpine:3.7", CancellationContext(), {}) },
+            "using a pulled image" to { client.pull("alpine:3.7") },
             "using a built image" to { client.build(testImagesDirectory.resolve("basic-image"), "batect-integration-tests-image") }
         ).forEach { (description, imageSource) ->
             describe(description) {

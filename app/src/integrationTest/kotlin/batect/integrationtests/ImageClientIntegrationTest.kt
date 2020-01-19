@@ -37,7 +37,7 @@ object ImageClientIntegrationTest : Spek({
 
         describe("pulling an image that has not been cached locally already") {
             beforeGroup { removeImage("hello-world:latest") }
-            val image by runBeforeGroup { client.images.pull("hello-world:latest", CancellationContext(), {}) }
+            val image by runBeforeGroup { client.pull("hello-world:latest") }
 
             it("pulls the image successfully") {
                 assertThat(image, equalTo(DockerImage("hello-world:latest")))

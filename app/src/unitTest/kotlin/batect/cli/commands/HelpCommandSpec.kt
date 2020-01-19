@@ -90,7 +90,7 @@ object HelpCommandSpec : Spek({
                         |      --booster-level=some_custom_value_format        Level of boosters to use. (extra help
                         |                                                      info)
                         |
-                        |For documentation and further information on batect, visit https://github.com/charleskorn/batect.
+                        |For documentation and further information on batect, visit https://github.com/batect/batect.
                         |
                         |""".trimMargin().withPlatformSpecificLineSeparator()))
             }

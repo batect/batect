@@ -24,7 +24,7 @@ function main() {
         if [ "$status" = "null" ]; then
             echo "Build has not started."
         else
-            echo -n "https://ci.appveyor.com/project/charleskorn/batect/builds/$id: "
+            echo -n "https://ci.appveyor.com/project/batect/batect/builds/$id: "
 
             case "$status" in
             success)

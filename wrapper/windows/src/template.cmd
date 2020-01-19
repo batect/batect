@@ -2,7 +2,7 @@
 rem This file is part of batect.
 rem Do not modify this file, it will be overwritten next time you upgrade batect.
 rem You should commit this file to version control alongside the rest of your project. It should not be installed globally.
-rem For more information, visit https://github.com/charleskorn/batect.
+rem For more information, visit https://github.com/batect/batect.
 
 setlocal EnableDelayedExpansion
 

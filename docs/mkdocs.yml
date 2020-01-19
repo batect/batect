@@ -4,8 +4,8 @@ site_description: Documentation for batect, the build and testing environments a
 site_author: Charles Korn
 copyright: Copyright &copy; 2017-2019 Charles Korn.
 
-repo_name: charleskorn/batect
-repo_url: https://github.com/charleskorn/batect
+repo_name: batect/batect
+repo_url: https://github.com/batect/batect
 edit_uri: edit/master/docs/content
 
 docs_dir: content
@@ -28,7 +28,7 @@ extra_javascript:
 extra:
   social:
   - type: 'github'
-    link: 'https://github.com/charleskorn/batect'
+    link: 'https://github.com/batect/batect'
   - type: 'comments'
     link: 'https://spectrum.chat/batect'
 
@@ -77,8 +77,8 @@ nav:
     - Windows: "tips/Windows.md"
 
   - Sample projects: "SampleProjects.md"
-  - Release notes: "https://github.com/charleskorn/batect/releases"
-  - Roadmap: "https://github.com/charleskorn/batect/blob/master/ROADMAP.md"
+  - Release notes: "https://github.com/batect/batect/releases"
+  - Roadmap: "https://github.com/batect/batect/blob/master/ROADMAP.md"
 
 google_analytics:
   - 'UA-63947227-2'

@@ -245,7 +245,7 @@ object TaskExecutionOrderResolverSpec : Spek({
             }
         }
 
-        on("resolving the execution order for a complex set of tasks from issue 53 (https://github.com/charleskorn/batect/issues/53)") {
+        on("resolving the execution order for a complex set of tasks from issue 53 (https://github.com/batect/batect/issues/53)") {
             val getSandwichContentsTask = Task("getSandwichContents", taskRunConfiguration)
             val putContentsInBreadTask = Task("putContentsInBread", taskRunConfiguration, prerequisiteTasks = listOf("getSandwichContents"))
             val prepareTheTableTask = Task("prepareTheTable", taskRunConfiguration)

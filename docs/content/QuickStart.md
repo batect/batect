@@ -3,7 +3,7 @@
 The `batect` and `batect.cmd` scripts are designed to be committed alongside your project, and not installed globally. They will
 automatically pull down the correct version of batect for your operating system.
 
-1. Download the latest version of `batect` and `batect.cmd` from the [releases page](https://github.com/charleskorn/batect/releases),
+1. Download the latest version of `batect` and `batect.cmd` from the [releases page](https://github.com/batect/batect/releases),
    and copy them into your project.
 
     Note that you only need the scripts - you don't need to download `batect.jar`.

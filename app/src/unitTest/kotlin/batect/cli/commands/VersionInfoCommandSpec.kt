@@ -68,7 +68,7 @@ object VersionInfoCommandSpec : Spek({
                     |OS version:        THE OS VERSION
                     |Docker version:    (DOCKER VERSION INFO)
                     |
-                    |For documentation and further information on batect, visit https://github.com/charleskorn/batect.
+                    |For documentation and further information on batect, visit https://github.com/batect/batect.
                     |
                     |""".trimMargin().withPlatformSpecificLineSeparator()))
             }

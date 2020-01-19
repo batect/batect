@@ -30,7 +30,7 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
     constructor(client: OkHttpClient, logger: Logger) : this(client, logger, { ZonedDateTime.now(ZoneOffset.UTC) })
 
     fun getLatestVersionInfo(): UpdateInfo {
-        val url = "https://api.github.com/repos/charleskorn/batect/releases/latest"
+        val url = "https://api.github.com/repos/batect/batect/releases/latest"
         val request = Request.Builder()
             .url(url)
             .build()

@@ -45,7 +45,7 @@ class CommandLineOptionsParser(
         const val disableCleanupFlagName = "no-cleanup"
         const val upgradeFlagName = "upgrade"
         const val configVariableOptionName = "config-var"
-        const val helpBlurb = "For documentation and further information on batect, visit https://github.com/charleskorn/batect."
+        const val helpBlurb = "For documentation and further information on batect, visit https://github.com/batect/batect."
     }
 
     private val dockerConnectionOptionsGroup = OptionGroup("Docker connection options")

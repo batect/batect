@@ -87,12 +87,12 @@ jobs:
 
     - stage: Integration and journey test
       name: Wait for Windows build to complete
-      if: (tag IS present OR branch = "master") AND repo = "charleskorn/batect" AND type != pull_request
+      if: (tag IS present OR branch = "master") AND repo = "batect/batect" AND type != pull_request
       script: ./travis/wait_for_appveyor.sh
 
     - stage: Release
       script: skip
-      if: tag IS present AND repo = "charleskorn/batect"
+      if: tag IS present AND repo = "batect/batect"
       workspaces:
         use:
         - build_workspace
@@ -105,7 +105,7 @@ jobs:
             secure: "gorxQBTZgKrgQ3Sc/veZX0b+Jh9b6xQxBOjcCPgp51rxXfea+115GrR+I7EG6soA6pnDdawy4TUTlzcKp4uwDlNmhTjWJuaCoVIbVPRfnLhL+wNYgwCeWLv9tocJWyn7RdtmNbfG3W9pSuWE+kaYplC/1I1golMxIIt/0M4OCMfy17oWJCd7LQRSjwPUMHrKgMFOrnQrfliK4fHYlLm35iz3pTvRfyv6AaTIhEstMubt1ljER5HMAtaVVA66rOhwGgUcyht2CqeZf/tonKhTFvsfDK0j2OBZqKetFB6aNorlBNVIr18EKokQmOZPEN1vyUHD0jkJ29w6wXBmeJJJ+nxiKBwiw73B+l9sutQ4DAKiSRfHnhCf5EMGsSKaOPFELCd8F3GoiG806sUtamqq9L7wg6EDd68nfo2gcxoDYYxSTxwBasvN4D8u/mAQkQeelSb5AbKjSSNZp0/umiM8dsVg8JP8oT3zKGBfpo5OUqi/PaDGmYnU32EmV1OYFMk/1BH8w5CXQybaTdY6LNHlEIM5RLiwhbbfUhBa/yNCR2BaZh3IWrq1CXO+3r3HzSE6E21VGcOT9MR0ZdnEpyBQLEGJfBElCkpaoAA6pW9uBEJJ5H4Hb84VoICF4AEN5gzo9KjbFOiz+4a7Wi7+TsqnfL4l/sAVUTa8lawXqX/NsDU="
           skip_cleanup: true
           on:
-            repo: charleskorn/batect
+            repo: batect/batect
             all_branches: true
 
         - provider: releases

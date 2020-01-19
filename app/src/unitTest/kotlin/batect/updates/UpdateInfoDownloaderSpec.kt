@@ -43,7 +43,7 @@ import java.time.ZonedDateTime
 
 object UpdateInfoDownloaderSpec : Spek({
     describe("an update information downloader") {
-        val downloadUrl = "https://api.github.com/repos/charleskorn/batect/releases/latest"
+        val downloadUrl = "https://api.github.com/repos/batect/batect/releases/latest"
         val client by createForEachTest { mock<OkHttpClient>() }
 
         val logger by createLoggerForEachTest()
@@ -54,18 +54,18 @@ object UpdateInfoDownloaderSpec : Spek({
         on("when the latest release information can be retrieved successfully and includes known wrapper script information") {
             beforeEachTest {
                 val responseBody = """{
-                      "url": "https://api.github.com/repos/charleskorn/batect/releases/7936494",
-                      "html_url": "https://github.com/charleskorn/batect/releases/tag/0.3",
+                      "url": "https://api.github.com/repos/batect/batect/releases/7936494",
+                      "html_url": "https://github.com/batect/batect/releases/tag/0.3",
                       "id": 7936494,
                       "tag_name": "0.3",
                       "assets": [
                         {
                           "name": "batect",
-                          "browser_download_url": "https://github.com/charleskorn/batect/releases/download/0.3/batect"
+                          "browser_download_url": "https://github.com/batect/batect/releases/download/0.3/batect"
                         },
                         {
                           "name": "batect.cmd",
-                          "browser_download_url": "https://github.com/charleskorn/batect/releases/download/0.3/batect.cmd"
+                          "browser_download_url": "https://github.com/batect/batect/releases/download/0.3/batect.cmd"
                         }
                       ]
                   }""".trimIndent()
@@ -80,7 +80,7 @@ object UpdateInfoDownloaderSpec : Spek({
             }
 
             it("returns the URL of the latest version") {
-                assertThat(updateInfo.url, equalTo("https://github.com/charleskorn/batect/releases/tag/0.3"))
+                assertThat(updateInfo.url, equalTo("https://github.com/batect/batect/releases/tag/0.3"))
             }
 
             it("returns the current date and time as the 'last updated' time") {
@@ -89,8 +89,8 @@ object UpdateInfoDownloaderSpec : Spek({
 
             it("returns the script information") {
                 assertThat(updateInfo.scripts, equalTo(listOf(
-                    ScriptInfo("batect", "https://github.com/charleskorn/batect/releases/download/0.3/batect"),
-                    ScriptInfo("batect.cmd", "https://github.com/charleskorn/batect/releases/download/0.3/batect.cmd")
+                    ScriptInfo("batect", "https://github.com/batect/batect/releases/download/0.3/batect"),
+                    ScriptInfo("batect.cmd", "https://github.com/batect/batect/releases/download/0.3/batect.cmd")
                 )))
             }
         }
@@ -98,8 +98,8 @@ object UpdateInfoDownloaderSpec : Spek({
         on("when the latest release information does not include any assets") {
             beforeEachTest {
                 val responseBody = """{
-                      "url": "https://api.github.com/repos/charleskorn/batect/releases/7936494",
-                      "html_url": "https://github.com/charleskorn/batect/releases/tag/0.3",
+                      "url": "https://api.github.com/repos/batect/batect/releases/7936494",
+                      "html_url": "https://github.com/batect/batect/releases/tag/0.3",
                       "id": 7936494,
                       "tag_name": "0.3",
                       "assets": []
@@ -118,14 +118,14 @@ object UpdateInfoDownloaderSpec : Spek({
         on("when the latest release information does not contain an asset with a known script name") {
             beforeEachTest {
                 val responseBody = """{
-                      "url": "https://api.github.com/repos/charleskorn/batect/releases/7936494",
-                      "html_url": "https://github.com/charleskorn/batect/releases/tag/0.3",
+                      "url": "https://api.github.com/repos/batect/batect/releases/7936494",
+                      "html_url": "https://github.com/batect/batect/releases/tag/0.3",
                       "id": 7936494,
                       "tag_name": "0.3",
                       "assets": [
                         {
                           "name": "batect.jar",
-                          "browser_download_url": "https://github.com/charleskorn/batect/releases/download/0.3/batect.jar"
+                          "browser_download_url": "https://github.com/batect/batect/releases/download/0.3/batect.jar"
                         }
                       ]
                   }""".trimIndent()
@@ -145,7 +145,7 @@ object UpdateInfoDownloaderSpec : Spek({
 
             it("throws an appropriate exception") {
                 assertThat({ downloader.getLatestVersionInfo() },
-                    throws(withMessage("Could not download latest release information from https://api.github.com/repos/charleskorn/batect/releases/latest: The server returned HTTP 404.")))
+                    throws(withMessage("Could not download latest release information from https://api.github.com/repos/batect/batect/releases/latest: The server returned HTTP 404.")))
             }
         }
 
@@ -162,7 +162,7 @@ object UpdateInfoDownloaderSpec : Spek({
 
             it("throws an appropriate exception") {
                 assertThat({ downloader.getLatestVersionInfo() },
-                    throws(withMessage("Could not download latest release information from https://api.github.com/repos/charleskorn/batect/releases/latest: Could not do what you asked because stuff happened.")
+                    throws(withMessage("Could not download latest release information from https://api.github.com/repos/batect/batect/releases/latest: Could not do what you asked because stuff happened.")
                         and withCause(exception)))
             }
         }

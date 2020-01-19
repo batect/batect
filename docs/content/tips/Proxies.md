@@ -99,4 +99,4 @@ If you are running batect on OS X or Windows with Docker 17.06 or later, batect 
 variables that refer to `localhost`, `127.0.0.1` or `::1` so that they refer to the host machine.
 
 If you are running batect on Linux, or using an older version of Docker, batect will not rewrite proxy-related environment variables.
-Support for Linux will be added in the future, check [this issue on GitHub](https://github.com/charleskorn/batect/issues/10) for updates.
+Support for Linux will be added in the future, check [this issue on GitHub](https://github.com/batect/batect/issues/10) for updates.

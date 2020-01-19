@@ -1,7 +1,7 @@
 # batect
-[![Build Status](https://img.shields.io/travis/charleskorn/batect/master.svg)](https://travis-ci.org/charleskorn/batect)
-[![Coverage](https://img.shields.io/codecov/c/github/charleskorn/batect.svg)](https://codecov.io/gh/charleskorn/batect)
-[![License](https://img.shields.io/github/license/charleskorn/batect.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Build Status](https://img.shields.io/travis/batect/batect/master.svg)](https://travis-ci.org/batect/batect)
+[![Coverage](https://img.shields.io/codecov/c/github/batect/batect.svg)](https://codecov.io/gh/batect/batect)
+[![License](https://img.shields.io/github/license/batect/batect.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Chat](https://img.shields.io/badge/chat-on%20spectrum-brightgreen.svg)](https://spectrum.chat/batect)
 
 **b**uild **a**nd **t**esting **e**nvironments as **c**ode **t**ool: Dockerised build and testing environments made easy
@@ -21,7 +21,7 @@
 
 ## Getting started
 
-1. Drop the latest `batect` and `batect.cmd` scripts from the [releases page](https://github.com/charleskorn/batect/releases)
+1. Drop the latest `batect` and `batect.cmd` scripts from the [releases page](https://github.com/batect/batect/releases)
    into the root folder of your project.
 2. If you're on Linux or OS X, make sure the script is executable: run `chmod +x batect`.
 3. Create your `batect.yml` to define your environment:
@@ -59,7 +59,7 @@ There's a batect community on [Spectrum](https://spectrum.chat/batect/) - anyone
 
 ## Feedback
 
-Please [open an issue on GitHub](https://github.com/charleskorn/batect/issues/new) if you run into a problem or have a suggestion.
+Please [open an issue on GitHub](https://github.com/batect/batect/issues/new) if you run into a problem or have a suggestion.
 
 You can see what new features and improvements are planned in the [roadmap](ROADMAP.md).
 

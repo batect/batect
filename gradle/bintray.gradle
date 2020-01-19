@@ -39,8 +39,8 @@ task generateBintrayDescriptor {
                |        "subject": "charleskorn",
                |        "desc": "Build And Testing Environments as Code Tool",
                |        "website_url": "https://batect.charleskorn.com",
-               |        "issue_tracker_url": "https://github.com/charleskorn/batect/issues",
-               |        "vcs_url": "https://github.com/charleskorn/batect",
+               |        "issue_tracker_url": "https://github.com/batect/batect/issues",
+               |        "vcs_url": "https://github.com/batect/batect",
                |        "licenses": ["Apache-2.0"],
                |        "labels": [
                |            "developer-experience",

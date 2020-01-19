@@ -16,7 +16,6 @@
 
 package batect.integrationtests.endtoend
 
-import batect.execution.CancellationContext
 import batect.integrationtests.build
 import batect.integrationtests.createClient
 import batect.integrationtests.creationRequestForContainer

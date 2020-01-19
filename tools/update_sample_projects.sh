@@ -42,6 +42,8 @@ function main {
     updateProject "batect-sample-ruby" "$latestVersion"
     echo
     updateProject "batect-sample-golang" "$latestVersion"
+    echo
+    updateProject "batect-sample-cypress" "$latestVersion"
 }
 
 main

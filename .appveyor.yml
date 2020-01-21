@@ -5,7 +5,7 @@ clone_folder: D:\projects\batect
 
 environment:
   GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"
-  GRADLE_USER_HOME: "D:\gradle"
+  GRADLE_USER_HOME: "D:\\gradle"
 
 install:
   - ver

@@ -1,10 +1,11 @@
 version: "{build}"
 image: "Windows Server 2019 on Azure for batect"
 skip_tags: true
-max_jobs: 20
+clone_folder: D:\projects\batect
 
 environment:
   GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"
+  GRADLE_USER_HOME: "D:\gradle"
 
 install:
   - ver
@@ -27,19 +28,19 @@ build_script:
 
 after_test:
   - ./gradlew --stop
-  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\modules-2\modules-2.lock
-  - ps: Remove-Item -ErrorAction SilentlyContinue -Recurse ${env:USERPROFILE}\.gradle\caches\*\plugin-resolution\
-  - ps: Remove-Item -ErrorAction SilentlyContinue -Recurse ${env:USERPROFILE}\.gradle\caches\*\scripts\
-  - ps: Remove-Item -ErrorAction SilentlyContinue -Recurse ${env:USERPROFILE}\.gradle\caches\*\scripts-remapped\
-  - ps: Remove-Item -ErrorAction SilentlyContinue -Recurse ${env:USERPROFILE}\.gradle\caches\*\fileHashes\
-  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\*\fileContent\*.lock
-  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\*\javaCompile\*.lock
-  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\*\executionHistory\*.lock
-  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\*\generated-gradle-jars\*.lock
-  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\jars-3\*.lock
-  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\journal-1\file-access.bin
-  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:USERPROFILE}\.gradle\caches\journal-1\*.lock
+  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\modules-2\modules-2.lock
+  - ps: Remove-Item -ErrorAction SilentlyContinue -Recurse ${env:GRADLE_USER_HOME}\caches\*\plugin-resolution\
+  - ps: Remove-Item -ErrorAction SilentlyContinue -Recurse ${env:GRADLE_USER_HOME}\caches\*\scripts\
+  - ps: Remove-Item -ErrorAction SilentlyContinue -Recurse ${env:GRADLE_USER_HOME}\caches\*\scripts-remapped\
+  - ps: Remove-Item -ErrorAction SilentlyContinue -Recurse ${env:GRADLE_USER_HOME}\caches\*\fileHashes\
+  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\*\fileContent\*.lock
+  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\*\javaCompile\*.lock
+  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\*\executionHistory\*.lock
+  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\*\generated-gradle-jars\*.lock
+  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\jars-3\*.lock
+  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\journal-1\file-access.bin
+  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\journal-1\*.lock
 
 cache:
-  - '%USERPROFILE%\.gradle\caches'
-  - '%USERPROFILE%\.gradle\wrapper'
+  - '%GRADLE_USER_HOME%\caches'
+  - '%GRADLE_USER_HOME%\wrapper'

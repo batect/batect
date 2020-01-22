@@ -404,10 +404,31 @@ object ContainersAPISpec : Spek({
                     whenever(httpClient.newBuilder()).doReturn(longTimeoutClientBuilder)
                 }
 
-                on("the Docker daemon returning a single event") {
+                on("the Docker daemon returning a single event followed by a new line character") {
                     val responseBody = """
                         |{"status":"health_status: healthy","id":"f09004d33c0892ed74718bd0c1166b28a8d4788bea6449bb6ea8c4d402b20db7","from":"12ff4615e7ff","Type":"container","Action":"health_status: healthy","Actor":{"ID":"f09004d33c0892ed74718bd0c1166b28a8d4788bea6449bb6ea8c4d402b20db7","Attributes":{"image":"12ff4615e7ff","name":"distracted_stonebraker"}},"scope":"local","time":1533986037,"timeNano":1533986037977811448}
                         |
+                    """.trimMargin()
+
+                    val call by createForEachTest { clientWithLongTimeout.mock("GET", expectedUrl, responseBody, 200) }
+                    val event by runForEachTest { api.waitForNextEvent(container, eventTypes, Duration.ofNanos(123), cancellationContext) }
+
+                    it("returns that event") {
+                        assertThat(event, equalTo(DockerEvent("health_status: healthy")))
+                    }
+
+                    it("configures the HTTP client with the timeout provided") {
+                        verify(longTimeoutClientBuilder).readTimeout(123, TimeUnit.NANOSECONDS)
+                    }
+
+                    it("registers the API call with the cancellation context") {
+                        verify(cancellationContext).addCancellationCallback(call::cancel)
+                    }
+                }
+
+                on("the Docker daemon returning a single event but followed by a new line character") {
+                    val responseBody = """
+                        |{"status":"health_status: healthy","id":"f09004d33c0892ed74718bd0c1166b28a8d4788bea6449bb6ea8c4d402b20db7","from":"12ff4615e7ff","Type":"container","Action":"health_status: healthy","Actor":{"ID":"f09004d33c0892ed74718bd0c1166b28a8d4788bea6449bb6ea8c4d402b20db7","Attributes":{"image":"12ff4615e7ff","name":"distracted_stonebraker"}},"scope":"local","time":1533986037,"timeNano":1533986037977811448}
                     """.trimMargin()
 
                     val call by createForEachTest { clientWithLongTimeout.mock("GET", expectedUrl, responseBody, 200) }

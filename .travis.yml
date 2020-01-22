@@ -110,7 +110,7 @@ jobs:
 
         - provider: releases
           api_key:
-            secure: wm/dkxB0NC7GWQzbeZBaLpDIEyCR7HhL/+GtWvQjfVDAGveH8mb7mCTiH8oBWB8mV4IRGYEBGq5daJcpVZide/EDDjDV2nLoQlhs0+YIV1vlsfYkOf29XBrV+8VBQlCsOSUqzuwzraOKM13/SMUtqGT4CAtGU0WGa9p3vI1UfevvKi0Ok3N0LLWdwEJ+nBNjDcWnHCfeMUSaFwQg4190iqxtBFphD1AKwAzaDAXHUHtMYjJpga6W0rIQMawEP65y71OWxnYnEYsUmV1RhhMsiVPVZzSsfXBTx81BWqRcTzyjEP18MChKj0Aaix+DJfrKBMYkLposdreicS9uqXTfb9CnMlr5z4EaJGdoIajmg2zLBooeY26EqN7Ub1+zj1HrRI0ORnO9++GHkRNB7dCmWw3BslURk2Z1hYDiHnaSvbG/nn5SmELtU6hipaNnTDHpiTuFli1lInl78feuUi20aTkOB2SRGg0aV/cezKBz/6aVPq2kB9hNzBeel0y/oKdOQlRAsvZbClcqf7Pv61I+zeUAnnHyqYH0pUuTHLzi3BN2gIsgqNUv0H+DxDo8pcAMw/YgAIf2bG88Rh1PODTdtaMJjXCkpcguypOJlrcLRnGQ5bk5/yQcVfT2hLcx9iWmbWKgK3J/fNxO9uxHqtt7u+s130qsgN8ELb4MoTsUAss=
+            secure: "j5HYmSbauZATCMRVmWe8cTRBw/q+uUq0a1kzHITMGhp8N0PIDtFliEsSNoyZjZnVAY7m/teWIshQm71wtq9t089gB4HuLwtMfXcVwCtP+WCy7XFij99cjaoB7AssZuAblzsUsnDMGeWPKCJSsqJZLA46FLHUoiQblWUe/WrEGbJCWzTc0Sc9A07zYsEIL69v/mmR9vKqUutE5C6DLAxdu33VJyyu/ZmsqwTSYztJOz/EfkmAIKM1jNsxH4F7UMpgJtWTfztykvCbIYre9UVXZPuibkHw+0V1n3EMc/TCn/GY2b1s5cVVwssIRceUieSV3cXeK3y/g+MlzNxQISmd/eveRNVAojABS8akTXZzbklT43nzLhMd8M9Gf2pjA4wn0m4E85jB9/rP3Ae8u1wb+g2ZSc6uXWu/Oi9wQgxL12x+RYiuHNGELfjJxPL3aHnPzKxkI6b388a40q68DbwvSQ3NOq1AfeDQJb/aMMO8Z4INpLN+wfLgVJ5iRLv4h9w8x9BR43tre8BzHNSWx44ESAl6h5nYj/wk/9jeE9vPwtz3zQDSRFC/ohvHz/YY1zP8GKH1R+JByYGFOjD9KA6/d6qkx/NALLSv9Zt+f+ReHIRa2/SBwSpQ7rg0h+LSDuHSJY2ZTcKqRmuekYmw1UBnV+IVvU2T3T74rjEOQ7VlqPg="
           skip_cleanup: true
           file_glob: true
           file: build/release/*
@@ -123,7 +123,7 @@ jobs:
           local_dir: docs/build/docs
           skip_cleanup: true
           github_token:
-            secure: "vDvsBKorIMunrBkLJ4mjhikxhsL4Va0zqkBaJqkqodyT9nxfwU7OgzK9DyJ/5eqmqriajxYRX28Hc0n/k+YNIhz8kNIYRfKRlubjgZIXqGkclXOqE7lLLo2YlnXZ00pL4G/goOUNtEEtXQLFraD7fcLl9Kwg5A9lKH6fclA3scNlogTdCpS0quJtKVbEEkMDPq3wfBdDV7BFkm3IAjLI7I9HTyANRiVVoOSQtr8oQkVad7IAJn3yTLPPkQ7pC7gMPeL7qOO8cQNehrOyOujpqRh5/YihWVqOMXHjEreHnQDXSgKjz1NL+Xv66LnFRaMzkRNbZNYQ9hU7t2S7Ns9tEqUblK1msXZcNEd7b1EIJdEZgFmn6HytvHiLXE1dLrsczkazqnRIOvEz+sHb+d4ABo2ZqTl4rEapMbQiYjXjXvQAfmDIEjTh4mYepbXdVZcADISFlJ49KSqJdXdjaIM5pfO0IrQ1pFvuFA3XXxf/PQ2RGfq9I+Hv5qXb/U5HPLOa0P9w8LCpBJIbneqQ11JbNlZucgCyNgdsbmTUd6aZ463Lq/OrEXArwPt2x6xD2i8aNc/Lq9tl8cTSZYxGAQqTVp4KLxFQNeDdlSmW+rXINXH2FUiSxiWGdOjjVbMvGY8OfPe0NyWiswI9JQNmp4sxU2lqpgeMJS+lZw53f1uHxg8="
+            secure: "hhBskZA6ZFOhK+itsjTj5EEmOF/VT3IyfK484DM7IuVwrVHIewe/GdQRnBrO06eqsMNbcTMsRSxxinI1OBMwiP6wNMR/7CI1+CSbwltAD1LnPyY0/fONipzNyKtMgpR5SQ/RSZVs/mmO2QDuVVKgaTAW6v/jiMTxJiduW6aqn2kw0LzxamSVBQ3y5xhP86A9XarmEwk98d+M1FR+9WYlyW0d+XMvRZn7OjAR1Fr9nRPF3ca7LEokKAwcTc5IilUAoHFyqlZLDkMD6EvfUWUlx2GBduhzDwzRL/5OzlIcNUlURqhIEZ1xXpmLYLp8pp7Zch6yesee+6qxLXipEGnQErOBoak7ieSJc7jWeG6ecXQkTpI5rzW8fR8yIClbxfZvjV/kwuAtkG8lcoSIeko8hvy4md2YCgF14ASSgehu3TI8UuuKqkRl76HsVHdTa2ajrqc8cWqmPdEyJI5PUvZy8/7Z5VdN+mGo6+Npg+684IEshy+n5poH0BwOPKeFV4oxfuMAq7DxiltjlPyr5yNfWFVq5KtNzbg4Gsw1D4oL0paBRjE8N/2tlHFpzxHaCzV6gaH42o3pcVNhEgK02FQk6cH2rHTTg+3Se/pT9jYm+QeVfUx8WyUKcEkkcrtLOQTlQQI1FfFc49psOwAP4l8y1ZAMkXljIaLTI9O2P+Sgwp0="
           target_branch: gh-pages
           keep_history: true
           on:

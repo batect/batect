@@ -84,6 +84,7 @@ sealed class VariableExpression {
                     }
                 }
                 is ConfigVariableReference -> "<${obj.referenceTo}"
+                is ConcatenatedExpression -> TODO()
             }
 
             encoder.encodeString(representation)
@@ -132,6 +133,13 @@ data class ConfigVariableReference(val referenceTo: String) : VariableExpression
     }
 
     override fun toString() = "${this::class.simpleName}(reference to: '$referenceTo')"
+}
+
+data class ConcatenatedExpression(val expressions: Iterable<VariableExpression>) : VariableExpression() {
+    constructor(vararg expressions: VariableExpression) : this(expressions.toList())
+
+    override fun evaluate(hostEnvironmentVariables: Map<String, String>, configVariables: Map<String, String?>): String =
+        expressions.joinToString("") { it.evaluate(hostEnvironmentVariables, configVariables) }
 }
 
 class VariableExpressionEvaluationException(message: String) : RuntimeException(message)

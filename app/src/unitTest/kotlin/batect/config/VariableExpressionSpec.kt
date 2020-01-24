@@ -21,6 +21,7 @@ import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.isEmptyString
 import com.natpryce.hamkrest.throws
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -179,6 +180,56 @@ object VariableExpressionSpec : Spek({
 
                 it("returns the default value") {
                     assertThat(value, equalTo("the value"))
+                }
+            }
+        }
+    }
+
+    describe("an expression that concatenates multiple other expressions") {
+        given("an empty list of expressions to concatenate") {
+            val expression = ConcatenatedExpression()
+
+            on("evaluating the expression") {
+                val value = expression.evaluate(emptyMap(), emptyMap())
+
+                it("returns an empty string") {
+                    assertThat(value, isEmptyString)
+                }
+            }
+        }
+
+        given("a single expression to concatenate") {
+            val expression = ConcatenatedExpression(LiteralValue("some value"))
+
+            on("evaluating the expression") {
+                val value = expression.evaluate(emptyMap(), emptyMap())
+
+                it("returns the result of evaluating that expression") {
+                    assertThat(value, equalTo("some value"))
+                }
+            }
+        }
+
+        given("two expressions to concatenate") {
+            val expression = ConcatenatedExpression(LiteralValue("some"), LiteralValue(" value"))
+
+            on("evaluating the expression") {
+                val value = expression.evaluate(emptyMap(), emptyMap())
+
+                it("returns both expressions concatenated together") {
+                    assertThat(value, equalTo("some value"))
+                }
+            }
+        }
+
+        given("three expressions to concatenate") {
+            val expression = ConcatenatedExpression(LiteralValue("some"), LiteralValue(" other"), LiteralValue(" value"))
+
+            on("evaluating the expression") {
+                val value = expression.evaluate(emptyMap(), emptyMap())
+
+                it("returns all expressions concatenated together") {
+                    assertThat(value, equalTo("some other value"))
                 }
             }
         }

@@ -52,6 +52,34 @@ Definitions for each of your tasks, the actions you launch through batect, in `n
 
 [Detailed reference for `tasks`](Tasks.md)
 
+## Expressions
+
+Some fields support expressions - references to environment variables on the host or [config variables](ConfigVariables.md).
+
+You can pass environment variables from the host (ie. where you run batect) to the container by using any of the following formats:
+
+* `$name` or `${name}`: use the value of `name` from the host as the value inside the container.
+
+    If `name` is not set on the host, batect will show an error message and not start the task.
+
+* `${name:-default}`: use the value of `name` from the host as the value inside the container.
+
+    If `name` is not set on the host, `default` is used instead.
+
+    `default` can be empty, so `${name:-}` will use the value of `name` from the host if it is
+    set, or a blank value if it is not set.
+
+You can refer to the value of a [config variable](ConfigVariables.md) with `<name` or `<{name}`.
+
+For example, to set `SUPER_SECRET_PASSWORD` in the container to the value of the `MY_PASSWORD` environment variable on the host,
+use `SUPER_SECRET_PASSWORD: $MY_PASSWORD` or `SUPER_SECRET_PASSWORD: ${MY_PASSWORD}`. Or, to default it to `insecure` if
+`MY_PASSWORD` is not set, use `SUPER_SECRET_PASSWORD: ${MY_PASSWORD:-insecure}`.
+
+Substitution in the middle of values is not supported (eg. `SUPER_SECRET_PASSWORD: My password is $MY_PASSWORD` will not work).
+
+The curly brace syntax for environment variables, including the ability to specify default values for environment variables,
+was added in v0.21. [Config variables](ConfigVariables.md) were added in v0.40.
+
 ## Anchors, aliases, extensions and merging
 
 Available since v0.27.

@@ -8,7 +8,7 @@ They are useful for a number of use cases:
 * Simplifying management of developer-specific preferences (eg. a developer's preferred log output level)
 * Simplifying management of sets of environment-specific settings (eg. managing sets of test environment connection settings for a CI server)
 
-Config variables can currently be used in environment variables for [containers](Containers.md#environment) and [tasks](Tasks.md#run), and [build args](Containers.md#build_args) for containers.
+Config variables can be used anywhere [expressions](Overview.md#expressions) are supported.
 
 Config variables were introduced in v0.40.
 

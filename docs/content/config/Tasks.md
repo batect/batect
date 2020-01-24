@@ -39,9 +39,7 @@ Specifies what to do when this task starts:
 
     If a variable is specified both here and on the container itself, the value given here will override the value defined on the container.
 
-    This field supports all of the same syntax as when [specifying a variable directly on the container](Containers.md#expressions),
-    including using config variables, passing environment variables from the host to the container and providing defaults for when the host
-    environment variable is not set.
+    Values can be [expressions](Overview.md#expressions).
 
     Prior to v0.21, environment variables were required to be supplied in `name=value` format.
 

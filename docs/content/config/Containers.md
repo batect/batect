@@ -21,17 +21,14 @@ with users running on other operating systems, using Unix-style paths is recomme
 The image can be overridden when running a task with [`--override-image`](../CLIReference.md#override-the-image-used-by-a-container-override-image).
 
 ## `build_args`
-List of build args (in `name: value` format) to use when building the image in [`build_directory`](#build_directory).
+List of build args (in `name: value` format) to use when building the image in [`build_directory`](#build_directory). Values can be [expressions](Overview.md#expressions).
 
 Each build arg must be defined in the Dockerfile with an `ARG` instruction otherwise the value provided will have no effect.
-
-The values of environment variables from the host and [config variables](ConfigVariables.md) can be passed as build args
-using [the same syntax as for `environment`](#expressions).
 
 !!! warning
     Use caution when using build args for secret values. Build arg values can be revealed by anyone with a copy of the image with the `docker history` command.
 
-Available since v0.28. The ability to use environment variable values in build args was added in v0.32.
+Available since v0.28. The ability to use expressions in build args was added in v0.32.
 
 ## `dockerfile`
 Dockerfile (relative to [`build_directory`](#build_directory)) to use when building the image in [`build_directory`](#build_directory). Defaults to `Dockerfile` if not set.
@@ -99,39 +96,9 @@ batect will always convert the entrypoint provided here to the exec form when pa
 Available since v0.37.
 
 ## `environment`
-List of environment variables (in `name: value` format) for the container.
+List of environment variables (in `name: value` format) for the container. Values can be [expressions](Overview.md#expressions).
 
 Prior to v0.21, environment variables were required to be supplied in `name=value` format.
-
-### Expressions
-In addition to providing a literal value, you can pass environment variables from the host
-(ie. where you run batect) to the container by using any of the following formats:
-
-* `$name` or `${name}`: use the value of `name` from the host as the value inside the container.
-
-    If the referenced host variable is not present, batect will show an error message and not start the task.
-
-* `${name:-default}`: use the value of `name` from the host as the value inside the container.
-
-    If the referenced host variable is not present, `default` is used instead.
-
-    `default` can be empty, so `${name:-}` will use the value of `name` from the host if it is
-    set, or a blank value if it is not set.
-
-You can also refer to the value of a [config variable](ConfigVariables.md) with `<name` or `<{name}`.
-
-For example, to set `SUPER_SECRET_PASSWORD` in the container to the value of the `MY_PASSWORD` environment variable on the host,
-use `SUPER_SECRET_PASSWORD: $MY_PASSWORD` or `SUPER_SECRET_PASSWORD: ${MY_PASSWORD}`. Or, to default it to `insecure` if
-`MY_PASSWORD` is not set, use `SUPER_SECRET_PASSWORD: ${MY_PASSWORD:-insecure}`.
-
-Substitution in the middle of values is not supported (eg. `SUPER_SECRET_PASSWORD: My password is $MY_PASSWORD` will not work).
-
-!!! warning
-    Be careful when using this - by relying on the host's environment variables, you are introducing inconsistency to how the container
-    runs between hosts, which is something you generally want to avoid.
-
-The curly brace syntax for environment variables, including the ability to specify default values for environment variables,
-was added in v0.21. [Config variables](ConfigVariables.md) were added in v0.40.
 
 ### `TERM`
 The `TERM` environment variable, if set on the host, is always automatically passed through to the container. This ensures that features such as

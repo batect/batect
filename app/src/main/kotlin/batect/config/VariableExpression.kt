@@ -21,6 +21,7 @@ import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.list
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Serializer
@@ -30,6 +31,7 @@ import kotlinx.serialization.withName
 @Serializable(with = VariableExpression.Companion::class)
 sealed class VariableExpression {
     abstract fun evaluate(hostEnvironmentVariables: Map<String, String>, configVariables: Map<String, String?>): String
+    abstract fun serialize(encoder: Encoder)
 
     @Serializer(forClass = VariableExpression::class)
     companion object : KSerializer<VariableExpression> {
@@ -73,27 +75,13 @@ sealed class VariableExpression {
             }
         }
 
-        override fun serialize(encoder: Encoder, obj: VariableExpression) {
-            val representation = when (obj) {
-                is LiteralValue -> obj.value
-                is EnvironmentVariableReference -> {
-                    if (obj.default == null) {
-                        '$' + obj.referenceTo
-                    } else {
-                        '$' + "{${obj.referenceTo}:-${obj.default}}"
-                    }
-                }
-                is ConfigVariableReference -> "<${obj.referenceTo}"
-                is ConcatenatedExpression -> TODO()
-            }
-
-            encoder.encodeString(representation)
-        }
+        override fun serialize(encoder: Encoder, obj: VariableExpression) = obj.serialize(encoder)
     }
 }
 
 data class LiteralValue(val value: String) : VariableExpression() {
     override fun evaluate(hostEnvironmentVariables: Map<String, String>, configVariables: Map<String, String?>) = value
+    override fun serialize(encoder: Encoder) = encoder.encodeString(value)
     override fun toString() = "${this::class.simpleName}(value: '$value')"
 }
 
@@ -106,6 +94,16 @@ data class EnvironmentVariableReference(val referenceTo: String, val default: St
             default != null -> default
             else -> throw VariableExpressionEvaluationException("The host environment variable '$referenceTo' is not set, and no default value has been provided.")
         }
+    }
+
+    override fun serialize(encoder: Encoder) {
+        val representation = if (default == null) {
+            "$$referenceTo"
+        } else {
+            '$' + "{$referenceTo:-$default}"
+        }
+
+        encoder.encodeString(representation)
     }
 
     override fun toString() = "${this::class.simpleName}(reference to: '$referenceTo', default: ${defaultValueToString()})"
@@ -132,6 +130,7 @@ data class ConfigVariableReference(val referenceTo: String) : VariableExpression
         return value
     }
 
+    override fun serialize(encoder: Encoder) = encoder.encodeString("<$referenceTo")
     override fun toString() = "${this::class.simpleName}(reference to: '$referenceTo')"
 }
 
@@ -140,6 +139,16 @@ data class ConcatenatedExpression(val expressions: Iterable<VariableExpression>)
 
     override fun evaluate(hostEnvironmentVariables: Map<String, String>, configVariables: Map<String, String?>): String =
         expressions.joinToString("") { it.evaluate(hostEnvironmentVariables, configVariables) }
+
+    override fun serialize(encoder: Encoder) {
+        val serializer = VariableExpression.Companion.list
+
+        encoder.encodeSerializableValue(serializer, expressions.toList())
+    }
+
+    override fun toString(): String {
+        return "${this::class.simpleName}(expressions: ${expressions.joinToString()})"
+    }
 }
 
 class VariableExpressionEvaluationException(message: String) : RuntimeException(message)

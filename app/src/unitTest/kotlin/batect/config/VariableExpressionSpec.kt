@@ -20,9 +20,11 @@ import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.withMessage
+import batect.utils.Json
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isEmptyString
 import com.natpryce.hamkrest.throws
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -88,6 +90,14 @@ object VariableExpressionSpec : Spek({
                 assertThat(value, equalTo("abc123"))
             }
         }
+
+        on("converting the expression to JSON") {
+            val json = Json.parser.stringify(VariableExpression.Companion, expression)
+
+            it("returns the value as a string") {
+                assertThat(json, equalTo("\"abc123\""))
+            }
+        }
     }
 
     describe("an expression that refers to an environment variable") {
@@ -116,6 +126,14 @@ object VariableExpressionSpec : Spek({
                     }
                 }
             }
+
+            on("converting the expression to JSON") {
+                val json = Json.parser.stringify(VariableExpression.Companion, expression)
+
+                it("returns a string representation of the variable") {
+                    assertThat(json, equalTo("\"\$THE_VAR\""))
+                }
+            }
         }
 
         given("the expression has a default value") {
@@ -142,6 +160,14 @@ object VariableExpressionSpec : Spek({
                     it("returns the default value") {
                         assertThat(value, equalTo("the default value"))
                     }
+                }
+            }
+
+            on("converting the expression to JSON") {
+                val json = Json.parser.stringify(VariableExpression.Companion, expression)
+
+                it("returns a string representation of the variable and its default value") {
+                    assertThat(json, equalTo("\"\${THE_VAR:-the default value}\""))
                 }
             }
         }
@@ -183,6 +209,14 @@ object VariableExpressionSpec : Spek({
                 }
             }
         }
+
+        on("converting the expression to JSON") {
+            val json = Json.parser.stringify(VariableExpression.Companion, expression)
+
+            it("returns a string representation of the variable") {
+                assertThat(json, equalTo("\"<THE_VAR\""))
+            }
+        }
     }
 
     describe("an expression that concatenates multiple other expressions") {
@@ -194,6 +228,14 @@ object VariableExpressionSpec : Spek({
 
                 it("returns an empty string") {
                     assertThat(value, isEmptyString)
+                }
+            }
+
+            on("converting the expression to JSON") {
+                val json = Json.parser.stringify(VariableExpression.Companion, expression)
+
+                it("returns an empty array") {
+                    assertThat(json, equalTo("[]"))
                 }
             }
         }
@@ -230,6 +272,14 @@ object VariableExpressionSpec : Spek({
 
                 it("returns all expressions concatenated together") {
                     assertThat(value, equalTo("some other value"))
+                }
+            }
+
+            on("converting the expression to JSON") {
+                val json = Json.parser.stringify(VariableExpression.Companion, expression)
+
+                it("returns an array of expressions") {
+                    assertThat(json, equivalentTo("""["some", " other", " value"]"""))
                 }
             }
         }

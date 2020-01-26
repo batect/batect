@@ -1,5 +1,9 @@
 # Container definitions
 
+!!! note
+    This page reflects the options available in the [most recent version](https://github.com/batect/batect/releases/latest)
+    of batect.
+
 Each container definition is made up of:
 
 ## `image`
@@ -28,16 +32,12 @@ Each build arg must be defined in the Dockerfile with an `ARG` instruction other
 !!! warning
     Use caution when using build args for secret values. Build arg values can be revealed by anyone with a copy of the image with the `docker history` command.
 
-Available since v0.28. The ability to use expressions in build args was added in v0.32.
-
 ## `dockerfile`
 Dockerfile (relative to [`build_directory`](#build_directory)) to use when building the image in [`build_directory`](#build_directory). Defaults to `Dockerfile` if not set.
 
 The Dockerfile must be within [`build_directory`](#build_directory).
 
 `dockerfile` must always be specified with Unix-style (`path/to/thing`) paths, even when running on Windows.
-
-Available since v0.31.
 
 ## `command`
 Command to run when the container starts.
@@ -93,12 +93,8 @@ See the Docker docs for [`CMD`](https://docs.docker.com/engine/reference/builder
 [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint) for more information on how the entrypoint is used.
 batect will always convert the entrypoint provided here to the exec form when passed to Docker.
 
-Available since v0.37.
-
 ## `environment`
 List of environment variables (in `name: value` format) for the container. Values can be [expressions](Overview.md#expressions).
-
-Prior to v0.21, environment variables were required to be supplied in `name=value` format.
 
 ### `TERM`
 The `TERM` environment variable, if set on the host, is always automatically passed through to the container. This ensures that features such as
@@ -164,8 +160,6 @@ Two formats are supported:
   ```
 
 Note that the `local` device mounts will be different for Windows and Unix-like hosts. See the [Docker guide for adding host devices to containers](https://docs.docker.com/engine/reference/commandline/run/#add-host-device-to-container---device) for more information.
-
-Available since v0.39.
 
 ## `ports`
 List of ports to make available to the host machine.
@@ -254,21 +248,15 @@ See [the task lifecycle](../TaskLifecycle.md) for more information on the effect
     It is recommended that you try to include any setup work in your image's Dockerfile wherever possible (and not use setup commands), as setup commands must be
     run every time the container starts whereas commands included in your image's Dockerfile only run when the image needs to be built.
 
-Available since v0.38.
-
 ## `privileged`
 Set to `true` to run the container in [privileged mode](https://docs.docker.com/engine/reference/commandline/run/#full-container-capabilities---privileged).
 
 See also [`capabilities_to_add` and `capabilities_to_drop`](#capabilities_to_add-and-capabilities_to_drop).
 
-Available since v0.29.
-
 ## `capabilities_to_add` and `capabilities_to_drop`
 List of [capabilities](http://man7.org/linux/man-pages/man7/capabilities.7.html) to add or drop for the container.
 
 This is equivalent to passing [`--cap-add` or `--cap-drop`](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) to `docker run`.
-
-Available since v0.31.
 
 ## `enable_init_process`
 Set to `true` to pass the [`--init`](https://docs.docker.com/engine/reference/run/#specify-an-init-process) flag when running the container.
@@ -277,12 +265,8 @@ This creates the container with a simple PID 1 process to handle the responsibil
 [Read this article](https://engineeringblog.yelp.com/2016/01/dumb-init-an-init-for-docker.html) if you're interested in more information about the behaviour
 of different processes running as PID 1 and why this flag was introduced.
 
-Available since v0.30.
-
 ## `additional_hostnames`
 List of hostnames to associate with this container, in addition to the default hostname (the name of the container).
-
-Available since v0.37.
 
 ## Examples
 

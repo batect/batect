@@ -1,5 +1,9 @@
 # Configuration file overview
 
+!!! note
+    This page reflects the options available in the [most recent version](https://github.com/batect/batect/releases/latest)
+    of batect.
+
 batect uses a YAML-based configuration file.
 
 By convention, this file is called `batect.yml` and is placed in the root of your project (alongside the `batect` script).
@@ -88,13 +92,7 @@ Combining expressions and literal values is supported (eg. `My password is $MY_P
 
 In fields that support expressions, you can escape `$` and `<` with a backslash (`\`).
 
-The curly brace syntax for environment variables, including the ability to specify default values for environment variables,
-was added in v0.21. [Config variables](ConfigVariables.md) were added in v0.40. Support for mixing expressions and literal
-values was added in v0.42.
-
 ## Anchors, aliases, extensions and merging
-
-Available since v0.27.
 
 batect supports YAML anchors and aliases. This allows you to specify a value in one place, and
 refer to it elsewhere. For example:

@@ -1,5 +1,9 @@
 # Config variables
 
+!!! note
+    This page reflects the options available in the [most recent version](https://github.com/batect/batect/releases/latest)
+    of batect.
+
 Config variables allow you simplify your configuration file, and document and codify the different options available to a developer using your tasks.
 
 They are useful for a number of use cases:
@@ -9,8 +13,6 @@ They are useful for a number of use cases:
 * Simplifying management of sets of environment-specific settings (eg. managing sets of test environment connection settings for a CI server)
 
 Config variables can be used anywhere [expressions](Overview.md#expressions) are supported.
-
-Config variables were introduced in v0.40.
 
 ## Values
 

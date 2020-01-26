@@ -1,7 +1,8 @@
 # CLI reference
 
 !!! note
-    This page reflects the options available in the most recent version of batect.
+    This page reflects the options available in the [most recent version](https://github.com/batect/batect/releases/latest)
+    of batect.
 
     If you are not running the most recent version, run `./batect --help` to see what options are available in your version.
 

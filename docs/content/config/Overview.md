@@ -3,7 +3,8 @@
 batect uses a YAML-based configuration file.
 
 By convention, this file is called `batect.yml` and is placed in the root of your project (alongside the `batect` script).
-You can, however, use a different name or location, and tell `batect` where to find it with the `-f` option.
+You can use a different name or location and tell `batect` where to find it with the
+[`-f` option](../CLIReference.md#use-a-non-standard-configuration-file-name-config-file-or-f).
 
 The root of the configuration file is made up of:
 
@@ -69,16 +70,27 @@ You can pass environment variables from the host (ie. where you run batect) to t
     `default` can be empty, so `${name:-}` will use the value of `name` from the host if it is
     set, or a blank value if it is not set.
 
+    `default` is treated as a literal, it cannot be a reference to another variable.
+
+For example, to refer to the value of the `MY_PASSWORD` environment variable on the host, use `$MY_PASSWORD` or
+`${MY_PASSWORD}`. Or, to default to `insecure` if `MY_PASSWORD` is not set, use `${MY_PASSWORD:-insecure}`.
+
 You can refer to the value of a [config variable](ConfigVariables.md) with `<name` or `<{name}`.
+Default values for config variables can be specified with [`default`](ConfigVariables.md#default) when defining them.
 
-For example, to set `SUPER_SECRET_PASSWORD` in the container to the value of the `MY_PASSWORD` environment variable on the host,
-use `SUPER_SECRET_PASSWORD: $MY_PASSWORD` or `SUPER_SECRET_PASSWORD: ${MY_PASSWORD}`. Or, to default it to `insecure` if
-`MY_PASSWORD` is not set, use `SUPER_SECRET_PASSWORD: ${MY_PASSWORD:-insecure}`.
+When given without braces, `name` can only contain letters, numbers and underscores.
+Any other characters are treated as literals (eg. `$MY_VAR, 2, 3` with `MY_VAR` set to `1` results
+in `1, 2, 3`).
 
-Substitution in the middle of values is not supported (eg. `SUPER_SECRET_PASSWORD: My password is $MY_PASSWORD` will not work).
+When given with braces, `name` can contain any character except a closing brace (`}`) or colon (`:`).
+
+Combining expressions and literal values is supported (eg. `My password is $MY_PASSWORD` or `<{SERVER}:8080`).
+
+In fields that support expressions, you can escape `$` and `<` with a backslash (`\`).
 
 The curly brace syntax for environment variables, including the ability to specify default values for environment variables,
-was added in v0.21. [Config variables](ConfigVariables.md) were added in v0.40.
+was added in v0.21. [Config variables](ConfigVariables.md) were added in v0.40. Support for mixing expressions and literal
+values was added in v0.42.
 
 ## Anchors, aliases, extensions and merging
 

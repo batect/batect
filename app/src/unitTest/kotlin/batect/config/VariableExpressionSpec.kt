@@ -45,8 +45,30 @@ object VariableExpressionSpec : Spek({
                 "\${SOME_VAR:-}" to EnvironmentVariableReference("SOME_VAR", ""),
                 "\${SOME_VAR:-default}" to EnvironmentVariableReference("SOME_VAR", "default"),
                 "\${SOME_VAR:-some value}" to EnvironmentVariableReference("SOME_VAR", "some value"),
+                "\${SOME_VAR:-some value \\} with braces}" to EnvironmentVariableReference("SOME_VAR", "some value } with braces"),
+                "\${SOME_VAR:-some value \\a with slashes}" to EnvironmentVariableReference("SOME_VAR", "some value a with slashes"),
                 "<SOME_VAR" to ConfigVariableReference("SOME_VAR"),
-                "<{SOME_VAR}" to ConfigVariableReference("SOME_VAR")
+                "<{SOME_VAR}" to ConfigVariableReference("SOME_VAR"),
+                "<{SOME_VAR:}" to ConfigVariableReference("SOME_VAR:"),
+                "a\$b" to ConcatenatedExpression(LiteralValue("a"), EnvironmentVariableReference("b")),
+                "a\${b}" to ConcatenatedExpression(LiteralValue("a"), EnvironmentVariableReference("b")),
+                "a\${b:-c}" to ConcatenatedExpression(LiteralValue("a"), EnvironmentVariableReference("b", "c")),
+                "\$a\$b" to ConcatenatedExpression(EnvironmentVariableReference("a"), EnvironmentVariableReference("b")),
+                "\$a b" to ConcatenatedExpression(EnvironmentVariableReference("a"), LiteralValue(" b")),
+                "\${a}b" to ConcatenatedExpression(EnvironmentVariableReference("a"), LiteralValue("b")),
+                "\$abc d" to ConcatenatedExpression(EnvironmentVariableReference("abc"), LiteralValue(" d")),
+                "\$a_b c" to ConcatenatedExpression(EnvironmentVariableReference("a_b"), LiteralValue(" c")),
+                "\$ab2 c" to ConcatenatedExpression(EnvironmentVariableReference("ab2"), LiteralValue(" c")),
+                "\$abc}d" to ConcatenatedExpression(EnvironmentVariableReference("abc"), LiteralValue("}d")),
+                "\$abc-d" to ConcatenatedExpression(EnvironmentVariableReference("abc"), LiteralValue("-d")),
+                "a<b" to ConcatenatedExpression(LiteralValue("a"), ConfigVariableReference("b")),
+                "<a<b" to ConcatenatedExpression(ConfigVariableReference("a"), ConfigVariableReference("b")),
+                "<a b" to ConcatenatedExpression(ConfigVariableReference("a"), LiteralValue(" b")),
+                "<a\$b" to ConcatenatedExpression(ConfigVariableReference("a"), EnvironmentVariableReference("b")),
+                "<{a}\$b" to ConcatenatedExpression(ConfigVariableReference("a"), EnvironmentVariableReference("b")),
+                "<a\${b}" to ConcatenatedExpression(ConfigVariableReference("a"), EnvironmentVariableReference("b")),
+                "<{a}\${b}" to ConcatenatedExpression(ConfigVariableReference("a"), EnvironmentVariableReference("b")),
+                "\$a<b" to ConcatenatedExpression(EnvironmentVariableReference("a"), ConfigVariableReference("b"))
             ).forEach { (source, expectedExpression) ->
                 on("parsing the input '$source'") {
                     val expression = VariableExpression.parse(source)
@@ -57,23 +79,25 @@ object VariableExpressionSpec : Spek({
                 }
             }
 
-            listOf(
-                "$",
-                "\${",
-                "\${}",
-                "\${some",
-                "\${some:",
-                "\${some:}",
-                "\${:-}",
-                "\${:-default}",
-                "<",
-                "<{",
-                "<{some",
-                "<{}"
-            ).forEach { source ->
+            mapOf(
+                "\\" to "invalid escape sequence: '\\' at column 1 must be immediately followed by a character to escape",
+                "$" to "invalid environment variable reference: '$' at column 1 must be followed by a variable name",
+                "\${" to "invalid environment variable reference: '{' at column 2 must be followed by a closing '}'",
+                "\${}" to "invalid environment variable reference: '\${}' at column 1 does not contain a variable name",
+                "\${some" to "invalid environment variable reference: '{' at column 2 must be followed by a closing '}'",
+                "\${some:" to "invalid environment variable reference: ':' at column 7 must be immediately followed by '-'",
+                "\${some:}" to "invalid environment variable reference: ':' at column 7 must be immediately followed by '-'",
+                "\${some:-b\\" to "invalid environment variable reference: '\\' at column 10 must be immediately followed by a character to escape",
+                "\${:-}" to "invalid environment variable reference: '\${:-}' at column 1 does not contain a variable name",
+                "\${:-default}" to "invalid environment variable reference: '\${:-default}' at column 1 does not contain a variable name",
+                "<" to "invalid config variable reference: '<' at column 1 must be followed by a variable name",
+                "<{" to "invalid config variable reference: '{' at column 2 must be followed by a closing '}'",
+                "<{some" to "invalid config variable reference: '{' at column 2 must be followed by a closing '}'",
+                "<{}" to "invalid config variable reference: '<{}' at column 1 does not contain a variable name"
+            ).forEach { (source, error) ->
                 on("parsing the input '$source'") {
                     it("throws an appropriate exception") {
-                        assertThat({ VariableExpression.parse(source) }, throws<IllegalArgumentException>(withMessage("Invalid expression '$source'")))
+                        assertThat({ VariableExpression.parse(source) }, throws<IllegalArgumentException>(withMessage("Invalid expression '$source': $error")))
                     }
                 }
             }

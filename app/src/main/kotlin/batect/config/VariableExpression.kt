@@ -21,11 +21,11 @@ import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.list
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Serializer
 import kotlinx.serialization.internal.StringDescriptor
+import kotlinx.serialization.list
 import kotlinx.serialization.withName
 
 @Serializable(with = VariableExpression.Companion::class)
@@ -35,33 +35,157 @@ sealed class VariableExpression {
 
     @Serializer(forClass = VariableExpression::class)
     companion object : KSerializer<VariableExpression> {
-        private val patterns = listOf(
-            Regex("") to { _: MatchResult -> LiteralValue("") },
-            Regex("\\$\\{(.+):-(.*)}") to { match: MatchResult -> EnvironmentVariableReference(match.groupValues[1], match.groupValues[2]) },
-            Regex("\\$\\{([^:]+)}") to { match: MatchResult -> EnvironmentVariableReference(match.groupValues[1]) },
-            Regex("\\$([^{](.*[^}])?)") to { match: MatchResult -> EnvironmentVariableReference(match.groupValues[1]) },
-            Regex("<\\{(.+)}") to { match: MatchResult -> ConfigVariableReference(match.groupValues[1]) },
-            Regex("<([^{](.*[^}])?)") to { match: MatchResult -> ConfigVariableReference(match.groupValues[1]) },
-            Regex("[^$<].*") to { match: MatchResult ->
-                if (match.value.startsWith("\\$") || match.value.startsWith("\\<")) {
-                    LiteralValue(match.value.drop(1))
-                } else {
-                    LiteralValue(match.value)
-                }
-            }
-        )
-
         fun parse(source: String): VariableExpression {
-            patterns.forEach { (pattern, generator) ->
-                val result = pattern.matchEntire(source)
+            val expressions = mutableListOf<VariableExpression>()
+            var nextIndex = 0
 
-                if (result != null) {
-                    return generator(result)
+            while (nextIndex < source.length) {
+                val startIndex = nextIndex
+
+                val result = when (source[nextIndex]) {
+                    '$' -> readEnvironmentVariable(source, startIndex)
+                    '<' -> readConfigVariable(source, startIndex)
+                    else -> readLiteralValue(source, startIndex)
                 }
+
+                nextIndex = result.readUntil + 1
+                expressions.add(result.expression)
             }
 
-            throw IllegalArgumentException("Invalid expression '$source'")
+            return when (expressions.size) {
+                0 -> LiteralValue("")
+                1 -> expressions.single()
+                else -> ConcatenatedExpression(expressions)
+            }
         }
+
+        private fun invalidExpressionException(source: String, message: String): Exception =
+            IllegalArgumentException("Invalid expression '$source': $message")
+
+        private fun readEnvironmentVariable(source: String, startIndex: Int): ParseResult =
+            readVariable(source, startIndex, "environment", true) { name, default ->
+                EnvironmentVariableReference(name, default)
+            }
+
+        private fun readConfigVariable(source: String, startIndex: Int): ParseResult =
+            readVariable(source, startIndex, "config", false) { name, _ ->
+                ConfigVariableReference(name)
+            }
+
+        private fun readVariable(source: String, startIndex: Int, type: String, supportsDefaults: Boolean, creator: (String, String?) -> VariableExpression): ParseResult {
+            if (startIndex == source.lastIndex) {
+                throw invalidExpressionException(source, "invalid $type variable reference: '${source[startIndex]}' at column ${startIndex + 1} must be followed by a variable name")
+            }
+
+            val hasBraces = source[startIndex + 1] == '{'
+            var haveSeenClosingBrace = false
+            var hasDefaultValue = false
+
+            var currentIndex = if (hasBraces) startIndex + 2 else startIndex + 1
+
+            val variableNameBuilder = StringBuilder()
+
+            loop@ while (currentIndex < source.length) {
+                val currentCharacter = source[currentIndex]
+
+                if (hasBraces) {
+                    when (currentCharacter) {
+                        '}' -> {
+                            haveSeenClosingBrace = true
+                            break@loop
+                        }
+                        ':' -> {
+                            if (supportsDefaults) {
+                                hasDefaultValue = true
+                                break@loop
+                            }
+                        }
+                    }
+                } else {
+                    if (!(currentCharacter.isLetterOrDigit() || currentCharacter == '_')) {
+                        currentIndex--
+                        break@loop
+                    }
+                }
+
+                variableNameBuilder.append(currentCharacter)
+                currentIndex++
+            }
+
+            val defaultValue = if (!hasDefaultValue) {
+                null
+            } else {
+                if (currentIndex == source.lastIndex || source[currentIndex + 1] != '-') {
+                    throw invalidExpressionException(source, "invalid $type variable reference: ':' at column ${currentIndex + 1} must be immediately followed by '-'")
+                }
+
+                currentIndex += 2
+
+                val defaultValueBuilder = StringBuilder()
+
+                loop@ while (currentIndex < source.length) {
+                    when (source[currentIndex]) {
+                        '}' -> {
+                            haveSeenClosingBrace = true
+                            break@loop
+                        }
+                        '\\' -> {
+                            if (currentIndex == source.lastIndex) {
+                                throw invalidExpressionException(source, "invalid $type variable reference: '\\' at column ${currentIndex + 1} must be immediately followed by a character to escape")
+                            }
+
+                            currentIndex++
+                        }
+                    }
+
+                    defaultValueBuilder.append(source[currentIndex])
+                    currentIndex++
+                }
+
+                defaultValueBuilder.toString()
+            }
+
+            if (hasBraces && !haveSeenClosingBrace) {
+                throw invalidExpressionException(source, "invalid $type variable reference: '{' at column ${startIndex + 2} must be followed by a closing '}'")
+            }
+
+            val variableName = variableNameBuilder.toString()
+
+            if (variableName.isEmpty()) {
+                throw invalidExpressionException(source, "invalid $type variable reference: '${source.substring(startIndex, currentIndex + 1)}' at column ${startIndex + 1} does not contain a variable name")
+            }
+
+            return ParseResult(creator(variableNameBuilder.toString(), defaultValue), currentIndex)
+        }
+
+        private fun readLiteralValue(source: String, startIndex: Int): ParseResult {
+            var index = startIndex
+            val builder = StringBuilder()
+
+            loop@ while (index < source.length) {
+                when (source[index]) {
+                    '$', '<' -> {
+                        index--
+                        break@loop
+                    }
+                    '\\' -> {
+                        if (index == source.lastIndex) {
+                            throw invalidExpressionException(source, "invalid escape sequence: '\\' at column ${index + 1} must be immediately followed by a character to escape")
+                        }
+
+                        index++
+                    }
+                }
+
+                builder.append(source[index])
+
+                index++
+            }
+
+            return ParseResult(LiteralValue(builder.toString()), index)
+        }
+
+        private data class ParseResult(val expression: VariableExpression, val readUntil: Int)
 
         override val descriptor: SerialDescriptor = StringDescriptor.withName("expression")
 

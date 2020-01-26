@@ -134,18 +134,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * return code options (any non-zero, particular container, first to exit)
 * allow configuration includes (ie. allow splitting the configuration over multiple files)
 * wildcard includes (eg. `include: containers/*.yaml`)
-* handle expanded form of mappings for environment variables, for example:
-
-  ```yaml
-  containers:
-    build-env:
-      build_dir: build-env
-      environment:
-        - name: THING
-          value: thing_value
-
-  ```
-
 * support port ranges in mappings
 * support protocols other than TCP in port mappings
 * requires / provides relationships (eg. 'app' requires 'service-a', and 'service-a-fake' and 'service-a-real' provide 'service-a')

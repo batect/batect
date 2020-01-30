@@ -323,7 +323,7 @@ object ImagesAPISpec : Spek({
                 }
 
                 it("configures the HTTP client with a longer timeout to allow for the daemon to contact the registry") {
-                    verify(longTimeoutClientBuilder).readTimeout(20, TimeUnit.SECONDS)
+                    verify(longTimeoutClientBuilder).readTimeout(30, TimeUnit.SECONDS)
                 }
 
                 it("registers the API call with the cancellation context") {
@@ -354,7 +354,7 @@ object ImagesAPISpec : Spek({
                 }
 
                 it("configures the HTTP client with a longer timeout to allow for the daemon to contact the registry") {
-                    verify(longTimeoutClientBuilder).readTimeout(20, TimeUnit.SECONDS)
+                    verify(longTimeoutClientBuilder).readTimeout(30, TimeUnit.SECONDS)
                 }
 
                 it("registers the API call with the cancellation context") {

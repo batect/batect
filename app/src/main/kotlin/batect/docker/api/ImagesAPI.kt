@@ -198,7 +198,7 @@ class ImagesAPI(
             .addRegistryCredentialsForPull(registryCredentials)
             .build()
 
-        clientWithTimeout(20, TimeUnit.SECONDS)
+        clientWithTimeout(30, TimeUnit.SECONDS)
             .newCall(request)
             .executeInCancellationContext(cancellationContext) { response ->
                 checkForFailure(response) { error ->

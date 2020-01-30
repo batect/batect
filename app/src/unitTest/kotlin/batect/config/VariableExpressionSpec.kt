@@ -119,7 +119,7 @@ object VariableExpressionSpec : Spek({
             val json = Json.parser.stringify(VariableExpression.Companion, expression)
 
             it("returns the value as a string") {
-                assertThat(json, equalTo("\"abc123\""))
+                assertThat(json, equivalentTo("""{"type":"LiteralValue","value":"abc123"}"""))
             }
         }
     }
@@ -155,7 +155,7 @@ object VariableExpressionSpec : Spek({
                 val json = Json.parser.stringify(VariableExpression.Companion, expression)
 
                 it("returns a string representation of the variable") {
-                    assertThat(json, equalTo("\"\$THE_VAR\""))
+                    assertThat(json, equivalentTo("""{"type":"EnvironmentVariableReference","referenceTo":"THE_VAR"}"""))
                 }
             }
         }
@@ -191,7 +191,7 @@ object VariableExpressionSpec : Spek({
                 val json = Json.parser.stringify(VariableExpression.Companion, expression)
 
                 it("returns a string representation of the variable and its default value") {
-                    assertThat(json, equalTo("\"\${THE_VAR:-the default value}\""))
+                    assertThat(json, equivalentTo("""{"type":"EnvironmentVariableReference","referenceTo":"THE_VAR","default":"the default value"}"""))
                 }
             }
         }
@@ -238,7 +238,7 @@ object VariableExpressionSpec : Spek({
             val json = Json.parser.stringify(VariableExpression.Companion, expression)
 
             it("returns a string representation of the variable") {
-                assertThat(json, equalTo("\"<THE_VAR\""))
+                assertThat(json, equivalentTo("""{"type":"ConfigVariableReference","referenceTo":"THE_VAR"}"""))
             }
         }
     }
@@ -259,7 +259,7 @@ object VariableExpressionSpec : Spek({
                 val json = Json.parser.stringify(VariableExpression.Companion, expression)
 
                 it("returns an empty array") {
-                    assertThat(json, equalTo("[]"))
+                    assertThat(json, equivalentTo("""{"type":"ConcatenatedExpression","expressions":[]}""".trimMargin()))
                 }
             }
         }
@@ -303,7 +303,14 @@ object VariableExpressionSpec : Spek({
                 val json = Json.parser.stringify(VariableExpression.Companion, expression)
 
                 it("returns an array of expressions") {
-                    assertThat(json, equivalentTo("""["some", " other", " value"]"""))
+                    assertThat(json, equivalentTo("""{
+                        |"type":"ConcatenatedExpression",
+                        |"expressions":[
+                        |   {"type":"LiteralValue","value":"some"},
+                        |   {"type":"LiteralValue","value":" other"},
+                        |   {"type":"LiteralValue","value":" value"}
+                        |]
+                        |}""".trimMargin()))
                 }
             }
         }

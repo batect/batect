@@ -73,10 +73,10 @@ object ConfigurationSpec : Spek({
                                         "command": ["the-command"],
                                         "entrypoint": ["the-entrypoint"],
                                         "environment": {
-                                            "SOME_VAR": "blah",
-                                            "SOME_REFERENCE": "${'$'}REFERENCE_TO",
-                                            "SOME_REFERENCE_WITH_DEFAULT": "${'$'}{REF_2:-the-default}",
-                                            "SOME_CONFIG_VAR": "<REF_3"
+                                            "SOME_VAR": {"type":"LiteralValue", "value":"blah"},
+                                            "SOME_REFERENCE": {"type":"EnvironmentVariableReference", "referenceTo":"REFERENCE_TO"},
+                                            "SOME_REFERENCE_WITH_DEFAULT": {"type":"EnvironmentVariableReference", "referenceTo":"REF_2", "default":"the-default"},
+                                            "SOME_CONFIG_VAR": {"type":"ConfigVariableReference", "referenceTo":"REF_3"}
                                         },
                                         "ports": [
                                             { "local": 123, "container": 456 }
@@ -133,7 +133,7 @@ object ConfigurationSpec : Spek({
                                     "command": ["the-command"],
                                     "entrypoint": ["sh"],
                                     "environment": {
-                                        "SOME_VAR": "some-value"
+                                        "SOME_VAR": {"type":"LiteralValue", "value":"some-value"}
                                     },
                                     "working_directory": "/some/working/dir",
                                     "volumes": [
@@ -185,10 +185,7 @@ object ConfigurationSpec : Spek({
                     BuildImage(
                         osIndependentPath("/some/build/dir"),
                         mapOf(
-                            "SOME_VAR" to LiteralValue("blah"),
-                            "SOME_REFERENCE" to EnvironmentVariableReference("REFERENCE_TO"),
-                            "SOME_REFERENCE_WITH_DEFAULT" to EnvironmentVariableReference("REF_2", "the-default"),
-                            "SOME_CONFIG_VAR" to ConfigVariableReference("REF_3")
+                            "SOME_VAR" to LiteralValue("blah")
                         ),
                         "some-dockerfile"
                     ),
@@ -208,10 +205,7 @@ object ConfigurationSpec : Spek({
                                 "the-container": {
                                     "build_directory": "/some/build/dir",
                                     "build_args": {
-                                        "SOME_VAR": "blah",
-                                        "SOME_REFERENCE": "${'$'}REFERENCE_TO",
-                                        "SOME_REFERENCE_WITH_DEFAULT": "${'$'}{REF_2:-the-default}",
-                                        "SOME_CONFIG_VAR": "<REF_3"
+                                        "SOME_VAR": {"type":"LiteralValue", "value":"blah"}
                                     },
                                     "dockerfile": "some-dockerfile",
                                     "command": null,

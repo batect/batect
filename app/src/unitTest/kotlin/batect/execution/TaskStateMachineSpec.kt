@@ -21,6 +21,7 @@ import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
 import batect.docker.client.DockerContainerType
 import batect.execution.model.events.ContainerCreatedEvent
+import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TaskNetworkDeletedEvent
@@ -38,13 +39,13 @@ import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.runNullableForEachTest
 import batect.testutils.withMessage
 import batect.ui.FailureErrorMessageFormatter
 import batect.ui.text.TextRun
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
@@ -89,35 +90,7 @@ object TaskStateMachineSpec : Spek({
 
         val stateMachine by createForEachTest { TaskStateMachine(graph, runOptions, runStagePlanner, cleanupStagePlanner, failureErrorMessageFormatter, cancellationContext, containerType, logger) }
 
-        describe("posting and retrieving events") {
-            given("no events have been posted") {
-                it("does not return any events") {
-                    assertThat(stateMachine.getAllEvents(), isEmpty)
-                }
-            }
-
-            given("an event has been posted") {
-                val event = TaskNetworkDeletedEvent
-                beforeEachTest { stateMachine.postEvent(event) }
-
-                it("returns that event in the list of all events") {
-                    assertThat(stateMachine.getAllEvents(), equalTo(setOf(event)))
-                }
-            }
-
-            given("multiple events have been posted") {
-                val events = setOf(
-                    TaskNetworkDeletedEvent,
-                    TaskNetworkCreatedEvent(DockerNetwork("some-network"))
-                )
-
-                beforeEachTest { events.forEach { stateMachine.postEvent(it) } }
-
-                it("returns all posted events in the list of all events") {
-                    assertThat(stateMachine.getAllEvents(), equalTo(events))
-                }
-            }
-
+        describe("posting events") {
             given("the event is a failure event") {
                 val event = mock<TaskFailedEvent>()
 
@@ -665,6 +638,56 @@ object TaskStateMachineSpec : Spek({
                             }
                         }
                     }
+                }
+            }
+        }
+
+        describe("getting the task exit code") {
+            val mainContainer by createForEachTest { Container("main-container", imageSourceDoesNotMatter()) }
+            val otherContainer by createForEachTest { Container("other-container", imageSourceDoesNotMatter()) }
+
+            beforeEachTest {
+                val node = mock<ContainerDependencyGraphNode> {
+                    on { container } doReturn mainContainer
+                }
+
+                whenever(graph.taskContainerNode).thenReturn(node)
+            }
+
+            given("the task's main container exited") {
+                beforeEachTest { stateMachine.postEvent(RunningContainerExitedEvent(mainContainer, 123)) }
+
+                val exitCode by runForEachTest { stateMachine.taskExitCode }
+
+                it("returns the exit code of the task's main container") {
+                    assertThat(exitCode, equalTo(123))
+                }
+            }
+
+            given("another container exited, but the main container did not") {
+                beforeEachTest { stateMachine.postEvent(RunningContainerExitedEvent(otherContainer, 123)) }
+
+                it("throws an appropriate exception") {
+                    assertThat({ stateMachine.taskExitCode }, throws<IllegalStateException>(withMessage("The task has not yet finished or has failed.")))
+                }
+            }
+
+            given("both the main container and another container exited") {
+                beforeEachTest {
+                    stateMachine.postEvent(RunningContainerExitedEvent(mainContainer, 123))
+                    stateMachine.postEvent(RunningContainerExitedEvent(otherContainer, 456))
+                }
+
+                val exitCode by runForEachTest { stateMachine.taskExitCode }
+
+                it("returns the exit code of the task's main container") {
+                    assertThat(exitCode, equalTo(123))
+                }
+            }
+
+            given("no containers exited") {
+                it("throws an appropriate exception") {
+                    assertThat({ stateMachine.taskExitCode }, throws<IllegalStateException>(withMessage("The task has not yet finished or has failed.")))
                 }
             }
         }

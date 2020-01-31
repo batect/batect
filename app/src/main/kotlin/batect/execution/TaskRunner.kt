@@ -19,7 +19,6 @@ package batect.execution
 import batect.config.Configuration
 import batect.config.Task
 import batect.docker.client.DockerContainerType
-import batect.execution.model.events.RunningContainerExitedEvent
 import batect.logging.Logger
 import batect.ui.EventLogger
 import batect.ui.EventLoggerProvider
@@ -70,7 +69,7 @@ data class TaskRunner(
 
         val duration = Duration.between(startTime, finishTime)
 
-        return onTaskSucceeded(eventLogger, task, stateMachine, graph, duration, runOptions)
+        return onTaskSucceeded(eventLogger, task, stateMachine, duration, runOptions)
     }
 
     private fun onTaskFailed(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine): Int {
@@ -84,21 +83,13 @@ data class TaskRunner(
         return -1
     }
 
-    private fun onTaskSucceeded(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine, graph: ContainerDependencyGraph, duration: Duration, runOptions: RunOptions): Int {
-        val containerExitedEvent = stateMachine.getAllEvents()
-            .filterIsInstance<RunningContainerExitedEvent>()
-            .singleOrNull { it.container == graph.taskContainerNode.container }
-
-        if (containerExitedEvent == null) {
-            throw IllegalStateException("The task neither failed nor succeeded.")
-        }
-
-        eventLogger.onTaskFinished(task.name, containerExitedEvent.exitCode, duration)
+    private fun onTaskSucceeded(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine, duration: Duration, runOptions: RunOptions): Int {
+        eventLogger.onTaskFinished(task.name, stateMachine.taskExitCode, duration)
 
         logger.info {
             message("Task execution completed normally.")
             data("taskName", task.name)
-            data("exitCode", containerExitedEvent.exitCode)
+            data("exitCode", stateMachine.taskExitCode)
         }
 
         if (runOptions.behaviourAfterSuccess == CleanupOption.DontCleanup) {
@@ -106,6 +97,6 @@ data class TaskRunner(
             return -1
         }
 
-        return containerExitedEvent.exitCode
+        return stateMachine.taskExitCode
     }
 }

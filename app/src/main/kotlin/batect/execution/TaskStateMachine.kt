@@ -18,6 +18,7 @@ package batect.execution
 
 import batect.docker.client.DockerContainerType
 import batect.execution.model.events.ContainerCreatedEvent
+import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskFailedEvent
@@ -193,6 +194,16 @@ class TaskStateMachine(
     private fun inRunStage(): Boolean = currentStage is RunStage
     private fun inCleanupStage(): Boolean = currentStage is CleanupStage
 
-    // This method is not thread safe, and is designed to be used only after task execution has completed.
-    fun getAllEvents(): Set<TaskEvent> = events
+    val taskExitCode: Int
+        get() {
+            val containerExitedEvent = events
+                .filterIsInstance<RunningContainerExitedEvent>()
+                .singleOrNull { it.container == graph.taskContainerNode.container }
+
+            if (containerExitedEvent == null) {
+                throw IllegalStateException("The task has not yet finished or has failed.")
+            }
+
+            return containerExitedEvent.exitCode
+        }
 }

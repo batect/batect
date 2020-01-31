@@ -23,20 +23,17 @@ import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.docker.client.DockerContainerType
-import batect.execution.model.events.RunningContainerExitedEvent
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import batect.testutils.runForEachTest
-import batect.testutils.withMessage
 import batect.ui.EventLogger
 import batect.ui.EventLoggerProvider
 import batect.ui.text.TextRun
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.doReturn
@@ -101,10 +98,7 @@ object TaskRunnerSpec : Spek({
             given("the task succeeds") {
                 beforeEachTest {
                     whenever(stateMachine.taskHasFailed).thenReturn(false)
-                    whenever(stateMachine.getAllEvents()).thenReturn(setOf(
-                        RunningContainerExitedEvent(container, 100),
-                        RunningContainerExitedEvent(Container("some-other-container", imageSourceDoesNotMatter()), 200)
-                    ))
+                    whenever(stateMachine.taskExitCode).thenReturn(100)
                     whenever(executionManager.run()).then { Thread.sleep(50) }
                 }
 
@@ -208,19 +202,6 @@ object TaskRunnerSpec : Spek({
 
                     it("returns a non-zero exit code") {
                         assertThat(exitCode, !equalTo(0))
-                    }
-                }
-            }
-
-            given("the task neither succeeds or fails") {
-                beforeEachTest {
-                    whenever(stateMachine.taskHasFailed).thenReturn(false)
-                    whenever(stateMachine.getAllEvents()).thenReturn(emptySet())
-                }
-
-                on("running the task") {
-                    it("throws an appropriate exception") {
-                        assertThat({ taskRunner.run(config, task, runOptions, containerType) }, throws<IllegalStateException>(withMessage("The task neither failed nor succeeded.")))
                     }
                 }
             }

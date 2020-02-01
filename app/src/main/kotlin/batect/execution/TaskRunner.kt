@@ -19,17 +19,15 @@ package batect.execution
 import batect.config.Configuration
 import batect.config.Task
 import batect.docker.client.DockerContainerType
+import batect.ioc.TaskKodeinFactory
 import batect.logging.Logger
 import batect.ui.EventLogger
-import batect.ui.EventLoggerProvider
+import org.kodein.di.generic.instance
 import java.time.Duration
 import java.time.Instant
 
 data class TaskRunner(
-    private val eventLoggerProvider: EventLoggerProvider,
-    private val graphProvider: ContainerDependencyGraphProvider,
-    private val stateMachineProvider: TaskStateMachineProvider,
-    private val executionManagerProvider: ParallelExecutionManagerProvider,
+    private val taskKodeinFactory: TaskKodeinFactory,
     private val interruptionTrap: InterruptionTrap,
     private val logger: Logger
 ) {
@@ -40,12 +38,11 @@ data class TaskRunner(
         }
 
         val startTime = Instant.now()
-        val graph = graphProvider.createGraph(config, task)
-        val eventLogger = eventLoggerProvider.getEventLogger(graph, runOptions)
+        val kodein = taskKodeinFactory.create(config, task, runOptions, containerType)
+        val eventLogger = kodein.instance<EventLogger>()
         eventLogger.onTaskStarting(task.name)
 
-        val stateMachine = stateMachineProvider.createStateMachine(graph, runOptions, containerType)
-        val executionManager = executionManagerProvider.createParallelExecutionManager(eventLogger, stateMachine, runOptions)
+        val executionManager = kodein.instance<ParallelExecutionManager>()
 
         logger.info {
             message("Preparation complete, starting task.")
@@ -62,6 +59,8 @@ data class TaskRunner(
             message("Task execution completed.")
             data("taskName", task.name)
         }
+
+        val stateMachine = kodein.instance<TaskStateMachine>()
 
         if (stateMachine.taskHasFailed) {
             return onTaskFailed(eventLogger, task, stateMachine)

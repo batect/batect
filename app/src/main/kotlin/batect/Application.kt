@@ -20,6 +20,8 @@ import batect.cli.CommandLineOptions
 import batect.cli.CommandLineOptionsParser
 import batect.cli.CommandLineOptionsParsingResult
 import batect.cli.commands.CommandFactory
+import batect.ioc.StreamType
+import batect.ioc.createKodeinConfiguration
 import batect.logging.ApplicationInfoLogger
 import batect.logging.logger
 import batect.os.ConsoleManager

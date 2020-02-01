@@ -23,6 +23,7 @@ import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.docker.client.DockerContainerType
+import batect.ioc.TaskKodeinFactory
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
@@ -30,7 +31,6 @@ import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.ui.EventLogger
-import batect.ui.EventLoggerProvider
 import batect.ui.text.TextRun
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -42,6 +42,9 @@ import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
+import org.kodein.di.Kodein
+import org.kodein.di.generic.bind
+import org.kodein.di.generic.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.Duration
@@ -53,34 +56,19 @@ object TaskRunnerSpec : Spek({
         val task = Task("some-task", runConfiguration)
         val config = Configuration("some-project", TaskMap(task), ContainerMap(container))
         val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true, emptyMap())
-
-        val graph = mock<ContainerDependencyGraph> {
-            on { taskContainerNode } doReturn ContainerDependencyGraphNode(container, mock(), true, emptySet(), mock)
-        }
-        val graphProvider = mock<ContainerDependencyGraphProvider> {
-            on { createGraph(config, task) } doReturn graph
-        }
-
-        val eventLogger by createForEachTest { mock<EventLogger>() }
-        val eventLoggerProvider by createForEachTest {
-            mock<EventLoggerProvider> {
-                on { getEventLogger(graph, runOptions) } doReturn eventLogger
-            }
-        }
-
-        val stateMachine by createForEachTest { mock<TaskStateMachine>() }
-        val executionManager by createForEachTest { mock<ParallelExecutionManager>() }
         val containerType = DockerContainerType.Windows
 
-        val stateMachineProvider by createForEachTest {
-            mock<TaskStateMachineProvider> {
-                on { createStateMachine(graph, runOptions, containerType) } doReturn stateMachine
-            }
-        }
+        val eventLogger by createForEachTest { mock<EventLogger>() }
+        val stateMachine by createForEachTest { mock<TaskStateMachine>() }
+        val executionManager by createForEachTest { mock<ParallelExecutionManager>() }
 
-        val executionManagerProvider by createForEachTest {
-            mock<ParallelExecutionManagerProvider> {
-                on { createParallelExecutionManager(eventLogger, stateMachine, runOptions) } doReturn executionManager
+        val taskKodeinFactory by createForEachTest {
+            mock<TaskKodeinFactory>() {
+                on { create(any(), any(), any(), any()) } doReturn Kodein.direct {
+                    bind<EventLogger>() with instance(eventLogger)
+                    bind<TaskStateMachine>() with instance(stateMachine)
+                    bind<ParallelExecutionManager>() with instance(executionManager)
+                }
             }
         }
 
@@ -92,7 +80,7 @@ object TaskRunnerSpec : Spek({
         }
 
         val logger by createLoggerForEachTest()
-        val taskRunner by createForEachTest { TaskRunner(eventLoggerProvider, graphProvider, stateMachineProvider, executionManagerProvider, interruptionTrap, logger) }
+        val taskRunner by createForEachTest { TaskRunner(taskKodeinFactory, interruptionTrap, logger) }
 
         describe("running a task") {
             given("the task succeeds") {
@@ -146,10 +134,6 @@ object TaskRunnerSpec : Spek({
                     val runOptionsWithCleanupDisabled = runOptions.copy(behaviourAfterSuccess = CleanupOption.DontCleanup)
 
                     beforeEachTest {
-                        whenever(eventLoggerProvider.getEventLogger(graph, runOptionsWithCleanupDisabled)).doReturn(eventLogger)
-                        whenever(stateMachineProvider.createStateMachine(graph, runOptionsWithCleanupDisabled, containerType)).doReturn(stateMachine)
-                        whenever(executionManagerProvider.createParallelExecutionManager(eventLogger, stateMachine, runOptionsWithCleanupDisabled)).doReturn(executionManager)
-
                         whenever(stateMachine.manualCleanupInstructions).doReturn(TextRun("Do this to clean up"))
                     }
 

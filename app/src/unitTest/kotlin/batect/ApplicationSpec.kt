@@ -21,6 +21,7 @@ import batect.cli.CommandLineOptionsParser
 import batect.cli.CommandLineOptionsParsingResult
 import batect.cli.commands.Command
 import batect.cli.commands.CommandFactory
+import batect.ioc.StreamType
 import batect.logging.ApplicationInfoLogger
 import batect.logging.Logger
 import batect.logging.LoggerFactory

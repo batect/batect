@@ -62,7 +62,6 @@ import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.RunAsCurrentUserConfiguration
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
-import batect.execution.TaskStepRunContext
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
@@ -132,7 +131,6 @@ object TaskStepRunnerSpec : Spek({
         val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true, emptyMap())
         val cancellationContext by createForEachTest { mock<CancellationContext>() }
         val ioStreamingOptions by createForEachTest { mock<ContainerIOStreamingOptions>() }
-        val stepRunContext by createForEachTest { TaskStepRunContext(eventSink, runOptions, cancellationContext, ioStreamingOptions) }
 
         val containersClient by createForEachTest { mock<DockerContainersClient>() }
         val execClient by createForEachTest { mock<DockerExecClient>() }
@@ -169,7 +167,21 @@ object TaskStepRunnerSpec : Spek({
             on { configVariableValues } doReturn emptyMap()
         }
 
-        val runner by createForEachTest { TaskStepRunner(dockerClient, proxyEnvironmentVariablesProvider, creationRequestFactory, environmentVariableProvider, runAsCurrentUserConfigurationProvider, systemInfo, hostEnvironmentVariables, configVariablesProvider) }
+        val runner by createForEachTest {
+            TaskStepRunner(
+                dockerClient,
+                proxyEnvironmentVariablesProvider,
+                creationRequestFactory,
+                environmentVariableProvider,
+                runAsCurrentUserConfigurationProvider,
+                systemInfo,
+                configVariablesProvider,
+                runOptions,
+                cancellationContext,
+                ioStreamingOptions,
+                hostEnvironmentVariables
+            )
+        }
 
         describe("running steps") {
             describe("running a 'build image' step") {
@@ -201,7 +213,7 @@ object TaskStepRunnerSpec : Spek({
                                     image
                                 }
 
-                            runner.run(step, stepRunContext)
+                            runner.run(step, eventSink)
                         }
 
                         it("passes the image build args provided by the user as well as any proxy-related build args, with user-provided build args overriding the generated proxy-related build args, and with any environment variable references resolved") {
@@ -228,10 +240,26 @@ object TaskStepRunnerSpec : Spek({
                     on("and propagating proxy-related environment variables is disabled") {
                         val image = DockerImage("some-image")
                         val runOptionsWithProxyEnvironmentVariablePropagationDisabled = runOptions.copy(propagateProxyEnvironmentVariables = false)
+                        val runnerWithProxyEnvironmentVariablePropagationDisabled by createForEachTest {
+                            TaskStepRunner(
+                                dockerClient,
+                                proxyEnvironmentVariablesProvider,
+                                creationRequestFactory,
+                                environmentVariableProvider,
+                                runAsCurrentUserConfigurationProvider,
+                                systemInfo,
+                                configVariablesProvider,
+                                runOptionsWithProxyEnvironmentVariablePropagationDisabled,
+                                cancellationContext,
+                                ioStreamingOptions,
+                                hostEnvironmentVariables
+                            )
+                        }
 
                         beforeEachTest {
                             whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), eq(outputSink), eq(cancellationContext), any())).thenReturn(image)
-                            runner.run(step, stepRunContext.copy(runOptions = runOptionsWithProxyEnvironmentVariablePropagationDisabled))
+
+                            runnerWithProxyEnvironmentVariablePropagationDisabled.run(step, eventSink)
                         }
 
                         it("does not pass the proxy-related environment variables as image build arguments, but does still pass the user-provided build args with any environment variable references resolved") {
@@ -253,7 +281,7 @@ object TaskStepRunnerSpec : Spek({
                 on("when building the image fails") {
                     beforeEachTest {
                         whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), eq(outputSink), eq(cancellationContext), any())).thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("emits a 'image build failed' event with all line breaks replaced with the system line separator") {
@@ -270,7 +298,7 @@ object TaskStepRunnerSpec : Spek({
                     val stepWithInvalidBuildArgReference = BuildImageStep(imageSourceWithInvalidBuildArgReference, imageTags)
 
                     beforeEachTest {
-                        runner.run(stepWithInvalidBuildArgReference, stepRunContext)
+                        runner.run(stepWithInvalidBuildArgReference, eventSink)
                     }
 
                     it("emits a 'image build failed' event") {
@@ -299,7 +327,7 @@ object TaskStepRunnerSpec : Spek({
                             image
                         }
 
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("emits a 'image pulled' event") {
@@ -316,7 +344,7 @@ object TaskStepRunnerSpec : Spek({
                     beforeEachTest {
                         whenever(imagesClient.pull(eq("some-image"), eq(cancellationContext), any())).thenThrow(ImagePullFailedException("Pulling image 'some-image' failed. Output from Docker was: Something went wrong."))
 
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("emits a 'image pull failed' event") {
@@ -337,7 +365,7 @@ object TaskStepRunnerSpec : Spek({
                         val step = CreateTaskNetworkStep(DockerContainerType.Linux)
 
                         beforeEachTest {
-                            runner.run(step, stepRunContext)
+                            runner.run(step, eventSink)
                         }
 
                         it("emits a 'network created' event") {
@@ -353,7 +381,7 @@ object TaskStepRunnerSpec : Spek({
                         val step = CreateTaskNetworkStep(DockerContainerType.Windows)
 
                         beforeEachTest {
-                            runner.run(step, stepRunContext)
+                            runner.run(step, eventSink)
                         }
 
                         it("emits a 'network created' event") {
@@ -372,7 +400,7 @@ object TaskStepRunnerSpec : Spek({
                     beforeEachTest {
                         whenever(networksClient.create(any())).doThrow(NetworkCreationFailedException("Something went wrong."))
 
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("emits a 'network creation failed' event") {
@@ -415,7 +443,7 @@ object TaskStepRunnerSpec : Spek({
                     beforeEachTest {
                         whenever(containersClient.create(request)).doReturn(dockerContainer)
 
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("creates the container with the provided configuration") {
@@ -431,7 +459,7 @@ object TaskStepRunnerSpec : Spek({
                     beforeEachTest {
                         whenever(containersClient.create(request)).doThrow(ContainerCreationFailedException("Something went wrong."))
 
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("emits a 'container creation failed' event") {
@@ -466,7 +494,7 @@ object TaskStepRunnerSpec : Spek({
                             DockerContainerRunResult(123)
                         }
 
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("runs the container with the stdin and stdout provided by the I/O streaming options") {
@@ -486,7 +514,7 @@ object TaskStepRunnerSpec : Spek({
                     beforeEachTest {
                         whenever(containersClient.run(any(), any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong"))
 
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("emits a 'container run failed' event") {
@@ -501,7 +529,7 @@ object TaskStepRunnerSpec : Spek({
                 val step = StopContainerStep(container, dockerContainer)
 
                 on("when stopping the container succeeds") {
-                    beforeEachTest { runner.run(step, stepRunContext) }
+                    beforeEachTest { runner.run(step, eventSink) }
 
                     it("stops the container") {
                         verify(containersClient).stop(dockerContainer)
@@ -516,7 +544,7 @@ object TaskStepRunnerSpec : Spek({
                     beforeEachTest {
                         whenever(containersClient.stop(dockerContainer)).thenThrow(ContainerStopFailedException("some-id", "Something went wrong"))
 
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("emits a 'container stop failed' event") {
@@ -531,7 +559,7 @@ object TaskStepRunnerSpec : Spek({
                 val step = RemoveContainerStep(container, dockerContainer)
 
                 on("when removing the container succeeds") {
-                    beforeEachTest { runner.run(step, stepRunContext) }
+                    beforeEachTest { runner.run(step, eventSink) }
 
                     it("removes the container") {
                         verify(containersClient).remove(dockerContainer)
@@ -546,7 +574,7 @@ object TaskStepRunnerSpec : Spek({
                     beforeEachTest {
                         whenever(containersClient.remove(dockerContainer)).thenThrow(ContainerRemovalFailedException("some-id", "Something went wrong"))
 
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("emits a 'container removal failed' event") {
@@ -565,7 +593,7 @@ object TaskStepRunnerSpec : Spek({
                     beforeEachTest {
                         Files.write(filePath, listOf("test file contents"))
 
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("emits a 'temporary file deleted' event") {
@@ -578,7 +606,7 @@ object TaskStepRunnerSpec : Spek({
                 }
 
                 on("when deleting the file fails") {
-                    beforeEachTest { runner.run(step, stepRunContext) }
+                    beforeEachTest { runner.run(step, eventSink) }
 
                     it("emits a 'temporary file deletion failed' event") {
                         verify(eventSink).postEvent(TemporaryFileDeletionFailedEvent(filePath, "java.nio.file.NoSuchFileException: /temp-file"))
@@ -597,7 +625,7 @@ object TaskStepRunnerSpec : Spek({
                         Files.createDirectories(directoryPath)
                         Files.write(directoryPath.resolve("some-file"), listOf("some file content"))
 
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("emits a 'temporary directory deleted' event") {
@@ -610,7 +638,7 @@ object TaskStepRunnerSpec : Spek({
                 }
 
                 on("when deleting the directory fails") {
-                    beforeEachTest { runner.run(step, stepRunContext) }
+                    beforeEachTest { runner.run(step, eventSink) }
 
                     it("emits a 'temporary directory deletion failed' event") {
                         verify(eventSink).postEvent(TemporaryDirectoryDeletionFailedEvent(directoryPath, "java.nio.file.NoSuchFileException: /temp-directory"))
@@ -627,7 +655,7 @@ object TaskStepRunnerSpec : Spek({
                     beforeEachTest {
                         whenever(containersClient.waitForHealthStatus(dockerContainer, cancellationContext)).doReturn(HealthStatus.NoHealthCheck)
 
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("emits a 'container became healthy' event") {
@@ -639,7 +667,7 @@ object TaskStepRunnerSpec : Spek({
                     beforeEachTest {
                         whenever(containersClient.waitForHealthStatus(dockerContainer, cancellationContext)).doReturn(HealthStatus.BecameHealthy)
 
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("emits a 'container became healthy' event") {
@@ -657,7 +685,7 @@ object TaskStepRunnerSpec : Spek({
                             beforeEachTest {
                                 whenever(containersClient.getLastHealthCheckResult(dockerContainer)).doReturn(DockerHealthCheckResult(2, ""))
 
-                                runner.run(step, stepRunContext)
+                                runner.run(step, eventSink)
                             }
 
                             it("emits a 'container did not become healthy' event with details of the last health check") {
@@ -674,7 +702,7 @@ object TaskStepRunnerSpec : Spek({
                             beforeEachTest {
                                 whenever(containersClient.getLastHealthCheckResult(dockerContainer)).doReturn(DockerHealthCheckResult(2, "Something's not ready yet.\nMore output on next line.\n"))
 
-                                runner.run(step, stepRunContext)
+                                runner.run(step, eventSink)
                             }
 
                             it("emits a 'container did not become healthy' event with details of the last health check with all line breaks replaced with the system line separator") {
@@ -692,7 +720,7 @@ object TaskStepRunnerSpec : Spek({
                         beforeEachTest {
                             whenever(containersClient.getLastHealthCheckResult(dockerContainer)).doReturn(DockerHealthCheckResult(0, ""))
 
-                            runner.run(step, stepRunContext)
+                            runner.run(step, eventSink)
                         }
 
                         it("emits a 'container did not become healthy' event with an explanation of the race condition") {
@@ -709,7 +737,7 @@ object TaskStepRunnerSpec : Spek({
                         beforeEachTest {
                             whenever(containersClient.getLastHealthCheckResult(dockerContainer)).doThrow(ContainerHealthCheckException("Something went wrong."))
 
-                            runner.run(step, stepRunContext)
+                            runner.run(step, eventSink)
                         }
 
                         it("emits a 'container did not become healthy' event with details of the last health check") {
@@ -727,7 +755,7 @@ object TaskStepRunnerSpec : Spek({
                     beforeEachTest {
                         whenever(containersClient.waitForHealthStatus(dockerContainer, cancellationContext)).doReturn(HealthStatus.Exited)
 
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("emits a 'container did not become healthy' event") {
@@ -739,7 +767,7 @@ object TaskStepRunnerSpec : Spek({
                     beforeEachTest {
                         whenever(containersClient.waitForHealthStatus(dockerContainer, cancellationContext)).doThrow(ContainerHealthCheckException("Something went wrong"))
 
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("emits a 'container did not become healthy' event") {
@@ -753,7 +781,7 @@ object TaskStepRunnerSpec : Spek({
                 val step = DeleteTaskNetworkStep(network)
 
                 on("when deleting the network succeeds") {
-                    beforeEachTest { runner.run(step, stepRunContext) }
+                    beforeEachTest { runner.run(step, eventSink) }
 
                     it("deletes the network") {
                         verify(networksClient).delete(network)
@@ -768,7 +796,7 @@ object TaskStepRunnerSpec : Spek({
                     beforeEachTest {
                         whenever(networksClient.delete(network)).thenThrow(NetworkDeletionFailedException("some-network", "Something went wrong"))
 
-                        runner.run(step, stepRunContext)
+                        runner.run(step, eventSink)
                     }
 
                     it("emits a 'network deletion failed' event") {
@@ -785,7 +813,7 @@ object TaskStepRunnerSpec : Spek({
                     val dockerContainer = DockerContainer("some-container-id")
                     val step = RunContainerSetupCommandsStep(container, config, allContainersInNetwork, dockerContainer)
 
-                    beforeEachTest { runner.run(step, stepRunContext) }
+                    beforeEachTest { runner.run(step, eventSink) }
 
                     it("emits a 'container ready' event") {
                         verify(eventSink).postEvent(ContainerBecameReadyEvent(container))
@@ -818,7 +846,7 @@ object TaskStepRunnerSpec : Spek({
                             whenever(execClient.run(any(), any(), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(0, "Some output from the command"))
                         }
 
-                        beforeEachTest { runner.run(step, stepRunContext) }
+                        beforeEachTest { runner.run(step, eventSink) }
 
                         it("emits a 'running setup command' event") {
                             verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand, 0))
@@ -865,7 +893,7 @@ object TaskStepRunnerSpec : Spek({
                             whenever(execClient.run(any(), any(), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(123, "Some output from the command"))
                         }
 
-                        beforeEachTest { runner.run(step, stepRunContext) }
+                        beforeEachTest { runner.run(step, eventSink) }
 
                         it("emits a 'running setup command' event") {
                             verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand, 0))
@@ -889,7 +917,7 @@ object TaskStepRunnerSpec : Spek({
                             whenever(execClient.run(any(), any(), any(), any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong."))
                         }
 
-                        beforeEachTest { runner.run(step, stepRunContext) }
+                        beforeEachTest { runner.run(step, eventSink) }
 
                         it("emits a 'running setup command' event") {
                             verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand, 0))
@@ -931,7 +959,7 @@ object TaskStepRunnerSpec : Spek({
                             whenever(execClient.run(any(), any(), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(0, "Some output from the command"))
                         }
 
-                        beforeEachTest { runner.run(step, stepRunContext) }
+                        beforeEachTest { runner.run(step, eventSink) }
 
                         it("runs the command with the working directory specified on the setup command") {
                             verify(execClient).run(
@@ -978,7 +1006,7 @@ object TaskStepRunnerSpec : Spek({
                             whenever(execClient.run(any(), any(), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(0, "Some output from the command"))
                         }
 
-                        beforeEachTest { runner.run(step, stepRunContext) }
+                        beforeEachTest { runner.run(step, eventSink) }
 
                         it("emits a 'running setup command' event before running each command in the order provided") {
                             inOrder(eventSink, execClient) {
@@ -1011,7 +1039,7 @@ object TaskStepRunnerSpec : Spek({
                                 whenever(execClient.run(eq(command2), any(), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(123, "Some output from the failing command"))
                             }
 
-                            beforeEachTest { runner.run(step, stepRunContext) }
+                            beforeEachTest { runner.run(step, eventSink) }
 
                             it("emits a 'running setup command' event for the commands before the failing command") {
                                 verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand1, 0))
@@ -1043,7 +1071,7 @@ object TaskStepRunnerSpec : Spek({
                                 whenever(execClient.run(eq(command2), any(), any(), any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong."))
                             }
 
-                            beforeEachTest { runner.run(step, stepRunContext) }
+                            beforeEachTest { runner.run(step, eventSink) }
 
                             it("emits a 'running setup command' event for the commands before the failing command") {
                                 verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand1, 0))

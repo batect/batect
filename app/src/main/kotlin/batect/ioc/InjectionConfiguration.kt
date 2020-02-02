@@ -95,6 +95,7 @@ import batect.ui.ConsoleInfo
 import batect.ui.EventLogger
 import batect.ui.EventLoggerProvider
 import batect.ui.FailureErrorMessageFormatter
+import batect.ui.containerio.ContainerIOStreamingOptions
 import batect.ui.fancy.StartupProgressDisplayProvider
 import batect.updates.UpdateInfoDownloader
 import batect.updates.UpdateInfoStorage
@@ -235,7 +236,7 @@ private val executionModule = Kodein.Module("execution") {
     bind<ContainerDependencyGraphProvider>() with singletonWithLogger { logger -> ContainerDependencyGraphProvider(instance(), instance(), logger) }
     bind<ContainerEntrypointResolver>() with singleton { ContainerEntrypointResolver() }
     bind<InterruptionTrap>() with singleton { InterruptionTrap(instance()) }
-    bind<ParallelExecutionManager>() with scoped(TaskScope).singletonWithLogger { logger -> ParallelExecutionManager(instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), logger) }
+    bind<ParallelExecutionManager>() with scoped(TaskScope).singletonWithLogger { logger -> ParallelExecutionManager(instance(), instance(), instance(), logger) }
     bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance(), instance()) }
     bind<RunOptions>(RunOptionsType.Overall) with singleton { RunOptions(commandLineOptions()) }
     bind<RunStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> RunStagePlanner(instance(), instance(), instance(), logger) }
@@ -243,7 +244,7 @@ private val executionModule = Kodein.Module("execution") {
     bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), logger) }
     bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(instance(), logger) }
     bind<TaskStateMachine>() with scoped(TaskScope).singletonWithLogger { logger -> TaskStateMachine(instance(), instance(RunOptionsType.Task), instance(), instance(), instance(), instance(), logger) }
-    bind<TaskStepRunner>() with singleton { TaskStepRunner(instance(), instance(), instance(), instance(), instance(), instance(), instance()) }
+    bind<TaskStepRunner>() with scoped(TaskScope).singleton { TaskStepRunner(instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance(), instance()) }
     bind<TaskSuggester>() with singleton { TaskSuggester() }
 }
 
@@ -293,6 +294,7 @@ private val uiModule = Kodein.Module("ui") {
     bind<Console>(StreamType.Error) with singleton { Console(instance(StreamType.Error), enableComplexOutput = !commandLineOptions().disableColorOutput && nativeMethods().determineIfStderrIsTTY(), consoleDimensions = instance()) }
     bind<ConsoleDimensions>() with singletonWithLogger { logger -> ConsoleDimensions(instance(), instance(), logger) }
     bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), instance(), logger) }
+    bind<ContainerIOStreamingOptions>() with scoped(TaskScope).singleton { instance<EventLogger>().ioStreamingOptions }
     bind<EventLogger>() with scoped(TaskScope).singleton { instance<EventLoggerProvider>().getEventLogger(context, instance()) }
     bind<FailureErrorMessageFormatter>() with scoped(TaskScope).singleton { FailureErrorMessageFormatter(instance(RunOptionsType.Task), instance()) }
     bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider(instance()) }

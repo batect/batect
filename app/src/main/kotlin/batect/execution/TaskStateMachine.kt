@@ -37,13 +37,13 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 class TaskStateMachine(
-    val graph: ContainerDependencyGraph,
-    val runOptions: RunOptions,
-    val runStagePlanner: RunStagePlanner,
-    val cleanupStagePlanner: CleanupStagePlanner,
-    val failureErrorMessageFormatter: FailureErrorMessageFormatter,
-    val cancellationContext: CancellationContext,
-    val logger: Logger
+    private val graph: ContainerDependencyGraph,
+    private val runOptions: RunOptions,
+    private val runStagePlanner: RunStagePlanner,
+    private val cleanupStagePlanner: CleanupStagePlanner,
+    private val failureErrorMessageFormatter: FailureErrorMessageFormatter,
+    private val cancellationContext: CancellationContext,
+    private val logger: Logger
 ) : TaskEventSink {
     var taskHasFailed: Boolean = false
         private set
@@ -135,7 +135,7 @@ class TaskStateMachine(
     }
 
     private fun startCleanupStage(stepsStillRunning: Boolean): TaskStep? {
-        val cleanupStage = cleanupStagePlanner.createStage(graph, events)
+        val cleanupStage = cleanupStagePlanner.createStage(events)
 
         if (taskHasFailed && shouldLeaveCreatedContainersRunningAfterFailure()) {
             manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events, cleanupStage.manualCleanupInstructions)

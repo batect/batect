@@ -40,11 +40,12 @@ class ParallelExecutionManager(
     private val eventLogger: EventLogger,
     private val taskStepRunner: TaskStepRunner,
     private val stateMachine: TaskStateMachine,
+    private val cancellationContext: CancellationContext,
     private val runOptions: RunOptions,
     private val logger: Logger
 ) : TaskEventSink {
     private val threadPool = createThreadPool()
-    private val stepRunContext = TaskStepRunContext(this, runOptions, stateMachine.cancellationContext, eventLogger.ioStreamingOptions)
+    private val stepRunContext = TaskStepRunContext(this, runOptions, cancellationContext, eventLogger.ioStreamingOptions)
 
     private val startNewWorkLockObject = Object()
     private val finishedSignal = CountDownLatch(1)

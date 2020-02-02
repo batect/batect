@@ -229,13 +229,13 @@ private val dockerClientModule = Kodein.Module("docker.client") {
 
 private val executionModule = Kodein.Module("execution") {
     bind<CancellationContext>() with scoped(TaskScope).singleton { CancellationContext() }
-    bind<CleanupStagePlanner>() with singletonWithLogger { logger -> CleanupStagePlanner(instance(), logger) }
+    bind<CleanupStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> CleanupStagePlanner(instance(), instance(), logger) }
     bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance(RunOptionsType.Task)) }
     bind<ContainerDependencyGraph>() with scoped(TaskScope).singleton { instance<ContainerDependencyGraphProvider>().createGraph(instance(), context) }
     bind<ContainerDependencyGraphProvider>() with singletonWithLogger { logger -> ContainerDependencyGraphProvider(instance(), instance(), logger) }
     bind<ContainerEntrypointResolver>() with singleton { ContainerEntrypointResolver() }
     bind<InterruptionTrap>() with singleton { InterruptionTrap(instance()) }
-    bind<ParallelExecutionManager>() with scoped(TaskScope).singletonWithLogger { logger -> ParallelExecutionManager(instance(), instance(), instance(), instance(RunOptionsType.Task), logger) }
+    bind<ParallelExecutionManager>() with scoped(TaskScope).singletonWithLogger { logger -> ParallelExecutionManager(instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), logger) }
     bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance(), instance()) }
     bind<RunOptions>(RunOptionsType.Overall) with singleton { RunOptions(commandLineOptions()) }
     bind<RunStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> RunStagePlanner(instance(), instance(), instance(), logger) }

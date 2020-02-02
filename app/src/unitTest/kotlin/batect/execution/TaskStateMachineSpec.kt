@@ -79,7 +79,7 @@ object TaskStateMachineSpec : Spek({
 
         val cleanupStagePlanner by createForEachTest {
             mock<CleanupStagePlanner> {
-                on { createStage(eq(graph), any()) } doReturn cleanupStage
+                on { createStage(any()) } doReturn cleanupStage
             }
         }
 
@@ -144,7 +144,7 @@ object TaskStateMachineSpec : Spek({
                                 }
 
                                 it("does not create the cleanup stage") {
-                                    verify(cleanupStagePlanner, never()).createStage(any(), any())
+                                    verify(cleanupStagePlanner, never()).createStage(any())
                                 }
                             }
                         }
@@ -164,7 +164,7 @@ object TaskStateMachineSpec : Spek({
                                 }
 
                                 it("does not create the cleanup stage") {
-                                    verify(cleanupStagePlanner, never()).createStage(any(), any())
+                                    verify(cleanupStagePlanner, never()).createStage(any())
                                 }
                             }
                         }
@@ -209,7 +209,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     it("sends all previous events to the cleanup stage planner") {
-                                        verify(cleanupStagePlanner).createStage(graph, setOf(event))
+                                        verify(cleanupStagePlanner).createStage(setOf(event))
                                     }
                                 }
                             }
@@ -232,7 +232,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     it("sends all previous events to the cleanup stage planner") {
-                                        verify(cleanupStagePlanner).createStage(graph, setOf(event))
+                                        verify(cleanupStagePlanner).createStage(setOf(event))
                                     }
 
                                     it("sets the cleanup instruction to that provided by the error message formatter") {
@@ -267,7 +267,7 @@ object TaskStateMachineSpec : Spek({
                             }
 
                             it("does not create the cleanup stage") {
-                                verify(cleanupStagePlanner, never()).createStage(any(), any())
+                                verify(cleanupStagePlanner, never()).createStage(any())
                             }
                         }
                     }
@@ -300,7 +300,7 @@ object TaskStateMachineSpec : Spek({
                                 }
 
                                 it("sends all previous events to the cleanup stage planner, and only creates the cleanup stage once") {
-                                    verify(cleanupStagePlanner, times(1)).createStage(graph, setOf(failureEvent))
+                                    verify(cleanupStagePlanner, times(1)).createStage(setOf(failureEvent))
                                 }
                             }
                         }
@@ -331,7 +331,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     it("sends all previous events to the cleanup stage planner, and only creates the cleanup stage once") {
-                                        verify(cleanupStagePlanner, times(1)).createStage(graph, setOf(failureEvent))
+                                        verify(cleanupStagePlanner, times(1)).createStage(setOf(failureEvent))
                                     }
                                 }
                             }
@@ -367,7 +367,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     it("sends all previous events to the cleanup stage planner") {
-                                        verify(cleanupStagePlanner).createStage(graph, events)
+                                        verify(cleanupStagePlanner).createStage(events)
                                     }
 
                                     it("sets the cleanup instruction to that provided by the error message formatter") {

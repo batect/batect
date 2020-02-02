@@ -57,16 +57,11 @@ object ParallelExecutionManagerSpec : Spek({
 
         val taskStepRunner by createForEachTest { mock<TaskStepRunner>() }
         val cancellationContext by createForEachTest { mock<CancellationContext>() }
-        val stateMachine by createForEachTest {
-            mock<TaskStateMachine> {
-                on { it.cancellationContext } doReturn cancellationContext
-            }
-        }
-
+        val stateMachine by createForEachTest { mock<TaskStateMachine>() }
         val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true, emptyMap())
         val logger by createLoggerForEachTest()
         val executionManager by createForEachTest {
-            ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, runOptions, logger)
+            ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, cancellationContext, runOptions, logger)
         }
 
         fun eqExpectedRunContext() = argThat<TaskStepRunContext> { this.runOptions == runOptions && this.cancellationContext == cancellationContext && this.ioStreamingOptions == ioStreamingOptions }

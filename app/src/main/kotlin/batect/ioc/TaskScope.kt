@@ -25,7 +25,9 @@ import java.util.WeakHashMap
 object TaskScope : Scope<Task> {
     private val registries = WeakHashMap<Task, ScopeRegistry>()
 
-    override fun getRegistry(context: Task): ScopeRegistry {
-        return registries.getOrPut(context) { StandardScopeRegistry() }
+    override fun getRegistry(context: Task): ScopeRegistry = registries.getOrPut(context) { StandardScopeRegistry() }
+
+    fun close(context: Task) {
+        registries.remove(context)?.close()
     }
 }

@@ -23,6 +23,7 @@ import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.docker.client.DockerContainerType
+import batect.ioc.TaskKodein
 import batect.ioc.TaskKodeinFactory
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
@@ -64,11 +65,11 @@ object TaskRunnerSpec : Spek({
 
         val taskKodeinFactory by createForEachTest {
             mock<TaskKodeinFactory>() {
-                on { create(any(), any(), any(), any()) } doReturn Kodein.direct {
+                on { create(any(), any(), any(), any()) } doReturn TaskKodein(task, Kodein.direct {
                     bind<EventLogger>() with instance(eventLogger)
                     bind<TaskStateMachine>() with instance(stateMachine)
                     bind<ParallelExecutionManager>() with instance(executionManager)
-                }
+                })
             }
         }
 

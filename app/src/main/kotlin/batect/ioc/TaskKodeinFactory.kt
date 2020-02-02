@@ -32,12 +32,16 @@ import org.kodein.di.generic.singleton
 class TaskKodeinFactory(
     private val baseKodein: DKodein
 ) {
-    fun create(config: Configuration, task: Task, runOptions: RunOptions, containerType: DockerContainerType): DKodein = Kodein.direct {
+    fun create(config: Configuration, task: Task, runOptions: RunOptions, containerType: DockerContainerType): TaskKodein = TaskKodein(task, Kodein.direct {
         extend(baseKodein, copy = Copy.All)
         bind<RunOptions>(RunOptionsType.Task) with scoped(TaskScope).singleton { runOptions }
 
         // TODO: move these up to a higher level (they're not task-specific)
         bind<Configuration>() with instance(config)
         bind<DockerContainerType>() with instance(containerType)
-    }.on(task)
+    }.on(task))
+}
+
+class TaskKodein(private val task: Task, kodein: DKodein) : DKodein by kodein, AutoCloseable {
+    override fun close() = TaskScope.close(task)
 }

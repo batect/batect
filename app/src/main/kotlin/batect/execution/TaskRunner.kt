@@ -38,37 +38,39 @@ data class TaskRunner(
         }
 
         val startTime = Instant.now()
-        val kodein = taskKodeinFactory.create(config, task, runOptions, containerType)
-        val eventLogger = kodein.instance<EventLogger>()
-        eventLogger.onTaskStarting(task.name)
 
-        val executionManager = kodein.instance<ParallelExecutionManager>()
+        taskKodeinFactory.create(config, task, runOptions, containerType).use { kodein ->
+            val eventLogger = kodein.instance<EventLogger>()
+            eventLogger.onTaskStarting(task.name)
 
-        logger.info {
-            message("Preparation complete, starting task.")
-            data("taskName", task.name)
+            val executionManager = kodein.instance<ParallelExecutionManager>()
+
+            logger.info {
+                message("Preparation complete, starting task.")
+                data("taskName", task.name)
+            }
+
+            interruptionTrap.trapInterruptions(executionManager).use {
+                executionManager.run()
+            }
+
+            val finishTime = Instant.now()
+
+            logger.info {
+                message("Task execution completed.")
+                data("taskName", task.name)
+            }
+
+            val stateMachine = kodein.instance<TaskStateMachine>()
+
+            if (stateMachine.taskHasFailed) {
+                return onTaskFailed(eventLogger, task, stateMachine)
+            }
+
+            val duration = Duration.between(startTime, finishTime)
+
+            return onTaskSucceeded(eventLogger, task, stateMachine, duration, runOptions)
         }
-
-        interruptionTrap.trapInterruptions(executionManager).use {
-            executionManager.run()
-        }
-
-        val finishTime = Instant.now()
-
-        logger.info {
-            message("Task execution completed.")
-            data("taskName", task.name)
-        }
-
-        val stateMachine = kodein.instance<TaskStateMachine>()
-
-        if (stateMachine.taskHasFailed) {
-            return onTaskFailed(eventLogger, task, stateMachine)
-        }
-
-        val duration = Duration.between(startTime, finishTime)
-
-        return onTaskSucceeded(eventLogger, task, stateMachine, duration, runOptions)
     }
 
     private fun onTaskFailed(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine): Int {

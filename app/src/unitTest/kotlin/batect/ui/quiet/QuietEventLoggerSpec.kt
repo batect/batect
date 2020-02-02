@@ -16,7 +16,6 @@
 
 package batect.ui.quiet
 
-import batect.execution.RunOptions
 import batect.execution.model.events.TaskFailedEvent
 import batect.testutils.createForEachTest
 import batect.testutils.on
@@ -35,15 +34,14 @@ import java.time.Duration
 object QuietEventLoggerSpec : Spek({
     describe("a quiet event logger") {
         val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
-        val runOptions by createForEachTest { mock<RunOptions>() }
         val errorConsole by createForEachTest { mock<Console>() }
 
-        val logger by createForEachTest { QuietEventLogger(failureErrorMessageFormatter, runOptions, errorConsole, mock()) }
+        val logger by createForEachTest { QuietEventLogger(failureErrorMessageFormatter, errorConsole, mock()) }
 
         on("when a 'task failed' event is posted") {
             beforeEachTest {
                 val event = mock<TaskFailedEvent>()
-                whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn(TextRun("Something went wrong."))
+                whenever(failureErrorMessageFormatter.formatErrorMessage(event)).doReturn(TextRun("Something went wrong."))
 
                 logger.postEvent(event)
             }

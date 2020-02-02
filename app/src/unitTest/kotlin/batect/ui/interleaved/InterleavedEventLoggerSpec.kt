@@ -24,7 +24,6 @@ import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.execution.ContainerRuntimeConfiguration
-import batect.execution.RunOptions
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
@@ -91,8 +90,7 @@ object InterleavedEventLoggerSpec : Spek({
 
         val output by createForEachTest { mock<InterleavedOutput>() }
         val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
-        val runOptions by createForEachTest { mock<RunOptions>() }
-        val logger by createForEachTest { InterleavedEventLogger(taskContainer, containers, output, failureErrorMessageFormatter, runOptions) }
+        val logger by createForEachTest { InterleavedEventLogger(taskContainer, containers, output, failureErrorMessageFormatter) }
 
         describe("handling when events are posted") {
             on("when an 'image built' event is posted") {
@@ -299,7 +297,7 @@ object InterleavedEventLoggerSpec : Spek({
                         ).forEach { (description, event, container) ->
                             on("when a '$description' event is posted") {
                                 beforeEachTest {
-                                    whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn(TextRun("Something went wrong."))
+                                    whenever(failureErrorMessageFormatter.formatErrorMessage(event)).doReturn(TextRun("Something went wrong."))
 
                                     logger.postEvent(event)
                                 }
@@ -314,7 +312,7 @@ object InterleavedEventLoggerSpec : Spek({
                             val event = ImagePullFailedEvent(container4And5ImageSource, "Couldn't pull the image.")
 
                             beforeEachTest {
-                                whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn(TextRun("Something went wrong."))
+                                whenever(failureErrorMessageFormatter.formatErrorMessage(event)).doReturn(TextRun("Something went wrong."))
 
                                 logger.postEvent(event)
                             }
@@ -328,7 +326,7 @@ object InterleavedEventLoggerSpec : Spek({
                             val event = ImageBuildFailedEvent(container1And2ImageSource, "Couldn't pull the image.")
 
                             beforeEachTest {
-                                whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn(TextRun("Something went wrong."))
+                                whenever(failureErrorMessageFormatter.formatErrorMessage(event)).doReturn(TextRun("Something went wrong."))
 
                                 logger.postEvent(event)
                             }
@@ -350,7 +348,7 @@ object InterleavedEventLoggerSpec : Spek({
                         ).forEach { (description, event) ->
                             on("when a '$description' event is posted") {
                                 beforeEachTest {
-                                    whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn(TextRun("Something went wrong."))
+                                    whenever(failureErrorMessageFormatter.formatErrorMessage(event)).doReturn(TextRun("Something went wrong."))
 
                                     logger.postEvent(event)
                                 }

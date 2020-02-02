@@ -16,7 +16,6 @@
 
 package batect.ui.quiet
 
-import batect.execution.RunOptions
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.ui.Console
@@ -28,14 +27,13 @@ import java.time.Duration
 
 class QuietEventLogger(
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
-    val runOptions: RunOptions,
     val errorConsole: Console,
     override val ioStreamingOptions: TaskContainerOnlyIOStreamingOptions
 ) : EventLogger {
     override fun postEvent(event: TaskEvent) {
         if (event is TaskFailedEvent) {
             errorConsole.println()
-            errorConsole.println(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
+            errorConsole.println(failureErrorMessageFormatter.formatErrorMessage(event))
         }
     }
 

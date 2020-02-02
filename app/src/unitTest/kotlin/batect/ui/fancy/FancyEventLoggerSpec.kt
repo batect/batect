@@ -19,7 +19,6 @@ package batect.ui.fancy
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
-import batect.execution.RunOptions
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.RunningContainerExitedEvent
@@ -51,7 +50,6 @@ import java.time.Duration
 object FancyEventLoggerSpec : Spek({
     describe("a fancy event logger") {
         val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
-        val runOptions by createForEachTest { mock<RunOptions>() }
         val console by createForEachTest { mock<Console>() }
         val errorConsole by createForEachTest { mock<Console>() }
         val startupProgressDisplay by createForEachTest { mock<StartupProgressDisplay>() }
@@ -59,7 +57,7 @@ object FancyEventLoggerSpec : Spek({
         val taskContainer by createForEachTest { Container("task-container", imageSourceDoesNotMatter()) }
 
         val logger by createForEachTest {
-            FancyEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole, startupProgressDisplay, cleanupProgressDisplay, taskContainer, mock())
+            FancyEventLogger(failureErrorMessageFormatter, console, errorConsole, startupProgressDisplay, cleanupProgressDisplay, taskContainer, mock())
         }
 
         describe("when logging an event") {
@@ -304,7 +302,7 @@ object FancyEventLoggerSpec : Spek({
                 val event by createForEachTest { mock<TaskFailedEvent>() }
 
                 given("clean up has not started yet") {
-                    beforeEachTest { whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn(TextRun("Something went wrong.")) }
+                    beforeEachTest { whenever(failureErrorMessageFormatter.formatErrorMessage(event)).doReturn(TextRun("Something went wrong.")) }
 
                     on("posting the event") {
                         beforeEachTest { logger.postEvent(event) }
@@ -338,7 +336,7 @@ object FancyEventLoggerSpec : Spek({
                         reset(console)
                         reset(cleanupProgressDisplay)
 
-                        whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn(TextRun("Something went wrong for a second time."))
+                        whenever(failureErrorMessageFormatter.formatErrorMessage(event)).doReturn(TextRun("Something went wrong for a second time."))
                     }
 
                     on("posting the event") {

@@ -20,7 +20,6 @@ import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
 import batect.config.SetupCommand
-import batect.execution.RunOptions
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ImageBuiltEvent
@@ -50,7 +49,6 @@ class SimpleEventLogger(
     val containers: Set<Container>,
     val taskContainer: Container,
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
-    val runOptions: RunOptions,
     val console: Console,
     val errorConsole: Console,
     override val ioStreamingOptions: TaskContainerOnlyIOStreamingOptions
@@ -62,7 +60,7 @@ class SimpleEventLogger(
     override fun postEvent(event: TaskEvent) {
         synchronized(lock) {
             when (event) {
-                is TaskFailedEvent -> logTaskFailure(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
+                is TaskFailedEvent -> logTaskFailure(failureErrorMessageFormatter.formatErrorMessage(event))
                 is ImageBuiltEvent -> logImageBuilt(event.source)
                 is ImagePulledEvent -> logImagePulled(event.source)
                 is ContainerStartedEvent -> logContainerStarted(event.container)

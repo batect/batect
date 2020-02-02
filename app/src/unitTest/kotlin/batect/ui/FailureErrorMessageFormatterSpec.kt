@@ -68,8 +68,6 @@ object FailureErrorMessageFormatterSpec : Spek({
             on { lineSeparator } doReturn lineEnding
         }
 
-        val formatter = FailureErrorMessageFormatter(systemInfo)
-
         fun Text.withPlatformSpecificLineSeparator() = this.copy(content.replace("\n", lineEnding))
         fun TextRun.withPlatformSpecificLineSeparator() = this.map { it.withPlatformSpecificLineSeparator() }
 
@@ -142,7 +140,8 @@ object FailureErrorMessageFormatterSpec : Spek({
             ).forEach { (description, event, expectedMessage) ->
                 given("a '$description' event") {
                     on("getting the message for that event") {
-                        val message = formatter.formatErrorMessage(event, mock())
+                        val formatter = FailureErrorMessageFormatter(mock(), systemInfo)
+                        val message = formatter.formatErrorMessage(event)
 
                         it("returns an appropriate error message") {
                             assertThat(message, equivalentTo(expectedMessage.withPlatformSpecificLineSeparator()))
@@ -180,7 +179,8 @@ object FailureErrorMessageFormatterSpec : Spek({
                         }
 
                         on("getting the message for that event") {
-                            val message = formatter.formatErrorMessage(event, runOptions)
+                            val formatter = FailureErrorMessageFormatter(runOptions, systemInfo)
+                            val message = formatter.formatErrorMessage(event)
 
                             it("returns an appropriate error message") {
                                 assertThat(message, equivalentTo(expectedMessage.withPlatformSpecificLineSeparator()))
@@ -194,7 +194,8 @@ object FailureErrorMessageFormatterSpec : Spek({
                         }
 
                         on("getting the message for that event") {
-                            val message = formatter.formatErrorMessage(event, runOptions)
+                            val formatter = FailureErrorMessageFormatter(runOptions, systemInfo)
+                            val message = formatter.formatErrorMessage(event)
                             val expectedMessageWithCleanupInfo = expectedMessage + Text("\n\nYou can re-run the task with ") + Text.bold("--no-cleanup-after-failure") + Text(" to leave the created containers running to diagnose the issue.")
 
                             it("returns an appropriate error message with a message mentioning that the task can be re-run with cleanup disabled") {
@@ -211,44 +212,172 @@ object FailureErrorMessageFormatterSpec : Spek({
 
         data class TestCase(val messageGenerator: (Set<TaskEvent>, List<String>) -> TextRun, val argumentName: String, val cleanupPhrase: String)
 
-        mapOf(
-            "failed" to TestCase(formatter::formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled, "--no-cleanup-after-failure", "Once you have finished investigating the issue"),
-            "succeeded" to TestCase(formatter::formatManualCleanupMessageAfterTaskSuccessWithCleanupDisabled, "--no-cleanup-after-success", "Once you have finished using the containers")
-        ).forEach { (description, case) ->
-            val (messageGenerator, argumentName, cleanupPhrase) = case
+        describe("formatting a message to display after a task finishes with cleanup disabled") {
+            val formatter = FailureErrorMessageFormatter(mock(), systemInfo)
 
-            describe("formatting a message to display after the task has $description with cleanup disabled") {
-                given("no events were posted") {
-                    val events = emptySet<TaskEvent>()
+            mapOf(
+                "failed" to TestCase(formatter::formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled, "--no-cleanup-after-failure", "Once you have finished investigating the issue"),
+                "succeeded" to TestCase(formatter::formatManualCleanupMessageAfterTaskSuccessWithCleanupDisabled, "--no-cleanup-after-success", "Once you have finished using the containers")
+            ).forEach { (description, case) ->
+                val (messageGenerator, argumentName, cleanupPhrase) = case
 
-                    it("throws an appropriate exception") {
-                        assertThat(
-                            { messageGenerator(events, emptyList()) },
-                            throws<IllegalArgumentException>(withMessage("No containers were created and so this method should not be called."))
-                        )
+                describe("formatting a message to display after the task has $description with cleanup disabled") {
+                    given("no events were posted") {
+                        val events = emptySet<TaskEvent>()
+
+                        it("throws an appropriate exception") {
+                            assertThat(
+                                { messageGenerator(events, emptyList()) },
+                                throws<IllegalArgumentException>(withMessage("No containers were created and so this method should not be called."))
+                            )
+                        }
                     }
-                }
 
-                given("no containers were created") {
-                    val events = setOf(
-                        TaskNetworkDeletedEvent
-                    )
-
-                    it("throws an appropriate exception") {
-                        assertThat(
-                            { messageGenerator(events, emptyList()) },
-                            throws<IllegalArgumentException>(withMessage("No containers were created and so this method should not be called."))
+                    given("no containers were created") {
+                        val events = setOf(
+                            TaskNetworkDeletedEvent
                         )
-                    }
-                }
 
-                given("a container was created") {
-                    given("the container started") {
-                        val container = Container("http-server", imageSourceDoesNotMatter())
+                        it("throws an appropriate exception") {
+                            assertThat(
+                                { messageGenerator(events, emptyList()) },
+                                throws<IllegalArgumentException>(withMessage("No containers were created and so this method should not be called."))
+                            )
+                        }
+                    }
+
+                    given("a container was created") {
+                        given("the container started") {
+                            val container = Container("http-server", imageSourceDoesNotMatter())
+
+                            val events = setOf(
+                                ContainerCreatedEvent(container, DockerContainer("http-server-container-id")),
+                                ContainerStartedEvent(container)
+                            )
+
+                            given("there are no cleanup commands") {
+                                val cleanupCommands = emptyList<String>()
+
+                                on("formatting the message") {
+                                    it("throws an appropriate exception") {
+                                        assertThat(
+                                            { messageGenerator(events, cleanupCommands) },
+                                            throws<IllegalArgumentException>(withMessage("No cleanup commands were provided."))
+                                        )
+                                    }
+                                }
+                            }
+
+                            given("there is one cleanup command") {
+                                val cleanupCommands = listOf(
+                                    "docker network rm some-network"
+                                )
+
+                                on("formatting the message") {
+                                    val message = messageGenerator(events, cleanupCommands)
+                                    val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
+                                        Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
+                                        Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-id <command>") + Text("'.\n") +
+                                        Text("\n") +
+                                        Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
+                                        Text.bold("docker network rm some-network")
+
+                                    it("returns an appropriate message") {
+                                        assertThat(message, equivalentTo(expectedMessage.withPlatformSpecificLineSeparator()))
+                                    }
+                                }
+                            }
+
+                            given("there are multiple cleanup commands") {
+                                val cleanupCommands = listOf(
+                                    "docker rm some-container",
+                                    "docker network rm some-network"
+                                )
+
+                                on("formatting the message") {
+                                    val message = messageGenerator(events, cleanupCommands)
+                                    val expectedMessage =
+                                        Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
+                                            Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
+                                            Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-id <command>") + Text("'.\n") +
+                                            Text("\n") +
+                                            Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
+                                            Text.bold("docker rm some-container\n") +
+                                            Text.bold("docker network rm some-network")
+
+                                    it("returns an appropriate message") {
+                                        assertThat(message, equivalentTo(expectedMessage.withPlatformSpecificLineSeparator()))
+                                    }
+                                }
+                            }
+                        }
+
+                        given("the container never started") {
+                            val container = Container("http-server", imageSourceDoesNotMatter())
+                            val events = setOf(
+                                ContainerCreatedEvent(container, DockerContainer("http-server-container-id"))
+                            )
+
+                            given("there is one cleanup command") {
+                                val cleanupCommands = listOf(
+                                    "docker network rm some-network"
+                                )
+
+                                on("formatting the message") {
+                                    val message = messageGenerator(events, cleanupCommands)
+                                    val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
+                                        Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
+                                        Text("', or run a command in the container with '") + Text.bold("docker start http-server-container-id; docker exec -it http-server-container-id <command>") + Text("'.\n") +
+                                        Text("\n") +
+                                        Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
+                                        Text.bold("docker network rm some-network")
+
+                                    it("returns an appropriate message that includes how to start the container") {
+                                        assertThat(message, equivalentTo(expectedMessage.withPlatformSpecificLineSeparator()))
+                                    }
+                                }
+                            }
+                        }
+
+                        given("the container exited") {
+                            val container = Container("http-server", imageSourceDoesNotMatter())
+                            val events = setOf(
+                                ContainerCreatedEvent(container, DockerContainer("http-server-container-id")),
+                                ContainerStartedEvent(container),
+                                RunningContainerExitedEvent(container, 123)
+                            )
+
+                            given("there is one cleanup command") {
+                                val cleanupCommands = listOf(
+                                    "docker network rm some-network"
+                                )
+
+                                on("formatting the message") {
+                                    val message = messageGenerator(events, cleanupCommands)
+                                    val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
+                                        Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
+                                        Text("', or run a command in the container with '") + Text.bold("docker start http-server-container-id; docker exec -it http-server-container-id <command>") + Text("'.\n") +
+                                        Text("\n") +
+                                        Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
+                                        Text.bold("docker network rm some-network")
+
+                                    it("returns an appropriate message that includes how to restart the exited container") {
+                                        assertThat(message, equivalentTo(expectedMessage.withPlatformSpecificLineSeparator()))
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    given("some containers were created and started") {
+                        val container1 = Container("http-server", imageSourceDoesNotMatter())
+                        val container2 = Container("database", imageSourceDoesNotMatter())
 
                         val events = setOf(
-                            ContainerCreatedEvent(container, DockerContainer("http-server-container-id")),
-                            ContainerStartedEvent(container)
+                            ContainerCreatedEvent(container1, DockerContainer("http-server-container-id")),
+                            ContainerStartedEvent(container1),
+                            ContainerCreatedEvent(container2, DockerContainer("database-container-id")),
+                            ContainerStartedEvent(container2)
                         )
 
                         given("there are no cleanup commands") {
@@ -271,12 +400,15 @@ object FailureErrorMessageFormatterSpec : Spek({
 
                             on("formatting the message") {
                                 val message = messageGenerator(events, cleanupCommands)
-                                val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
-                                    Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
-                                    Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-id <command>") + Text("'.\n") +
-                                    Text("\n") +
-                                    Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
-                                    Text.bold("docker network rm some-network")
+                                val expectedMessage =
+                                    Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
+                                        Text("For container ") + Text.bold("database") + Text(", view its output by running '") + Text.bold("docker logs database-container-id") +
+                                        Text("', or run a command in the container with '") + Text.bold("docker exec -it database-container-id <command>") + Text("'.\n") +
+                                        Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
+                                        Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-id <command>") + Text("'.\n") +
+                                        Text("\n") +
+                                        Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
+                                        Text.bold("docker network rm some-network")
 
                                 it("returns an appropriate message") {
                                     assertThat(message, equivalentTo(expectedMessage.withPlatformSpecificLineSeparator()))
@@ -294,6 +426,8 @@ object FailureErrorMessageFormatterSpec : Spek({
                                 val message = messageGenerator(events, cleanupCommands)
                                 val expectedMessage =
                                     Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
+                                        Text("For container ") + Text.bold("database") + Text(", view its output by running '") + Text.bold("docker logs database-container-id") +
+                                        Text("', or run a command in the container with '") + Text.bold("docker exec -it database-container-id <command>") + Text("'.\n") +
                                         Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
                                         Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-id <command>") + Text("'.\n") +
                                         Text("\n") +
@@ -307,140 +441,13 @@ object FailureErrorMessageFormatterSpec : Spek({
                             }
                         }
                     }
-
-                    given("the container never started") {
-                        val container = Container("http-server", imageSourceDoesNotMatter())
-                        val events = setOf(
-                            ContainerCreatedEvent(container, DockerContainer("http-server-container-id"))
-                        )
-
-                        given("there is one cleanup command") {
-                            val cleanupCommands = listOf(
-                                "docker network rm some-network"
-                            )
-
-                            on("formatting the message") {
-                                val message = messageGenerator(events, cleanupCommands)
-                                val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
-                                    Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
-                                    Text("', or run a command in the container with '") + Text.bold("docker start http-server-container-id; docker exec -it http-server-container-id <command>") + Text("'.\n") +
-                                    Text("\n") +
-                                    Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
-                                    Text.bold("docker network rm some-network")
-
-                                it("returns an appropriate message that includes how to start the container") {
-                                    assertThat(message, equivalentTo(expectedMessage.withPlatformSpecificLineSeparator()))
-                                }
-                            }
-                        }
-                    }
-
-                    given("the container exited") {
-                        val container = Container("http-server", imageSourceDoesNotMatter())
-                        val events = setOf(
-                            ContainerCreatedEvent(container, DockerContainer("http-server-container-id")),
-                            ContainerStartedEvent(container),
-                            RunningContainerExitedEvent(container, 123)
-                        )
-
-                        given("there is one cleanup command") {
-                            val cleanupCommands = listOf(
-                                "docker network rm some-network"
-                            )
-
-                            on("formatting the message") {
-                                val message = messageGenerator(events, cleanupCommands)
-                                val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
-                                    Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
-                                    Text("', or run a command in the container with '") + Text.bold("docker start http-server-container-id; docker exec -it http-server-container-id <command>") + Text("'.\n") +
-                                    Text("\n") +
-                                    Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
-                                    Text.bold("docker network rm some-network")
-
-                                it("returns an appropriate message that includes how to restart the exited container") {
-                                    assertThat(message, equivalentTo(expectedMessage.withPlatformSpecificLineSeparator()))
-                                }
-                            }
-                        }
-                    }
-                }
-
-                given("some containers were created and started") {
-                    val container1 = Container("http-server", imageSourceDoesNotMatter())
-                    val container2 = Container("database", imageSourceDoesNotMatter())
-
-                    val events = setOf(
-                        ContainerCreatedEvent(container1, DockerContainer("http-server-container-id")),
-                        ContainerStartedEvent(container1),
-                        ContainerCreatedEvent(container2, DockerContainer("database-container-id")),
-                        ContainerStartedEvent(container2)
-                    )
-
-                    given("there are no cleanup commands") {
-                        val cleanupCommands = emptyList<String>()
-
-                        on("formatting the message") {
-                            it("throws an appropriate exception") {
-                                assertThat(
-                                    { messageGenerator(events, cleanupCommands) },
-                                    throws<IllegalArgumentException>(withMessage("No cleanup commands were provided."))
-                                )
-                            }
-                        }
-                    }
-
-                    given("there is one cleanup command") {
-                        val cleanupCommands = listOf(
-                            "docker network rm some-network"
-                        )
-
-                        on("formatting the message") {
-                            val message = messageGenerator(events, cleanupCommands)
-                            val expectedMessage =
-                                Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
-                                    Text("For container ") + Text.bold("database") + Text(", view its output by running '") + Text.bold("docker logs database-container-id") +
-                                    Text("', or run a command in the container with '") + Text.bold("docker exec -it database-container-id <command>") + Text("'.\n") +
-                                    Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
-                                    Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-id <command>") + Text("'.\n") +
-                                    Text("\n") +
-                                    Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
-                                    Text.bold("docker network rm some-network")
-
-                            it("returns an appropriate message") {
-                                assertThat(message, equivalentTo(expectedMessage.withPlatformSpecificLineSeparator()))
-                            }
-                        }
-                    }
-
-                    given("there are multiple cleanup commands") {
-                        val cleanupCommands = listOf(
-                            "docker rm some-container",
-                            "docker network rm some-network"
-                        )
-
-                        on("formatting the message") {
-                            val message = messageGenerator(events, cleanupCommands)
-                            val expectedMessage =
-                                Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
-                                    Text("For container ") + Text.bold("database") + Text(", view its output by running '") + Text.bold("docker logs database-container-id") +
-                                    Text("', or run a command in the container with '") + Text.bold("docker exec -it database-container-id <command>") + Text("'.\n") +
-                                    Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
-                                    Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-id <command>") + Text("'.\n") +
-                                    Text("\n") +
-                                    Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
-                                    Text.bold("docker rm some-container\n") +
-                                    Text.bold("docker network rm some-network")
-
-                            it("returns an appropriate message") {
-                                assertThat(message, equivalentTo(expectedMessage.withPlatformSpecificLineSeparator()))
-                            }
-                        }
-                    }
                 }
             }
         }
 
         describe("formatting a message to display after cleanup failed") {
+            val formatter = FailureErrorMessageFormatter(mock(), systemInfo)
+
             given("there are no cleanup commands") {
                 val cleanupCommands = emptyList<String>()
 

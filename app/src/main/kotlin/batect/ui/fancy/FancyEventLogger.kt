@@ -17,7 +17,6 @@
 package batect.ui.fancy
 
 import batect.config.Container
-import batect.execution.RunOptions
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
@@ -35,7 +34,6 @@ import java.time.Duration
 
 class FancyEventLogger(
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
-    val runOptions: RunOptions,
     val console: Console,
     val errorConsole: Console,
     val startupProgressDisplay: StartupProgressDisplay,
@@ -97,7 +95,7 @@ class FancyEventLogger(
             console.println()
         }
 
-        errorConsole.println(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
+        errorConsole.println(failureErrorMessageFormatter.formatErrorMessage(event))
 
         if (haveStartedCleanup) {
             console.println()

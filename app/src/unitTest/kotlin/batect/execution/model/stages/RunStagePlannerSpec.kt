@@ -39,7 +39,6 @@ import batect.execution.model.rules.run.RunContainerSetupCommandsStepRule
 import batect.execution.model.rules.run.RunContainerStepRule
 import batect.execution.model.rules.run.WaitForContainerToBecomeHealthyStepRule
 import batect.os.Command
-import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
 import batect.testutils.on
@@ -67,11 +66,10 @@ object RunStagePlannerSpec : Spek({
         }
 
         val logger by createLoggerForEachTest()
-        val planner by createForEachTest { RunStagePlanner(logger) }
         val containerType = DockerContainerType.Windows
 
-        fun Suite.itCreatesStageWithRules(graph: ContainerDependencyGraph, expectedRules: Map<String, TaskStepRule>) {
-            val stage by runForEachTest { planner.createStage(graph, containerType) }
+        fun Suite.itCreatesStageWithRules(config: Configuration, graph: ContainerDependencyGraph, expectedRules: Map<String, TaskStepRule>) {
+            val stage by runForEachTest { RunStagePlanner(config, graph, containerType, logger).createStage() }
 
             expectedRules.forEach { (description, expectedRule) ->
                 it("includes a rule to $description") {
@@ -99,6 +97,7 @@ object RunStagePlannerSpec : Spek({
                     val allContainersInNetwork = setOf(container)
 
                     itCreatesStageWithRules(
+                        config,
                         graph,
                         mapOf(
                             "create the task network" to CreateTaskNetworkStepRule(containerType),
@@ -119,6 +118,7 @@ object RunStagePlannerSpec : Spek({
                     val allContainersInNetwork = setOf(container)
 
                     itCreatesStageWithRules(
+                        config,
                         graph,
                         mapOf(
                             "create the task network" to CreateTaskNetworkStepRule(containerType),
@@ -140,6 +140,7 @@ object RunStagePlannerSpec : Spek({
                 val allContainersInNetwork = setOf(container)
 
                 itCreatesStageWithRules(
+                    config,
                     graph,
                     mapOf(
                         "create the task network" to CreateTaskNetworkStepRule(containerType),
@@ -160,6 +161,7 @@ object RunStagePlannerSpec : Spek({
                 val allContainersInNetwork = setOf(container)
 
                 itCreatesStageWithRules(
+                    config,
                     graph,
                     mapOf(
                         "create the task network" to CreateTaskNetworkStepRule(containerType),
@@ -190,6 +192,7 @@ object RunStagePlannerSpec : Spek({
                 val allContainersInNetwork = setOf(taskContainer, container1, container2, container3)
 
                 itCreatesStageWithRules(
+                    config,
                     graph,
                     mapOf(
                         "create the task network" to CreateTaskNetworkStepRule(containerType),
@@ -228,6 +231,7 @@ object RunStagePlannerSpec : Spek({
                 val allContainersInNetwork = setOf(taskContainer, container1, container2)
 
                 itCreatesStageWithRules(
+                    config,
                     graph,
                     mapOf(
                         "create the task network" to CreateTaskNetworkStepRule(containerType),
@@ -262,6 +266,7 @@ object RunStagePlannerSpec : Spek({
                         val allContainersInNetwork = setOf(taskContainer, container1, container2)
 
                         itCreatesStageWithRules(
+                            config,
                             graph,
                             mapOf(
                                 "create the task network" to CreateTaskNetworkStepRule(containerType),
@@ -295,6 +300,7 @@ object RunStagePlannerSpec : Spek({
                         val allContainersInNetwork = setOf(taskContainer, container1, container2)
 
                         itCreatesStageWithRules(
+                            config,
                             graph,
                             mapOf(
                                 "create the task network" to CreateTaskNetworkStepRule(containerType),
@@ -329,6 +335,7 @@ object RunStagePlannerSpec : Spek({
                     val allContainersInNetwork = setOf(taskContainer, container1, container2)
 
                     itCreatesStageWithRules(
+                        config,
                         graph,
                         mapOf(
                             "create the task network" to CreateTaskNetworkStepRule(containerType),

@@ -23,10 +23,10 @@ import batect.config.PortMapping
 import batect.config.Task
 
 data class ContainerDependencyGraph(
-    val config: Configuration,
-    val task: Task,
-    val commandResolver: ContainerCommandResolver,
-    val entrypointResolver: ContainerEntrypointResolver
+    private val config: Configuration,
+    private val task: Task,
+    private val commandResolver: ContainerCommandResolver,
+    private val entrypointResolver: ContainerEntrypointResolver
 ) {
     private val nodesMap = createNodes()
 

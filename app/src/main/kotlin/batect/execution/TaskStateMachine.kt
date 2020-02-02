@@ -16,7 +16,6 @@
 
 package batect.execution
 
-import batect.docker.client.DockerContainerType
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskEvent
@@ -44,7 +43,6 @@ class TaskStateMachine(
     val cleanupStagePlanner: CleanupStagePlanner,
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
     val cancellationContext: CancellationContext,
-    val containerType: DockerContainerType,
     val logger: Logger
 ) : TaskEventSink {
     var taskHasFailed: Boolean = false
@@ -55,7 +53,7 @@ class TaskStateMachine(
 
     private val events: MutableSet<TaskEvent> = mutableSetOf()
     private val lock = ReentrantLock()
-    private var currentStage: Stage = runStagePlanner.createStage(graph, containerType)
+    private var currentStage: Stage = runStagePlanner.createStage()
     private var taskFailedDuringCleanup: Boolean = false
 
     fun popNextStep(stepsStillRunning: Boolean): TaskStep? {

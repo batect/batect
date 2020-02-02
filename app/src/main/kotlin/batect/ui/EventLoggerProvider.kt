@@ -16,6 +16,7 @@
 
 package batect.ui
 
+import batect.config.Task
 import batect.execution.ContainerDependencyGraph
 import batect.execution.RunOptions
 import batect.ui.containerio.TaskContainerOnlyIOStreamingOptions
@@ -41,12 +42,12 @@ class EventLoggerProvider(
     private val requestedOutputStyle: OutputStyle?,
     private val disableColorOutput: Boolean
 ) {
-    fun getEventLogger(graph: ContainerDependencyGraph, runOptions: RunOptions): EventLogger {
+    fun getEventLogger(task: Task, graph: ContainerDependencyGraph, runOptions: RunOptions): EventLogger {
         return when (requestedOutputStyle) {
             OutputStyle.Quiet -> createQuietLogger(graph, runOptions)
             OutputStyle.Fancy -> createFancyLogger(graph, runOptions)
             OutputStyle.Simple -> createSimpleLogger(graph, runOptions)
-            OutputStyle.All -> createInterleavedLogger(graph, runOptions)
+            OutputStyle.All -> createInterleavedLogger(task, graph, runOptions)
             null -> {
                 if (!consoleInfo.supportsInteractivity || disableColorOutput) {
                     createSimpleLogger(graph, runOptions)
@@ -70,9 +71,9 @@ class EventLoggerProvider(
 
     private fun createTaskContainerOnlyIOStreamingOptions(graph: ContainerDependencyGraph) = TaskContainerOnlyIOStreamingOptions(graph.taskContainerNode.container, stdout, stdin, consoleInfo)
 
-    private fun createInterleavedLogger(graph: ContainerDependencyGraph, runOptions: RunOptions): InterleavedEventLogger {
+    private fun createInterleavedLogger(task: Task, graph: ContainerDependencyGraph, runOptions: RunOptions): InterleavedEventLogger {
         val containers = graph.allNodes.mapToSet { it.container }
-        val output = InterleavedOutput(graph.task.name, containers, console)
+        val output = InterleavedOutput(task.name, containers, console)
 
         return InterleavedEventLogger(graph.taskContainerNode.container, containers, output, failureErrorMessageFormatter, runOptions)
     }

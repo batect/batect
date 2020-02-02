@@ -19,7 +19,6 @@ package batect.execution
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
-import batect.docker.client.DockerContainerType
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskFailedEvent
@@ -64,11 +63,10 @@ object TaskStateMachineSpec : Spek({
         val graph by createForEachTest { mock<ContainerDependencyGraph>() }
         val runOptions by createForEachTest { mock<RunOptions>() }
         val logger by createLoggerForEachTest()
-        val containerType = DockerContainerType.Windows
         val runStage by createForEachTest { mock<RunStage>() }
         val runStagePlanner by createForEachTest {
             mock<RunStagePlanner> {
-                on { createStage(graph, containerType) } doReturn runStage
+                on { createStage() } doReturn runStage
             }
         }
 
@@ -88,7 +86,7 @@ object TaskStateMachineSpec : Spek({
         val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
         val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
-        val stateMachine by createForEachTest { TaskStateMachine(graph, runOptions, runStagePlanner, cleanupStagePlanner, failureErrorMessageFormatter, cancellationContext, containerType, logger) }
+        val stateMachine by createForEachTest { TaskStateMachine(graph, runOptions, runStagePlanner, cleanupStagePlanner, failureErrorMessageFormatter, cancellationContext, logger) }
 
         describe("posting events") {
             given("the event is a failure event") {

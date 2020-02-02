@@ -17,6 +17,7 @@
 package batect.execution.model.stages
 
 import batect.config.BuildImage
+import batect.config.Configuration
 import batect.config.Container
 import batect.config.PullImage
 import batect.docker.client.DockerContainerType
@@ -34,8 +35,13 @@ import batect.logging.Logger
 import batect.utils.flatMapToSet
 import batect.utils.mapToSet
 
-class RunStagePlanner(private val logger: Logger) {
-    fun createStage(graph: ContainerDependencyGraph, containerType: DockerContainerType): RunStage {
+class RunStagePlanner(
+    private val config: Configuration,
+    private val graph: ContainerDependencyGraph,
+    private val containerType: DockerContainerType,
+    private val logger: Logger
+) {
+    fun createStage(): RunStage {
         val allContainersInNetwork = graph.allNodes.mapToSet { it.container }
 
         val rules = imageCreationRulesFor(graph) +
@@ -63,7 +69,7 @@ class RunStagePlanner(private val logger: Logger) {
             .mapToSet { (imageSource, containers) ->
                 when (imageSource) {
                     is PullImage -> PullImageStepRule(imageSource)
-                    is BuildImage -> BuildImageStepRule(imageSource, imageTagsFor(graph.config.projectName, containers))
+                    is BuildImage -> BuildImageStepRule(imageSource, imageTagsFor(config.projectName, containers))
                 }
             }
     }

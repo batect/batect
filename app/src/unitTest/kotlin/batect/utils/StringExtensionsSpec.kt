@@ -48,6 +48,12 @@ object StringExtensionsSpec : Spek({
             }
         }
 
+        given("a string longer than the maximum width with only one word") {
+            it("returns the original string") {
+                assertThat("blah foo".breakAt(3).lines(), equalTo(listOf("blah", "foo")))
+            }
+        }
+
         given("a string longer than the maximum width with two words where the first word fits within the maximum width") {
             it("moves the second word to a new line") {
                 assertThat("the foo".breakAt(4).lines(), equalTo(listOf("the", "foo")))

@@ -43,7 +43,6 @@ import okio.Sink
 import okio.sink
 import java.io.ByteArrayOutputStream
 import java.util.Base64
-import java.util.concurrent.TimeUnit
 
 class ImagesAPI(
     httpConfig: DockerHttpConfig,
@@ -198,7 +197,7 @@ class ImagesAPI(
             .addRegistryCredentialsForPull(registryCredentials)
             .build()
 
-        clientWithTimeout(30, TimeUnit.SECONDS)
+        clientWithNoTimeout()
             .newCall(request)
             .executeInCancellationContext(cancellationContext) { response ->
                 checkForFailure(response) { error ->

@@ -34,7 +34,6 @@ import batect.docker.DockerHttpConfig
 import batect.docker.DockerHttpConfigDefaults
 import batect.docker.DockerTLSConfig
 import batect.docker.api.ContainersAPI
-import batect.docker.api.DockerAPI
 import batect.docker.api.ExecAPI
 import batect.docker.api.ImagesAPI
 import batect.docker.api.NetworksAPI
@@ -71,6 +70,18 @@ import batect.execution.TaskSuggester
 import batect.execution.model.stages.CleanupStagePlanner
 import batect.execution.model.stages.RunStagePlanner
 import batect.execution.model.steps.TaskStepRunner
+import batect.execution.model.steps.runners.BuildImageStepRunner
+import batect.execution.model.steps.runners.CreateContainerStepRunner
+import batect.execution.model.steps.runners.CreateTaskNetworkStepRunner
+import batect.execution.model.steps.runners.DeleteTaskNetworkStepRunner
+import batect.execution.model.steps.runners.DeleteTemporaryDirectoryStepRunner
+import batect.execution.model.steps.runners.DeleteTemporaryFileStepRunner
+import batect.execution.model.steps.runners.PullImageStepRunner
+import batect.execution.model.steps.runners.RemoveContainerStepRunner
+import batect.execution.model.steps.runners.RunContainerSetupCommandsStepRunner
+import batect.execution.model.steps.runners.RunContainerStepRunner
+import batect.execution.model.steps.runners.StopContainerStepRunner
+import batect.execution.model.steps.runners.WaitForContainerToBecomeHealthyStepRunner
 import batect.logging.ApplicationInfoLogger
 import batect.logging.HttpLoggingInterceptor
 import batect.logging.LogMessageWriter
@@ -212,7 +223,6 @@ private val dockerModule = Kodein.Module("docker") {
 
 private val dockerApiModule = Kodein.Module("docker.api") {
     bind<ContainersAPI>() with singletonWithLogger { logger -> ContainersAPI(instance(), instance(), logger) }
-    bind<DockerAPI>() with singleton { DockerAPI(instance(), instance(), instance(), instance()) }
     bind<ExecAPI>() with singletonWithLogger { logger -> ExecAPI(instance(), instance(), logger) }
     bind<ImagesAPI>() with singletonWithLogger { logger -> ImagesAPI(instance(), instance(), logger) }
     bind<NetworksAPI>() with singletonWithLogger { logger -> NetworksAPI(instance(), instance(), logger) }
@@ -229,6 +239,8 @@ private val dockerClientModule = Kodein.Module("docker.client") {
 }
 
 private val executionModule = Kodein.Module("execution") {
+    import(runnersModule)
+
     bind<CancellationContext>() with scoped(TaskScope).singleton { CancellationContext() }
     bind<CleanupStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> CleanupStagePlanner(instance(), instance(), logger) }
     bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance(RunOptionsType.Task)) }
@@ -244,8 +256,23 @@ private val executionModule = Kodein.Module("execution") {
     bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), logger) }
     bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(instance(), logger) }
     bind<TaskStateMachine>() with scoped(TaskScope).singletonWithLogger { logger -> TaskStateMachine(instance(), instance(RunOptionsType.Task), instance(), instance(), instance(), instance(), logger) }
-    bind<TaskStepRunner>() with scoped(TaskScope).singleton { TaskStepRunner(instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance(), instance()) }
+    bind<TaskStepRunner>() with scoped(TaskScope).singleton { TaskStepRunner(dkodein) }
     bind<TaskSuggester>() with singleton { TaskSuggester() }
+}
+
+private val runnersModule = Kodein.Module("execution.model.steps.runners") {
+    bind<BuildImageStepRunner>() with scoped(TaskScope).singleton { BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
+    bind<CreateContainerStepRunner>() with scoped(TaskScope).singleton { CreateContainerStepRunner(instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
+    bind<CreateTaskNetworkStepRunner>() with scoped(TaskScope).singleton { CreateTaskNetworkStepRunner(instance()) }
+    bind<DeleteTaskNetworkStepRunner>() with scoped(TaskScope).singleton { DeleteTaskNetworkStepRunner(instance()) }
+    bind<DeleteTemporaryDirectoryStepRunner>() with scoped(TaskScope).singleton { DeleteTemporaryDirectoryStepRunner() }
+    bind<DeleteTemporaryFileStepRunner>() with scoped(TaskScope).singleton { DeleteTemporaryFileStepRunner() }
+    bind<PullImageStepRunner>() with scoped(TaskScope).singleton { PullImageStepRunner(instance(), instance()) }
+    bind<RemoveContainerStepRunner>() with scoped(TaskScope).singleton { RemoveContainerStepRunner(instance()) }
+    bind<RunContainerSetupCommandsStepRunner>() with scoped(TaskScope).singleton { RunContainerSetupCommandsStepRunner(instance(), instance(), instance(), instance(RunOptionsType.Task), instance(), instance()) }
+    bind<RunContainerStepRunner>() with scoped(TaskScope).singleton { RunContainerStepRunner(instance(), instance(), instance()) }
+    bind<StopContainerStepRunner>() with scoped(TaskScope).singleton { StopContainerStepRunner(instance()) }
+    bind<WaitForContainerToBecomeHealthyStepRunner>() with scoped(TaskScope).singleton { WaitForContainerToBecomeHealthyStepRunner(instance(), instance(), instance()) }
 }
 
 private val loggingModule = Kodein.Module("logging") {

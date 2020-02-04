@@ -31,6 +31,14 @@ object DockerImageProgressReporterSpec : Spek({
     describe("a Docker image pull progress reporter") {
         val reporter by createForEachTest { DockerImageProgressReporter() }
 
+        // This is the rough idea:
+        // - we should show nothing if we have no layer information at all
+        // - we should show 'downloading' while any layer is downloading
+        // - we should show 'verifying checksum' if all layers are verifying checksum or later and one or more is verifying a checksum
+        // - we should show 'download complete' only if all layers are download complete
+        // - we should show 'extracting' if all layers are download complete or later and one or more is extracting
+        // - we should show 'pull complete' only if all layers are pull complete
+
         mapOf(
             "an empty event" to "{}",
             "an 'image pull starting' event" to """{"status":"Pulling from library/node","id":"10-stretch"}""",
@@ -112,7 +120,7 @@ object DockerImageProgressReporterSpec : Spek({
             }
 
             on("processing a 'verifying checksum' event for the same layer") {
-                // Note that the 'status' field for a 'verifying checksum' event has the S capitalised, while
+                // Note that the 'status' field for a 'verifying checksum' event has the C capitalised, while
                 // every other kind of event uses lowercase for later words in the description.
                 val json = """{"status":"Verifying Checksum","progressDetail":{},"id":"d6cd23cd1a2c"}"""
                 val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
@@ -193,6 +201,21 @@ object DockerImageProgressReporterSpec : Spek({
                     }
                 }
             }
+
+            given("a 'download complete' event has been processed") {
+                beforeEachTest {
+                    reporter.processRawProgressUpdate("""{"status":"Download complete","progressDetail":{},"id":"d6cd23cd1a2c"}""")
+                }
+
+                on("processing an 'extracting' event for another layer") {
+                    val json = """{"status":"Extracting","progressDetail":{"current":900,"total":7000},"id":"b59856e9f0ab"}"""
+                    val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+
+                    it("returns a progress update combining the state of both layers") {
+                        assertThat(progressUpdate, equalTo(DockerImageProgress("extracting", 900, 4159 + 7000)))
+                    }
+                }
+            }
         }
 
         given("a single 'verifying checksum' event has been processed") {
@@ -216,6 +239,132 @@ object DockerImageProgressReporterSpec : Spek({
                 it("returns an appropriate progress update") {
                     assertThat(progressUpdate, equalTo(DockerImageProgress("downloading", 900, 4159)))
                 }
+            }
+        }
+
+        given("all layers are downloading") {
+            val progressUpdate by runNullableForEachTest {
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
+            }
+
+            it("returns a progress update that indicates the image is downloading") {
+                assertThat(progressUpdate, equalTo(DockerImageProgress("downloading", 900, 7000)))
+            }
+        }
+
+        given("some layers are downloading and some have finished downloading") {
+            val progressUpdate by runNullableForEachTest {
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Download complete","progressDetail":{},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
+            }
+
+            it("returns a progress update that indicates the image is downloading") {
+                assertThat(progressUpdate, equalTo(DockerImageProgress("downloading", 4600, 7000)))
+            }
+        }
+
+        given("some layers are downloading and some are extracting") {
+            val progressUpdate by runNullableForEachTest {
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Extracting","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
+            }
+
+            it("returns a progress update that indicates the image is downloading") {
+                assertThat(progressUpdate, equalTo(DockerImageProgress("downloading", 3300, 7000)))
+            }
+        }
+
+        given("some layers are downloading, some are verifying checksums and some have finished downloading") {
+            val progressUpdate by runNullableForEachTest {
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":50,"total":9000},"id":"4c60885e4f94"}""")
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Verifying Checksum","progressDetail":{},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
+                reporter.processRawProgressUpdate("""{"status":"Download complete","progressDetail":{},"id":"55cbf04beb70"}""")
+            }
+
+            it("returns a progress update that indicates the image is downloading") {
+                assertThat(progressUpdate, equalTo(DockerImageProgress("downloading", 7050, 16000)))
+            }
+        }
+
+        given("some layers are verifying checksums and some have finished downloading") {
+            val progressUpdate by runNullableForEachTest {
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Verifying Checksum","progressDetail":{},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
+                reporter.processRawProgressUpdate("""{"status":"Download complete","progressDetail":{},"id":"55cbf04beb70"}""")
+            }
+
+            it("returns a progress update that indicates the checksum is being verified") {
+                assertThat(progressUpdate, equalTo(DockerImageProgress("verifying checksum", 3000, 7000)))
+            }
+        }
+
+        given("some layers have finished downloading and some are extracting") {
+            val progressUpdate by runNullableForEachTest {
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Extracting","progressDetail":{"current":700,"total":4000},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
+                reporter.processRawProgressUpdate("""{"status":"Download complete","progressDetail":{},"id":"55cbf04beb70"}""")
+            }
+
+            it("returns a progress update that indicates the image is extracting") {
+                assertThat(progressUpdate, equalTo(DockerImageProgress("extracting", 700, 7000)))
+            }
+        }
+
+        given("all layers have finished downloading") {
+            val progressUpdate by runNullableForEachTest {
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Download complete","progressDetail":{},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
+                reporter.processRawProgressUpdate("""{"status":"Download complete","progressDetail":{},"id":"55cbf04beb70"}""")
+            }
+
+            it("returns a progress update that indicates the image has finished downloading") {
+                assertThat(progressUpdate, equalTo(DockerImageProgress("download complete", 7000, 7000)))
+            }
+        }
+
+        given("some layers have finished downloading and some have finished pulling") {
+            val progressUpdate by runNullableForEachTest {
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Download complete","progressDetail":{},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
+                reporter.processRawProgressUpdate("""{"status":"Pull complete","progressDetail":{},"id":"55cbf04beb70"}""")
+            }
+
+            it("returns a progress update that indicates the image has finished downloading") {
+                assertThat(progressUpdate, equalTo(DockerImageProgress("download complete", 7000, 7000)))
+            }
+        }
+
+        given("some layers are extracting and some have finished pulling") {
+            val progressUpdate by runNullableForEachTest {
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Extracting","progressDetail":{"current":700,"total":4000},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
+                reporter.processRawProgressUpdate("""{"status":"Pull complete","progressDetail":{},"id":"55cbf04beb70"}""")
+            }
+
+            it("returns a progress update that indicates the image is extracting") {
+                assertThat(progressUpdate, equalTo(DockerImageProgress("extracting", 3700, 7000)))
+            }
+        }
+
+        given("all layers have finished pulling") {
+            val progressUpdate by runNullableForEachTest {
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Pull complete","progressDetail":{},"id":"d6cd23cd1a2c"}""")
+                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
+                reporter.processRawProgressUpdate("""{"status":"Pull complete","progressDetail":{},"id":"55cbf04beb70"}""")
+            }
+
+            it("returns a progress update that indicates the image has finished pulling") {
+                assertThat(progressUpdate, equalTo(DockerImageProgress("pull complete", 7000, 7000)))
             }
         }
 

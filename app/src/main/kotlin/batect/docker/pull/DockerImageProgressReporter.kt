@@ -83,14 +83,21 @@ class DockerImageProgressReporter {
     }
 
     private fun computeOverallProgress(): DockerImageProgress {
-        val earliestOperation = layerStates.values.map { it.currentOperation }.min()!!
-        val layersInEarliestOperation = layerStates.values.filter { it.currentOperation == earliestOperation }
-        val layersInLaterOperations = layerStates.values.filter { it.currentOperation > earliestOperation }
+        // We need this special case for extraction as extraction only happens one layer at a time and other layers remain in the 'download complete' state
+        // until it's their turn to be extracted, but we want to show that extraction progress. (Without this, we'd just look at the earliest step, which is
+        // 'download complete', and show that for the entire time the extraction is going on.
+        val anyLayerIsExtracting = layerStates.values.any { it.currentOperation == DownloadOperation.Extracting }
+        val allLayersHaveFinishedDownloading = layerStates.values.all { it.currentOperation >= DownloadOperation.DownloadComplete }
+        val extracting = anyLayerIsExtracting && allLayersHaveFinishedDownloading
 
-        val overallCompletedBytes = layersInEarliestOperation.sumBy { it.completedBytes } + layersInLaterOperations.sumBy { it.totalBytes }
+        val currentOperation = if (extracting) DownloadOperation.Extracting else layerStates.values.map { it.currentOperation }.min()!!
+        val layersInCurrentOperation = layerStates.values.filter { it.currentOperation == currentOperation }
+        val layersFinishedCurrentOperation = layerStates.values.filter { it.currentOperation > currentOperation }
+
+        val overallCompletedBytes = layersInCurrentOperation.sumBy { it.completedBytes } + layersFinishedCurrentOperation.sumBy { it.totalBytes }
         val overallTotalBytes = layerStates.values.sumBy { it.totalBytes }
 
-        return DockerImageProgress(earliestOperation.displayName, overallCompletedBytes, overallTotalBytes)
+        return DockerImageProgress(currentOperation.displayName, overallCompletedBytes, overallTotalBytes)
     }
 
     private enum class DownloadOperation(val statusName: String, val assumeAllBytesCompleted: Boolean = false) {

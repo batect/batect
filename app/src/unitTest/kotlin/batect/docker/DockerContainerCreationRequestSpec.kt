@@ -32,6 +32,7 @@ object DockerContainerCreationRequestSpec : Spek({
     describe("a Docker container creation request") {
         given("a request with all values provided") {
             val request = DockerContainerCreationRequest(
+                "the-container-name",
                 DockerImage("the-image"),
                 DockerNetwork("the-network"),
                 listOf("do-the-thing"),
@@ -122,6 +123,7 @@ object DockerContainerCreationRequestSpec : Spek({
 
         given("a request with only the minimal set of values provided") {
             val request = DockerContainerCreationRequest(
+                "the-container-name",
                 DockerImage("the-image"),
                 DockerNetwork("the-network"),
                 emptyList(),

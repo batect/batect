@@ -27,6 +27,7 @@ import kotlinx.serialization.json.json
 
 @Serializable
 data class DockerContainerCreationRequest(
+    val name: String,
     val image: DockerImage,
     val network: DockerNetwork,
     val command: List<String>,

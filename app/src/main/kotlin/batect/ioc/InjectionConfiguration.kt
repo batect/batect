@@ -29,6 +29,7 @@ import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderF
 import batect.config.io.ConfigurationLoader
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerContainerEnvironmentVariableProvider
+import batect.docker.DockerContainerNameGenerator
 import batect.docker.DockerHostNameResolver
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerHttpConfigDefaults
@@ -198,8 +199,9 @@ private val dockerModule = Kodein.Module("docker") {
     bind<ContainerIOStreamer>() with singleton { ContainerIOStreamer() }
     bind<ContainerTTYManager>() with singletonWithLogger { logger -> ContainerTTYManager(instance(), instance(), instance(), logger) }
     bind<ContainerWaiter>() with singleton { ContainerWaiter(instance()) }
-    bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance()) }
+    bind<DockerContainerCreationRequestFactory>() with scoped(TaskScope).singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
     bind<DockerContainerEnvironmentVariableProvider>() with singleton { DockerContainerEnvironmentVariableProvider(instance(), instance()) }
+    bind<DockerContainerNameGenerator>() with scoped(TaskScope).singleton { DockerContainerNameGenerator() }
     bind<DockerfileParser>() with singleton { DockerfileParser() }
     bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
     bind<DockerImageBuildContextFactory>() with singleton { DockerImageBuildContextFactory(instance()) }

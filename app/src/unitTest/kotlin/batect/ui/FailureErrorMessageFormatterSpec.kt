@@ -251,7 +251,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                             val container = Container("http-server", imageSourceDoesNotMatter())
 
                             val events = setOf(
-                                ContainerCreatedEvent(container, DockerContainer("http-server-container-id")),
+                                ContainerCreatedEvent(container, DockerContainer("http-server-container-id", "http-server-container-name")),
                                 ContainerStartedEvent(container)
                             )
 
@@ -276,8 +276,8 @@ object FailureErrorMessageFormatterSpec : Spek({
                                 on("formatting the message") {
                                     val message = messageGenerator(events, cleanupCommands)
                                     val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
-                                        Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
-                                        Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-id <command>") + Text("'.\n") +
+                                        Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
+                                        Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-name <command>") + Text("'.\n") +
                                         Text("\n") +
                                         Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
                                         Text.bold("docker network rm some-network")
@@ -298,8 +298,8 @@ object FailureErrorMessageFormatterSpec : Spek({
                                     val message = messageGenerator(events, cleanupCommands)
                                     val expectedMessage =
                                         Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
-                                            Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
-                                            Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-id <command>") + Text("'.\n") +
+                                            Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
+                                            Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-name <command>") + Text("'.\n") +
                                             Text("\n") +
                                             Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
                                             Text.bold("docker rm some-container\n") +
@@ -315,7 +315,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                         given("the container never started") {
                             val container = Container("http-server", imageSourceDoesNotMatter())
                             val events = setOf(
-                                ContainerCreatedEvent(container, DockerContainer("http-server-container-id"))
+                                ContainerCreatedEvent(container, DockerContainer("http-server-container-id", "http-server-container-name"))
                             )
 
                             given("there is one cleanup command") {
@@ -326,8 +326,8 @@ object FailureErrorMessageFormatterSpec : Spek({
                                 on("formatting the message") {
                                     val message = messageGenerator(events, cleanupCommands)
                                     val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
-                                        Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
-                                        Text("', or run a command in the container with '") + Text.bold("docker start http-server-container-id; docker exec -it http-server-container-id <command>") + Text("'.\n") +
+                                        Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
+                                        Text("', or run a command in the container with '") + Text.bold("docker start http-server-container-name; docker exec -it http-server-container-name <command>") + Text("'.\n") +
                                         Text("\n") +
                                         Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
                                         Text.bold("docker network rm some-network")
@@ -342,7 +342,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                         given("the container exited") {
                             val container = Container("http-server", imageSourceDoesNotMatter())
                             val events = setOf(
-                                ContainerCreatedEvent(container, DockerContainer("http-server-container-id")),
+                                ContainerCreatedEvent(container, DockerContainer("http-server-container-id", "http-server-container-name")),
                                 ContainerStartedEvent(container),
                                 RunningContainerExitedEvent(container, 123)
                             )
@@ -355,8 +355,8 @@ object FailureErrorMessageFormatterSpec : Spek({
                                 on("formatting the message") {
                                     val message = messageGenerator(events, cleanupCommands)
                                     val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
-                                        Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
-                                        Text("', or run a command in the container with '") + Text.bold("docker start http-server-container-id; docker exec -it http-server-container-id <command>") + Text("'.\n") +
+                                        Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
+                                        Text("', or run a command in the container with '") + Text.bold("docker start http-server-container-name; docker exec -it http-server-container-name <command>") + Text("'.\n") +
                                         Text("\n") +
                                         Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
                                         Text.bold("docker network rm some-network")
@@ -374,9 +374,9 @@ object FailureErrorMessageFormatterSpec : Spek({
                         val container2 = Container("database", imageSourceDoesNotMatter())
 
                         val events = setOf(
-                            ContainerCreatedEvent(container1, DockerContainer("http-server-container-id")),
+                            ContainerCreatedEvent(container1, DockerContainer("http-server-container-id", "http-server-container-name")),
                             ContainerStartedEvent(container1),
-                            ContainerCreatedEvent(container2, DockerContainer("database-container-id")),
+                            ContainerCreatedEvent(container2, DockerContainer("database-container-id", "database-container-name")),
                             ContainerStartedEvent(container2)
                         )
 
@@ -402,10 +402,10 @@ object FailureErrorMessageFormatterSpec : Spek({
                                 val message = messageGenerator(events, cleanupCommands)
                                 val expectedMessage =
                                     Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
-                                        Text("For container ") + Text.bold("database") + Text(", view its output by running '") + Text.bold("docker logs database-container-id") +
-                                        Text("', or run a command in the container with '") + Text.bold("docker exec -it database-container-id <command>") + Text("'.\n") +
-                                        Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
-                                        Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-id <command>") + Text("'.\n") +
+                                        Text("For container ") + Text.bold("database") + Text(", view its output by running '") + Text.bold("docker logs database-container-name") +
+                                        Text("', or run a command in the container with '") + Text.bold("docker exec -it database-container-name <command>") + Text("'.\n") +
+                                        Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
+                                        Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-name <command>") + Text("'.\n") +
                                         Text("\n") +
                                         Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
                                         Text.bold("docker network rm some-network")
@@ -426,10 +426,10 @@ object FailureErrorMessageFormatterSpec : Spek({
                                 val message = messageGenerator(events, cleanupCommands)
                                 val expectedMessage =
                                     Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers will not be cleaned up.\n")) +
-                                        Text("For container ") + Text.bold("database") + Text(", view its output by running '") + Text.bold("docker logs database-container-id") +
-                                        Text("', or run a command in the container with '") + Text.bold("docker exec -it database-container-id <command>") + Text("'.\n") +
-                                        Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-id") +
-                                        Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-id <command>") + Text("'.\n") +
+                                        Text("For container ") + Text.bold("database") + Text(", view its output by running '") + Text.bold("docker logs database-container-name") +
+                                        Text("', or run a command in the container with '") + Text.bold("docker exec -it database-container-name <command>") + Text("'.\n") +
+                                        Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
+                                        Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-name <command>") + Text("'.\n") +
                                         Text("\n") +
                                         Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
                                         Text.bold("docker rm some-container\n") +

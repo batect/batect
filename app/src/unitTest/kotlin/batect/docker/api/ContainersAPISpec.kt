@@ -98,7 +98,7 @@ object ContainersAPISpec : Spek({
         val errorMessageWithCorrectLineEndings = "Something went wrong.SYSTEM_LINE_SEPARATORMore details on next line."
 
         describe("creating a container") {
-            val expectedUrl = "$dockerBaseUrl/v1.37/containers/create"
+            val expectedUrl = "$dockerBaseUrl/v1.37/containers/create?name=the-container"
             val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
             val longTimeoutClientBuilder by createForEachTest {
                 mock<OkHttpClient.Builder> { mock ->
@@ -116,8 +116,7 @@ object ContainersAPISpec : Spek({
                 val network = DockerNetwork("the-network")
                 val command = listOf("doStuff")
                 val entrypoint = listOf("sh")
-                val request =
-                    DockerContainerCreationRequest(image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
+                val request = DockerContainerCreationRequest("the-container", image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
 
                 on("a successful creation") {
                     val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, """{"Id": "abc123"}""", 201) }
@@ -135,6 +134,10 @@ object ContainersAPISpec : Spek({
 
                     it("returns the ID of the created container") {
                         assertThat(result.id, equalTo("abc123"))
+                    }
+
+                    it("returns the name of the created container") {
+                        assertThat(result.name, equalTo("the-container"))
                     }
 
                     it("configures the HTTP client with a longer timeout to allow for the container to be created") {

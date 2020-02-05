@@ -24,6 +24,7 @@ import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.UserAndGroup
+import java.util.UUID
 
 fun creationRequestForContainer(
     image: DockerImage,
@@ -35,6 +36,7 @@ fun creationRequestForContainer(
     userAndGroup: UserAndGroup? = null
 ): DockerContainerCreationRequest {
     return DockerContainerCreationRequest(
+        "batect-integration-test-" + UUID.randomUUID().toString(),
         image,
         network,
         command,

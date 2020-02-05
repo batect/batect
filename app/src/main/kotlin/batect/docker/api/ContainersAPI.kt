@@ -61,6 +61,7 @@ class ContainersAPI(
 
         val url = urlForContainers.newBuilder()
             .addPathSegment("create")
+            .addQueryParameter("name", creationRequest.name)
             .build()
 
         val body = creationRequest.toJson()
@@ -86,9 +87,10 @@ class ContainersAPI(
             logger.info {
                 message("Container created.")
                 data("containerId", containerId)
+                data("containerName", creationRequest.name)
             }
 
-            return DockerContainer(containerId)
+            return DockerContainer(containerId, creationRequest.name)
         }
     }
 

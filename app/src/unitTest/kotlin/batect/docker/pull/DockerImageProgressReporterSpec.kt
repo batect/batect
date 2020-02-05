@@ -37,7 +37,7 @@ object DockerImageProgressReporterSpec : Spek({
         // - we should show 'verifying checksum' if all layers are verifying checksum or later and one or more is verifying a checksum
         // - we should show 'download complete' only if all layers are download complete
         // - we should show 'extracting' if all layers are download complete or later and one or more is extracting
-        // - we should show 'pull complete' only if all layers are pull complete
+        // - we should show 'pull complete' only if all layers are pull complete OR if all layers are download complete or later and at least one is pull complete and none are extracting
 
         mapOf(
             "an empty event" to "{}",
@@ -337,8 +337,8 @@ object DockerImageProgressReporterSpec : Spek({
                 reporter.processRawProgressUpdate("""{"status":"Pull complete","progressDetail":{},"id":"55cbf04beb70"}""")
             }
 
-            it("returns a progress update that indicates the image has finished downloading") {
-                assertThat(progressUpdate, equalTo(DockerImageProgress("download complete", 7000, 7000)))
+            it("returns a progress update that indicates the image has partly finished pulling") {
+                assertThat(progressUpdate, equalTo(DockerImageProgress("pull complete", 3000, 7000)))
             }
         }
 

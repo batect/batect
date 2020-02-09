@@ -23,7 +23,7 @@ import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
 import kotlinx.serialization.internal.StringDescriptor
 
-data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: String = "") : Comparable<Version> {
+data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: String = "", val metadata: String = "") : Comparable<Version> {
     override fun compareTo(other: Version): Int = this.compareTo(other, VersionComparisonMode.Normal)
 
     fun compareTo(other: Version, mode: VersionComparisonMode): Int = when {
@@ -38,14 +38,16 @@ data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: S
     }
 
     override fun toString(): String = when {
+        suffix != "" && metadata != "" -> "$major.$minor.$patch-$suffix+$metadata"
         suffix != "" -> "$major.$minor.$patch-$suffix"
+        metadata != "" -> "$major.$minor.$patch+$metadata"
         patch != 0 -> "$major.$minor.$patch"
         else -> "$major.$minor"
     }
 
     @Serializer(forClass = Version::class)
     companion object : KSerializer<Version> {
-        private val regex = """^(?<major>\d+)(\.(?<minor>\d+)(\.(?<patch>\d+)(-(?<suffix>[a-zA-Z0-9-.]+))?)?)?$""".toRegex()
+        private val regex = """^(?<major>\d+)(\.(?<minor>\d+)(\.(?<patch>\d+)(-(?<suffix>[a-zA-Z0-9-.]+))?(\+(?<metadata>[a-zA-Z0-9-.]+))?)?)?$""".toRegex()
 
         fun parse(value: String): Version {
             val match = regex.matchEntire(value)
@@ -58,8 +60,9 @@ data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: S
             val minor = match.getIntegerMatch(3)
             val patch = match.getIntegerMatch(5)
             val suffix = match.getStringMatch(7)
+            val metadata = match.getStringMatch(9)
 
-            return Version(major, minor, patch, suffix)
+            return Version(major, minor, patch, suffix, metadata)
         }
 
         private fun MatchResult.getIntegerMatch(index: Int): Int {

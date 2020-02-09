@@ -104,7 +104,7 @@ object VersionSpec : Spek({
                 }
             }
 
-            on("when both major and minor parts are non-zero and the suffix is empty") {
+            on("when both major and minor parts are non-zero and both the suffix and metadata are empty") {
                 val version = Version(1, 2, 0, "")
 
                 it("formats it in the format major.minor") {
@@ -112,7 +112,7 @@ object VersionSpec : Spek({
                 }
             }
 
-            on("when all parts are non-zero and the suffix is empty") {
+            on("when all parts are non-zero and both the suffix and metadata are empty") {
                 val version = Version(1, 2, 3, "")
 
                 it("formats it in the format major.minor.patch") {
@@ -120,11 +120,27 @@ object VersionSpec : Spek({
                 }
             }
 
-            on("when the suffix is non-empty") {
+            on("when the suffix is non-empty and no metadata is provided") {
                 val version = Version(1, 0, 0, "thing")
 
                 it("formats it in the format major.minor.patch-suffix") {
                     assertThat(version.toString(), equalTo("1.0.0-thing"))
+                }
+            }
+
+            on("when the suffix is empty and metadata is provided") {
+                val version = Version(1, 0, 0, "", "extra")
+
+                it("formats it in the format major.minor.patch+metadata") {
+                    assertThat(version.toString(), equalTo("1.0.0+extra"))
+                }
+            }
+
+            on("when both the suffix and metadata are non-empty") {
+                val version = Version(1, 0, 0, "thing", "extra")
+
+                it("formats it in the format major.minor.patch-suffix+metadata") {
+                    assertThat(version.toString(), equalTo("1.0.0-thing+extra"))
                 }
             }
         }
@@ -159,6 +175,22 @@ object VersionSpec : Spek({
 
                 it("gives all four values from the string") {
                     assertThat(version, equalTo(Version(1, 2, 3, "abc-def.12")))
+                }
+            }
+
+            on("when major, minor and patch versions and both a suffix and metadata are provided") {
+                val version = Version.parse("1.2.3-abc-def.12+ghi-jkl.34")
+
+                it("gives all four values from the string") {
+                    assertThat(version, equalTo(Version(1, 2, 3, "abc-def.12", "ghi-jkl.34")))
+                }
+            }
+
+            on("when major, minor and patch versions and metadata are provided") {
+                val version = Version.parse("1.2.3+ghi-jkl.34")
+
+                it("gives all four values from the string") {
+                    assertThat(version, equalTo(Version(1, 2, 3, "", "ghi-jkl.34")))
                 }
             }
 

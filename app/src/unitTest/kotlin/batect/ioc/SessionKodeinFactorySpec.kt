@@ -16,8 +16,8 @@
 
 package batect.ioc
 
-import batect.config.Task
-import batect.execution.RunOptions
+import batect.config.Configuration
+import batect.docker.client.DockerContainerType
 import batect.testutils.createForEachTest
 import batect.testutils.on
 import batect.testutils.runForEachTest
@@ -27,38 +27,33 @@ import com.nhaarman.mockitokotlin2.mock
 import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
-import org.kodein.di.generic.scoped
-import org.kodein.di.generic.singleton
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object TaskKodeinFactorySpec : Spek({
-    describe("a task Kodein factory") {
+object SessionKodeinFactorySpec : Spek({
+    describe("a session Kodein factory") {
         val baseKodein = Kodein.direct {
             bind<String>("some string") with instance("The string value")
-            bind<TaskReference>() with scoped(TaskScope).singleton { TaskReference(context) }
         }
 
-        val factory by createForEachTest { TaskKodeinFactory(baseKodein) }
+        val factory by createForEachTest { SessionKodeinFactory(baseKodein) }
 
         on("creating a task Kodein context") {
-            val task by createForEachTest { mock<Task>() }
-            val runOptions by createForEachTest { mock<RunOptions>() }
-            val extendedKodein by runForEachTest { factory.create(task, runOptions) }
+            val config by createForEachTest { mock<Configuration>() }
+            val containerType by createForEachTest { mock<DockerContainerType>() }
+            val extendedKodein by runForEachTest { factory.create(config, containerType) }
 
             it("includes the configuration from the original instance") {
                 assertThat(extendedKodein.instance<String>("some string"), equalTo("The string value"))
             }
 
-            it("includes the run options") {
-                assertThat(extendedKodein.instance<RunOptions>(RunOptionsType.Task), equalTo(runOptions))
+            it("includes the configuration") {
+                assertThat(extendedKodein.instance<Configuration>(), equalTo(config))
             }
 
-            it("sets the context correctly") {
-                assertThat(extendedKodein.instance<TaskReference>(), equalTo(TaskReference(task)))
+            it("includes the container type") {
+                assertThat(extendedKodein.instance<DockerContainerType>(), equalTo(containerType))
             }
         }
     }
 })
-
-private data class TaskReference(val task: Task)

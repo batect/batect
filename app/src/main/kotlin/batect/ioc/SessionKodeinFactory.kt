@@ -16,25 +16,20 @@
 
 package batect.ioc
 
-import batect.config.Task
-import batect.execution.RunOptions
+import batect.config.Configuration
+import batect.docker.client.DockerContainerType
 import org.kodein.di.Copy
 import org.kodein.di.DKodein
 import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
-import org.kodein.di.generic.on
-import org.kodein.di.generic.scoped
-import org.kodein.di.generic.singleton
+import org.kodein.di.generic.instance
 
-class TaskKodeinFactory(
+class SessionKodeinFactory(
     private val baseKodein: DKodein
 ) {
-    fun create(task: Task, runOptions: RunOptions): TaskKodein = TaskKodein(task, Kodein.direct {
+    fun create(config: Configuration, containerType: DockerContainerType): DKodein = Kodein.direct {
         extend(baseKodein, copy = Copy.All)
-        bind<RunOptions>(RunOptionsType.Task) with scoped(TaskScope).singleton { runOptions }
-    }.on(task))
-}
-
-class TaskKodein(private val task: Task, kodein: DKodein) : DKodein by kodein, AutoCloseable {
-    override fun close() = TaskScope.close(task)
+        bind<Configuration>() with instance(config)
+        bind<DockerContainerType>() with instance(containerType)
+    }
 }

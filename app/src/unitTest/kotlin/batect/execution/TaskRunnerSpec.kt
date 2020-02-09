@@ -16,13 +16,9 @@
 
 package batect.execution
 
-import batect.config.Configuration
 import batect.config.Container
-import batect.config.ContainerMap
 import batect.config.Task
-import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
-import batect.docker.client.DockerContainerType
 import batect.ioc.TaskKodein
 import batect.ioc.TaskKodeinFactory
 import batect.testutils.createForEachTest
@@ -55,9 +51,7 @@ object TaskRunnerSpec : Spek({
         val container = Container("some-container", imageSourceDoesNotMatter())
         val runConfiguration = TaskRunConfiguration(container.name)
         val task = Task("some-task", runConfiguration)
-        val config = Configuration("some-project", TaskMap(task), ContainerMap(container))
         val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true, emptyMap())
-        val containerType = DockerContainerType.Windows
 
         val eventLogger by createForEachTest { mock<EventLogger>() }
         val stateMachine by createForEachTest { mock<TaskStateMachine>() }
@@ -65,7 +59,7 @@ object TaskRunnerSpec : Spek({
 
         val taskKodeinFactory by createForEachTest {
             mock<TaskKodeinFactory>() {
-                on { create(any(), any(), any(), any()) } doReturn TaskKodein(task, Kodein.direct {
+                on { create(any(), any()) } doReturn TaskKodein(task, Kodein.direct {
                     bind<EventLogger>() with instance(eventLogger)
                     bind<TaskStateMachine>() with instance(stateMachine)
                     bind<ParallelExecutionManager>() with instance(executionManager)
@@ -93,7 +87,7 @@ object TaskRunnerSpec : Spek({
 
                 given("cleanup after success is enabled") {
                     on("running the task") {
-                        val exitCode by runForEachTest { taskRunner.run(config, task, runOptions, containerType) }
+                        val exitCode by runForEachTest { taskRunner.run(task, runOptions) }
 
                         it("logs that the task is starting") {
                             verify(eventLogger).onTaskStarting("some-task")
@@ -139,7 +133,7 @@ object TaskRunnerSpec : Spek({
                     }
 
                     on("running the task") {
-                        val exitCode by runForEachTest { taskRunner.run(config, task, runOptionsWithCleanupDisabled, containerType) }
+                        val exitCode by runForEachTest { taskRunner.run(task, runOptionsWithCleanupDisabled) }
 
                         it("logs that the task finished after running the task, then logs the manual cleanup instructions") {
                             inOrder(eventLogger, executionManager) {
@@ -163,7 +157,7 @@ object TaskRunnerSpec : Spek({
                 }
 
                 on("running the task") {
-                    val exitCode by runForEachTest { taskRunner.run(config, task, runOptions, containerType) }
+                    val exitCode by runForEachTest { taskRunner.run(task, runOptions) }
 
                     it("logs that the task is starting") {
                         verify(eventLogger).onTaskStarting("some-task")

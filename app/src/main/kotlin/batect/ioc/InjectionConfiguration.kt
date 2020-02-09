@@ -144,6 +144,7 @@ fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStrea
     import(cliModule)
     import(configModule)
     import(dockerModule)
+    import(iocModule)
     import(executionModule)
     import(loggingModule)
     import(osModule)
@@ -240,6 +241,11 @@ private val dockerClientModule = Kodein.Module("docker.client") {
     bind<DockerClient>() with singleton { DockerClient(instance(), instance(), instance(), instance(), instance()) }
 }
 
+private val iocModule = Kodein.Module("ioc") {
+    bind<TaskKodeinFactory>() with singleton { TaskKodeinFactory(dkodein) }
+    bind<SessionKodeinFactory>() with singleton { SessionKodeinFactory(dkodein) }
+}
+
 private val executionModule = Kodein.Module("execution") {
     import(runnersModule)
 
@@ -254,7 +260,6 @@ private val executionModule = Kodein.Module("execution") {
     bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance(), instance()) }
     bind<RunOptions>(RunOptionsType.Overall) with singleton { RunOptions(commandLineOptions()) }
     bind<RunStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> RunStagePlanner(instance(), instance(), instance(), logger) }
-    bind<TaskKodeinFactory>() with singleton { TaskKodeinFactory(dkodein) }
     bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), logger) }
     bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(instance(), logger) }
     bind<TaskStateMachine>() with scoped(TaskScope).singletonWithLogger { logger -> TaskStateMachine(instance(), instance(RunOptionsType.Task), instance(), instance(), instance(), instance(), logger) }

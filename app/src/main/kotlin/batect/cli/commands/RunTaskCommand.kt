@@ -29,10 +29,12 @@ import batect.execution.RunOptions
 import batect.execution.TaskExecutionOrderResolutionException
 import batect.execution.TaskExecutionOrderResolver
 import batect.execution.TaskRunner
+import batect.ioc.SessionKodeinFactory
 import batect.logging.Logger
 import batect.ui.Console
 import batect.ui.text.Text
 import batect.updates.UpdateNotifier
+import org.kodein.di.generic.instance
 import java.nio.file.Path
 
 class RunTaskCommand(
@@ -41,7 +43,7 @@ class RunTaskCommand(
     val configLoader: ConfigurationLoader,
     val configVariablesProvider: ConfigVariablesProvider,
     val taskExecutionOrderResolver: TaskExecutionOrderResolver,
-    val taskRunner: TaskRunner,
+    val sessionKodeinFactory: SessionKodeinFactory,
     val updateNotifier: UpdateNotifier,
     val dockerSystemInfoClient: DockerSystemInfoClient,
     val console: Console,
@@ -90,12 +92,15 @@ class RunTaskCommand(
     }
 
     private fun runTasks(config: Configuration, tasks: List<Task>, containerType: DockerContainerType): Int {
+        val sessionKodein = sessionKodeinFactory.create(config, containerType)
+        val taskRunner = sessionKodein.instance<TaskRunner>()
+
         for (task in tasks) {
             val isMainTask = task == tasks.last()
             val behaviourAfterSuccess = if (isMainTask) runOptions.behaviourAfterSuccess else CleanupOption.Cleanup
             val runOptionsForThisTask = runOptions.copy(behaviourAfterSuccess = behaviourAfterSuccess)
 
-            val exitCode = taskRunner.run(config, task, runOptionsForThisTask, containerType)
+            val exitCode = taskRunner.run(task, runOptionsForThisTask)
 
             if (exitCode != 0) {
                 return exitCode

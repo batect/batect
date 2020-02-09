@@ -42,7 +42,8 @@ object InjectionConfigurationSpec : Spek({
 
         val baseConfiguration = createKodeinConfiguration(PrintStream(ByteArrayOutputStream()), PrintStream(ByteArrayOutputStream()), ByteArrayInputStream(ByteArray(0)))
         val afterCommandLineOptions = CommandLineOptions(taskName = task.name).extend(baseConfiguration)
-        val inTaskContext = TaskKodeinFactory(afterCommandLineOptions).create(config, task, mock(), mock())
+        val inSessionContext = SessionKodeinFactory(afterCommandLineOptions).create(config, mock())
+        val inTaskContext = TaskKodeinFactory(inSessionContext).create(task, mock())
 
         describe("each registered class") {
             inTaskContext.container.tree.bindings.keys.forEach { key ->

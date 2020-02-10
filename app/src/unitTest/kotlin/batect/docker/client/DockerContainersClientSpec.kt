@@ -83,7 +83,7 @@ object DockerContainersClientSpec : Spek({
                 val network = DockerNetwork("the-network")
                 val command = listOf("doStuff")
                 val entrypoint = listOf("sh")
-                val request = DockerContainerCreationRequest(image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet(), "json-file")
+                val request = DockerContainerCreationRequest("name", image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet(), "json-file")
 
                 on("creating the container") {
                     beforeEachTest { whenever(api.create(request)).doReturn(DockerContainer("abc123")) }

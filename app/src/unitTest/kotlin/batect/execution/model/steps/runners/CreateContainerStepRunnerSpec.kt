@@ -59,7 +59,7 @@ object CreateContainerStepRunnerSpec : Spek({
 
         val config = mock<ContainerRuntimeConfiguration>()
         val step = CreateContainerStep(container, config, setOf(container, otherContainer), image, network)
-        val request = DockerContainerCreationRequest("the-container-name", image, network, Command.parse("do-stuff").parsedCommand, Command.parse("sh").parsedCommand, "some-container", setOf("some-container"), emptyMap(), "/work-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
+        val request = DockerContainerCreationRequest("the-container-name", image, network, Command.parse("do-stuff").parsedCommand, Command.parse("sh").parsedCommand, "some-container", setOf("some-container"), emptyMap(), "/work-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet(), "json-file")
 
         val containersClient by createForEachTest { mock<DockerContainersClient>() }
         val userAndGroup = UserAndGroup(456, 789)

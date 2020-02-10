@@ -1,0 +1,219 @@
+# Generated with https://github.com/charleskorn/dependabot-config-generator
+
+version: 1
+update_configs:
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/integrationTest/resources/test-images/basic-image
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/integrationTest/resources/test-images/image-with-expose
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/integrationTest/resources/test-images/image-without-expose
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/build-arg/build-env
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/container-with-additional-hostname/build-env
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/container-with-additional-hostname/http-server
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/container-with-dependency-chain/build-env
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/container-with-dependency-chain/http-server
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/container-with-dependency-chain/proxy
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/container-with-dependency/build-env
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/container-with-dependency/http-server
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/container-with-health-check-overrides/dependency
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/dependency-container-with-setup-command/task-env
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/proxy-variables/build-env
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/simple-task-dockerfile-command/build-env
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/simple-task-using-dockerfile-with-add-from-url/build-env
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/simple-task-using-dockerfile/build-env
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/symlinks-in-build-context/build-env
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/task-container-with-setup-command/task-env
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/task-with-explicit-dependency/build-env
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/task-with-explicit-dependency/http-server
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/task-with-healthy-dependency/build-env
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/task-with-healthy-dependency/http-server
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/task-with-slow-healthy-dependency/dependency
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/journeyTest/resources/task-with-unhealthy-dependency/http-server
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: app/src/performanceTest/resources/single-container-built-image/containers/test-env
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
+    directory: wrapper/unix/test/test-env
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: app
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: /
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: buildSrc
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: docs
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: tools/schema
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: wrapper
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: wrapper/testapp
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: wrapper/unix
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: java:gradle
+    update_schedule: daily
+    directory: wrapper/windows
+    default_labels:
+      - is:dependency-update

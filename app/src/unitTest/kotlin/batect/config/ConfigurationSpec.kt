@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,16 +16,21 @@
 
 package batect.config
 
+import batect.config.io.ConfigurationException
 import batect.docker.Capability
 import batect.os.Command
 import batect.testutils.createForEachTest
+import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.osIndependentPath
+import batect.testutils.withMessage
 import batect.utils.Json
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.throws
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
 import java.time.Duration
 
 object ConfigurationSpec : Spek({
@@ -40,8 +45,9 @@ object ConfigurationSpec : Spek({
                         Command.parse("the-entrypoint"),
                         mapOf(
                             "SOME_VAR" to LiteralValue("blah"),
-                            "SOME_REFERENCE" to ReferenceValue("REFERENCE_TO"),
-                            "SOME_REFERENCE_WITH_DEFAULT" to ReferenceValue("REF_2", "the-default")
+                            "SOME_REFERENCE" to EnvironmentVariableReference("REFERENCE_TO"),
+                            "SOME_REFERENCE_WITH_DEFAULT" to EnvironmentVariableReference("REF_2", "the-default"),
+                            "SOME_CONFIG_VAR" to ConfigVariableReference("REF_3")
                         ),
                         setOf(PortMapping(123, 456)),
                         "/some/work/dir"
@@ -67,9 +73,10 @@ object ConfigurationSpec : Spek({
                                         "command": ["the-command"],
                                         "entrypoint": ["the-entrypoint"],
                                         "environment": {
-                                            "SOME_VAR": "blah",
-                                            "SOME_REFERENCE": "${'$'}REFERENCE_TO",
-                                            "SOME_REFERENCE_WITH_DEFAULT": "${'$'}{REF_2:-the-default}"
+                                            "SOME_VAR": {"type":"LiteralValue", "value":"blah"},
+                                            "SOME_REFERENCE": {"type":"EnvironmentVariableReference", "referenceTo":"REFERENCE_TO"},
+                                            "SOME_REFERENCE_WITH_DEFAULT": {"type":"EnvironmentVariableReference", "referenceTo":"REF_2", "default":"the-default"},
+                                            "SOME_CONFIG_VAR": {"type":"ConfigVariableReference", "referenceTo":"REF_3"}
                                         },
                                         "ports": [
                                             { "local": 123, "container": 456 }
@@ -82,7 +89,8 @@ object ConfigurationSpec : Spek({
                                     "prerequisites": ["task-1"]
                                 }
                             },
-                            "containers": {}
+                            "containers": {},
+                            "config_variables": {}
                         }
                     """.trimIndent()))
                 }
@@ -126,7 +134,7 @@ object ConfigurationSpec : Spek({
                                     "command": ["the-command"],
                                     "entrypoint": ["sh"],
                                     "environment": {
-                                        "SOME_VAR": "some-value"
+                                        "SOME_VAR": {"type":"LiteralValue", "value":"some-value"}
                                     },
                                     "working_directory": "/some/working/dir",
                                     "volumes": [
@@ -166,7 +174,8 @@ object ConfigurationSpec : Spek({
                                     ],
                                     "log_config_type": "json-file"
                                 }
-                            }
+                            },
+                            "config_variables": {}
                         }
                     """.trimIndent()))
                 }
@@ -178,9 +187,7 @@ object ConfigurationSpec : Spek({
                     BuildImage(
                         osIndependentPath("/some/build/dir"),
                         mapOf(
-                            "SOME_VAR" to LiteralValue("blah"),
-                            "SOME_REFERENCE" to ReferenceValue("REFERENCE_TO"),
-                            "SOME_REFERENCE_WITH_DEFAULT" to ReferenceValue("REF_2", "the-default")
+                            "SOME_VAR" to LiteralValue("blah")
                         ),
                         "some-dockerfile"
                     ),
@@ -200,9 +207,7 @@ object ConfigurationSpec : Spek({
                                 "the-container": {
                                     "build_directory": "/some/build/dir",
                                     "build_args": {
-                                        "SOME_VAR": "blah",
-                                        "SOME_REFERENCE": "${'$'}REFERENCE_TO",
-                                        "SOME_REFERENCE_WITH_DEFAULT": "${'$'}{REF_2:-the-default}"
+                                        "SOME_VAR": {"type":"LiteralValue", "value":"blah"}
                                     },
                                     "dockerfile": "some-dockerfile",
                                     "command": null,
@@ -229,11 +234,77 @@ object ConfigurationSpec : Spek({
                                     "setup_commands": [],
                                     "log_config_type": "json-file"
                                 }
+                            },
+                            "config_variables": {}
+                        }
+                    """.trimIndent()))
+                }
+            }
+
+            given("a single config variable") {
+                val configVariable = ConfigVariableDefinition("some-variable", "Some description", "Some default")
+                val configuration = Configuration("the-project", TaskMap(), ContainerMap(), ConfigVariableMap(configVariable))
+                val json by createForEachTest { Json.parser.stringify(Configuration.serializer(), configuration) }
+
+                it("serializes the configuration to the expected value") {
+                    assertThat(json, equivalentTo("""
+                        {
+                            "project_name": "the-project",
+                            "tasks": {},
+                            "containers": {},
+                            "config_variables": {
+                                "some-variable": {
+                                    "description": "Some description",
+                                    "default": "Some default"
+                                }
                             }
                         }
                     """.trimIndent()))
                 }
             }
         }
+
+        describe("overriding image sources") {
+            val container1 = Container("container-1", BuildImage(Paths.get("some-build-dir")))
+            val container2 = Container("container-2", PullImage("some-image"))
+            val originalConfig = createConfiguration(container1, container2)
+
+            given("no overrides") {
+                val overrides = emptyMap<String, ImageSource>()
+
+                it("returns the original configuration unmodified") {
+                    assertThat(originalConfig.applyImageOverrides(overrides), equalTo(originalConfig))
+                }
+            }
+
+            given("a single override") {
+                val overrides = mapOf(container1.name to PullImage("another-image"))
+
+                it("returns a new configuration with the image for the given container overridden") {
+                    assertThat(originalConfig.applyImageOverrides(overrides), equalTo(createConfiguration(Container("container-1", PullImage("another-image")), container2)))
+                }
+            }
+
+            given("multiple overrides") {
+                val overrides = mapOf(
+                    container1.name to PullImage("another-image"),
+                    container2.name to PullImage("another-other-image")
+                )
+
+                it("returns a new configuration with the images for the given containers overridden") {
+                    assertThat(originalConfig.applyImageOverrides(overrides), equalTo(createConfiguration(Container("container-1", PullImage("another-image")), Container("container-2", PullImage("another-other-image")))))
+                }
+            }
+
+            given("an override for a container that doesn't exist") {
+                val overrides = mapOf("another-container" to PullImage("another-image"))
+
+                it("throws an appropriate exception") {
+                    assertThat({ originalConfig.applyImageOverrides(overrides) }, throws<ConfigurationException>(withMessage("Cannot override image for container 'another-container' because there is no container named 'another-container' defined.")))
+                }
+            }
+        }
     }
 })
+
+private fun createConfiguration(vararg containers: Container): Configuration = Configuration("my_project", TaskMap(), ContainerMap(*containers))

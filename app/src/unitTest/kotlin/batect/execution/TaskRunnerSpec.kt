@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,26 +16,21 @@
 
 package batect.execution
 
-import batect.config.Configuration
 import batect.config.Container
-import batect.config.ContainerMap
 import batect.config.Task
-import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
-import batect.execution.model.events.RunningContainerExitedEvent
+import batect.ioc.TaskKodein
+import batect.ioc.TaskKodeinFactory
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import batect.testutils.runForEachTest
-import batect.testutils.withMessage
 import batect.ui.EventLogger
-import batect.ui.EventLoggerProvider
 import batect.ui.text.TextRun
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.doReturn
@@ -44,6 +39,9 @@ import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
+import org.kodein.di.Kodein
+import org.kodein.di.generic.bind
+import org.kodein.di.generic.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.Duration
@@ -53,35 +51,19 @@ object TaskRunnerSpec : Spek({
         val container = Container("some-container", imageSourceDoesNotMatter())
         val runConfiguration = TaskRunConfiguration(container.name)
         val task = Task("some-task", runConfiguration)
-        val config = Configuration("some-project", TaskMap(task), ContainerMap(container))
-        val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true)
-
-        val graph = mock<ContainerDependencyGraph> {
-            on { taskContainerNode } doReturn ContainerDependencyGraphNode(container, mock(), true, emptySet(), mock)
-        }
-        val graphProvider = mock<ContainerDependencyGraphProvider> {
-            on { createGraph(config, task) } doReturn graph
-        }
+        val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true, emptyMap())
 
         val eventLogger by createForEachTest { mock<EventLogger>() }
-        val eventLoggerProvider by createForEachTest {
-            mock<EventLoggerProvider> {
-                on { getEventLogger(graph, runOptions) } doReturn eventLogger
-            }
-        }
-
         val stateMachine by createForEachTest { mock<TaskStateMachine>() }
         val executionManager by createForEachTest { mock<ParallelExecutionManager>() }
 
-        val stateMachineProvider by createForEachTest {
-            mock<TaskStateMachineProvider> {
-                on { createStateMachine(graph, runOptions) } doReturn stateMachine
-            }
-        }
-
-        val executionManagerProvider by createForEachTest {
-            mock<ParallelExecutionManagerProvider> {
-                on { createParallelExecutionManager(eventLogger, stateMachine, runOptions) } doReturn executionManager
+        val taskKodeinFactory by createForEachTest {
+            mock<TaskKodeinFactory>() {
+                on { create(any(), any()) } doReturn TaskKodein(task, Kodein.direct {
+                    bind<EventLogger>() with instance(eventLogger)
+                    bind<TaskStateMachine>() with instance(stateMachine)
+                    bind<ParallelExecutionManager>() with instance(executionManager)
+                })
             }
         }
 
@@ -93,22 +75,19 @@ object TaskRunnerSpec : Spek({
         }
 
         val logger by createLoggerForEachTest()
-        val taskRunner by createForEachTest { TaskRunner(eventLoggerProvider, graphProvider, stateMachineProvider, executionManagerProvider, interruptionTrap, logger) }
+        val taskRunner by createForEachTest { TaskRunner(taskKodeinFactory, interruptionTrap, logger) }
 
         describe("running a task") {
             given("the task succeeds") {
                 beforeEachTest {
                     whenever(stateMachine.taskHasFailed).thenReturn(false)
-                    whenever(stateMachine.getAllEvents()).thenReturn(setOf(
-                        RunningContainerExitedEvent(container, 100),
-                        RunningContainerExitedEvent(Container("some-other-container", imageSourceDoesNotMatter()), 200)
-                    ))
+                    whenever(stateMachine.taskExitCode).thenReturn(100)
                     whenever(executionManager.run()).then { Thread.sleep(50) }
                 }
 
                 given("cleanup after success is enabled") {
                     on("running the task") {
-                        val exitCode by runForEachTest { taskRunner.run(config, task, runOptions) }
+                        val exitCode by runForEachTest { taskRunner.run(task, runOptions) }
 
                         it("logs that the task is starting") {
                             verify(eventLogger).onTaskStarting("some-task")
@@ -150,15 +129,11 @@ object TaskRunnerSpec : Spek({
                     val runOptionsWithCleanupDisabled = runOptions.copy(behaviourAfterSuccess = CleanupOption.DontCleanup)
 
                     beforeEachTest {
-                        whenever(eventLoggerProvider.getEventLogger(graph, runOptionsWithCleanupDisabled)).doReturn(eventLogger)
-                        whenever(stateMachineProvider.createStateMachine(graph, runOptionsWithCleanupDisabled)).doReturn(stateMachine)
-                        whenever(executionManagerProvider.createParallelExecutionManager(eventLogger, stateMachine, runOptionsWithCleanupDisabled)).doReturn(executionManager)
-
                         whenever(stateMachine.manualCleanupInstructions).doReturn(TextRun("Do this to clean up"))
                     }
 
                     on("running the task") {
-                        val exitCode by runForEachTest { taskRunner.run(config, task, runOptionsWithCleanupDisabled) }
+                        val exitCode by runForEachTest { taskRunner.run(task, runOptionsWithCleanupDisabled) }
 
                         it("logs that the task finished after running the task, then logs the manual cleanup instructions") {
                             inOrder(eventLogger, executionManager) {
@@ -182,7 +157,7 @@ object TaskRunnerSpec : Spek({
                 }
 
                 on("running the task") {
-                    val exitCode by runForEachTest { taskRunner.run(config, task, runOptions) }
+                    val exitCode by runForEachTest { taskRunner.run(task, runOptions) }
 
                     it("logs that the task is starting") {
                         verify(eventLogger).onTaskStarting("some-task")
@@ -206,19 +181,6 @@ object TaskRunnerSpec : Spek({
 
                     it("returns a non-zero exit code") {
                         assertThat(exitCode, !equalTo(0))
-                    }
-                }
-            }
-
-            given("the task neither succeeds or fails") {
-                beforeEachTest {
-                    whenever(stateMachine.taskHasFailed).thenReturn(false)
-                    whenever(stateMachine.getAllEvents()).thenReturn(emptySet())
-                }
-
-                on("running the task") {
-                    it("throws an appropriate exception") {
-                        assertThat({ taskRunner.run(config, task, runOptions) }, throws<IllegalStateException>(withMessage("The task neither failed nor succeeded.")))
                     }
                 }
             }

@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,15 +18,15 @@ package batect.execution
 
 import batect.config.Configuration
 import batect.config.Container
-import batect.config.EnvironmentVariableExpression
+import batect.config.VariableExpression
 import batect.config.PortMapping
 import batect.config.Task
 
 data class ContainerDependencyGraph(
-    val config: Configuration,
-    val task: Task,
-    val commandResolver: ContainerCommandResolver,
-    val entrypointResolver: ContainerEntrypointResolver
+    private val config: Configuration,
+    private val task: Task,
+    private val commandResolver: ContainerCommandResolver,
+    private val entrypointResolver: ContainerEntrypointResolver
 ) {
     private val nodesMap = createNodes()
 
@@ -145,7 +145,7 @@ data class ContainerDependencyGraph(
         return "Container $firstContainer depends on " + otherContainers.joinToString(", which depends on ") + "."
     }
 
-    private fun additionalEnvironmentVariables(isRootNode: Boolean): Map<String, EnvironmentVariableExpression> =
+    private fun additionalEnvironmentVariables(isRootNode: Boolean): Map<String, VariableExpression> =
         if (isRootNode) {
             task.runConfiguration.additionalEnvironmentVariables
         } else {

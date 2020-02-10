@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,18 +17,20 @@
 package batect.docker
 
 import batect.config.Container
-import batect.config.EnvironmentVariableExpression
-import batect.config.EnvironmentVariableExpressionEvaluationException
+import batect.config.VariableExpression
+import batect.config.VariableExpressionEvaluationException
+import batect.execution.ConfigVariablesProvider
 import batect.execution.ContainerRuntimeConfiguration
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.utils.mapToSet
 
 class DockerContainerEnvironmentVariableProvider(
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
-    private val hostEnvironmentVariables: Map<String, String>
+    private val hostEnvironmentVariables: Map<String, String>,
+    private val configVariablesProvider: ConfigVariablesProvider
 ) {
-    constructor(proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider)
-        : this(proxyEnvironmentVariablesProvider, System.getenv())
+    constructor(proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider, configVariablesProvider: ConfigVariablesProvider)
+        : this(proxyEnvironmentVariablesProvider, System.getenv(), configVariablesProvider)
 
     fun environmentVariablesFor(
         container: Container,
@@ -53,13 +55,13 @@ class DockerContainerEnvironmentVariableProvider(
         emptyMap()
     }
 
-    private fun substituteEnvironmentVariables(original: Map<String, EnvironmentVariableExpression>): Map<String, String> =
+    private fun substituteEnvironmentVariables(original: Map<String, VariableExpression>): Map<String, String> =
         original.mapValues { (name, value) -> evaluateEnvironmentVariableValue(name, value) }
 
-    private fun evaluateEnvironmentVariableValue(name: String, expression: EnvironmentVariableExpression): String {
+    private fun evaluateEnvironmentVariableValue(name: String, expression: VariableExpression): String {
         try {
-            return expression.evaluate(hostEnvironmentVariables)
-        } catch (e: EnvironmentVariableExpressionEvaluationException) {
+            return expression.evaluate(hostEnvironmentVariables, configVariablesProvider.configVariableValues)
+        } catch (e: VariableExpressionEvaluationException) {
             throw ContainerCreationFailedException("The value for the environment variable '$name' cannot be evaluated: ${e.message}", e)
         }
     }

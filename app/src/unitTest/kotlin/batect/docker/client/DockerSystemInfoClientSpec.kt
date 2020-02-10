@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ object DockerSystemInfoClientSpec : Spek({
                             }
 
                             it("returns success") {
-                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded))
+                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux)))
                             }
                         }
 
@@ -83,7 +83,7 @@ object DockerSystemInfoClientSpec : Spek({
                             }
 
                             it("returns success") {
-                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded))
+                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux)))
                             }
                         }
 
@@ -99,12 +99,24 @@ object DockerSystemInfoClientSpec : Spek({
                     }
 
                     given("the daemon is running in Windows mode") {
+                        given("the daemon reports a compatible API version") {
+                            beforeEachTest {
+                                whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "2.0", "xxx", "xxx", "windows"))
+                            }
+
+                            it("returns success") {
+                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Windows)))
+                            }
+                        }
+                    }
+
+                    given("the daemon is running in another mode") {
                         beforeEachTest {
-                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "2.0", "xxx", "xxx", "windows"))
+                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "2.0", "xxx", "xxx", "something-else"))
                         }
 
-                        it("returns failure") {
-                            assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Failed("batect requires Docker to be running in Linux containers mode.")))
+                        it("returns success") {
+                            assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Failed("batect requires Docker to be running in Linux or Windows containers mode.")))
                         }
                     }
                 }

@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package batect.ui
 
+import batect.config.Task
 import batect.execution.ContainerDependencyGraph
-import batect.execution.RunOptions
 import batect.ui.containerio.TaskContainerOnlyIOStreamingOptions
 import batect.ui.fancy.CleanupProgressDisplay
 import batect.ui.fancy.FancyEventLogger
@@ -41,39 +41,39 @@ class EventLoggerProvider(
     private val requestedOutputStyle: OutputStyle?,
     private val disableColorOutput: Boolean
 ) {
-    fun getEventLogger(graph: ContainerDependencyGraph, runOptions: RunOptions): EventLogger {
+    fun getEventLogger(task: Task, graph: ContainerDependencyGraph): EventLogger {
         return when (requestedOutputStyle) {
-            OutputStyle.Quiet -> createQuietLogger(graph, runOptions)
-            OutputStyle.Fancy -> createFancyLogger(graph, runOptions)
-            OutputStyle.Simple -> createSimpleLogger(graph, runOptions)
-            OutputStyle.All -> createInterleavedLogger(graph, runOptions)
+            OutputStyle.Quiet -> createQuietLogger(graph)
+            OutputStyle.Fancy -> createFancyLogger(graph)
+            OutputStyle.Simple -> createSimpleLogger(graph)
+            OutputStyle.All -> createInterleavedLogger(task, graph)
             null -> {
                 if (!consoleInfo.supportsInteractivity || disableColorOutput) {
-                    createSimpleLogger(graph, runOptions)
+                    createSimpleLogger(graph)
                 } else {
-                    createFancyLogger(graph, runOptions)
+                    createFancyLogger(graph)
                 }
             }
         }
     }
 
-    private fun createQuietLogger(graph: ContainerDependencyGraph, runOptions: RunOptions) =
-        QuietEventLogger(failureErrorMessageFormatter, runOptions, errorConsole, createTaskContainerOnlyIOStreamingOptions(graph))
+    private fun createQuietLogger(graph: ContainerDependencyGraph) =
+        QuietEventLogger(failureErrorMessageFormatter, errorConsole, createTaskContainerOnlyIOStreamingOptions(graph))
 
-    private fun createFancyLogger(graph: ContainerDependencyGraph, runOptions: RunOptions): FancyEventLogger =
-        FancyEventLogger(failureErrorMessageFormatter, runOptions, console, errorConsole, startupProgressDisplayProvider.createForDependencyGraph(graph), CleanupProgressDisplay(), graph.taskContainerNode.container, createTaskContainerOnlyIOStreamingOptions(graph))
+    private fun createFancyLogger(graph: ContainerDependencyGraph): FancyEventLogger =
+        FancyEventLogger(failureErrorMessageFormatter, console, errorConsole, startupProgressDisplayProvider.createForDependencyGraph(graph), CleanupProgressDisplay(), graph.taskContainerNode.container, createTaskContainerOnlyIOStreamingOptions(graph))
 
-    private fun createSimpleLogger(graph: ContainerDependencyGraph, runOptions: RunOptions): SimpleEventLogger {
+    private fun createSimpleLogger(graph: ContainerDependencyGraph): SimpleEventLogger {
         val containers = graph.allNodes.mapToSet { it.container }
-        return SimpleEventLogger(containers, graph.taskContainerNode.container, failureErrorMessageFormatter, runOptions, console, errorConsole, createTaskContainerOnlyIOStreamingOptions(graph))
+        return SimpleEventLogger(containers, graph.taskContainerNode.container, failureErrorMessageFormatter, console, errorConsole, createTaskContainerOnlyIOStreamingOptions(graph))
     }
 
     private fun createTaskContainerOnlyIOStreamingOptions(graph: ContainerDependencyGraph) = TaskContainerOnlyIOStreamingOptions(graph.taskContainerNode.container, stdout, stdin, consoleInfo)
 
-    private fun createInterleavedLogger(graph: ContainerDependencyGraph, runOptions: RunOptions): InterleavedEventLogger {
+    private fun createInterleavedLogger(task: Task, graph: ContainerDependencyGraph): InterleavedEventLogger {
         val containers = graph.allNodes.mapToSet { it.container }
-        val output = InterleavedOutput(graph.task.name, containers, console)
+        val output = InterleavedOutput(task.name, containers, console)
 
-        return InterleavedEventLogger(graph.taskContainerNode.container, containers, output, failureErrorMessageFormatter, runOptions)
+        return InterleavedEventLogger(graph.taskContainerNode.container, containers, output, failureErrorMessageFormatter)
     }
 }

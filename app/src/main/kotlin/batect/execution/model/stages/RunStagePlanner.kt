@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,8 +17,10 @@
 package batect.execution.model.stages
 
 import batect.config.BuildImage
+import batect.config.Configuration
 import batect.config.Container
 import batect.config.PullImage
+import batect.docker.client.DockerContainerType
 import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerDependencyGraphNode
 import batect.execution.model.rules.TaskStepRule
@@ -33,13 +35,18 @@ import batect.logging.Logger
 import batect.utils.flatMapToSet
 import batect.utils.mapToSet
 
-class RunStagePlanner(private val logger: Logger) {
-    fun createStage(graph: ContainerDependencyGraph): RunStage {
+class RunStagePlanner(
+    private val config: Configuration,
+    private val graph: ContainerDependencyGraph,
+    private val containerType: DockerContainerType,
+    private val logger: Logger
+) {
+    fun createStage(): RunStage {
         val allContainersInNetwork = graph.allNodes.mapToSet { it.container }
 
         val rules = imageCreationRulesFor(graph) +
             graph.allNodes.flatMapToSet { executionStepsFor(it, allContainersInNetwork) } +
-            CreateTaskNetworkStepRule
+            CreateTaskNetworkStepRule(containerType)
 
         logger.info {
             message("Created run plan.")
@@ -62,7 +69,7 @@ class RunStagePlanner(private val logger: Logger) {
             .mapToSet { (imageSource, containers) ->
                 when (imageSource) {
                     is PullImage -> PullImageStepRule(imageSource)
-                    is BuildImage -> BuildImageStepRule(imageSource, imageTagsFor(graph.config.projectName, containers))
+                    is BuildImage -> BuildImageStepRule(imageSource, imageTagsFor(config.projectName, containers))
                 }
             }
     }

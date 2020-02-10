@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -31,12 +31,14 @@ import org.spekframework.spek2.style.specification.describe
 
 object FlagOptionSpec : Spek({
     describe("a flag option") {
+        val group = OptionGroup("the group")
+
         describe("parsing") {
             val defaultProvider = mock<DefaultValueProvider<Boolean>> {
                 onGeneric { value } doReturn PossibleValue.Valid(true)
             }
 
-            val option by createForEachTest { FlagOption("enable-extra-awesomeness", "Enable the extra awesome features.", defaultProvider) }
+            val option by createForEachTest { FlagOption(group, "enable-extra-awesomeness", "Enable the extra awesome features.", defaultProvider) }
 
             on("the option not being provided") {
                 it("gives the value from the default value provider") {
@@ -81,7 +83,7 @@ object FlagOptionSpec : Spek({
                     onGeneric { value } doReturn PossibleValue.Valid(true)
                 }
 
-                val option by createForEachTest { FlagOption("enable-extra-awesomeness", "Enable the extra awesome features.", defaultProvider) }
+                val option by createForEachTest { FlagOption(group, "enable-extra-awesomeness", "Enable the extra awesome features.", defaultProvider) }
 
                 on("checking the default value for the option") {
                     it("does not return an error") {
@@ -95,7 +97,7 @@ object FlagOptionSpec : Spek({
                     onGeneric { value } doReturn PossibleValue.Invalid("The default value is invalid")
                 }
 
-                val option by createForEachTest { FlagOption("enable-extra-awesomeness", "Enable the extra awesome features.", defaultProvider) }
+                val option by createForEachTest { FlagOption(group, "enable-extra-awesomeness", "Enable the extra awesome features.", defaultProvider) }
 
                 given("the default value has not been overridden") {
                     on("checking the default value for the option") {
@@ -126,7 +128,7 @@ object FlagOptionSpec : Spek({
                     onGeneric { description } doReturn ""
                 }
 
-                val option = FlagOption("enable-extra-awesomeness", "Enable the extra awesome features.", defaultProvider)
+                val option = FlagOption(group, "enable-extra-awesomeness", "Enable the extra awesome features.", defaultProvider)
 
                 it("returns the original description") {
                     assertThat(option.descriptionForHelp, equalTo("Enable the extra awesome features."))
@@ -139,7 +141,7 @@ object FlagOptionSpec : Spek({
                     onGeneric { description } doReturn "Defaults to '1234' if not set."
                 }
 
-                val option = FlagOption("enable-extra-awesomeness", "Enable the extra awesome features.", defaultProvider)
+                val option = FlagOption(group, "enable-extra-awesomeness", "Enable the extra awesome features.", defaultProvider)
 
                 it("returns the original description with the additional information from the default value provider") {
                     assertThat(option.descriptionForHelp, equalTo("Enable the extra awesome features. Defaults to '1234' if not set."))

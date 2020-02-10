@@ -23,7 +23,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * support for Windows
   * send updated console dimensions to daemon if console is resized while container is running
   * fix issue where app appears to hang when running on a 32-bit JVM (field size / alignment issue in named pipes calls?)
-  * show a warning (or just fail) if the daemon is configured to run Windows containers
   * show more detailed Windows version information by reading it from `kernel32.dll`: https://stackoverflow.com/a/27323983/1668119
 * fix #10 (proxies that refer to localhost)
   * Linux:
@@ -37,14 +36,14 @@ If there's something you're really keen to see, pull requests are always welcome
 * support setting `ulimit` values (`--ulimit` - https://docs.docker.com/engine/reference/commandline/run/#set-ulimits-in-container---ulimit)
 * allow `home_directory` to match local user's home directory path
 * allow `working_directory` and container side of volume mount to reference home directory (inside container)
-* allow container side of volume mount to use path of local directory (eg. mount current directory at same path inside container)
+* allow container side of volume mount to use path of local directory (eg. mount current directory at same path inside container) - will be tricky on Windows
 * show build context upload progress when building image
 * some way to kill a misbehaving task (eg. one that is not responding to Ctrl+C)
 * support for BuildKit
 * shell tab completion for options (eg. `batect --h<tab>` completes to `batect --help`) - #116
 * shell tab completion for tasks (eg. `batect b<tab>` completes to `batect build`) - #116
 * Kubernetes-style health checks from outside the container (don't require `curl` / `wget` to be installed in the container, just provide HTTP endpoint)
-* ability to override image tag for a container (eg. `./batect --use-image-tag:my-app=abc123 the-task`)
+* ability to build one or more container images separate to running a task (two use cases: build and push an application image, and pre-build all CI environment images in parallel rather than waiting until they're needed and building them effectively serially)
 
 ### Other
 * logo
@@ -95,6 +94,7 @@ If there's something you're really keen to see, pull requests are always welcome
     * errors - type and stacktrace only (no further details due to privacy issues)
     * shape of task / container dependency graph (numbers only)
     * timing for task execution - at least startup / run / cleanup times, information about task steps (eg. image pull vs create vs wait for healthy) would be good too
+    * time taken for JVM to start app
     * when a 'update is available' message is shown
   * metadata:
     * OS type and version
@@ -104,6 +104,7 @@ If there's something you're really keen to see, pull requests are always welcome
     * output mode used
     * Docker daemon connection type
     * some way to anonymously identify users (to understand usage patterns) and projects (to understand upgrade and usage patterns regardless of user)
+    * whether build is running on CI or not (detect through `CI` environment variable?)
 * security scanning for Docker images in tests and sample projects
 * use batect to build batect (self-hosting)
 * tool to visualise execution on a timeline
@@ -133,18 +134,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * return code options (any non-zero, particular container, first to exit)
 * allow configuration includes (ie. allow splitting the configuration over multiple files)
 * wildcard includes (eg. `include: containers/*.yaml`)
-* handle expanded form of mappings for environment variables, for example:
-
-  ```yaml
-  containers:
-    build-env:
-      build_dir: build-env
-      environment:
-        - name: THING
-          value: thing_value
-
-  ```
-
 * support port ranges in mappings
 * support protocols other than TCP in port mappings
 * requires / provides relationships (eg. 'app' requires 'service-a', and 'service-a-fake' and 'service-a-real' provide 'service-a')
@@ -155,7 +144,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * when starting up containers and displaying progress, show countdown to health check (eg. 'waiting for container to become healthy, next check in 3 seconds, will timeout after 2 more retries')
 * default to just terminating all containers at clean up time with option to gracefully shut down on individual containers
   (eg. database where data is shared between invocations and we don't want to corrupt it)
-* group display of options shown when running `batect --help`
 * add dependency relationship between containers and tasks (eg. running the app container requires running the build first - removes the need to specify
   build task as a prerequisite on every task that starts the app)
 * allow piping files into tasks (eg. `cat thefile.txt | ./batect the-task`)

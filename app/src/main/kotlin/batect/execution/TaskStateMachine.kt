@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package batect.execution
 
 import batect.execution.model.events.ContainerCreatedEvent
+import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskFailedEvent
@@ -36,13 +37,13 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 class TaskStateMachine(
-    val graph: ContainerDependencyGraph,
-    val runOptions: RunOptions,
-    val runStagePlanner: RunStagePlanner,
-    val cleanupStagePlanner: CleanupStagePlanner,
-    val failureErrorMessageFormatter: FailureErrorMessageFormatter,
-    val cancellationContext: CancellationContext,
-    val logger: Logger
+    private val graph: ContainerDependencyGraph,
+    private val runOptions: RunOptions,
+    private val runStagePlanner: RunStagePlanner,
+    private val cleanupStagePlanner: CleanupStagePlanner,
+    private val failureErrorMessageFormatter: FailureErrorMessageFormatter,
+    private val cancellationContext: CancellationContext,
+    private val logger: Logger
 ) : TaskEventSink {
     var taskHasFailed: Boolean = false
         private set
@@ -52,7 +53,7 @@ class TaskStateMachine(
 
     private val events: MutableSet<TaskEvent> = mutableSetOf()
     private val lock = ReentrantLock()
-    private var currentStage: Stage = runStagePlanner.createStage(graph)
+    private var currentStage: Stage = runStagePlanner.createStage()
     private var taskFailedDuringCleanup: Boolean = false
 
     fun popNextStep(stepsStillRunning: Boolean): TaskStep? {
@@ -134,7 +135,7 @@ class TaskStateMachine(
     }
 
     private fun startCleanupStage(stepsStillRunning: Boolean): TaskStep? {
-        val cleanupStage = cleanupStagePlanner.createStage(graph, events)
+        val cleanupStage = cleanupStagePlanner.createStage(events)
 
         if (taskHasFailed && shouldLeaveCreatedContainersRunningAfterFailure()) {
             manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events, cleanupStage.manualCleanupInstructions)
@@ -191,6 +192,16 @@ class TaskStateMachine(
     private fun inRunStage(): Boolean = currentStage is RunStage
     private fun inCleanupStage(): Boolean = currentStage is CleanupStage
 
-    // This method is not thread safe, and is designed to be used only after task execution has completed.
-    fun getAllEvents(): Set<TaskEvent> = events
+    val taskExitCode: Int
+        get() {
+            val containerExitedEvent = events
+                .filterIsInstance<RunningContainerExitedEvent>()
+                .singleOrNull { it.container == graph.taskContainerNode.container }
+
+            if (containerExitedEvent == null) {
+                throw IllegalStateException("The task has not yet finished or has failed.")
+            }
+
+            return containerExitedEvent.exitCode
+        }
 }

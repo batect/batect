@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -40,12 +40,9 @@ class ParallelExecutionManager(
     private val eventLogger: EventLogger,
     private val taskStepRunner: TaskStepRunner,
     private val stateMachine: TaskStateMachine,
-    private val runOptions: RunOptions,
     private val logger: Logger
 ) : TaskEventSink {
     private val threadPool = createThreadPool()
-    private val stepRunContext = TaskStepRunContext(this, runOptions, stateMachine.cancellationContext, eventLogger.ioStreamingOptions)
-
     private val startNewWorkLockObject = Object()
     private val finishedSignal = CountDownLatch(1)
     private var runningSteps = 0
@@ -127,7 +124,7 @@ class ParallelExecutionManager(
                 }
 
                 eventLogger.postEvent(StepStartingEvent(step))
-                taskStepRunner.run(step, stepRunContext)
+                taskStepRunner.run(step, this)
 
                 logger.info {
                     message("Step completed.")

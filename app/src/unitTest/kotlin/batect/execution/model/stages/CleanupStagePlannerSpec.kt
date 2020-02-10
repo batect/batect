@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -84,11 +84,11 @@ object CleanupStagePlannerSpec : Spek({
         val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
         val events by createForEachTest { mutableSetOf<TaskEvent>() }
         val logger by createLoggerForEachTest()
-        val planner by createForEachTest { CleanupStagePlanner(systemInfo, logger) }
+        val planner by createForEachTest { CleanupStagePlanner(graph, systemInfo, logger) }
 
         given("no events were posted") {
             on("creating the stage") {
-                val stage by runForEachTest { planner.createStage(graph, events) }
+                val stage by runForEachTest { planner.createStage(events) }
 
                 it("has no rules") {
                     assertThat(stage.rules, isEmpty)
@@ -109,7 +109,7 @@ object CleanupStagePlannerSpec : Spek({
                 given("no temporary files or directories were created") {
                     on("creating the stage") {
                         itHasExactlyTheRules(
-                            { planner.createStage(graph, events) },
+                            { planner.createStage(events) },
                             mapOf(
                                 "delete the task network" to DeleteTaskNetworkStepRule(network, emptySet())
                             )
@@ -130,7 +130,7 @@ object CleanupStagePlannerSpec : Spek({
 
                     on("creating the stage") {
                         itHasExactlyTheRules(
-                            { planner.createStage(graph, events) },
+                            { planner.createStage(events) },
                             mapOf(
                                 "delete the task network" to DeleteTaskNetworkStepRule(network, emptySet()),
                                 "delete the first file" to DeleteTemporaryFileStepRule(file1, null),
@@ -151,7 +151,7 @@ object CleanupStagePlannerSpec : Spek({
                     given("no temporary files or directories were created") {
                         on("creating the stage") {
                             itHasExactlyTheRules(
-                                { planner.createStage(graph, events) },
+                                { planner.createStage(events) },
                                 mapOf(
                                     "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
                                     "remove the container" to RemoveContainerStepRule(taskContainer, dockerContainer, false)
@@ -175,7 +175,7 @@ object CleanupStagePlannerSpec : Spek({
 
                         on("creating the stage") {
                             itHasExactlyTheRules(
-                                { planner.createStage(graph, events) },
+                                { planner.createStage(events) },
                                 mapOf(
                                     "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
                                     "remove the container" to RemoveContainerStepRule(taskContainer, dockerContainer, false),
@@ -195,7 +195,7 @@ object CleanupStagePlannerSpec : Spek({
                     given("no temporary files or directories were created") {
                         on("creating the stage") {
                             itHasExactlyTheRules(
-                                { planner.createStage(graph, events) },
+                                { planner.createStage(events) },
                                 mapOf(
                                     "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
                                     "stop the container" to StopContainerStepRule(taskContainer, dockerContainer, emptySet()),
@@ -220,7 +220,7 @@ object CleanupStagePlannerSpec : Spek({
 
                         on("creating the stage") {
                             itHasExactlyTheRules(
-                                { planner.createStage(graph, events) },
+                                { planner.createStage(events) },
                                 mapOf(
                                     "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
                                     "stop the container" to StopContainerStepRule(taskContainer, dockerContainer, emptySet()),
@@ -251,7 +251,7 @@ object CleanupStagePlannerSpec : Spek({
                     given("no temporary files or directories were created") {
                         on("creating the stage") {
                             itHasExactlyTheRules(
-                                { planner.createStage(graph, events) },
+                                { planner.createStage(events) },
                                 mapOf(
                                     "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
                                     "remove the task container" to RemoveContainerStepRule(taskContainer, taskDockerContainer, false),
@@ -277,7 +277,7 @@ object CleanupStagePlannerSpec : Spek({
 
                         on("creating the stage") {
                             itHasExactlyTheRules(
-                                { planner.createStage(graph, events) },
+                                { planner.createStage(events) },
                                 mapOf(
                                     "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
                                     "remove the task container" to RemoveContainerStepRule(taskContainer, taskDockerContainer, false),
@@ -301,7 +301,7 @@ object CleanupStagePlannerSpec : Spek({
                     given("no temporary files or directories were created") {
                         on("creating the stage") {
                             itHasExactlyTheRules(
-                                { planner.createStage(graph, events) },
+                                { planner.createStage(events) },
                                 mapOf(
                                     "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
                                     "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, emptySet()),
@@ -328,7 +328,7 @@ object CleanupStagePlannerSpec : Spek({
 
                         on("creating the stage") {
                             itHasExactlyTheRules(
-                                { planner.createStage(graph, events) },
+                                { planner.createStage(events) },
                                 mapOf(
                                     "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
                                     "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, emptySet()),
@@ -355,7 +355,7 @@ object CleanupStagePlannerSpec : Spek({
                     given("no temporary files or directories were created") {
                         on("creating the stage") {
                             itHasExactlyTheRules(
-                                { planner.createStage(graph, events) },
+                                { planner.createStage(events) },
                                 mapOf(
                                     "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
                                     "stop the task container" to StopContainerStepRule(taskContainer, taskDockerContainer, emptySet()),
@@ -384,7 +384,7 @@ object CleanupStagePlannerSpec : Spek({
 
                         on("creating the stage") {
                             itHasExactlyTheRules(
-                                { planner.createStage(graph, events) },
+                                { planner.createStage(events) },
                                 mapOf(
                                     "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
                                     "stop the task container" to StopContainerStepRule(taskContainer, taskDockerContainer, emptySet()),

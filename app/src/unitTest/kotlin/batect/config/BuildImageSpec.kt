@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -29,14 +29,20 @@ object BuildImageSpec : Spek({
             osIndependentPath("/image-build-dir"),
             mapOf(
                 "some_arg" to LiteralValue("some_value"),
-                "some_other_arg" to ReferenceValue("host_var")
+                "some_other_arg" to EnvironmentVariableReference("host_var"),
+                "some_config_var" to ConfigVariableReference("config_var")
             ),
             "some-Dockerfile-path"
         )
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(source.toString(), equalTo("BuildImage(build directory: '/image-build-dir', build args: [some_arg=LiteralValue(value: 'some_value'), some_other_arg=ReferenceValue(reference to: 'host_var', default: null)], Dockerfile path: 'some-Dockerfile-path')"))
+                assertThat(source.toString(), equalTo(
+                    "BuildImage(" +
+                        "build directory: '/image-build-dir', " +
+                        "build args: [some_arg=LiteralValue(value: 'some_value'), some_other_arg=EnvironmentVariableReference(reference to: 'host_var', default: null), some_config_var=ConfigVariableReference(reference to: 'config_var')], " +
+                        "Dockerfile path: 'some-Dockerfile-path')"
+                ))
             }
         }
     }

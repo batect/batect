@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,31 +18,44 @@ package batect.cli.commands
 
 import batect.cli.CommandLineOptionsParser
 import batect.cli.options.OptionDefinition
+import batect.cli.options.OptionGroup
+import batect.ui.ConsoleDimensions
+import batect.utils.breakAt
 import java.io.PrintStream
 
-class HelpCommand(val optionsParser: CommandLineOptionsParser, val outputStream: PrintStream) : Command {
+class HelpCommand(
+    val optionsParser: CommandLineOptionsParser,
+    val outputStream: PrintStream,
+    val consoleDimensions: ConsoleDimensions
+) : Command {
+    private val consoleWidth: Int = consoleDimensions.current?.width ?: Int.MAX_VALUE
+
     override fun run(): Int {
         outputStream.println("Usage: batect [options] task [-- additional arguments to pass to task]")
         outputStream.println()
-        outputStream.println("Options:")
 
-        val options = formatListOfOptions(optionsParser.optionParser.getOptions())
-        printInColumns(options)
+        val options = optionsParser.optionParser.getOptions().associateWith { nameFor(it) }
+        val alignToColumn = determineColumnSize(options.values)
+        val lines = options.map { (option, name) -> OptionLine(option.group, option.longName, formatInColumn(name, option.descriptionForHelp, alignToColumn)) }
 
-        outputStream.println()
+        lines
+            .sortedBy { it.group.name }
+            .groupBy { it.group }
+            .forEach { (group, options) ->
+                outputStream.println(group.name + ":")
+
+                options.sortedBy { it.longName }.forEach { outputStream.print(it.text) }
+                outputStream.println()
+            }
+
         outputStream.println(CommandLineOptionsParser.helpBlurb)
         outputStream.println()
 
         return 1
     }
 
-    private fun formatListOfOptions(options: Iterable<OptionDefinition>): Map<String, String> {
-        return options.sortedBy { it.longName }
-            .associate { nameFor(it) to it.descriptionForHelp }
-    }
-
     private fun nameFor(option: OptionDefinition): String {
-        val longNamePart = if (option.acceptsValue) "${option.longOption}=value" else option.longOption
+        val longNamePart = if (option.acceptsValue) "${option.longOption}=${option.valueFormatForHelp}" else option.longOption
 
         return when {
             option.shortName == null -> "    $longNamePart"
@@ -50,13 +63,34 @@ class HelpCommand(val optionsParser: CommandLineOptionsParser, val outputStream:
         }
     }
 
-    private fun printInColumns(items: Map<String, String>) {
-        val alignToColumn = items.keys.map { it.length }.max() ?: 0
+    private fun determineColumnSize(optionNames: Iterable<String>): Int = optionNames.map { it.length }.max() ?: 0
 
-        items.forEach { (firstColumn, secondColumn) ->
-            val indentationCount = 4 + alignToColumn - firstColumn.length
-            val indentation = " ".repeat(indentationCount)
-            outputStream.println("  $firstColumn$indentation$secondColumn")
-        }
+    private fun formatInColumn(first: String, second: String, alignToColumn: Int): String {
+        val firstLineIndentationCount = 4 + alignToColumn - first.length
+        val firstLineIndentation = " ".repeat(firstLineIndentationCount)
+
+        val secondLineIndentationCount = 6 + alignToColumn
+        val secondLineIndentation = " ".repeat(secondLineIndentationCount)
+
+        val secondColumnWidth = consoleWidth - secondLineIndentationCount
+        val secondColumnLines = second.breakAt(secondColumnWidth).lines()
+        val secondColumn = alternate(secondColumnLines, secondLineIndentation)
+
+        return "  $first$firstLineIndentation$secondColumn"
     }
+
+    private fun alternate(lines: List<String>, separator: String): String {
+        val builder = StringBuilder()
+
+        builder.appendln(lines.first())
+
+        lines.drop(1).forEach {
+            builder.append(separator)
+            builder.appendln(it)
+        }
+
+        return builder.toString()
+    }
+
+    data class OptionLine(val group: OptionGroup, val longName: String, val text: String)
 }

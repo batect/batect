@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -194,8 +194,9 @@ object OptionParserSpec : Spek({
         describe("adding options") {
             given("a parser with a single value option with a short name") {
                 val parser by createForEachTest { OptionParser() }
+                val group = OptionGroup("the group")
                 val defaultValueProvider = StaticDefaultValueProvider<String?>(null)
-                val option = ValueOption("value", "The value", defaultValueProvider, ValueConverters::string, 'v')
+                val option = ValueOption(group, "value", "The value", defaultValueProvider, ValueConverters::string, 'v')
                 beforeEachTest { parser.addOption(option) }
 
                 on("getting the list of all options") {
@@ -208,14 +209,14 @@ object OptionParserSpec : Spek({
 
                 on("attempting to add another option with the same name") {
                     it("throws an exception") {
-                        assertThat({ parser.addOption(ValueOption("value", "The other value", defaultValueProvider, ValueConverters::string)) },
+                        assertThat({ parser.addOption(ValueOption(group, "value", "The other value", defaultValueProvider, ValueConverters::string)) },
                             throws<IllegalArgumentException>(withMessage("An option with the name 'value' has already been added.")))
                     }
                 }
 
                 on("attempting to add another option with the same short name") {
                     it("throws an exception") {
-                        assertThat({ parser.addOption(ValueOption("other-value", "The other value", defaultValueProvider, ValueConverters::string, 'v')) },
+                        assertThat({ parser.addOption(ValueOption(group, "other-value", "The other value", defaultValueProvider, ValueConverters::string, 'v')) },
                             throws<IllegalArgumentException>(withMessage("An option with the name 'v' has already been added.")))
                     }
                 }

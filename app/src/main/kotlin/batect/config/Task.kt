@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ data class TaskRunConfiguration(
     val container: String,
     val command: Command? = null,
     val entrypoint: Command? = null,
-    @SerialName("environment") @Serializable(with = EnvironmentSerializer::class) val additionalEnvironmentVariables: Map<String, EnvironmentVariableExpression> = emptyMap(),
+    @SerialName("environment") @Serializable(with = EnvironmentSerializer::class) val additionalEnvironmentVariables: Map<String, VariableExpression> = emptyMap(),
     @SerialName("ports") val additionalPortMappings: Set<PortMapping> = emptySet(),
     @SerialName("working_directory") val workingDiretory: String? = null
 )

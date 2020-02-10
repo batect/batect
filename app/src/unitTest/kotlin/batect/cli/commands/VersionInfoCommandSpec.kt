@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ object VersionInfoCommandSpec : Spek({
                     |OS version:        THE OS VERSION
                     |Docker version:    (DOCKER VERSION INFO)
                     |
-                    |For documentation and further information on batect, visit https://github.com/charleskorn/batect.
+                    |For documentation and further information on batect, visit https://github.com/batect/batect.
                     |
                     |""".trimMargin().withPlatformSpecificLineSeparator()))
             }

@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -66,6 +66,7 @@ object CommandLineOptionsParserSpec : Spek({
         }
 
         val defaultCommandLineOptions = CommandLineOptions(
+            configVariablesSourceFile = fileSystem.getPath("/resolved/batect.local.yml"),
             dockerHost = defaultDockerHost,
             dockerTlsCACertificatePath = fileSystem.getPath("home-dir", ".docker", "ca.pem"),
             dockerTLSCertificatePath = fileSystem.getPath("home-dir", ".docker", "cert.pem"),
@@ -168,6 +169,7 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--upgrade", "some-task") to defaultCommandLineOptions.copy(runUpgrade = true),
             listOf("-f=somefile.yml", "some-task") to defaultCommandLineOptions.copy(configurationFileName = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task"),
             listOf("--config-file=somefile.yml", "some-task") to defaultCommandLineOptions.copy(configurationFileName = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task"),
+            listOf("--config-vars-file=somefile.yml", "some-task") to defaultCommandLineOptions.copy(configVariablesSourceFile = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task"),
             listOf("--log-file=somefile.log", "some-task") to defaultCommandLineOptions.copy(logFileName = fileSystem.getPath("/resolved/somefile.log"), taskName = "some-task"),
             listOf("--output=simple", "some-task") to defaultCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Simple, taskName = "some-task"),
             listOf("--output=quiet", "some-task") to defaultCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Quiet, taskName = "some-task"),
@@ -178,6 +180,8 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--no-cleanup-after-success", "some-task") to defaultCommandLineOptions.copy(disableCleanupAfterSuccess = true, taskName = "some-task"),
             listOf("--no-cleanup", "some-task") to defaultCommandLineOptions.copy(disableCleanupAfterFailure = true, disableCleanupAfterSuccess = true, taskName = "some-task"),
             listOf("--no-proxy-vars", "some-task") to defaultCommandLineOptions.copy(dontPropagateProxyEnvironmentVariables = true, taskName = "some-task"),
+            listOf("--config-var", "a=b", "--config-var", "c=d", "some-task") to defaultCommandLineOptions.copy(configVariableOverrides = mapOf("a" to "b", "c" to "d"), taskName = "some-task"),
+            listOf("--override-image", "container-1=image-1", "--override-image", "container-2=image-2", "some-task") to defaultCommandLineOptions.copy(imageOverrides = mapOf("container-1" to "image-1", "container-2" to "image-2"), taskName = "some-task"),
             listOf("--docker-host=some-host", "some-task") to defaultCommandLineOptions.copy(dockerHost = "some-host", taskName = "some-task"),
             listOf("--docker-tls", "some-task") to defaultCommandLineOptions.copy(dockerUseTLS = true, taskName = "some-task"),
             listOf("--docker-tls-verify", "some-task") to defaultCommandLineOptions.copy(dockerUseTLS = true, dockerVerifyTLS = true, taskName = "some-task"),

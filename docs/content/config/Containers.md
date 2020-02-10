@@ -1,9 +1,15 @@
 # Container definitions
 
+!!! note
+    This page reflects the options available in the [most recent version](https://github.com/batect/batect/releases/latest)
+    of batect.
+
 Each container definition is made up of:
 
 ## `image`
 Image name (in standard Docker image reference format) to use for this container. **One of `image` or `build_directory` is required.**
+
+The image can be overridden when running a task with [`--override-image`](../CLIReference.md#override-the-image-used-by-a-container-override-image).
 
 !!! tip
     It is highly recommended that you specify a specific image version, and not use `latest`, to ensure that the same image is used
@@ -16,17 +22,15 @@ Path (relative to the configuration file's directory) to a directory containing 
 On Windows, `build_directory` can use either Windows-style (`path\to\thing`) or Unix-style (`path/to/thing`) paths, but for compatibility
 with users running on other operating systems, using Unix-style paths is recommended.
 
+The image can be overridden when running a task with [`--override-image`](../CLIReference.md#override-the-image-used-by-a-container-override-image).
+
 ## `build_args`
-List of build args (in `name: value` format) to use when building the image in [`build_directory`](#build_directory).
+List of build args (in `name: value` format) to use when building the image in [`build_directory`](#build_directory). Values can be [expressions](Overview.md#expressions).
 
 Each build arg must be defined in the Dockerfile with an `ARG` instruction otherwise the value provided will have no effect.
 
-The value of environment variables from the host can be passed as build args using [the same syntax as for `environment`](#environment-variable-substitution).
-
 !!! warning
     Use caution when using build args for secret values. Build arg values can be revealed by anyone with a copy of the image with the `docker history` command.
-
-Available since v0.28. The ability to use environment variable values in build args was added in v0.32.
 
 ## `dockerfile`
 Dockerfile (relative to [`build_directory`](#build_directory)) to use when building the image in [`build_directory`](#build_directory). Defaults to `Dockerfile` if not set.
@@ -34,8 +38,6 @@ Dockerfile (relative to [`build_directory`](#build_directory)) to use when build
 The Dockerfile must be within [`build_directory`](#build_directory).
 
 `dockerfile` must always be specified with Unix-style (`path/to/thing`) paths, even when running on Windows.
-
-Available since v0.31.
 
 ## `command`
 Command to run when the container starts.
@@ -50,7 +52,7 @@ Both of these can be overridden for an individual task by specifying a [`command
     Keep in mind that this command is passed to the image's `ENTRYPOINT`, just like it would when using `docker run <image> <command>`
     directly.
 
-    This means that if the entrypoint is not set or is not a shell, standard shell syntax features like `&&` might not work.
+    This means that if the entrypoint is not set or is not a shell, standard shell syntax features like `$MY_ENVIRONMENT_VARIABLE` and `&&` might not work.
 
     See the Docker docs for [`CMD`](https://docs.docker.com/engine/reference/builder/#cmd) and
     [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint) for more details.
@@ -91,39 +93,8 @@ See the Docker docs for [`CMD`](https://docs.docker.com/engine/reference/builder
 [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint) for more information on how the entrypoint is used.
 batect will always convert the entrypoint provided here to the exec form when passed to Docker.
 
-Available since v0.37.
-
 ## `environment`
-List of environment variables (in `name: value` format) for the container.
-
-Prior to v0.21, environment variables were required to be supplied in `name=value` format.
-
-### Environment variable substitution
-You can pass environment variables from the host (ie. where you run batect) to the container by using any of the following formats:
-
-* `$<name>` or `${<name>}`: use the value of `<name>` from the host as the value inside the container.
-
-    If the referenced host variable is not present, batect will show an error message and not start the task.
-
-* `${<name>:-<default>}`: use the value of `<name>` from the host as the value inside the container.
-
-    If the referenced host variable is not present, `<default>` is used instead.
-
-    `<default>` can be empty, so `${<name>:-}` will use the value of `<name>` from the host if it is
-    set, or a blank value if it is not set.
-
-For example, to set `SUPER_SECRET_PASSWORD` in the container to the value of the `MY_PASSWORD` variable on the host, use
-`SUPER_SECRET_PASSWORD: $MY_PASSWORD` or `SUPER_SECRET_PASSWORD: ${MY_PASSWORD}`. Or, to default it to `insecure` if
-`MY_PASSWORD` is not set, use `SUPER_SECRET_PASSWORD: ${MY_PASSWORD:-insecure}`.
-
-Substitution in the middle of values is not supported (eg. `SUPER_SECRET_PASSWORD: My password is $MY_PASSWORD` will not work).
-
-!!! warning
-    Be careful when using this - by relying on the host's environment variables, you are introducing inconsistency to how the container
-    runs between hosts, which is something you generally want to avoid.
-
-The curly brace syntax for environment variables, including the ability to specify default values for environment variables,
-was added in v0.21.
+List of environment variables (in `name: value` format) for the container. Values can be [expressions](Overview.md#expressions).
 
 ### `TERM`
 The `TERM` environment variable, if set on the host, is always automatically passed through to the container. This ensures that features such as
@@ -189,8 +160,6 @@ Two formats are supported:
   ```
 
 Note that the `local` device mounts will be different for Windows and Unix-like hosts. See the [Docker guide for adding host devices to containers](https://docs.docker.com/engine/reference/commandline/run/#add-host-device-to-container---device) for more information.
-
-Available since v0.39.
 
 ## `ports`
 List of ports to make available to the host machine.
@@ -279,21 +248,15 @@ See [the task lifecycle](../TaskLifecycle.md) for more information on the effect
     It is recommended that you try to include any setup work in your image's Dockerfile wherever possible (and not use setup commands), as setup commands must be
     run every time the container starts whereas commands included in your image's Dockerfile only run when the image needs to be built.
 
-Available since v0.38.
-
 ## `privileged`
 Set to `true` to run the container in [privileged mode](https://docs.docker.com/engine/reference/commandline/run/#full-container-capabilities---privileged).
 
 See also [`capabilities_to_add` and `capabilities_to_drop`](#capabilities_to_add-and-capabilities_to_drop).
 
-Available since v0.29.
-
 ## `capabilities_to_add` and `capabilities_to_drop`
 List of [capabilities](http://man7.org/linux/man-pages/man7/capabilities.7.html) to add or drop for the container.
 
 This is equivalent to passing [`--cap-add` or `--cap-drop`](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) to `docker run`.
-
-Available since v0.31.
 
 ## `enable_init_process`
 Set to `true` to pass the [`--init`](https://docs.docker.com/engine/reference/run/#specify-an-init-process) flag when running the container.
@@ -302,12 +265,8 @@ This creates the container with a simple PID 1 process to handle the responsibil
 [Read this article](https://engineeringblog.yelp.com/2016/01/dumb-init-an-init-for-docker.html) if you're interested in more information about the behaviour
 of different processes running as PID 1 and why this flag was introduced.
 
-Available since v0.30.
-
 ## `additional_hostnames`
 List of hostnames to associate with this container, in addition to the default hostname (the name of the container).
-
-Available since v0.37.
 
 ## Examples
 

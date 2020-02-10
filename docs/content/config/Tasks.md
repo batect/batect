@@ -1,5 +1,9 @@
 # Task definitions
 
+!!! note
+    This page reflects the options available in the [most recent version](https://github.com/batect/batect/releases/latest)
+    of batect.
+
 Each task definition is made up of:
 
 ## `description`
@@ -7,8 +11,6 @@ Description shown when running `batect --list-tasks`.
 
 ## `group`
 Group name used to group tasks when running `batect --list-tasks`.
-
-Available since v0.27.
 
 ## `run`
 Specifies what to do when this task starts:
@@ -21,8 +23,8 @@ Specifies what to do when this task starts:
     [the command specified on the container definition](Containers.md#command) is used if there is one, otherwise the image's default command is used.
 
     Just like when specifying a command for a container, this command is passed to the image's `ENTRYPOINT`, if there is one. This can prevent
-    shell syntax features like `&&` from working. See the [note about entrypoints in the documentation for containers](Containers.md#command-entrypoint-note)
-    for more information.
+    shell syntax features like `$MY_ENVIRONMENT_VARIABLE` and `&&` from working. See the
+    [note about entrypoints in the documentation for containers](Containers.md#command-entrypoint-note) for more information.
 
 * `entrypoint` Entrypoint to use to run the command.
 
@@ -32,31 +34,22 @@ Specifies what to do when this task starts:
     Applies to whichever command takes precedence, whether that is the command specified on this task, the [command specified on the container](Containers.md#command),
     or the image's default command.
 
-    Available since v0.37.
-
 * `environment` List of environment variables (in `name: value` format) to pass to the container, in addition to those defined on the
   container itself.
 
     If a variable is specified both here and on the container itself, the value given here will override the value defined on the container.
 
-    This field supports all of the same syntax as when [specifying a variable directly on the container](Containers.md#environment),
-    including passing variables from the host to the container and providing defaults for when the host variable is not set.
-
-    Prior to v0.21, environment variables were required to be supplied in `name=value` format.
+    Values can be [expressions](Overview.md#expressions).
 
 * `ports` List of port mappings to create for the container, in addition to those defined on the container itself.
 
     Behaves identically to [specifying a port mapping directly on the container](Containers.md#ports), and supports the same syntax.
-
-    Available since v0.13.
 
 * `working_directory` Working directory to use for this task's container.
 
     Overrides any working directory on the container definition and the image's default working directory. If no working directory is provided here,
     [the working directory specified on the container definition](Containers.md#working_directory) is used if there is one, otherwise the image's default
     working directory is used.
-
-    Available since v0.26.
 
 ## `dependencies`
 List of other containers (not tasks) that should be started and healthy before starting the task container given in `run`.

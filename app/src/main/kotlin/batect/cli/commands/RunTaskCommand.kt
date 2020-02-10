@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,27 +17,33 @@
 package batect.cli.commands
 
 import batect.config.Configuration
+import batect.config.PullImage
 import batect.config.Task
 import batect.config.io.ConfigurationLoader
 import batect.docker.client.DockerConnectivityCheckResult
+import batect.docker.client.DockerContainerType
 import batect.docker.client.DockerSystemInfoClient
 import batect.execution.CleanupOption
+import batect.execution.ConfigVariablesProvider
 import batect.execution.RunOptions
 import batect.execution.TaskExecutionOrderResolutionException
 import batect.execution.TaskExecutionOrderResolver
 import batect.execution.TaskRunner
+import batect.ioc.SessionKodeinFactory
 import batect.logging.Logger
 import batect.ui.Console
 import batect.ui.text.Text
 import batect.updates.UpdateNotifier
+import org.kodein.di.generic.instance
 import java.nio.file.Path
 
 class RunTaskCommand(
     val configFile: Path,
     val runOptions: RunOptions,
     val configLoader: ConfigurationLoader,
+    val configVariablesProvider: ConfigVariablesProvider,
     val taskExecutionOrderResolver: TaskExecutionOrderResolver,
-    val taskRunner: TaskRunner,
+    val sessionKodeinFactory: SessionKodeinFactory,
     val updateNotifier: UpdateNotifier,
     val dockerSystemInfoClient: DockerSystemInfoClient,
     val console: Console,
@@ -46,25 +52,34 @@ class RunTaskCommand(
 ) : Command {
 
     override fun run(): Int {
-        val config = configLoader.loadConfig(configFile)
+        val config = loadConfig()
+        configVariablesProvider.build(config)
 
-        val connectivityCheckResult = dockerSystemInfoClient.checkConnectivity()
-
-        if (connectivityCheckResult is DockerConnectivityCheckResult.Failed) {
-            errorConsole.println(Text.red("Docker is not installed, not running or not compatible with batect: ${connectivityCheckResult.message}"))
-            return -1
+        return when (val connectivityCheckResult = dockerSystemInfoClient.checkConnectivity()) {
+            is DockerConnectivityCheckResult.Failed -> {
+                errorConsole.println(Text.red("Docker is not installed, not running or not compatible with batect: ${connectivityCheckResult.message}"))
+                -1
+            }
+            is DockerConnectivityCheckResult.Succeeded -> {
+                runFromConfig(config, connectivityCheckResult.containerType)
+            }
         }
-
-        return runFromConfig(config)
     }
 
-    private fun runFromConfig(config: Configuration): Int {
+    private fun loadConfig(): Configuration {
+        val configFromFile = configLoader.loadConfig(configFile)
+        val overrides = runOptions.imageOverrides.mapValues { PullImage(it.value) }
+
+        return configFromFile.applyImageOverrides(overrides)
+    }
+
+    private fun runFromConfig(config: Configuration, containerType: DockerContainerType): Int {
         try {
             val tasks = taskExecutionOrderResolver.resolveExecutionOrder(config, runOptions.taskName)
 
             updateNotifier.run()
 
-            return runTasks(config, tasks)
+            return runTasks(config, tasks, containerType)
         } catch (e: TaskExecutionOrderResolutionException) {
             logger.error {
                 message("Could not resolve task execution order.")
@@ -76,13 +91,16 @@ class RunTaskCommand(
         }
     }
 
-    private fun runTasks(config: Configuration, tasks: List<Task>): Int {
+    private fun runTasks(config: Configuration, tasks: List<Task>, containerType: DockerContainerType): Int {
+        val sessionKodein = sessionKodeinFactory.create(config, containerType)
+        val taskRunner = sessionKodein.instance<TaskRunner>()
+
         for (task in tasks) {
             val isMainTask = task == tasks.last()
             val behaviourAfterSuccess = if (isMainTask) runOptions.behaviourAfterSuccess else CleanupOption.Cleanup
             val runOptionsForThisTask = runOptions.copy(behaviourAfterSuccess = behaviourAfterSuccess)
 
-            val exitCode = taskRunner.run(config, task, runOptionsForThisTask)
+            val exitCode = taskRunner.run(task, runOptionsForThisTask)
 
             if (exitCode != 0) {
                 return exitCode

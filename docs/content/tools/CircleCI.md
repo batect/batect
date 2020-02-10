@@ -26,7 +26,7 @@ jobs:
 ```
 
 You can see a full example of using batect with CircleCI in
-[the Golang sample project](https://github.com/charleskorn/batect-sample-golang).
+[the Golang sample project](https://github.com/batect/batect-sample-golang).
 
 ## Simplifying configuration with CircleCI
 

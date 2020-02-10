@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.1'
+        classpath 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.2'
         classpath 'com.github.java-json-tools:json-schema-validator:2.2.11'
     }
 }
@@ -93,7 +93,7 @@ task validateSampleFilesAgainstSchema {
 
     def schemaFile = new File("$projectDir/configSchema.json")
     def configFiles =
-        fileTree(dir: "${rootProject.projectDir}/app/src/journeyTest/resources", include: '**/*.yml') +
+        fileTree(dir: "${rootProject.projectDir}/app/src/journeyTest/resources", include: '**/*.yml', exclude: '**/batect.local.yml') +
         fileTree(dir: "$projectDir/tests", include: '**/*.yml')
 
     inputs.file schemaFile

@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -87,29 +87,32 @@ class OptionParser {
 interface OptionParserContainer {
     val optionParser: OptionParser
 
-    fun valueOption(longName: String, description: String, shortName: Char? = null) =
-        valueOption(longName, description, ValueConverters::string, shortName)
+    fun valueOption(group: OptionGroup, longName: String, description: String, shortName: Char? = null) =
+        valueOption(group, longName, description, ValueConverters::string, shortName)
 
-    fun <V> valueOption(longName: String, description: String, valueConverter: (String) -> ValueConversionResult<V>, shortName: Char? = null) =
-        valueOption(longName, description, StaticDefaultValueProvider<V?>(null), valueConverter, shortName)
+    fun <V> valueOption(group: OptionGroup, longName: String, description: String, valueConverter: (String) -> ValueConversionResult<V>, shortName: Char? = null) =
+        valueOption(group, longName, description, StaticDefaultValueProvider<V?>(null), valueConverter, shortName)
 
-    fun valueOption(longName: String, description: String, defaultValue: String, shortName: Char? = null) =
-        valueOption(longName, description, defaultValue, ValueConverters::string, shortName)
+    fun valueOption(group: OptionGroup, longName: String, description: String, defaultValue: String, shortName: Char? = null) =
+        valueOption(group, longName, description, defaultValue, ValueConverters::string, shortName)
 
-    fun <V> valueOption(longName: String, description: String, defaultValue: V, valueConverter: (String) -> ValueConversionResult<V>, shortName: Char? = null) =
-        valueOption(longName, description, StaticDefaultValueProvider(defaultValue), valueConverter, shortName)
+    fun <StorageType, ValueType : StorageType> valueOption(group: OptionGroup, longName: String, description: String, defaultValue: StorageType, valueConverter: (String) -> ValueConversionResult<ValueType>, shortName: Char? = null) =
+        valueOption(group, longName, description, StaticDefaultValueProvider(defaultValue), valueConverter, shortName)
 
-    fun valueOption(longName: String, description: String, defaultValueProvider: DefaultValueProvider<String>, shortName: Char? = null) =
-        valueOption(longName, description, defaultValueProvider, ValueConverters::string, shortName)
+    fun valueOption(group: OptionGroup, longName: String, description: String, defaultValueProvider: DefaultValueProvider<String>, shortName: Char? = null) =
+        valueOption(group, longName, description, defaultValueProvider, ValueConverters::string, shortName)
 
-    fun <StorageType, ValueType : StorageType> valueOption(longName: String, description: String, defaultValueProvider: DefaultValueProvider<StorageType>, valueConverter: (String) -> ValueConversionResult<ValueType>, shortName: Char? = null) =
-        ValueOption(longName, description, defaultValueProvider, valueConverter, shortName)
+    fun <StorageType, ValueType : StorageType> valueOption(group: OptionGroup, longName: String, description: String, defaultValueProvider: DefaultValueProvider<StorageType>, valueConverter: (String) -> ValueConversionResult<ValueType>, shortName: Char? = null) =
+        ValueOption(group, longName, description, defaultValueProvider, valueConverter, shortName)
 
-    fun flagOption(longName: String, description: String, shortName: Char? = null) =
-        flagOption(longName, description, StandardFlagOptionDefaultValueProvider, shortName)
+    fun flagOption(group: OptionGroup, longName: String, description: String, shortName: Char? = null) =
+        flagOption(group, longName, description, StandardFlagOptionDefaultValueProvider, shortName)
 
-    fun flagOption(longName: String, description: String, defaultValueProvider: DefaultValueProvider<Boolean>, shortName: Char? = null) =
-        FlagOption(longName, description, defaultValueProvider, shortName)
+    fun flagOption(group: OptionGroup, longName: String, description: String, defaultValueProvider: DefaultValueProvider<Boolean>, shortName: Char? = null) =
+        FlagOption(group, longName, description, defaultValueProvider, shortName)
+
+    fun mapOption(group: OptionGroup, longName: String, description: String, shortName: Char? = null) = MapOption(group, longName, description, shortName)
+    fun mapOption(group: OptionGroup, longName: String, description: String, valueFormatForHelp: String, shortName: Char? = null) = MapOption(group, longName, description, shortName, valueFormatForHelp)
 }
 
 sealed class OptionsParsingResult {

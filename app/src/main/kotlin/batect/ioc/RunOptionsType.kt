@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,14 +14,9 @@
    limitations under the License.
 */
 
-package batect.execution
+package batect.ioc
 
-import batect.execution.model.events.TaskEventSink
-import batect.ui.containerio.ContainerIOStreamingOptions
-
-data class TaskStepRunContext(
-    val eventSink: TaskEventSink,
-    val runOptions: RunOptions,
-    val cancellationContext: CancellationContext,
-    val ioStreamingOptions: ContainerIOStreamingOptions
-)
+enum class RunOptionsType {
+    Overall,
+    Task
+}

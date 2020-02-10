@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -22,11 +22,12 @@ import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
 class FlagOption(
+    group: OptionGroup,
     longName: String,
     description: String,
     val defaultValueProvider: DefaultValueProvider<Boolean>,
     shortName: Char? = null
-) : OptionDefinition(longName, description, false, shortName), ReadOnlyProperty<OptionParserContainer, Boolean> {
+) : OptionDefinition(group, longName, description, false, shortName), ReadOnlyProperty<OptionParserContainer, Boolean> {
     private var value: PossibleValue<Boolean> = defaultValueProvider.value
     override var valueSource: OptionValueSource = OptionValueSource.Default
         private set

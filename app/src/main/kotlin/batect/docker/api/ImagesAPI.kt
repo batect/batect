@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -43,7 +43,6 @@ import okio.Sink
 import okio.sink
 import java.io.ByteArrayOutputStream
 import java.util.Base64
-import java.util.concurrent.TimeUnit
 
 class ImagesAPI(
     httpConfig: DockerHttpConfig,
@@ -198,7 +197,7 @@ class ImagesAPI(
             .addRegistryCredentialsForPull(registryCredentials)
             .build()
 
-        clientWithTimeout(20, TimeUnit.SECONDS)
+        clientWithNoTimeout()
             .newCall(request)
             .executeInCancellationContext(cancellationContext) { response ->
                 checkForFailure(response) { error ->

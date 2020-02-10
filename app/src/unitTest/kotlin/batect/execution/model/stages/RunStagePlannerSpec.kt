@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import batect.config.PullImage
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
+import batect.docker.client.DockerContainerType
 import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerEntrypointResolver
@@ -38,7 +39,6 @@ import batect.execution.model.rules.run.RunContainerSetupCommandsStepRule
 import batect.execution.model.rules.run.RunContainerStepRule
 import batect.execution.model.rules.run.WaitForContainerToBecomeHealthyStepRule
 import batect.os.Command
-import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
 import batect.testutils.on
@@ -66,10 +66,10 @@ object RunStagePlannerSpec : Spek({
         }
 
         val logger by createLoggerForEachTest()
-        val planner by createForEachTest { RunStagePlanner(logger) }
+        val containerType = DockerContainerType.Windows
 
-        fun Suite.itCreatesStageWithRules(graph: ContainerDependencyGraph, expectedRules: Map<String, TaskStepRule>) {
-            val stage by runForEachTest { planner.createStage(graph) }
+        fun Suite.itCreatesStageWithRules(config: Configuration, graph: ContainerDependencyGraph, expectedRules: Map<String, TaskStepRule>) {
+            val stage by runForEachTest { RunStagePlanner(config, graph, containerType, logger).createStage() }
 
             expectedRules.forEach { (description, expectedRule) ->
                 it("includes a rule to $description") {
@@ -97,9 +97,10 @@ object RunStagePlannerSpec : Spek({
                     val allContainersInNetwork = setOf(container)
 
                     itCreatesStageWithRules(
+                        config,
                         graph,
                         mapOf(
-                            "create the task network" to CreateTaskNetworkStepRule,
+                            "create the task network" to CreateTaskNetworkStepRule(containerType),
                             "pull the image for the task container" to PullImageStepRule(PullImage("some-image")),
                             "create the task container" to CreateContainerStepRule(container, graph.nodeFor(container).config, allContainersInNetwork),
                             "run the task container" to RunContainerStepRule(container, emptySet()),
@@ -117,9 +118,10 @@ object RunStagePlannerSpec : Spek({
                     val allContainersInNetwork = setOf(container)
 
                     itCreatesStageWithRules(
+                        config,
                         graph,
                         mapOf(
-                            "create the task network" to CreateTaskNetworkStepRule,
+                            "create the task network" to CreateTaskNetworkStepRule(containerType),
                             "build the image for the task container" to BuildImageStepRule(imageSource, setOf("the-project-the-container")),
                             "create the task container" to CreateContainerStepRule(container, graph.nodeFor(container).config, allContainersInNetwork),
                             "run the task container" to RunContainerStepRule(container, emptySet()),
@@ -138,9 +140,10 @@ object RunStagePlannerSpec : Spek({
                 val allContainersInNetwork = setOf(container)
 
                 itCreatesStageWithRules(
+                    config,
                     graph,
                     mapOf(
-                        "create the task network" to CreateTaskNetworkStepRule,
+                        "create the task network" to CreateTaskNetworkStepRule(containerType),
                         "pull the image for the task container" to PullImageStepRule(PullImage("some-image")),
                         "create the task container with the additional environment variables" to CreateContainerStepRule(container, graph.nodeFor(container).config, allContainersInNetwork),
                         "run the task container" to RunContainerStepRule(container, emptySet()),
@@ -158,9 +161,10 @@ object RunStagePlannerSpec : Spek({
                 val allContainersInNetwork = setOf(container)
 
                 itCreatesStageWithRules(
+                    config,
                     graph,
                     mapOf(
-                        "create the task network" to CreateTaskNetworkStepRule,
+                        "create the task network" to CreateTaskNetworkStepRule(containerType),
                         "pull the image for the task container" to PullImageStepRule(PullImage("some-image")),
                         "create the task container with the additional environment variables" to CreateContainerStepRule(container, graph.nodeFor(container).config, allContainersInNetwork),
                         "run the task container" to RunContainerStepRule(container, emptySet()),
@@ -188,9 +192,10 @@ object RunStagePlannerSpec : Spek({
                 val allContainersInNetwork = setOf(taskContainer, container1, container2, container3)
 
                 itCreatesStageWithRules(
+                    config,
                     graph,
                     mapOf(
-                        "create the task network" to CreateTaskNetworkStepRule,
+                        "create the task network" to CreateTaskNetworkStepRule(containerType),
                         "build the image for the task container" to BuildImageStepRule(taskContainerImageSource, setOf("the-project-task-container")),
                         "build the image for container 1" to BuildImageStepRule(container1ImageSource, setOf("the-project-container-1")),
                         "pull the image for container 2" to PullImageStepRule(container2ImageSource),
@@ -226,9 +231,10 @@ object RunStagePlannerSpec : Spek({
                 val allContainersInNetwork = setOf(taskContainer, container1, container2)
 
                 itCreatesStageWithRules(
+                    config,
                     graph,
                     mapOf(
-                        "create the task network" to CreateTaskNetworkStepRule,
+                        "create the task network" to CreateTaskNetworkStepRule(containerType),
                         "pull the image for the task container" to PullImageStepRule(taskContainerImageSource),
                         "pull the image shared by both container 1 and 2" to PullImageStepRule(sharedImageSource),
                         "create the task container" to CreateContainerStepRule(taskContainer, graph.nodeFor(taskContainer).config, allContainersInNetwork),
@@ -260,9 +266,10 @@ object RunStagePlannerSpec : Spek({
                         val allContainersInNetwork = setOf(taskContainer, container1, container2)
 
                         itCreatesStageWithRules(
+                            config,
                             graph,
                             mapOf(
-                                "create the task network" to CreateTaskNetworkStepRule,
+                                "create the task network" to CreateTaskNetworkStepRule(containerType),
                                 "pull the image for the task container" to PullImageStepRule(PullImage("task-image")),
                                 "build the image shared by both container 1 and 2" to BuildImageStepRule(imageSource, setOf("the-project-container-1", "the-project-container-2")),
                                 "create the task container" to CreateContainerStepRule(taskContainer, graph.nodeFor(taskContainer).config, allContainersInNetwork),
@@ -293,9 +300,10 @@ object RunStagePlannerSpec : Spek({
                         val allContainersInNetwork = setOf(taskContainer, container1, container2)
 
                         itCreatesStageWithRules(
+                            config,
                             graph,
                             mapOf(
-                                "create the task network" to CreateTaskNetworkStepRule,
+                                "create the task network" to CreateTaskNetworkStepRule(containerType),
                                 "pull the image for the task container" to PullImageStepRule(PullImage("task-image")),
                                 "build the image for container 1" to BuildImageStepRule(container1ImageSource, setOf("the-project-container-1")),
                                 "build the image for container 2" to BuildImageStepRule(container2ImageSource, setOf("the-project-container-2")),
@@ -327,9 +335,10 @@ object RunStagePlannerSpec : Spek({
                     val allContainersInNetwork = setOf(taskContainer, container1, container2)
 
                     itCreatesStageWithRules(
+                        config,
                         graph,
                         mapOf(
-                            "create the task network" to CreateTaskNetworkStepRule,
+                            "create the task network" to CreateTaskNetworkStepRule(containerType),
                             "pull the image for the task container" to PullImageStepRule(PullImage("task-image")),
                             "build the image for container 1" to BuildImageStepRule(container1ImageSource, setOf("the-project-container-1")),
                             "build the image for container 2" to BuildImageStepRule(container2ImageSource, setOf("the-project-container-2")),

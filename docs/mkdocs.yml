@@ -1,11 +1,11 @@
 site_name: batect documentation
-site_url: https://batect.charleskorn.com
+site_url: https://batect.dev
 site_description: Documentation for batect, the build and testing environments as code tool
 site_author: Charles Korn
-copyright: Copyright &copy; 2017-2019 Charles Korn.
+copyright: Copyright &copy; 2017-2020 Charles Korn.
 
-repo_name: charleskorn/batect
-repo_url: https://github.com/charleskorn/batect
+repo_name: batect/batect
+repo_url: https://github.com/batect/batect
 edit_uri: edit/master/docs/content
 
 docs_dir: content
@@ -28,7 +28,7 @@ extra_javascript:
 extra:
   social:
   - type: 'github'
-    link: 'https://github.com/charleskorn/batect'
+    link: 'https://github.com/batect/batect'
   - type: 'comments'
     link: 'https://spectrum.chat/batect'
 
@@ -49,6 +49,7 @@ nav:
 
   - Configuration file reference:
     - Overview: "config/Overview.md"
+    - Config Variables: "config/ConfigVariables.md"
     - Containers: "config/Containers.md"
     - Tasks: "config/Tasks.md"
 
@@ -59,6 +60,7 @@ nav:
   - Language and tool-specific information:
     - CircleCI: "tools/CircleCI.md"
     - Docker: "tools/Docker.md"
+    - GitHub Actions: "tools/GitHubActions.md"
     - Golang: "tools/Golang.md"
     - Java: "tools/Java.md"
     - Node.js: "tools/Node.md"
@@ -75,8 +77,8 @@ nav:
     - Windows: "tips/Windows.md"
 
   - Sample projects: "SampleProjects.md"
-  - Release notes: "https://github.com/charleskorn/batect/releases"
-  - Roadmap: "https://github.com/charleskorn/batect/blob/master/ROADMAP.md"
+  - Release notes: "https://github.com/batect/batect/releases"
+  - Roadmap: "https://github.com/batect/batect/blob/master/ROADMAP.md"
 
 google_analytics:
   - 'UA-63947227-2'

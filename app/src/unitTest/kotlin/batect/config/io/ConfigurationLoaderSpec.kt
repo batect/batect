@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package batect.config.io
 
 import batect.config.BuildImage
+import batect.config.ConfigVariableDefinition
 import batect.config.Configuration
 import batect.config.HealthCheckConfig
 import batect.config.LiteralValue
@@ -650,6 +651,54 @@ object ConfigurationLoaderSpec : Spek({
             }
         }
 
+        on("loading a valid configuration file with a config variable with no optional fields specified") {
+            val configString = """
+                    |project_name: the_cool_project
+                    |
+                    |config_variables:
+                    |  my-config-var: {}
+                    """.trimMargin()
+
+            val config by runForEachTest { loadConfiguration(configString) }
+
+            it("should load the config variable specified") {
+                val configVariable = config.configVariables.getValue("my-config-var")
+                assertThat(configVariable, equalTo(ConfigVariableDefinition("my-config-var", null, null)))
+            }
+        }
+
+        on("loading a valid configuration file with a config variable with all optional fields specified") {
+            val configString = """
+                    |project_name: the_cool_project
+                    |
+                    |config_variables:
+                    |  my-config-var:
+                    |    description: This is my config variable
+                    |    default: my-default-value
+                    """.trimMargin()
+
+            val config by runForEachTest { loadConfiguration(configString) }
+
+            it("should load the config variable specified") {
+                val configVariable = config.configVariables.getValue("my-config-var")
+                assertThat(configVariable, equalTo(ConfigVariableDefinition("my-config-var", "This is my config variable", "my-default-value")))
+            }
+        }
+
+        on("loading a configuration file where a config variable is defined twice") {
+            val config = """
+                    |project_name: the_cool_project
+                    |
+                    |config_variables:
+                    |  my-config-var: {}
+                    |  my-config-var: {}
+                    """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'my-config-var'. It was previously given at line 4, column 3.") and withLineNumber(5) and withFileName(testFileName)))
+            }
+        }
+
         on("loading a configuration file where the project name is given twice") {
             val config = """
                 |project_name: the_cool_project
@@ -668,7 +717,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Unknown property 'thing'. Known properties are: containers, project_name, tasks") and withLineNumber(2) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Unknown property 'thing'. Known properties are: config_variables, containers, project_name, tasks") and withLineNumber(2) and withFileName(testFileName)))
             }
         }
 

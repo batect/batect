@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package batect.ui.interleaved
 
 import batect.config.Container
 import batect.config.ImageSource
-import batect.execution.RunOptions
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
@@ -62,8 +61,7 @@ class InterleavedEventLogger(
     val taskContainer: Container,
     val containers: Set<Container>,
     private val output: InterleavedOutput,
-    val failureErrorMessageFormatter: FailureErrorMessageFormatter,
-    val runOptions: RunOptions
+    val failureErrorMessageFormatter: FailureErrorMessageFormatter
 ) : EventLogger {
     private val haveStartedCleanup = AtomicBoolean(false)
     private val commands = ConcurrentHashMap<Container, Command>()
@@ -225,10 +223,10 @@ class InterleavedEventLogger(
     }
 
     private fun printErrorForContainer(container: Container, event: TaskFailedEvent) {
-        output.printErrorForContainer(container, failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
+        output.printErrorForContainer(container, failureErrorMessageFormatter.formatErrorMessage(event))
     }
 
     private fun printErrorForTask(event: TaskFailedEvent) {
-        output.printErrorForTask(failureErrorMessageFormatter.formatErrorMessage(event, runOptions))
+        output.printErrorForTask(failureErrorMessageFormatter.formatErrorMessage(event))
     }
 }

@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ object DockerUtils {
             .redirectErrorStream(true)
             .start()
 
-        val exitCode = process.waitFor()
         val output = InputStreamReader(process.inputStream).readText()
+        val exitCode = process.waitFor()
 
         if (exitCode != 0) {
             throw Exception("Retrieving list of containers from Docker failed with exit code $exitCode. Output from Docker was: $output")
@@ -41,8 +41,8 @@ object DockerUtils {
             .redirectErrorStream(true)
             .start()
 
-        val exitCode = process.waitFor()
         val output = InputStreamReader(process.inputStream).readText()
+        val exitCode = process.waitFor()
 
         if (exitCode != 0) {
             throw Exception("Retrieving list of networks from Docker failed with exit code $exitCode. Output from Docker was: $output")

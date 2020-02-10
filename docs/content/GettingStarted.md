@@ -1,6 +1,6 @@
 # Getting started tutorial
 
-The samples shown below are taken from the [Java sample project](https://github.com/charleskorn/batect-sample-java).
+The samples shown below are taken from the [Java sample project](https://github.com/batect/batect-sample-java).
 
 ## Installation
 
@@ -121,7 +121,7 @@ to start running those tests until it's actually ready to use. While Postgres is
 and other things can take anywhere from a few moments to a minute or two to start up and be ready. We can use
 [Docker's health check feature](https://docs.docker.com/engine/reference/builder/#healthcheck) to indicate when a container is ready for use.
 
-In our case, we can take [the health check script](https://github.com/charleskorn/batect-sample-java/tree/master/.batect/database/health-check.sh)
+In our case, we can take [the health check script](https://github.com/batect/batect-sample-java/tree/master/.batect/database/health-check.sh)
 from the sample project and copy it into our `.batect/database` folder. All it does is try to issue a simple query against the
 database - if that succeeds, we can assume that the database is up and running. (There's
 [a collection of sample health check scripts provided by Docker](https://github.com/docker-library/healthcheck/) you can use.)

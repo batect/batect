@@ -24,7 +24,7 @@ Some solutions for this include:
   required runtime components installed alongside it.
 
 (Have you tried something else that worked? Or do you use another IDE or text editor that supports using runtimes inside a
-container? Please [submit a PR](https://github.com/charleskorn/batect/pulls) to add to the list above.)
+container? Please [submit a PR](https://github.com/batect/batect/pulls) to add to the list above.)
 
 ## Editing `batect.yml`
 

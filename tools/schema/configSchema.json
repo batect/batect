@@ -1,7 +1,7 @@
 {
   "title": "JSON schema for batect configuration files",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "id": "https://batect.charleskorn.com/configSchema.json",
+  "id": "https://batect.dev/configSchema.json",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -14,6 +14,9 @@
     },
     "tasks": {
       "$ref": "#/definitions/tasks"
+    },
+    "config_variables": {
+      "$ref": "#/definitions/configVariablesList"
     },
     "project_name": {
       "type": "string",
@@ -456,6 +459,30 @@
         "required": [
           "command"
         ]
+      }
+    },
+    "configVariablesList": {
+      "type": "object",
+      "description": "Definitions for each of the config variables used to configure your tasks and containers",
+      "additionalProperties": {
+        "$ref": "#/definitions/configVariable"
+      }
+    },
+    "configVariable": {
+      "type": "object",
+      "description": "Definition of a single config variable",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of the purpose of the variable",
+          "minLength": 1
+        },
+        "default": {
+          "type": "string",
+          "description": "Default value of the variable if one is not provided elsewhere",
+          "minLength": 1
+        }
       }
     }
   }

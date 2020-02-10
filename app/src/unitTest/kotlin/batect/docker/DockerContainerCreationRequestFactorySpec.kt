@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -58,7 +58,11 @@ object DockerContainerCreationRequestFactorySpec : Spek({
             on { environmentVariablesFor(any(), any(), eq(propagateProxyEnvironmentVariables), eq(terminalType), eq(allContainersInNetwork)) } doReturn expectedEnvironmentVariables
         }
 
-        val factory = DockerContainerCreationRequestFactory(environmentVariablesProvider)
+        val nameGenerator = mock<DockerContainerNameGenerator> {
+            on { generateNameFor(any()) } doReturn "the-container-name"
+        }
+
+        val factory = DockerContainerCreationRequestFactory(environmentVariablesProvider, nameGenerator)
 
         given("there are no additional volume mounts") {
             val additionalVolumeMounts = emptySet<VolumeMount>()
@@ -97,6 +101,10 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                         terminalType,
                         allContainersInNetwork
                     )
+
+                    it("populates the container name on the request") {
+                        assertThat(request.name, equalTo("the-container-name"))
+                    }
 
                     it("populates the image on the request") {
                         assertThat(request.image, equalTo(image))

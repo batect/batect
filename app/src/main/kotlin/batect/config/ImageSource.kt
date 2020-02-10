@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import java.nio.file.Path
 
 sealed class ImageSource
 
-data class BuildImage(val buildDirectory: Path, val buildArgs: Map<String, EnvironmentVariableExpression> = emptyMap(), val dockerfilePath: String = "Dockerfile") : ImageSource() {
+data class BuildImage(val buildDirectory: Path, val buildArgs: Map<String, VariableExpression> = emptyMap(), val dockerfilePath: String = "Dockerfile") : ImageSource() {
     override fun toString(): String = "${this.javaClass.simpleName}(" +
         "build directory: '$buildDirectory', " +
         "build args: [${buildArgs.map { "${it.key}=${it.value}" }.joinToString(", ")}], " +

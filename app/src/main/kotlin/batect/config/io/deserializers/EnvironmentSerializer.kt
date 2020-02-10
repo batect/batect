@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 package batect.config.io.deserializers
 
-import batect.config.EnvironmentVariableExpression
+import batect.config.VariableExpression
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.internal.StringSerializer
 import kotlinx.serialization.map
 
 internal object EnvironmentSerializer :
-    KSerializer<Map<String, EnvironmentVariableExpression>> by (StringSerializer to EnvironmentVariableExpression.serializer()).map
+    KSerializer<Map<String, VariableExpression>> by (StringSerializer to VariableExpression.serializer()).map

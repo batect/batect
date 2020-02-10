@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -57,7 +57,6 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayOutputStream
 import java.nio.file.Paths
-import java.util.concurrent.TimeUnit
 
 object ImagesAPISpec : Spek({
     describe("a Docker images API client") {
@@ -322,8 +321,8 @@ object ImagesAPISpec : Spek({
                     assertThat(progressReceiver, receivedAllUpdatesFrom(response))
                 }
 
-                it("configures the HTTP client with a longer timeout to allow for the daemon to contact the registry") {
-                    verify(longTimeoutClientBuilder).readTimeout(20, TimeUnit.SECONDS)
+                it("configures the HTTP client with no timeout to allow for slow layer extraction operations") {
+                    verify(longTimeoutClientBuilder).readTimeout(eq(0), any())
                 }
 
                 it("registers the API call with the cancellation context") {
@@ -353,8 +352,8 @@ object ImagesAPISpec : Spek({
                     assertThat(progressReceiver, receivedAllUpdatesFrom(response))
                 }
 
-                it("configures the HTTP client with a longer timeout to allow for the daemon to contact the registry") {
-                    verify(longTimeoutClientBuilder).readTimeout(20, TimeUnit.SECONDS)
+                it("configures the HTTP client with no timeout to allow for slow layer extraction operations") {
+                    verify(longTimeoutClientBuilder).readTimeout(eq(0), any())
                 }
 
                 it("registers the API call with the cancellation context") {
@@ -399,8 +398,7 @@ object ImagesAPISpec : Spek({
                 it("throws an appropriate exception with all line endings corrected for the host system") {
                     assertThat({ api.pull(imageName, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }, throws<ImagePullFailedException>(
                         withMessage("Pulling image 'some-image' failed: Server error: 404 trying to fetch remote history for some-image.SYSTEM_LINE_SEPARATORMore details on following line.")
-                    )
-                    )
+                    ))
                 }
 
                 it("sends all progress updates to the receiver except for the error") {

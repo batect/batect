@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -241,7 +241,7 @@ object ContainerSpec : Spek({
                 val result by runForEachTest { parser.parse(Container.Companion, yaml) }
 
                 it("returns the expected container configuration") {
-                    assertThat(result.imageSource, equalTo(BuildImage(osIndependentPath("/resolved/container-1-build-dir"), mapOf("SOME_ARG" to LiteralValue("some_value"), "SOME_DYNAMIC_VALUE" to ReferenceValue("host_var")), "some-Dockerfile")))
+                    assertThat(result.imageSource, equalTo(BuildImage(osIndependentPath("/resolved/container-1-build-dir"), mapOf("SOME_ARG" to LiteralValue("some_value"), "SOME_DYNAMIC_VALUE" to EnvironmentVariableReference("host_var")), "some-Dockerfile")))
                     assertThat(result.command, equalTo(Command.parse("do-the-thing.sh some-param")))
                     assertThat(result.entrypoint, equalTo(Command.parse("sh")))
                     assertThat(

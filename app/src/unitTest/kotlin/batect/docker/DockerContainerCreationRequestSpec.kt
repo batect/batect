@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ object DockerContainerCreationRequestSpec : Spek({
     describe("a Docker container creation request") {
         given("a request with all values provided") {
             val request = DockerContainerCreationRequest(
+                "the-container-name",
                 DockerImage("the-image"),
                 DockerNetwork("the-network"),
                 listOf("do-the-thing"),
@@ -126,6 +127,7 @@ object DockerContainerCreationRequestSpec : Spek({
 
         given("a request with only the minimal set of values provided") {
             val request = DockerContainerCreationRequest(
+                "the-container-name",
                 DockerImage("the-image"),
                 DockerNetwork("the-network"),
                 emptyList(),

@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -36,10 +36,14 @@ import batect.os.Dimensions
 import batect.os.SystemInfo
 import batect.utils.Json
 import jnr.constants.platform.Signal
+import kotlinx.serialization.json.JsonDecodingException
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.json
 import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
 import okhttp3.Request
+import okio.BufferedSource
+import java.lang.Exception
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 
@@ -57,6 +61,7 @@ class ContainersAPI(
 
         val url = urlForContainers.newBuilder()
             .addPathSegment("create")
+            .addQueryParameter("name", creationRequest.name)
             .build()
 
         val body = creationRequest.toJson()
@@ -82,9 +87,10 @@ class ContainersAPI(
             logger.info {
                 message("Container created.")
                 data("containerId", containerId)
+                data("containerName", creationRequest.name)
             }
 
-            return DockerContainer(containerId)
+            return DockerContainer(containerId, creationRequest.name)
         }
     }
 
@@ -254,12 +260,11 @@ class ContainersAPI(
                     throw DockerException("Getting events for container '${container.id}' failed: ${error.message}")
                 }
 
-                val firstEvent = response.body!!.source().readUtf8LineStrict()
-                val parsedEvent = Json.parser.parseJson(firstEvent).jsonObject
+                val parsedEvent = response.body!!.source().readJsonObject()
 
                 logger.info {
                     message("Received event for container.")
-                    data("event", firstEvent)
+                    data("event", parsedEvent.toString())
                 }
 
                 return DockerEvent(parsedEvent.getValue("status").primitive.content)
@@ -470,7 +475,7 @@ class ContainersAPI(
                     throw ContainerStoppedException(message)
                 }
 
-                if (error.statusCode == 500 && error.message.trim() == "bad file descriptor: unknown") {
+                if (error.statusCode == 500 && (error.message.trim() == "bad file descriptor: unknown" || error.message.endsWith("the handle has already been closed"))) {
                     throw ContainerStoppedException("$message (the container may have stopped quickly after starting)")
                 }
 
@@ -496,4 +501,26 @@ class ContainersAPI(
         .build()
 
     private fun LogMessageBuilder.data(key: String, value: DockerContainerCreationRequest) = this.data(key, value, DockerContainerCreationRequest.serializer())
+
+    // HACK: This method is a workaround for two issues:
+    // - starting with Docker 19.03.5, the /events API no longer sends new line characters between events, so we can't just read a full line of the response and parse that (see https://github.com/batect/batect/issues/393)
+    // - kotlinx.serialization doesn't support reading JSON from a stream, it only supports reading from a string (see https://github.com/Kotlin/kotlinx.serialization/issues/204)
+    //
+    // Furthermore, we can't just read as much as we can from the stream in each go, because kotlinx.serialization doesn't allow you to just read as much as you can from the source string and stop once it's read a full object.
+    private fun BufferedSource.readJsonObject(): JsonObject {
+        val buffer = StringBuffer()
+
+        while (true) {
+            buffer.append(this.readUtf8CodePoint().toChar())
+
+            try {
+                return Json.parser.parseJson(buffer.toString()).jsonObject
+            } catch (e: Exception) {
+                when (e) {
+                    is JsonDecodingException, is StringIndexOutOfBoundsException -> {} // Haven't read a full JSON object yet, keep reading.
+                    else -> throw e
+                }
+            }
+        }
+    }
 }

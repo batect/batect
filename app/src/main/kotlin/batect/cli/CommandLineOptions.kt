@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package batect.cli
 
+import batect.execution.ConfigVariablesProvider
 import batect.logging.FileLogSink
 import batect.logging.LogSink
 import batect.logging.NullLogSink
@@ -35,6 +36,7 @@ data class CommandLineOptions(
     val runUpgrade: Boolean = false,
     val listTasks: Boolean = false,
     val configurationFileName: Path = Paths.get("batect.yml"),
+    val configVariablesSourceFile: Path? = null,
     val logFileName: Path? = null,
     val requestedOutputStyle: OutputStyle? = null,
     val disableColorOutput: Boolean = false,
@@ -44,6 +46,8 @@ data class CommandLineOptions(
     val dontPropagateProxyEnvironmentVariables: Boolean = false,
     val taskName: String? = null,
     val additionalTaskCommandArguments: Iterable<String> = emptyList(),
+    val configVariableOverrides: Map<String, String> = emptyMap(),
+    val imageOverrides: Map<String, String> = emptyMap(),
     val dockerHost: String = "tcp://set-to-default-value-in/CommandLineOptionsParser",
     val dockerUseTLS: Boolean = false,
     val dockerVerifyTLS: Boolean = false,
@@ -54,6 +58,7 @@ data class CommandLineOptions(
     fun extend(originalKodein: DKodein): DKodein = Kodein.direct {
         extend(originalKodein, copy = Copy.All)
         bind<CommandLineOptions>() with instance(this@CommandLineOptions)
+        bind<ConfigVariablesProvider>() with instance(ConfigVariablesProvider(configVariableOverrides, configVariablesSourceFile))
 
         bind<LogSink>() with singleton {
             if (logFileName == null) {

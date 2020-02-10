@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import batect.config.Task
 import batect.config.TaskRunConfiguration
 import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerDependencyGraphNode
-import batect.execution.RunOptions
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -59,6 +58,7 @@ object EventLoggerProviderSpec : Spek({
         val container1 = Container("container-1", imageSourceDoesNotMatter())
         val container2 = Container("container-2", imageSourceDoesNotMatter())
         val taskContainer = Container("task-container", imageSourceDoesNotMatter())
+        val task = Task("the-task", TaskRunConfiguration("the-container"))
         val graph = mock<ContainerDependencyGraph> {
             on { allNodes } doReturn setOf(
                 ContainerDependencyGraphNode(container1, mock(), false, emptySet(), mock()),
@@ -66,16 +66,12 @@ object EventLoggerProviderSpec : Spek({
             )
 
             on { taskContainerNode } doReturn ContainerDependencyGraphNode(taskContainer, mock(), true, emptySet(), mock())
-
-            on { task } doReturn Task("the-task", TaskRunConfiguration("the-container"))
         }
 
         val startupProgressDisplay = mock<StartupProgressDisplay>()
         val startupProgressDisplayProvider = mock<StartupProgressDisplayProvider> {
             on { createForDependencyGraph(graph) } doReturn startupProgressDisplay
         }
-
-        val runOptions = mock<RunOptions>()
 
         fun Suite.itReturnsAQuietEventLogger(loggerCreator: () -> EventLogger) {
             val logger by createForEachTest(loggerCreator)
@@ -86,10 +82,6 @@ object EventLoggerProviderSpec : Spek({
 
             it("passes the failure error message formatter to the event logger") {
                 assertThat((logger as QuietEventLogger).failureErrorMessageFormatter, equalTo(failureErrorMessageFormatter))
-            }
-
-            it("passes the run options to the event logger") {
-                assertThat((logger as QuietEventLogger).runOptions, equalTo(runOptions))
             }
 
             it("passes the error console to the event logger") {
@@ -120,10 +112,6 @@ object EventLoggerProviderSpec : Spek({
                 assertThat((logger as SimpleEventLogger).failureErrorMessageFormatter, equalTo(failureErrorMessageFormatter))
             }
 
-            it("passes the run options to the event logger") {
-                assertThat((logger as SimpleEventLogger).runOptions, equalTo(runOptions))
-            }
-
             it("passes the console to the event logger") {
                 assertThat((logger as SimpleEventLogger).console, equalTo(console))
             }
@@ -146,10 +134,6 @@ object EventLoggerProviderSpec : Spek({
 
             it("passes the failure error message formatter to the event logger") {
                 assertThat((logger as FancyEventLogger).failureErrorMessageFormatter, equalTo(failureErrorMessageFormatter))
-            }
-
-            it("passes the run options to the event logger") {
-                assertThat((logger as FancyEventLogger).runOptions, equalTo(runOptions))
             }
 
             it("passes the console to the event logger") {
@@ -192,10 +176,6 @@ object EventLoggerProviderSpec : Spek({
                 assertThat((logger as InterleavedEventLogger).failureErrorMessageFormatter, equalTo(failureErrorMessageFormatter))
             }
 
-            it("passes the run options to the event logger") {
-                assertThat((logger as InterleavedEventLogger).runOptions, equalTo(runOptions))
-            }
-
             it("sets the I/O streaming options to the expected value") {
                 val containers = setOf(container1, container2)
                 val output = InterleavedOutput("the-task", containers, console)
@@ -210,7 +190,7 @@ object EventLoggerProviderSpec : Spek({
 
             val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false) }
 
-            itReturnsAQuietEventLogger { provider.getEventLogger(graph, runOptions) }
+            itReturnsAQuietEventLogger { provider.getEventLogger(task, graph) }
         }
 
         on("when simple output has been requested") {
@@ -220,7 +200,7 @@ object EventLoggerProviderSpec : Spek({
 
             val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false) }
 
-            itReturnsASimpleEventLogger { provider.getEventLogger(graph, runOptions) }
+            itReturnsASimpleEventLogger { provider.getEventLogger(task, graph) }
         }
 
         on("when fancy output has been requested") {
@@ -230,7 +210,7 @@ object EventLoggerProviderSpec : Spek({
 
             val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false) }
 
-            itReturnsAFancyEventLogger(startupProgressDisplay) { provider.getEventLogger(graph, runOptions) }
+            itReturnsAFancyEventLogger(startupProgressDisplay) { provider.getEventLogger(task, graph) }
         }
 
         on("when interleaved output has been requested") {
@@ -240,7 +220,7 @@ object EventLoggerProviderSpec : Spek({
 
             val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false) }
 
-            itReturnsAnInterleavedEventLogger { provider.getEventLogger(graph, runOptions) }
+            itReturnsAnInterleavedEventLogger { provider.getEventLogger(task, graph) }
         }
 
         given("no output style has been requested") {
@@ -253,7 +233,7 @@ object EventLoggerProviderSpec : Spek({
 
                 val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput) }
 
-                itReturnsASimpleEventLogger { provider.getEventLogger(graph, runOptions) }
+                itReturnsASimpleEventLogger { provider.getEventLogger(task, graph) }
             }
 
             given("colored output has not been disabled") {
@@ -264,7 +244,7 @@ object EventLoggerProviderSpec : Spek({
 
                     val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput) }
 
-                    itReturnsAFancyEventLogger(startupProgressDisplay) { provider.getEventLogger(graph, runOptions) }
+                    itReturnsAFancyEventLogger(startupProgressDisplay) { provider.getEventLogger(task, graph) }
                 }
 
                 on("when the console does not support interactivity") {
@@ -272,7 +252,7 @@ object EventLoggerProviderSpec : Spek({
 
                     val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput) }
 
-                    itReturnsASimpleEventLogger { provider.getEventLogger(graph, runOptions) }
+                    itReturnsASimpleEventLogger { provider.getEventLogger(task, graph) }
                 }
             }
         }

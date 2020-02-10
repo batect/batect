@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,11 +14,6 @@
    limitations under the License.
 */
 
-package batect.docker.api
+package batect.cli.options
 
-data class DockerAPI(
-    val containers: ContainersAPI,
-    val images: ImagesAPI,
-    val networks: NetworksAPI,
-    val systemInfo: SystemInfoAPI
-)
+data class OptionGroup(val name: String)

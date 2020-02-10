@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import batect.config.PullImage
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.docker.client.DockerContainerType
 import batect.execution.ContainerRuntimeConfiguration
 import java.nio.file.Path
 
@@ -38,8 +39,8 @@ data class PullImageStep(val source: PullImage) : TaskStep() {
     override fun toString() = "${this.javaClass.simpleName}(source: $source)"
 }
 
-object CreateTaskNetworkStep : TaskStep() {
-    override fun toString(): String = this.javaClass.simpleName
+data class CreateTaskNetworkStep(val containerType: DockerContainerType) : TaskStep() {
+    override fun toString(): String = "${this.javaClass.simpleName}(container type: $containerType)"
 }
 
 data class CreateContainerStep(

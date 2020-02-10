@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,10 +17,12 @@
 package batect.cli.options
 
 abstract class OptionDefinition(
+    val group: OptionGroup,
     val longName: String,
     val description: String,
     val acceptsValue: Boolean,
-    val shortName: Char? = null
+    val shortName: Char? = null,
+    val allowMultiple: Boolean = false
 ) {
     private var alreadySeen: Boolean = false
     abstract val valueSource: OptionValueSource
@@ -55,7 +57,7 @@ abstract class OptionDefinition(
             throw IllegalArgumentException("List of arguments cannot be empty.")
         }
 
-        if (alreadySeen) {
+        if (alreadySeen && !allowMultiple) {
             return specifiedMultipleTimesError()
         }
 
@@ -84,6 +86,7 @@ abstract class OptionDefinition(
     internal abstract fun checkDefaultValue(): DefaultApplicationResult
 
     open val descriptionForHelp: String = description
+    open val valueFormatForHelp: String = "value"
 }
 
 sealed class DefaultApplicationResult {

@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -97,10 +97,11 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
                     .redirectErrorStream(true)
                     .start()
 
+                val output = InputStreamReader(inspectProcess.inputStream).readText().trim()
                 inspectProcess.waitFor()
 
                 assertThat(inspectProcess.exitValue(), equalTo(0))
-                assertThat(InputStreamReader(inspectProcess.inputStream).readText().trim(), equalTo("running"))
+                assertThat(output, equalTo("running"))
             }
 
             it("the command given to view the logs displays the logs from the container") {
@@ -112,9 +113,10 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
                     .redirectErrorStream(true)
                     .start()
 
+                val output = InputStreamReader(logsProcess.inputStream).readText().trim()
                 logsProcess.waitFor()
 
-                assertThat(InputStreamReader(logsProcess.inputStream).readText().trim(), equalTo("This is some output from the HTTP server"))
+                assertThat(output, equalTo("This is some output from the HTTP server"))
                 assertThat(logsProcess.exitValue(), equalTo(0))
             }
 

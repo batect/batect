@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.execution.ContainerRuntimeConfiguration
-import batect.execution.RunOptions
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ImageBuiltEvent
@@ -36,9 +35,9 @@ import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.execution.model.steps.CleanupStep
 import batect.execution.model.steps.CreateContainerStep
-import batect.execution.model.steps.CreateTaskNetworkStep
 import batect.execution.model.steps.PullImageStep
 import batect.execution.model.steps.RunContainerStep
+import batect.execution.model.steps.TaskStep
 import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.given
@@ -73,11 +72,10 @@ object SimpleEventLoggerSpec : Spek({
         val containers = setOf(taskContainer, container1, container2, container3)
 
         val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
-        val runOptions by createForEachTest { mock<RunOptions>() }
         val console by createForEachTest { mock<Console>() }
         val errorConsole by createForEachTest { mock<Console>() }
 
-        val logger by createForEachTest { SimpleEventLogger(containers, taskContainer, failureErrorMessageFormatter, runOptions, console, errorConsole, mock()) }
+        val logger by createForEachTest { SimpleEventLogger(containers, taskContainer, failureErrorMessageFormatter, console, errorConsole, mock()) }
         val setupCommands = listOf("a", "b", "c", "d").map { SetupCommand(Command.parse(it)) }
         val container = Container("the-cool-container", imageSourceDoesNotMatter(), setupCommands = setupCommands)
 
@@ -85,7 +83,7 @@ object SimpleEventLoggerSpec : Spek({
             on("when a 'task failed' event is posted") {
                 beforeEachTest {
                     val event = mock<TaskFailedEvent>()
-                    whenever(failureErrorMessageFormatter.formatErrorMessage(event, runOptions)).doReturn(TextRun("Something went wrong."))
+                    whenever(failureErrorMessageFormatter.formatErrorMessage(event)).doReturn(TextRun("Something went wrong."))
 
                     logger.postEvent(event)
                 }
@@ -330,7 +328,7 @@ object SimpleEventLoggerSpec : Spek({
 
                 on("when another kind of step is starting") {
                     beforeEachTest {
-                        val step = CreateTaskNetworkStep
+                        val step = mock<TaskStep>()
                         logger.postEvent(StepStartingEvent(step))
                     }
 

@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package batect.cli
 
+import batect.execution.ConfigVariablesProvider
 import batect.logging.FileLogSink
 import batect.logging.LogMessageWriter
 import batect.logging.LogSink
@@ -25,8 +26,10 @@ import batect.testutils.given
 import batect.testutils.on
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
+import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockitokotlin2.mock
 import org.kodein.di.Kodein
@@ -34,11 +37,16 @@ import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
 
 object CommandLineOptionsSpec : Spek({
     describe("a set of command line options") {
         given("no log file name has been provided") {
-            val options = CommandLineOptions(taskName = "some-task")
+            val options = CommandLineOptions(
+                taskName = "some-task",
+                configVariablesSourceFile = Paths.get("somefile.yml"),
+                configVariableOverrides = mapOf("a" to "b")
+            )
 
             on("extending an existing Kodein configuration") {
                 val originalKodein = Kodein.direct {
@@ -53,6 +61,13 @@ object CommandLineOptionsSpec : Spek({
 
                 it("adds itself to the Kodein configuration") {
                     assertThat(extendedKodein.instance<CommandLineOptions>(), equalTo(options))
+                }
+
+                it("creates a config variables provider to use") {
+                    assertThat(extendedKodein.instance<ConfigVariablesProvider>(),
+                        has(ConfigVariablesProvider::sourceFile, equalTo(options.configVariablesSourceFile))
+                        and has(ConfigVariablesProvider::commandLineOverrides, equalTo(options.configVariableOverrides))
+                    )
                 }
 
                 it("creates a null log sink to use") {

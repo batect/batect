@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -46,23 +46,23 @@ import batect.ui.text.Text
 import batect.ui.text.TextRun
 import batect.ui.text.join
 
-class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
+class FailureErrorMessageFormatter(private val runOptions: RunOptions, systemInfo: SystemInfo) {
     private val newLine = systemInfo.lineSeparator
 
-    fun formatErrorMessage(event: TaskFailedEvent, runOptions: RunOptions): TextRun = when (event) {
+    fun formatErrorMessage(event: TaskFailedEvent): TextRun = when (event) {
         is TaskNetworkCreationFailedEvent -> formatErrorMessage("Could not create network for task", event.message)
         is ImageBuildFailedEvent -> formatErrorMessage("Could not build image from directory '${event.source.buildDirectory}'", event.message)
         is ImagePullFailedEvent -> formatErrorMessage(Text("Could not pull image ") + Text.bold(event.source.imageName), event.message)
         is ContainerCreationFailedEvent -> formatErrorMessage(Text("Could not create container ") + Text.bold(event.container.name), event.message)
-        is ContainerDidNotBecomeHealthyEvent -> formatErrorMessage(Text("Container ") + Text.bold(event.container.name) + Text(" did not become healthy"), event.message) + hintToReRunWithCleanupDisabled(runOptions)
+        is ContainerDidNotBecomeHealthyEvent -> formatErrorMessage(Text("Container ") + Text.bold(event.container.name) + Text(" did not become healthy"), event.message) + hintToReRunWithCleanupDisabled
         is ContainerRunFailedEvent -> formatErrorMessage(Text("Could not run container ") + Text.bold(event.container.name), event.message)
         is ContainerStopFailedEvent -> formatErrorMessage(Text("Could not stop container ") + Text.bold(event.container.name), event.message)
         is ContainerRemovalFailedEvent -> formatErrorMessage(Text("Could not remove container ") + Text.bold(event.container.name), event.message)
         is TaskNetworkDeletionFailedEvent -> formatErrorMessage("Could not delete the task network", event.message)
         is TemporaryFileDeletionFailedEvent -> formatErrorMessage("Could not delete temporary file '${event.filePath}'", event.message)
         is TemporaryDirectoryDeletionFailedEvent -> formatErrorMessage("Could not delete temporary directory '${event.directoryPath}'", event.message)
-        is SetupCommandExecutionErrorEvent -> formatErrorMessage(Text("Could not run setup command ") + Text.bold(event.command.command.originalCommand) + Text(" in container ") + Text.bold(event.container.name), event.message) + hintToReRunWithCleanupDisabled(runOptions)
-        is SetupCommandFailedEvent -> formatErrorMessage(Text("Setup command ") + Text.bold(event.command.command.originalCommand) + Text(" in container ") + Text.bold(event.container.name) + Text(" failed"), setupCommandFailedBodyText(event.exitCode, event.output)) + hintToReRunWithCleanupDisabled(runOptions)
+        is SetupCommandExecutionErrorEvent -> formatErrorMessage(Text("Could not run setup command ") + Text.bold(event.command.command.originalCommand) + Text(" in container ") + Text.bold(event.container.name), event.message) + hintToReRunWithCleanupDisabled
+        is SetupCommandFailedEvent -> formatErrorMessage(Text("Setup command ") + Text.bold(event.command.command.originalCommand) + Text(" in container ") + Text.bold(event.container.name) + Text(" failed"), setupCommandFailedBodyText(event.exitCode, event.output)) + hintToReRunWithCleanupDisabled
         is ExecutionFailedEvent -> formatErrorMessage("An unexpected exception occurred during execution", event.message)
         is UserInterruptedExecutionEvent -> formatMessage("Task cancelled", TextRun("Interrupt received during execution"), "Waiting for outstanding operations to stop or finish before cleaning up...")
     }
@@ -71,9 +71,11 @@ class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
     private fun formatErrorMessage(headline: TextRun, body: String) = formatMessage("Error", headline, body)
     private fun formatMessage(type: String, headline: TextRun, body: String) = Text.red(Text.bold("$type: ") + headline + Text(".$newLine")) + Text(body)
 
-    private fun hintToReRunWithCleanupDisabled(runOptions: RunOptions): TextRun = when (runOptions.behaviourAfterFailure) {
-        CleanupOption.Cleanup -> Text("$newLine${newLine}You can re-run the task with ") + Text.bold("--${CommandLineOptionsParser.disableCleanupAfterFailureFlagName}") + Text(" to leave the created containers running to diagnose the issue.")
-        CleanupOption.DontCleanup -> TextRun("")
+    private val hintToReRunWithCleanupDisabled: TextRun by lazy {
+        when (runOptions.behaviourAfterFailure) {
+            CleanupOption.Cleanup -> Text("$newLine${newLine}You can re-run the task with ") + Text.bold("--${CommandLineOptionsParser.disableCleanupAfterFailureFlagName}") + Text(" to leave the created containers running to diagnose the issue.")
+            CleanupOption.DontCleanup -> TextRun("")
+        }
     }
 
     private fun setupCommandFailedBodyText(exitCode: Int, output: String): String = if (output.isEmpty()) {
@@ -118,14 +120,15 @@ class FailureErrorMessageFormatter(systemInfo: SystemInfo) {
     private fun containerOutputAndExecInstructions(container: Container, dockerContainer: DockerContainer, events: Set<TaskEvent>): TextRun {
         val neverStarted = events.none { it is ContainerStartedEvent && it.container == container }
         val alreadyExited = events.any { it is RunningContainerExitedEvent && it.container == container }
+        val containerName = dockerContainer.name!!
 
         val execCommand = if (neverStarted || alreadyExited) {
-            "docker start ${dockerContainer.id}; docker exec -it ${dockerContainer.id} <command>"
+            "docker start $containerName; docker exec -it $containerName <command>"
         } else {
-            "docker exec -it ${dockerContainer.id} <command>"
+            "docker exec -it $containerName <command>"
         }
 
-        return Text("For container ") + Text.bold(container.name) + Text(", view its output by running '") + Text.bold("docker logs ${dockerContainer.id}") + Text("', or run a command in the container with '") + Text.bold(execCommand) + Text("'.$newLine")
+        return Text("For container ") + Text.bold(container.name) + Text(", view its output by running '") + Text.bold("docker logs $containerName") + Text("', or run a command in the container with '") + Text.bold(execCommand) + Text("'.$newLine")
     }
 
     fun formatManualCleanupMessageAfterCleanupFailure(cleanupCommands: List<String>): TextRun {

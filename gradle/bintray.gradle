@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -38,9 +38,9 @@ task generateBintrayDescriptor {
                |        "repo": "batect",
                |        "subject": "charleskorn",
                |        "desc": "Build And Testing Environments as Code Tool",
-               |        "website_url": "https://batect.charleskorn.com",
-               |        "issue_tracker_url": "https://github.com/charleskorn/batect/issues",
-               |        "vcs_url": "https://github.com/charleskorn/batect",
+               |        "website_url": "https://batect.dev",
+               |        "issue_tracker_url": "https://github.com/batect/batect/issues",
+               |        "vcs_url": "https://github.com/batect/batect",
                |        "licenses": ["Apache-2.0"],
                |        "labels": [
                |            "developer-experience",

@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -165,4 +165,4 @@ object ContainerCommandResolverSpec : Spek({
 })
 
 private fun runOptionsForTask(taskName: String, additionalCommandLineArguments: Iterable<String>) =
-    RunOptions(taskName, additionalCommandLineArguments, CleanupOption.Cleanup, CleanupOption.Cleanup, false)
+    RunOptions(taskName, additionalCommandLineArguments, CleanupOption.Cleanup, CleanupOption.Cleanup, false, emptyMap())

@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -49,8 +49,8 @@ data class ApplicationRunner(val testName: String) {
         val process = builder.start()
         afterStart(process)
 
-        process.waitFor()
         val output = InputStreamReader(process.inputStream).readText()
+        process.waitFor()
 
         val containersAfter = DockerUtils.getAllCreatedContainers()
         val potentiallyOrphanedContainers = containersAfter - containersBefore

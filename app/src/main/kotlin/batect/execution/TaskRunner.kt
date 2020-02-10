@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,60 +16,59 @@
 
 package batect.execution
 
-import batect.config.Configuration
 import batect.config.Task
-import batect.execution.model.events.RunningContainerExitedEvent
+import batect.ioc.TaskKodeinFactory
 import batect.logging.Logger
 import batect.ui.EventLogger
-import batect.ui.EventLoggerProvider
+import org.kodein.di.generic.instance
 import java.time.Duration
 import java.time.Instant
 
 data class TaskRunner(
-    private val eventLoggerProvider: EventLoggerProvider,
-    private val graphProvider: ContainerDependencyGraphProvider,
-    private val stateMachineProvider: TaskStateMachineProvider,
-    private val executionManagerProvider: ParallelExecutionManagerProvider,
+    private val taskKodeinFactory: TaskKodeinFactory,
     private val interruptionTrap: InterruptionTrap,
     private val logger: Logger
 ) {
-    fun run(config: Configuration, task: Task, runOptions: RunOptions): Int {
+    fun run(task: Task, runOptions: RunOptions): Int {
         logger.info {
             message("Preparing task.")
             data("taskName", task.name)
         }
 
         val startTime = Instant.now()
-        val graph = graphProvider.createGraph(config, task)
-        val eventLogger = eventLoggerProvider.getEventLogger(graph, runOptions)
-        eventLogger.onTaskStarting(task.name)
 
-        val stateMachine = stateMachineProvider.createStateMachine(graph, runOptions)
-        val executionManager = executionManagerProvider.createParallelExecutionManager(eventLogger, stateMachine, runOptions)
+        taskKodeinFactory.create(task, runOptions).use { kodein ->
+            val eventLogger = kodein.instance<EventLogger>()
+            eventLogger.onTaskStarting(task.name)
 
-        logger.info {
-            message("Preparation complete, starting task.")
-            data("taskName", task.name)
+            val executionManager = kodein.instance<ParallelExecutionManager>()
+
+            logger.info {
+                message("Preparation complete, starting task.")
+                data("taskName", task.name)
+            }
+
+            interruptionTrap.trapInterruptions(executionManager).use {
+                executionManager.run()
+            }
+
+            val finishTime = Instant.now()
+
+            logger.info {
+                message("Task execution completed.")
+                data("taskName", task.name)
+            }
+
+            val stateMachine = kodein.instance<TaskStateMachine>()
+
+            if (stateMachine.taskHasFailed) {
+                return onTaskFailed(eventLogger, task, stateMachine)
+            }
+
+            val duration = Duration.between(startTime, finishTime)
+
+            return onTaskSucceeded(eventLogger, task, stateMachine, duration, runOptions)
         }
-
-        interruptionTrap.trapInterruptions(executionManager).use {
-            executionManager.run()
-        }
-
-        val finishTime = Instant.now()
-
-        logger.info {
-            message("Task execution completed.")
-            data("taskName", task.name)
-        }
-
-        if (stateMachine.taskHasFailed) {
-            return onTaskFailed(eventLogger, task, stateMachine)
-        }
-
-        val duration = Duration.between(startTime, finishTime)
-
-        return onTaskSucceeded(eventLogger, task, stateMachine, graph, duration, runOptions)
     }
 
     private fun onTaskFailed(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine): Int {
@@ -83,21 +82,13 @@ data class TaskRunner(
         return -1
     }
 
-    private fun onTaskSucceeded(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine, graph: ContainerDependencyGraph, duration: Duration, runOptions: RunOptions): Int {
-        val containerExitedEvent = stateMachine.getAllEvents()
-            .filterIsInstance<RunningContainerExitedEvent>()
-            .singleOrNull { it.container == graph.taskContainerNode.container }
-
-        if (containerExitedEvent == null) {
-            throw IllegalStateException("The task neither failed nor succeeded.")
-        }
-
-        eventLogger.onTaskFinished(task.name, containerExitedEvent.exitCode, duration)
+    private fun onTaskSucceeded(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine, duration: Duration, runOptions: RunOptions): Int {
+        eventLogger.onTaskFinished(task.name, stateMachine.taskExitCode, duration)
 
         logger.info {
             message("Task execution completed normally.")
             data("taskName", task.name)
-            data("exitCode", containerExitedEvent.exitCode)
+            data("exitCode", stateMachine.taskExitCode)
         }
 
         if (runOptions.behaviourAfterSuccess == CleanupOption.DontCleanup) {
@@ -105,6 +96,6 @@ data class TaskRunner(
             return -1
         }
 
-        return containerExitedEvent.exitCode
+        return stateMachine.taskExitCode
     }
 }

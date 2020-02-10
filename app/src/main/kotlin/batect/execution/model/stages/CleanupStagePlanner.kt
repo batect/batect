@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -35,8 +35,12 @@ import batect.os.SystemInfo
 import batect.utils.filterToSet
 import batect.utils.mapToSet
 
-class CleanupStagePlanner(private val systemInfo: SystemInfo, private val logger: Logger) {
-    fun createStage(graph: ContainerDependencyGraph, pastEvents: Set<TaskEvent>): CleanupStage {
+class CleanupStagePlanner(
+    private val graph: ContainerDependencyGraph,
+    private val systemInfo: SystemInfo,
+    private val logger: Logger
+) {
+    fun createStage(pastEvents: Set<TaskEvent>): CleanupStage {
         val containersCreated = pastEvents
             .filterIsInstance<ContainerCreatedEvent>()
             .associate { it.container to it.dockerContainer }
@@ -46,7 +50,7 @@ class CleanupStagePlanner(private val systemInfo: SystemInfo, private val logger
             .mapToSet { it.container }
 
         val rules = networkCleanupRules(pastEvents, containersCreated) +
-            stopContainerRules(graph, containersCreated, containersStarted) +
+            stopContainerRules(containersCreated, containersStarted) +
             removeContainerRules(containersCreated, containersStarted) +
             fileDeletionRules(pastEvents, containersCreated) +
             directoryDeletionRules(pastEvents, containersCreated)
@@ -69,7 +73,7 @@ class CleanupStagePlanner(private val systemInfo: SystemInfo, private val logger
                 DeleteTaskNetworkStepRule(it.network, containersThatMustBeRemovedFirst)
             }
 
-    private fun stopContainerRules(graph: ContainerDependencyGraph, containersCreated: Map<Container, DockerContainer>, containersStarted: Set<Container>): Set<StopContainerStepRule> =
+    private fun stopContainerRules(containersCreated: Map<Container, DockerContainer>, containersStarted: Set<Container>): Set<StopContainerStepRule> =
         containersStarted
             .mapToSet { container ->
                 val dockerContainer = containersCreated.getValue(container)

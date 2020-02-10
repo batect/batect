@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,7 +21,8 @@ import batect.config.VolumeMount
 import batect.execution.ContainerRuntimeConfiguration
 
 class DockerContainerCreationRequestFactory(
-    private val environmentVariableProvider: DockerContainerEnvironmentVariableProvider
+    private val environmentVariableProvider: DockerContainerEnvironmentVariableProvider,
+    private val containerNameGenerator: DockerContainerNameGenerator
 ) {
     fun create(
         container: Container,
@@ -35,6 +36,7 @@ class DockerContainerCreationRequestFactory(
         allContainersInNetwork: Set<Container>
     ): DockerContainerCreationRequest {
         return DockerContainerCreationRequest(
+            containerNameGenerator.generateNameFor(container),
             image,
             network,
             if (config.command != null) config.command.parsedCommand else emptyList(),

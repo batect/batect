@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package batect.execution.model.steps
 
+import batect.docker.client.DockerContainerType
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -24,11 +25,11 @@ import org.spekframework.spek2.style.specification.describe
 
 object CreateTaskNetworkStepSpec : Spek({
     describe("a 'create task network' step") {
-        val step = CreateTaskNetworkStep
+        val step = CreateTaskNetworkStep(DockerContainerType.Windows)
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(step.toString(), equalTo("CreateTaskNetworkStep"))
+                assertThat(step.toString(), equalTo("CreateTaskNetworkStep(container type: Windows)"))
             }
         }
     }

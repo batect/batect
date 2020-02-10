@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ class NetworksAPI(
     systemInfo: SystemInfo,
     logger: Logger
 ) : APIBase(httpConfig, systemInfo, logger) {
-    fun create(): DockerNetwork {
+    fun create(driver: String): DockerNetwork {
         logger.info {
             message("Creating new network.")
         }
@@ -44,7 +44,7 @@ class NetworksAPI(
         val body = json {
             "Name" to UUID.randomUUID().toString()
             "CheckDuplicate" to true
-            "Driver" to "bridge"
+            "Driver" to driver
         }
 
         val request = Request.Builder()

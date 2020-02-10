@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 */
 
 plugins {
-    id 'com.diffplug.gradle.spotless' version '3.26.1'
+    id 'com.diffplug.gradle.spotless' version '3.27.1'
     id 'com.github.ben-manes.versions' version '0.27.0'
     id 'org.ajoberstar.reckon' version '0.12.0'
 }

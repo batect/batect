@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ package batect.execution
 import batect.execution.model.events.ExecutionFailedEvent
 import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
+import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskFailedEvent
-import batect.execution.model.steps.CreateTaskNetworkStep
 import batect.execution.model.steps.TaskStep
 import batect.execution.model.steps.TaskStepRunner
 import batect.testutils.createForEachTest
@@ -32,7 +32,6 @@ import batect.ui.containerio.ContainerIOStreamingOptions
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
@@ -57,20 +56,9 @@ object ParallelExecutionManagerSpec : Spek({
         }
 
         val taskStepRunner by createForEachTest { mock<TaskStepRunner>() }
-        val cancellationContext by createForEachTest { mock<CancellationContext>() }
-        val stateMachine by createForEachTest {
-            mock<TaskStateMachine> {
-                on { it.cancellationContext } doReturn cancellationContext
-            }
-        }
-
-        val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true)
+        val stateMachine by createForEachTest { mock<TaskStateMachine>() }
         val logger by createLoggerForEachTest()
-        val executionManager by createForEachTest {
-            ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, runOptions, logger)
-        }
-
-        fun eqExpectedRunContext() = argThat<TaskStepRunContext> { this.runOptions == runOptions && this.cancellationContext == cancellationContext && this.ioStreamingOptions == ioStreamingOptions }
+        val executionManager by createForEachTest { ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, logger) }
 
         given("a single step is provided by the state machine") {
             val step by createForEachTest { mock<TaskStep>() }
@@ -86,13 +74,13 @@ object ParallelExecutionManagerSpec : Spek({
                         }
 
                         it("runs the step") {
-                            verify(taskStepRunner).run(eq(step), eqExpectedRunContext())
+                            verify(taskStepRunner).run(eq(step), eq(executionManager))
                         }
 
                         it("logs the step to the event logger and then runs it") {
                             inOrder(eventLogger, taskStepRunner) {
                                 verify(eventLogger).postEvent(StepStartingEvent(step))
-                                verify(taskStepRunner).run(eq(step), eqExpectedRunContext())
+                                verify(taskStepRunner).run(eq(step), eq(executionManager))
                             }
                         }
                     }
@@ -108,11 +96,11 @@ object ParallelExecutionManagerSpec : Spek({
                     val stepThatShouldNotBeRun by createForEachTest { mock<TaskStep>() }
 
                     beforeEachTest {
-                        whenever(taskStepRunner.run(eq(step), eqExpectedRunContext())).then { invocation ->
-                            val context = invocation.arguments[1] as TaskStepRunContext
+                        whenever(taskStepRunner.run(eq(step), eq(executionManager))).then { invocation ->
+                            val eventSink = invocation.arguments[1] as TaskEventSink
 
                             whenever(stateMachine.popNextStep(any())).doReturn(stepThatShouldNotBeRun, null)
-                            context.eventSink.postEvent(eventToPost)
+                            eventSink.postEvent(eventToPost)
                             whenever(stateMachine.popNextStep(any())).doReturn(null)
 
                             null
@@ -146,11 +134,11 @@ object ParallelExecutionManagerSpec : Spek({
                     val stepTriggeredByEvent by createForEachTest { mock<TaskStep>() }
 
                     beforeEachTest {
-                        whenever(taskStepRunner.run(eq(step), any())).then { invocation ->
-                            val context = invocation.arguments[1] as TaskStepRunContext
+                        whenever(taskStepRunner.run(eq(step), eq(executionManager))).then { invocation ->
+                            val eventSink = invocation.arguments[1] as TaskEventSink
 
                             whenever(stateMachine.popNextStep(any())).doReturn(stepTriggeredByEvent, null)
-                            context.eventSink.postEvent(eventToPost)
+                            eventSink.postEvent(eventToPost)
 
                             null
                         }
@@ -183,7 +171,7 @@ object ParallelExecutionManagerSpec : Spek({
         }
 
         given("a step throws an exception during execution") {
-            val step = CreateTaskNetworkStep
+            val step = mock<TaskStep>()
 
             beforeEachTest {
                 whenever(stateMachine.popNextStep(false)).doReturn(step, null)
@@ -191,25 +179,25 @@ object ParallelExecutionManagerSpec : Spek({
 
             given("the exception is not because the step was cancelled") {
                 beforeEachTest {
-                    whenever(taskStepRunner.run(eq(step), eqExpectedRunContext())).then { throw ExecutionException("Something went wrong.", null) }
+                    whenever(taskStepRunner.run(eq(step), eq(executionManager))).then { throw ExecutionException("Something went wrong.", null) }
                 }
 
                 on("running the task") {
                     beforeEachTest { executionManager.run() }
 
                     it("logs a task failure event to the event logger") {
-                        verify(eventLogger).postEvent(ExecutionFailedEvent("During execution of step of kind 'CreateTaskNetworkStep': java.util.concurrent.ExecutionException: Something went wrong."))
+                        verify(eventLogger).postEvent(ExecutionFailedEvent("During execution of step of kind '${step::class.simpleName}': java.util.concurrent.ExecutionException: Something went wrong."))
                     }
 
                     it("logs a task failure event to the state machine") {
-                        verify(stateMachine).postEvent(ExecutionFailedEvent("During execution of step of kind 'CreateTaskNetworkStep': java.util.concurrent.ExecutionException: Something went wrong."))
+                        verify(stateMachine).postEvent(ExecutionFailedEvent("During execution of step of kind '${step::class.simpleName}': java.util.concurrent.ExecutionException: Something went wrong."))
                     }
                 }
             }
 
             given("the exception directly signals that the step was cancelled") {
                 beforeEachTest {
-                    whenever(taskStepRunner.run(eq(step), eqExpectedRunContext())).thenThrow(CancellationException("The step was cancelled"))
+                    whenever(taskStepRunner.run(eq(step), eq(executionManager))).thenThrow(CancellationException("The step was cancelled"))
                 }
 
                 on("running the task") {
@@ -227,7 +215,7 @@ object ParallelExecutionManagerSpec : Spek({
 
             given("the exception indirectly signals that the step was cancelled") {
                 beforeEachTest {
-                    whenever(taskStepRunner.run(eq(step), eqExpectedRunContext())).then { throw ExecutionException("Something went wrong", CancellationException("The step was cancelled")) }
+                    whenever(taskStepRunner.run(eq(step), eq(executionManager))).then { throw ExecutionException("Something went wrong", CancellationException("The step was cancelled")) }
                 }
 
                 on("running the task") {
@@ -263,13 +251,13 @@ object ParallelExecutionManagerSpec : Spek({
                 waitForStep1.acquire()
                 waitForStep2.acquire()
 
-                whenever(taskStepRunner.run(eq(step1), eqExpectedRunContext())).doAnswer {
+                whenever(taskStepRunner.run(eq(step1), eq(executionManager))).doAnswer {
                     waitForStep1.release()
                     step1SawStep2 = waitForStep2.tryAcquire(100, TimeUnit.MILLISECONDS)
                     null
                 }
 
-                whenever(taskStepRunner.run(eq(step2), eqExpectedRunContext())).doAnswer {
+                whenever(taskStepRunner.run(eq(step2), eq(executionManager))).doAnswer {
                     waitForStep2.release()
                     step2SawStep1 = waitForStep1.tryAcquire(100, TimeUnit.MILLISECONDS)
                     null
@@ -283,7 +271,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("runs the first step") {
-                verify(taskStepRunner).run(eq(step1), eqExpectedRunContext())
+                verify(taskStepRunner).run(eq(step1), eq(executionManager))
             }
 
             it("logs the second step to the event logger") {
@@ -291,7 +279,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("runs the second step") {
-                verify(taskStepRunner).run(eq(step2), eqExpectedRunContext())
+                verify(taskStepRunner).run(eq(step2), eq(executionManager))
             }
 
             it("runs step 1 in parallel with step 2") {
@@ -315,9 +303,9 @@ object ParallelExecutionManagerSpec : Spek({
                 val waitForStep2 = Semaphore(1)
                 waitForStep2.acquire()
 
-                whenever(taskStepRunner.run(eq(step1), eqExpectedRunContext())).doAnswer { invocation ->
-                    val context = invocation.arguments[1] as TaskStepRunContext
-                    context.eventSink.postEvent(step2TriggerEvent)
+                whenever(taskStepRunner.run(eq(step1), eq(executionManager))).doAnswer { invocation ->
+                    val eventSink = invocation.arguments[1] as TaskEventSink
+                    eventSink.postEvent(step2TriggerEvent)
 
                     step2StartedBeforeStep1Ended = waitForStep2.tryAcquire(100, TimeUnit.MILLISECONDS)
                     null
@@ -328,7 +316,7 @@ object ParallelExecutionManagerSpec : Spek({
                     null
                 }
 
-                whenever(taskStepRunner.run(eq(step2), eqExpectedRunContext())).doAnswer {
+                whenever(taskStepRunner.run(eq(step2), eq(executionManager))).doAnswer {
                     waitForStep2.release()
                     null
                 }
@@ -341,7 +329,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("runs the first step") {
-                verify(taskStepRunner).run(eq(step1), eqExpectedRunContext())
+                verify(taskStepRunner).run(eq(step1), eq(executionManager))
             }
 
             it("logs the second step to the event logger") {
@@ -349,7 +337,7 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             it("runs the second step") {
-                verify(taskStepRunner).run(eq(step2), eqExpectedRunContext())
+                verify(taskStepRunner).run(eq(step2), eq(executionManager))
             }
 
             it("runs the first step in parallel with the second step") {

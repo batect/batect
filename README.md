@@ -1,7 +1,7 @@
 # batect
-[![Build Status](https://img.shields.io/travis/charleskorn/batect/master.svg)](https://travis-ci.org/charleskorn/batect)
-[![Coverage](https://img.shields.io/codecov/c/github/charleskorn/batect.svg)](https://codecov.io/gh/charleskorn/batect)
-[![License](https://img.shields.io/github/license/charleskorn/batect.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Build Status](https://img.shields.io/travis/batect/batect/master.svg)](https://travis-ci.org/batect/batect)
+[![Coverage](https://img.shields.io/codecov/c/github/batect/batect.svg)](https://codecov.io/gh/batect/batect)
+[![License](https://img.shields.io/github/license/batect/batect.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Chat](https://img.shields.io/badge/chat-on%20spectrum-brightgreen.svg)](https://spectrum.chat/batect)
 
 **b**uild **a**nd **t**esting **e**nvironments as **c**ode **t**ool: Dockerised build and testing environments made easy
@@ -21,12 +21,12 @@
 
 ## Getting started
 
-1. Drop the latest `batect` and `batect.cmd` scripts from the [releases page](https://github.com/charleskorn/batect/releases)
+1. Drop the latest `batect` and `batect.cmd` scripts from the [releases page](https://github.com/batect/batect/releases)
    into the root folder of your project.
 2. If you're on Linux or OS X, make sure the script is executable: run `chmod +x batect`.
 3. Create your `batect.yml` to define your environment:
-    * Take a look at the [sample projects](https://batect.charleskorn.com/SampleProjects.html) for inspiration
-    * Dive straight into [the configuration file reference](https://batect.charleskorn.com/config/Overview.html)
+    * Take a look at the [sample projects](https://batect.dev/SampleProjects.html) for inspiration
+    * Dive straight into [the configuration file reference](https://batect.dev/config/Overview.html)
     * Or, if you're using another tool already and want to switch to batect,
       [batectify](https://batectify.enchanting.dev/) by [@ineffyble](https://github.com/ineffyble) can convert files from
       other tools to batect's format
@@ -38,17 +38,17 @@ batect requires Docker 18.03.1 or newer, Java 8 or newer (although this requirem
 * On Linux and OS X: Bash and `curl`
 * On Windows: Windows 10
 
-batect does not yet support running Windows containers - follow [this issue](https://github.com/charleskorn/batect/issues/275) for updates.
+batect supports both Linux and Windows containers.
 
 ## Documentation
 
-All documentation is available on [the documentation site](https://batect.charleskorn.com). Highlights include:
+All documentation is available on [the documentation site](https://batect.dev). Highlights include:
 
-* [Introduction](https://batect.charleskorn.com)
-* [Getting started guide](https://batect.charleskorn.com/GettingStarted.html)
-* [Configuration file reference](https://batect.charleskorn.com/config/Overview.html)
-* [Sample projects](https://batect.charleskorn.com/SampleProjects.html)
-* [Comparison with other tools](https://batect.charleskorn.com/Comparison.html)
+* [Introduction](https://batect.dev)
+* [Getting started guide](https://batect.dev/GettingStarted.html)
+* [Configuration file reference](https://batect.dev/config/Overview.html)
+* [Sample projects](https://batect.dev/SampleProjects.html)
+* [Comparison with other tools](https://batect.dev/Comparison.html)
 
 If you prefer watching videos to reading documentation, you can also watch Charles introduce batect and the rationale behind it
 at the [Evolution by ThoughtWorks conference](https://www.thoughtworks.com/evolution-by-thoughtworks/content#Presentations).
@@ -59,7 +59,7 @@ There's a batect community on [Spectrum](https://spectrum.chat/batect/) - anyone
 
 ## Feedback
 
-Please [open an issue on GitHub](https://github.com/charleskorn/batect/issues/new) if you run into a problem or have a suggestion.
+Please [open an issue on GitHub](https://github.com/batect/batect/issues/new) if you run into a problem or have a suggestion.
 
 You can see what new features and improvements are planned in the [roadmap](ROADMAP.md).
 
@@ -84,4 +84,6 @@ Thank you to the following people for their bug reports, pull requests, suggesti
 * [@Sami5](https://github.com/Sami5)
 * ...and everyone else who has used the tool and provided feedback offline
 
-Thank you to YourKit for providing a complimentary copy of the [YourKit profiler](https://www.yourkit.com/java/profiler).
+Thank you to YourKit for providing a complimentary copy of the [YourKit profiler](https://www.yourkit.com/java/profiler), and
+thank you to JFrog for providing a complimentary instance of both [Bintray](https://bintray.com/charleskorn/batect/batect) and
+[Artifactory](https://jfrog.com/artifactory/).

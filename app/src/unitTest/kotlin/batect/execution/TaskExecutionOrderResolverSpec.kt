@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -245,7 +245,7 @@ object TaskExecutionOrderResolverSpec : Spek({
             }
         }
 
-        on("resolving the execution order for a complex set of tasks from issue 53 (https://github.com/charleskorn/batect/issues/53)") {
+        on("resolving the execution order for a complex set of tasks from issue 53 (https://github.com/batect/batect/issues/53)") {
             val getSandwichContentsTask = Task("getSandwichContents", taskRunConfiguration)
             val putContentsInBreadTask = Task("putContentsInBread", taskRunConfiguration, prerequisiteTasks = listOf("getSandwichContents"))
             val prepareTheTableTask = Task("prepareTheTable", taskRunConfiguration)

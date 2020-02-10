@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -83,14 +83,23 @@ class DockerImageProgressReporter {
     }
 
     private fun computeOverallProgress(): DockerImageProgress {
-        val earliestOperation = layerStates.values.map { it.currentOperation }.min()!!
-        val layersInEarliestOperation = layerStates.values.filter { it.currentOperation == earliestOperation }
-        val layersInLaterOperations = layerStates.values.filter { it.currentOperation > earliestOperation }
+        val anyLayerIsExtractingOrComplete = layerStates.values.any { it.currentOperation >= DownloadOperation.Extracting }
+        val allLayersHaveFinishedDownloading = layerStates.values.all { it.currentOperation >= DownloadOperation.DownloadComplete }
+        val extractionPhase = anyLayerIsExtractingOrComplete && allLayersHaveFinishedDownloading
 
-        val overallCompletedBytes = layersInEarliestOperation.sumBy { it.completedBytes } + layersInLaterOperations.sumBy { it.totalBytes }
+        val currentOperation = if (extractionPhase) {
+            layerStates.values.map { it.currentOperation }.filter { it >= DownloadOperation.Extracting }.min()!!
+        } else {
+            layerStates.values.map { it.currentOperation }.min()!!
+        }
+
+        val layersInCurrentOperation = layerStates.values.filter { it.currentOperation == currentOperation }
+        val layersFinishedCurrentOperation = layerStates.values.filter { it.currentOperation > currentOperation }
+
+        val overallCompletedBytes = layersInCurrentOperation.sumBy { it.completedBytes } + layersFinishedCurrentOperation.sumBy { it.totalBytes }
         val overallTotalBytes = layerStates.values.sumBy { it.totalBytes }
 
-        return DockerImageProgress(earliestOperation.displayName, overallCompletedBytes, overallTotalBytes)
+        return DockerImageProgress(currentOperation.displayName, overallCompletedBytes, overallTotalBytes)
     }
 
     private enum class DownloadOperation(val statusName: String, val assumeAllBytesCompleted: Boolean = false) {

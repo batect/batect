@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import batect.cli.CommandLineOptionsParser
 import batect.cli.CommandLineOptionsParsingResult
 import batect.cli.commands.Command
 import batect.cli.commands.CommandFactory
+import batect.ioc.StreamType
 import batect.logging.ApplicationInfoLogger
 import batect.logging.Logger
 import batect.logging.LoggerFactory

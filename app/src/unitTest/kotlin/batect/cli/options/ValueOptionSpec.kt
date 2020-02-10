@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object ValueOptionSpec : Spek({
     describe("a value option") {
+        val group = OptionGroup("the group")
         val converter = { value: String ->
             when (value) {
                 "valid-value" -> ValueConversionResult.ConversionSucceeded(123)
@@ -48,7 +49,7 @@ object ValueOptionSpec : Spek({
                     }
                 }
 
-                val option by createForEachTest { ValueOption("value", "The value", StaticDefaultValueProvider("default-value"), valueConverter, 'v') }
+                val option by createForEachTest { ValueOption(group, "value", "The value", StaticDefaultValueProvider("default-value"), valueConverter, 'v') }
 
                 listOf("--value", "-v").forEach { format ->
                     on("parsing a list of arguments where the option is specified in the form '$format thing'") {
@@ -111,7 +112,7 @@ object ValueOptionSpec : Spek({
         }
 
         on("not applying a value for the option") {
-            val option = ValueOption("value", "The value", StaticDefaultValueProvider(9999), ValueConverters::positiveInteger, 'v')
+            val option = ValueOption(group, "value", "The value", StaticDefaultValueProvider(9999), ValueConverters::positiveInteger, 'v')
 
             it("returns the default value") {
                 assertThat(option.getValue(mock(), mock()), equalTo(9999))
@@ -128,7 +129,7 @@ object ValueOptionSpec : Spek({
                     onGeneric { value } doReturn PossibleValue.Valid("foo")
                 }
 
-                val option by createForEachTest { ValueOption("value", "The value.", defaultProvider, ValueConverters::string) }
+                val option by createForEachTest { ValueOption(group, "value", "The value.", defaultProvider, ValueConverters::string) }
 
                 on("checking the default value for the option") {
                     it("does not return an error") {
@@ -146,7 +147,7 @@ object ValueOptionSpec : Spek({
                     onGeneric { value } doReturn PossibleValue.Invalid("The default value is invalid")
                 }
 
-                val option by createForEachTest { ValueOption("value", "The value.", defaultProvider, ValueConverters::string) }
+                val option by createForEachTest { ValueOption(group, "value", "The value.", defaultProvider, ValueConverters::string) }
 
                 given("the default value has not been overridden") {
                     on("checking the default value for the option") {
@@ -184,7 +185,7 @@ object ValueOptionSpec : Spek({
                     onGeneric { description } doReturn ""
                 }
 
-                val option = ValueOption("option", "Some integer option.", defaultProvider, converter)
+                val option = ValueOption(group, "option", "Some integer option.", defaultProvider, converter)
 
                 it("returns the original description") {
                     assertThat(option.descriptionForHelp, equalTo("Some integer option."))
@@ -196,7 +197,7 @@ object ValueOptionSpec : Spek({
                     onGeneric { description } doReturn "Defaults to '1234' if not set."
                 }
 
-                val option = ValueOption("option", "Some integer option.", defaultProvider, converter)
+                val option = ValueOption(group, "option", "Some integer option.", defaultProvider, converter)
 
                 it("returns the original description with the additional information from the default value provider") {
                     assertThat(option.descriptionForHelp, equalTo("Some integer option. Defaults to '1234' if not set."))

@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
     constructor(client: OkHttpClient, logger: Logger) : this(client, logger, { ZonedDateTime.now(ZoneOffset.UTC) })
 
     fun getLatestVersionInfo(): UpdateInfo {
-        val url = "https://api.github.com/repos/charleskorn/batect/releases/latest"
+        val url = "https://api.github.com/repos/batect/batect/releases/latest"
         val request = Request.Builder()
             .url(url)
             .build()

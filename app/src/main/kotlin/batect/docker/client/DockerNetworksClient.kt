@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,6 +20,6 @@ import batect.docker.DockerNetwork
 import batect.docker.api.NetworksAPI
 
 class DockerNetworksClient(private val api: NetworksAPI) {
-    fun create(): DockerNetwork = api.create()
+    fun create(driver: String): DockerNetwork = api.create(driver)
     fun delete(network: DockerNetwork) = api.delete(network)
 }

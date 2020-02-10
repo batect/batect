@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 function getLatestVersion {
-    curl --fail --silent --show-error https://api.github.com/repos/charleskorn/batect/releases/latest | jq -r '.name'
+    curl --fail --silent --show-error https://api.github.com/repos/batect/batect/releases/latest | jq -r '.name'
 }
 
 function updateProject {
@@ -42,6 +42,8 @@ function main {
     updateProject "batect-sample-ruby" "$latestVersion"
     echo
     updateProject "batect-sample-golang" "$latestVersion"
+    echo
+    updateProject "batect-sample-cypress" "$latestVersion"
 }
 
 main

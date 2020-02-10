@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -98,7 +98,7 @@ object ContainersAPISpec : Spek({
         val errorMessageWithCorrectLineEndings = "Something went wrong.SYSTEM_LINE_SEPARATORMore details on next line."
 
         describe("creating a container") {
-            val expectedUrl = "$dockerBaseUrl/v1.37/containers/create"
+            val expectedUrl = "$dockerBaseUrl/v1.37/containers/create?name=the-container"
             val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
             val longTimeoutClientBuilder by createForEachTest {
                 mock<OkHttpClient.Builder> { mock ->
@@ -116,8 +116,7 @@ object ContainersAPISpec : Spek({
                 val network = DockerNetwork("the-network")
                 val command = listOf("doStuff")
                 val entrypoint = listOf("sh")
-                val request =
-                    DockerContainerCreationRequest(image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet(), "json-file")
+                val request = DockerContainerCreationRequest("the-container", image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet(), "json-file")
 
                 on("a successful creation") {
                     val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, """{"Id": "abc123"}""", 201) }
@@ -135,6 +134,10 @@ object ContainersAPISpec : Spek({
 
                     it("returns the ID of the created container") {
                         assertThat(result.id, equalTo("abc123"))
+                    }
+
+                    it("returns the name of the created container") {
+                        assertThat(result.name, equalTo("the-container"))
                     }
 
                     it("configures the HTTP client with a longer timeout to allow for the container to be created") {
@@ -404,10 +407,31 @@ object ContainersAPISpec : Spek({
                     whenever(httpClient.newBuilder()).doReturn(longTimeoutClientBuilder)
                 }
 
-                on("the Docker daemon returning a single event") {
+                on("the Docker daemon returning a single event followed by a new line character") {
                     val responseBody = """
                         |{"status":"health_status: healthy","id":"f09004d33c0892ed74718bd0c1166b28a8d4788bea6449bb6ea8c4d402b20db7","from":"12ff4615e7ff","Type":"container","Action":"health_status: healthy","Actor":{"ID":"f09004d33c0892ed74718bd0c1166b28a8d4788bea6449bb6ea8c4d402b20db7","Attributes":{"image":"12ff4615e7ff","name":"distracted_stonebraker"}},"scope":"local","time":1533986037,"timeNano":1533986037977811448}
                         |
+                    """.trimMargin()
+
+                    val call by createForEachTest { clientWithLongTimeout.mock("GET", expectedUrl, responseBody, 200) }
+                    val event by runForEachTest { api.waitForNextEvent(container, eventTypes, Duration.ofNanos(123), cancellationContext) }
+
+                    it("returns that event") {
+                        assertThat(event, equalTo(DockerEvent("health_status: healthy")))
+                    }
+
+                    it("configures the HTTP client with the timeout provided") {
+                        verify(longTimeoutClientBuilder).readTimeout(123, TimeUnit.NANOSECONDS)
+                    }
+
+                    it("registers the API call with the cancellation context") {
+                        verify(cancellationContext).addCancellationCallback(call::cancel)
+                    }
+                }
+
+                on("the Docker daemon returning a single event but followed by a new line character") {
+                    val responseBody = """
+                        |{"status":"health_status: healthy","id":"f09004d33c0892ed74718bd0c1166b28a8d4788bea6449bb6ea8c4d402b20db7","from":"12ff4615e7ff","Type":"container","Action":"health_status: healthy","Actor":{"ID":"f09004d33c0892ed74718bd0c1166b28a8d4788bea6449bb6ea8c4d402b20db7","Attributes":{"image":"12ff4615e7ff","name":"distracted_stonebraker"}},"scope":"local","time":1533986037,"timeNano":1533986037977811448}
                     """.trimMargin()
 
                     val call by createForEachTest { clientWithLongTimeout.mock("GET", expectedUrl, responseBody, 200) }
@@ -700,6 +724,14 @@ object ContainersAPISpec : Spek({
 
                     it("throws an appropriate exception") {
                         assertThat({ api.resizeTTY(container, dimensions) }, throws<ContainerStoppedException>(withMessage("Resizing TTY for container 'the-container-id' failed: bad file descriptor: unknown (the container may have stopped quickly after starting)")))
+                    }
+                }
+
+                on("the container being stopped when running a Windows container") {
+                    beforeEachTest { httpClient.mockPost(expectedUrl, """{"message": "process 2676 in container e766a7947b2e03a5bc02103a9a88b8c1ab914c9ed488205134f3fcc98e77a877 encountered an error during hcsshim::Process::ResizeConsole: hcsshim: the handle has already been closed"}""", 500) }
+
+                    it("throws an appropriate exception") {
+                        assertThat({ api.resizeTTY(container, dimensions) }, throws<ContainerStoppedException>(withMessage("Resizing TTY for container 'the-container-id' failed: process 2676 in container e766a7947b2e03a5bc02103a9a88b8c1ab914c9ed488205134f3fcc98e77a877 encountered an error during hcsshim::Process::ResizeConsole: hcsshim: the handle has already been closed (the container may have stopped quickly after starting)")))
                     }
                 }
 

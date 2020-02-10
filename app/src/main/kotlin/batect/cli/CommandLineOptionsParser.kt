@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,12 +16,14 @@
 
 package batect.cli
 
+import batect.cli.options.OptionGroup
 import batect.cli.options.OptionParser
 import batect.cli.options.OptionParserContainer
 import batect.cli.options.OptionValueSource
 import batect.cli.options.OptionsParsingResult
 import batect.cli.options.ValueConverters
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
+import batect.cli.options.defaultvalues.FileDefaultValueProvider
 import batect.docker.DockerHttpConfigDefaults
 import batect.os.PathResolverFactory
 import batect.os.SystemInfo
@@ -42,18 +44,25 @@ class CommandLineOptionsParser(
         const val disableCleanupAfterSuccessFlagName = "no-cleanup-after-success"
         const val disableCleanupFlagName = "no-cleanup"
         const val upgradeFlagName = "upgrade"
-        const val helpBlurb = "For documentation and further information on batect, visit https://github.com/charleskorn/batect."
+        const val configVariableOptionName = "config-var"
+        const val helpBlurb = "For documentation and further information on batect, visit https://github.com/batect/batect."
     }
 
-    private val showHelp: Boolean by flagOption("help", "Show this help information and exit.")
-    private val showVersionInfo: Boolean by flagOption("version", "Show batect version information and exit.")
-    private val runUpgrade: Boolean by flagOption(upgradeFlagName, "Upgrade batect to the latest available version.")
-    private val listTasks: Boolean by flagOption("list-tasks", "List available tasks and exit.", 'T')
+    private val dockerConnectionOptionsGroup = OptionGroup("Docker connection options")
+    private val executionOptionsGroup = OptionGroup("Execution options")
+    private val outputOptionsGroup = OptionGroup("Output options")
+    private val helpOptionsGroup = OptionGroup("Help options")
 
-    private val disableColorOutput: Boolean by flagOption("no-color", "Disable colored output from batect. Does not affect task command output. Implies --output=simple unless overridden.")
-    private val disableUpdateNotification: Boolean by flagOption("no-update-notification", "Disable checking for updates to batect and notifying you when a new version is available.")
+    private val showHelp: Boolean by flagOption(helpOptionsGroup, "help", "Show this help information and exit.")
+    private val showVersionInfo: Boolean by flagOption(helpOptionsGroup, "version", "Show batect version information and exit.")
+    private val runUpgrade: Boolean by flagOption(helpOptionsGroup, upgradeFlagName, "Upgrade batect to the latest available version.")
+    private val listTasks: Boolean by flagOption(helpOptionsGroup, "list-tasks", "List available tasks and exit.", 'T')
+
+    private val disableColorOutput: Boolean by flagOption(outputOptionsGroup, "no-color", "Disable colored output from batect. Does not affect task command output. Implies --output=simple unless overridden.")
+    private val disableUpdateNotification: Boolean by flagOption(executionOptionsGroup, "no-update-notification", "Disable checking for updates to batect and notifying you when a new version is available.")
 
     private val configurationFileName: Path by valueOption(
+        executionOptionsGroup,
         "config-file",
         "The configuration file to use.",
         Paths.get("batect.yml"),
@@ -61,31 +70,58 @@ class CommandLineOptionsParser(
         'f'
     )
 
+    private val configVariablesSourceFileNameOption = valueOption(
+        executionOptionsGroup,
+        "config-vars-file",
+        "YAML file containing values for config variables. Values in file take precedence over default values.",
+        FileDefaultValueProvider("batect.local.yml", pathResolverFactory),
+        ValueConverters.pathToFile(pathResolverFactory, mustExist = true)
+    )
+
+    private val configVariablesSourceFileName: Path? by configVariablesSourceFileNameOption
+
+    private val configVariableOverrides: Map<String, String> by mapOption(
+        executionOptionsGroup,
+        configVariableOptionName,
+        "Set a value for a config variable. Takes precedence over default values and values in file provided to ${configVariablesSourceFileNameOption.longOption}."
+    )
+
+    private val imageOverrides: Map<String, String> by mapOption(
+        executionOptionsGroup,
+        "override-image",
+        "Override the image used by a container.",
+        "<container>=<image>"
+    )
+
     private val logFileName: Path? by valueOption(
+        helpOptionsGroup,
         "log-file",
         "Write internal batect logs to file.",
         ValueConverters.pathToFile(pathResolverFactory)
     )
 
     private val requestedOutputStyle: OutputStyle? by valueOption(
+        outputOptionsGroup,
         "output",
         "Force a particular style of output from batect (does not affect task command output). Valid values are: fancy (default value if your console supports this), simple (no updating text), all (interleaved output from all containers) or quiet (only error messages).",
         ValueConverters.optionalEnum(),
         'o'
     )
 
-    private val disableCleanupAfterFailure: Boolean by flagOption(disableCleanupAfterFailureFlagName, "If an error occurs before any task can start, leave all containers created for that task running so that the issue can be investigated.")
-    private val disableCleanupAfterSuccess: Boolean by flagOption(disableCleanupAfterSuccessFlagName, "If the main task succeeds, leave all containers created for that task running.")
-    private val disableCleanup: Boolean by flagOption(disableCleanupFlagName, "Equivalent to providing both --$disableCleanupAfterFailureFlagName and --$disableCleanupAfterSuccessFlagName.")
-    private val dontPropagateProxyEnvironmentVariables: Boolean by flagOption("no-proxy-vars", "Don't propagate proxy-related environment variables such as http_proxy and no_proxy to image builds or containers.")
+    private val disableCleanupAfterFailure: Boolean by flagOption(executionOptionsGroup, disableCleanupAfterFailureFlagName, "If an error occurs before any task can start, leave all containers created for that task running so that the issue can be investigated.")
+    private val disableCleanupAfterSuccess: Boolean by flagOption(executionOptionsGroup, disableCleanupAfterSuccessFlagName, "If the main task succeeds, leave all containers created for that task running.")
+    private val disableCleanup: Boolean by flagOption(executionOptionsGroup, disableCleanupFlagName, "Equivalent to providing both --$disableCleanupAfterFailureFlagName and --$disableCleanupAfterSuccessFlagName.")
+    private val dontPropagateProxyEnvironmentVariables: Boolean by flagOption(executionOptionsGroup, "no-proxy-vars", "Don't propagate proxy-related environment variables such as http_proxy and no_proxy to image builds or containers.")
 
     private val dockerHost: String by valueOption(
+        dockerConnectionOptionsGroup,
         "docker-host",
         "Docker host to use, in the format 'unix:///var/run/docker.sock', 'npipe:////./pipe/docker_engine' or 'tcp://1.2.3.4:5678'.",
         environmentVariableDefaultValueProviderFactory.create("DOCKER_HOST", dockerHttpConfigDefaults.defaultDockerHost, ValueConverters::string)
     )
 
     private val dockerUseTLSOption = flagOption(
+        dockerConnectionOptionsGroup,
         "docker-tls",
         "Use TLS when communicating with the Docker host, but don't verify the certificate presented by the Docker host."
     )
@@ -93,6 +129,7 @@ class CommandLineOptionsParser(
     private val dockerUseTLS: Boolean by dockerUseTLSOption
 
     private val dockerVerifyTLSOption = flagOption(
+        dockerConnectionOptionsGroup,
         "docker-tls-verify",
         "Use TLS when communicating with the Docker host and verify the certificate presented by the Docker host. Implies ${dockerUseTLSOption.longOption}.",
         environmentVariableDefaultValueProviderFactory.create("DOCKER_TLS_VERIFY", false, ValueConverters::boolean)
@@ -103,6 +140,7 @@ class CommandLineOptionsParser(
     private val dockerDirectory = systemInfo.homeDirectory.resolve(".docker")
 
     private val dockerCertificateDirectoryOption = valueOption(
+        dockerConnectionOptionsGroup,
         "docker-cert-path",
         "Path to directory containing certificates to use to provide authentication to the Docker host and authenticate the Docker host. Has no effect if ${dockerUseTLSOption.longOption} is not set.",
         environmentVariableDefaultValueProviderFactory.create("DOCKER_CERT_PATH", null, ValueConverters.pathToDirectory(pathResolverFactory, mustExist = true)),
@@ -112,6 +150,7 @@ class CommandLineOptionsParser(
     private val dockerCertificateDirectory: Path? by dockerCertificateDirectoryOption
 
     private val dockerTLSCACertificatePathOption = valueOption(
+        dockerConnectionOptionsGroup,
         "docker-tls-ca-cert",
         "Path to TLS CA certificate file that should be used to verify certificates presented by the Docker host. Has no effect if ${dockerVerifyTLSOption.longOption} is not set, and takes precedence over ${dockerCertificateDirectoryOption.longOption}.",
         dockerDirectory.resolve("ca.pem"),
@@ -121,6 +160,7 @@ class CommandLineOptionsParser(
     private val dockerTlsCACertificatePath: Path by dockerTLSCACertificatePathOption
 
     private val dockerTLSCertificatePathOption = valueOption(
+        dockerConnectionOptionsGroup,
         "docker-tls-cert",
         "Path to TLS certificate file to use to authenticate to the Docker host. Has no effect if ${dockerUseTLSOption.longOption} is not set, and takes precedence over ${dockerCertificateDirectoryOption.longOption}.",
         dockerDirectory.resolve("cert.pem"),
@@ -130,6 +170,7 @@ class CommandLineOptionsParser(
     private val dockerTLSCertificatePath: Path by dockerTLSCertificatePathOption
 
     private val dockerTLSKeyPathOption = valueOption(
+        dockerConnectionOptionsGroup,
         "docker-tls-key",
         "Path to TLS key file to use to authenticate to the Docker host. Has no effect if ${dockerUseTLSOption.longOption} is not set, and takes precedence over ${dockerCertificateDirectoryOption.longOption}.",
         dockerDirectory.resolve("key.pem"),
@@ -190,6 +231,8 @@ class CommandLineOptionsParser(
         runUpgrade = runUpgrade,
         listTasks = listTasks,
         configurationFileName = configurationFileName,
+        configVariablesSourceFile = configVariablesSourceFileName,
+        imageOverrides = imageOverrides,
         logFileName = logFileName,
         requestedOutputStyle = requestedOutputStyle,
         disableColorOutput = disableColorOutput,
@@ -199,6 +242,7 @@ class CommandLineOptionsParser(
         dontPropagateProxyEnvironmentVariables = dontPropagateProxyEnvironmentVariables,
         taskName = taskName,
         additionalTaskCommandArguments = additionalTaskCommandArguments,
+        configVariableOverrides = configVariableOverrides,
         dockerHost = dockerHost,
         dockerUseTLS = dockerUseTLS || dockerVerifyTLS,
         dockerVerifyTLS = dockerVerifyTLS,

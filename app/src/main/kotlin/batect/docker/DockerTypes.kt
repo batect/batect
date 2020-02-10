@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import java.time.Duration
 data class DockerImage(val id: String)
 
 @Serializable
-data class DockerContainer(val id: String)
+data class DockerContainer(val id: String, val name: String? = null)
 
 data class DockerContainerRunResult(val exitCode: Int)
 

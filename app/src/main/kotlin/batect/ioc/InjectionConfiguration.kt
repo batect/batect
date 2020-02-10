@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2019 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
    limitations under the License.
 */
 
-package batect
+package batect.ioc
 
+import batect.VersionInfo
 import batect.cli.CommandLineOptions
 import batect.cli.CommandLineOptionsParser
 import batect.cli.commands.CommandFactory
@@ -26,10 +27,9 @@ import batect.cli.commands.UpgradeCommand
 import batect.cli.commands.VersionInfoCommand
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.config.io.ConfigurationLoader
-import batect.docker.api.DockerAPI
-import batect.docker.client.DockerClient
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerContainerEnvironmentVariableProvider
+import batect.docker.DockerContainerNameGenerator
 import batect.docker.DockerHostNameResolver
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerHttpConfigDefaults
@@ -42,6 +42,7 @@ import batect.docker.api.SystemInfoAPI
 import batect.docker.build.DockerIgnoreParser
 import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
+import batect.docker.client.DockerClient
 import batect.docker.client.DockerContainersClient
 import batect.docker.client.DockerExecClient
 import batect.docker.client.DockerImagesClient
@@ -54,20 +55,34 @@ import batect.docker.pull.DockerRegistryIndexResolver
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
+import batect.execution.CancellationContext
 import batect.execution.ContainerCommandResolver
-import batect.execution.ContainerEntrypointResolver
+import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerDependencyGraphProvider
+import batect.execution.ContainerEntrypointResolver
 import batect.execution.InterruptionTrap
-import batect.execution.ParallelExecutionManagerProvider
+import batect.execution.ParallelExecutionManager
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
 import batect.execution.TaskExecutionOrderResolver
 import batect.execution.TaskRunner
-import batect.execution.TaskStateMachineProvider
+import batect.execution.TaskStateMachine
 import batect.execution.TaskSuggester
 import batect.execution.model.stages.CleanupStagePlanner
 import batect.execution.model.stages.RunStagePlanner
 import batect.execution.model.steps.TaskStepRunner
+import batect.execution.model.steps.runners.BuildImageStepRunner
+import batect.execution.model.steps.runners.CreateContainerStepRunner
+import batect.execution.model.steps.runners.CreateTaskNetworkStepRunner
+import batect.execution.model.steps.runners.DeleteTaskNetworkStepRunner
+import batect.execution.model.steps.runners.DeleteTemporaryDirectoryStepRunner
+import batect.execution.model.steps.runners.DeleteTemporaryFileStepRunner
+import batect.execution.model.steps.runners.PullImageStepRunner
+import batect.execution.model.steps.runners.RemoveContainerStepRunner
+import batect.execution.model.steps.runners.RunContainerSetupCommandsStepRunner
+import batect.execution.model.steps.runners.RunContainerStepRunner
+import batect.execution.model.steps.runners.StopContainerStepRunner
+import batect.execution.model.steps.runners.WaitForContainerToBecomeHealthyStepRunner
 import batect.logging.ApplicationInfoLogger
 import batect.logging.HttpLoggingInterceptor
 import batect.logging.LogMessageWriter
@@ -89,8 +104,10 @@ import batect.os.windows.WindowsNativeMethods
 import batect.ui.Console
 import batect.ui.ConsoleDimensions
 import batect.ui.ConsoleInfo
+import batect.ui.EventLogger
 import batect.ui.EventLoggerProvider
 import batect.ui.FailureErrorMessageFormatter
+import batect.ui.containerio.ContainerIOStreamingOptions
 import batect.ui.fancy.StartupProgressDisplayProvider
 import batect.updates.UpdateInfoDownloader
 import batect.updates.UpdateInfoStorage
@@ -104,6 +121,7 @@ import org.kodein.di.DKodein
 import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
+import org.kodein.di.generic.scoped
 import org.kodein.di.generic.singleton
 import java.io.InputStream
 import java.io.PrintStream
@@ -126,6 +144,7 @@ fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStrea
     import(cliModule)
     import(configModule)
     import(dockerModule)
+    import(iocModule)
     import(executionModule)
     import(loggingModule)
     import(osModule)
@@ -142,12 +161,6 @@ fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStrea
     }
 }
 
-enum class StreamType {
-    Input,
-    Output,
-    Error
-}
-
 private val cliModule = Kodein.Module("cli") {
     bind<CommandFactory>() with singleton { CommandFactory() }
     bind<CommandLineOptionsParser>() with singleton { CommandLineOptionsParser(instance(), instance(), instance(), instance()) }
@@ -156,6 +169,7 @@ private val cliModule = Kodein.Module("cli") {
     bind<RunTaskCommand>() with singletonWithLogger { logger ->
         RunTaskCommand(
             commandLineOptions().configurationFileName,
+            instance(RunOptionsType.Overall),
             instance(),
             instance(),
             instance(),
@@ -168,7 +182,7 @@ private val cliModule = Kodein.Module("cli") {
         )
     }
 
-    bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(StreamType.Output)) }
+    bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(StreamType.Output), instance()) }
     bind<ListTasksCommand>() with singleton { ListTasksCommand(commandLineOptions().configurationFileName, instance(), instance(StreamType.Output)) }
     bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(StreamType.Output), instance(), instance(), instance()) }
     bind<UpgradeCommand>() with singletonWithLogger { logger -> UpgradeCommand(instance(), instance(), instance(), instance(), instance(StreamType.Output), instance(StreamType.Error), logger) }
@@ -186,8 +200,9 @@ private val dockerModule = Kodein.Module("docker") {
     bind<ContainerIOStreamer>() with singleton { ContainerIOStreamer() }
     bind<ContainerTTYManager>() with singletonWithLogger { logger -> ContainerTTYManager(instance(), instance(), instance(), logger) }
     bind<ContainerWaiter>() with singleton { ContainerWaiter(instance()) }
-    bind<DockerContainerCreationRequestFactory>() with singleton { DockerContainerCreationRequestFactory(instance()) }
-    bind<DockerContainerEnvironmentVariableProvider>() with singleton { DockerContainerEnvironmentVariableProvider(instance()) }
+    bind<DockerContainerCreationRequestFactory>() with scoped(TaskScope).singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
+    bind<DockerContainerEnvironmentVariableProvider>() with singleton { DockerContainerEnvironmentVariableProvider(instance(), instance()) }
+    bind<DockerContainerNameGenerator>() with scoped(TaskScope).singleton { DockerContainerNameGenerator() }
     bind<DockerfileParser>() with singleton { DockerfileParser() }
     bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
     bind<DockerImageBuildContextFactory>() with singleton { DockerImageBuildContextFactory(instance()) }
@@ -211,7 +226,6 @@ private val dockerModule = Kodein.Module("docker") {
 
 private val dockerApiModule = Kodein.Module("docker.api") {
     bind<ContainersAPI>() with singletonWithLogger { logger -> ContainersAPI(instance(), instance(), logger) }
-    bind<DockerAPI>() with singleton { DockerAPI(instance(), instance(), instance(), instance()) }
     bind<ExecAPI>() with singletonWithLogger { logger -> ExecAPI(instance(), instance(), logger) }
     bind<ImagesAPI>() with singletonWithLogger { logger -> ImagesAPI(instance(), instance(), logger) }
     bind<NetworksAPI>() with singletonWithLogger { logger -> NetworksAPI(instance(), instance(), logger) }
@@ -227,21 +241,45 @@ private val dockerClientModule = Kodein.Module("docker.client") {
     bind<DockerClient>() with singleton { DockerClient(instance(), instance(), instance(), instance(), instance()) }
 }
 
+private val iocModule = Kodein.Module("ioc") {
+    bind<TaskKodeinFactory>() with singleton { TaskKodeinFactory(dkodein) }
+    bind<SessionKodeinFactory>() with singleton { SessionKodeinFactory(dkodein) }
+}
+
 private val executionModule = Kodein.Module("execution") {
-    bind<CleanupStagePlanner>() with singletonWithLogger { logger -> CleanupStagePlanner(instance(), logger) }
-    bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance()) }
+    import(runnersModule)
+
+    bind<CancellationContext>() with scoped(TaskScope).singleton { CancellationContext() }
+    bind<CleanupStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> CleanupStagePlanner(instance(), instance(), logger) }
+    bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance(RunOptionsType.Task)) }
+    bind<ContainerDependencyGraph>() with scoped(TaskScope).singleton { instance<ContainerDependencyGraphProvider>().createGraph(instance(), context) }
     bind<ContainerDependencyGraphProvider>() with singletonWithLogger { logger -> ContainerDependencyGraphProvider(instance(), instance(), logger) }
     bind<ContainerEntrypointResolver>() with singleton { ContainerEntrypointResolver() }
     bind<InterruptionTrap>() with singleton { InterruptionTrap(instance()) }
-    bind<ParallelExecutionManagerProvider>() with singleton { ParallelExecutionManagerProvider(instance(), instance()) }
+    bind<ParallelExecutionManager>() with scoped(TaskScope).singletonWithLogger { logger -> ParallelExecutionManager(instance(), instance(), instance(), logger) }
     bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance(), instance()) }
-    bind<RunOptions>() with singleton { RunOptions(commandLineOptions()) }
-    bind<RunStagePlanner>() with singletonWithLogger { logger -> RunStagePlanner(logger) }
-    bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(), instance(), instance(), logger) }
+    bind<RunOptions>(RunOptionsType.Overall) with singleton { RunOptions(commandLineOptions()) }
+    bind<RunStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> RunStagePlanner(instance(), instance(), instance(), logger) }
+    bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), logger) }
     bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(instance(), logger) }
-    bind<TaskStateMachineProvider>() with singleton { TaskStateMachineProvider(instance(), instance(), instance(), instance()) }
-    bind<TaskStepRunner>() with singleton { TaskStepRunner(instance(), instance(), instance(), instance(), instance(), instance()) }
+    bind<TaskStateMachine>() with scoped(TaskScope).singletonWithLogger { logger -> TaskStateMachine(instance(), instance(RunOptionsType.Task), instance(), instance(), instance(), instance(), logger) }
+    bind<TaskStepRunner>() with scoped(TaskScope).singleton { TaskStepRunner(dkodein) }
     bind<TaskSuggester>() with singleton { TaskSuggester() }
+}
+
+private val runnersModule = Kodein.Module("execution.model.steps.runners") {
+    bind<BuildImageStepRunner>() with scoped(TaskScope).singleton { BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
+    bind<CreateContainerStepRunner>() with scoped(TaskScope).singleton { CreateContainerStepRunner(instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
+    bind<CreateTaskNetworkStepRunner>() with scoped(TaskScope).singleton { CreateTaskNetworkStepRunner(instance()) }
+    bind<DeleteTaskNetworkStepRunner>() with scoped(TaskScope).singleton { DeleteTaskNetworkStepRunner(instance()) }
+    bind<DeleteTemporaryDirectoryStepRunner>() with scoped(TaskScope).singleton { DeleteTemporaryDirectoryStepRunner() }
+    bind<DeleteTemporaryFileStepRunner>() with scoped(TaskScope).singleton { DeleteTemporaryFileStepRunner() }
+    bind<PullImageStepRunner>() with scoped(TaskScope).singleton { PullImageStepRunner(instance(), instance()) }
+    bind<RemoveContainerStepRunner>() with scoped(TaskScope).singleton { RemoveContainerStepRunner(instance()) }
+    bind<RunContainerSetupCommandsStepRunner>() with scoped(TaskScope).singleton { RunContainerSetupCommandsStepRunner(instance(), instance(), instance(), instance(RunOptionsType.Task), instance(), instance()) }
+    bind<RunContainerStepRunner>() with scoped(TaskScope).singleton { RunContainerStepRunner(instance(), instance(), instance()) }
+    bind<StopContainerStepRunner>() with scoped(TaskScope).singleton { StopContainerStepRunner(instance()) }
+    bind<WaitForContainerToBecomeHealthyStepRunner>() with scoped(TaskScope).singleton { WaitForContainerToBecomeHealthyStepRunner(instance(), instance(), instance()) }
 }
 
 private val loggingModule = Kodein.Module("logging") {
@@ -290,7 +328,9 @@ private val uiModule = Kodein.Module("ui") {
     bind<Console>(StreamType.Error) with singleton { Console(instance(StreamType.Error), enableComplexOutput = !commandLineOptions().disableColorOutput && nativeMethods().determineIfStderrIsTTY(), consoleDimensions = instance()) }
     bind<ConsoleDimensions>() with singletonWithLogger { logger -> ConsoleDimensions(instance(), instance(), logger) }
     bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), instance(), logger) }
-    bind<FailureErrorMessageFormatter>() with singleton { FailureErrorMessageFormatter(instance()) }
+    bind<ContainerIOStreamingOptions>() with scoped(TaskScope).singleton { instance<EventLogger>().ioStreamingOptions }
+    bind<EventLogger>() with scoped(TaskScope).singleton { instance<EventLoggerProvider>().getEventLogger(context, instance()) }
+    bind<FailureErrorMessageFormatter>() with scoped(TaskScope).singleton { FailureErrorMessageFormatter(instance(RunOptionsType.Task), instance()) }
     bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider(instance()) }
 }
 

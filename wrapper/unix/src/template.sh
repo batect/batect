@@ -6,7 +6,7 @@
     # This file is part of batect.
     # Do not modify this file, it will be overwritten next time you upgrade batect.
     # You should commit this file to version control alongside the rest of your project. It should not be installed globally.
-    # For more information, visit https://github.com/charleskorn/batect.
+    # For more information, visit https://github.com/batect/batect.
 
     VERSION="VERSION-GOES-HERE"
     DOWNLOAD_URL_ROOT=${BATECT_DOWNLOAD_URL_ROOT:-"https://dl.bintray.com/charleskorn/batect"}

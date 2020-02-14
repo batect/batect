@@ -17,6 +17,7 @@
 package batect.ui
 
 import batect.logging.Logger
+import batect.os.HostEnvironmentVariables
 import batect.os.NativeMethods
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
@@ -25,11 +26,9 @@ import batect.os.data
 class ConsoleInfo(
     private val nativeMethods: NativeMethods,
     private val systemInfo: SystemInfo,
-    private val environment: Map<String, String>,
+    private val environment: HostEnvironmentVariables,
     private val logger: Logger
 ) {
-    constructor(nativeMethods: NativeMethods, systemInfo: SystemInfo, logger: Logger) : this(nativeMethods, systemInfo, System.getenv(), logger)
-
     val stdinIsTTY: Boolean by lazy {
         val result = nativeMethods.determineIfStdinIsTTY()
 

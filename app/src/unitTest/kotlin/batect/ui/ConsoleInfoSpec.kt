@@ -16,6 +16,7 @@
 
 package batect.ui
 
+import batect.os.HostEnvironmentVariables
 import batect.os.NativeMethods
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
@@ -45,7 +46,7 @@ object ConsoleInfoSpec : Spek({
                     on { determineIfStdinIsTTY() } doReturn true
                 }
 
-                val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, emptyMap(), logger) }
+                val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables(), logger) }
 
                 it("returns true") {
                     assertThat(consoleInfo.stdinIsTTY, equalTo(true))
@@ -57,7 +58,7 @@ object ConsoleInfoSpec : Spek({
                     on { determineIfStdinIsTTY() } doReturn false
                 }
 
-                val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, emptyMap(), logger) }
+                val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables(), logger) }
 
                 it("returns false") {
                     assertThat(consoleInfo.stdinIsTTY, equalTo(false))
@@ -71,7 +72,7 @@ object ConsoleInfoSpec : Spek({
                     on { determineIfStdoutIsTTY() } doReturn true
                 }
 
-                val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, emptyMap(), logger) }
+                val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables(), logger) }
 
                 it("returns true") {
                     assertThat(consoleInfo.stdoutIsTTY, equalTo(true))
@@ -83,7 +84,7 @@ object ConsoleInfoSpec : Spek({
                     on { determineIfStdoutIsTTY() } doReturn false
                 }
 
-                val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, emptyMap(), logger) }
+                val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables(), logger) }
 
                 it("returns false") {
                     assertThat(consoleInfo.stdoutIsTTY, equalTo(false))
@@ -98,7 +99,7 @@ object ConsoleInfoSpec : Spek({
                 }
 
                 on("the TERM environment variable being set to 'dumb'") {
-                    val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, mapOf("TERM" to "dumb"), logger) }
+                    val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables("TERM" to "dumb"), logger) }
 
                     it("returns false") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -113,7 +114,7 @@ object ConsoleInfoSpec : Spek({
                             }
                         }
 
-                        val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, windowsSystemInfo, emptyMap(), logger) }
+                        val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, windowsSystemInfo, HostEnvironmentVariables(), logger) }
 
                         it("returns true") {
                             assertThat(consoleInfo.supportsInteractivity, equalTo(true))
@@ -121,7 +122,7 @@ object ConsoleInfoSpec : Spek({
                     }
 
                     describe("when the application is not running on Windows") {
-                        val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, emptyMap(), logger) }
+                        val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables(), logger) }
 
                         it("returns false") {
                             assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -130,7 +131,7 @@ object ConsoleInfoSpec : Spek({
                 }
 
                 on("the TERM environment variable being set to something other than 'dumb' and the TRAVIS environment variable not being set") {
-                    val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, mapOf("TERM" to "other-terminal"), logger) }
+                    val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables("TERM" to "other-terminal"), logger) }
 
                     it("returns true") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(true))
@@ -138,7 +139,7 @@ object ConsoleInfoSpec : Spek({
                 }
 
                 on("the TERM environment variable being set to something other than 'dumb' and the TRAVIS environment variable being set") {
-                    val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, mapOf("TERM" to "other-terminal", "TRAVIS" to "true"), logger) }
+                    val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables("TERM" to "other-terminal", "TRAVIS" to "true"), logger) }
 
                     it("returns false") {
                         assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -151,7 +152,7 @@ object ConsoleInfoSpec : Spek({
                     on { determineIfStdoutIsTTY() } doReturn false
                 }
 
-                val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, mapOf("TERM" to "other-terminal"), logger) }
+                val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables("TERM" to "other-terminal"), logger) }
 
                 it("returns false") {
                     assertThat(consoleInfo.supportsInteractivity, equalTo(false))
@@ -163,7 +164,7 @@ object ConsoleInfoSpec : Spek({
             val nativeMethods = mock<NativeMethods>()
 
             on("when the TERM environment variable is not set") {
-                val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, emptyMap(), logger) }
+                val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables(), logger) }
 
                 it("returns null") {
                     assertThat(consoleInfo.terminalType, absent())
@@ -171,7 +172,7 @@ object ConsoleInfoSpec : Spek({
             }
 
             on("when the TERM environment variable is set") {
-                val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, mapOf("TERM" to "some-terminal"), logger) }
+                val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables("TERM" to "some-terminal"), logger) }
 
                 it("returns its value") {
                     assertThat(consoleInfo.terminalType, equalTo("some-terminal"))

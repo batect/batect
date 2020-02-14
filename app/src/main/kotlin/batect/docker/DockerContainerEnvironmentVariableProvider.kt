@@ -21,17 +21,15 @@ import batect.config.VariableExpression
 import batect.config.VariableExpressionEvaluationException
 import batect.execution.ConfigVariablesProvider
 import batect.execution.ContainerRuntimeConfiguration
+import batect.os.HostEnvironmentVariables
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.utils.mapToSet
 
 class DockerContainerEnvironmentVariableProvider(
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
-    private val hostEnvironmentVariables: Map<String, String>,
+    private val hostEnvironmentVariables: HostEnvironmentVariables,
     private val configVariablesProvider: ConfigVariablesProvider
 ) {
-    constructor(proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider, configVariablesProvider: ConfigVariablesProvider)
-        : this(proxyEnvironmentVariablesProvider, System.getenv(), configVariablesProvider)
-
     fun environmentVariablesFor(
         container: Container,
         config: ContainerRuntimeConfiguration,

@@ -17,8 +17,9 @@
 package batect.cli.options.defaultvalues
 
 import batect.cli.options.ValueConversionResult
+import batect.os.HostEnvironmentVariables
 
-class EnvironmentVariableDefaultValueProviderFactory(private val environment: Map<String, String> = System.getenv()) {
+class EnvironmentVariableDefaultValueProviderFactory(private val environment: HostEnvironmentVariables) {
     fun <StorageType, ValueType : StorageType> create(
         name: String,
         fallback: StorageType,

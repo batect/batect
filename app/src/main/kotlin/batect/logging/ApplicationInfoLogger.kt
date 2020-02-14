@@ -19,6 +19,7 @@ package batect.logging
 import batect.VersionInfo
 import batect.data
 import batect.docker.client.DockerSystemInfoClient
+import batect.os.HostEnvironmentVariables
 import batect.os.SystemInfo
 import batect.os.data
 
@@ -27,11 +28,8 @@ class ApplicationInfoLogger(
     private val versionInfo: VersionInfo,
     private val systemInfo: SystemInfo,
     private val dockerSystemInfoClient: DockerSystemInfoClient,
-    private val environmentVariables: Map<String, String>
+    private val environmentVariables: HostEnvironmentVariables
 ) {
-    constructor(logger: Logger, versionInfo: VersionInfo, systemInfo: SystemInfo, dockerSystemInfoClient: DockerSystemInfoClient)
-        : this(logger, versionInfo, systemInfo, dockerSystemInfoClient, System.getenv())
-
     fun logApplicationInfo(commandLineArgs: Iterable<String>) {
         logger.info {
             message("Application started.")

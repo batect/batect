@@ -16,15 +16,14 @@
 
 package batect.os.proxies
 
+import batect.os.HostEnvironmentVariables
 import batect.utils.mapToSet
 import java.util.TreeSet
 
 class ProxyEnvironmentVariablesProvider(
     private val preprocessor: ProxyEnvironmentVariablePreprocessor,
-    private val hostEnvironmentVariables: Map<String, String>
+    private val hostEnvironmentVariables: HostEnvironmentVariables
 ) {
-    constructor(preprocessor: ProxyEnvironmentVariablePreprocessor) : this(preprocessor, System.getenv())
-
     private val proxyEnvironmentVariablesNeedingPreprocessing = setOf("http_proxy", "https_proxy", "ftp_proxy")
         .toCollection(TreeSet(String.CASE_INSENSITIVE_ORDER))
 

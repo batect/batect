@@ -29,6 +29,7 @@ import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.BuildImageStep
+import batect.os.HostEnvironmentVariables
 import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.ui.containerio.ContainerIOStreamingOptions
@@ -41,7 +42,7 @@ class BuildImageStepRunner(
     private val ioStreamingOptions: ContainerIOStreamingOptions,
     private val runOptions: RunOptions,
     private val systemInfo: SystemInfo,
-    private val hostEnvironmentVariables: Map<String, String> = System.getenv()
+    private val hostEnvironmentVariables: HostEnvironmentVariables
 ) {
     fun run(step: BuildImageStep, eventSink: TaskEventSink) {
         try {

@@ -42,6 +42,7 @@ import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.logging.Logger
 import batect.os.ConsoleManager
+import batect.os.HostEnvironmentVariables
 import batect.os.NativeMethods
 import batect.os.ProcessRunner
 import batect.os.SignalListener
@@ -75,7 +76,7 @@ fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: Na
     val imagesAPI = ImagesAPI(httpConfig, systemInfo, logger)
     val networksAPI = NetworksAPI(httpConfig, systemInfo, logger)
     val systemInfoAPI = SystemInfoAPI(httpConfig, systemInfo, logger)
-    val consoleInfo = ConsoleInfo(nativeMethods, systemInfo, logger)
+    val consoleInfo = ConsoleInfo(nativeMethods, systemInfo, HostEnvironmentVariables.current, logger)
     val consoleManager = getConsoleManagerForPlatform(consoleInfo, processRunner, nativeMethods, logger)
     val credentialsConfigurationFile = DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger)
     val credentialsProvider = DockerRegistryCredentialsProvider(DockerRegistryDomainResolver(), DockerRegistryIndexResolver(), credentialsConfigurationFile)

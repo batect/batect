@@ -17,6 +17,7 @@
 package batect.cli.commands
 
 import batect.VersionInfo
+import batect.os.HostEnvironmentVariables
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
@@ -62,10 +63,10 @@ object UpgradeCommandSpec : Spek({
             val updateInfoDownloader = mock<UpdateInfoDownloader>()
             val versionInfo = mock<VersionInfo>()
             val fileSystem = Jimfs.newFileSystem(Configuration.unix())
-            val environmentVariables = emptyMap<String, String>()
+            val environmentVariables = HostEnvironmentVariables()
 
             on("running the command") {
-                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, logger) }
                 val exitCode by runForEachTest { command.run() }
 
                 it("returns a non-zero exit code") {
@@ -83,7 +84,7 @@ object UpgradeCommandSpec : Spek({
             val existingWrapperScriptLocation = "${wrapperScriptDirectory}existing-wrapper.sh"
             val newWrapperScriptLocation = "${wrapperScriptDirectory}new-wrapper.sh"
 
-            val environmentVariables = mapOf(
+            val environmentVariables = HostEnvironmentVariables(
                 "BATECT_WRAPPER_SCRIPT_DIR" to wrapperScriptDirectory
             )
 
@@ -126,7 +127,7 @@ object UpgradeCommandSpec : Spek({
                             }
 
                             on("running the command") {
-                                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, logger) }
                                 val exitCode by runForEachTest { command.run() }
 
                                 it("returns a zero exit code") {
@@ -168,7 +169,7 @@ object UpgradeCommandSpec : Spek({
                             }
 
                             on("running the command") {
-                                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, logger) }
                                 val exitCode by runForEachTest { command.run() }
 
                                 it("returns a non-zero exit code") {
@@ -204,7 +205,7 @@ object UpgradeCommandSpec : Spek({
                             }
 
                             on("running the command") {
-                                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, logger) }
                                 val exitCode by runForEachTest { command.run() }
 
                                 it("returns a non-zero exit code") {
@@ -235,7 +236,7 @@ object UpgradeCommandSpec : Spek({
                         }
 
                         on("running the command") {
-                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("returns a zero exit code") {
@@ -258,7 +259,7 @@ object UpgradeCommandSpec : Spek({
                         }
 
                         on("running the command") {
-                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("returns a zero exit code") {
@@ -289,7 +290,7 @@ object UpgradeCommandSpec : Spek({
                         }
 
                         on("running the command") {
-                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("returns a non-zero exit code") {
@@ -314,7 +315,7 @@ object UpgradeCommandSpec : Spek({
                         }
 
                         on("running the command") {
-                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("returns a zero exit code") {
@@ -337,7 +338,7 @@ object UpgradeCommandSpec : Spek({
                         }
 
                         on("running the command") {
-                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("returns a zero exit code") {
@@ -365,7 +366,7 @@ object UpgradeCommandSpec : Spek({
                 val versionInfo = mock<VersionInfo>()
 
                 on("running the command") {
-                    val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, environmentVariables) }
+                    val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, logger) }
                     val exitCode by runForEachTest { command.run() }
 
                     it("returns a non-zero exit code") {

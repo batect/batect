@@ -16,6 +16,7 @@
 
 package batect.os.proxies
 
+import batect.os.HostEnvironmentVariables
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.isEmptyMap
@@ -36,7 +37,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
         }
 
         given("there are no environment variables defined") {
-            val environmentVariables = emptyMap<String, String>()
+            val environmentVariables = HostEnvironmentVariables()
             val provider = ProxyEnvironmentVariablesProvider(preprocessor, environmentVariables)
 
             mapOf(
@@ -56,7 +57,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
         }
 
         given("there are no proxy-related environment variables defined") {
-            val environmentVariables = mapOf(
+            val environmentVariables = HostEnvironmentVariables(
                 "PATH" to "/usr/bin:/blah",
                 "HOME" to "/home/someuser"
             )
@@ -87,7 +88,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                     val extraNoProxyEntries = emptySet<String>()
 
                     given("and the variable name is given in lowercase") {
-                        val environmentVariables = mapOf(
+                        val environmentVariables = HostEnvironmentVariables(
                             "PATH" to "/usr/bin:/blah",
                             "HOME" to "/home/someuser",
                             lowercaseName to "http://proxy:1234"
@@ -108,7 +109,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                     }
 
                     given("and the variable name is given in uppercase") {
-                        val environmentVariables = mapOf(
+                        val environmentVariables = HostEnvironmentVariables(
                             "PATH" to "/usr/bin:/blah",
                             "HOME" to "/home/someuser",
                             uppercaseName to "http://proxy:1234"
@@ -129,7 +130,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                     }
 
                     given("and the variable name is given in both lowercase and uppercase") {
-                        val environmentVariables = mapOf(
+                        val environmentVariables = HostEnvironmentVariables(
                             "PATH" to "/usr/bin:/blah",
                             "HOME" to "/home/someuser",
                             lowercaseName to "http://lowercase-proxy:1234",
@@ -155,7 +156,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                     val extraNoProxyEntries = setOf("host-1", "host-2")
 
                     given("and the variable name is given in lowercase") {
-                        val environmentVariables = mapOf(
+                        val environmentVariables = HostEnvironmentVariables(
                             "PATH" to "/usr/bin:/blah",
                             "HOME" to "/home/someuser",
                             lowercaseName to "http://proxy:1234"
@@ -178,7 +179,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                     }
 
                     given("and the variable name is given in uppercase") {
-                        val environmentVariables = mapOf(
+                        val environmentVariables = HostEnvironmentVariables(
                             "PATH" to "/usr/bin:/blah",
                             "HOME" to "/home/someuser",
                             uppercaseName to "http://proxy:1234"
@@ -201,7 +202,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                     }
 
                     given("and the variable name is given in both lowercase and uppercase") {
-                        val environmentVariables = mapOf(
+                        val environmentVariables = HostEnvironmentVariables(
                             "PATH" to "/usr/bin:/blah",
                             "HOME" to "/home/someuser",
                             lowercaseName to "http://lowercase-proxy:1234",
@@ -232,7 +233,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                 val extraNoProxyEntries = emptySet<String>()
 
                 given("and the variable name is given in lowercase") {
-                    val environmentVariables = mapOf(
+                    val environmentVariables = HostEnvironmentVariables(
                         "PATH" to "/usr/bin:/blah",
                         "HOME" to "/home/someuser",
                         "no_proxy" to "host-1"
@@ -253,7 +254,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                 }
 
                 given("and the variable name is given in uppercase") {
-                    val environmentVariables = mapOf(
+                    val environmentVariables = HostEnvironmentVariables(
                         "PATH" to "/usr/bin:/blah",
                         "HOME" to "/home/someuser",
                         "NO_PROXY" to "host-1"
@@ -274,7 +275,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                 }
 
                 given("and the variable name is given in both lowercase and uppercase") {
-                    val environmentVariables = mapOf(
+                    val environmentVariables = HostEnvironmentVariables(
                         "PATH" to "/usr/bin:/blah",
                         "HOME" to "/home/someuser",
                         "no_proxy" to "lowercase-host-1",
@@ -300,7 +301,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                 val extraNoProxyEntries = setOf("host-1", "host-2")
 
                 given("and the variable name is given in lowercase") {
-                    val environmentVariables = mapOf(
+                    val environmentVariables = HostEnvironmentVariables(
                         "PATH" to "/usr/bin:/blah",
                         "HOME" to "/home/someuser",
                         "no_proxy" to "existing-host"
@@ -321,7 +322,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                 }
 
                 given("and the variable name is given in uppercase") {
-                    val environmentVariables = mapOf(
+                    val environmentVariables = HostEnvironmentVariables(
                         "PATH" to "/usr/bin:/blah",
                         "HOME" to "/home/someuser",
                         "NO_PROXY" to "existing-host"
@@ -342,7 +343,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                 }
 
                 given("and the variable name is given in both lowercase and uppercase") {
-                    val environmentVariables = mapOf(
+                    val environmentVariables = HostEnvironmentVariables(
                         "PATH" to "/usr/bin:/blah",
                         "HOME" to "/home/someuser",
                         "no_proxy" to "lowercase-host",

@@ -22,6 +22,7 @@ import batect.config.LiteralValue
 import batect.config.VariableExpressionEvaluationException
 import batect.execution.ConfigVariablesProvider
 import batect.execution.ContainerRuntimeConfiguration
+import batect.os.HostEnvironmentVariables
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
@@ -48,13 +49,12 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
             val terminalType = null as String?
 
             given("propagating proxy environment variables is disabled") {
-                val hostEnvironmentVariables = emptyMap<String, String>()
                 val propagateProxyEnvironmentVariables = false
                 val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider> {
                     on { getProxyEnvironmentVariables(setOf("container-1", "container-2")) } doReturn mapOf("SOME_PROXY_VAR" to "this should not be used")
                 }
 
-                val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, hostEnvironmentVariables, configVariablesProviderFor(emptyMap()))
+                val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, HostEnvironmentVariables(), configVariablesProviderFor(emptyMap()))
 
                 given("there are no additional environment variables") {
                     val container = Container(
@@ -132,8 +132,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
         given("the console's type is provided") {
             val terminalType = "some-term"
             val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider>()
-            val hostEnvironmentVariables = emptyMap<String, String>()
-            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, hostEnvironmentVariables, configVariablesProviderFor(emptyMap()))
+            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, HostEnvironmentVariables(), configVariablesProviderFor(emptyMap()))
             val propagateProxyEnvironmentVariables = false
 
             given("a container with no override for the TERM environment variable") {
@@ -239,7 +238,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
         given("there are references to config variables or host environment variables") {
             val terminalType = null as String?
             val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider>()
-            val hostEnvironmentVariables = mapOf("SOME_HOST_VARIABLE" to "SOME_HOST_VALUE")
+            val hostEnvironmentVariables = HostEnvironmentVariables("SOME_HOST_VARIABLE" to "SOME_HOST_VALUE")
             val configVariables = mapOf("SOME_CONFIG_VARIABLE" to "SOME_CONFIG_VALUE")
             val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, hostEnvironmentVariables, configVariablesProviderFor(configVariables))
             val propagateProxyEnvironmentVariables = false
@@ -354,7 +353,6 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
         given("there are proxy environment variables present on the host") {
             val terminalType = null as String?
-            val hostEnvironmentVariables = emptyMap<String, String>()
             val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider> {
                 on { getProxyEnvironmentVariables(setOf("container-1", "container-2")) } doReturn mapOf(
                     "HTTP_PROXY" to "http://some-proxy",
@@ -362,7 +360,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                 )
             }
 
-            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, hostEnvironmentVariables, configVariablesProviderFor(emptyMap()))
+            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, HostEnvironmentVariables(), configVariablesProviderFor(emptyMap()))
 
             given("propagating proxy environment variables is enabled") {
                 val propagateProxyEnvironmentVariables = true

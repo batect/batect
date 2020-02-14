@@ -34,6 +34,7 @@ import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.BuildImageStep
+import batect.os.HostEnvironmentVariables
 import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.testutils.createForEachTest
@@ -84,7 +85,7 @@ object BuildImageStepRunnerSpec : Spek({
             on { lineSeparator } doReturn "SYSTEM_LINE_SEPARATOR"
         }
 
-        val hostEnvironmentVariables = mapOf("SOME_ENV_VAR" to "some env var value")
+        val hostEnvironmentVariables = HostEnvironmentVariables("SOME_ENV_VAR" to "some env var value")
         val eventSink by createForEachTest { mock<TaskEventSink>() }
 
         val runner by createForEachTest {

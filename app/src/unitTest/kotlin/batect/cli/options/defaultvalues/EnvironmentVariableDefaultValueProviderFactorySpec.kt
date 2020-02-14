@@ -18,6 +18,7 @@ package batect.cli.options.defaultvalues
 
 import batect.cli.options.ValueConversionResult
 import batect.cli.options.ValueConverters
+import batect.os.HostEnvironmentVariables
 import batect.testutils.equalTo
 import batect.testutils.given
 import com.natpryce.hamkrest.assertion.assertThat
@@ -26,7 +27,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object EnvironmentVariableDefaultValueProviderFactorySpec : Spek({
     describe("an environment variable default value provider") {
-        val environment = mapOf(
+        val environment = HostEnvironmentVariables(
             "SOME_VAR" to "some value"
         )
 

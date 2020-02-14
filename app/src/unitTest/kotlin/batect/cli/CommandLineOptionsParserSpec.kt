@@ -18,6 +18,7 @@ package batect.cli
 
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.docker.DockerHttpConfigDefaults
+import batect.os.HostEnvironmentVariables
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
 import batect.os.PathResolverFactory
@@ -54,7 +55,7 @@ object CommandLineOptionsParserSpec : Spek({
             on { createResolverForCurrentDirectory() } doReturn pathResolver
         }
 
-        val environmentVariableDefaultValueProviderFactory = EnvironmentVariableDefaultValueProviderFactory(emptyMap())
+        val environmentVariableDefaultValueProviderFactory = EnvironmentVariableDefaultValueProviderFactory(HostEnvironmentVariables())
 
         val defaultDockerHost = "http://some-docker-host"
         val dockerHttpConfigDefaults = mock<DockerHttpConfigDefaults> {

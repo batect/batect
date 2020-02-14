@@ -18,6 +18,7 @@ package batect.cli.commands
 
 import batect.VersionInfo
 import batect.logging.Logger
+import batect.os.HostEnvironmentVariables
 import batect.ui.Console
 import batect.ui.text.Text
 import batect.updates.ScriptInfo
@@ -38,12 +39,9 @@ class UpgradeCommand(
     private val fileSystem: FileSystem,
     private val console: Console,
     private val errorConsole: Console,
-    private val logger: Logger,
-    private val environmentVariables: Map<String, String>
+    private val environmentVariables: HostEnvironmentVariables,
+    private val logger: Logger
 ) : Command {
-    constructor(updateInfoDownloader: UpdateInfoDownloader, versionInfo: VersionInfo, httpClient: OkHttpClient, fileSystem: FileSystem, console: Console, errorConsole: Console, logger: Logger) :
-        this(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, logger, System.getenv())
-
     override fun run(): Int {
         val wrapperScriptDir = environmentVariables["BATECT_WRAPPER_SCRIPT_DIR"]
 

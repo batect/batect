@@ -68,6 +68,7 @@ import batect.execution.TaskExecutionOrderResolver
 import batect.execution.TaskRunner
 import batect.execution.TaskStateMachine
 import batect.execution.TaskSuggester
+import batect.execution.VolumeMountResolver
 import batect.execution.model.stages.CleanupStagePlanner
 import batect.execution.model.stages.RunStagePlanner
 import batect.execution.model.steps.TaskStepRunner
@@ -265,11 +266,12 @@ private val executionModule = Kodein.Module("execution") {
     bind<TaskStateMachine>() with scoped(TaskScope).singletonWithLogger { logger -> TaskStateMachine(instance(), instance(RunOptionsType.Task), instance(), instance(), instance(), instance(), logger) }
     bind<TaskStepRunner>() with scoped(TaskScope).singleton { TaskStepRunner(dkodein) }
     bind<TaskSuggester>() with singleton { TaskSuggester() }
+    bind<VolumeMountResolver>() with scoped(TaskScope).singleton { VolumeMountResolver() }
 }
 
 private val runnersModule = Kodein.Module("execution.model.steps.runners") {
     bind<BuildImageStepRunner>() with scoped(TaskScope).singleton { BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
-    bind<CreateContainerStepRunner>() with scoped(TaskScope).singleton { CreateContainerStepRunner(instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
+    bind<CreateContainerStepRunner>() with scoped(TaskScope).singleton { CreateContainerStepRunner(instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
     bind<CreateTaskNetworkStepRunner>() with scoped(TaskScope).singleton { CreateTaskNetworkStepRunner(instance()) }
     bind<DeleteTaskNetworkStepRunner>() with scoped(TaskScope).singleton { DeleteTaskNetworkStepRunner(instance()) }
     bind<DeleteTemporaryDirectoryStepRunner>() with scoped(TaskScope).singleton { DeleteTemporaryDirectoryStepRunner() }

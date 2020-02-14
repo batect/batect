@@ -43,14 +43,6 @@ data class VolumeMount(
     val containerPath: String,
     val options: String? = null
 ) {
-    override fun toString(): String {
-        if (options == null) {
-            return "$localPath:$containerPath"
-        } else {
-            return "$localPath:$containerPath:$options"
-        }
-    }
-
     @Serializer(forClass = VolumeMount::class)
     companion object : KSerializer<VolumeMount> {
         override val descriptor: SerialDescriptor = object : SerialClassDescImpl("VolumeMount") {

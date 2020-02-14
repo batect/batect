@@ -19,7 +19,6 @@ package batect.docker
 import batect.config.DeviceMount
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
-import batect.config.VolumeMount
 import batect.testutils.given
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
@@ -41,7 +40,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 setOf("the-first-network-alias", "the-second-network-alias"),
                 mapOf("SOME_VAR" to "some value"),
                 "/work-dir",
-                setOf(VolumeMount("/local", "/container", "ro")),
+                setOf(DockerVolumeMount("/local", "/container", "ro")),
                 setOf(DeviceMount("/dev/local", "/dev/container", "rw")),
                 setOf(PortMapping(123, 456)),
                 HealthCheckConfig(Duration.ofNanos(555), 12, Duration.ofNanos(333)),

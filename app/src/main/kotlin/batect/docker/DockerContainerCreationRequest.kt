@@ -19,7 +19,6 @@ package batect.docker
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
 import batect.config.DeviceMount
-import batect.config.VolumeMount
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -36,7 +35,7 @@ data class DockerContainerCreationRequest(
     val networkAliases: Set<String>,
     val environmentVariables: Map<String, String>,
     val workingDirectory: String?,
-    val volumeMounts: Set<VolumeMount>,
+    val volumeMounts: Set<DockerVolumeMount>,
     val deviceMounts: Set<DeviceMount>,
     val portMappings: Set<PortMapping>,
     val healthCheckConfig: HealthCheckConfig,

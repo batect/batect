@@ -16,10 +16,12 @@
 
 package batect.execution
 
+import batect.config.VolumeMount
 import batect.docker.DockerVolumeMount
-import batect.docker.UserAndGroup
+import batect.utils.mapToSet
 
-data class RunAsCurrentUserConfiguration(
-    val volumeMounts: Set<DockerVolumeMount>,
-    val userAndGroup: UserAndGroup?
-)
+class VolumeMountResolver {
+    fun resolve(mounts: Set<VolumeMount>): Set<DockerVolumeMount> = mounts.mapToSet {
+        DockerVolumeMount(it.localPath, it.containerPath, it.options)
+    }
+}

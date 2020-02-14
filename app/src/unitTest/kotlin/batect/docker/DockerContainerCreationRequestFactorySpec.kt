@@ -21,7 +21,6 @@ import batect.config.HealthCheckConfig
 import batect.config.LiteralValue
 import batect.config.PortMapping
 import batect.config.DeviceMount
-import batect.config.VolumeMount
 import batect.execution.ContainerRuntimeConfiguration
 import batect.os.Command
 import batect.testutils.given
@@ -45,6 +44,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
         val entrypoint = Command.parse("sh")
         val workingDirectory = "some-specific-working-directory"
         val terminalType = "some-term"
+        val volumeMounts = setOf(DockerVolumeMount("local", "remote", "mode"))
         val allContainersInNetwork = setOf(
             Container("container-1", imageSourceDoesNotMatter()),
             Container("container-2", imageSourceDoesNotMatter())
@@ -64,166 +64,135 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
         val factory = DockerContainerCreationRequestFactory(environmentVariablesProvider, nameGenerator)
 
-        given("there are no additional volume mounts") {
-            val additionalVolumeMounts = emptySet<VolumeMount>()
-
-            given("there are no additional port mappings") {
-                val additionalPortMappings = emptySet<PortMapping>()
-
-                on("creating the request") {
-                    val container = Container(
-                        "some-container",
-                        imageSourceDoesNotMatter(),
-                        command = Command.parse("some-command-that-wont-be-used"),
-                        entrypoint = Command.parse("some-command-that-wont-be-used"),
-                        workingDirectory = "/some-work-dir",
-                        volumeMounts = setOf(VolumeMount("local", "remote", "mode")),
-                        deviceMounts = setOf(DeviceMount("/dev/local", "/dev/container", "options")),
-                        portMappings = setOf(PortMapping(123, 456)),
-                        healthCheckConfig = HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(5)),
-                        privileged = false,
-                        enableInitProcess = true,
-                        capabilitiesToAdd = setOf(Capability.NET_ADMIN),
-                        capabilitiesToDrop = setOf(Capability.KILL),
-                        additionalHostnames = setOf("some-alias")
-                    )
-
-                    val userAndGroup = UserAndGroup(123, 456)
-                    val config = ContainerRuntimeConfiguration(command, entrypoint, workingDirectory, additionalEnvironmentVariables, additionalPortMappings)
-                    val request = factory.create(
-                        container,
-                        image,
-                        network,
-                        config,
-                        additionalVolumeMounts,
-                        propagateProxyEnvironmentVariables,
-                        userAndGroup,
-                        terminalType,
-                        allContainersInNetwork
-                    )
-
-                    it("populates the container name on the request") {
-                        assertThat(request.name, equalTo("the-container-name"))
-                    }
-
-                    it("populates the image on the request") {
-                        assertThat(request.image, equalTo(image))
-                    }
-
-                    it("populates the network on the request") {
-                        assertThat(request.network, equalTo(network))
-                    }
-
-                    it("populates the command on the request") {
-                        assertThat(request.command, equalTo(command.parsedCommand))
-                    }
-
-                    it("populates the entrypoint on the request") {
-                        assertThat(request.entrypoint, equalTo(entrypoint.parsedCommand))
-                    }
-
-                    it("populates the hostname on the request with the name of the container") {
-                        assertThat(request.hostname, equalTo(container.name))
-                    }
-
-                    it("populates the network aliases on the request with the name of the container and additional hostnames from the container") {
-                        assertThat(request.networkAliases, equalTo(setOf(container.name, "some-alias")))
-                    }
-
-                    it("populates the environment variables on the request with the environment variables from the environment variable provider") {
-                        assertThat(request.environmentVariables, equalTo(expectedEnvironmentVariables))
-                    }
-
-                    it("populates the working directory on the request with the working directory provided, not from the container") {
-                        assertThat(request.workingDirectory, equalTo(workingDirectory))
-                    }
-
-                    it("populates the volume mounts on the request with the volume mounts from the container") {
-                        assertThat(request.volumeMounts, equalTo(container.volumeMounts))
-                    }
-
-                    it("populates the device mounts on the request with the device mounts from the container") {
-                        assertThat(request.deviceMounts, equalTo(container.deviceMounts))
-                    }
-
-                    it("populates the port mappings on the request with the port mappings from the container") {
-                        assertThat(request.portMappings, equalTo(container.portMappings))
-                    }
-
-                    it("populates the health check configuration on the request with the health check configuration from the container") {
-                        assertThat(request.healthCheckConfig, equalTo(container.healthCheckConfig))
-                    }
-
-                    it("populates the user and group configuration on the request with the provided values") {
-                        assertThat(request.userAndGroup, equalTo(userAndGroup))
-                    }
-
-                    it("populates the privileged mode with the setting from the container") {
-                        assertThat(request.privileged, equalTo(false))
-                    }
-
-                    it("populates the init configuration on the request with the enable init process configuration from the container") {
-                        assertThat(request.init, equalTo(container.enableInitProcess))
-                    }
-
-                    it("populates the capabilities to add on the request with the set from the container") {
-                        assertThat(request.capabilitiesToAdd, equalTo(container.capabilitiesToAdd))
-                    }
-
-                    it("populates the capabilities to drop on the request with the set from the container") {
-                        assertThat(request.capabilitiesToDrop, equalTo(container.capabilitiesToDrop))
-                    }
-                }
-            }
-
-            given("there are additional port mappings") {
-                val additionalPortMappings = setOf(
-                    PortMapping(1000, 2000)
-                )
-
-                on("creating the request") {
-                    val container = Container(
-                        "some-container",
-                        imageSourceDoesNotMatter(),
-                        portMappings = setOf(PortMapping(123, 456))
-                    )
-
-                    val config = ContainerRuntimeConfiguration(command, entrypoint, workingDirectory, additionalEnvironmentVariables, additionalPortMappings)
-                    val request = factory.create(container, image, network, config, additionalVolumeMounts, propagateProxyEnvironmentVariables, null, terminalType, allContainersInNetwork)
-
-                    it("populates the port mappings on the request with the combined set of port mappings from the container and the additional port mappings") {
-                        assertThat(
-                            request.portMappings, equalTo(
-                                setOf(
-                                    PortMapping(123, 456),
-                                    PortMapping(1000, 2000)
-                                )
-                            )
-                        )
-                    }
-                }
-            }
-        }
-
-        given("there are additional volume mounts") {
-            val additionalVolumeMounts = setOf(VolumeMount("extra-local", "extra-remote", "extra-mode"))
+        given("there are no additional port mappings") {
+            val additionalPortMappings = emptySet<PortMapping>()
 
             on("creating the request") {
                 val container = Container(
                     "some-container",
                     imageSourceDoesNotMatter(),
-                    volumeMounts = setOf(VolumeMount("local", "remote", "mode"))
+                    command = Command.parse("some-command-that-wont-be-used"),
+                    entrypoint = Command.parse("some-command-that-wont-be-used"),
+                    workingDirectory = "/some-work-dir",
+                    deviceMounts = setOf(DeviceMount("/dev/local", "/dev/container", "options")),
+                    portMappings = setOf(PortMapping(123, 456)),
+                    healthCheckConfig = HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(5)),
+                    privileged = false,
+                    enableInitProcess = true,
+                    capabilitiesToAdd = setOf(Capability.NET_ADMIN),
+                    capabilitiesToDrop = setOf(Capability.KILL),
+                    additionalHostnames = setOf("some-alias")
                 )
 
-                val config = ContainerRuntimeConfiguration(command, entrypoint, workingDirectory, additionalEnvironmentVariables, emptySet())
-                val request = factory.create(container, image, network, config, additionalVolumeMounts, propagateProxyEnvironmentVariables, null, terminalType, allContainersInNetwork)
+                val userAndGroup = UserAndGroup(123, 456)
+                val config = ContainerRuntimeConfiguration(command, entrypoint, workingDirectory, additionalEnvironmentVariables, additionalPortMappings)
+                val request = factory.create(
+                    container,
+                    image,
+                    network,
+                    config,
+                    volumeMounts,
+                    propagateProxyEnvironmentVariables,
+                    userAndGroup,
+                    terminalType,
+                    allContainersInNetwork
+                )
 
-                it("populates the volume mounts on the request with the combined set of volume mounts from the container and the additional volume mounts") {
+                it("populates the container name on the request") {
+                    assertThat(request.name, equalTo("the-container-name"))
+                }
+
+                it("populates the image on the request") {
+                    assertThat(request.image, equalTo(image))
+                }
+
+                it("populates the network on the request") {
+                    assertThat(request.network, equalTo(network))
+                }
+
+                it("populates the command on the request") {
+                    assertThat(request.command, equalTo(command.parsedCommand))
+                }
+
+                it("populates the entrypoint on the request") {
+                    assertThat(request.entrypoint, equalTo(entrypoint.parsedCommand))
+                }
+
+                it("populates the hostname on the request with the name of the container") {
+                    assertThat(request.hostname, equalTo(container.name))
+                }
+
+                it("populates the network aliases on the request with the name of the container and additional hostnames from the container") {
+                    assertThat(request.networkAliases, equalTo(setOf(container.name, "some-alias")))
+                }
+
+                it("populates the environment variables on the request with the environment variables from the environment variable provider") {
+                    assertThat(request.environmentVariables, equalTo(expectedEnvironmentVariables))
+                }
+
+                it("populates the working directory on the request with the working directory provided, not from the container") {
+                    assertThat(request.workingDirectory, equalTo(workingDirectory))
+                }
+
+                it("populates the volume mounts on the request with the volume mounts provided") {
+                    assertThat(request.volumeMounts, equalTo(volumeMounts))
+                }
+
+                it("populates the device mounts on the request with the device mounts from the container") {
+                    assertThat(request.deviceMounts, equalTo(container.deviceMounts))
+                }
+
+                it("populates the port mappings on the request with the port mappings from the container") {
+                    assertThat(request.portMappings, equalTo(container.portMappings))
+                }
+
+                it("populates the health check configuration on the request with the health check configuration from the container") {
+                    assertThat(request.healthCheckConfig, equalTo(container.healthCheckConfig))
+                }
+
+                it("populates the user and group configuration on the request with the provided values") {
+                    assertThat(request.userAndGroup, equalTo(userAndGroup))
+                }
+
+                it("populates the privileged mode with the setting from the container") {
+                    assertThat(request.privileged, equalTo(false))
+                }
+
+                it("populates the init configuration on the request with the enable init process configuration from the container") {
+                    assertThat(request.init, equalTo(container.enableInitProcess))
+                }
+
+                it("populates the capabilities to add on the request with the set from the container") {
+                    assertThat(request.capabilitiesToAdd, equalTo(container.capabilitiesToAdd))
+                }
+
+                it("populates the capabilities to drop on the request with the set from the container") {
+                    assertThat(request.capabilitiesToDrop, equalTo(container.capabilitiesToDrop))
+                }
+            }
+        }
+
+        given("there are additional port mappings") {
+            val additionalPortMappings = setOf(
+                PortMapping(1000, 2000)
+            )
+
+            on("creating the request") {
+                val container = Container(
+                    "some-container",
+                    imageSourceDoesNotMatter(),
+                    portMappings = setOf(PortMapping(123, 456))
+                )
+
+                val config = ContainerRuntimeConfiguration(command, entrypoint, workingDirectory, additionalEnvironmentVariables, additionalPortMappings)
+                val request = factory.create(container, image, network, config, volumeMounts, propagateProxyEnvironmentVariables, null, terminalType, allContainersInNetwork)
+
+                it("populates the port mappings on the request with the combined set of port mappings from the container and the additional port mappings") {
                     assertThat(
-                        request.volumeMounts, equalTo(
+                        request.portMappings, equalTo(
                             setOf(
-                                VolumeMount("local", "remote", "mode"),
-                                VolumeMount("extra-local", "extra-remote", "extra-mode")
+                                PortMapping(123, 456),
+                                PortMapping(1000, 2000)
                             )
                         )
                     )

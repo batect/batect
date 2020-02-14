@@ -18,7 +18,7 @@ package batect.execution
 
 import batect.config.Container
 import batect.config.RunAsCurrentUserConfig
-import batect.config.VolumeMount
+import batect.docker.DockerVolumeMount
 import batect.docker.UserAndGroup
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TemporaryDirectoryCreatedEvent
@@ -65,16 +65,15 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
             val directoryThatExists = "/existing/directory"
             val fileThatExists = "/existing/file"
             val directoryThatDoesNotExist = "/new/directory"
-            val containerMounts = setOf(
-                VolumeMount(directoryThatExists, "/container/existing-directory", null),
-                VolumeMount(fileThatExists, "/container/existing-file", null),
-                VolumeMount(directoryThatDoesNotExist, "/container/new-directory", null)
+            val volumeMounts = setOf(
+                DockerVolumeMount(directoryThatExists, "/container/existing-directory", null),
+                DockerVolumeMount(fileThatExists, "/container/existing-file", null),
+                DockerVolumeMount(directoryThatDoesNotExist, "/container/new-directory", null)
             )
 
             val container = Container(
                 "some-container",
                 imageSourceDoesNotMatter(),
-                volumeMounts = containerMounts,
                 runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
             )
 
@@ -94,7 +93,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
             }
 
             on("generating the configuration") {
-                val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
+                val configuration by runForEachTest { provider.generateConfiguration(container, volumeMounts, eventSink) }
 
                 it("does not emit any events") {
                     verify(eventSink, never()).postEvent(any())
@@ -139,10 +138,10 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 val directoryThatExists = "C:\\existing\\directory"
                 val fileThatExists = "C:\\existing\\file"
                 val directoryThatDoesNotExist = "C:\\new\\directory"
-                val containerMounts = setOf(
-                    VolumeMount(directoryThatExists, "/container/existing-directory", null),
-                    VolumeMount(fileThatExists, "/container/existing-file", null),
-                    VolumeMount(directoryThatDoesNotExist, "/container/new-directory", null)
+                val volumeMounts = setOf(
+                    DockerVolumeMount(directoryThatExists, "/container/existing-directory", null),
+                    DockerVolumeMount(fileThatExists, "/container/existing-file", null),
+                    DockerVolumeMount(directoryThatDoesNotExist, "/container/new-directory", null)
                 )
 
                 beforeEachTest {
@@ -154,7 +153,6 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 val container = Container(
                     "some-container",
                     imageSourceDoesNotMatter(),
-                    volumeMounts = containerMounts,
                     runAsCurrentUserConfig = runAsCurrentUserConfig
                 )
 
@@ -168,7 +166,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem) }
 
                 on("generating the configuration") {
-                    val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
+                    val configuration by runForEachTest { provider.generateConfiguration(container, volumeMounts, eventSink) }
 
                     it("returns a set of volume mounts for the passwd and group file and home directory") {
                         assertThat(
@@ -269,10 +267,10 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 val directoryThatExists = "/existing/directory"
                 val fileThatExists = "/existing/file"
                 val directoryThatDoesNotExist = "/new/directory"
-                val containerMounts = setOf(
-                    VolumeMount(directoryThatExists, "/container/existing-directory", null),
-                    VolumeMount(fileThatExists, "/container/existing-file", null),
-                    VolumeMount(directoryThatDoesNotExist, "/container/new-directory", null)
+                val volumeMounts = setOf(
+                    DockerVolumeMount(directoryThatExists, "/container/existing-directory", null),
+                    DockerVolumeMount(fileThatExists, "/container/existing-file", null),
+                    DockerVolumeMount(directoryThatDoesNotExist, "/container/new-directory", null)
                 )
 
                 beforeEachTest {
@@ -284,7 +282,6 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 val container = Container(
                     "some-container",
                     imageSourceDoesNotMatter(),
-                    volumeMounts = containerMounts,
                     runAsCurrentUserConfig = runAsCurrentUserConfig
                 )
 
@@ -299,7 +296,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem) }
 
                     on("generating the configuration") {
-                        val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
+                        val configuration by runForEachTest { provider.generateConfiguration(container, volumeMounts, eventSink) }
 
                         it("returns a set of volume mounts for the passwd and group file and home directory") {
                             assertThat(
@@ -412,7 +409,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem) }
 
                     on("generating the configuration") {
-                        val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
+                        val configuration by runForEachTest { provider.generateConfiguration(container, volumeMounts, eventSink) }
 
                         it("returns a set of volume mounts for the passwd and group file") {
                             assertThat(
@@ -517,11 +514,11 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 })
 
 private fun hasReadOnlyVolumeMount(path: String) =
-    anyElement(has(VolumeMount::containerPath, equalTo(path)) and has(VolumeMount::options, equalTo("ro")))
+    anyElement(has(DockerVolumeMount::containerPath, equalTo(path)) and has(DockerVolumeMount::options, equalTo("ro")))
 
 private fun hasDelegatedVolumeMount(path: String) =
-    anyElement(has(VolumeMount::containerPath, equalTo(path)) and has(VolumeMount::options, equalTo("delegated")))
+    anyElement(has(DockerVolumeMount::containerPath, equalTo(path)) and has(DockerVolumeMount::options, equalTo("delegated")))
 
-private fun localPathToPasswdFile(mounts: Set<VolumeMount>, fileSystem: FileSystem): Path = fileSystem.getPath(mounts.single { it.containerPath == "/etc/passwd" }.localPath)
-private fun localPathToGroupFile(mounts: Set<VolumeMount>, fileSystem: FileSystem): Path = fileSystem.getPath(mounts.single { it.containerPath == "/etc/group" }.localPath)
-private fun localPathToHomeDirectory(mounts: Set<VolumeMount>, homeDirectory: String, fileSystem: FileSystem): Path = fileSystem.getPath(mounts.single { it.containerPath == homeDirectory }.localPath)
+private fun localPathToPasswdFile(mounts: Set<DockerVolumeMount>, fileSystem: FileSystem): Path = fileSystem.getPath(mounts.single { it.containerPath == "/etc/passwd" }.localPath)
+private fun localPathToGroupFile(mounts: Set<DockerVolumeMount>, fileSystem: FileSystem): Path = fileSystem.getPath(mounts.single { it.containerPath == "/etc/group" }.localPath)
+private fun localPathToHomeDirectory(mounts: Set<DockerVolumeMount>, homeDirectory: String, fileSystem: FileSystem): Path = fileSystem.getPath(mounts.single { it.containerPath == homeDirectory }.localPath)

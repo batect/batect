@@ -18,7 +18,6 @@ package batect.execution.model.steps.runners
 
 import batect.config.Container
 import batect.config.SetupCommand
-import batect.config.VolumeMount
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerEnvironmentVariableProvider
 import batect.docker.DockerException
@@ -28,7 +27,6 @@ import batect.docker.client.DockerExecClient
 import batect.execution.CancellationContext
 import batect.execution.CleanupOption
 import batect.execution.ContainerRuntimeConfiguration
-import batect.execution.RunAsCurrentUserConfiguration
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
 import batect.execution.model.events.ContainerBecameReadyEvent
@@ -62,15 +60,9 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
     describe("running a 'run setup commands' step") {
         val execClient by createForEachTest { mock<DockerExecClient>() }
         val environmentVariableProvider by createForEachTest { mock<DockerContainerEnvironmentVariableProvider>() }
-
         val userAndGroup = UserAndGroup(456, 789)
-        val runAsCurrentUserConfiguration = RunAsCurrentUserConfiguration(
-            setOf(VolumeMount("/tmp/local-path", "/tmp/remote-path", "rw")),
-            userAndGroup
-        )
 
         val runAsCurrentUserConfigurationProvider = mock<RunAsCurrentUserConfigurationProvider> {
-            on { generateConfiguration(any(), any()) } doReturn runAsCurrentUserConfiguration
             on { determineUserAndGroup(any()) } doReturn userAndGroup
         }
 

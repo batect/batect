@@ -16,10 +16,10 @@
 
 package batect.integrationtests.endtoend
 
-import batect.config.VolumeMount
 import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.docker.DockerVolumeMount
 import batect.docker.UserAndGroup
 import batect.integrationtests.build
 import batect.integrationtests.createClient
@@ -74,7 +74,7 @@ private fun creationRequestForContainerThatCreatesFile(image: DockerImage, netwo
     val localMountDirectory = localFileToCreate.parent.toAbsolutePath()
     val containerMountDirectory = "/tmp/batect-integration-test"
     val containerFileToCreate = "$containerMountDirectory/${localFileToCreate.fileName}"
-    val volumeMount = VolumeMount(localMountDirectory.toString(), containerMountDirectory, null)
+    val volumeMount = DockerVolumeMount(localMountDirectory.toString(), containerMountDirectory, null)
 
     val command = listOf("sh", "-c", "echo 'Hello from container' >> \"$containerFileToCreate\"")
     val userAndGroup = UserAndGroup(getUserId(nativeMethods), getGroupId(nativeMethods))

@@ -27,6 +27,11 @@ data class DockerImage(val id: String)
 @Serializable
 data class DockerContainer(val id: String, val name: String? = null)
 
+@Serializable
+data class DockerVolumeMount(val localPath: String, val containerPath: String, val options: String? = null) {
+    override fun toString(): String = if (options == null) "$localPath:$containerPath" else "$localPath:$containerPath:$options"
+}
+
 data class DockerContainerRunResult(val exitCode: Int)
 
 @Serializable

@@ -73,10 +73,6 @@ object VolumeMountSpec : Spek({
                     it("returns the correct options") {
                         assertThat(volumeMount.options, absent())
                     }
-
-                    it("returns the correct string form") {
-                        assertThat(volumeMount.toString(), equalTo("/resolved/local:/container"))
-                    }
                 }
 
                 on("parsing a valid volume mount definition with options") {
@@ -92,10 +88,6 @@ object VolumeMountSpec : Spek({
 
                     it("returns the correct options") {
                         assertThat(volumeMount.options, equalTo("some_options"))
-                    }
-
-                    it("returns the correct string form") {
-                        assertThat(volumeMount.toString(), equalTo("/resolved/local:/container:some_options"))
                     }
                 }
 
@@ -117,10 +109,6 @@ object VolumeMountSpec : Spek({
                         it("returns the correct options") {
                             assertThat(volumeMount.options, absent())
                         }
-
-                        it("returns the correct string form") {
-                            assertThat(volumeMount.toString(), equalTo("/resolved$local:/container"))
-                        }
                     }
 
                     on("parsing a valid Windows volume mount definition with $description and options") {
@@ -136,10 +124,6 @@ object VolumeMountSpec : Spek({
 
                         it("returns the correct options") {
                             assertThat(volumeMount.options, equalTo("cached"))
-                        }
-
-                        it("returns the correct string form") {
-                            assertThat(volumeMount.toString(), equalTo("/resolved$local:/container:cached"))
                         }
                     }
                 }
@@ -199,10 +183,6 @@ object VolumeMountSpec : Spek({
                     it("returns the correct options") {
                         assertThat(volumeMount.options, absent())
                     }
-
-                    it("returns the correct string form") {
-                        assertThat(volumeMount.toString(), equalTo("/resolved/local:/container"))
-                    }
                 }
 
                 on("parsing a valid volume mount definition with options") {
@@ -224,10 +204,6 @@ object VolumeMountSpec : Spek({
 
                     it("returns the correct options") {
                         assertThat(volumeMount.options, equalTo("some_options"))
-                    }
-
-                    it("returns the correct string form") {
-                        assertThat(volumeMount.toString(), equalTo("/resolved/local:/container:some_options"))
                     }
                 }
 

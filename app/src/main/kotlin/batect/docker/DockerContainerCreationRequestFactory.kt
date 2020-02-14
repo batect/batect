@@ -17,7 +17,6 @@
 package batect.docker
 
 import batect.config.Container
-import batect.config.VolumeMount
 import batect.execution.ContainerRuntimeConfiguration
 
 class DockerContainerCreationRequestFactory(
@@ -29,7 +28,7 @@ class DockerContainerCreationRequestFactory(
         image: DockerImage,
         network: DockerNetwork,
         config: ContainerRuntimeConfiguration,
-        additionalVolumeMounts: Set<VolumeMount>,
+        volumeMounts: Set<DockerVolumeMount>,
         propagateProxyEnvironmentVariables: Boolean,
         userAndGroup: UserAndGroup?,
         terminalType: String?,
@@ -45,7 +44,7 @@ class DockerContainerCreationRequestFactory(
             container.additionalHostnames + container.name,
             environmentVariableProvider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork),
             config.workingDirectory,
-            container.volumeMounts + additionalVolumeMounts,
+            volumeMounts,
             container.deviceMounts,
             container.portMappings + config.additionalPortMappings,
             container.healthCheckConfig,

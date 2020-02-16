@@ -47,7 +47,7 @@ data class Container(
     val imageSource: ImageSource,
     val command: Command? = null,
     val entrypoint: Command? = null,
-    val environment: Map<String, VariableExpression> = emptyMap(),
+    val environment: Map<String, Expression> = emptyMap(),
     val workingDirectory: String? = null,
     val volumeMounts: Set<VolumeMount> = emptySet(),
     val deviceMounts: Set<DeviceMount> = emptySet(),
@@ -139,12 +139,12 @@ data class Container(
 
         private fun deserializeFromObject(input: YamlInput): Container {
             var buildDirectory: Path? = null
-            var buildArgs: Map<String, VariableExpression>? = null
+            var buildArgs: Map<String, Expression>? = null
             var dockerfilePath: String? = null
             var imageName: String? = null
             var command: Command? = null
             var entrypoint: Command? = null
-            var environment = emptyMap<String, VariableExpression>()
+            var environment = emptyMap<String, Expression>()
             var workingDirectory: String? = null
             var volumeMounts = emptySet<VolumeMount>()
             var deviceMounts = emptySet<DeviceMount>()
@@ -230,7 +230,7 @@ data class Container(
 
         private fun resolveImageSource(
             buildDirectory: Path?,
-            buildArgs: Map<String, VariableExpression>?,
+            buildArgs: Map<String, Expression>?,
             dockerfilePath: String?,
             imageName: String?,
             location: Location

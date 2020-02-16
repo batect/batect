@@ -34,7 +34,7 @@ import kotlinx.serialization.internal.nullable
 
 @Serializable(with = VolumeMount.Companion::class)
 data class VolumeMount(
-    val localPath: VariableExpression,
+    val localPath: Expression,
     val containerPath: String,
     val options: String? = null
 ) {
@@ -93,14 +93,14 @@ data class VolumeMount(
             )
 
         private fun deserializeFromObject(input: YamlInput): VolumeMount {
-            var localPath: VariableExpression? = null
+            var localPath: Expression? = null
             var containerPath: String? = null
             var options: String? = null
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
                     CompositeDecoder.READ_DONE -> break@loop
-                    localPathFieldIndex -> localPath = input.decodeSerializableElement(descriptor, i, VariableExpression.serializer())
+                    localPathFieldIndex -> localPath = input.decodeSerializableElement(descriptor, i, Expression.serializer())
                     containerPathFieldIndex -> containerPath = input.decodeStringElement(descriptor, i)
                     optionsFieldIndex -> options = input.decodeStringElement(descriptor, i)
                     else -> throw SerializationException("Unknown index $i")
@@ -121,7 +121,7 @@ data class VolumeMount(
         override fun serialize(encoder: Encoder, obj: VolumeMount) {
             val output = encoder.beginStructure(descriptor)
 
-            output.encodeSerializableElement(descriptor, localPathFieldIndex, VariableExpression.serializer(), obj.localPath)
+            output.encodeSerializableElement(descriptor, localPathFieldIndex, Expression.serializer(), obj.localPath)
             output.encodeStringElement(descriptor, containerPathFieldIndex, obj.containerPath)
             output.encodeSerializableElement(descriptor, optionsFieldIndex, StringSerializer.nullable, obj.options)
 

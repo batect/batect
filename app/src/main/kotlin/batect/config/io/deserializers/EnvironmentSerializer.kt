@@ -16,10 +16,10 @@
 
 package batect.config.io.deserializers
 
-import batect.config.VariableExpression
+import batect.config.Expression
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.internal.StringSerializer
 import kotlinx.serialization.map
 
 internal object EnvironmentSerializer :
-    KSerializer<Map<String, VariableExpression>> by (StringSerializer to VariableExpression.serializer()).map
+    KSerializer<Map<String, Expression>> by (StringSerializer to Expression.serializer()).map

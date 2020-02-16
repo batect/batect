@@ -16,7 +16,7 @@
 
 package batect.execution
 
-import batect.config.VariableExpression
+import batect.config.Expression
 import batect.config.PortMapping
 import batect.os.Command
 
@@ -24,7 +24,7 @@ data class ContainerRuntimeConfiguration(
     val command: Command?,
     val entrypoint: Command?,
     val workingDirectory: String?,
-    val additionalEnvironmentVariables: Map<String, VariableExpression>,
+    val additionalEnvironmentVariables: Map<String, Expression>,
     val additionalPortMappings: Set<PortMapping>
 ) {
     override fun toString(): String {

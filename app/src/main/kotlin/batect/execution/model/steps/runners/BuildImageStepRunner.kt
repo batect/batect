@@ -16,7 +16,7 @@
 
 package batect.execution.model.steps.runners
 
-import batect.config.VariableExpression
+import batect.config.Expression
 import batect.config.VariableExpressionEvaluationException
 import batect.docker.ImageBuildFailedException
 import batect.docker.client.DockerImageBuildProgress
@@ -70,10 +70,10 @@ class BuildImageStepRunner(
         }
     }
 
-    private fun substituteBuildArgs(original: Map<String, VariableExpression>): Map<String, String> =
+    private fun substituteBuildArgs(original: Map<String, Expression>): Map<String, String> =
         original.mapValues { (name, value) -> evaluateBuildArgValue(name, value) }
 
-    private fun evaluateBuildArgValue(name: String, expression: VariableExpression): String {
+    private fun evaluateBuildArgValue(name: String, expression: Expression): String {
         try {
             return expression.evaluate(hostEnvironmentVariables, configVariablesProvider.configVariableValues)
         } catch (e: VariableExpressionEvaluationException) {

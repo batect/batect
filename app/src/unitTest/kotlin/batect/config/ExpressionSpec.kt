@@ -29,8 +29,8 @@ import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object VariableExpressionSpec : Spek({
-    describe("a variable expression") {
+object ExpressionSpec : Spek({
+    describe("an expression") {
         describe("parsing from a string") {
             mapOf(
                 "some literal value" to LiteralValue("some literal value"),
@@ -72,7 +72,7 @@ object VariableExpressionSpec : Spek({
                 "\$a<b" to ConcatenatedExpression(EnvironmentVariableReference("a", originalExpression = "\$a"), ConfigVariableReference("b", originalExpression = "<b"), originalExpression = "\$a<b")
             ).forEach { (source, expectedExpression) ->
                 on("parsing the input '$source'") {
-                    val expression = VariableExpression.parse(source)
+                    val expression = Expression.parse(source)
 
                     it("returns the expected expression") {
                         assertThat(expression, equalTo(expectedExpression))
@@ -102,7 +102,7 @@ object VariableExpressionSpec : Spek({
             ).forEach { (source, error) ->
                 on("parsing the input '$source'") {
                     it("throws an appropriate exception") {
-                        assertThat({ VariableExpression.parse(source) }, throws<IllegalArgumentException>(withMessage("Invalid expression '$source': $error")))
+                        assertThat({ Expression.parse(source) }, throws<IllegalArgumentException>(withMessage("Invalid expression '$source': $error")))
                     }
                 }
             }
@@ -121,7 +121,7 @@ object VariableExpressionSpec : Spek({
         }
 
         on("converting the expression to JSON") {
-            val json = Json.parser.stringify(VariableExpression.Companion, expression)
+            val json = Json.parser.stringify(Expression.Companion, expression)
 
             it("returns the value as a string") {
                 assertThat(json, equivalentTo("""{"type":"LiteralValue","value":"abc123"}"""))
@@ -157,7 +157,7 @@ object VariableExpressionSpec : Spek({
             }
 
             on("converting the expression to JSON") {
-                val json = Json.parser.stringify(VariableExpression.Companion, expression)
+                val json = Json.parser.stringify(Expression.Companion, expression)
 
                 it("returns a string representation of the variable") {
                     assertThat(json, equivalentTo("""{"type":"EnvironmentVariableReference","referenceTo":"THE_VAR"}"""))
@@ -193,7 +193,7 @@ object VariableExpressionSpec : Spek({
             }
 
             on("converting the expression to JSON") {
-                val json = Json.parser.stringify(VariableExpression.Companion, expression)
+                val json = Json.parser.stringify(Expression.Companion, expression)
 
                 it("returns a string representation of the variable and its default value") {
                     assertThat(json, equivalentTo("""{"type":"EnvironmentVariableReference","referenceTo":"THE_VAR","default":"the default value"}"""))
@@ -240,7 +240,7 @@ object VariableExpressionSpec : Spek({
         }
 
         on("converting the expression to JSON") {
-            val json = Json.parser.stringify(VariableExpression.Companion, expression)
+            val json = Json.parser.stringify(Expression.Companion, expression)
 
             it("returns a string representation of the variable") {
                 assertThat(json, equivalentTo("""{"type":"ConfigVariableReference","referenceTo":"THE_VAR"}"""))
@@ -261,7 +261,7 @@ object VariableExpressionSpec : Spek({
             }
 
             on("converting the expression to JSON") {
-                val json = Json.parser.stringify(VariableExpression.Companion, expression)
+                val json = Json.parser.stringify(Expression.Companion, expression)
 
                 it("returns an empty array") {
                     assertThat(json, equivalentTo("""{"type":"ConcatenatedExpression","expressions":[]}""".trimMargin()))
@@ -305,7 +305,7 @@ object VariableExpressionSpec : Spek({
             }
 
             on("converting the expression to JSON") {
-                val json = Json.parser.stringify(VariableExpression.Companion, expression)
+                val json = Json.parser.stringify(Expression.Companion, expression)
 
                 it("returns an array of expressions") {
                     assertThat(json, equivalentTo("""{

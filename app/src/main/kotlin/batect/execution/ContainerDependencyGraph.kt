@@ -18,7 +18,7 @@ package batect.execution
 
 import batect.config.Configuration
 import batect.config.Container
-import batect.config.VariableExpression
+import batect.config.Expression
 import batect.config.PortMapping
 import batect.config.Task
 
@@ -145,7 +145,7 @@ data class ContainerDependencyGraph(
         return "Container $firstContainer depends on " + otherContainers.joinToString(", which depends on ") + "."
     }
 
-    private fun additionalEnvironmentVariables(isRootNode: Boolean): Map<String, VariableExpression> =
+    private fun additionalEnvironmentVariables(isRootNode: Boolean): Map<String, Expression> =
         if (isRootNode) {
             task.runConfiguration.additionalEnvironmentVariables
         } else {

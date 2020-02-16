@@ -135,7 +135,7 @@ Two formats are supported:
             container: /code
             options: cached
     ```
-  
+
     When using this expanded format, `local` can be an [expression](Overview.md#expressions).
 
 On Windows, the local path can use either Windows-style (`path\to\thing`) or Unix-style (`path/to/thing`) paths, but for compatibility

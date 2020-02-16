@@ -209,7 +209,7 @@ Overrides [health check](https://docs.docker.com/engine/reference/builder/#healt
 * `interval` The interval between runs of the health check. Accepts values such as `2s` (two seconds) or `1m` (one minute).
 
 * `start_period` The time to wait before failing health checks count against the retry count. The health check is still run during this period,
-  and if the check succeeds, the container is immediately considered healthy. Accepts values such as `2s` (two seconds) or `1m` (one minute).  
+  and if the check succeeds, the container is immediately considered healthy. Accepts values such as `2s` (two seconds) or `1m` (one minute).
 
 ## `run_as_current_user`
 Run the container with the same UID and GID as the user running batect (rather than the user the Docker daemon runs as, which is root

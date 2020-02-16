@@ -48,31 +48,28 @@ object ConfigVariablesProviderSpec : Spek({
 
                 given("the configuration has no variables defined") {
                     val config = configWithVariables()
-
-                    beforeEachTest { provider.build(config) }
+                    val configVariableValues by createForEachTest { provider.build(config) }
 
                     it("returns an empty set of config variables") {
-                        assertThat(provider.configVariableValues, isEmptyMap())
+                        assertThat(configVariableValues, isEmptyMap())
                     }
                 }
 
                 given("the configuration has a variable with no default defined") {
                     val config = configWithVariables(ConfigVariableDefinition("some_var", "Some description", null))
-
-                    beforeEachTest { provider.build(config) }
+                    val configVariableValues by createForEachTest { provider.build(config) }
 
                     it("returns that variable with no value") {
-                        assertThat(provider.configVariableValues, equalTo(mapOf("some_var" to null)))
+                        assertThat(configVariableValues, equalTo(mapOf("some_var" to null)))
                     }
                 }
 
                 given("the configuration has a variable with a default defined") {
                     val config = configWithVariables(ConfigVariableDefinition("some_var", "Some description", "the default value"))
-
-                    beforeEachTest { provider.build(config) }
+                    val configVariableValues by createForEachTest { provider.build(config) }
 
                     it("returns that variable with the default value") {
-                        assertThat(provider.configVariableValues, equalTo(mapOf("some_var" to "the default value")))
+                        assertThat(configVariableValues, equalTo(mapOf("some_var" to "the default value")))
                     }
                 }
             }
@@ -100,21 +97,19 @@ object ConfigVariablesProviderSpec : Spek({
 
                     given("the override is for a variable that has no default defined") {
                         val config = configWithVariables(ConfigVariableDefinition("some_var", "Some description", null))
-
-                        beforeEachTest { provider.build(config) }
+                        val configVariableValues by createForEachTest { provider.build(config) }
 
                         it("returns that variable with the provided value") {
-                            assertThat(provider.configVariableValues, equalTo(mapOf("some_var" to "some value")))
+                            assertThat(configVariableValues, equalTo(mapOf("some_var" to "some value")))
                         }
                     }
 
                     given("the override is for a variable with a default defined") {
                         val config = configWithVariables(ConfigVariableDefinition("some_var", "Some description", "the default value"))
-
-                        beforeEachTest { provider.build(config) }
+                        val configVariableValues by createForEachTest { provider.build(config) }
 
                         it("returns that variable with the provided value") {
-                            assertThat(provider.configVariableValues, equalTo(mapOf("some_var" to "some value")))
+                            assertThat(configVariableValues, equalTo(mapOf("some_var" to "some value")))
                         }
                     }
                 }
@@ -151,21 +146,19 @@ object ConfigVariablesProviderSpec : Spek({
 
                 given("the override is for a variable that has no default defined") {
                     val config = configWithVariables(ConfigVariableDefinition("some_var", "Some description", null))
-
-                    beforeEachTest { provider.build(config) }
+                    val configVariableValues by createForEachTest { provider.build(config) }
 
                     it("returns that variable with the provided value") {
-                        assertThat(provider.configVariableValues, equalTo(mapOf("some_var" to "some value")))
+                        assertThat(configVariableValues, equalTo(mapOf("some_var" to "some value")))
                     }
                 }
 
                 given("the override is for a variable with a default defined") {
                     val config = configWithVariables(ConfigVariableDefinition("some_var", "Some description", "the default value"))
-
-                    beforeEachTest { provider.build(config) }
+                    val configVariableValues by createForEachTest { provider.build(config) }
 
                     it("returns that variable with the provided value") {
-                        assertThat(provider.configVariableValues, equalTo(mapOf("some_var" to "some value")))
+                        assertThat(configVariableValues, equalTo(mapOf("some_var" to "some value")))
                     }
                 }
             }
@@ -178,13 +171,12 @@ object ConfigVariablesProviderSpec : Spek({
                 given("the file also contains a value for the same variable") {
                     val config = configWithVariables(ConfigVariableDefinition("some_var", "Some description", "the default value"))
 
-                    beforeEachTest {
-                        Files.write(sourceFile, listOf("some_var: some file value"))
-                        provider.build(config)
-                    }
+                    beforeEachTest { Files.write(sourceFile, listOf("some_var: some file value")) }
+
+                    val configVariableValues by createForEachTest { provider.build(config) }
 
                     it("returns the variable with the value from the command line") {
-                        assertThat(provider.configVariableValues, equalTo(mapOf("some_var" to "some value")))
+                        assertThat(configVariableValues, equalTo(mapOf("some_var" to "some value")))
                     }
                 }
             }

@@ -17,6 +17,7 @@
 package batect.execution
 
 import batect.config.EnvironmentVariableReference
+import batect.config.ExpressionEvaluationContext
 import batect.config.LiteralValue
 import batect.config.VolumeMount
 import batect.docker.DockerVolumeMount
@@ -51,9 +52,9 @@ object VolumeMountResolverSpec : Spek({
             }
         }
 
-        val environmentVariables = HostEnvironmentVariables("INVALID" to "invalid")
+        val expressionEvaluationContext = ExpressionEvaluationContext(HostEnvironmentVariables("INVALID" to "invalid"), emptyMap())
 
-        val resolver by createForEachTest { VolumeMountResolver(pathResolver, environmentVariables, mock()) }
+        val resolver by createForEachTest { VolumeMountResolver(pathResolver, expressionEvaluationContext) }
 
         given("a set of volume mounts from the configuration file that resolve to valid paths") {
             val mounts = setOf(

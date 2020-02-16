@@ -37,15 +37,13 @@ class ConfigVariablesProvider(
     val commandLineOverrides: Map<String, String>,
     val sourceFile: Path?
 ) {
-    lateinit var configVariableValues: Map<String, String?>
-
-    fun build(config: Configuration) {
+    fun build(config: Configuration): Map<String, String?> {
         val defaults = defaultValues(config)
         val fromFile = loadFileValues(config)
 
         validateCommandLineOverrides(config)
 
-        configVariableValues = defaults + fromFile + commandLineOverrides
+        return defaults + fromFile + commandLineOverrides
     }
 
     private fun defaultValues(config: Configuration): Map<String, String?> =

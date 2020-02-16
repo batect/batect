@@ -24,7 +24,6 @@ import batect.docker.client.DockerConnectivityCheckResult
 import batect.docker.client.DockerContainerType
 import batect.docker.client.DockerSystemInfoClient
 import batect.execution.CleanupOption
-import batect.execution.ConfigVariablesProvider
 import batect.execution.RunOptions
 import batect.execution.TaskExecutionOrderResolutionException
 import batect.execution.TaskExecutionOrderResolver
@@ -41,7 +40,6 @@ class RunTaskCommand(
     val configFile: Path,
     val runOptions: RunOptions,
     val configLoader: ConfigurationLoader,
-    val configVariablesProvider: ConfigVariablesProvider,
     val taskExecutionOrderResolver: TaskExecutionOrderResolver,
     val sessionKodeinFactory: SessionKodeinFactory,
     val updateNotifier: UpdateNotifier,
@@ -53,7 +51,6 @@ class RunTaskCommand(
 
     override fun run(): Int {
         val config = loadConfig()
-        configVariablesProvider.build(config)
 
         return when (val connectivityCheckResult = dockerSystemInfoClient.checkConnectivity()) {
             is DockerConnectivityCheckResult.Failed -> {

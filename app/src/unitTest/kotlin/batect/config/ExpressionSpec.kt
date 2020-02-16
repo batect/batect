@@ -113,7 +113,7 @@ object ExpressionSpec : Spek({
         val expression = LiteralValue("abc123")
 
         on("evaluating the expression") {
-            val value = expression.evaluate(HostEnvironmentVariables(), emptyMap())
+            val value = expression.evaluate(ExpressionEvaluationContext(HostEnvironmentVariables(), emptyMap()))
 
             it("returns the value") {
                 assertThat(value, equalTo("abc123"))
@@ -137,7 +137,7 @@ object ExpressionSpec : Spek({
                 val hostEnvironmentVariables = HostEnvironmentVariables("THE_VAR" to "some value")
 
                 on("evaluating the expression") {
-                    val value = expression.evaluate(hostEnvironmentVariables, emptyMap())
+                    val value = expression.evaluate(ExpressionEvaluationContext(hostEnvironmentVariables, emptyMap()))
 
                     it("returns the value from the host") {
                         assertThat(value, equalTo("some value"))
@@ -150,7 +150,7 @@ object ExpressionSpec : Spek({
 
                 on("evaluating the expression") {
                     it("throws an appropriate exception") {
-                        assertThat({ expression.evaluate(hostEnvironmentVariables, emptyMap()) },
+                        assertThat({ expression.evaluate(ExpressionEvaluationContext(hostEnvironmentVariables, emptyMap())) },
                             throws<VariableExpressionEvaluationException>(withMessage("The host environment variable 'THE_VAR' is not set, and no default value has been provided.")))
                     }
                 }
@@ -172,7 +172,7 @@ object ExpressionSpec : Spek({
                 val hostEnvironmentVariables = HostEnvironmentVariables("THE_VAR" to "some value")
 
                 on("evaluating the expression") {
-                    val value = expression.evaluate(hostEnvironmentVariables, emptyMap())
+                    val value = expression.evaluate(ExpressionEvaluationContext(hostEnvironmentVariables, emptyMap()))
 
                     it("returns the value from the host") {
                         assertThat(value, equalTo("some value"))
@@ -184,7 +184,7 @@ object ExpressionSpec : Spek({
                 val hostEnvironmentVariables = HostEnvironmentVariables("SOME_OTHER_VAR" to "some value")
 
                 on("evaluating the expression") {
-                    val value = expression.evaluate(hostEnvironmentVariables, emptyMap())
+                    val value = expression.evaluate(ExpressionEvaluationContext(hostEnvironmentVariables, emptyMap()))
 
                     it("returns the default value") {
                         assertThat(value, equalTo("the default value"))
@@ -210,7 +210,7 @@ object ExpressionSpec : Spek({
 
             on("evaluating the expression") {
                 it("throws an appropriate exception") {
-                    assertThat({ expression.evaluate(HostEnvironmentVariables(), configVariables) },
+                    assertThat({ expression.evaluate(ExpressionEvaluationContext(HostEnvironmentVariables(), configVariables)) },
                         throws<VariableExpressionEvaluationException>(withMessage("The config variable 'THE_VAR' has not been defined.")))
                 }
             }
@@ -221,7 +221,7 @@ object ExpressionSpec : Spek({
 
             on("evaluating the expression") {
                 it("throws an appropriate exception") {
-                    assertThat({ expression.evaluate(HostEnvironmentVariables(), configVariables) },
+                    assertThat({ expression.evaluate(ExpressionEvaluationContext(HostEnvironmentVariables(), configVariables)) },
                         throws<VariableExpressionEvaluationException>(withMessage("The config variable 'THE_VAR' is not set and has no default value.")))
                 }
             }
@@ -231,7 +231,7 @@ object ExpressionSpec : Spek({
             val configVariables = mapOf("THE_VAR" to "the value")
 
             on("evaluating the expression") {
-                val value = expression.evaluate(HostEnvironmentVariables(), configVariables)
+                val value = expression.evaluate(ExpressionEvaluationContext(HostEnvironmentVariables(), configVariables))
 
                 it("returns the default value") {
                     assertThat(value, equalTo("the value"))
@@ -253,7 +253,7 @@ object ExpressionSpec : Spek({
             val expression = ConcatenatedExpression()
 
             on("evaluating the expression") {
-                val value = expression.evaluate(HostEnvironmentVariables(), emptyMap())
+                val value = expression.evaluate(ExpressionEvaluationContext(HostEnvironmentVariables(), emptyMap()))
 
                 it("returns an empty string") {
                     assertThat(value, isEmptyString)
@@ -273,7 +273,7 @@ object ExpressionSpec : Spek({
             val expression = ConcatenatedExpression(LiteralValue("some value"))
 
             on("evaluating the expression") {
-                val value = expression.evaluate(HostEnvironmentVariables(), emptyMap())
+                val value = expression.evaluate(ExpressionEvaluationContext(HostEnvironmentVariables(), emptyMap()))
 
                 it("returns the result of evaluating that expression") {
                     assertThat(value, equalTo("some value"))
@@ -285,7 +285,7 @@ object ExpressionSpec : Spek({
             val expression = ConcatenatedExpression(LiteralValue("some"), LiteralValue(" value"))
 
             on("evaluating the expression") {
-                val value = expression.evaluate(HostEnvironmentVariables(), emptyMap())
+                val value = expression.evaluate(ExpressionEvaluationContext(HostEnvironmentVariables(), emptyMap()))
 
                 it("returns both expressions concatenated together") {
                     assertThat(value, equalTo("some value"))
@@ -297,7 +297,7 @@ object ExpressionSpec : Spek({
             val expression = ConcatenatedExpression(LiteralValue("some"), LiteralValue(" other"), LiteralValue(" value"))
 
             on("evaluating the expression") {
-                val value = expression.evaluate(HostEnvironmentVariables(), emptyMap())
+                val value = expression.evaluate(ExpressionEvaluationContext(HostEnvironmentVariables(), emptyMap()))
 
                 it("returns all expressions concatenated together") {
                     assertThat(value, equalTo("some other value"))

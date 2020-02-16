@@ -17,7 +17,6 @@
 package batect.config
 
 import batect.config.io.ConfigurationException
-import batect.os.HostEnvironmentVariables
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.CompositeEncoder
 import kotlinx.serialization.Decoder
@@ -32,7 +31,7 @@ import kotlin.math.min
 
 @Serializable(with = Expression.Companion::class)
 sealed class Expression(open val originalExpression: String) {
-    abstract fun evaluate(hostEnvironmentVariables: HostEnvironmentVariables, configVariables: Map<String, String?>): String
+    abstract fun evaluate(context: ExpressionEvaluationContext): String
     abstract fun serialize(encoder: CompositeEncoder)
 
     @Serializer(forClass = Expression::class)
@@ -221,7 +220,7 @@ sealed class Expression(open val originalExpression: String) {
 }
 
 data class LiteralValue(val value: String, override val originalExpression: String = value) : Expression(originalExpression) {
-    override fun evaluate(hostEnvironmentVariables: HostEnvironmentVariables, configVariables: Map<String, String?>) = value
+    override fun evaluate(context: ExpressionEvaluationContext) = value
     override fun toString() = "${this::class.simpleName}(value: '$value', original expression: '$originalExpression')"
 
     private val descriptor: SerialDescriptor = object : SerialClassDescImpl("LiteralValue") {
@@ -236,8 +235,8 @@ data class LiteralValue(val value: String, override val originalExpression: Stri
 data class EnvironmentVariableReference(val referenceTo: String, val default: String? = null, override val originalExpression: String) : Expression(originalExpression) {
     constructor(referenceTo: String, default: String? = null) : this(referenceTo, default, if (default == null) "\${$referenceTo}" else "\${$referenceTo:-$default}")
 
-    override fun evaluate(hostEnvironmentVariables: HostEnvironmentVariables, configVariables: Map<String, String?>): String {
-        val hostValue = hostEnvironmentVariables.get(referenceTo)
+    override fun evaluate(context: ExpressionEvaluationContext): String {
+        val hostValue = context.hostEnvironmentVariables.get(referenceTo)
 
         return when {
             hostValue != null -> hostValue
@@ -273,12 +272,12 @@ data class EnvironmentVariableReference(val referenceTo: String, val default: St
 data class ConfigVariableReference(val referenceTo: String, override val originalExpression: String) : Expression(originalExpression) {
     constructor(referenceTo: String) : this(referenceTo, "<{$referenceTo}")
 
-    override fun evaluate(hostEnvironmentVariables: HostEnvironmentVariables, configVariables: Map<String, String?>): String {
-        if (!configVariables.containsKey(referenceTo)) {
+    override fun evaluate(context: ExpressionEvaluationContext): String {
+        if (!context.configVariables.containsKey(referenceTo)) {
             throw VariableExpressionEvaluationException("The config variable '$referenceTo' has not been defined.")
         }
 
-        val value = configVariables.getValue(referenceTo)
+        val value = context.configVariables.getValue(referenceTo)
 
         if (value == null) {
             throw VariableExpressionEvaluationException("The config variable '$referenceTo' is not set and has no default value.")
@@ -304,8 +303,8 @@ data class ConcatenatedExpression(val expressions: Iterable<Expression>, overrid
     constructor(expressions: Iterable<Expression>) : this(expressions, expressions.joinToString("") { it.originalExpression })
     constructor(vararg expressions: Expression) : this(expressions.toList())
 
-    override fun evaluate(hostEnvironmentVariables: HostEnvironmentVariables, configVariables: Map<String, String?>): String =
-        expressions.joinToString("") { it.evaluate(hostEnvironmentVariables, configVariables) }
+    override fun evaluate(context: ExpressionEvaluationContext): String =
+        expressions.joinToString("") { it.evaluate(context) }
 
     private val descriptor: SerialDescriptor = object : SerialClassDescImpl("ConcatenatedExpression") {
         init {

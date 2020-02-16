@@ -28,7 +28,6 @@ import batect.docker.client.DockerConnectivityCheckResult
 import batect.docker.client.DockerContainerType
 import batect.docker.client.DockerSystemInfoClient
 import batect.execution.CleanupOption
-import batect.execution.ConfigVariablesProvider
 import batect.execution.RunOptions
 import batect.execution.TaskExecutionOrderResolutionException
 import batect.execution.TaskExecutionOrderResolver
@@ -86,7 +85,6 @@ object RunTaskCommandSpec : Spek({
                 on { loadConfig(configFile) } doReturn config
             }
 
-            val configVariablesProvider by createForEachTest { mock<ConfigVariablesProvider>() }
             val updateNotifier by createForEachTest { mock<UpdateNotifier>() }
             val console by createForEachTest { mock<Console>() }
             val errorConsole by createForEachTest { mock<Console>() }
@@ -116,7 +114,7 @@ object RunTaskCommandSpec : Spek({
                                 whenever(taskRunner.run(mainTask, runOptions)).thenReturn(expectedTaskExitCode)
                             }
 
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, configVariablesProvider, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the task") {
@@ -138,13 +136,6 @@ object RunTaskCommandSpec : Spek({
                                 }
                             }
 
-                            it("loads any config variables before running the task") {
-                                inOrder(taskRunner, configVariablesProvider) {
-                                    verify(configVariablesProvider).build(configWithImageOverrides)
-                                    verify(taskRunner).run(any(), any())
-                                }
-                            }
-
                             it("does not print anything to the error console") {
                                 verifyZeroInteractions(errorConsole)
                             }
@@ -155,7 +146,7 @@ object RunTaskCommandSpec : Spek({
                                 whenever(taskRunner.run(mainTask, runOptions)).thenReturn(0)
                             }
 
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, configVariablesProvider, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the task") {
@@ -173,13 +164,6 @@ object RunTaskCommandSpec : Spek({
                             it("displays any update notifications before running the task") {
                                 inOrder(taskRunner, updateNotifier) {
                                     verify(updateNotifier).run()
-                                    verify(taskRunner).run(any(), any())
-                                }
-                            }
-
-                            it("loads any config variables before running the task") {
-                                inOrder(taskRunner, configVariablesProvider) {
-                                    verify(configVariablesProvider).build(configWithImageOverrides)
                                     verify(taskRunner).run(any(), any())
                                 }
                             }
@@ -204,7 +188,7 @@ object RunTaskCommandSpec : Spek({
                                 whenever(taskRunner.run(mainTask, runOptions)).thenReturn(expectedTaskExitCode)
                             }
 
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, configVariablesProvider, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the dependency task with cleanup on success enabled") {
@@ -234,13 +218,6 @@ object RunTaskCommandSpec : Spek({
                                 }
                             }
 
-                            it("loads any config variables before running the task") {
-                                inOrder(taskRunner, configVariablesProvider) {
-                                    verify(configVariablesProvider).build(configWithImageOverrides)
-                                    verify(taskRunner, atLeastOnce()).run(any(), any())
-                                }
-                            }
-
                             it("does not print anything to the error console") {
                                 verifyZeroInteractions(errorConsole)
                             }
@@ -251,7 +228,7 @@ object RunTaskCommandSpec : Spek({
                                 whenever(taskRunner.run(otherTask, runOptionsForOtherTask)).thenReturn(1)
                             }
 
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, configVariablesProvider, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the dependency task") {
@@ -273,13 +250,6 @@ object RunTaskCommandSpec : Spek({
                                 }
                             }
 
-                            it("loads any config variables before running the task") {
-                                inOrder(taskRunner, configVariablesProvider) {
-                                    verify(configVariablesProvider).build(configWithImageOverrides)
-                                    verify(taskRunner).run(any(), any())
-                                }
-                            }
-
                             it("does not print anything to the error console") {
                                 verifyZeroInteractions(errorConsole)
                             }
@@ -292,7 +262,7 @@ object RunTaskCommandSpec : Spek({
                             on { resolveExecutionOrder(configWithImageOverrides, taskName) } doThrow exception
                         }
 
-                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, configVariablesProvider, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
+                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
                         val exitCode by runForEachTest { command.run() }
 
                         it("prints a message to the output") {
@@ -315,7 +285,7 @@ object RunTaskCommandSpec : Spek({
                         on { checkConnectivity() } doReturn DockerConnectivityCheckResult.Failed("Something went wrong.")
                     }
 
-                    val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, configVariablesProvider, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
+                    val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
                     val exitCode by runForEachTest { command.run() }
 
                     it("prints a message to the output") {

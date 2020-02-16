@@ -17,13 +17,19 @@
 package batect.ioc
 
 import batect.config.Configuration
+import batect.config.ExpressionEvaluationContext
 import batect.docker.client.DockerContainerType
+import batect.execution.ConfigVariablesProvider
+import batect.os.HostEnvironmentVariables
 import batect.testutils.createForEachTest
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.verify
 import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
@@ -36,7 +42,16 @@ object SessionKodeinFactorySpec : Spek({
             bind<String>("some string") with instance("The string value")
         }
 
-        val factory by createForEachTest { SessionKodeinFactory(baseKodein) }
+        val configVariables = mapOf("SOME_VAR" to "some value")
+        val configVariablesProvider by createForEachTest {
+            mock<ConfigVariablesProvider> {
+                on { build(any()) } doReturn configVariables
+            }
+        }
+
+        val hostEnvironmentVariables = HostEnvironmentVariables()
+
+        val factory by createForEachTest { SessionKodeinFactory(baseKodein, hostEnvironmentVariables, configVariablesProvider) }
 
         on("creating a task Kodein context") {
             val config by createForEachTest { mock<Configuration>() }
@@ -53,6 +68,14 @@ object SessionKodeinFactorySpec : Spek({
 
             it("includes the container type") {
                 assertThat(extendedKodein.instance<DockerContainerType>(), equalTo(containerType))
+            }
+
+            it("builds the set of config variables") {
+                verify(configVariablesProvider).build(config)
+            }
+
+            it("includes the expression evaluation context") {
+                assertThat(extendedKodein.instance<ExpressionEvaluationContext>(), equalTo(ExpressionEvaluationContext(hostEnvironmentVariables, configVariables)))
             }
         }
     }

@@ -20,6 +20,7 @@ import batect.config.BuildImage
 import batect.config.EnvironmentVariableReference
 import batect.config.LiteralValue
 import batect.config.Expression
+import batect.config.ExpressionEvaluationContext
 import batect.config.VariableExpressionEvaluationException
 import batect.docker.DockerImage
 import batect.docker.ImageBuildFailedException
@@ -27,7 +28,6 @@ import batect.docker.client.DockerImageBuildProgress
 import batect.docker.client.DockerImagesClient
 import batect.execution.CancellationContext
 import batect.execution.CleanupOption
-import batect.execution.ConfigVariablesProvider
 import batect.execution.RunOptions
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
@@ -68,10 +68,6 @@ object BuildImageStepRunnerSpec : Spek({
             on { getProxyEnvironmentVariables(emptySet()) } doReturn proxyVariables
         }
 
-        val configVariablesProvider = mock<ConfigVariablesProvider> {
-            on { configVariableValues } doReturn emptyMap()
-        }
-
         val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
         val ioStreamingOptions by createForEachTest {
@@ -85,19 +81,18 @@ object BuildImageStepRunnerSpec : Spek({
             on { lineSeparator } doReturn "SYSTEM_LINE_SEPARATOR"
         }
 
-        val hostEnvironmentVariables = HostEnvironmentVariables("SOME_ENV_VAR" to "some env var value")
+        val expressionEvaluationContext = ExpressionEvaluationContext(HostEnvironmentVariables("SOME_ENV_VAR" to "some env var value"), emptyMap())
         val eventSink by createForEachTest { mock<TaskEventSink>() }
 
         val runner by createForEachTest {
             BuildImageStepRunner(
                 imagesClient,
                 proxyEnvironmentVariablesProvider,
-                configVariablesProvider,
+                expressionEvaluationContext,
                 cancellationContext,
                 ioStreamingOptions,
                 runOptions,
-                systemInfo,
-                hostEnvironmentVariables
+                systemInfo
             )
         }
 
@@ -150,12 +145,11 @@ object BuildImageStepRunnerSpec : Spek({
                     BuildImageStepRunner(
                         imagesClient,
                         proxyEnvironmentVariablesProvider,
-                        configVariablesProvider,
+                        expressionEvaluationContext,
                         cancellationContext,
                         ioStreamingOptions,
                         runOptionsWithProxyEnvironmentVariablePropagationDisabled,
-                        systemInfo,
-                        hostEnvironmentVariables
+                        systemInfo
                     )
                 }
 
@@ -194,7 +188,7 @@ object BuildImageStepRunnerSpec : Spek({
 
         on("when a build arg is an invalid reference") {
             val invalidReference = mock<Expression> {
-                on { evaluate(hostEnvironmentVariables, emptyMap()) } doThrow VariableExpressionEvaluationException("Couldn't evaluate expression.")
+                on { evaluate(expressionEvaluationContext) } doThrow VariableExpressionEvaluationException("Couldn't evaluate expression.")
             }
 
             val imageSourceWithInvalidBuildArgReference = BuildImage(buildDirectory, mapOf("SOME_HOST_VAR" to invalidReference), dockerfilePath)

@@ -18,11 +18,10 @@ package batect.docker
 
 import batect.config.Container
 import batect.config.Expression
+import batect.config.ExpressionEvaluationContext
 import batect.config.LiteralValue
 import batect.config.VariableExpressionEvaluationException
-import batect.execution.ConfigVariablesProvider
 import batect.execution.ContainerRuntimeConfiguration
-import batect.os.HostEnvironmentVariables
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
@@ -54,7 +53,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                     on { getProxyEnvironmentVariables(setOf("container-1", "container-2")) } doReturn mapOf("SOME_PROXY_VAR" to "this should not be used")
                 }
 
-                val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, HostEnvironmentVariables(), configVariablesProviderFor(emptyMap()))
+                val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, mock())
 
                 given("there are no additional environment variables") {
                     val container = Container(
@@ -132,7 +131,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
         given("the console's type is provided") {
             val terminalType = "some-term"
             val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider>()
-            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, HostEnvironmentVariables(), configVariablesProviderFor(emptyMap()))
+            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, mock())
             val propagateProxyEnvironmentVariables = false
 
             given("a container with no override for the TERM environment variable") {
@@ -238,13 +237,12 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
         given("there are references to config variables or host environment variables") {
             val terminalType = null as String?
             val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider>()
-            val hostEnvironmentVariables = HostEnvironmentVariables("SOME_HOST_VARIABLE" to "SOME_HOST_VALUE")
-            val configVariables = mapOf("SOME_CONFIG_VARIABLE" to "SOME_CONFIG_VALUE")
-            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, hostEnvironmentVariables, configVariablesProviderFor(configVariables))
+            val expressionEvaluationContext = mock<ExpressionEvaluationContext>()
+            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, expressionEvaluationContext)
             val propagateProxyEnvironmentVariables = false
 
             val invalidReference = mock<Expression> {
-                on { evaluate(hostEnvironmentVariables, configVariables) } doThrow VariableExpressionEvaluationException("Couldn't evaluate expression.")
+                on { evaluate(expressionEvaluationContext) } doThrow VariableExpressionEvaluationException("Couldn't evaluate expression.")
             }
 
             given("and those references are on the container") {
@@ -360,7 +358,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                 )
             }
 
-            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, HostEnvironmentVariables(), configVariablesProviderFor(emptyMap()))
+            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, mock())
 
             given("propagating proxy environment variables is enabled") {
                 val propagateProxyEnvironmentVariables = true
@@ -464,7 +462,3 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
 private fun configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables: Map<String, Expression>) =
     ContainerRuntimeConfiguration(null, null, null, additionalEnvironmentVariables, emptySet())
-
-private fun configVariablesProviderFor(variables: Map<String, String?>) = mock<ConfigVariablesProvider> {
-    on { configVariableValues } doReturn variables
-}

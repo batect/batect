@@ -18,17 +18,15 @@ package batect.docker
 
 import batect.config.Container
 import batect.config.Expression
+import batect.config.ExpressionEvaluationContext
 import batect.config.VariableExpressionEvaluationException
-import batect.execution.ConfigVariablesProvider
 import batect.execution.ContainerRuntimeConfiguration
-import batect.os.HostEnvironmentVariables
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.utils.mapToSet
 
 class DockerContainerEnvironmentVariableProvider(
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
-    private val hostEnvironmentVariables: HostEnvironmentVariables,
-    private val configVariablesProvider: ConfigVariablesProvider
+    private val expressionEvaluationContext: ExpressionEvaluationContext
 ) {
     fun environmentVariablesFor(
         container: Container,
@@ -58,7 +56,7 @@ class DockerContainerEnvironmentVariableProvider(
 
     private fun evaluateEnvironmentVariableValue(name: String, expression: Expression): String {
         try {
-            return expression.evaluate(hostEnvironmentVariables, configVariablesProvider.configVariableValues)
+            return expression.evaluate(expressionEvaluationContext)
         } catch (e: VariableExpressionEvaluationException) {
             throw ContainerCreationFailedException("The value for the environment variable '$name' cannot be evaluated: ${e.message}", e)
         }

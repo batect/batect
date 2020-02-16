@@ -177,7 +177,6 @@ private val cliModule = Kodein.Module("cli") {
             instance(),
             instance(),
             instance(),
-            instance(),
             instance(StreamType.Output),
             instance(StreamType.Error),
             logger
@@ -203,7 +202,7 @@ private val dockerModule = Kodein.Module("docker") {
     bind<ContainerTTYManager>() with singletonWithLogger { logger -> ContainerTTYManager(instance(), instance(), instance(), logger) }
     bind<ContainerWaiter>() with singleton { ContainerWaiter(instance()) }
     bind<DockerContainerCreationRequestFactory>() with scoped(TaskScope).singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
-    bind<DockerContainerEnvironmentVariableProvider>() with singleton { DockerContainerEnvironmentVariableProvider(instance(), instance(), instance()) }
+    bind<DockerContainerEnvironmentVariableProvider>() with singleton { DockerContainerEnvironmentVariableProvider(instance(), instance()) }
     bind<DockerContainerNameGenerator>() with scoped(TaskScope).singleton { DockerContainerNameGenerator() }
     bind<DockerfileParser>() with singleton { DockerfileParser() }
     bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
@@ -245,7 +244,7 @@ private val dockerClientModule = Kodein.Module("docker.client") {
 
 private val iocModule = Kodein.Module("ioc") {
     bind<TaskKodeinFactory>() with singleton { TaskKodeinFactory(dkodein) }
-    bind<SessionKodeinFactory>() with singleton { SessionKodeinFactory(dkodein) }
+    bind<SessionKodeinFactory>() with singleton { SessionKodeinFactory(dkodein, instance(), instance()) }
 }
 
 private val executionModule = Kodein.Module("execution") {
@@ -271,14 +270,13 @@ private val executionModule = Kodein.Module("execution") {
     bind<VolumeMountResolver>() with scoped(TaskScope).singleton {
         VolumeMountResolver(
             instance<PathResolverFactory>().createResolver(commandLineOptions().configurationFileName.toAbsolutePath().parent),
-            instance(),
             instance()
         )
     }
 }
 
 private val runnersModule = Kodein.Module("execution.model.steps.runners") {
-    bind<BuildImageStepRunner>() with scoped(TaskScope).singleton { BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance(), instance()) }
+    bind<BuildImageStepRunner>() with scoped(TaskScope).singleton { BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
     bind<CreateContainerStepRunner>() with scoped(TaskScope).singleton { CreateContainerStepRunner(instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
     bind<CreateTaskNetworkStepRunner>() with scoped(TaskScope).singleton { CreateTaskNetworkStepRunner(instance()) }
     bind<DeleteTaskNetworkStepRunner>() with scoped(TaskScope).singleton { DeleteTaskNetworkStepRunner(instance()) }

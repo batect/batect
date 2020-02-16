@@ -24,6 +24,7 @@ import batect.config.PullImage
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
+import batect.os.HostEnvironmentVariables
 import batect.testutils.doesNotThrow
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
@@ -42,7 +43,7 @@ object InjectionConfigurationSpec : Spek({
 
         val baseConfiguration = createKodeinConfiguration(PrintStream(ByteArrayOutputStream()), PrintStream(ByteArrayOutputStream()), ByteArrayInputStream(ByteArray(0)))
         val afterCommandLineOptions = CommandLineOptions(taskName = task.name).extend(baseConfiguration)
-        val inSessionContext = SessionKodeinFactory(afterCommandLineOptions).create(config, mock())
+        val inSessionContext = SessionKodeinFactory(afterCommandLineOptions, HostEnvironmentVariables(), mock()).create(config, mock())
         val inTaskContext = TaskKodeinFactory(inSessionContext).create(task, mock())
 
         describe("each registered class") {

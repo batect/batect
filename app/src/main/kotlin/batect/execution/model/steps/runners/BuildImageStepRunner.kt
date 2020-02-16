@@ -17,19 +17,18 @@
 package batect.execution.model.steps.runners
 
 import batect.config.Expression
+import batect.config.ExpressionEvaluationContext
 import batect.config.VariableExpressionEvaluationException
 import batect.docker.ImageBuildFailedException
 import batect.docker.client.DockerImageBuildProgress
 import batect.docker.client.DockerImagesClient
 import batect.execution.CancellationContext
-import batect.execution.ConfigVariablesProvider
 import batect.execution.RunOptions
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.BuildImageStep
-import batect.os.HostEnvironmentVariables
 import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.ui.containerio.ContainerIOStreamingOptions
@@ -37,12 +36,11 @@ import batect.ui.containerio.ContainerIOStreamingOptions
 class BuildImageStepRunner(
     private val imagesClient: DockerImagesClient,
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
-    private val configVariablesProvider: ConfigVariablesProvider,
+    private val expressionEvaluationContext: ExpressionEvaluationContext,
     private val cancellationContext: CancellationContext,
     private val ioStreamingOptions: ContainerIOStreamingOptions,
     private val runOptions: RunOptions,
-    private val systemInfo: SystemInfo,
-    private val hostEnvironmentVariables: HostEnvironmentVariables
+    private val systemInfo: SystemInfo
 ) {
     fun run(step: BuildImageStep, eventSink: TaskEventSink) {
         try {
@@ -75,7 +73,7 @@ class BuildImageStepRunner(
 
     private fun evaluateBuildArgValue(name: String, expression: Expression): String {
         try {
-            return expression.evaluate(hostEnvironmentVariables, configVariablesProvider.configVariableValues)
+            return expression.evaluate(expressionEvaluationContext)
         } catch (e: VariableExpressionEvaluationException) {
             throw ImageBuildFailedException("The value for the build arg '$name' cannot be evaluated: ${e.message}", e)
         }

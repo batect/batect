@@ -16,6 +16,7 @@
 
 package batect.config
 
+import batect.os.HostEnvironmentVariables
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
@@ -35,46 +36,50 @@ object VariableExpressionSpec : Spek({
                 "some literal value" to LiteralValue("some literal value"),
                 "a" to LiteralValue("a"),
                 "" to LiteralValue(""),
-                "\\\$some literal value" to LiteralValue("\$some literal value"),
-                "\\<some literal value" to LiteralValue("<some literal value"),
-                "\$SOME_VAR" to EnvironmentVariableReference("SOME_VAR"),
-                "\$a" to EnvironmentVariableReference("a"),
-                "\$ab" to EnvironmentVariableReference("ab"),
-                "\${SOME_VAR}" to EnvironmentVariableReference("SOME_VAR"),
-                "\${a}" to EnvironmentVariableReference("a"),
-                "\${SOME_VAR:-}" to EnvironmentVariableReference("SOME_VAR", ""),
-                "\${SOME_VAR:-default}" to EnvironmentVariableReference("SOME_VAR", "default"),
-                "\${SOME_VAR:-some value}" to EnvironmentVariableReference("SOME_VAR", "some value"),
-                "\${SOME_VAR:-some value \\} with braces}" to EnvironmentVariableReference("SOME_VAR", "some value } with braces"),
-                "\${SOME_VAR:-some value \\a with slashes}" to EnvironmentVariableReference("SOME_VAR", "some value a with slashes"),
-                "<SOME_VAR" to ConfigVariableReference("SOME_VAR"),
-                "<{SOME_VAR}" to ConfigVariableReference("SOME_VAR"),
-                "<{SOME_VAR:}" to ConfigVariableReference("SOME_VAR:"),
-                "a\$b" to ConcatenatedExpression(LiteralValue("a"), EnvironmentVariableReference("b")),
-                "a\${b}" to ConcatenatedExpression(LiteralValue("a"), EnvironmentVariableReference("b")),
-                "a\${b:-c}" to ConcatenatedExpression(LiteralValue("a"), EnvironmentVariableReference("b", "c")),
-                "\$a\$b" to ConcatenatedExpression(EnvironmentVariableReference("a"), EnvironmentVariableReference("b")),
-                "\$a b" to ConcatenatedExpression(EnvironmentVariableReference("a"), LiteralValue(" b")),
-                "\${a}b" to ConcatenatedExpression(EnvironmentVariableReference("a"), LiteralValue("b")),
-                "\$abc d" to ConcatenatedExpression(EnvironmentVariableReference("abc"), LiteralValue(" d")),
-                "\$a_b c" to ConcatenatedExpression(EnvironmentVariableReference("a_b"), LiteralValue(" c")),
-                "\$ab2 c" to ConcatenatedExpression(EnvironmentVariableReference("ab2"), LiteralValue(" c")),
-                "\$abc}d" to ConcatenatedExpression(EnvironmentVariableReference("abc"), LiteralValue("}d")),
-                "\$abc-d" to ConcatenatedExpression(EnvironmentVariableReference("abc"), LiteralValue("-d")),
-                "a<b" to ConcatenatedExpression(LiteralValue("a"), ConfigVariableReference("b")),
-                "<a<b" to ConcatenatedExpression(ConfigVariableReference("a"), ConfigVariableReference("b")),
-                "<a b" to ConcatenatedExpression(ConfigVariableReference("a"), LiteralValue(" b")),
-                "<a\$b" to ConcatenatedExpression(ConfigVariableReference("a"), EnvironmentVariableReference("b")),
-                "<{a}\$b" to ConcatenatedExpression(ConfigVariableReference("a"), EnvironmentVariableReference("b")),
-                "<a\${b}" to ConcatenatedExpression(ConfigVariableReference("a"), EnvironmentVariableReference("b")),
-                "<{a}\${b}" to ConcatenatedExpression(ConfigVariableReference("a"), EnvironmentVariableReference("b")),
-                "\$a<b" to ConcatenatedExpression(EnvironmentVariableReference("a"), ConfigVariableReference("b"))
+                "\\\$some literal value" to LiteralValue("\$some literal value", originalExpression = "\\\$some literal value"),
+                "\\<some literal value" to LiteralValue("<some literal value", originalExpression = "\\<some literal value"),
+                "\$SOME_VAR" to EnvironmentVariableReference("SOME_VAR", originalExpression = "\$SOME_VAR"),
+                "\$a" to EnvironmentVariableReference("a", originalExpression = "\$a"),
+                "\$ab" to EnvironmentVariableReference("ab", originalExpression = "\$ab"),
+                "\${SOME_VAR}" to EnvironmentVariableReference("SOME_VAR", originalExpression = "\${SOME_VAR}"),
+                "\${a}" to EnvironmentVariableReference("a", originalExpression = "\${a}"),
+                "\${SOME_VAR:-}" to EnvironmentVariableReference("SOME_VAR", "", originalExpression = "\${SOME_VAR:-}"),
+                "\${SOME_VAR:-default}" to EnvironmentVariableReference("SOME_VAR", "default", originalExpression = "\${SOME_VAR:-default}"),
+                "\${SOME_VAR:-some value}" to EnvironmentVariableReference("SOME_VAR", "some value", originalExpression = "\${SOME_VAR:-some value}"),
+                "\${SOME_VAR:-some value \\} with braces}" to EnvironmentVariableReference("SOME_VAR", "some value } with braces", originalExpression = "\${SOME_VAR:-some value \\} with braces}"),
+                "\${SOME_VAR:-some value \\a with slashes}" to EnvironmentVariableReference("SOME_VAR", "some value a with slashes", originalExpression = "\${SOME_VAR:-some value \\a with slashes}"),
+                "<SOME_VAR" to ConfigVariableReference("SOME_VAR", originalExpression = "<SOME_VAR"),
+                "<{SOME_VAR}" to ConfigVariableReference("SOME_VAR", originalExpression = "<{SOME_VAR}"),
+                "<{SOME_VAR:}" to ConfigVariableReference("SOME_VAR:", originalExpression = "<{SOME_VAR:}"),
+                "a\$b" to ConcatenatedExpression(LiteralValue("a"), EnvironmentVariableReference("b", originalExpression = "\$b"), originalExpression = "a\$b"),
+                "a\${b}" to ConcatenatedExpression(LiteralValue("a"), EnvironmentVariableReference("b"), originalExpression = "a\${b}"),
+                "a\${b:-c}" to ConcatenatedExpression(LiteralValue("a"), EnvironmentVariableReference("b", "c"), originalExpression = "a\${b:-c}"),
+                "\$a\$b" to ConcatenatedExpression(EnvironmentVariableReference("a", originalExpression = "\$a"), EnvironmentVariableReference("b", originalExpression = "\$b"), originalExpression = "\$a\$b"),
+                "\$a b" to ConcatenatedExpression(EnvironmentVariableReference("a", originalExpression = "\$a"), LiteralValue(" b"), originalExpression = "\$a b"),
+                "\${a}b" to ConcatenatedExpression(EnvironmentVariableReference("a"), LiteralValue("b"), originalExpression = "\${a}b"),
+                "\$abc d" to ConcatenatedExpression(EnvironmentVariableReference("abc", originalExpression = "\$abc"), LiteralValue(" d"), originalExpression = "\$abc d"),
+                "\$a_b c" to ConcatenatedExpression(EnvironmentVariableReference("a_b", originalExpression = "\$a_b"), LiteralValue(" c"), originalExpression = "\$a_b c"),
+                "\$ab2 c" to ConcatenatedExpression(EnvironmentVariableReference("ab2", originalExpression = "\$ab2"), LiteralValue(" c"), originalExpression = "\$ab2 c"),
+                "\$abc}d" to ConcatenatedExpression(EnvironmentVariableReference("abc", originalExpression = "\$abc"), LiteralValue("}d"), originalExpression = "\$abc}d"),
+                "\$abc-d" to ConcatenatedExpression(EnvironmentVariableReference("abc", originalExpression = "\$abc"), LiteralValue("-d"), originalExpression = "\$abc-d"),
+                "a<b" to ConcatenatedExpression(LiteralValue("a"), ConfigVariableReference("b", originalExpression = "<b"), originalExpression = "a<b"),
+                "<a<b" to ConcatenatedExpression(ConfigVariableReference("a", originalExpression = "<a"), ConfigVariableReference("b", originalExpression = "<b"), originalExpression = "<a<b"),
+                "<a b" to ConcatenatedExpression(ConfigVariableReference("a", originalExpression = "<a"), LiteralValue(" b"), originalExpression = "<a b"),
+                "<a\$b" to ConcatenatedExpression(ConfigVariableReference("a", originalExpression = "<a"), EnvironmentVariableReference("b", originalExpression = "\$b"), originalExpression = "<a\$b"),
+                "<{a}\$b" to ConcatenatedExpression(ConfigVariableReference("a"), EnvironmentVariableReference("b", originalExpression = "\$b"), originalExpression = "<{a}\$b"),
+                "<a\${b}" to ConcatenatedExpression(ConfigVariableReference("a", originalExpression = "<a"), EnvironmentVariableReference("b"), originalExpression = "<a\${b}"),
+                "<{a}\${b}" to ConcatenatedExpression(ConfigVariableReference("a"), EnvironmentVariableReference("b"), originalExpression = "<{a}\${b}"),
+                "\$a<b" to ConcatenatedExpression(EnvironmentVariableReference("a", originalExpression = "\$a"), ConfigVariableReference("b", originalExpression = "<b"), originalExpression = "\$a<b")
             ).forEach { (source, expectedExpression) ->
                 on("parsing the input '$source'") {
                     val expression = VariableExpression.parse(source)
 
                     it("returns the expected expression") {
                         assertThat(expression, equalTo(expectedExpression))
+                    }
+
+                    it("includes the original expression so that it can be displayed to the user later") {
+                        assertThat(expression.originalExpression, equalTo(source))
                     }
                 }
             }
@@ -108,7 +113,7 @@ object VariableExpressionSpec : Spek({
         val expression = LiteralValue("abc123")
 
         on("evaluating the expression") {
-            val value = expression.evaluate(emptyMap(), emptyMap())
+            val value = expression.evaluate(HostEnvironmentVariables(), emptyMap())
 
             it("returns the value") {
                 assertThat(value, equalTo("abc123"))
@@ -129,7 +134,7 @@ object VariableExpressionSpec : Spek({
             val expression = EnvironmentVariableReference("THE_VAR")
 
             given("the referenced environment variable is set") {
-                val hostEnvironmentVariables = mapOf("THE_VAR" to "some value")
+                val hostEnvironmentVariables = HostEnvironmentVariables("THE_VAR" to "some value")
 
                 on("evaluating the expression") {
                     val value = expression.evaluate(hostEnvironmentVariables, emptyMap())
@@ -141,7 +146,7 @@ object VariableExpressionSpec : Spek({
             }
 
             given("the referenced environment variable is not set") {
-                val hostEnvironmentVariables = mapOf("SOME_OTHER_VAR" to "some value")
+                val hostEnvironmentVariables = HostEnvironmentVariables("SOME_OTHER_VAR" to "some value")
 
                 on("evaluating the expression") {
                     it("throws an appropriate exception") {
@@ -164,7 +169,7 @@ object VariableExpressionSpec : Spek({
             val expression = EnvironmentVariableReference("THE_VAR", "the default value")
 
             given("the referenced environment variable is set") {
-                val hostEnvironmentVariables = mapOf("THE_VAR" to "some value")
+                val hostEnvironmentVariables = HostEnvironmentVariables("THE_VAR" to "some value")
 
                 on("evaluating the expression") {
                     val value = expression.evaluate(hostEnvironmentVariables, emptyMap())
@@ -176,7 +181,7 @@ object VariableExpressionSpec : Spek({
             }
 
             given("the referenced environment variable is not set") {
-                val hostEnvironmentVariables = mapOf("SOME_OTHER_VAR" to "some value")
+                val hostEnvironmentVariables = HostEnvironmentVariables("SOME_OTHER_VAR" to "some value")
 
                 on("evaluating the expression") {
                     val value = expression.evaluate(hostEnvironmentVariables, emptyMap())
@@ -205,7 +210,7 @@ object VariableExpressionSpec : Spek({
 
             on("evaluating the expression") {
                 it("throws an appropriate exception") {
-                    assertThat({ expression.evaluate(emptyMap(), configVariables) },
+                    assertThat({ expression.evaluate(HostEnvironmentVariables(), configVariables) },
                         throws<VariableExpressionEvaluationException>(withMessage("The config variable 'THE_VAR' has not been defined.")))
                 }
             }
@@ -216,7 +221,7 @@ object VariableExpressionSpec : Spek({
 
             on("evaluating the expression") {
                 it("throws an appropriate exception") {
-                    assertThat({ expression.evaluate(emptyMap(), configVariables) },
+                    assertThat({ expression.evaluate(HostEnvironmentVariables(), configVariables) },
                         throws<VariableExpressionEvaluationException>(withMessage("The config variable 'THE_VAR' is not set and has no default value.")))
                 }
             }
@@ -226,7 +231,7 @@ object VariableExpressionSpec : Spek({
             val configVariables = mapOf("THE_VAR" to "the value")
 
             on("evaluating the expression") {
-                val value = expression.evaluate(emptyMap(), configVariables)
+                val value = expression.evaluate(HostEnvironmentVariables(), configVariables)
 
                 it("returns the default value") {
                     assertThat(value, equalTo("the value"))
@@ -248,7 +253,7 @@ object VariableExpressionSpec : Spek({
             val expression = ConcatenatedExpression()
 
             on("evaluating the expression") {
-                val value = expression.evaluate(emptyMap(), emptyMap())
+                val value = expression.evaluate(HostEnvironmentVariables(), emptyMap())
 
                 it("returns an empty string") {
                     assertThat(value, isEmptyString)
@@ -268,7 +273,7 @@ object VariableExpressionSpec : Spek({
             val expression = ConcatenatedExpression(LiteralValue("some value"))
 
             on("evaluating the expression") {
-                val value = expression.evaluate(emptyMap(), emptyMap())
+                val value = expression.evaluate(HostEnvironmentVariables(), emptyMap())
 
                 it("returns the result of evaluating that expression") {
                     assertThat(value, equalTo("some value"))
@@ -280,7 +285,7 @@ object VariableExpressionSpec : Spek({
             val expression = ConcatenatedExpression(LiteralValue("some"), LiteralValue(" value"))
 
             on("evaluating the expression") {
-                val value = expression.evaluate(emptyMap(), emptyMap())
+                val value = expression.evaluate(HostEnvironmentVariables(), emptyMap())
 
                 it("returns both expressions concatenated together") {
                     assertThat(value, equalTo("some value"))
@@ -292,7 +297,7 @@ object VariableExpressionSpec : Spek({
             val expression = ConcatenatedExpression(LiteralValue("some"), LiteralValue(" other"), LiteralValue(" value"))
 
             on("evaluating the expression") {
-                val value = expression.evaluate(emptyMap(), emptyMap())
+                val value = expression.evaluate(HostEnvironmentVariables(), emptyMap())
 
                 it("returns all expressions concatenated together") {
                     assertThat(value, equalTo("some other value"))

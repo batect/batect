@@ -39,7 +39,7 @@ object ContainerRuntimeConfigurationSpec : Spek({
 
                 it("returns a human-readable representation of itself") {
                     assertThat(config.toString(), equalTo("ContainerRuntimeConfiguration(command: [the-command, some-arg], entrypoint: [the-entrypoint], working directory: some-working-dir, " +
-                        "additional environment variables: [SOME_VAR=LiteralValue(value: 'some value')], additional port mappings: [123:456])")
+                        "additional environment variables: [SOME_VAR=LiteralValue(value: 'some value', original expression: 'some value')], additional port mappings: [123:456])")
                     )
                 }
             }
@@ -51,7 +51,7 @@ object ContainerRuntimeConfigurationSpec : Spek({
 
                 it("returns a human-readable representation of itself") {
                     assertThat(config.toString(), equalTo("ContainerRuntimeConfiguration(command: null, entrypoint: null, working directory: some-working-dir, " +
-                        "additional environment variables: [SOME_VAR=LiteralValue(value: 'some value')], additional port mappings: [123:456])")
+                        "additional environment variables: [SOME_VAR=LiteralValue(value: 'some value', original expression: 'some value')], additional port mappings: [123:456])")
                     )
                 }
             }

@@ -16,12 +16,9 @@
 
 package batect.config
 
-import batect.config.io.deserializers.PathDeserializer
-import batect.os.PathResolutionResult
-import batect.os.PathType
 import batect.testutils.createForEachTest
+import batect.testutils.equalTo
 import batect.testutils.on
-import batect.testutils.osIndependentPath
 import batect.testutils.runForEachTest
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
@@ -30,40 +27,21 @@ import com.charleskorn.kaml.Yaml
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.doAnswer
-import com.nhaarman.mockitokotlin2.mock
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.modules.serializersModuleOf
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object VolumeMountSpec : Spek({
     describe("a volume mount") {
         describe("deserializing from YAML") {
-            val pathDeserializer by createForEachTest {
-                mock<PathDeserializer> {
-                    on { deserialize(any()) } doAnswer { invocation ->
-                        val input = invocation.arguments[0] as Decoder
-
-                        when (val originalPath = input.decodeString()) {
-                            "/invalid" -> PathResolutionResult.InvalidPath(originalPath)
-                            else -> PathResolutionResult.Resolved(originalPath, osIndependentPath("/resolved" + originalPath), PathType.Other)
-                        }
-                    }
-                }
-            }
-
-            val parser by createForEachTest { Yaml(context = serializersModuleOf(PathResolutionResult::class, pathDeserializer)) }
+            val parser by createForEachTest { Yaml() }
 
             describe("deserializing from compact form") {
                 on("parsing a valid volume mount definition") {
                     val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, "'/local:/container'") }
 
-                    it("returns the correct local path, resolved to an absolute path") {
-                        assertThat(volumeMount.localPath, equalTo("/resolved/local"))
+                    it("returns the correct local path") {
+                        assertThat(volumeMount.localPath, equalTo(LiteralValue("/local")))
                     }
 
                     it("returns the correct container path") {
@@ -78,8 +56,8 @@ object VolumeMountSpec : Spek({
                 on("parsing a valid volume mount definition with options") {
                     val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, "'/local:/container:some_options'") }
 
-                    it("returns the correct local path, resolved to an absolute path") {
-                        assertThat(volumeMount.localPath, equalTo("/resolved/local"))
+                    it("returns the correct local path") {
+                        assertThat(volumeMount.localPath, equalTo(LiteralValue("/local")))
                     }
 
                     it("returns the correct container path") {
@@ -98,8 +76,8 @@ object VolumeMountSpec : Spek({
                     on("parsing a valid Windows volume mount definition with $description") {
                         val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, "'$local:/container'") }
 
-                        it("returns the correct local path, resolved to an absolute path") {
-                            assertThat(volumeMount.localPath, equalTo("/resolved$local"))
+                        it("returns the correct local path") {
+                            assertThat(volumeMount.localPath, equalTo(LiteralValue(local)))
                         }
 
                         it("returns the correct container path") {
@@ -114,8 +92,8 @@ object VolumeMountSpec : Spek({
                     on("parsing a valid Windows volume mount definition with $description and options") {
                         val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, "'$local:/container:cached'") }
 
-                        it("returns the correct local path, resolved to an absolute path") {
-                            assertThat(volumeMount.localPath, equalTo("/resolved$local"))
+                        it("returns the correct local path") {
+                            assertThat(volumeMount.localPath, equalTo(LiteralValue(local)))
                         }
 
                         it("returns the correct container path") {
@@ -155,12 +133,6 @@ object VolumeMountSpec : Spek({
                         }
                     }
                 }
-
-                on("parsing a volume mount definition with an invalid local path") {
-                    it("fails with an appropriate error message") {
-                        assertThat({ parser.parse(VolumeMount.Companion, "'/invalid:/container'") }, throws(withMessage("'/invalid' is not a valid path.") and withLineNumber(1) and withColumn(1)))
-                    }
-                }
             }
 
             describe("deserializing from expanded form") {
@@ -172,8 +144,8 @@ object VolumeMountSpec : Spek({
 
                     val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, yaml) }
 
-                    it("returns the correct local path, resolved to an absolute path") {
-                        assertThat(volumeMount.localPath, equalTo("/resolved/local"))
+                    it("returns the correct local path") {
+                        assertThat(volumeMount.localPath, equalTo(LiteralValue("/local")))
                     }
 
                     it("returns the correct container path") {
@@ -194,8 +166,8 @@ object VolumeMountSpec : Spek({
 
                     val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, yaml) }
 
-                    it("returns the correct local path, resolved to an absolute path") {
-                        assertThat(volumeMount.localPath, equalTo("/resolved/local"))
+                    it("returns the correct local path") {
+                        assertThat(volumeMount.localPath, equalTo(LiteralValue("/local")))
                     }
 
                     it("returns the correct container path") {
@@ -232,17 +204,6 @@ object VolumeMountSpec : Spek({
                                     and withColumn(1)
                             )
                         )
-                    }
-                }
-
-                on("parsing a volume mount definition with an invalid local path") {
-                    val yaml = """
-                        container: /container
-                        local: /invalid
-                    """.trimIndent()
-
-                    it("fails with an appropriate error message") {
-                        assertThat({ parser.parse(VolumeMount.Companion, yaml) }, throws(withMessage("'/invalid' is not a valid path.") and withLineNumber(2) and withColumn(8)))
                     }
                 }
             }

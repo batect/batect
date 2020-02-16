@@ -124,16 +124,19 @@ Two formats are supported:
 * Standard Docker `local:container` or `local:container:options` format
 
 * An expanded format:
-  ```yaml
-  containers:
-    my-container:
-      ...
-      volumes:
-        # This is equivalent to .:/code:cached
-        - local: .
-          container: /code
-          options: cached
-  ```
+
+    ```yaml
+    containers:
+      my-container:
+        ...
+        volumes:
+          # This is equivalent to .:/code:cached
+          - local: .
+            container: /code
+            options: cached
+    ```
+  
+    When using this expanded format, `local` can be an [expression](Overview.md#expressions).
 
 On Windows, the local path can use either Windows-style (`path\to\thing`) or Unix-style (`path/to/thing`) paths, but for compatibility
 with users running on other operating systems, using Unix-style paths is recommended.

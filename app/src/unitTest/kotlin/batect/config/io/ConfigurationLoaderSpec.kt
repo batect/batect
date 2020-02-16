@@ -533,8 +533,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.healthCheckConfig, equalTo(HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(1))))
                 assertThat(container.runAsCurrentUserConfig, equalTo(RunAsCurrentUserConfig.RunAsCurrentUser("/home/something")))
                 assertThat(container.volumeMounts, equalTo(setOf(
-                    VolumeMount("/resolved/..", "/here", null),
-                    VolumeMount("/resolved/somewhere", "/else", "ro")
+                    VolumeMount(LiteralValue("../"), "/here", null),
+                    VolumeMount(LiteralValue("/somewhere"), "/else", "ro")
                 )))
             }
         }
@@ -569,8 +569,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.name, equalTo("container-1"))
                 assertThat(container.imageSource, equalTo(BuildImage(fileSystem.getPath("/resolved/container-1-build-dir"))))
                 assertThat(container.volumeMounts, equalTo(setOf(
-                    VolumeMount("/resolved/..", "/here", null),
-                    VolumeMount("/resolved/somewhere", "/else", "ro")
+                    VolumeMount(LiteralValue("../"), "/here", null),
+                    VolumeMount(LiteralValue("/somewhere"), "/else", "ro")
                 )))
             }
         }

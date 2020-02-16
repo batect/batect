@@ -21,6 +21,7 @@ import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.client.DockerContainersClient
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
+import batect.execution.VolumeMountResolutionException
 import batect.execution.VolumeMountResolver
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
@@ -57,6 +58,8 @@ class CreateContainerStepRunner(
             val dockerContainer = containersClient.create(creationRequest)
             eventSink.postEvent(ContainerCreatedEvent(step.container, dockerContainer))
         } catch (e: ContainerCreationFailedException) {
+            eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))
+        } catch (e: VolumeMountResolutionException) {
             eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))
         }
     }

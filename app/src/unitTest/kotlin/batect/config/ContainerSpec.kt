@@ -196,7 +196,7 @@ object ContainerSpec : Spek({
                 build_directory: /container-1-build-dir
                 build_args:
                   SOME_ARG: some_value
-                  SOME_DYNAMIC_VALUE: ${'$'}host_var
+                  SOME_DYNAMIC_VALUE: ${'$'}{host_var}
                 dockerfile: some-Dockerfile
                 command: do-the-thing.sh some-param
                 entrypoint: sh
@@ -259,8 +259,8 @@ object ContainerSpec : Spek({
                     assertThat(
                         result.volumeMounts, equalTo(
                             setOf(
-                                VolumeMount("/resolved/volume1", "/here", null),
-                                VolumeMount("/resolved/somewhere", "/else", "ro")
+                                VolumeMount(LiteralValue("/volume1"), "/here", null),
+                                VolumeMount(LiteralValue("/somewhere"), "/else", "ro")
                             )
                         )
                     )

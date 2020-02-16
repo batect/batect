@@ -32,6 +32,7 @@ import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.RunAsCurrentUserConfiguration
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
+import batect.execution.VolumeMountResolutionException
 import batect.execution.VolumeMountResolver
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
@@ -120,6 +121,18 @@ object CreateContainerStepRunnerSpec : Spek({
         on("when creating the container fails") {
             beforeEachTest {
                 whenever(containersClient.create(request)).doThrow(ContainerCreationFailedException("Something went wrong."))
+
+                runner.run(step, eventSink)
+            }
+
+            it("emits a 'container creation failed' event") {
+                verify(eventSink).postEvent(ContainerCreationFailedEvent(container, "Something went wrong."))
+            }
+        }
+
+        on("when resolving a volume mount fails") {
+            beforeEachTest {
+                whenever(volumeMountResolver.resolve(any())).doThrow(VolumeMountResolutionException("Something went wrong."))
 
                 runner.run(step, eventSink)
             }

@@ -40,7 +40,7 @@ object BuildImageSpec : Spek({
                 assertThat(source.toString(), equalTo(
                     "BuildImage(" +
                         "build directory: '/image-build-dir', " +
-                        "build args: [some_arg=LiteralValue(value: 'some_value'), some_other_arg=EnvironmentVariableReference(reference to: 'host_var', default: null), some_config_var=ConfigVariableReference(reference to: 'config_var')], " +
+                        "build args: [some_arg=LiteralValue(value: 'some_value', original expression: 'some_value'), some_other_arg=EnvironmentVariableReference(reference to: 'host_var', default: null, original expression: '\${host_var}'), some_config_var=ConfigVariableReference(reference to: 'config_var', original expression: '<{config_var}')], " +
                         "Dockerfile path: 'some-Dockerfile-path')"
                 ))
             }

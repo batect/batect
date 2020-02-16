@@ -17,6 +17,7 @@
 package batect.config
 
 import batect.config.io.ConfigurationException
+import batect.os.HostEnvironmentVariables
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.CompositeEncoder
 import kotlinx.serialization.Decoder
@@ -27,10 +28,11 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Serializer
 import kotlinx.serialization.internal.SerialClassDescImpl
 import kotlinx.serialization.list
+import kotlin.math.min
 
 @Serializable(with = VariableExpression.Companion::class)
-sealed class VariableExpression {
-    abstract fun evaluate(hostEnvironmentVariables: Map<String, String>, configVariables: Map<String, String?>): String
+sealed class VariableExpression(open val originalExpression: String) {
+    abstract fun evaluate(hostEnvironmentVariables: HostEnvironmentVariables, configVariables: Map<String, String?>): String
     abstract fun serialize(encoder: CompositeEncoder)
 
     @Serializer(forClass = VariableExpression::class)
@@ -55,7 +57,7 @@ sealed class VariableExpression {
             return when (expressions.size) {
                 0 -> LiteralValue("")
                 1 -> expressions.single()
-                else -> ConcatenatedExpression(expressions)
+                else -> ConcatenatedExpression(expressions, source)
             }
         }
 
@@ -63,16 +65,16 @@ sealed class VariableExpression {
             IllegalArgumentException("Invalid expression '$source': $message")
 
         private fun readEnvironmentVariable(source: String, startIndex: Int): ParseResult =
-            readVariable(source, startIndex, "environment", true) { name, default ->
-                EnvironmentVariableReference(name, default)
+            readVariable(source, startIndex, "environment", true) { name, default, originalExpression ->
+                EnvironmentVariableReference(name, default, originalExpression)
             }
 
         private fun readConfigVariable(source: String, startIndex: Int): ParseResult =
-            readVariable(source, startIndex, "config", false) { name, _ ->
-                ConfigVariableReference(name)
+            readVariable(source, startIndex, "config", false) { name, _, originalExpression ->
+                ConfigVariableReference(name, originalExpression)
             }
 
-        private fun readVariable(source: String, startIndex: Int, type: String, supportsDefaults: Boolean, creator: (String, String?) -> VariableExpression): ParseResult {
+        private fun readVariable(source: String, startIndex: Int, type: String, supportsDefaults: Boolean, creator: (String, String?, String) -> VariableExpression): ParseResult {
             if (startIndex == source.lastIndex) {
                 throw invalidExpressionException(source, "invalid $type variable reference: '${source[startIndex]}' at column ${startIndex + 1} must be followed by a variable name")
             }
@@ -155,7 +157,9 @@ sealed class VariableExpression {
                 throw invalidExpressionException(source, "invalid $type variable reference: '${source.substring(startIndex, currentIndex + 1)}' at column ${startIndex + 1} does not contain a variable name")
             }
 
-            return ParseResult(creator(variableNameBuilder.toString(), defaultValue), currentIndex)
+            val originalExpression = source.substring(startIndex, min(currentIndex + 1, source.lastIndex + 1))
+
+            return ParseResult(creator(variableNameBuilder.toString(), defaultValue, originalExpression), currentIndex)
         }
 
         private fun readLiteralValue(source: String, startIndex: Int): ParseResult {
@@ -182,7 +186,9 @@ sealed class VariableExpression {
                 index++
             }
 
-            return ParseResult(LiteralValue(builder.toString()), index)
+            val originalExpression = source.substring(startIndex, min(index + 1, source.lastIndex + 1))
+
+            return ParseResult(LiteralValue(builder.toString(), originalExpression), index)
         }
 
         private data class ParseResult(val expression: VariableExpression, val readUntil: Int)
@@ -214,9 +220,9 @@ sealed class VariableExpression {
     }
 }
 
-data class LiteralValue(val value: String) : VariableExpression() {
-    override fun evaluate(hostEnvironmentVariables: Map<String, String>, configVariables: Map<String, String?>) = value
-    override fun toString() = "${this::class.simpleName}(value: '$value')"
+data class LiteralValue(val value: String, override val originalExpression: String = value) : VariableExpression(originalExpression) {
+    override fun evaluate(hostEnvironmentVariables: HostEnvironmentVariables, configVariables: Map<String, String?>) = value
+    override fun toString() = "${this::class.simpleName}(value: '$value', original expression: '$originalExpression')"
 
     private val descriptor: SerialDescriptor = object : SerialClassDescImpl("LiteralValue") {
         init {
@@ -227,8 +233,10 @@ data class LiteralValue(val value: String) : VariableExpression() {
     override fun serialize(encoder: CompositeEncoder) = encoder.encodeStringElement(descriptor, 0, value)
 }
 
-data class EnvironmentVariableReference(val referenceTo: String, val default: String? = null) : VariableExpression() {
-    override fun evaluate(hostEnvironmentVariables: Map<String, String>, configVariables: Map<String, String?>): String {
+data class EnvironmentVariableReference(val referenceTo: String, val default: String? = null, override val originalExpression: String) : VariableExpression(originalExpression) {
+    constructor(referenceTo: String, default: String? = null) : this(referenceTo, default, if (default == null) "\${$referenceTo}" else "\${$referenceTo:-$default}")
+
+    override fun evaluate(hostEnvironmentVariables: HostEnvironmentVariables, configVariables: Map<String, String?>): String {
         val hostValue = hostEnvironmentVariables.get(referenceTo)
 
         return when {
@@ -253,7 +261,7 @@ data class EnvironmentVariableReference(val referenceTo: String, val default: St
         }
     }
 
-    override fun toString() = "${this::class.simpleName}(reference to: '$referenceTo', default: ${defaultValueToString()})"
+    override fun toString() = "${this::class.simpleName}(reference to: '$referenceTo', default: ${defaultValueToString()}, original expression: '$originalExpression')"
 
     private fun defaultValueToString() = if (default == null) {
         "null"
@@ -262,8 +270,10 @@ data class EnvironmentVariableReference(val referenceTo: String, val default: St
     }
 }
 
-data class ConfigVariableReference(val referenceTo: String) : VariableExpression() {
-    override fun evaluate(hostEnvironmentVariables: Map<String, String>, configVariables: Map<String, String?>): String {
+data class ConfigVariableReference(val referenceTo: String, override val originalExpression: String) : VariableExpression(originalExpression) {
+    constructor(referenceTo: String) : this(referenceTo, "<{$referenceTo}")
+
+    override fun evaluate(hostEnvironmentVariables: HostEnvironmentVariables, configVariables: Map<String, String?>): String {
         if (!configVariables.containsKey(referenceTo)) {
             throw VariableExpressionEvaluationException("The config variable '$referenceTo' has not been defined.")
         }
@@ -277,7 +287,7 @@ data class ConfigVariableReference(val referenceTo: String) : VariableExpression
         return value
     }
 
-    override fun toString() = "${this::class.simpleName}(reference to: '$referenceTo')"
+    override fun toString() = "${this::class.simpleName}(reference to: '$referenceTo', original expression: '$originalExpression')"
 
     private val descriptor: SerialDescriptor = object : SerialClassDescImpl("ConfigVariableReference") {
         init {
@@ -288,10 +298,13 @@ data class ConfigVariableReference(val referenceTo: String) : VariableExpression
     override fun serialize(encoder: CompositeEncoder) = encoder.encodeStringElement(descriptor, 0, referenceTo)
 }
 
-data class ConcatenatedExpression(val expressions: Iterable<VariableExpression>) : VariableExpression() {
+data class ConcatenatedExpression(val expressions: Iterable<VariableExpression>, override val originalExpression: String) : VariableExpression(originalExpression) {
+    constructor(vararg expressions: VariableExpression, originalExpression: String) : this(expressions.toList(), originalExpression)
+
+    constructor(expressions: Iterable<VariableExpression>) : this(expressions, expressions.joinToString("") { it.originalExpression })
     constructor(vararg expressions: VariableExpression) : this(expressions.toList())
 
-    override fun evaluate(hostEnvironmentVariables: Map<String, String>, configVariables: Map<String, String?>): String =
+    override fun evaluate(hostEnvironmentVariables: HostEnvironmentVariables, configVariables: Map<String, String?>): String =
         expressions.joinToString("") { it.evaluate(hostEnvironmentVariables, configVariables) }
 
     private val descriptor: SerialDescriptor = object : SerialClassDescImpl("ConcatenatedExpression") {
@@ -303,7 +316,7 @@ data class ConcatenatedExpression(val expressions: Iterable<VariableExpression>)
     override fun serialize(encoder: CompositeEncoder) = encoder.encodeSerializableElement(descriptor, 0, list, expressions.toList())
 
     override fun toString(): String {
-        return "${this::class.simpleName}(expressions: ${expressions.joinToString()})"
+        return "${this::class.simpleName}(expressions: ${expressions.joinToString()}, original expression: '$originalExpression')"
     }
 }
 

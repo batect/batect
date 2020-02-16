@@ -26,6 +26,8 @@ Specifies what to do when this task starts:
     shell syntax features like `$MY_ENVIRONMENT_VARIABLE` and `&&` from working. See the
     [note about entrypoints in the documentation for containers](Containers.md#command-entrypoint-note) for more information.
 
+<a id="entrypoint"></a>
+
 * `entrypoint` Entrypoint to use to run the command.
 
     Overrides any entrypoint specified on the container definition and the image's default entrypoint. If no entrypoint is provided here,

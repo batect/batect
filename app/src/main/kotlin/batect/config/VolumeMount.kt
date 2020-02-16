@@ -18,20 +18,15 @@ package batect.config
 
 import batect.config.io.ConfigurationException
 import batect.config.io.deserializers.tryToDeserializeWith
-import batect.os.PathResolutionResult
-import com.charleskorn.kaml.Location
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.CompositeDecoder
 import kotlinx.serialization.Decoder
-import kotlinx.serialization.DeserializationStrategy
-import kotlinx.serialization.ElementValueDecoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.decode
 import kotlinx.serialization.internal.SerialClassDescImpl
 import kotlinx.serialization.internal.StringDescriptor
 import kotlinx.serialization.internal.StringSerializer
@@ -39,7 +34,7 @@ import kotlinx.serialization.internal.nullable
 
 @Serializable(with = VolumeMount.Companion::class)
 data class VolumeMount(
-    val localPath: String,
+    val localPath: VariableExpression,
     val containerPath: String,
     val options: String? = null
 ) {
@@ -85,17 +80,9 @@ data class VolumeMount(
             val container = match.groupValues[3]
             val options = match.groupValues[5].takeIf { it.isNotEmpty() }
 
-            val resolvedLocal = resolveLocalPathFromString(local, input)
+            val resolvedLocal = LiteralValue(local)
 
             return VolumeMount(resolvedLocal, container, options)
-        }
-
-        private fun resolveLocalPathFromString(localPart: String, input: YamlInput): String {
-            val dummyInput = object : ElementValueDecoder() {
-                override fun decodeString() = localPart
-            }
-
-            return resolveLocalPath(dummyInput.decode(input.localPathDeserializer), input.getCurrentLocation())
         }
 
         private fun invalidMountDefinitionException(value: String, input: YamlInput) =
@@ -106,17 +93,14 @@ data class VolumeMount(
             )
 
         private fun deserializeFromObject(input: YamlInput): VolumeMount {
-            var localPath: String? = null
+            var localPath: VariableExpression? = null
             var containerPath: String? = null
             var options: String? = null
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
                     CompositeDecoder.READ_DONE -> break@loop
-                    localPathFieldIndex -> {
-                        val resolutionResult = input.decodeSerializableElement(descriptor, i, input.localPathDeserializer)
-                        localPath = resolveLocalPath(resolutionResult, input.getCurrentLocation())
-                    }
+                    localPathFieldIndex -> localPath = input.decodeSerializableElement(descriptor, i, VariableExpression.serializer())
                     containerPathFieldIndex -> containerPath = input.decodeStringElement(descriptor, i)
                     optionsFieldIndex -> options = input.decodeStringElement(descriptor, i)
                     else -> throw SerializationException("Unknown index $i")
@@ -134,20 +118,10 @@ data class VolumeMount(
             return VolumeMount(localPath, containerPath, options)
         }
 
-        private fun resolveLocalPath(pathResolutionResult: PathResolutionResult, location: Location): String {
-            when (pathResolutionResult) {
-                is PathResolutionResult.Resolved -> return pathResolutionResult.absolutePath.toString()
-                is PathResolutionResult.InvalidPath -> throw ConfigurationException("'${pathResolutionResult.originalPath}' is not a valid path.", location.line, location.column)
-            }
-        }
-
-        private val YamlInput.localPathDeserializer: DeserializationStrategy<PathResolutionResult>
-            get() = context.getContextual(PathResolutionResult::class)!!
-
         override fun serialize(encoder: Encoder, obj: VolumeMount) {
             val output = encoder.beginStructure(descriptor)
 
-            output.encodeStringElement(descriptor, localPathFieldIndex, obj.localPath)
+            output.encodeSerializableElement(descriptor, localPathFieldIndex, VariableExpression.serializer(), obj.localPath)
             output.encodeStringElement(descriptor, containerPathFieldIndex, obj.containerPath)
             output.encodeSerializableElement(descriptor, optionsFieldIndex, StringSerializer.nullable, obj.options)
 

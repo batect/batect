@@ -26,8 +26,13 @@ function updateProject {
         ./batect --upgrade
         git add batect
         git add batect.cmd
-        git commit -m "$commit_message"
-        git push
+
+        if output=$(git status --porcelain) && [ ! -z "$output" ]; then
+            git commit -m "$commit_message"
+            git push
+        else
+            echo "$project_dir is already up-to-date."
+        fi
     }
 }
 

@@ -36,7 +36,7 @@ task generateBintrayDescriptor {
                |    "package": {
                |        "name": "batect",
                |        "repo": "batect",
-               |        "subject": "charleskorn",
+               |        "subject": "batect",
                |        "desc": "Build And Testing Environments as Code Tool",
                |        "website_url": "https://batect.dev",
                |        "issue_tracker_url": "https://github.com/batect/batect/issues",

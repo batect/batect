@@ -85,5 +85,5 @@ Thank you to the following people for their bug reports, pull requests, suggesti
 * ...and everyone else who has used the tool and provided feedback offline
 
 Thank you to YourKit for providing a complimentary copy of the [YourKit profiler](https://www.yourkit.com/java/profiler), and
-thank you to JFrog for providing a complimentary instance of both [Bintray](https://bintray.com/charleskorn/batect/batect) and
+thank you to JFrog for providing a complimentary instance of both [Bintray](https://bintray.com/batect/batect/batect) and
 [Artifactory](https://jfrog.com/artifactory/).

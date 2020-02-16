@@ -11,7 +11,7 @@ function getValueOrDefault($value, $default) {
     }
 }
 
-$DownloadUrlRoot = getValueOrDefault $env:BATECT_DOWNLOAD_URL_ROOT "https://dl.bintray.com/charleskorn/batect"
+$DownloadUrlRoot = getValueOrDefault $env:BATECT_DOWNLOAD_URL_ROOT "https://dl.bintray.com/batect/batect"
 $UrlEncodedVersion = [Uri]::EscapeDataString($Version)
 $DownloadUrl = getValueOrDefault $env:BATECT_DOWNLOAD_URL "$DownloadUrlRoot/$UrlEncodedVersion/bin/batect-$UrlEncodedVersion.jar"
 

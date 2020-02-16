@@ -29,6 +29,7 @@ containers:
       retries: 1
       interval: 2s
       start_period: 5s
+      command: exit 0
     run_as_current_user:
       enabled: true
       home_directory: /root

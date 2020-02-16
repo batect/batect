@@ -9,6 +9,7 @@ containers:
   dependency:
     build_directory: dependency
     health_check:
+      command: /tools/health-check.sh
       interval: 0.1s
       retries: 10
       start_period: 0.5s

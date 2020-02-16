@@ -108,7 +108,7 @@ object ConfigurationSpec : Spek({
                     setOf(DeviceMount("/dev/local", "/dev/container", "device-options")),
                     setOf(PortMapping(123, 456)),
                     setOf("other-container"),
-                    HealthCheckConfig(Duration.ofSeconds(1), 23, Duration.ofSeconds(4)),
+                    HealthCheckConfig(Duration.ofSeconds(1), 23, Duration.ofSeconds(4), "exit 0"),
                     RunAsCurrentUserConfig.RunAsCurrentUser("/some/home/dir"),
                     true,
                     true,
@@ -157,7 +157,8 @@ object ConfigurationSpec : Spek({
                                     "health_check": {
                                         "interval": "1s",
                                         "retries": 23,
-                                        "start_period": "4s"
+                                        "start_period": "4s",
+                                        "command": "exit 0"
                                     },
                                     "run_as_current_user": {
                                         "enabled": true,
@@ -219,7 +220,8 @@ object ConfigurationSpec : Spek({
                                     "health_check": {
                                         "interval": null,
                                         "retries": null,
-                                        "start_period": null
+                                        "start_period": null,
+                                        "command": null
                                     },
                                     "run_as_current_user": {
                                         "enabled": false

@@ -339,6 +339,11 @@
           "type": "string",
           "description": "The time to wait before failing health checks count against the retry count. The health check is still run during this period, and if the check succeeds, the container is immediately considered healthy. Accepts values such as `2s` (two seconds) or `1m` (one minute).",
           "minLength": 1
+        },
+        "command": {
+          "type": "string",
+          "description": "The command to run to check the health of the container. If this command exits with code 0, the container is considered healthy.",
+          "minLength": 1
         }
       }
     },

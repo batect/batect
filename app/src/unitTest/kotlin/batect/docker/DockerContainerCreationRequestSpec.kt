@@ -43,7 +43,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 setOf(DockerVolumeMount("/local", "/container", "ro")),
                 setOf(DeviceMount("/dev/local", "/dev/container", "rw")),
                 setOf(PortMapping(123, 456)),
-                HealthCheckConfig(Duration.ofNanos(555), 12, Duration.ofNanos(333)),
+                HealthCheckConfig(Duration.ofNanos(555), 12, Duration.ofNanos(333), "exit 0"),
                 UserAndGroup(789, 222),
                 privileged = true,
                 init = true,
@@ -100,7 +100,7 @@ object DockerContainerCreationRequestSpec : Spek({
                         |       "CapDrop": ["AUDIT_READ", "CHOWN"]
                         |   },
                         |   "Healthcheck": {
-                        |       "Test": [],
+                        |       "Test": ["CMD-SHELL", "exit 0"],
                         |       "Interval": 555,
                         |       "Retries": 12,
                         |       "StartPeriod": 333

@@ -201,12 +201,15 @@ depend on them.
 ## `health_check`
 Overrides [health check](https://docs.docker.com/engine/reference/builder/#healthcheck) configuration specified in the image or Dockerfile:
 
+* `command` The command to run to check the health of the container. If this command exits with code 0, the container is considered healthy, otherwise
+  the container is considered unhealthy. If not provided, the default command specified in the image or Dockerfile is used.
+
 * `retries` The number of times to perform the health check before considering the container unhealthy.
 
 * `interval` The interval between runs of the health check. Accepts values such as `2s` (two seconds) or `1m` (one minute).
 
 * `start_period` The time to wait before failing health checks count against the retry count. The health check is still run during this period,
-  and if the check succeeds, the container is immediately considered healthy. Accepts values such as `2s` (two seconds) or `1m` (one minute).
+  and if the check succeeds, the container is immediately considered healthy. Accepts values such as `2s` (two seconds) or `1m` (one minute).  
 
 ## `run_as_current_user`
 Run the container with the same UID and GID as the user running batect (rather than the user the Docker daemon runs as, which is root

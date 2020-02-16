@@ -86,7 +86,12 @@ data class DockerContainerCreationRequest(
             }
 
             "Healthcheck" to json {
-                "Test" to emptyList<String>().toJsonArray()
+                if (healthCheckConfig.command == null) {
+                    "Test" to emptyList<String>().toJsonArray()
+                } else {
+                    "Test" to listOf("CMD-SHELL", healthCheckConfig.command).toJsonArray()
+                }
+
                 "Interval" to (healthCheckConfig.interval?.toNanos() ?: 0)
                 "Retries" to (healthCheckConfig.retries ?: 0)
                 "StartPeriod" to (healthCheckConfig.startPeriod?.toNanos() ?: 0)

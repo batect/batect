@@ -25,5 +25,6 @@ import java.time.Duration
 data class HealthCheckConfig(
     @Serializable(with = DurationSerializer::class) val interval: Duration? = null,
     val retries: Int? = null,
-    @SerialName("start_period") @Serializable(with = DurationSerializer::class) val startPeriod: Duration? = null
+    @SerialName("start_period") @Serializable(with = DurationSerializer::class) val startPeriod: Duration? = null,
+    val command: String? = null
 )

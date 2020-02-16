@@ -20,7 +20,7 @@ import batect.config.Container
 import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
 import batect.config.LiteralValue
-import batect.config.VariableExpressionEvaluationException
+import batect.config.ExpressionEvaluationException
 import batect.execution.ContainerRuntimeConfiguration
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.testutils.given
@@ -242,7 +242,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
             val propagateProxyEnvironmentVariables = false
 
             val invalidReference = mock<Expression> {
-                on { evaluate(expressionEvaluationContext) } doThrow VariableExpressionEvaluationException("Couldn't evaluate expression.")
+                on { evaluate(expressionEvaluationContext) } doThrow ExpressionEvaluationException("Couldn't evaluate expression.")
             }
 
             given("and those references are on the container") {

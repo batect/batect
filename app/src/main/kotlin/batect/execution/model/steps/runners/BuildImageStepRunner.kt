@@ -18,7 +18,7 @@ package batect.execution.model.steps.runners
 
 import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
-import batect.config.VariableExpressionEvaluationException
+import batect.config.ExpressionEvaluationException
 import batect.docker.ImageBuildFailedException
 import batect.docker.client.DockerImageBuildProgress
 import batect.docker.client.DockerImagesClient
@@ -74,7 +74,7 @@ class BuildImageStepRunner(
     private fun evaluateBuildArgValue(name: String, expression: Expression): String {
         try {
             return expression.evaluate(expressionEvaluationContext)
-        } catch (e: VariableExpressionEvaluationException) {
+        } catch (e: ExpressionEvaluationException) {
             throw ImageBuildFailedException("The value for the build arg '$name' cannot be evaluated: ${e.message}", e)
         }
     }

@@ -241,7 +241,7 @@ data class EnvironmentVariableReference(val referenceTo: String, val default: St
         return when {
             hostValue != null -> hostValue
             default != null -> default
-            else -> throw VariableExpressionEvaluationException("The host environment variable '$referenceTo' is not set, and no default value has been provided.")
+            else -> throw ExpressionEvaluationException("The host environment variable '$referenceTo' is not set, and no default value has been provided.")
         }
     }
 
@@ -274,13 +274,13 @@ data class ConfigVariableReference(val referenceTo: String, override val origina
 
     override fun evaluate(context: ExpressionEvaluationContext): String {
         if (!context.configVariables.containsKey(referenceTo)) {
-            throw VariableExpressionEvaluationException("The config variable '$referenceTo' has not been defined.")
+            throw ExpressionEvaluationException("The config variable '$referenceTo' has not been defined.")
         }
 
         val value = context.configVariables.getValue(referenceTo)
 
         if (value == null) {
-            throw VariableExpressionEvaluationException("The config variable '$referenceTo' is not set and has no default value.")
+            throw ExpressionEvaluationException("The config variable '$referenceTo' is not set and has no default value.")
         }
 
         return value
@@ -319,4 +319,4 @@ data class ConcatenatedExpression(val expressions: Iterable<Expression>, overrid
     }
 }
 
-class VariableExpressionEvaluationException(message: String) : RuntimeException(message)
+class ExpressionEvaluationException(message: String) : RuntimeException(message)

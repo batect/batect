@@ -18,7 +18,7 @@ package batect.execution
 
 import batect.config.ExpressionEvaluationContext
 import batect.config.LiteralValue
-import batect.config.VariableExpressionEvaluationException
+import batect.config.ExpressionEvaluationException
 import batect.config.VolumeMount
 import batect.docker.DockerVolumeMount
 import batect.os.PathResolutionResult
@@ -49,7 +49,7 @@ class VolumeMountResolver(
     private fun evaluateLocalPath(mount: VolumeMount): String {
         try {
             return mount.localPath.evaluate(expressionEvaluationContext)
-        } catch (e: VariableExpressionEvaluationException) {
+        } catch (e: ExpressionEvaluationException) {
             throw VolumeMountResolutionException("Could not resolve volume mount path: expression '${mount.localPath.originalExpression}' could not be evaluated: ${e.message}", e)
         }
     }

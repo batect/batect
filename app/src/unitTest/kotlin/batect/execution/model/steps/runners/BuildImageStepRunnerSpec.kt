@@ -21,7 +21,7 @@ import batect.config.EnvironmentVariableReference
 import batect.config.LiteralValue
 import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
-import batect.config.VariableExpressionEvaluationException
+import batect.config.ExpressionEvaluationException
 import batect.docker.DockerImage
 import batect.docker.ImageBuildFailedException
 import batect.docker.client.DockerImageBuildProgress
@@ -188,7 +188,7 @@ object BuildImageStepRunnerSpec : Spek({
 
         on("when a build arg is an invalid reference") {
             val invalidReference = mock<Expression> {
-                on { evaluate(expressionEvaluationContext) } doThrow VariableExpressionEvaluationException("Couldn't evaluate expression.")
+                on { evaluate(expressionEvaluationContext) } doThrow ExpressionEvaluationException("Couldn't evaluate expression.")
             }
 
             val imageSourceWithInvalidBuildArgReference = BuildImage(buildDirectory, mapOf("SOME_HOST_VAR" to invalidReference), dockerfilePath)

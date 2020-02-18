@@ -1,6 +1,6 @@
 # Problem statement
 
-One of the most common complaints about running builds or tests using Dockerised environments, including with batect, is that they can be significantly slower than running them in a virtualisation-free environment. 
+One of the most common complaints about running builds or tests using Dockerised environments, including with batect, is that they can be significantly slower than running them in a virtualisation-free environment.
 
 This reduced performance primarily stems from three factors:
 
@@ -15,7 +15,7 @@ Volume mounts are primarily used in batect for two purposes:
 * to make application code available within the container
 * to cache files such as external libraries or packages between runs to remove the need to download them for each build or test run (and thus save time)
 
-While the throughput of volume mounts on macOS and Windows is generally comparable to native file access within a container, the latency performing I/O operations such as opening a file handle can often be significant, as these need to cross from the Linux VM hosting Docker to the host OS and back again. 
+While the throughput of volume mounts on macOS and Windows is generally comparable to native file access within a container, the latency performing I/O operations such as opening a file handle can often be significant, as these need to cross from the Linux VM hosting Docker to the host OS and back again.
 
 This increased latency quickly accumulates, especially when many file operations are involved. This particularly affects languages such as JavaScript and Golang that encourage distributing all dependencies as source code and breaking codebases into many small files, as even a warm build with no source code changes still requires the compiler to examine each dependency file to ensure that the cached build result is up-to-date.
 
@@ -27,11 +27,27 @@ Furthermore, configuring and managing cache directories adds friction to develop
 
 # Proposed solution
 
-To resolve the issues outlined above, this RFC proposes adding a new volume mount mechanism designed specifically for cache directories that uses Docker volumes instead of mounting directories from the host operating system, except when running as part of a CI build. 
+To resolve the issues outlined above, this RFC proposes adding a new volume mount mechanism designed specifically for cache directories that uses Docker volumes instead of mounting directories from the host operating system, except when running as part of a CI build.
 
 When running as part of a CI build, batect will instead default to mounting a directory on the host OS so that this directory can easily be shared between builds. (It is assumed that most CI builds occur on Linux and so the overhead of this is negligible.)
 
 The choice of cache mechanism would also be able to be overridden with a command line option.
+
+
+
+# Spike results
+
+Performance tests for a non-trivial Golang app (https://github.com/batect/abacus/commit/428bab1a8a142eb41fd6062de61ac340ad58b5fe) were performed using the test scripts in this directory. Tests were perfomed on a 2018 MacBook Pro running macOS 10.15.3 and Docker Desktop 2.2.0.3.
+
+|                                                                          | Using mount (no options) | Using mount (`delegated` mode) | Using volume |
+| ------------------------------------------------------------------------ | ------------------------ | ------------------------------ | ------------ |
+| Download dependencies (`go mod download`)                                | 44.460s                  | 25.941s                        | 11.336s      |
+| Initial build with no build cache (`go build` with some options)         | 10.810s                  | 5.939s                         | 4.127s       |
+| Subsequent build with no changes (`go build` with same options as above) | 6.312s                   | 1.428s                         | 0.360s       |
+
+Downloading dependencies was run a number of times to ensure no network-level caching was impacting the results.
+
+While this is only one highly unscientific test for one codebase, it gives an indication of the likely performance gains from the proposed solution.
 
 
 
@@ -50,7 +66,7 @@ containers:
       - local: .
         container: /code
         options: cached
-      
+
       # Mount cache at /go
       - type: cache
         name: build-go-cache
@@ -67,7 +83,7 @@ Not specifying `type` or specifying `type: mount` would result in the existing b
 
 ### Detection of runtime environment
 
-In order to determine if batect is running as part of a CI build (and so choose a default cache mechanism), batect will check for the presence of the `CI` or `BUILD_NUMBER` environment variables. If either of these are set to any value, batect will assume that the task is running as part of a CI build and default to using directory mounts for caches. 
+In order to determine if batect is running as part of a CI build (and so choose a default cache mechanism), batect will check for the presence of the `CI` or `BUILD_NUMBER` environment variables. If either of these are set to any value, batect will assume that the task is running as part of a CI build and default to using directory mounts for caches.
 
 `CI` is set by most common CI tools, with Jenkins and TeamCity not setting `CI` but instead setting `BUILD_NUMBER`.
 
@@ -104,4 +120,3 @@ Examples for running a task:
 New `--clean` command:
 
 `./batect --clean`: delete all caches for default cache type for environment (can also use `--cache-type` to override default) and then exit
-

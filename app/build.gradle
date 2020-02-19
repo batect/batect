@@ -44,13 +44,14 @@ repositories {
 }
 
 dependencies {
+    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.4.0"))
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.14.0"
     implementation 'org.kodein.di:kodein-di-core-jvm:6.5.1'
     implementation 'org.kodein.di:kodein-di-generic-jvm:6.5.1'
     implementation 'com.squareup.okio:okio:2.4.3'
-    implementation 'com.squareup.okhttp3:okhttp:4.3.1'
+    implementation 'com.squareup.okhttp3:okhttp'
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.64'
     implementation 'com.github.jnr:jnr-unixsocket:0.25'
     implementation 'com.github.jnr:jnr-posix:3.0.51'
@@ -62,7 +63,7 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:3.2.4'
     testImplementation 'com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0'
     testImplementation 'com.google.jimfs:jimfs:1.1'
-    testImplementation 'com.squareup.okhttp3:mockwebserver:4.3.1'
+    testImplementation 'com.squareup.okhttp3:mockwebserver'
 }
 
 shadowJar {

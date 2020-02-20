@@ -17,7 +17,7 @@ build_script:
   - ./gradlew --parallel app:check wrapper:windows:check jacocoTestReport
   - ps: |
       $env:Path = "C:\Program Files\Git\usr\bin;" + $env:Path
-      bash -c 'export CI=True && export APPVEYOR=True && curl -s --show-error --fail --retry-connrefused --retry 10 https://codecov.io/bash | bash -s -- -F windows'
+      bash -c 'export CI=true && export APPVEYOR=true && curl -s --show-error --fail --retry-connrefused --retry 10 https://codecov.io/bash | bash -s -- -F windows'
   - ps: ./appveyor/Enable-LinuxContainers.ps1
   - docker version
   - ./gradlew integrationTest

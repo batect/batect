@@ -1,5 +1,5 @@
 # batect
-[![Build Status](https://img.shields.io/travis/batect/batect/master.svg)](https://travis-ci.org/batect/batect)
+[![Build Status](https://img.shields.io/travis/batect/batect/master.svg)](https://travis-ci.com/batect/batect)
 [![Coverage](https://img.shields.io/codecov/c/github/batect/batect.svg)](https://codecov.io/gh/batect/batect)
 [![License](https://img.shields.io/github/license/batect/batect.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Chat](https://img.shields.io/badge/chat-on%20spectrum-brightgreen.svg)](https://spectrum.chat/batect)

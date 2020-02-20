@@ -83,12 +83,13 @@ data class TaskRunner(
     }
 
     private fun onTaskSucceeded(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine, duration: Duration, runOptions: RunOptions): Int {
-        eventLogger.onTaskFinished(task.name, stateMachine.taskExitCode, duration)
+        val exitCode = stateMachine.taskExitCode
+        eventLogger.onTaskFinished(task.name, exitCode, duration)
 
         logger.info {
             message("Task execution completed normally.")
             data("taskName", task.name)
-            data("exitCode", stateMachine.taskExitCode)
+            data("exitCode", exitCode)
         }
 
         if (runOptions.behaviourAfterSuccess == CleanupOption.DontCleanup) {
@@ -96,6 +97,10 @@ data class TaskRunner(
             return -1
         }
 
-        return stateMachine.taskExitCode
+        return if (exitCode in Int.MIN_VALUE..Int.MAX_VALUE) {
+            exitCode.toInt()
+        } else {
+            -1
+        }
     }
 }

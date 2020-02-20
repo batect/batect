@@ -271,7 +271,7 @@ class ContainersAPI(
             }
     }
 
-    fun waitForExit(container: DockerContainer, cancellationContext: CancellationContext): Int {
+    fun waitForExit(container: DockerContainer, cancellationContext: CancellationContext): Long {
         logger.info {
             message("Waiting for container to exit.")
             data("container", container)
@@ -313,7 +313,7 @@ class ContainersAPI(
                     throw DockerException("Waiting for container '${container.id}' to exit succeeded but returned an error: $message")
                 }
 
-                return parsedResponse.getValue("StatusCode").primitive.int
+                return parsedResponse.getValue("StatusCode").primitive.long
             }
     }
 

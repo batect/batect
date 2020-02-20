@@ -23,8 +23,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
 class ContainerWaiter(private val api: ContainersAPI) {
-    fun startWaitingForContainerToExit(container: DockerContainer, cancellationContext: CancellationContext): Future<Int> {
-        return Executors.newSingleThreadExecutor().submit<Int> {
+    fun startWaitingForContainerToExit(container: DockerContainer, cancellationContext: CancellationContext): Future<Long> {
+        return Executors.newSingleThreadExecutor().submit<Long> {
             api.waitForExit(container, cancellationContext)
         }
     }

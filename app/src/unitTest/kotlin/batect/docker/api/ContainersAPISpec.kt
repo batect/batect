@@ -533,6 +533,25 @@ object ContainersAPISpec : Spek({
                             verify(cancellationContext).addCancellationCallback(call::cancel)
                         }
                     }
+
+                    on("the response containing a status code outside the 0-255 range") {
+                        val responseBody = """{"StatusCode": 3221225794}"""
+
+                        val call by createForEachTest { clientWithNoTimeout.mockPost(expectedUrl, responseBody, 200) }
+                        val exitCode by runForEachTest { api.waitForExit(container, cancellationContext) }
+
+                        it("returns the exit code from the container") {
+                            assertThat(exitCode, equalTo(3221225794))
+                        }
+
+                        it("configures the HTTP client with no timeout") {
+                            verify(noTimeoutClientBuilder).readTimeout(eq(0), any())
+                        }
+
+                        it("registers the API call with the cancellation context") {
+                            verify(cancellationContext).addCancellationCallback(call::cancel)
+                        }
+                    }
                 }
 
                 on("the wait returning an error in the body of the response") {

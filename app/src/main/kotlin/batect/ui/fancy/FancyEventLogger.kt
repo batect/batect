@@ -117,7 +117,7 @@ class FancyEventLogger(
         console.println(Text.white(Text("Running ") + Text.bold(taskName) + Text("...")))
     }
 
-    override fun onTaskFinished(taskName: String, exitCode: Int, duration: Duration) {
+    override fun onTaskFinished(taskName: String, exitCode: Long, duration: Duration) {
         cleanupProgressDisplay.clear(console)
 
         console.println(Text.white(Text.bold(taskName) + Text(" finished with exit code $exitCode in ${duration.humanise()}.")))

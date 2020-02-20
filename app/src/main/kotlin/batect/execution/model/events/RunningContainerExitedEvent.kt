@@ -18,6 +18,6 @@ package batect.execution.model.events
 
 import batect.config.Container
 
-data class RunningContainerExitedEvent(val container: Container, val exitCode: Int) : TaskEvent() {
+data class RunningContainerExitedEvent(val container: Container, val exitCode: Long) : TaskEvent() {
     override fun toString() = "${this::class.simpleName}(container: '${container.name}', exit code: $exitCode)"
 }

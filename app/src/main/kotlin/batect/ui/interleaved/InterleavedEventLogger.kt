@@ -70,7 +70,7 @@ class InterleavedEventLogger(
         output.printForTask(Text.white(Text("Running ") + Text.bold(taskName) + Text("...")))
     }
 
-    override fun onTaskFinished(taskName: String, exitCode: Int, duration: Duration) {
+    override fun onTaskFinished(taskName: String, exitCode: Long, duration: Duration) {
         output.printForTask(Text.white(Text.bold(taskName) + Text(" finished with exit code $exitCode in ${duration.humanise()}.")))
     }
 

@@ -114,7 +114,7 @@ object DockerContainersClientSpec : Spek({
                 val onStartedHandler by createForEachTest { mock<() -> Unit>() }
 
                 beforeEachTest {
-                    whenever(waiter.startWaitingForContainerToExit(container, cancellationContext)).doReturn(CompletableFuture.completedFuture(123))
+                    whenever(waiter.startWaitingForContainerToExit(container, cancellationContext)).doReturn(CompletableFuture.completedFuture(123L))
                     whenever(api.attachToOutput(container)).doReturn(outputStream)
                     whenever(api.attachToInput(container)).doReturn(inputStream)
                     whenever(consoleManager.enterRawMode()).doReturn(terminalRestorer)

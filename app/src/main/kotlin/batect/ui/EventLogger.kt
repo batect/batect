@@ -23,7 +23,7 @@ import java.time.Duration
 
 interface EventLogger : TaskEventSink {
     fun onTaskStarting(taskName: String)
-    fun onTaskFinished(taskName: String, exitCode: Int, duration: Duration)
+    fun onTaskFinished(taskName: String, exitCode: Long, duration: Duration)
     fun onTaskFinishedWithCleanupDisabled(manualCleanupInstructions: TextRun)
     fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun)
 

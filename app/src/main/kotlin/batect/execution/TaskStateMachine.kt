@@ -192,7 +192,7 @@ class TaskStateMachine(
     private fun inRunStage(): Boolean = currentStage is RunStage
     private fun inCleanupStage(): Boolean = currentStage is CleanupStage
 
-    val taskExitCode: Int
+    val taskExitCode: Long
         get() {
             val containerExitedEvent = events
                 .filterIsInstance<RunningContainerExitedEvent>()

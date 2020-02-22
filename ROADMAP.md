@@ -39,7 +39,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * allow container side of volume mount to use path of local directory (eg. mount current directory at same path inside container) - will be tricky on Windows
 * show build context upload progress when building image
 * some way to kill a misbehaving task (eg. one that is not responding to Ctrl+C)
-* support for BuildKit
+* support for BuildKit - https://github.com/moby/moby/pull/37151 has links to references
 * shell tab completion for options (eg. `batect --h<tab>` completes to `batect --help`) - #116
 * shell tab completion for tasks (eg. `batect b<tab>` completes to `batect build`) - #116
 * Kubernetes-style health checks from outside the container (don't require `curl` / `wget` to be installed in the container, just provide HTTP endpoint)

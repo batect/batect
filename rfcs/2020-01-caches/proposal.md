@@ -75,7 +75,7 @@ containers:
 
 `name` is also required and can be any valid Docker volume name. A cache can be shared by multiple containers  within the same project by using the same `name`. Both `local` and `options` are not permitted for a cache as these would have no effect.
 
-Not specifying `type` or specifying `type: mount` would result in the existing behaviour of mounting a local directory into the container.
+Not specifying `type` or specifying `type: host` would result in the existing behaviour of mounting a local directory into the container.
 
 
 

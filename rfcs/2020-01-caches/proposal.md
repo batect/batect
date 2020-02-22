@@ -91,7 +91,7 @@ Examples for running a task:
 
 New `--clean` command:
 
-`./batect --clean`: delete all caches for default cache type for environment (can also use `--cache-type` to override default) and then exit
+`./batect --clean`: delete all caches for default cache type (can also use `--cache-type` to override default) and then exit
 
 
 
@@ -110,3 +110,23 @@ To allow sharing volumes between task invocations while ensuring that caches are
 If a container has a mount with `type: cache`, then whenever that container is started, a directory on the host is mounted into the container at the path specified by `container`. If the directory already exists, it is reused, and if it does not exist, it is created before the container is created.
 
 To allow sharing caches between task invocations while ensuring that caches are only shared within the same project, these caches are created in the `.batect/caches` directory in the directory containing the configuration file. The name of the directory within `caches` matches the name of the cache - for example, `.batect/caches/build-go-cache` for the example configuration above.
+
+
+## Impacts on other features
+
+### 'Run as current user' mode
+
+When 'run as current user' (RACU) mode is enabled, batect instructs Docker to run the container with a custom UID and GID (these match the host OS user's UID and GID). 
+
+However, Docker always creates and mounts volumes with the owner and group set to `root`, except if the target directory already exists in the image, in which case the directory retains the ownership information from the image (see https://github.com/moby/moby/issues/21259 and https://github.com/moby/moby/issues/2259).
+
+Therefore, in order for the custom user to be able to read and write to the volume, the target directory must exist in the image and have the correct owner and group set. In order to simplify this for users, batect will provide a build arg when building images that contains a shell command to create and configure these directories. 
+
+For example:
+
+```dockerfile
+FROM alpine:3.11.3
+
+ARG batect_cache_setup_command
+RUN $batect_cache_setup_command # Equivalent to RUN mkdir -p "/path/to/cache1" && chown <uid>:<gid> "/path/to/cache1" && mkdir -p "/path/to/cache2" && chown <uid>:<gid> "/path/to/cache2"
+```

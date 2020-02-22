@@ -27,17 +27,14 @@ Furthermore, configuring and managing cache directories adds friction to develop
 
 # Proposed solution
 
-To resolve the issues outlined above, this RFC proposes adding a new volume mount mechanism designed specifically for cache directories that uses Docker volumes instead of mounting directories from the host operating system, except when running as part of a CI build.
+To resolve the issues outlined above, this RFC proposes adding a new volume mount mechanism designed specifically for cache directories that uses Docker volumes instead of mounting directories from the host operating system.
 
-When running as part of a CI build, batect will instead default to mounting a directory on the host OS so that this directory can easily be shared between builds. (It is assumed that most CI builds occur on Linux and so the overhead of this is negligible.)
-
-The choice of cache mechanism would also be able to be overridden with a command line option.
-
+In some situations, it is still preferable to use a mounted directory instead of a volume (eg. to persist a cache across CI builds by configuring the CI tool to archive and restore a directory), so batect will also offer the option to use mounted directories as the backing storage for a cache, configurable with a CLI option.
 
 
 # Spike results
 
-Performance tests for a non-trivial Golang app (https://github.com/batect/abacus/commit/428bab1a8a142eb41fd6062de61ac340ad58b5fe) were performed using the test scripts in this directory. Tests were perfomed on a 2018 MacBook Pro running macOS 10.15.3 and Docker Desktop 2.2.0.3.
+Performance tests for a non-trivial Golang app (https://github.com/batect/abacus/commit/428bab1a8a142eb41fd6062de61ac340ad58b5fe) were performed using the test scripts in this directory. Tests were performed on a 2018 MacBook Pro running macOS 10.15.3 and Docker Desktop 2.2.0.3.
 
 |                                                                          | Using mount (no options) | Using mount (`delegated` mode) | Using volume |
 | ------------------------------------------------------------------------ | ------------------------ | ------------------------------ | ------------ |
@@ -73,21 +70,32 @@ containers:
         container: /go
 ```
 
-`name` is also required and can be any valid Docker volume name. A cache can be shared by multiple containers  within the same project by using the same `name`. Both `local` and `options` are not permitted for a cache as these would have no effect.
+`name` is also required and can be any valid Docker volume name. A cache can be shared by multiple containers within the same project by using the same `name`. `local` is not permitted for a cache as it would have no effect.
+
+`options` can be specified for caches and can be any valid Docker volume mount options (eg. `ro`).
 
 Not specifying `type` or specifying `type: host` would result in the existing behaviour of mounting a local directory into the container.
 
 
+## CLI changes
+
+Examples for running a task:
+
+`./batect build`: run `build` task with default cache type (volumes)
+
+`./batect --cache-type=directory build`: run `build` task with directory mounts used for caches
+
+`./batect --cache-type=volume build`: run `build` task with volumes used for caches
+
+
+
+New `--clean` command:
+
+`./batect --clean`: delete all caches for default cache type for environment (can also use `--cache-type` to override default) and then exit
+
+
 
 ## Behaviour changes
-
-### Detection of runtime environment
-
-In order to determine if batect is running as part of a CI build (and so choose a default cache mechanism), batect will check for the presence of the `CI` or `BUILD_NUMBER` environment variables. If either of these are set to any value, batect will assume that the task is running as part of a CI build and default to using directory mounts for caches.
-
-`CI` is set by most common CI tools, with Jenkins and TeamCity not setting `CI` but instead setting `BUILD_NUMBER`.
-
-(Libraries such as [ci-info](https://github.com/watson/ci-info/blob/2012259979fc38517f8e3fc74daff714251b554d/index.js#L52) may also serve as inspiration for this if `CI` and `BUILD_NUMBER` are not sufficient.)
 
 ### When cache type is volume
 
@@ -102,21 +110,3 @@ To allow sharing volumes between task invocations while ensuring that caches are
 If a container has a mount with `type: cache`, then whenever that container is started, a directory on the host is mounted into the container at the path specified by `container`. If the directory already exists, it is reused, and if it does not exist, it is created before the container is created.
 
 To allow sharing caches between task invocations while ensuring that caches are only shared within the same project, these caches are created in the `.batect/caches` directory in the directory containing the configuration file. The name of the directory within `caches` matches the name of the cache - for example, `.batect/caches/build-go-cache` for the example configuration above.
-
-
-
-## CLI changes
-
-Examples for running a task:
-
-`./batect build`: run `build` task with default cache type for environment (see above)
-
-`./batect --cache-type=directory build`: run `build` task with directory mounts used for caches
-
-`./batect --cache-type=volume build`: run `build` task with volumes used for caches
-
-
-
-New `--clean` command:
-
-`./batect --clean`: delete all caches for default cache type for environment (can also use `--cache-type` to override default) and then exit

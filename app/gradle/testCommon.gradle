@@ -23,7 +23,7 @@ dependencies {
     testCommonImplementation 'com.natpryce:hamkrest:1.7.0.0'
     testCommonImplementation "org.spekframework.spek2:spek-dsl-jvm:2.0.9"
     testCommonRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:2.0.9"
-    testCommonRuntimeOnly 'org.junit.platform:junit-platform-engine:1.5.2'
+    testCommonRuntimeOnly 'org.junit.platform:junit-platform-engine:1.6.0'
 }
 
 tasks.withType(Test) {

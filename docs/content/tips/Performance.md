@@ -3,27 +3,58 @@
 ## I/O performance
 
 !!! tip "tl;dr"
-    If you're seeing slow build times under batect on OS X, volume mount options such as `cached` might help
+    If you're seeing slow build times under batect on macOS or Windows, using batect's caches as well as volume mount options such as `cached` might help
+
+Docker requires features only found in the Linux kernel, and so on macOS and Windows, Docker Desktop runs a lightweight Linux virtual machine
+to host Docker. However, while this works perfectly fine for most situations, there is some overhead involved in operations
+that need to work across the host / virtual machine boundary, particularly when it comes to mounting files or directories into a container from the host.
+
+While the throughput of mounts on macOS and Windows is generally comparable to native file access within a container, the latency
+performing I/O operations such as opening a file handle can often be significant, as these need to cross from the Linux VM hosting Docker to the
+host OS and back again.
+
+This increased latency quickly accumulates, especially when many file operations are involved. This particularly affects languages such as JavaScript
+and Golang that encourage distributing all dependencies as source code and breaking codebases into many small files, as even a warm build with no source
+code changes still requires the compiler to examine each dependency file to ensure that the cached build result is up-to-date.
+
+There are two ways to improve the performance of file I/O when using batect:
+
+* Use [a batect cache backed by a Docker volume](#cache-volumes) wherever possible
+* Otherwise, use [the `cached` mount mode](#mounts-in-cached-mode)
+
+### Cache volumes
+
+The performance penalty of mounting a file or directory from the host machine does not apply to [Docker volumes](https://docs.docker.com/storage/volumes/),
+as these remain entirely on the Linux VM hosting Docker. This makes them perfect for directories such as caches where persistence between task runs is required,
+but easy access to their contents is not necessary.
+
+batect makes this simple to configure. In your container definition, add a mount to [`volumes`](../config/Containers.md#volumes) with `type: cache`.
+
+For example, for a typical Node.js application, to cache the `node_modules` directory in a volume, include the following in your configuration:
+
+```yaml
+containers:
+  build-env:
+    image: "node:13.8.0"
+    volumes:
+      - local: .
+        container: /code
+      - type: cache
+        name: app-node-modules
+        container: /code/node_modules
+    working_directory: /code
+```
+
+### Mounts in `cached` mode
 
 !!! info
-    This section only applies to OS X-based hosts, and is only supported by Docker version 17.04 and higher.
+    This section only applies to macOS-based hosts, and is only supported by Docker version 17.04 and higher.
+    Enabling `cached` mode is harmless for other host operating systems.
 
-Docker requires features only found in the Linux kernel, and so on OS X, Docker for Mac runs a lightweight virtual machine
-to host Docker. However, while this works perfectly fine for most situations, there is some overhead involved in operations
-that need to work across the host / virtual machine boundary.
+For situations where a cache is not appropriate (eg. mounting your code from the host into a build environment), specifying the `cached` volume mount option
+can result in significant performance improvements.
 
-Usually this overhead is so small that it's not noticeable, but for operations involving mounted volumes, this overhead can
-be significant. In particular, this can impact compilation operations involving reading and writing many files.
-
-There is a way to reduce this overhead significantly: use the
-[volume mount options introduced in Docker 17.04](https://docs.docker.com/docker-for-mac/osxfs-caching/).
-
-In particular, for the typical scenario where you are editing code files on your host's disk and mounting that into a container
-for compilation, using the `cached` volume mount mode can result in a significant performance improvement - we saw an improvement
-in compilation times of ~60% on one Golang project once we started using this.
-
-(Before you use these options in another context, you should consult the
-[documentation](https://docs.docker.com/docker-for-mac/osxfs-caching/) to understand the implications of the option.)
+(Before you use this option in another context, you should consult the [documentation](https://docs.docker.com/docker-for-mac/osxfs-caching/) to understand the implications of it.)
 
 For example, instead of defining your container like this:
 

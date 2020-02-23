@@ -117,7 +117,9 @@ Both of these can be overridden for an individual task by specifying a [`working
 ## `volumes`
 List of volume mounts to create for the container.
 
-Relative local paths will be resolved relative to the configuration file's directory.
+Both local mounts (mounting a directory on the host into a container) and [cache mounts](../tips/Performance.md#cache-volumes) are supported:
+
+### Local mounts
 
 Two formats are supported:
 
@@ -136,12 +138,44 @@ Two formats are supported:
             options: cached
     ```
 
-    When using this expanded format, `local` can be an [expression](Overview.md#expressions).
+In both formats, the following fields are supported:
 
-On Windows, the local path can use either Windows-style (`path\to\thing`) or Unix-style (`path/to/thing`) paths, but for compatibility
-with users running on other operating systems, using Unix-style paths is recommended.
+* `local`: path to the local file or directory to mount. Can be an [expression](Overview.md#expressions) when using the expanded format. Required.
 
-See [this page](../tips/Performance.md#io-performance) for more information on why using `cached` volume mounts may be worthwhile.
+    Relative paths will be resolved relative to the configuration file's directory.
+
+    On Windows, the local path can use either Windows-style (`path\to\thing`) or Unix-style (`path/to/thing`) paths, but for compatibility
+    with users running on other operating systems, using Unix-style paths is recommended.
+
+* `container`: path to mount the local file or directory at inside the container. Required.
+* `options`: standard Docker mount options (such as `ro` for read-only). Optional.
+
+Using `options: cached` may improve performance when running on macOS hosts - see [this page](../tips/Performance.md#io-performance) for further explanation.
+
+### Cache mounts
+
+Cache mounts provide persistence between task runs without the performance overhead of mounting a directory from the host into the container.
+
+They are perfect for directories such as `node_modules` which contain downloaded dependencies that can safely be reused for each task run.
+
+The format for a cache mount is:
+
+```yaml
+containers:
+  my-container:
+    ...
+    volumes:
+      - type: cache
+        name: node-modules
+        container: /code/node_modules
+```
+
+The following fields are supported:
+
+* `type`: must be set to `cache`. Required.
+* `name`: name of the cache, must be a valid Docker volume name. The same name can be used to share a cache between multiple containers. Required.
+* `container`: path to mount the cache directory at inside the container. Required.
+* `options`: standard Docker mount options (such as `ro` for read-only). Optional.
 
 ## `devices`
 List of device mounts to create for the container.

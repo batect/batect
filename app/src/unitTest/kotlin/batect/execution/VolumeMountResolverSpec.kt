@@ -19,7 +19,7 @@ package batect.execution
 import batect.config.EnvironmentVariableReference
 import batect.config.ExpressionEvaluationContext
 import batect.config.LiteralValue
-import batect.config.VolumeMount
+import batect.config.LocalMount
 import batect.docker.DockerVolumeMount
 import batect.os.HostEnvironmentVariables
 import batect.os.PathResolutionResult
@@ -58,10 +58,10 @@ object VolumeMountResolverSpec : Spek({
 
         given("a set of volume mounts from the configuration file that resolve to valid paths") {
             val mounts = setOf(
-                VolumeMount(LiteralValue("file"), "/container-1"),
-                VolumeMount(LiteralValue("directory"), "/container-2", "options-2"),
-                VolumeMount(LiteralValue("other"), "/container-3"),
-                VolumeMount(LiteralValue("does-not-exist"), "/container-4")
+                LocalMount(LiteralValue("file"), "/container-1"),
+                LocalMount(LiteralValue("directory"), "/container-2", "options-2"),
+                LocalMount(LiteralValue("other"), "/container-3"),
+                LocalMount(LiteralValue("does-not-exist"), "/container-4")
             )
 
             it("resolves the local mount paths, preserving the container path and options") {
@@ -77,7 +77,7 @@ object VolumeMountResolverSpec : Spek({
         given("a volume mount with an invalid path") {
             given("the path does not contain an expression") {
                 val mounts = setOf(
-                    VolumeMount(LiteralValue("invalid"), "/container-1")
+                    LocalMount(LiteralValue("invalid"), "/container-1")
                 )
 
                 it("throws an appropriate exception") {
@@ -87,7 +87,7 @@ object VolumeMountResolverSpec : Spek({
 
             given("the path contains an expression") {
                 val mounts = setOf(
-                    VolumeMount(EnvironmentVariableReference("INVALID", originalExpression = "the-original-invalid-expression"), "/container-1")
+                    LocalMount(EnvironmentVariableReference("INVALID", originalExpression = "the-original-invalid-expression"), "/container-1")
                 )
 
                 it("throws an appropriate exception") {
@@ -98,7 +98,7 @@ object VolumeMountResolverSpec : Spek({
 
         given("a volume mount with an expression that cannot be evaluated") {
             val mounts = setOf(
-                VolumeMount(EnvironmentVariableReference("DOES_NOT_EXIST", originalExpression = "the-original-expression"), "/container-1")
+                LocalMount(EnvironmentVariableReference("DOES_NOT_EXIST", originalExpression = "the-original-expression"), "/container-1")
             )
 
             it("throws an appropriate exception") {

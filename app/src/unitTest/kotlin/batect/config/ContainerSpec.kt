@@ -260,8 +260,8 @@ object ContainerSpec : Spek({
                     assertThat(
                         result.volumeMounts, equalTo(
                             setOf(
-                                VolumeMount(LiteralValue("/volume1"), "/here", null),
-                                VolumeMount(LiteralValue("/somewhere"), "/else", "ro")
+                                LocalMount(LiteralValue("/volume1"), "/here", null),
+                                LocalMount(LiteralValue("/somewhere"), "/else", "ro")
                             )
                         )
                     )

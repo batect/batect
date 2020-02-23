@@ -21,10 +21,10 @@ import batect.config.ConfigVariableDefinition
 import batect.config.Configuration
 import batect.config.HealthCheckConfig
 import batect.config.LiteralValue
+import batect.config.LocalMount
 import batect.config.PortMapping
 import batect.config.PullImage
 import batect.config.RunAsCurrentUserConfig
-import batect.config.VolumeMount
 import batect.os.Command
 import batect.os.PathResolutionResult
 import batect.os.PathResolverFactory
@@ -533,8 +533,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.healthCheckConfig, equalTo(HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(1))))
                 assertThat(container.runAsCurrentUserConfig, equalTo(RunAsCurrentUserConfig.RunAsCurrentUser("/home/something")))
                 assertThat(container.volumeMounts, equalTo(setOf(
-                    VolumeMount(LiteralValue("../"), "/here", null),
-                    VolumeMount(LiteralValue("/somewhere"), "/else", "ro")
+                    LocalMount(LiteralValue("../"), "/here", null),
+                    LocalMount(LiteralValue("/somewhere"), "/else", "ro")
                 )))
             }
         }
@@ -569,8 +569,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.name, equalTo("container-1"))
                 assertThat(container.imageSource, equalTo(BuildImage(fileSystem.getPath("/resolved/container-1-build-dir"))))
                 assertThat(container.volumeMounts, equalTo(setOf(
-                    VolumeMount(LiteralValue("../"), "/here", null),
-                    VolumeMount(LiteralValue("/somewhere"), "/else", "ro")
+                    LocalMount(LiteralValue("../"), "/here", null),
+                    LocalMount(LiteralValue("/somewhere"), "/else", "ro")
                 )))
             }
         }

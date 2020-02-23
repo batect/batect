@@ -36,12 +36,12 @@ object VolumeMountSpec : Spek({
         describe("deserializing from YAML") {
             val parser by createForEachTest { Yaml() }
 
-            describe("deserializing from compact form") {
-                on("parsing a valid volume mount definition") {
+            describe("deserializing a local mount from compact form") {
+                on("parsing a valid volume mount definition with no options") {
                     val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, "'/local:/container'") }
 
                     it("returns the correct local path") {
-                        assertThat(volumeMount.localPath, equalTo(LiteralValue("/local")))
+                        assertThat((volumeMount as LocalMount).localPath, equalTo(LiteralValue("/local")))
                     }
 
                     it("returns the correct container path") {
@@ -57,7 +57,7 @@ object VolumeMountSpec : Spek({
                     val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, "'/local:/container:some_options'") }
 
                     it("returns the correct local path") {
-                        assertThat(volumeMount.localPath, equalTo(LiteralValue("/local")))
+                        assertThat((volumeMount as LocalMount).localPath, equalTo(LiteralValue("/local")))
                     }
 
                     it("returns the correct container path") {
@@ -77,7 +77,7 @@ object VolumeMountSpec : Spek({
                         val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, "'$local:/container'") }
 
                         it("returns the correct local path") {
-                            assertThat(volumeMount.localPath, equalTo(LiteralValue(local)))
+                            assertThat((volumeMount as LocalMount).localPath, equalTo(LiteralValue(local)))
                         }
 
                         it("returns the correct container path") {
@@ -93,7 +93,7 @@ object VolumeMountSpec : Spek({
                         val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, "'$local:/container:cached'") }
 
                         it("returns the correct local path") {
-                            assertThat(volumeMount.localPath, equalTo(LiteralValue(local)))
+                            assertThat((volumeMount as LocalMount).localPath, equalTo(LiteralValue(local)))
                         }
 
                         it("returns the correct container path") {
@@ -135,7 +135,7 @@ object VolumeMountSpec : Spek({
                 }
             }
 
-            describe("deserializing from expanded form") {
+            describe("deserializing a local mount from expanded form") {
                 on("parsing a valid volume mount definition") {
                     val yaml = """
                             local: /local
@@ -145,7 +145,7 @@ object VolumeMountSpec : Spek({
                     val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, yaml) }
 
                     it("returns the correct local path") {
-                        assertThat(volumeMount.localPath, equalTo(LiteralValue("/local")))
+                        assertThat((volumeMount as LocalMount).localPath, equalTo(LiteralValue("/local")))
                     }
 
                     it("returns the correct container path") {
@@ -167,7 +167,7 @@ object VolumeMountSpec : Spek({
                     val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, yaml) }
 
                     it("returns the correct local path") {
-                        assertThat(volumeMount.localPath, equalTo(LiteralValue("/local")))
+                        assertThat((volumeMount as LocalMount).localPath, equalTo(LiteralValue("/local")))
                     }
 
                     it("returns the correct container path") {

@@ -19,6 +19,7 @@ package batect.execution
 import batect.config.ExpressionEvaluationContext
 import batect.config.LiteralValue
 import batect.config.ExpressionEvaluationException
+import batect.config.LocalMount
 import batect.config.VolumeMount
 import batect.docker.DockerVolumeMount
 import batect.os.PathResolutionResult
@@ -30,15 +31,21 @@ class VolumeMountResolver(
     private val expressionEvaluationContext: ExpressionEvaluationContext
 ) {
     fun resolve(mounts: Set<VolumeMount>): Set<DockerVolumeMount> = mounts.mapToSet {
-        val evaluatedLocalPath = evaluateLocalPath(it)
+        when (it) {
+            is LocalMount -> resolve(it)
+        }
+    }
 
-        when (val resolvedLocalPath = pathResolver.resolve(evaluatedLocalPath)) {
-            is PathResolutionResult.Resolved -> DockerVolumeMount(resolvedLocalPath.absolutePath.toString(), it.containerPath, it.options)
+    private fun resolve(mount: LocalMount): DockerVolumeMount {
+        val evaluatedLocalPath = evaluateLocalPath(mount)
+
+        return when (val resolvedLocalPath = pathResolver.resolve(evaluatedLocalPath)) {
+            is PathResolutionResult.Resolved -> DockerVolumeMount(resolvedLocalPath.absolutePath.toString(), mount.containerPath, mount.options)
             else -> {
-                val expressionDisplay = if (it.localPath is LiteralValue) {
-                    "'${it.localPath.value}'"
+                val expressionDisplay = if (mount.localPath is LiteralValue) {
+                    "'${mount.localPath.value}'"
                 } else {
-                    "expression '${it.localPath.originalExpression}' (evaluated as '$evaluatedLocalPath')"
+                    "expression '${mount.localPath.originalExpression}' (evaluated as '$evaluatedLocalPath')"
                 }
 
                 throw VolumeMountResolutionException("Could not resolve volume mount path: $expressionDisplay is not a valid path.")
@@ -46,7 +53,7 @@ class VolumeMountResolver(
         }
     }
 
-    private fun evaluateLocalPath(mount: VolumeMount): String {
+    private fun evaluateLocalPath(mount: LocalMount): String {
         try {
             return mount.localPath.evaluate(expressionEvaluationContext)
         } catch (e: ExpressionEvaluationException) {

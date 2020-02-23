@@ -33,10 +33,9 @@ import kotlinx.serialization.internal.StringSerializer
 import kotlinx.serialization.internal.nullable
 
 @Serializable(with = VolumeMount.Companion::class)
-data class VolumeMount(
-    val localPath: Expression,
-    val containerPath: String,
-    val options: String? = null
+sealed class VolumeMount(
+    open val containerPath: String,
+    open val options: String? = null
 ) {
     @Serializer(forClass = VolumeMount::class)
     companion object : KSerializer<VolumeMount> {
@@ -82,7 +81,7 @@ data class VolumeMount(
 
             val resolvedLocal = LiteralValue(local)
 
-            return VolumeMount(resolvedLocal, container, options)
+            return LocalMount(resolvedLocal, container, options)
         }
 
         private fun invalidMountDefinitionException(value: String, input: YamlInput) =
@@ -115,17 +114,26 @@ data class VolumeMount(
                 throw ConfigurationException("Field '${descriptor.getElementName(containerPathFieldIndex)}' is required but it is missing.", input.node.location.line, input.node.location.column)
             }
 
-            return VolumeMount(localPath, containerPath, options)
+            return LocalMount(localPath, containerPath, options)
         }
 
         override fun serialize(encoder: Encoder, obj: VolumeMount) {
             val output = encoder.beginStructure(descriptor)
 
-            output.encodeSerializableElement(descriptor, localPathFieldIndex, Expression.serializer(), obj.localPath)
             output.encodeStringElement(descriptor, containerPathFieldIndex, obj.containerPath)
             output.encodeSerializableElement(descriptor, optionsFieldIndex, StringSerializer.nullable, obj.options)
+
+            when (obj) {
+                is LocalMount -> output.encodeSerializableElement(descriptor, localPathFieldIndex, Expression.serializer(), obj.localPath)
+            }
 
             output.endStructure(descriptor)
         }
     }
 }
+
+data class LocalMount(
+    val localPath: Expression,
+    override val containerPath: String,
+    override val options: String? = null
+) : VolumeMount(containerPath, options)

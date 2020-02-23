@@ -104,7 +104,7 @@ object ConfigurationSpec : Spek({
                     Command.parse("sh"),
                     mapOf("SOME_VAR" to LiteralValue("some-value")),
                     "/some/working/dir",
-                    setOf(VolumeMount(LiteralValue("/local/path"), "/container/path", "some-options")),
+                    setOf(LocalMount(LiteralValue("/local/path"), "/container/path", "some-options")),
                     setOf(DeviceMount("/dev/local", "/dev/container", "device-options")),
                     setOf(PortMapping(123, 456)),
                     setOf("other-container"),

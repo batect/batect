@@ -19,6 +19,7 @@ package batect.execution
 import batect.config.Container
 import batect.config.RunAsCurrentUserConfig
 import batect.docker.DockerVolumeMount
+import batect.docker.DockerVolumeMountSource
 import batect.docker.UserAndGroup
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TemporaryDirectoryCreatedEvent
@@ -96,9 +97,9 @@ class RunAsCurrentUserConfigurationProvider(
         eventSink.postEvent(TemporaryDirectoryCreatedEvent(container, homeDirectory))
 
         return setOf(
-            DockerVolumeMount(passwdFile.toString(), "/etc/passwd", "ro"),
-            DockerVolumeMount(groupFile.toString(), "/etc/group", "ro"),
-            DockerVolumeMount(homeDirectory.toString(), runAsCurrentUserConfig.homeDirectory, "delegated")
+            DockerVolumeMount(DockerVolumeMountSource.LocalPath(passwdFile.toString()), "/etc/passwd", "ro"),
+            DockerVolumeMount(DockerVolumeMountSource.LocalPath(groupFile.toString()), "/etc/group", "ro"),
+            DockerVolumeMount(DockerVolumeMountSource.LocalPath(homeDirectory.toString()), runAsCurrentUserConfig.homeDirectory, "delegated")
         )
     }
 
@@ -155,8 +156,8 @@ class RunAsCurrentUserConfigurationProvider(
     private fun createTempFile(name: String): Path = Files.createTempFile(systemInfo.tempDirectory, "batect-$name-", "")
 
     private fun createMissingVolumeMountDirectories(mounts: Set<DockerVolumeMount>) {
-        mounts.forEach { mount ->
-            val path = fileSystem.getPath(mount.localPath)
+        mounts.map { it.source }.filterIsInstance<DockerVolumeMountSource.LocalPath>().forEach { mount ->
+            val path = fileSystem.getPath(mount.path)
 
             if (!Files.exists(path)) {
                 Files.createDirectories(path)

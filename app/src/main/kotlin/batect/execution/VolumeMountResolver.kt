@@ -23,6 +23,7 @@ import batect.config.ExpressionEvaluationException
 import batect.config.LocalMount
 import batect.config.VolumeMount
 import batect.docker.DockerVolumeMount
+import batect.docker.DockerVolumeMountSource
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
 import batect.utils.mapToSet
@@ -43,7 +44,7 @@ class VolumeMountResolver(
         val evaluatedLocalPath = evaluateLocalPath(mount)
 
         return when (val resolvedLocalPath = pathResolver.resolve(evaluatedLocalPath)) {
-            is PathResolutionResult.Resolved -> DockerVolumeMount(resolvedLocalPath.absolutePath.toString(), mount.containerPath, mount.options)
+            is PathResolutionResult.Resolved -> DockerVolumeMount(DockerVolumeMountSource.LocalPath(resolvedLocalPath.absolutePath.toString()), mount.containerPath, mount.options)
             else -> {
                 val expressionDisplay = if (mount.localPath is LiteralValue) {
                     "'${mount.localPath.value}'"
@@ -64,7 +65,7 @@ class VolumeMountResolver(
         }
     }
 
-    private fun resolve(mount: CacheMount): DockerVolumeMount = DockerVolumeMount("batect-cache-${cacheManager.projectCacheKey}-${mount.name}", mount.containerPath, mount.options)
+    private fun resolve(mount: CacheMount): DockerVolumeMount = DockerVolumeMount(DockerVolumeMountSource.Volume("batect-cache-${cacheManager.projectCacheKey}-${mount.name}"), mount.containerPath, mount.options)
 }
 
 class VolumeMountResolutionException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

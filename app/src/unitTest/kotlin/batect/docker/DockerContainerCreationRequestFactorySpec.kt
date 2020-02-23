@@ -44,7 +44,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
         val entrypoint = Command.parse("sh")
         val workingDirectory = "some-specific-working-directory"
         val terminalType = "some-term"
-        val volumeMounts = setOf(DockerVolumeMount("local", "remote", "mode"))
+        val volumeMounts = setOf(DockerVolumeMount(DockerVolumeMountSource.LocalPath("local"), "remote", "mode"))
         val allContainersInNetwork = setOf(
             Container("container-1", imageSourceDoesNotMatter()),
             Container("container-2", imageSourceDoesNotMatter())

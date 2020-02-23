@@ -28,8 +28,14 @@ data class DockerImage(val id: String)
 data class DockerContainer(val id: String, val name: String? = null)
 
 @Serializable
-data class DockerVolumeMount(val localPath: String, val containerPath: String, val options: String? = null) {
-    override fun toString(): String = if (options == null) "$localPath:$containerPath" else "$localPath:$containerPath:$options"
+data class DockerVolumeMount(val source: DockerVolumeMountSource, val containerPath: String, val options: String? = null) {
+    override fun toString(): String = if (options == null) "${source.formatted}:$containerPath" else "${source.formatted}:$containerPath:$options"
+}
+
+@Serializable
+sealed class DockerVolumeMountSource(val formatted: String) {
+    data class LocalPath(val path: String) : DockerVolumeMountSource(path)
+    data class Volume(val name: String) : DockerVolumeMountSource(name)
 }
 
 data class DockerContainerRunResult(val exitCode: Long)

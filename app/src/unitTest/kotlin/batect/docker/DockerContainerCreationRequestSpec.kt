@@ -40,7 +40,10 @@ object DockerContainerCreationRequestSpec : Spek({
                 setOf("the-first-network-alias", "the-second-network-alias"),
                 mapOf("SOME_VAR" to "some value"),
                 "/work-dir",
-                setOf(DockerVolumeMount("/local", "/container", "ro")),
+                setOf(
+                    DockerVolumeMount(DockerVolumeMountSource.LocalPath("/local"), "/container-1", "ro"),
+                    DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container-2", "ro")
+                ),
                 setOf(DeviceMount("/dev/local", "/dev/container", "rw")),
                 setOf(PortMapping(123, 456)),
                 HealthCheckConfig(Duration.ofNanos(555), 12, Duration.ofNanos(333), "exit 0"),
@@ -77,7 +80,8 @@ object DockerContainerCreationRequestSpec : Spek({
                         |   "HostConfig": {
                         |       "NetworkMode": "the-network",
                         |       "Binds": [
-                        |           "/local:/container:ro"
+                        |           "/local:/container-1:ro",
+                        |           "my-volume:/container-2:ro"
                         |       ],
                         |       "Devices": [
                         |           {

@@ -25,6 +25,7 @@ import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.DockerVolumeMount
+import batect.docker.DockerVolumeMountSource
 import batect.docker.UserAndGroup
 import batect.docker.client.DockerContainersClient
 import batect.execution.CleanupOption
@@ -67,13 +68,13 @@ object CreateContainerStepRunnerSpec : Spek({
 
         val volumeMountResolver by createForEachTest {
             mock<VolumeMountResolver> {
-                on { resolve(any()) } doReturn setOf(DockerVolumeMount("/local-container", "/remote-container", "some-options-from-container"))
+                on { resolve(any()) } doReturn setOf(DockerVolumeMount(DockerVolumeMountSource.LocalPath("/local-container"), "/remote-container", "some-options-from-container"))
             }
         }
 
         val userAndGroup = UserAndGroup(456, 789)
         val runAsCurrentUserConfiguration = RunAsCurrentUserConfiguration(
-            setOf(DockerVolumeMount("/local-user", "/remote-user", "some-options-from-run-as-current-user")),
+            setOf(DockerVolumeMount(DockerVolumeMountSource.LocalPath("/local-user"), "/remote-user", "some-options-from-run-as-current-user")),
             userAndGroup
         )
 
@@ -83,7 +84,10 @@ object CreateContainerStepRunnerSpec : Spek({
         }
 
         val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true, emptyMap())
-        val combinedMounts = setOf(DockerVolumeMount("/local-container", "/remote-container", "some-options-from-container"), DockerVolumeMount("/local-user", "/remote-user", "some-options-from-run-as-current-user"))
+        val combinedMounts = setOf(
+            DockerVolumeMount(DockerVolumeMountSource.LocalPath("/local-container"), "/remote-container", "some-options-from-container"),
+            DockerVolumeMount(DockerVolumeMountSource.LocalPath("/local-user"), "/remote-user", "some-options-from-run-as-current-user")
+        )
 
         val creationRequestFactory by createForEachTest {
             mock<DockerContainerCreationRequestFactory> {

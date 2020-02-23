@@ -22,6 +22,7 @@ import batect.config.ExpressionEvaluationContext
 import batect.config.LiteralValue
 import batect.config.LocalMount
 import batect.docker.DockerVolumeMount
+import batect.docker.DockerVolumeMountSource
 import batect.os.HostEnvironmentVariables
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
@@ -76,10 +77,10 @@ object VolumeMountResolverSpec : Spek({
                     assertThat(
                         resolver.resolve(mounts), equalTo(
                             setOf(
-                                DockerVolumeMount("/resolved/file", "/container-1"),
-                                DockerVolumeMount("/resolved/directory", "/container-2", "options-2"),
-                                DockerVolumeMount("/resolved/other", "/container-3"),
-                                DockerVolumeMount("/resolved/does-not-exist", "/container-4")
+                                DockerVolumeMount(DockerVolumeMountSource.LocalPath("/resolved/file"), "/container-1"),
+                                DockerVolumeMount(DockerVolumeMountSource.LocalPath("/resolved/directory"), "/container-2", "options-2"),
+                                DockerVolumeMount(DockerVolumeMountSource.LocalPath("/resolved/other"), "/container-3"),
+                                DockerVolumeMount(DockerVolumeMountSource.LocalPath("/resolved/does-not-exist"), "/container-4")
                             )
                         )
                     )
@@ -133,8 +134,8 @@ object VolumeMountResolverSpec : Spek({
                     assertThat(
                         resolver.resolve(mounts), equalTo(
                             setOf(
-                                DockerVolumeMount("batect-cache-abc123-cache-1", "/container-1"),
-                                DockerVolumeMount("batect-cache-abc123-cache-2", "/container-2", "options-2")
+                                DockerVolumeMount(DockerVolumeMountSource.Volume("batect-cache-abc123-cache-1"), "/container-1"),
+                                DockerVolumeMount(DockerVolumeMountSource.Volume("batect-cache-abc123-cache-2"), "/container-2", "options-2")
                             )
                         )
                     )

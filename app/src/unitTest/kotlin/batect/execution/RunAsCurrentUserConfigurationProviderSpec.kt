@@ -19,6 +19,7 @@ package batect.execution
 import batect.config.Container
 import batect.config.RunAsCurrentUserConfig
 import batect.docker.DockerVolumeMount
+import batect.docker.DockerVolumeMountSource
 import batect.docker.UserAndGroup
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TemporaryDirectoryCreatedEvent
@@ -66,9 +67,10 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
             val fileThatExists = "/existing/file"
             val directoryThatDoesNotExist = "/new/directory"
             val volumeMounts = setOf(
-                DockerVolumeMount(directoryThatExists, "/container/existing-directory", null),
-                DockerVolumeMount(fileThatExists, "/container/existing-file", null),
-                DockerVolumeMount(directoryThatDoesNotExist, "/container/new-directory", null)
+                DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatExists), "/container/existing-directory", null),
+                DockerVolumeMount(DockerVolumeMountSource.LocalPath(fileThatExists), "/container/existing-file", null),
+                DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatDoesNotExist), "/container/new-directory", null),
+                DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/containter/volume", null)
             )
 
             val container = Container(
@@ -139,9 +141,10 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 val fileThatExists = "C:\\existing\\file"
                 val directoryThatDoesNotExist = "C:\\new\\directory"
                 val volumeMounts = setOf(
-                    DockerVolumeMount(directoryThatExists, "/container/existing-directory", null),
-                    DockerVolumeMount(fileThatExists, "/container/existing-file", null),
-                    DockerVolumeMount(directoryThatDoesNotExist, "/container/new-directory", null)
+                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatExists), "/container/existing-directory", null),
+                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(fileThatExists), "/container/existing-file", null),
+                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatDoesNotExist), "/container/new-directory", null),
+                    DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/containter/volume", null)
                 )
 
                 beforeEachTest {
@@ -268,9 +271,10 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 val fileThatExists = "/existing/file"
                 val directoryThatDoesNotExist = "/new/directory"
                 val volumeMounts = setOf(
-                    DockerVolumeMount(directoryThatExists, "/container/existing-directory", null),
-                    DockerVolumeMount(fileThatExists, "/container/existing-file", null),
-                    DockerVolumeMount(directoryThatDoesNotExist, "/container/new-directory", null)
+                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatExists), "/container/existing-directory", null),
+                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(fileThatExists), "/container/existing-file", null),
+                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatDoesNotExist), "/container/new-directory", null),
+                    DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/containter/volume", null)
                 )
 
                 beforeEachTest {
@@ -519,6 +523,9 @@ private fun hasReadOnlyVolumeMount(path: String) =
 private fun hasDelegatedVolumeMount(path: String) =
     anyElement(has(DockerVolumeMount::containerPath, equalTo(path)) and has(DockerVolumeMount::options, equalTo("delegated")))
 
-private fun localPathToPasswdFile(mounts: Set<DockerVolumeMount>, fileSystem: FileSystem): Path = fileSystem.getPath(mounts.single { it.containerPath == "/etc/passwd" }.localPath)
-private fun localPathToGroupFile(mounts: Set<DockerVolumeMount>, fileSystem: FileSystem): Path = fileSystem.getPath(mounts.single { it.containerPath == "/etc/group" }.localPath)
-private fun localPathToHomeDirectory(mounts: Set<DockerVolumeMount>, homeDirectory: String, fileSystem: FileSystem): Path = fileSystem.getPath(mounts.single { it.containerPath == homeDirectory }.localPath)
+private fun localPathToPasswdFile(mounts: Set<DockerVolumeMount>, fileSystem: FileSystem): Path = fileSystem.getPath(pathToLocalMount(mounts) { it.containerPath == "/etc/passwd" })
+private fun localPathToGroupFile(mounts: Set<DockerVolumeMount>, fileSystem: FileSystem): Path = fileSystem.getPath(pathToLocalMount(mounts) { it.containerPath == "/etc/group" })
+private fun localPathToHomeDirectory(mounts: Set<DockerVolumeMount>, homeDirectory: String, fileSystem: FileSystem): Path = fileSystem.getPath(pathToLocalMount(mounts) { it.containerPath == homeDirectory })
+
+private fun pathToLocalMount(mounts: Set<DockerVolumeMount>, predicate: (DockerVolumeMount) -> Boolean): String =
+    (mounts.single(predicate).source as DockerVolumeMountSource.LocalPath).path

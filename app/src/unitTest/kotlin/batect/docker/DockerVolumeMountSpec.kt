@@ -24,19 +24,43 @@ import org.spekframework.spek2.style.specification.describe
 
 object DockerVolumeMountSpec : Spek({
     describe("a Docker volume mount") {
-        given("a volume mount with no options") {
-            val mount = DockerVolumeMount("/local", "/container")
+        given("a volume mount with a local path as the source") {
+            val source = DockerVolumeMountSource.LocalPath("/local")
 
-            it("converts to a string with no options included") {
-                assertThat(mount.toString(), equalTo("/local:/container"))
+            given("it has no options") {
+                val mount = DockerVolumeMount(source, "/container")
+
+                it("converts to a string in Docker volume mount format with no options included") {
+                    assertThat(mount.toString(), equalTo("/local:/container"))
+                }
+            }
+
+            given("it has some options") {
+                val mount = DockerVolumeMount(source, "/container", "some-options")
+
+                it("converts to a string in Docker volume mount format with the options included") {
+                    assertThat(mount.toString(), equalTo("/local:/container:some-options"))
+                }
             }
         }
 
-        given("a volume mount with options") {
-            val mount = DockerVolumeMount("/local", "/container", "some-options")
+        given("a volume mount with a volume as the source") {
+            val source = DockerVolumeMountSource.Volume("my-volume")
 
-            it("converts to a string with the options included") {
-                assertThat(mount.toString(), equalTo("/local:/container:some-options"))
+            given("it has no options") {
+                val mount = DockerVolumeMount(source, "/container")
+
+                it("converts to a string in Docker volume mount format with no options included") {
+                    assertThat(mount.toString(), equalTo("my-volume:/container"))
+                }
+            }
+
+            given("it has some options") {
+                val mount = DockerVolumeMount(source, "/container", "some-options")
+
+                it("converts to a string in Docker volume mount format with the options included") {
+                    assertThat(mount.toString(), equalTo("my-volume:/container:some-options"))
+                }
             }
         }
     }

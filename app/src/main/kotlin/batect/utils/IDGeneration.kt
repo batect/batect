@@ -14,13 +14,8 @@
    limitations under the License.
 */
 
-package batect.docker
+package batect.utils
 
-import batect.config.Container
-import batect.utils.generateId
+private val alphabet: List<Char> = ('a'..'z') + ('0'..'9')
 
-class DockerContainerNameGenerator {
-    fun generateNameFor(container: Container): String = "${container.name}-$suffix"
-
-    private val suffix = generateId(6)
-}
+fun generateId(length: Int): String = List(length) { alphabet.random() }.joinToString("")

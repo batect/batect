@@ -26,6 +26,7 @@ import batect.cli.commands.RunTaskCommand
 import batect.cli.commands.UpgradeCommand
 import batect.cli.commands.VersionInfoCommand
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
+import batect.config.ProjectPaths
 import batect.config.io.ConfigurationLoader
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerContainerEnvironmentVariableProvider
@@ -55,6 +56,7 @@ import batect.docker.pull.DockerRegistryIndexResolver
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
+import batect.execution.CacheManager
 import batect.execution.CancellationContext
 import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerDependencyGraph
@@ -192,6 +194,7 @@ private val cliModule = Kodein.Module("cli") {
 private val configModule = Kodein.Module("config") {
     bind<ConfigurationLoader>() with singletonWithLogger { logger -> ConfigurationLoader(instance(), logger) }
     bind<PathResolverFactory>() with singleton { PathResolverFactory(instance()) }
+    bind<ProjectPaths>() with singleton { ProjectPaths(commandLineOptions().configurationFileName) }
 }
 
 private val dockerModule = Kodein.Module("docker") {
@@ -250,6 +253,7 @@ private val iocModule = Kodein.Module("ioc") {
 private val executionModule = Kodein.Module("execution") {
     import(runnersModule)
 
+    bind<CacheManager>() with singleton { CacheManager(instance()) }
     bind<CancellationContext>() with scoped(TaskScope).singleton { CancellationContext() }
     bind<CleanupStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> CleanupStagePlanner(instance(), instance(), logger) }
     bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance(RunOptionsType.Task)) }
@@ -269,7 +273,8 @@ private val executionModule = Kodein.Module("execution") {
 
     bind<VolumeMountResolver>() with scoped(TaskScope).singleton {
         VolumeMountResolver(
-            instance<PathResolverFactory>().createResolver(commandLineOptions().configurationFileName.toAbsolutePath().parent),
+            instance<PathResolverFactory>().createResolver(instance<ProjectPaths>().projectRootDirectory),
+            instance(),
             instance()
         )
     }

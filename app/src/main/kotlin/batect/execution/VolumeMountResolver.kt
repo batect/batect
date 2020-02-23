@@ -16,6 +16,7 @@
 
 package batect.execution
 
+import batect.config.CacheMount
 import batect.config.ExpressionEvaluationContext
 import batect.config.LiteralValue
 import batect.config.ExpressionEvaluationException
@@ -28,11 +29,13 @@ import batect.utils.mapToSet
 
 class VolumeMountResolver(
     private val pathResolver: PathResolver,
-    private val expressionEvaluationContext: ExpressionEvaluationContext
+    private val expressionEvaluationContext: ExpressionEvaluationContext,
+    private val cacheManager: CacheManager
 ) {
     fun resolve(mounts: Set<VolumeMount>): Set<DockerVolumeMount> = mounts.mapToSet {
         when (it) {
             is LocalMount -> resolve(it)
+            is CacheMount -> resolve(it)
         }
     }
 
@@ -60,6 +63,8 @@ class VolumeMountResolver(
             throw VolumeMountResolutionException("Could not resolve volume mount path: expression '${mount.localPath.originalExpression}' could not be evaluated: ${e.message}", e)
         }
     }
+
+    private fun resolve(mount: CacheMount): DockerVolumeMount = DockerVolumeMount("batect-cache-${cacheManager.projectCacheKey}-${mount.name}", mount.containerPath, mount.options)
 }
 
 class VolumeMountResolutionException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

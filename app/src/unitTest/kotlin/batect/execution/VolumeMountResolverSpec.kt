@@ -16,6 +16,7 @@
 
 package batect.execution
 
+import batect.config.CacheMount
 import batect.config.EnvironmentVariableReference
 import batect.config.ExpressionEvaluationContext
 import batect.config.LiteralValue
@@ -54,55 +55,90 @@ object VolumeMountResolverSpec : Spek({
 
         val expressionEvaluationContext = ExpressionEvaluationContext(HostEnvironmentVariables("INVALID" to "invalid"), emptyMap())
 
-        val resolver by createForEachTest { VolumeMountResolver(pathResolver, expressionEvaluationContext) }
-
-        given("a set of volume mounts from the configuration file that resolve to valid paths") {
-            val mounts = setOf(
-                LocalMount(LiteralValue("file"), "/container-1"),
-                LocalMount(LiteralValue("directory"), "/container-2", "options-2"),
-                LocalMount(LiteralValue("other"), "/container-3"),
-                LocalMount(LiteralValue("does-not-exist"), "/container-4")
-            )
-
-            it("resolves the local mount paths, preserving the container path and options") {
-                assertThat(resolver.resolve(mounts), equalTo(setOf(
-                    DockerVolumeMount("/resolved/file", "/container-1"),
-                    DockerVolumeMount("/resolved/directory", "/container-2", "options-2"),
-                    DockerVolumeMount("/resolved/other", "/container-3"),
-                    DockerVolumeMount("/resolved/does-not-exist", "/container-4")
-                )))
+        val cacheManager by createForEachTest {
+            mock<CacheManager> {
+                on { projectCacheKey } doReturn "abc123"
             }
         }
 
-        given("a volume mount with an invalid path") {
-            given("the path does not contain an expression") {
+        val resolver by createForEachTest { VolumeMountResolver(pathResolver, expressionEvaluationContext, cacheManager) }
+
+        describe("resolving local mounts") {
+            given("a set of volume mounts from the configuration file that resolve to valid paths") {
                 val mounts = setOf(
-                    LocalMount(LiteralValue("invalid"), "/container-1")
+                    LocalMount(LiteralValue("file"), "/container-1"),
+                    LocalMount(LiteralValue("directory"), "/container-2", "options-2"),
+                    LocalMount(LiteralValue("other"), "/container-3"),
+                    LocalMount(LiteralValue("does-not-exist"), "/container-4")
                 )
 
-                it("throws an appropriate exception") {
-                    assertThat({ resolver.resolve(mounts) }, throws<VolumeMountResolutionException>(withMessage("Could not resolve volume mount path: 'invalid' is not a valid path.")))
+                it("resolves the local mount paths, preserving the container path and options") {
+                    assertThat(
+                        resolver.resolve(mounts), equalTo(
+                            setOf(
+                                DockerVolumeMount("/resolved/file", "/container-1"),
+                                DockerVolumeMount("/resolved/directory", "/container-2", "options-2"),
+                                DockerVolumeMount("/resolved/other", "/container-3"),
+                                DockerVolumeMount("/resolved/does-not-exist", "/container-4")
+                            )
+                        )
+                    )
                 }
             }
 
-            given("the path contains an expression") {
+            given("a volume mount with an invalid path") {
+                given("the path does not contain an expression") {
+                    val mounts = setOf(
+                        LocalMount(LiteralValue("invalid"), "/container-1")
+                    )
+
+                    it("throws an appropriate exception") {
+                        assertThat({ resolver.resolve(mounts) }, throws<VolumeMountResolutionException>(withMessage("Could not resolve volume mount path: 'invalid' is not a valid path.")))
+                    }
+                }
+
+                given("the path contains an expression") {
+                    val mounts = setOf(
+                        LocalMount(EnvironmentVariableReference("INVALID", originalExpression = "the-original-invalid-expression"), "/container-1")
+                    )
+
+                    it("throws an appropriate exception") {
+                        assertThat({ resolver.resolve(mounts) }, throws<VolumeMountResolutionException>(withMessage("Could not resolve volume mount path: expression 'the-original-invalid-expression' (evaluated as 'invalid') is not a valid path.")))
+                    }
+                }
+            }
+
+            given("a volume mount with an expression that cannot be evaluated") {
                 val mounts = setOf(
-                    LocalMount(EnvironmentVariableReference("INVALID", originalExpression = "the-original-invalid-expression"), "/container-1")
+                    LocalMount(EnvironmentVariableReference("DOES_NOT_EXIST", originalExpression = "the-original-expression"), "/container-1")
                 )
 
                 it("throws an appropriate exception") {
-                    assertThat({ resolver.resolve(mounts) }, throws<VolumeMountResolutionException>(withMessage("Could not resolve volume mount path: expression 'the-original-invalid-expression' (evaluated as 'invalid') is not a valid path.")))
+                    assertThat(
+                        { resolver.resolve(mounts) },
+                        throws<VolumeMountResolutionException>(withMessage("Could not resolve volume mount path: expression 'the-original-expression' could not be evaluated: The host environment variable 'DOES_NOT_EXIST' is not set, and no default value has been provided."))
+                    )
                 }
             }
         }
 
-        given("a volume mount with an expression that cannot be evaluated") {
-            val mounts = setOf(
-                LocalMount(EnvironmentVariableReference("DOES_NOT_EXIST", originalExpression = "the-original-expression"), "/container-1")
-            )
+        describe("resolving cache mounts") {
+            given("a cache mount") {
+                val mounts = setOf(
+                    CacheMount("cache-1", "/container-1"),
+                    CacheMount("cache-2", "/container-2", "options-2")
+                )
 
-            it("throws an appropriate exception") {
-                assertThat({ resolver.resolve(mounts) }, throws<VolumeMountResolutionException>(withMessage("Could not resolve volume mount path: expression 'the-original-expression' could not be evaluated: The host environment variable 'DOES_NOT_EXIST' is not set, and no default value has been provided.")))
+                it("resolves the mount to a cache volume, preserving the container path and options") {
+                    assertThat(
+                        resolver.resolve(mounts), equalTo(
+                            setOf(
+                                DockerVolumeMount("batect-cache-abc123-cache-1", "/container-1"),
+                                DockerVolumeMount("batect-cache-abc123-cache-2", "/container-2", "options-2")
+                            )
+                        )
+                    )
+                }
             }
         }
     }

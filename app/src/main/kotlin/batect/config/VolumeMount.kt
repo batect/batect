@@ -137,3 +137,9 @@ data class LocalMount(
     override val containerPath: String,
     override val options: String? = null
 ) : VolumeMount(containerPath, options)
+
+data class CacheMount(
+    val name: String,
+    override val containerPath: String,
+    override val options: String? = null
+) : VolumeMount(containerPath, options)

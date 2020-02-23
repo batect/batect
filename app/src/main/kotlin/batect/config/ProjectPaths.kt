@@ -14,13 +14,14 @@
    limitations under the License.
 */
 
-package batect.docker
+package batect.config
 
-import batect.config.Container
-import batect.utils.generateId
+import java.nio.file.Path
 
-class DockerContainerNameGenerator {
-    fun generateNameFor(container: Container): String = "${container.name}-$suffix"
-
-    private val suffix = generateId(6)
+data class ProjectPaths(
+    val configurationFileName: Path
+) {
+    val projectRootDirectory: Path by lazy { configurationFileName.parent.toAbsolutePath() }
+    val batectDirectory: Path by lazy { projectRootDirectory.resolve(".batect") }
+    val cacheDirectory: Path by lazy { batectDirectory.resolve("caches") }
 }

@@ -116,11 +116,11 @@ To allow sharing caches between task invocations while ensuring that caches are 
 
 ### 'Run as current user' mode
 
-When 'run as current user' (RACU) mode is enabled, batect instructs Docker to run the container with a custom UID and GID (these match the host OS user's UID and GID). 
+When 'run as current user' (RACU) mode is enabled, batect instructs Docker to run the container with a custom UID and GID (these match the host OS user's UID and GID).
 
 However, Docker always creates and mounts volumes with the owner and group set to `root`, except if the target directory already exists in the image, in which case the directory retains the ownership information from the image (see https://github.com/moby/moby/issues/21259 and https://github.com/moby/moby/issues/2259).
 
-Therefore, in order for the custom user to be able to read and write to the volume, the target directory must exist in the image and have the correct owner and group set. In order to simplify this for users, batect will provide a build arg when building images that contains a shell command to create and configure these directories. 
+Therefore, in order for the custom user to be able to read and write to the volume, the target directory must exist in the image and have the correct owner and group set. In order to simplify this for users, batect will provide a build arg when building images that contains a shell command to create and configure these directories.
 
 For example:
 

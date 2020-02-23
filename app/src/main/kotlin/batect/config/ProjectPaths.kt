@@ -21,7 +21,7 @@ import java.nio.file.Path
 data class ProjectPaths(
     val configurationFileName: Path
 ) {
-    val projectRootDirectory: Path by lazy { configurationFileName.parent.toAbsolutePath() }
+    val projectRootDirectory: Path by lazy { configurationFileName.toAbsolutePath().parent }
     val batectDirectory: Path by lazy { projectRootDirectory.resolve(".batect") }
     val cacheDirectory: Path by lazy { batectDirectory.resolve("caches") }
 }

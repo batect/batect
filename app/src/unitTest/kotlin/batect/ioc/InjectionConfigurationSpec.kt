@@ -34,7 +34,6 @@ import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
-import java.nio.file.Paths
 
 object InjectionConfigurationSpec : Spek({
     describe("Kodein injection configuration") {
@@ -43,7 +42,7 @@ object InjectionConfigurationSpec : Spek({
         val config = Configuration("project", TaskMap(task), ContainerMap(container))
 
         val baseConfiguration = createKodeinConfiguration(PrintStream(ByteArrayOutputStream()), PrintStream(ByteArrayOutputStream()), ByteArrayInputStream(ByteArray(0)))
-        val afterCommandLineOptions = CommandLineOptions(taskName = task.name, configurationFileName = Paths.get(".", "batect.yml")).extend(baseConfiguration)
+        val afterCommandLineOptions = CommandLineOptions(taskName = task.name).extend(baseConfiguration)
         val inSessionContext = SessionKodeinFactory(afterCommandLineOptions, HostEnvironmentVariables(), mock()).create(config, mock())
         val inTaskContext = TaskKodeinFactory(inSessionContext).create(task, mock())
 

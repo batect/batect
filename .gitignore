@@ -41,3 +41,5 @@ wrapper/**/test/testapp.jar
 
 tools/log-viewer/log.json
 tools/viz-tool/log.json
+
+**/.batect/caches

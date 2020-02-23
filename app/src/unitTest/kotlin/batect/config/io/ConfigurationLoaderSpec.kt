@@ -1066,34 +1066,6 @@ object ConfigurationLoaderSpec : Spek({
             }
         }
 
-        on("loading a configuration file with a volume mount in expanded format missing the container path") {
-            val configString = """
-                |containers:
-                |  container-1:
-                |    build_directory: container-1
-                |    volumes:
-                |      - local: thing
-                """.trimMargin()
-
-            it("should fail with an error message") {
-                assertThat({ loadConfiguration(configString) }, throws(withMessage("Field 'container' is required but it is missing.") and withLineNumber(5) and withFileName(testFileName)))
-            }
-        }
-
-        on("loading a configuration file with a volume mount in expanded format missing the local path") {
-            val configString = """
-                |containers:
-                |  container-1:
-                |    build_directory: container-1
-                |    volumes:
-                |      - container: thing
-                """.trimMargin()
-
-            it("should fail with an error message") {
-                assertThat({ loadConfiguration(configString) }, throws(withMessage("Field 'local' is required but it is missing.") and withLineNumber(5) and withFileName(testFileName)))
-            }
-        }
-
         on("loading a configuration file with a volume mount in expanded format with an unknown field") {
             val configString = """
                 |containers:
@@ -1106,7 +1078,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(configString) }, throws(withMessage("Unknown property 'something_else'. Known properties are: container, local, options") and withLineNumber(7) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Unknown property 'something_else'. Known properties are: container, local, name, options, type") and withLineNumber(7) and withFileName(testFileName)))
             }
         }
 

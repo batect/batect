@@ -138,6 +138,7 @@ object ConfigurationSpec : Spek({
                                     "working_directory": "/some/working/dir",
                                     "volumes": [
                                         {
+                                            "type": "local",
                                             "local": {"type":"LiteralValue", "value":"/local/path"},
                                             "container": "/container/path",
                                             "options": "some-options"

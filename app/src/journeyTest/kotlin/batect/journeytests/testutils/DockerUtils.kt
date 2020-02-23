@@ -50,4 +50,34 @@ object DockerUtils {
 
         return output.split("\n").toSet()
     }
+
+    fun getAllVolumes(): Set<String> {
+        val commandLine = listOf("docker", "volume", "ls", "-q")
+        val process = ProcessBuilder(commandLine)
+            .redirectErrorStream(true)
+            .start()
+
+        val output = InputStreamReader(process.inputStream).readText()
+        val exitCode = process.waitFor()
+
+        if (exitCode != 0) {
+            throw Exception("Retrieving list of volumes from Docker failed with exit code $exitCode. Output from Docker was: $output")
+        }
+
+        return output.split("\n").toSet()
+    }
+
+    fun removeVolume(volume: String) {
+        val commandLine = listOf("docker", "volume", "rm", volume)
+        val process = ProcessBuilder(commandLine)
+            .redirectErrorStream(true)
+            .start()
+
+        val output = InputStreamReader(process.inputStream).readText()
+        val exitCode = process.waitFor()
+
+        if (exitCode != 0) {
+            throw Exception("Deleting volume '$volume' failed with exit code $exitCode. Output from Docker was: $output")
+        }
+    }
 }

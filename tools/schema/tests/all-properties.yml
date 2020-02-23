@@ -19,6 +19,20 @@ containers:
       - local: ~/.m2
         container: /root/.m2
         options: consistent
+      - type: local
+        local: ~/.ssh
+        container: /root/.ssh
+      - type: local
+        local: ~/.m2
+        container: /root/.m2
+        options: consistent
+      - type: cache
+        name: my-cache
+        container: /root/.cache
+      - type: cache
+        name: my-other-cache
+        container: /root/.other-cache
+        options: ro
     ports:
       - 123:456
       - local: 789

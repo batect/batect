@@ -23,11 +23,15 @@ import batect.testutils.runForEachTest
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
+import batect.utils.Json
+import com.charleskorn.kaml.InvalidPropertyValueException
 import com.charleskorn.kaml.Yaml
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -179,13 +183,35 @@ object VolumeMountSpec : Spek({
                     }
                 }
 
+                on("parsing a valid volume mount definition with the type explicitly specified") {
+                    val yaml = """
+                            type: local
+                            local: /local
+                            container: /container
+                        """.trimIndent()
+
+                    val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, yaml) }
+
+                    it("returns the correct local path") {
+                        assertThat((volumeMount as LocalMount).localPath, equalTo(LiteralValue("/local")))
+                    }
+
+                    it("returns the correct container path") {
+                        assertThat(volumeMount.containerPath, equalTo("/container"))
+                    }
+
+                    it("returns the correct options") {
+                        assertThat(volumeMount.options, absent())
+                    }
+                }
+
                 on("parsing a volume mount definition missing the 'local' field") {
                     val yaml = "container: /container"
 
                     it("fails with an appropriate error message") {
                         assertThat(
                             { parser.parse(VolumeMount.Companion, yaml) }, throws(
-                                withMessage("Field 'local' is required but it is missing.")
+                                withMessage("Field 'local' is required for local path mounts but it is missing.")
                                     and withLineNumber(1)
                                     and withColumn(1)
                             )
@@ -206,6 +232,124 @@ object VolumeMountSpec : Spek({
                         )
                     }
                 }
+
+                on("parsing a volume mount definition containing the 'name' field") {
+                    val yaml = """
+                        local: /local
+                        container: /container
+                        name: blah
+                    """.trimIndent()
+
+                    it("fails with an appropriate error message") {
+                        assertThat(
+                            { parser.parse(VolumeMount.Companion, yaml) }, throws(
+                                withMessage("Field 'name' is not permitted for local path mounts.")
+                                    and withLineNumber(1)
+                                    and withColumn(1)
+                            )
+                        )
+                    }
+                }
+            }
+
+            on("deserializing a cache mount from expanded form") {
+                on("parsing a valid volume mount definition") {
+                    val yaml = """
+                            type: cache
+                            name: my-cache
+                            container: /container
+                        """.trimIndent()
+
+                    val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, yaml) }
+
+                    it("returns the correct volume name") {
+                        assertThat((volumeMount as CacheMount).name, equalTo("my-cache"))
+                    }
+
+                    it("returns the correct container path") {
+                        assertThat(volumeMount.containerPath, equalTo("/container"))
+                    }
+
+                    it("returns the correct options") {
+                        assertThat(volumeMount.options, absent())
+                    }
+                }
+
+                on("parsing a valid volume mount definition with options") {
+                    val yaml = """
+                            type: cache
+                            name: my-cache
+                            container: /container
+                            options: some_options
+                        """.trimIndent()
+
+                    val volumeMount by runForEachTest { parser.parse(VolumeMount.Companion, yaml) }
+
+                    it("returns the correct volume name") {
+                        assertThat((volumeMount as CacheMount).name, equalTo("my-cache"))
+                    }
+
+                    it("returns the correct container path") {
+                        assertThat(volumeMount.containerPath, equalTo("/container"))
+                    }
+
+                    it("returns the correct options") {
+                        assertThat(volumeMount.options, equalTo("some_options"))
+                    }
+                }
+
+                on("parsing a volume mount definition missing the 'name' field") {
+                    val yaml = """
+                            type: cache
+                            container: /container
+                        """.trimIndent()
+
+                    it("fails with an appropriate error message") {
+                        assertThat(
+                            { parser.parse(VolumeMount.Companion, yaml) }, throws(
+                                withMessage("Field 'name' is required for cache mounts but it is missing.")
+                                    and withLineNumber(1)
+                                    and withColumn(1)
+                            )
+                        )
+                    }
+                }
+
+                on("parsing a volume mount definition containing the 'local' field") {
+                    val yaml = """
+                        type: cache
+                        name: blah
+                        local: /local
+                        container: /container
+                    """.trimIndent()
+
+                    it("fails with an appropriate error message") {
+                        assertThat(
+                            { parser.parse(VolumeMount.Companion, yaml) }, throws(
+                                withMessage("Field 'local' is not permitted for cache mounts.")
+                                    and withLineNumber(1)
+                                    and withColumn(1)
+                            )
+                        )
+                    }
+                }
+            }
+
+            describe("deserializing a mount from expanded form with an unknown type") {
+                val yaml = """
+                        type: blah
+                        container: /container
+                    """.trimIndent()
+
+                it("fails with an appropriate error message") {
+                    assertThat(
+                        { parser.parse(VolumeMount.Companion, yaml) }, throws<InvalidPropertyValueException>(
+                            withMessage("Value for 'type' is invalid: Value 'blah' is not a valid option, permitted choices are: cache, local")
+                                and has(InvalidPropertyValueException::line, equalTo(1))
+                                and has(InvalidPropertyValueException::column, equalTo(7))
+                        )
+                    )
+                }
             }
 
             describe("deserializing from something that is neither a string nor a map") {
@@ -219,6 +363,38 @@ object VolumeMountSpec : Spek({
                             withMessage("Volume mount definition is not valid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'.")
                         )
                     )
+                }
+            }
+        }
+
+        describe("serializing to JSON for logs") {
+            describe("serializing a local path mount") {
+                val mount = LocalMount(LiteralValue("/local"), "/container", "ro")
+
+                it("serializes to the expected format") {
+                    assertThat(Json.parser.stringify(VolumeMount.serializer(), mount), equivalentTo("""
+                        |{
+                        |   "type": "local",
+                        |   "local": {"type":"LiteralValue","value":"/local"},
+                        |   "container": "/container",
+                        |   "options": "ro"
+                        |}
+                    """.trimMargin()))
+                }
+            }
+
+            describe("serializing a cache mount") {
+                val mount = CacheMount("my-cache", "/container", "ro")
+
+                it("serializes to the expected format") {
+                    assertThat(Json.parser.stringify(VolumeMount.serializer(), mount), equivalentTo("""
+                        |{
+                        |   "type": "cache",
+                        |   "name": "my-cache",
+                        |   "container": "/container",
+                        |   "options": "ro"
+                        |}
+                    """.trimMargin()))
                 }
             }
         }

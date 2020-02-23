@@ -291,6 +291,13 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "type": {
+                "type": "string",
+                "description": "Type of volume mount",
+                "enum": [
+                  "local"
+                ]
+              },
               "local": {
                 "type": "string",
                 "description": "Path on the host machine to mount",
@@ -315,6 +322,45 @@
             },
             "required": [
               "local",
+              "container"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Type of volume mount",
+                "enum": [
+                  "cache"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "description": "Name of the cache",
+                "minLength": 1
+              },
+              "container": {
+                "type": "string",
+                "description": "Path inside the container to mount the cache at",
+                "minLength": 1
+              },
+              "options": {
+                "type": "string",
+                "description": "Docker volume mount options to use when creating mount",
+                "enum": [
+                  "cached",
+                  "delegated",
+                  "consistent",
+                  "default",
+                  "ro"
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "name",
               "container"
             ]
           }

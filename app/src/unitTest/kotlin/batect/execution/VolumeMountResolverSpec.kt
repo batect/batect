@@ -40,6 +40,7 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
 
 object VolumeMountResolverSpec : Spek({
     describe("a volume mount resolver") {
@@ -154,16 +155,22 @@ object VolumeMountResolverSpec : Spek({
                     }
 
                     val resolver by createForEachTest { VolumeMountResolver(mock(), mock(), cacheManager, projectPaths, CacheType.Directory) }
+                    val resolvedMounts by createForEachTest { resolver.resolve(mounts) }
 
                     it("resolves the mount to a cache directory, preserving the container path and options") {
                         assertThat(
-                            resolver.resolve(mounts), equalTo(
+                            resolvedMounts, equalTo(
                                 setOf(
                                     DockerVolumeMount(DockerVolumeMountSource.LocalPath("/caches/cache-1"), "/container-1"),
                                     DockerVolumeMount(DockerVolumeMountSource.LocalPath("/caches/cache-2"), "/container-2", "options-2")
                                 )
                             )
                         )
+                    }
+
+                    it("creates each of the local cache directories") {
+                        assertThat(Files.isDirectory(fileSystem.getPath("/caches/cache-1")), equalTo(true))
+                        assertThat(Files.isDirectory(fileSystem.getPath("/caches/cache-2")), equalTo(true))
                     }
                 }
             }

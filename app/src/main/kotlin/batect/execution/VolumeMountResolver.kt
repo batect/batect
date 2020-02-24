@@ -28,6 +28,7 @@ import batect.docker.DockerVolumeMountSource
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
 import batect.utils.mapToSet
+import java.nio.file.Files
 
 class VolumeMountResolver(
     private val pathResolver: PathResolver,
@@ -70,7 +71,12 @@ class VolumeMountResolver(
 
     private fun resolve(mount: CacheMount): DockerVolumeMount = when (cacheType) {
         CacheType.Volume -> DockerVolumeMount(DockerVolumeMountSource.Volume("batect-cache-${cacheManager.projectCacheKey}-${mount.name}"), mount.containerPath, mount.options)
-        CacheType.Directory -> DockerVolumeMount(DockerVolumeMountSource.LocalPath(projectPaths.cacheDirectory.resolve(mount.name).toString()), mount.containerPath, mount.options)
+        CacheType.Directory -> {
+            val path = projectPaths.cacheDirectory.resolve(mount.name)
+            Files.createDirectories(path)
+
+            DockerVolumeMount(DockerVolumeMountSource.LocalPath(path.toString()), mount.containerPath, mount.options)
+        }
     }
 }
 

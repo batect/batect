@@ -32,9 +32,7 @@ import org.spekframework.spek2.style.specification.describe
 object CacheMountJourneyTest : Spek({
     describe("running a container with a cache mounted") {
         beforeGroup {
-            DockerUtils.getAllVolumes()
-                .filter { it.startsWith("batect-cache-") && it.endsWith("-batect-cache-mount-journey-test-cache") }
-                .forEach { DockerUtils.removeVolume(it) }
+            DockerUtils.deleteCache("batect-cache-mount-journey-test-cache")
         }
 
         val runner by createForGroup { ApplicationRunner("cache-mount") }

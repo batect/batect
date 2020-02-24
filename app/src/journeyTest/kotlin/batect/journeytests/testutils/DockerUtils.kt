@@ -80,4 +80,10 @@ object DockerUtils {
             throw Exception("Deleting volume '$volume' failed with exit code $exitCode. Output from Docker was: $output")
         }
     }
+
+    fun deleteCache(name: String) {
+        getAllVolumes()
+            .filter { it.startsWith("batect-cache-") && it.endsWith("-$name") }
+            .forEach { removeVolume(it) }
+    }
 }

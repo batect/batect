@@ -4,8 +4,10 @@ containers:
   build-env:
     image: alpine:3.6
     volumes:
-      - ../../../../build/test-results/journey-tests/run-as-current-user:/output
-      - .:/scripts
+      - local: ../../../../build/test-results/journey-tests/run-as-current-user
+        container: /output
+      - local: .
+        container: /scripts
     run_as_current_user:
       enabled: true
       home_directory: /home/special-place

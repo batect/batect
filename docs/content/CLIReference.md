@@ -138,6 +138,22 @@ Example:
 ./batect --config-file my-other-config-file.yml the-task
 ```
 
+### Customise cache storage mechanism <small>(`--cache-type`)</small>
+
+By default, batect will use a Docker volume for each [cache mount](tips/Performance.md#cache-volumes).
+Use this option to instruct batect to use a different storage mechanism.
+
+Supported values are:
+
+* `volume`: use Docker volumes
+* `directory`: use directories mounted from the project's `.batect/caches` directory
+
+Example:
+
+```shell
+./batect --cache-type=directory the-task
+```
+
 ### Customise Docker connection options
 
 #### Use a non-standard Docker host <small>(`--docker-host`)</small>

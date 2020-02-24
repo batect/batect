@@ -18,6 +18,7 @@ package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.DockerUtils
+import batect.journeytests.testutils.deleteDirectoryContents
 import batect.journeytests.testutils.itCleansUpAllContainersItCreates
 import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
 import batect.testutils.createForGroup
@@ -31,36 +32,44 @@ import org.spekframework.spek2.style.specification.describe
 
 object CacheMountJourneyTest : Spek({
     describe("running a container with a cache mounted") {
-        beforeGroup {
-            DockerUtils.deleteCache("batect-cache-mount-journey-test-cache")
-        }
-
         val runner by createForGroup { ApplicationRunner("cache-mount") }
 
-        on("running the task twice") {
-            val firstResult by runBeforeGroup { runner.runApplication(listOf("the-task")) }
-            val secondResult by runBeforeGroup { runner.runApplication(listOf("the-task")) }
+        beforeGroup {
+            DockerUtils.deleteCache("batect-cache-mount-journey-test-cache")
+            deleteDirectoryContents(runner.testDirectory.resolve(".batect").resolve("caches").resolve("batect-cache-mount-journey-test-cache"))
+        }
 
-            it("should not have access to the file in the cache in the first run and create it") {
-                assertThat(firstResult.output, containsSubstring("File does not exist, creating it\r\n"))
+        mapOf(
+            "running the task with caches set to use volume mounts" to "--cache-type=volume",
+            "running the task with caches set to use directory mounts" to "--cache-type=directory"
+        ).forEach { (description, arg) ->
+            describe(description) {
+                on("running the task twice") {
+                    val firstResult by runBeforeGroup { runner.runApplication(listOf(arg, "the-task")) }
+                    val secondResult by runBeforeGroup { runner.runApplication(listOf(arg, "the-task")) }
+
+                    it("should not have access to the file in the cache in the first run and create it") {
+                        assertThat(firstResult.output, containsSubstring("File does not exist, creating it\r\n"))
+                    }
+
+                    it("should have access to the file in the cache in the second run") {
+                        assertThat(secondResult.output, containsSubstring("File exists\r\n"))
+                    }
+
+                    it("should succeed on the first run") {
+                        assertThat(firstResult.exitCode, equalTo(0))
+                    }
+
+                    it("should succeed on the second run") {
+                        assertThat(secondResult.exitCode, equalTo(0))
+                    }
+
+                    itCleansUpAllContainersItCreates { firstResult }
+                    itCleansUpAllNetworksItCreates { firstResult }
+                    itCleansUpAllContainersItCreates { secondResult }
+                    itCleansUpAllNetworksItCreates { secondResult }
+                }
             }
-
-            it("should have access to the file in the cache in the second run") {
-                assertThat(secondResult.output, containsSubstring("File exists\r\n"))
-            }
-
-            it("should succeed on the first run") {
-                assertThat(firstResult.exitCode, equalTo(0))
-            }
-
-            it("should succeed on the second run") {
-                assertThat(secondResult.exitCode, equalTo(0))
-            }
-
-            itCleansUpAllContainersItCreates { firstResult }
-            itCleansUpAllNetworksItCreates { firstResult }
-            itCleansUpAllContainersItCreates { secondResult }
-            itCleansUpAllNetworksItCreates { secondResult }
         }
     }
 })

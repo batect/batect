@@ -16,6 +16,7 @@
 
 package batect.cli
 
+import batect.execution.CacheType
 import batect.execution.ConfigVariablesProvider
 import batect.logging.FileLogSink
 import batect.logging.LogSink
@@ -53,7 +54,8 @@ data class CommandLineOptions(
     val dockerVerifyTLS: Boolean = false,
     val dockerTlsCACertificatePath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
     val dockerTLSCertificatePath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
-    val dockerTLSKeyPath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser")
+    val dockerTLSKeyPath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
+    val cacheType: CacheType = CacheType.Volume
 ) {
     fun extend(originalKodein: DKodein): DKodein = Kodein.direct {
         extend(originalKodein, copy = Copy.All)

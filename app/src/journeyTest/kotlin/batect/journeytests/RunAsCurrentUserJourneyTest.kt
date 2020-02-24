@@ -17,6 +17,7 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
+import batect.journeytests.testutils.deleteDirectoryContents
 import batect.journeytests.testutils.itCleansUpAllContainersItCreates
 import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
 import batect.testutils.createForGroup
@@ -31,7 +32,6 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.InputStreamReader
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
 
 object RunAsCurrentUserJourneyTest : Spek({
@@ -97,18 +97,6 @@ object RunAsCurrentUserJourneyTest : Spek({
         }
     }
 })
-
-private fun deleteDirectoryContents(directory: Path) {
-    Files.newDirectoryStream(directory).use { stream ->
-        stream.forEach { path ->
-            if (Files.isDirectory(path)) {
-                deleteDirectoryContents(path)
-            }
-
-            Files.delete(path)
-        }
-    }
-}
 
 // On Windows, all mounted directories are mounted with root as the owner and this cannot be changed.
 // See https://github.com/docker/for-win/issues/63 and https://github.com/docker/for-win/issues/39.

@@ -18,6 +18,7 @@ package batect.cli
 
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.docker.DockerHttpConfigDefaults
+import batect.execution.CacheType
 import batect.os.HostEnvironmentVariables
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
@@ -200,7 +201,9 @@ object CommandLineOptionsParserSpec : Spek({
                 dockerTLSCertificatePath = fileSystem.getPath("/resolved/some-cert"),
                 dockerTLSKeyPath = fileSystem.getPath("/resolved/some-key"),
                 taskName = "some-task"
-            )
+            ),
+            listOf("--cache-type=volume", "some-task") to defaultCommandLineOptions.copy(cacheType = CacheType.Volume, taskName = "some-task"),
+            listOf("--cache-type=directory", "some-task") to defaultCommandLineOptions.copy(cacheType = CacheType.Directory, taskName = "some-task")
         ).forEach { (args, expectedResult) ->
             given("the arguments $args") {
                 on("parsing the command line") {

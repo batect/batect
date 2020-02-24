@@ -275,7 +275,9 @@ private val executionModule = Kodein.Module("execution") {
         VolumeMountResolver(
             instance<PathResolverFactory>().createResolver(instance<ProjectPaths>().projectRootDirectory),
             instance(),
-            instance()
+            instance(),
+            instance(),
+            commandLineOptions().cacheType
         )
     }
 }

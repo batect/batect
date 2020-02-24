@@ -45,6 +45,12 @@ containers:
     working_directory: /code
 ```
 
+!!! tip
+    To make it easier to share caches between builds on ephemeral CI agents, you can use directories mounted from the project's `.batect/caches` directory
+    instead of volumes and then archive this directory between builds. Run batect with `--cache-type=directory` to enable this behaviour.
+
+    Using mounted directories instead of volumes has no performance impact on Linux.
+
 ### Mounts in `cached` mode
 
 !!! info

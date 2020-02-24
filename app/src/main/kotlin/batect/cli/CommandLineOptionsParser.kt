@@ -22,9 +22,11 @@ import batect.cli.options.OptionParserContainer
 import batect.cli.options.OptionValueSource
 import batect.cli.options.OptionsParsingResult
 import batect.cli.options.ValueConverters
+import batect.cli.options.defaultvalues.EnumDefaultValueProvider
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.cli.options.defaultvalues.FileDefaultValueProvider
 import batect.docker.DockerHttpConfigDefaults
+import batect.execution.CacheType
 import batect.os.PathResolverFactory
 import batect.os.SystemInfo
 import batect.ui.OutputStyle
@@ -100,11 +102,12 @@ class CommandLineOptionsParser(
         ValueConverters.pathToFile(pathResolverFactory)
     )
 
-    private val requestedOutputStyle: OutputStyle? by valueOption(
+    private val requestedOutputStyle: OutputStyle? by valueOption<OutputStyle?, OutputStyle>(
         outputOptionsGroup,
         "output",
         "Force a particular style of output from batect (does not affect task command output). Valid values are: fancy (default value if your console supports this), simple (no updating text), all (interleaved output from all containers) or quiet (only error messages).",
-        ValueConverters.optionalEnum(),
+        null,
+        ValueConverters.enum(),
         'o'
     )
 
@@ -112,6 +115,14 @@ class CommandLineOptionsParser(
     private val disableCleanupAfterSuccess: Boolean by flagOption(executionOptionsGroup, disableCleanupAfterSuccessFlagName, "If the main task succeeds, leave all containers created for that task running.")
     private val disableCleanup: Boolean by flagOption(executionOptionsGroup, disableCleanupFlagName, "Equivalent to providing both --$disableCleanupAfterFailureFlagName and --$disableCleanupAfterSuccessFlagName.")
     private val dontPropagateProxyEnvironmentVariables: Boolean by flagOption(executionOptionsGroup, "no-proxy-vars", "Don't propagate proxy-related environment variables such as http_proxy and no_proxy to image builds or containers.")
+
+    private val cacheType: CacheType by valueOption(
+        executionOptionsGroup,
+        "cache-type",
+        "Storage mechanism to use for caches. Valid values are: 'volume' (use Docker volumes) or 'directory' (use directories mounted from the host).",
+        EnumDefaultValueProvider(CacheType.Volume),
+        ValueConverters.enum()
+    )
 
     private val dockerHost: String by valueOption(
         dockerConnectionOptionsGroup,
@@ -248,7 +259,8 @@ class CommandLineOptionsParser(
         dockerVerifyTLS = dockerVerifyTLS,
         dockerTLSKeyPath = resolvePathToDockerCertificate(dockerTLSKeyPath, dockerTLSKeyPathOption.valueSource, "key.pem"),
         dockerTLSCertificatePath = resolvePathToDockerCertificate(dockerTLSCertificatePath, dockerTLSCertificatePathOption.valueSource, "cert.pem"),
-        dockerTlsCACertificatePath = resolvePathToDockerCertificate(dockerTlsCACertificatePath, dockerTLSCACertificatePathOption.valueSource, "ca.pem")
+        dockerTlsCACertificatePath = resolvePathToDockerCertificate(dockerTlsCACertificatePath, dockerTLSCACertificatePathOption.valueSource, "ca.pem"),
+        cacheType = cacheType
     )
 }
 

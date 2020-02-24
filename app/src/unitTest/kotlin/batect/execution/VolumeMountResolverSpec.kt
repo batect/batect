@@ -21,6 +21,7 @@ import batect.config.EnvironmentVariableReference
 import batect.config.ExpressionEvaluationContext
 import batect.config.LiteralValue
 import batect.config.LocalMount
+import batect.config.ProjectPaths
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
 import batect.os.HostEnvironmentVariables
@@ -44,27 +45,21 @@ object VolumeMountResolverSpec : Spek({
     describe("a volume mount resolver") {
         val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
 
-        val pathResolver by createForEachTest {
-            mock<PathResolver> {
-                on { resolve("file") } doReturn PathResolutionResult.Resolved("file", fileSystem.getPath("/resolved/file"), PathType.File)
-                on { resolve("directory") } doReturn PathResolutionResult.Resolved("directory", fileSystem.getPath("/resolved/directory"), PathType.Directory)
-                on { resolve("other") } doReturn PathResolutionResult.Resolved("other", fileSystem.getPath("/resolved/other"), PathType.Other)
-                on { resolve("does-not-exist") } doReturn PathResolutionResult.Resolved("does-not-exist", fileSystem.getPath("/resolved/does-not-exist"), PathType.DoesNotExist)
-                on { resolve("invalid") } doReturn PathResolutionResult.InvalidPath("invalid")
-            }
-        }
-
-        val expressionEvaluationContext = ExpressionEvaluationContext(HostEnvironmentVariables("INVALID" to "invalid"), emptyMap())
-
-        val cacheManager by createForEachTest {
-            mock<CacheManager> {
-                on { projectCacheKey } doReturn "abc123"
-            }
-        }
-
-        val resolver by createForEachTest { VolumeMountResolver(pathResolver, expressionEvaluationContext, cacheManager) }
-
         describe("resolving local mounts") {
+            val pathResolver by createForEachTest {
+                mock<PathResolver> {
+                    on { resolve("file") } doReturn PathResolutionResult.Resolved("file", fileSystem.getPath("/resolved/file"), PathType.File)
+                    on { resolve("directory") } doReturn PathResolutionResult.Resolved("directory", fileSystem.getPath("/resolved/directory"), PathType.Directory)
+                    on { resolve("other") } doReturn PathResolutionResult.Resolved("other", fileSystem.getPath("/resolved/other"), PathType.Other)
+                    on { resolve("does-not-exist") } doReturn PathResolutionResult.Resolved("does-not-exist", fileSystem.getPath("/resolved/does-not-exist"), PathType.DoesNotExist)
+                    on { resolve("invalid") } doReturn PathResolutionResult.InvalidPath("invalid")
+                }
+            }
+
+            val expressionEvaluationContext = ExpressionEvaluationContext(HostEnvironmentVariables("INVALID" to "invalid"), emptyMap())
+
+            val resolver by createForEachTest { VolumeMountResolver(pathResolver, expressionEvaluationContext, mock(), mock(), mock()) }
+
             given("a set of volume mounts from the configuration file that resolve to valid paths") {
                 val mounts = setOf(
                     LocalMount(LiteralValue("file"), "/container-1"),
@@ -124,21 +119,52 @@ object VolumeMountResolverSpec : Spek({
         }
 
         describe("resolving cache mounts") {
+            val cacheManager by createForEachTest {
+                mock<CacheManager> {
+                    on { projectCacheKey } doReturn "abc123"
+                }
+            }
+
             given("a cache mount") {
                 val mounts = setOf(
                     CacheMount("cache-1", "/container-1"),
                     CacheMount("cache-2", "/container-2", "options-2")
                 )
 
-                it("resolves the mount to a cache volume, preserving the container path and options") {
-                    assertThat(
-                        resolver.resolve(mounts), equalTo(
-                            setOf(
-                                DockerVolumeMount(DockerVolumeMountSource.Volume("batect-cache-abc123-cache-1"), "/container-1"),
-                                DockerVolumeMount(DockerVolumeMountSource.Volume("batect-cache-abc123-cache-2"), "/container-2", "options-2")
+                given("the current cache type is volumes") {
+                    val resolver by createForEachTest { VolumeMountResolver(mock(), mock(), cacheManager, mock(), CacheType.Volume) }
+
+                    it("resolves the mount to a cache volume, preserving the container path and options") {
+                        assertThat(
+                            resolver.resolve(mounts), equalTo(
+                                setOf(
+                                    DockerVolumeMount(DockerVolumeMountSource.Volume("batect-cache-abc123-cache-1"), "/container-1"),
+                                    DockerVolumeMount(DockerVolumeMountSource.Volume("batect-cache-abc123-cache-2"), "/container-2", "options-2")
+                                )
                             )
                         )
-                    )
+                    }
+                }
+
+                given("the current cache type is directories") {
+                    val projectPaths by createForEachTest {
+                        mock<ProjectPaths> {
+                            on { cacheDirectory } doReturn fileSystem.getPath("/caches")
+                        }
+                    }
+
+                    val resolver by createForEachTest { VolumeMountResolver(mock(), mock(), cacheManager, projectPaths, CacheType.Directory) }
+
+                    it("resolves the mount to a cache directory, preserving the container path and options") {
+                        assertThat(
+                            resolver.resolve(mounts), equalTo(
+                                setOf(
+                                    DockerVolumeMount(DockerVolumeMountSource.LocalPath("/caches/cache-1"), "/container-1"),
+                                    DockerVolumeMount(DockerVolumeMountSource.LocalPath("/caches/cache-2"), "/container-2", "options-2")
+                                )
+                            )
+                        )
+                    }
                 }
             }
         }

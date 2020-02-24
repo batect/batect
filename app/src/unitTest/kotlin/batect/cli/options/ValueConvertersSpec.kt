@@ -120,8 +120,8 @@ object ValueConvertersSpec : Spek({
             }
         }
 
-        describe("optional enum value converter") {
-            val converter = ValueConverters.optionalEnum<OutputStyle>()
+        describe("enum value converter") {
+            val converter = ValueConverters.enum<OutputStyle>()
 
             given("a valid value") {
                 it("returns the equivalent enum constant") {

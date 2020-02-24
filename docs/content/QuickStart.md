@@ -8,7 +8,7 @@ automatically pull down the correct version of batect for your operating system.
 
     Note that you only need the scripts - you don't need to download `batect.jar`.
 
-2. If you're on Linux or OS X, make sure the script is executable: run `chmod +x batect`.
+2. If you're on Linux or macOS, make sure the script is executable: run `chmod +x batect`.
 3. Run `./batect --version` and if you see some version information, you're good to go!
 
 Note that a JVM (version 8 or above) must be installed to use batect. (This requirement will be removed in a future release.)

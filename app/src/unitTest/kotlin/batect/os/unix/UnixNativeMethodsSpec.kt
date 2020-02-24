@@ -116,13 +116,13 @@ object UnixNativeMethodsSpec : Spek({
                 }
             }
 
-            describe("when running on OS X") {
+            describe("when running on macOS") {
                 beforeEachTest { whenever(platform.os).thenReturn(Platform.OS.DARWIN) }
 
                 on("calling ioctl()") {
                     beforeEachTest { nativeMethods.getConsoleDimensions() }
 
-                    it("invokes ioctl() with the OS X-specific value for TIOCGWINSZ") {
+                    it("invokes ioctl() with the macOS-specific value for TIOCGWINSZ") {
                         verify(libc).ioctl(any(), eq(0x40087468), any())
                     }
                 }

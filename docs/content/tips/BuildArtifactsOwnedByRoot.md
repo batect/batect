@@ -8,7 +8,7 @@ On Linux, by default, the Docker daemon runs as root, and so all containers run 
 it is owned by the `root` Unix user, making it difficult for other users to modify or delete the files. This most often comes up when a build task produces
 an artifact and writes that artifact to a mounted volume.
 
-(On OS X and Windows, the Docker daemon runs as the currently logged-in user and so any files created in mounted volumes are owned by that user, so this is not an issue.)
+(On macOS and Windows, the Docker daemon runs as the currently logged-in user and so any files created in mounted volumes are owned by that user, so this is not an issue.)
 
 To fix this issue, batect can run containers in 'run as current user' mode, ensuring that all files written to a mounted volume are created by the current
 user, not root. This mode can be enabled on a per-container basis with the [`run_as_current_user` option](../config/Containers.md#run_as_current_user).
@@ -28,12 +28,12 @@ When enabled, the following configuration changes are made:
     This means that any other users defined in the container's image are effectively lost. Under most circumstances, this is not an issue.
 
   * Similarly, a new `/etc/group` file is mounted into the container with two groups: root and the current user's primary group (usually `staff` on
-    OS X, and the user's name on Linux). If batect is running as root, then just root is listed.
+    macOS, and the user's name on Linux). If batect is running as root, then just root is listed.
 
     Again, this means that any other groups defined in the container's image are effectively lost. Under most circumstances, this is not an issue.
 
 While this is really only useful on Linux, for consistency, batect makes the same configuration changes regardless of the host operating system.
-These configuration changes are harmless on OS X and Windows.
+These configuration changes are harmless on macOS and Windows.
 
 ## Special notes for Windows
 

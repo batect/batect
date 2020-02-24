@@ -70,7 +70,7 @@ If there's something you're really keen to see, pull requests are always welcome
     * how to run something when the container starts, regardless of the task's command line (eg. `ENTRYPOINT` with shell script and `exec`, similar to the example in [the docs](https://docs.docker.com/engine/reference/builder/#entrypoint))
   * importance of idempotency
   * improve the getting started guide (it's way too wordy)
-  * add note about increasing default CPU and memory limits when using Docker on OS X
+  * add note about increasing default CPU and memory limits when using Docker on macOS
   * how to introduce batect to an existing project
   * how to use batect as the basis for a pipeline made up of reusable building blocks
   * expand comparison with other tools to cover Dogo, Cage and Toast
@@ -153,4 +153,4 @@ If there's something you're really keen to see, pull requests are always welcome
 * make the last mile easier: pushing images and deploying applications
 * init containers: containers that must start, run and complete before a container can start (eg. populating a database with data)
 * some way to handle secrets easily
-* add support for `docker-sync` to improve I/O performance on OS X
+* add support for `docker-sync` to improve I/O performance on macOS

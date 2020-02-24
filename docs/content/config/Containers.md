@@ -249,8 +249,8 @@ Overrides [health check](https://docs.docker.com/engine/reference/builder/#healt
 Run the container with the same UID and GID as the user running batect (rather than the user the Docker daemon runs as, which is root
 on Linux). This means that any files created by the container will be owned by the user running batect, rather than root.
 
-This is really only useful on Linux. On OS X, the Docker daemon runs as the currently logged-in user and so any files created in the container are owned
-by that user, so this is less of an issue. However, for consistency, the same configuration changes are made on both Linux and OS X.
+This is really only useful on Linux. On macOS, the Docker daemon runs as the currently logged-in user and so any files created in the container are owned
+by that user, so this is less of an issue. However, for consistency, the same configuration changes are made on both Linux and macOS.
 
 `run_as_current_user` has the following options:
 

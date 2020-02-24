@@ -13,7 +13,7 @@
   [go script](https://www.thoughtworks.com/insights/blog/praise-go-script-part-i) based on Docker
 * Manage dependencies for integration and end-to-end testing (like databases) with ease
 * Onboard new team members in minutes: no installation required
-* Supports Linux, OS X and Windows
+* Supports Linux, macOS and Windows
 * Works with any language or framework, your existing CI system, and your chosen language's existing tooling
 * Take advantage of existing Docker images to get started quickly
 
@@ -23,7 +23,7 @@
 
 1. Drop the latest `batect` and `batect.cmd` scripts from the [releases page](https://github.com/batect/batect/releases)
    into the root folder of your project.
-2. If you're on Linux or OS X, make sure the script is executable: run `chmod +x batect`.
+2. If you're on Linux or macOS, make sure the script is executable: run `chmod +x batect`.
 3. Create your `batect.yml` to define your environment:
     * Take a look at the [sample projects](https://batect.dev/SampleProjects.html) for inspiration
     * Dive straight into [the configuration file reference](https://batect.dev/config/Overview.html)
@@ -35,7 +35,7 @@
 
 batect requires Docker 18.03.1 or newer, Java 8 or newer (although this requirement will be removed before v1.0), and:
 
-* On Linux and OS X: Bash and `curl`
+* On Linux and macOS: Bash and `curl`
 * On Windows: Windows 10
 
 batect supports both Linux and Windows containers.

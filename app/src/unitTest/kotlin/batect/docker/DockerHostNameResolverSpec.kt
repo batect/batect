@@ -39,7 +39,7 @@ object DockerHostNameResolverSpec : Spek({
         val dockerSystemInfoClient by createForEachTest { mock<DockerSystemInfoClient>() }
         val resolver by createForEachTest { DockerHostNameResolver(systemInfo, dockerSystemInfoClient) }
 
-        given("the local system is running OS X") {
+        given("the local system is running macOS") {
             beforeEachTest { whenever(systemInfo.operatingSystem).doReturn(OperatingSystem.Mac) }
 
             on("the Docker version being less than 17.06") {

@@ -72,7 +72,7 @@ object SystemInfoSpec : Spek({
         }
 
         describe("getting the operating system and whether that OS is supported") {
-            on("when running on OS X") {
+            on("when running on macOS") {
                 beforeEachTest {
                     systemProperties.setProperty("os.name", "Mac OS X")
                     systemProperties.setProperty("java.io.tmpdir", "/var/folders/tf/abc123/T/")
@@ -80,7 +80,7 @@ object SystemInfoSpec : Spek({
 
                 val systemInfo by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties) }
 
-                it("returns that the operating system is Mac OS X") {
+                it("returns that the operating system is Mac") {
                     assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Mac))
                 }
 

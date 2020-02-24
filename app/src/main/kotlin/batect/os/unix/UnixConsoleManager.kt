@@ -27,7 +27,7 @@ class UnixConsoleManager(
     private val logger: Logger
 ) : ConsoleManager {
     override fun enableConsoleEscapeSequences() {
-        // Nothing to do on Linux or OS X.
+        // Nothing to do on Linux or macOS.
     }
 
     override fun enterRawMode(): AutoCloseable {

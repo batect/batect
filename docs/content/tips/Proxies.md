@@ -25,7 +25,7 @@ When pulling an image, the Docker daemon uses any proxy-related environment vari
 environment to determine whether or not to use a proxy. These settings cannot be set at image pull time, so
 batect can't configure these settings for you - you must configure them yourself.
 
-On OS X, Docker defaults to using your system's proxy settings, and you can change these by going to the Docker icon >
+On macOS, Docker defaults to using your system's proxy settings, and you can change these by going to the Docker icon >
 Preferences > Proxies.
 
 On Linux, you may need to configure the Docker daemon's proxy settings yourself.
@@ -95,7 +95,7 @@ defined, but `HTTP_PROXY` isn't, then both `http_proxy` and `HTTP_PROXY` are pro
 If you run a local proxy on your host machine such as [Cntlm](http://cntlm.sourceforge.net/), referring to this proxy with `localhost`
 will not work from inside a Docker container, as `localhost` refers to the container, not the host machine.
 
-If you are running batect on OS X or Windows with Docker 17.06 or later, batect will automatically rewrite proxy-related environment
+If you are running batect on macOS or Windows with Docker 17.06 or later, batect will automatically rewrite proxy-related environment
 variables that refer to `localhost`, `127.0.0.1` or `::1` so that they refer to the host machine.
 
 If you are running batect on Linux, or using an older version of Docker, batect will not rewrite proxy-related environment variables.

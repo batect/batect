@@ -320,7 +320,7 @@ class ContainersAPI(
     // Note that these two methods assume that the container was created with the TTY option enabled, even if the local terminal is not a TTY.
     // The caller must call close() on the response to clean up all connections once it is finished with the streams.
     //
-    // This entire thing is a bit of a gross hack. The WebSocket version of this API doesn't work properly on OS X (see https://github.com/docker/for-mac/issues/1662),
+    // This entire thing is a bit of a gross hack. The WebSocket version of this API doesn't work properly on macOS (see https://github.com/docker/for-mac/issues/1662),
     // and OkHttp doesn't cleanly support Docker's non-standard connection hijacking mechanism.
     // And, to make things more complicated, we can't use the same socket for both container input and container output, as we need to be able to close
     // the input stream when there's no more input without closing the output stream - Java sockets don't seem to support closing one side of the

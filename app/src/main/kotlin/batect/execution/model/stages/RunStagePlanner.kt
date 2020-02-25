@@ -44,8 +44,7 @@ class RunStagePlanner(
     fun createStage(): RunStage {
         val allContainersInNetwork = graph.allNodes.mapToSet { it.container }
 
-        val rules = imageCreationRulesFor(graph) +
-            graph.allNodes.flatMapToSet { executionStepsFor(it, allContainersInNetwork) } +
+        val rules = graph.allNodes.flatMapToSet { executionStepsFor(it, allContainersInNetwork) } +
             CreateTaskNetworkStepRule(containerType)
 
         logger.info {
@@ -57,23 +56,17 @@ class RunStagePlanner(
     }
 
     private fun executionStepsFor(node: ContainerDependencyGraphNode, allContainersInNetwork: Set<Container>) = setOf(
+        imageCreationRuleFor(node.container),
         CreateContainerStepRule(node.container, node.config, allContainersInNetwork),
         RunContainerStepRule(node.container, node.dependsOnContainers),
         WaitForContainerToBecomeHealthyStepRule(node.container),
         RunContainerSetupCommandsStepRule(node.container, node.config, allContainersInNetwork)
     )
 
-    private fun imageCreationRulesFor(graph: ContainerDependencyGraph): Set<TaskStepRule> {
-        return graph.allNodes.map { it.container }
-            .groupBy { it.imageSource }
-            .mapToSet { (imageSource, containers) ->
-                when (imageSource) {
-                    is PullImage -> PullImageStepRule(imageSource)
-                    is BuildImage -> BuildImageStepRule(imageSource, imageTagsFor(config.projectName, containers))
-                }
-            }
+    private fun imageCreationRuleFor(container: Container): TaskStepRule = when (container.imageSource) {
+        is PullImage -> PullImageStepRule(container.imageSource)
+        is BuildImage -> BuildImageStepRule(container, imageTagFor(container))
     }
 
-    private fun imageTagsFor(projectName: String, containers: List<Container>): Set<String> =
-        containers.mapToSet { "$projectName-${it.name}" }
+    private fun imageTagFor(container: Container) = "${config.projectName}-${container.name}"
 }

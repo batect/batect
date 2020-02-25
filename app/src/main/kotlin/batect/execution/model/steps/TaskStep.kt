@@ -16,7 +16,6 @@
 
 package batect.execution.model.steps
 
-import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
 import batect.docker.DockerContainer
@@ -29,10 +28,10 @@ import java.nio.file.Path
 sealed class TaskStep
 
 data class BuildImageStep(
-    val source: BuildImage,
-    val imageTags: Set<String>
+    val container: Container,
+    val imageTag: String
 ) : TaskStep() {
-    override fun toString() = "${this.javaClass.simpleName}(source: $source, image tags: $imageTags)"
+    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', image tag: '$imageTag')"
 }
 
 data class PullImageStep(val source: PullImage) : TaskStep() {

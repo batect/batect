@@ -17,6 +17,7 @@
 package batect.execution.model.steps.runners
 
 import batect.config.BuildImage
+import batect.config.Container
 import batect.config.EnvironmentVariableReference
 import batect.config.LiteralValue
 import batect.config.Expression
@@ -57,9 +58,9 @@ object BuildImageStepRunnerSpec : Spek({
         val buildDirectory = Paths.get("/some-build-dir")
         val buildArgs = mapOf("some_arg" to LiteralValue("some_value"), "SOME_PROXY_CONFIG" to LiteralValue("overridden"), "SOME_HOST_VAR" to EnvironmentVariableReference("SOME_ENV_VAR"))
         val dockerfilePath = "some-Dockerfile-path"
-        val imageTags = setOf("some_image_tag", "some_other_image_tag")
-        val imageSource = BuildImage(buildDirectory, buildArgs, dockerfilePath)
-        val step = BuildImageStep(imageSource, imageTags)
+        val imageTag = "some_image_tag"
+        val container = Container("some-container", BuildImage(buildDirectory, buildArgs, dockerfilePath))
+        val step = BuildImageStep(container, imageTag)
         val outputSink by createForEachTest { mock<Sink>() }
 
         val imagesClient by createForEachTest { mock<DockerImagesClient>() }
@@ -72,7 +73,7 @@ object BuildImageStepRunnerSpec : Spek({
 
         val ioStreamingOptions by createForEachTest {
             mock<ContainerIOStreamingOptions> {
-                on { stdoutForImageBuild(imageSource) } doReturn outputSink
+                on { stdoutForImageBuild(container) } doReturn outputSink
             }
         }
 
@@ -103,7 +104,7 @@ object BuildImageStepRunnerSpec : Spek({
                 val update2 = DockerImageBuildProgress(2, 2, "Second step", null)
 
                 beforeEachTest {
-                    whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), eq(outputSink), eq(cancellationContext), any()))
+                    whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(setOf(imageTag)), eq(outputSink), eq(cancellationContext), any()))
                         .then { invocation ->
                             @Suppress("UNCHECKED_CAST")
                             val onStatusUpdate = invocation.arguments[6] as (DockerImageBuildProgress) -> Unit
@@ -129,12 +130,12 @@ object BuildImageStepRunnerSpec : Spek({
                 }
 
                 it("emits a 'image build progress' event for each update received from Docker") {
-                    verify(eventSink).postEvent(ImageBuildProgressEvent(imageSource, update1))
-                    verify(eventSink).postEvent(ImageBuildProgressEvent(imageSource, update2))
+                    verify(eventSink).postEvent(ImageBuildProgressEvent(container, update1))
+                    verify(eventSink).postEvent(ImageBuildProgressEvent(container, update2))
                 }
 
                 it("emits a 'image built' event") {
-                    verify(eventSink).postEvent(ImageBuiltEvent(imageSource, image))
+                    verify(eventSink).postEvent(ImageBuiltEvent(container, image))
                 }
             }
 
@@ -154,7 +155,7 @@ object BuildImageStepRunnerSpec : Spek({
                 }
 
                 beforeEachTest {
-                    whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), eq(outputSink), eq(cancellationContext), any())).thenReturn(image)
+                    whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(setOf(imageTag)), eq(outputSink), eq(cancellationContext), any())).thenReturn(image)
 
                     runnerWithProxyEnvironmentVariablePropagationDisabled.run(step, eventSink)
                 }
@@ -170,19 +171,19 @@ object BuildImageStepRunnerSpec : Spek({
                 }
 
                 it("emits a 'image built' event") {
-                    verify(eventSink).postEvent(ImageBuiltEvent(imageSource, image))
+                    verify(eventSink).postEvent(ImageBuiltEvent(container, image))
                 }
             }
         }
 
         on("when building the image fails") {
             beforeEachTest {
-                whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(imageTags), eq(outputSink), eq(cancellationContext), any())).thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
+                whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(setOf(imageTag)), eq(outputSink), eq(cancellationContext), any())).thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
                 runner.run(step, eventSink)
             }
 
             it("emits a 'image build failed' event with all line breaks replaced with the system line separator") {
-                verify(eventSink).postEvent(ImageBuildFailedEvent(imageSource, "Something went wrong.SYSTEM_LINE_SEPARATORMore details on this line."))
+                verify(eventSink).postEvent(ImageBuildFailedEvent(container, "Something went wrong.SYSTEM_LINE_SEPARATORMore details on this line."))
             }
         }
 
@@ -192,14 +193,16 @@ object BuildImageStepRunnerSpec : Spek({
             }
 
             val imageSourceWithInvalidBuildArgReference = BuildImage(buildDirectory, mapOf("SOME_HOST_VAR" to invalidReference), dockerfilePath)
-            val stepWithInvalidBuildArgReference = BuildImageStep(imageSourceWithInvalidBuildArgReference, imageTags)
+            val containerWithInvalidBuildArgReference = Container("some-container", imageSourceWithInvalidBuildArgReference)
+
+            val stepWithInvalidBuildArgReference = BuildImageStep(containerWithInvalidBuildArgReference, imageTag)
 
             beforeEachTest {
                 runner.run(stepWithInvalidBuildArgReference, eventSink)
             }
 
             it("emits a 'image build failed' event") {
-                verify(eventSink).postEvent(ImageBuildFailedEvent(imageSourceWithInvalidBuildArgReference, "The value for the build arg 'SOME_HOST_VAR' cannot be evaluated: Couldn't evaluate expression."))
+                verify(eventSink).postEvent(ImageBuildFailedEvent(containerWithInvalidBuildArgReference, "The value for the build arg 'SOME_HOST_VAR' cannot be evaluated: Couldn't evaluate expression."))
             }
         }
     }

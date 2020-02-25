@@ -75,18 +75,15 @@ import java.time.Duration
 
 object InterleavedEventLoggerSpec : Spek({
     describe("an interleaved event logger") {
-        val container1And2ImageSource = BuildImage(Paths.get("/some-image-dir"))
-        val container3ImageSource = BuildImage(Paths.get("/some-other-image-dir"))
-        val container4And5ImageSource = PullImage("another-image")
+        val container1ImageSource = BuildImage(Paths.get("/some-image-dir"))
+        val container2And3ImageSource = PullImage("another-image")
         val taskContainerImageSource = PullImage("some-image")
         val taskContainer = Container("task-container", taskContainerImageSource)
         val setupCommands = listOf("a", "b", "c", "d").map { SetupCommand(Command.parse(it)) }
-        val container1 = Container("container-1", container1And2ImageSource, setupCommands = setupCommands)
-        val container2 = Container("container-2", container1And2ImageSource)
-        val container3 = Container("container-3", container3ImageSource)
-        val container4 = Container("container-4", container4And5ImageSource)
-        val container5 = Container("container-5", container4And5ImageSource)
-        val containers = setOf(taskContainer, container1, container2, container3, container4, container5)
+        val container1 = Container("container-1", container1ImageSource, setupCommands = setupCommands)
+        val container2 = Container("container-4", container2And3ImageSource)
+        val container3 = Container("container-5", container2And3ImageSource)
+        val containers = setOf(taskContainer, container1, container2, container3)
 
         val output by createForEachTest { mock<InterleavedOutput>() }
         val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
@@ -95,13 +92,12 @@ object InterleavedEventLoggerSpec : Spek({
         describe("handling when events are posted") {
             on("when an 'image built' event is posted") {
                 beforeEachTest {
-                    val event = ImageBuiltEvent(container1And2ImageSource, DockerImage("abc-123"))
+                    val event = ImageBuiltEvent(container1, DockerImage("abc-123"))
                     logger.postEvent(event)
                 }
 
-                it("prints a message to the output for each container that uses that built image") {
+                it("prints a message to the output") {
                     verify(output).printForContainer(container1, TextRun(Text.white("Image built.")))
-                    verify(output).printForContainer(container2, TextRun(Text.white("Image built.")))
                 }
             }
 
@@ -112,8 +108,8 @@ object InterleavedEventLoggerSpec : Spek({
                 }
 
                 it("prints a message to the output for each container that uses that pulled image") {
-                    verify(output).printForContainer(container4, Text.white(Text("Pulled ") + Text.bold("another-image") + Text(".")))
-                    verify(output).printForContainer(container5, Text.white(Text("Pulled ") + Text.bold("another-image") + Text(".")))
+                    verify(output).printForContainer(container2, Text.white(Text("Pulled ") + Text.bold("another-image") + Text(".")))
+                    verify(output).printForContainer(container3, Text.white(Text("Pulled ") + Text.bold("another-image") + Text(".")))
                 }
             }
 
@@ -188,25 +184,24 @@ object InterleavedEventLoggerSpec : Spek({
             describe("when a 'step starting' event is posted") {
                 on("when a 'build image' step is starting") {
                     beforeEachTest {
-                        val step = BuildImageStep(container1And2ImageSource, emptySet())
+                        val step = BuildImageStep(container1, "the-image-tag")
                         logger.postEvent(StepStartingEvent(step))
                     }
 
-                    it("prints a message to the output for each container that uses that built image") {
+                    it("prints a message to the output") {
                         verify(output).printForContainer(container1, TextRun(Text.white("Building image...")))
-                        verify(output).printForContainer(container2, TextRun(Text.white("Building image...")))
                     }
                 }
 
                 on("when a 'pull image' step is starting") {
                     beforeEachTest {
-                        val step = PullImageStep(container4And5ImageSource)
+                        val step = PullImageStep(container2And3ImageSource)
                         logger.postEvent(StepStartingEvent(step))
                     }
 
                     it("prints a message to the output for each container that used that pulled image") {
-                        verify(output).printForContainer(container4, Text.white(Text("Pulling ") + Text.bold("another-image") + Text("...")))
-                        verify(output).printForContainer(container5, Text.white(Text("Pulling ") + Text.bold("another-image") + Text("...")))
+                        verify(output).printForContainer(container2, Text.white(Text("Pulling ") + Text.bold("another-image") + Text("...")))
+                        verify(output).printForContainer(container3, Text.white(Text("Pulling ") + Text.bold("another-image") + Text("...")))
                     }
                 }
 
@@ -287,7 +282,7 @@ object InterleavedEventLoggerSpec : Spek({
                         data class Scenario(val description: String, val event: TaskFailedEvent, val container: Container)
 
                         listOf(
-                            Scenario("image pull failed", ImageBuildFailedEvent(container3ImageSource, "Couldn't pull the image."), container3),
+                            Scenario("image pull failed", ImageBuildFailedEvent(container1, "Couldn't pull the image."), container1),
                             Scenario("image build failed", ImagePullFailedEvent(taskContainerImageSource, "Couldn't build the image."), taskContainer),
                             Scenario("container creation failed", ContainerCreationFailedEvent(container1, "Couldn't create the container."), container1),
                             Scenario("container did not become healthy", ContainerDidNotBecomeHealthyEvent(container1, "Container did not become healthy."), container1),
@@ -309,21 +304,7 @@ object InterleavedEventLoggerSpec : Spek({
                         }
 
                         on("when a 'image pull failed' event is posted for an image shared by multiple containers") {
-                            val event = ImagePullFailedEvent(container4And5ImageSource, "Couldn't pull the image.")
-
-                            beforeEachTest {
-                                whenever(failureErrorMessageFormatter.formatErrorMessage(event)).doReturn(TextRun("Something went wrong."))
-
-                                logger.postEvent(event)
-                            }
-
-                            it("prints the message to the output for the task") {
-                                verify(output).printErrorForTask(TextRun("Something went wrong."))
-                            }
-                        }
-
-                        on("when a 'image build failed' event is posted for an image shared by multiple containers") {
-                            val event = ImageBuildFailedEvent(container1And2ImageSource, "Couldn't pull the image.")
+                            val event = ImagePullFailedEvent(container2And3ImageSource, "Couldn't pull the image.")
 
                             beforeEachTest {
                                 whenever(failureErrorMessageFormatter.formatErrorMessage(event)).doReturn(TextRun("Something went wrong."))

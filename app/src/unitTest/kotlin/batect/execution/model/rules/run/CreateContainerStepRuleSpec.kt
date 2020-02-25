@@ -106,9 +106,9 @@ object CreateContainerStepRuleSpec : Spek({
         given("the container uses an image that must be built") {
             val source = BuildImage(Paths.get("/some-image-directory"))
             val container = Container("the-container", source)
-            val otherContainerInNetwork = Container("the-other-container", imageSourceDoesNotMatter())
+            val otherContainer = Container("the-other-container", imageSourceDoesNotMatter())
             val config = mock<ContainerRuntimeConfiguration>()
-            val allContainersInNetwork = setOf(container, otherContainerInNetwork)
+            val allContainersInNetwork = setOf(container, otherContainer)
             val rule = CreateContainerStepRule(container, config, allContainersInNetwork)
             val events by createForEachTest { mutableSetOf<TaskEvent>() }
 
@@ -118,7 +118,7 @@ object CreateContainerStepRuleSpec : Spek({
 
                 given("the image for the container has been built") {
                     val image = DockerImage("the-built-image")
-                    beforeEachTest { events.add(ImageBuiltEvent(source, image)) }
+                    beforeEachTest { events.add(ImageBuiltEvent(container, image)) }
 
                     on("evaluating the rule") {
                         val result by runForEachTest { rule.evaluate(events) }
@@ -130,7 +130,7 @@ object CreateContainerStepRuleSpec : Spek({
                 }
 
                 given("an image has been built for another container") {
-                    beforeEachTest { events.add(ImageBuiltEvent(BuildImage(Paths.get("/some-other-image-directory")), DockerImage("some-other-image"))) }
+                    beforeEachTest { events.add(ImageBuiltEvent(otherContainer, DockerImage("some-other-image"))) }
 
                     on("evaluating the rule") {
                         val result by runForEachTest { rule.evaluate(events) }

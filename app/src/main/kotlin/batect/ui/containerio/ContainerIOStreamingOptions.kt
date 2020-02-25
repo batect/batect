@@ -16,7 +16,6 @@
 
 package batect.ui.containerio
 
-import batect.config.BuildImage
 import batect.config.Container
 import batect.config.SetupCommand
 import batect.os.Dimensions
@@ -28,7 +27,7 @@ interface ContainerIOStreamingOptions {
     fun stdinForContainer(container: Container): Source?
     fun stdoutForContainer(container: Container): Sink?
     fun stdoutForContainerSetupCommand(container: Container, setupCommand: SetupCommand, index: Int): Sink?
-    fun stdoutForImageBuild(imageSource: BuildImage): Sink?
+    fun stdoutForImageBuild(container: Container): Sink?
 
     val frameDimensions: Dimensions
 }

@@ -16,36 +16,36 @@
 
 package batect.execution.model.events
 
-import batect.config.BuildImage
+import batect.config.Container
 import batect.docker.client.DockerImageBuildProgress
 import batect.docker.pull.DockerImageProgress
 import batect.testutils.given
+import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
 
 object ImageBuildProgressEventSpec : Spek({
     describe("an 'image build progress' event") {
-        val source = BuildImage(Paths.get("/some-build-dir"))
+        val container = Container("the-container", imageSourceDoesNotMatter())
 
         given("it has some image pull progress information") {
-            val event = ImageBuildProgressEvent(source, DockerImageBuildProgress(1, 10, "Something is happening", DockerImageProgress("downloading", 12, 20)))
+            val event = ImageBuildProgressEvent(container, DockerImageBuildProgress(1, 10, "Something is happening", DockerImageProgress("downloading", 12, 20)))
 
             on("toString()") {
                 it("returns a human-readable representation of itself") {
-                    com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuildProgressEvent(source: $source, current step: 1, total steps: 10, message: 'Something is happening', pull progress: 'downloading: 12 B of 20 B (60%)')"))
+                    com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuildProgressEvent(container: 'the-container', current step: 1, total steps: 10, message: 'Something is happening', pull progress: 'downloading: 12 B of 20 B (60%)')"))
                 }
             }
         }
 
         given("it has no image pull progress information") {
-            val event = ImageBuildProgressEvent(source, DockerImageBuildProgress(1, 10, "Something is happening", null))
+            val event = ImageBuildProgressEvent(container, DockerImageBuildProgress(1, 10, "Something is happening", null))
 
             on("toString()") {
                 it("returns a human-readable representation of itself") {
-                    com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuildProgressEvent(source: $source, current step: 1, total steps: 10, message: 'Something is happening', pull progress: null)"))
+                    com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuildProgressEvent(container: 'the-container', current step: 1, total steps: 10, message: 'Something is happening', pull progress: null)"))
                 }
             }
         }

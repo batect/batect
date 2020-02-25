@@ -179,7 +179,7 @@ object EventLoggerProviderSpec : Spek({
             it("sets the I/O streaming options to the expected value") {
                 val containers = setOf(container1, container2)
                 val output = InterleavedOutput("the-task", containers, console)
-                assertThat(logger.ioStreamingOptions, equalTo(InterleavedContainerIOStreamingOptions(output, containers)))
+                assertThat(logger.ioStreamingOptions, equalTo(InterleavedContainerIOStreamingOptions(output)))
             }
         }
 

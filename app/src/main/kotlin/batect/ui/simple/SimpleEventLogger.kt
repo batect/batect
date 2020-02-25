@@ -16,7 +16,6 @@
 
 package batect.ui.simple
 
-import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
 import batect.config.SetupCommand
@@ -61,7 +60,7 @@ class SimpleEventLogger(
         synchronized(lock) {
             when (event) {
                 is TaskFailedEvent -> logTaskFailure(failureErrorMessageFormatter.formatErrorMessage(event))
-                is ImageBuiltEvent -> logImageBuilt(event.source)
+                is ImageBuiltEvent -> logImageBuilt(event.container)
                 is ImagePulledEvent -> logImagePulled(event.source)
                 is ContainerStartedEvent -> logContainerStarted(event.container)
                 is ContainerBecameHealthyEvent -> logContainerBecameHealthy(event.container)
@@ -79,7 +78,7 @@ class SimpleEventLogger(
 
     private fun logStepStarting(step: TaskStep) {
         when (step) {
-            is BuildImageStep -> logImageBuildStarting(step.source)
+            is BuildImageStep -> logImageBuildStarting(step.container)
             is PullImageStep -> logImagePullStarting(step.source)
             is RunContainerStep -> logContainerRunning(step.container)
             is CreateContainerStep -> commands[step.container] = step.config.command
@@ -87,20 +86,12 @@ class SimpleEventLogger(
         }
     }
 
-    private fun logImageBuildStarting(source: BuildImage) {
-        containers
-            .filter { it.imageSource == source }
-            .forEach {
-                console.println(Text.white(Text("Building ") + Text.bold(it.name) + Text("...")))
-            }
+    private fun logImageBuildStarting(container: Container) {
+        console.println(Text.white(Text("Building ") + Text.bold(container.name) + Text("...")))
     }
 
-    private fun logImageBuilt(source: BuildImage) {
-        containers
-            .filter { it.imageSource == source }
-            .forEach {
-                console.println(Text.white(Text("Built ") + Text.bold(it.name) + Text(".")))
-            }
+    private fun logImageBuilt(container: Container) {
+        console.println(Text.white(Text("Built ") + Text.bold(container.name) + Text(".")))
     }
 
     private fun logImagePullStarting(source: PullImage) {

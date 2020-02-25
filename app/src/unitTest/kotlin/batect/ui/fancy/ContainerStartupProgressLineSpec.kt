@@ -66,7 +66,6 @@ object ContainerStartupProgressLineSpec : Spek({
             val imageSource = BuildImage(Paths.get("/some-image-dir"))
             val setupCommands = listOf("a", "b", "c", "d").map { SetupCommand(Command.parse(it)) }
             val container = Container(containerName, imageSource, setupCommands = setupCommands)
-            val otherImageSource = BuildImage(Paths.get("/some-other-image-dir"))
 
             val line by createForEachTest { ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC), false) }
 
@@ -80,7 +79,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving an 'image build starting' notification") {
                 on("that notification being for this line's container") {
-                    val step = BuildImageStep(imageSource, emptySet())
+                    val step = BuildImageStep(container, "the-image-tag")
                     beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
@@ -90,7 +89,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val step = BuildImageStep(otherImageSource, emptySet())
+                    val step = BuildImageStep(otherContainer, "the-image-tag")
                     beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
@@ -103,7 +102,7 @@ object ContainerStartupProgressLineSpec : Spek({
             describe("after receiving an 'image build progress' notification") {
                 given("that notification is for this line's container") {
                     on("that notification containing image pull progress information") {
-                        val event = ImageBuildProgressEvent(imageSource, DockerImageBuildProgress(1, 5, "FROM the-image:1.2.3", DockerImageProgress("downloading", 12, 20)))
+                        val event = ImageBuildProgressEvent(container, DockerImageBuildProgress(1, 5, "FROM the-image:1.2.3", DockerImageProgress("downloading", 12, 20)))
                         beforeEachTest { line.onEventPosted(event) }
                         val output by runForEachTest { line.print() }
 
@@ -113,7 +112,7 @@ object ContainerStartupProgressLineSpec : Spek({
                     }
 
                     on("that notification not containing image pull progress information") {
-                        val event = ImageBuildProgressEvent(imageSource, DockerImageBuildProgress(2, 5, "COPY health-check.sh /tools/", null))
+                        val event = ImageBuildProgressEvent(container, DockerImageBuildProgress(2, 5, "COPY health-check.sh /tools/", null))
                         beforeEachTest { line.onEventPosted(event) }
                         val output by runForEachTest { line.print() }
 
@@ -124,7 +123,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val event = ImageBuildProgressEvent(otherImageSource, DockerImageBuildProgress(2, 5, "COPY health-check.sh /tools/", null))
+                    val event = ImageBuildProgressEvent(otherContainer, DockerImageBuildProgress(2, 5, "COPY health-check.sh /tools/", null))
                     beforeEachTest { line.onEventPosted(event) }
                     val output by runForEachTest { line.print() }
 
@@ -146,7 +145,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving an 'image built' notification") {
                 describe("and that notification being for this line's container") {
-                    val event = ImageBuiltEvent(imageSource, DockerImage("some-image"))
+                    val event = ImageBuiltEvent(container, DockerImage("some-image"))
 
                     on("when the task network has already been created") {
                         beforeEachTest {
@@ -172,7 +171,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val event = ImageBuiltEvent(otherImageSource, DockerImage("some-image"))
+                    val event = ImageBuiltEvent(otherContainer, DockerImage("some-image"))
                     beforeEachTest { line.onEventPosted(event) }
                     val output by runForEachTest { line.print() }
 
@@ -206,7 +205,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("when the image is still building") {
                     beforeEachTest {
-                        line.onEventPosted(StepStartingEvent(BuildImageStep(imageSource, emptySet())))
+                        line.onEventPosted(StepStartingEvent(BuildImageStep(container, "the-image-tag")))
                         line.onEventPosted(event)
                     }
 
@@ -219,7 +218,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("when the image has been built") {
                     beforeEachTest {
-                        line.onEventPosted(ImageBuiltEvent(imageSource, DockerImage("some-image")))
+                        line.onEventPosted(ImageBuiltEvent(container, DockerImage("some-image")))
                         line.onEventPosted(event)
                     }
 

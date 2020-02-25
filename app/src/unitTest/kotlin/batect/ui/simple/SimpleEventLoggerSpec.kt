@@ -63,13 +63,9 @@ import java.time.Duration
 
 object SimpleEventLoggerSpec : Spek({
     describe("a simple event logger") {
-        val container1And2ImageSource = BuildImage(Paths.get("/some-image-dir"))
-        val container3ImageSource = BuildImage(Paths.get("/some-other-image-dir"))
         val taskContainer = Container("task-container", PullImage("some-image"))
-        val container1 = Container("container-1", container1And2ImageSource)
-        val container2 = Container("container-2", container1And2ImageSource)
-        val container3 = Container("container-3", container3ImageSource)
-        val containers = setOf(taskContainer, container1, container2, container3)
+        val otherContainer = Container("other-container", BuildImage(Paths.get("/some-image-dir")))
+        val containers = setOf(taskContainer, otherContainer)
 
         val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
         val console by createForEachTest { mock<Console>() }
@@ -96,13 +92,12 @@ object SimpleEventLoggerSpec : Spek({
 
             on("when an 'image built' event is posted") {
                 beforeEachTest {
-                    val event = ImageBuiltEvent(container1And2ImageSource, DockerImage("abc-123"))
+                    val event = ImageBuiltEvent(otherContainer, DockerImage("abc-123"))
                     logger.postEvent(event)
                 }
 
-                it("prints a message to the output for each container that uses that built image") {
-                    verify(console).println(Text.white(Text("Built ") + Text.bold("container-1") + Text(".")))
-                    verify(console).println(Text.white(Text("Built ") + Text.bold("container-2") + Text(".")))
+                it("prints a message to the output") {
+                    verify(console).println(Text.white(Text("Built ") + Text.bold("other-container") + Text(".")))
                 }
             }
 
@@ -216,13 +211,12 @@ object SimpleEventLoggerSpec : Spek({
             describe("when a 'step starting' event is posted") {
                 on("when a 'build image' step is starting") {
                     beforeEachTest {
-                        val step = BuildImageStep(container1And2ImageSource, emptySet())
+                        val step = BuildImageStep(otherContainer, "the-image-tag")
                         logger.postEvent(StepStartingEvent(step))
                     }
 
-                    it("prints a message to the output for each container that uses that built image") {
-                        verify(console).println(Text.white(Text("Building ") + Text.bold("container-1") + Text("...")))
-                        verify(console).println(Text.white(Text("Building ") + Text.bold("container-2") + Text("...")))
+                    it("prints a message to the output") {
+                        verify(console).println(Text.white(Text("Building ") + Text.bold("other-container") + Text("...")))
                     }
                 }
 

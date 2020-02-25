@@ -16,7 +16,6 @@
 
 package batect.execution.model.events
 
-import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
 import batect.config.SetupCommand
@@ -32,8 +31,8 @@ data class TaskNetworkCreationFailedEvent(val message: String) : TaskFailedEvent
     override fun toString() = "${this::class.simpleName}(message: '$message')"
 }
 
-data class ImageBuildFailedEvent(val source: BuildImage, val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(source: $source, message: '$message')"
+data class ImageBuildFailedEvent(val container: Container, val message: String) : TaskFailedEvent() {
+    override fun toString() = "${this::class.simpleName}(container: '${container.name}', message: '$message')"
 }
 
 data class ImagePullFailedEvent(val source: PullImage, val message: String) : TaskFailedEvent() {

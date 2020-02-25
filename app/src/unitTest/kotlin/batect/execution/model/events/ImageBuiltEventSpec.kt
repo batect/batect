@@ -16,23 +16,23 @@
 
 package batect.execution.model.events
 
-import batect.config.BuildImage
+import batect.config.Container
 import batect.docker.DockerImage
+import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
 
 object ImageBuiltEventSpec : Spek({
     describe("an 'image built' event") {
+        val container = Container("the-container", imageSourceDoesNotMatter())
         val image = DockerImage("image-1")
-        val source = BuildImage(Paths.get("/some-build-dir"))
-        val event = ImageBuiltEvent(source, image)
+        val event = ImageBuiltEvent(container, image)
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuiltEvent(source: $source, image: 'image-1')"))
+                com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImageBuiltEvent(container: 'the-container', image: 'image-1')"))
             }
         }
     }

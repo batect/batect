@@ -16,7 +16,6 @@
 
 package batect.ui.interleaved
 
-import batect.config.BuildImage
 import batect.config.Container
 import batect.config.SetupCommand
 import batect.os.Command
@@ -34,14 +33,10 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
 
 object InterleavedContainerIOStreamingOptionsSpec : Spek({
     describe("a set of I/O streaming options for interleaved output") {
-        val container1 = Container("some-container", imageSourceDoesNotMatter())
-        val buildImage = BuildImage(Paths.get("some-dir"))
-        val container2 = Container("container-2", buildImage)
-        val container3 = Container("container-2", buildImage)
+        val container = Container("some-container", imageSourceDoesNotMatter())
 
         val output by createForEachTest {
             mock<InterleavedOutput> {
@@ -49,23 +44,23 @@ object InterleavedContainerIOStreamingOptionsSpec : Spek({
             }
         }
 
-        val options by createForEachTest { InterleavedContainerIOStreamingOptions(output, setOf(container2, container3)) }
+        val options by createForEachTest { InterleavedContainerIOStreamingOptions(output) }
 
         on("getting the terminal type to use for a container") {
             it("returns 'dumb'") {
-                assertThat(options.terminalTypeForContainer(container1), equalTo("dumb"))
+                assertThat(options.terminalTypeForContainer(container), equalTo("dumb"))
             }
         }
 
         on("getting the stdin stream to use") {
             it("does not return a stdin stream") {
-                assertThat(options.stdinForContainer(container1), absent())
+                assertThat(options.stdinForContainer(container), absent())
             }
         }
 
         on("getting the stdout stream to use") {
             it("returns an interleaved output stream") {
-                assertThat(options.stdoutForContainer(container1), equalTo(InterleavedContainerOutputSink(container1, output)))
+                assertThat(options.stdoutForContainer(container), equalTo(InterleavedContainerOutputSink(container, output)))
             }
         }
 
@@ -76,18 +71,18 @@ object InterleavedContainerIOStreamingOptionsSpec : Spek({
         }
 
         on("getting the stdout stream to use for a container's setup command") {
-            val stream by runNullableForEachTest { options.stdoutForContainerSetupCommand(container1, SetupCommand(Command.parse("blah")), 2) }
+            val stream by runNullableForEachTest { options.stdoutForContainerSetupCommand(container, SetupCommand(Command.parse("blah")), 2) }
 
             it("returns an interleaved output stream with an appropriate prefix") {
-                assertThat(stream, equalTo(InterleavedContainerOutputSink(container1, output, TextRun(Text.white("Setup command 3 | ")))))
+                assertThat(stream, equalTo(InterleavedContainerOutputSink(container, output, TextRun(Text.white("Setup command 3 | ")))))
             }
         }
 
         on("getting the stdout stream to use for image build output") {
-            val stream by runNullableForEachTest { options.stdoutForImageBuild(buildImage) }
+            val stream by runNullableForEachTest { options.stdoutForImageBuild(container) }
 
-            it("returns an interleaved output stream with an appropriate prefix and linked to the first matching container") {
-                assertThat(stream, equalTo(InterleavedContainerOutputSink(container2, output, TextRun(Text.white("Image build | ")))))
+            it("returns an interleaved output stream with an appropriate prefix") {
+                assertThat(stream, equalTo(InterleavedContainerOutputSink(container, output, TextRun(Text.white("Image build | ")))))
             }
         }
     }

@@ -62,7 +62,7 @@ data class CreateContainerStepRule(
                 .singleInstanceOrNull<ImagePulledEvent> { it.source == container.imageSource }
                 ?.image
             is BuildImage -> pastEvents
-                .singleInstanceOrNull<ImageBuiltEvent> { it.source == container.imageSource }
+                .singleInstanceOrNull<ImageBuiltEvent> { it.container == container }
                 ?.image
         }
     }

@@ -16,7 +16,6 @@
 
 package batect.ui.containerio
 
-import batect.config.BuildImage
 import batect.config.Container
 import batect.config.SetupCommand
 import batect.os.Dimensions
@@ -53,5 +52,5 @@ data class TaskContainerOnlyIOStreamingOptions(
     }
 
     override fun stdoutForContainerSetupCommand(container: Container, setupCommand: SetupCommand, index: Int): Sink? = null
-    override fun stdoutForImageBuild(imageSource: BuildImage): Sink? = null
+    override fun stdoutForImageBuild(container: Container): Sink? = null
 }

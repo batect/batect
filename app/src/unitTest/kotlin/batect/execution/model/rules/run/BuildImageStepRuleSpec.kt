@@ -16,34 +16,33 @@
 
 package batect.execution.model.rules.run
 
-import batect.config.BuildImage
-import batect.config.LiteralValue
+import batect.config.Container
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.BuildImageStep
 import batect.testutils.equalTo
+import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
 
 object BuildImageStepRuleSpec : Spek({
     describe("a build image step rule") {
-        val source = BuildImage(Paths.get("/some-build-dir"), mapOf("some_arg" to LiteralValue("some_value")), "some-Dockerfile-path")
-        val imageTags = setOf("some_image_tag", "some_other_image_tag")
-        val rule = BuildImageStepRule(source, imageTags)
+        val source = Container("the-container", imageSourceDoesNotMatter())
+        val imageTag = "the-image-tag"
+        val rule = BuildImageStepRule(source, imageTag)
 
         on("evaluating the rule") {
             val result = rule.evaluate(emptySet())
 
             it("returns a 'build image' step") {
-                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(BuildImageStep(source, imageTags))))
+                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(BuildImageStep(source, imageTag))))
             }
         }
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(rule.toString(), equalTo("BuildImageStepRule(source: $source, image tags: [some_image_tag, some_other_image_tag])"))
+                assertThat(rule.toString(), equalTo("BuildImageStepRule(container: 'the-container', image tag: 'the-image-tag')"))
             }
         }
     }

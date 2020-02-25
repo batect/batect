@@ -16,7 +16,6 @@
 
 package batect.ui
 
-import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
 import batect.config.SetupCommand
@@ -84,8 +83,8 @@ object FailureErrorMessageFormatterSpec : Spek({
                 ),
                 Scenario(
                     "image build failed",
-                    ImageBuildFailedEvent(BuildImage(osIndependentPath("/some-build-dir")), "Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("Could not build image from directory '/some-build-dir'.\n")) + Text("Something went wrong.")
+                    ImageBuildFailedEvent(container, "Something went wrong."),
+                    Text.red(Text.bold("Error: ") + Text("Could not build image for container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")
                 ),
                 Scenario(
                     "image pull failed",

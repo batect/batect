@@ -16,23 +16,22 @@
 
 package batect.execution.model.steps
 
-import batect.config.BuildImage
-import batect.config.LiteralValue
+import batect.config.Container
+import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
 
 object BuildImageStepSpec : Spek({
     describe("a 'build image' step") {
-        val source = BuildImage(Paths.get("/image-build-dir"), mapOf("some_arg" to LiteralValue("some_value")), "some-Dockerfile-path")
-        val step = BuildImageStep(source, setOf("some_image_tag", "some_other_image_tag"))
+        val container = Container("the-container", imageSourceDoesNotMatter())
+        val step = BuildImageStep(container, "some_image_tag")
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(step.toString(), equalTo("BuildImageStep(source: $source, image tags: [some_image_tag, some_other_image_tag])"))
+                assertThat(step.toString(), equalTo("BuildImageStep(container: 'the-container', image tag: 'some_image_tag')"))
             }
         }
     }

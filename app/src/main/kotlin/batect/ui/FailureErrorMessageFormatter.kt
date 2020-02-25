@@ -51,7 +51,7 @@ class FailureErrorMessageFormatter(private val runOptions: RunOptions, systemInf
 
     fun formatErrorMessage(event: TaskFailedEvent): TextRun = when (event) {
         is TaskNetworkCreationFailedEvent -> formatErrorMessage("Could not create network for task", event.message)
-        is ImageBuildFailedEvent -> formatErrorMessage("Could not build image from directory '${event.source.buildDirectory}'", event.message)
+        is ImageBuildFailedEvent -> formatErrorMessage(Text("Could not build image for container ") + Text.bold(event.container.name), event.message)
         is ImagePullFailedEvent -> formatErrorMessage(Text("Could not pull image ") + Text.bold(event.source.imageName), event.message)
         is ContainerCreationFailedEvent -> formatErrorMessage(Text("Could not create container ") + Text.bold(event.container.name), event.message)
         is ContainerDidNotBecomeHealthyEvent -> formatErrorMessage(Text("Container ") + Text.bold(event.container.name) + Text(" did not become healthy"), event.message) + hintToReRunWithCleanupDisabled

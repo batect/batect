@@ -88,7 +88,7 @@ class InterleavedEventLogger(
         }
     }
 
-    override val ioStreamingOptions: ContainerIOStreamingOptions by lazy { InterleavedContainerIOStreamingOptions(output, containers) }
+    override val ioStreamingOptions: ContainerIOStreamingOptions by lazy { InterleavedContainerIOStreamingOptions(output) }
 
     override fun postEvent(event: TaskEvent) {
         when (event) {
@@ -109,11 +109,7 @@ class InterleavedEventLogger(
     }
 
     private fun onImageBuilt(event: ImageBuiltEvent) {
-        val text = TextRun(Text.white("Image built."))
-
-        containers
-            .filter { it.imageSource == event.source }
-            .forEach { output.printForContainer(it, text) }
+        output.printForContainer(event.container, TextRun(Text.white("Image built.")))
     }
 
     private fun onImagePulled(event: ImagePulledEvent) {
@@ -153,11 +149,7 @@ class InterleavedEventLogger(
     }
 
     private fun onBuildImageStepStarting(step: BuildImageStep) {
-        val text = TextRun(Text.white("Building image..."))
-
-        containers
-            .filter { it.imageSource == step.source }
-            .forEach { output.printForContainer(it, text) }
+        output.printForContainer(step.container, TextRun(Text.white("Building image...")))
     }
 
     private fun onPullImageStepStarting(step: PullImageStep) {
@@ -196,7 +188,7 @@ class InterleavedEventLogger(
 
     private fun onTaskFailed(event: TaskFailedEvent) {
         when (event) {
-            is ImageBuildFailedEvent -> printErrorForContainers(event.source, event)
+            is ImageBuildFailedEvent -> printErrorForContainer(event.container, event)
             is ImagePullFailedEvent -> printErrorForContainers(event.source, event)
             is ContainerCreationFailedEvent -> printErrorForContainer(event.container, event)
             is ContainerDidNotBecomeHealthyEvent -> printErrorForContainer(event.container, event)

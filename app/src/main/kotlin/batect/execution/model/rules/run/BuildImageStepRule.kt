@@ -16,21 +16,21 @@
 
 package batect.execution.model.rules.run
 
-import batect.config.BuildImage
+import batect.config.Container
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.BuildImageStep
 
 data class BuildImageStepRule(
-    val source: BuildImage,
-    val imageTags: Set<String>
+    val container: Container,
+    val imageTag: String
 ) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
-        return TaskStepRuleEvaluationResult.Ready(BuildImageStep(source, imageTags))
+        return TaskStepRuleEvaluationResult.Ready(BuildImageStep(container, imageTag))
     }
 
     override fun toString() = "${this::class.simpleName}(" +
-        "source: $source, " +
-        "image tags: $imageTags)"
+        "container: '${container.name}', " +
+        "image tag: '$imageTag')"
 }

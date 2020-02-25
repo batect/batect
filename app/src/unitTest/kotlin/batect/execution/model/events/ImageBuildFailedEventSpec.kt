@@ -16,22 +16,22 @@
 
 package batect.execution.model.events
 
-import batect.config.BuildImage
+import batect.config.Container
+import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
 
 object ImageBuildFailedEventSpec : Spek({
     describe("a 'image build failed' event") {
-        val source = BuildImage(Paths.get("/some-build-dir"))
-        val event = ImageBuildFailedEvent(source, "Something went wrong")
+        val container = Container("the-container", imageSourceDoesNotMatter())
+        val event = ImageBuildFailedEvent(container, "Something went wrong")
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(event.toString(), equalTo("ImageBuildFailedEvent(source: $source, message: 'Something went wrong')"))
+                assertThat(event.toString(), equalTo("ImageBuildFailedEvent(container: 'the-container', message: 'Something went wrong')"))
             }
         }
     }

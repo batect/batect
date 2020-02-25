@@ -16,6 +16,7 @@
 
 package batect.execution.model.steps.runners
 
+import batect.config.BuildImage
 import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
@@ -45,26 +46,27 @@ class BuildImageStepRunner(
     fun run(step: BuildImageStep, eventSink: TaskEventSink) {
         try {
             val onStatusUpdate = { p: DockerImageBuildProgress ->
-                eventSink.postEvent(ImageBuildProgressEvent(step.source, p))
+                eventSink.postEvent(ImageBuildProgressEvent(step.container, p))
             }
 
-            val buildArgs = buildTimeProxyEnvironmentVariablesForOptions(runOptions) + substituteBuildArgs(step.source.buildArgs)
+            val buildConfig = step.container.imageSource as BuildImage
+            val buildArgs = buildTimeProxyEnvironmentVariablesForOptions(runOptions) + substituteBuildArgs(buildConfig.buildArgs)
 
             val image = imagesClient.build(
-                step.source.buildDirectory,
+                buildConfig.buildDirectory,
                 buildArgs,
-                step.source.dockerfilePath,
-                step.imageTags,
-                ioStreamingOptions.stdoutForImageBuild(step.source),
+                buildConfig.dockerfilePath,
+                setOf(step.imageTag),
+                ioStreamingOptions.stdoutForImageBuild(step.container),
                 cancellationContext,
                 onStatusUpdate
             )
 
-            eventSink.postEvent(ImageBuiltEvent(step.source, image))
+            eventSink.postEvent(ImageBuiltEvent(step.container, image))
         } catch (e: ImageBuildFailedException) {
             val message = e.message ?: ""
 
-            eventSink.postEvent(ImageBuildFailedEvent(step.source, message.replace("\n", systemInfo.lineSeparator)))
+            eventSink.postEvent(ImageBuildFailedEvent(step.container, message.replace("\n", systemInfo.lineSeparator)))
         }
     }
 

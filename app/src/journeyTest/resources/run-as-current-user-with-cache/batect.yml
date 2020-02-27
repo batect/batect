@@ -1,0 +1,23 @@
+project_name: run-as-current-user-with-cache-test
+
+containers:
+  build-env:
+    build_directory: build-env
+    volumes:
+      - local: .
+        container: /scripts
+      - type: cache
+        name: run-as-current-user-with-cache-test-normal-cache
+        container: /cache
+      - type: cache
+        name: run-as-current-user-with-cache-test-nested-cache
+        container: /home/special-place/cache
+    run_as_current_user:
+      enabled: true
+      home_directory: /home/special-place
+
+tasks:
+  the-task:
+    run:
+      container: build-env
+      command: /scripts/test.sh

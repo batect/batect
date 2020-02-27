@@ -45,6 +45,17 @@ containers:
     working_directory: /code
 ```
 
+If you are using cache volumes with [run as current user mode](BuildArtifactsOwnedByRoot.md) enabled, you must use a Dockerfile built by batect for the container and add
+the following to that Dockerfile to ensure that the container can read and write to caches:
+
+```dockerfile
+ARG batect_cache_setup_command
+RUN sh -c "$batect_cache_setup_command"
+```
+
+batect uses the `batect_cache_setup_command` build arg to create the target directories of any caches and ensure that they have the correct permissions set. This must be done
+at image build time due to limitations in Docker's support for using volumes with different users.
+
 !!! tip
     To make it easier to share caches between builds on ephemeral CI agents, you can use directories mounted from the project's `.batect/caches` directory
     instead of volumes and then archive this directory between builds. Run batect with `--cache-type=directory` to enable this behaviour.

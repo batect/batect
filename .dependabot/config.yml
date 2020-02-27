@@ -88,6 +88,12 @@ update_configs:
 
   - package_manager: docker
     update_schedule: daily
+    directory: app/src/journeyTest/resources/run-as-current-user-with-cache/build-env
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
     directory: app/src/journeyTest/resources/simple-task-dockerfile-command/build-env
     default_labels:
       - is:dependency-update

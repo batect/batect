@@ -16,7 +16,10 @@
 
 package batect.execution
 
+import batect.config.CacheMount
 import batect.config.Container
+import batect.config.LiteralValue
+import batect.config.LocalMount
 import batect.config.RunAsCurrentUserConfig
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
@@ -60,6 +63,12 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
     describe("a 'run as current user' configuration provider") {
         val eventSink by createForEachTest { mock<TaskEventSink>() }
 
+        val configuredMounts = setOf(
+            CacheMount("cache-1", "/caches/1"),
+            CacheMount("cache-2", "/caches/2"),
+            LocalMount(LiteralValue("/some-local-path"), "/mount/local")
+        )
+
         given("the container has 'run as current user' disabled") {
             val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
 
@@ -76,7 +85,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
             val container = Container(
                 "some-container",
                 imageSourceDoesNotMatter(),
-                runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
+                runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser,
+                volumeMounts = configuredMounts
             )
 
             val systemInfo by createForEachTest {
@@ -121,6 +131,14 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     assertThat(userAndGroup, absent())
                 }
             }
+
+            on("generating the cache setup command") {
+                val cacheSetupCommand by runForEachTest { provider.generateCacheSetupCommand(container) }
+
+                it("returns a no-op command") {
+                    assertThat(cacheSetupCommand, equalTo("""echo "Nothing to do.""""))
+                }
+            }
         }
 
         given("the container has 'run as current user' enabled") {
@@ -156,7 +174,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 val container = Container(
                     "some-container",
                     imageSourceDoesNotMatter(),
-                    runAsCurrentUserConfig = runAsCurrentUserConfig
+                    runAsCurrentUserConfig = runAsCurrentUserConfig,
+                    volumeMounts = configuredMounts
                 )
 
                 val nativeMethods = mock<NativeMethods> {
@@ -255,6 +274,14 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         assertThat(userAndGroup, equalTo(UserAndGroup(0, 0)))
                     }
                 }
+
+                on("generating the cache setup command") {
+                    val cacheSetupCommand by runForEachTest { provider.generateCacheSetupCommand(container) }
+
+                    it("returns a command to create the cache mount directories and set the correct owner and group") {
+                        assertThat(cacheSetupCommand, equalTo("""mkdir -p "/caches/1" && chown 0:0 "/caches/1" && mkdir -p "/caches/2" && chown 0:0 "/caches/2""""))
+                    }
+                }
             }
 
             given("the application is not running on Windows") {
@@ -286,7 +313,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 val container = Container(
                     "some-container",
                     imageSourceDoesNotMatter(),
-                    runAsCurrentUserConfig = runAsCurrentUserConfig
+                    runAsCurrentUserConfig = runAsCurrentUserConfig,
+                    volumeMounts = configuredMounts
                 )
 
                 given("the current user is not root") {
@@ -400,6 +428,26 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             assertThat(userAndGroup, equalTo(UserAndGroup(123, 456)))
                         }
                     }
+
+                    on("generating the cache setup command") {
+                        val cacheSetupCommand by runForEachTest { provider.generateCacheSetupCommand(container) }
+
+                        it("returns a command to create the cache mount directories and set the correct owner and group") {
+                            assertThat(cacheSetupCommand, equalTo("""mkdir -p "/caches/1" && chown 123:456 "/caches/1" && mkdir -p "/caches/2" && chown 123:456 "/caches/2""""))
+                        }
+                    }
+
+                    given("the container has no cache mounts") {
+                        val containerWithNoCaches = Container("the-container", imageSourceDoesNotMatter(), volumeMounts = setOf(LocalMount(LiteralValue("/some-local-path"), "/mount/local")))
+
+                        on("generating the cache setup command") {
+                            val cacheSetupCommand by runForEachTest { provider.generateCacheSetupCommand(containerWithNoCaches) }
+
+                            it("returns a no-op command") {
+                                assertThat(cacheSetupCommand, equalTo("""echo "Nothing to do.""""))
+                            }
+                        }
+                    }
                 }
 
                 given("the current user is root") {
@@ -509,6 +557,14 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                         it("returns a user and group configuration with root's UID and GID") {
                             assertThat(userAndGroup, equalTo(UserAndGroup(0, 0)))
+                        }
+                    }
+
+                    on("generating the cache setup command") {
+                        val cacheSetupCommand by runForEachTest { provider.generateCacheSetupCommand(container) }
+
+                        it("returns a command to create the cache mount directories and set the correct owner and group") {
+                            assertThat(cacheSetupCommand, equalTo("""mkdir -p "/caches/1" && chown 0:0 "/caches/1" && mkdir -p "/caches/2" && chown 0:0 "/caches/2""""))
                         }
                     }
                 }

@@ -283,7 +283,7 @@ private val executionModule = Kodein.Module("execution") {
 }
 
 private val runnersModule = Kodein.Module("execution.model.steps.runners") {
-    bind<BuildImageStepRunner>() with scoped(TaskScope).singleton { BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
+    bind<BuildImageStepRunner>() with scoped(TaskScope).singleton { BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
     bind<CreateContainerStepRunner>() with scoped(TaskScope).singleton { CreateContainerStepRunner(instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
     bind<CreateTaskNetworkStepRunner>() with scoped(TaskScope).singleton { CreateTaskNetworkStepRunner(instance()) }
     bind<DeleteTaskNetworkStepRunner>() with scoped(TaskScope).singleton { DeleteTaskNetworkStepRunner(instance()) }

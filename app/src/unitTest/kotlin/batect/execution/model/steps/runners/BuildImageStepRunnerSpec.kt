@@ -29,6 +29,7 @@ import batect.docker.client.DockerImageBuildProgress
 import batect.docker.client.DockerImagesClient
 import batect.execution.CancellationContext
 import batect.execution.CleanupOption
+import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
@@ -77,6 +78,12 @@ object BuildImageStepRunnerSpec : Spek({
             }
         }
 
+        val runAsCurrentUserConfigurationProvider by createForEachTest {
+            mock<RunAsCurrentUserConfigurationProvider> {
+                on { generateCacheSetupCommand(container) } doReturn "setup-cache"
+            }
+        }
+
         val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true, emptyMap())
         val systemInfo = mock<SystemInfo> {
             on { lineSeparator } doReturn "SYSTEM_LINE_SEPARATOR"
@@ -92,6 +99,7 @@ object BuildImageStepRunnerSpec : Spek({
                 expressionEvaluationContext,
                 cancellationContext,
                 ioStreamingOptions,
+                runAsCurrentUserConfigurationProvider,
                 runOptions,
                 systemInfo
             )
@@ -118,12 +126,13 @@ object BuildImageStepRunnerSpec : Spek({
                     runner.run(step, eventSink)
                 }
 
-                it("passes the image build args provided by the user as well as any proxy-related build args, with user-provided build args overriding the generated proxy-related build args, and with any environment variable references resolved") {
+                it("passes the image build args provided by the user as well as any proxy-related build args, with user-provided build args overriding the generated proxy-related build args, and with the cache setup command included") {
                     val expectedArgs = mapOf(
                         "some_arg" to "some_value",
                         "SOME_PROXY_CONFIG" to "overridden",
                         "SOME_OTHER_PROXY_CONFIG" to "some_other_value",
-                        "SOME_HOST_VAR" to "some env var value"
+                        "SOME_HOST_VAR" to "some env var value",
+                        "batect_cache_setup_command" to "setup-cache"
                     )
 
                     verify(imagesClient).build(any(), eq(expectedArgs), any(), any(), any(), any(), any())
@@ -149,6 +158,7 @@ object BuildImageStepRunnerSpec : Spek({
                         expressionEvaluationContext,
                         cancellationContext,
                         ioStreamingOptions,
+                        runAsCurrentUserConfigurationProvider,
                         runOptionsWithProxyEnvironmentVariablePropagationDisabled,
                         systemInfo
                     )
@@ -164,7 +174,8 @@ object BuildImageStepRunnerSpec : Spek({
                     val expectedArgs = mapOf(
                         "some_arg" to "some_value",
                         "SOME_PROXY_CONFIG" to "overridden",
-                        "SOME_HOST_VAR" to "some env var value"
+                        "SOME_HOST_VAR" to "some env var value",
+                        "batect_cache_setup_command" to "setup-cache"
                     )
 
                     verify(imagesClient).build(any(), eq(expectedArgs), any(), any(), any(), any(), any())

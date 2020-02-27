@@ -177,6 +177,17 @@ The following fields are supported:
 * `container`: path to mount the cache directory at inside the container. Required.
 * `options`: standard Docker mount options (such as `ro` for read-only). Optional.
 
+If [run as current user mode](#run_as_current_user) is enabled, you must use a Dockerfile built by batect for the container and add the following to that
+Dockerfile to ensure that the container can read and write to caches:
+
+```dockerfile
+ARG batect_cache_setup_command
+RUN sh -c "$batect_cache_setup_command"
+```
+
+batect uses the `batect_cache_setup_command` build arg to create the target directories of any caches and ensure that they have the correct permissions set. This must be done
+at image build time due to limitations in Docker's support for using volumes with different users.
+
 ## `devices`
 List of device mounts to create for the container.
 

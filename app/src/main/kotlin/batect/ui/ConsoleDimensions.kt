@@ -59,6 +59,11 @@ class ConsoleDimensions(
                 data("dimensions", newDimensions)
             }
         } catch (e: NoConsoleException) {
+            logger.warn {
+                message("Getting console dimensions failed because we are not running in a console.")
+                exception(e)
+            }
+
             currentDimensions.set(Result.success(null))
         } catch (e: NativeMethodException) {
             logger.warn {

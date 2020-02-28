@@ -62,7 +62,7 @@ object UnixNativeMethodsSpec : Spek({
                     val expectedColumns = 456
 
                     beforeEachTest {
-                        whenever(libc.ioctl(eq(0), any(), any())).thenAnswer { invocation ->
+                        whenever(libc.ioctl(eq(1), any(), any())).thenAnswer { invocation ->
                             val size = invocation.arguments[2] as UnixNativeMethods.WindowSize
 
                             size.ws_row.set(expectedRows)

@@ -50,11 +50,11 @@ class UnixNativeMethods(
         posix
     )
 
-    private val STDIN_FILENO = 0
+    private val STDOUT_FILENO = 1
 
     override fun getConsoleDimensions(): Dimensions {
         val size = WindowSize(runtime)
-        val result = libc.ioctl(STDIN_FILENO, TIOCGWINSZ.getForPlatform(platform), size)
+        val result = libc.ioctl(STDOUT_FILENO, TIOCGWINSZ.getForPlatform(platform), size)
 
         if (result != 0) {
             val error = Errno.valueOf(posix.errno().toLong())

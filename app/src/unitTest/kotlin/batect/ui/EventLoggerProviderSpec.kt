@@ -21,6 +21,7 @@ import batect.config.Task
 import batect.config.TaskRunConfiguration
 import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerDependencyGraphNode
+import batect.os.Dimensions
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -54,6 +55,7 @@ object EventLoggerProviderSpec : Spek({
         val stdout = mock<PrintStream>()
         val stdin = mock<InputStream>()
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
+        val consoleDimensions by createForEachTest { mock<ConsoleDimensions>() }
 
         val container1 = Container("container-1", imageSourceDoesNotMatter())
         val container2 = Container("container-2", imageSourceDoesNotMatter())
@@ -188,7 +190,7 @@ object EventLoggerProviderSpec : Spek({
 
             beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(true) }
 
-            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false) }
+            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, false) }
 
             itReturnsAQuietEventLogger { provider.getEventLogger(task, graph) }
         }
@@ -198,7 +200,7 @@ object EventLoggerProviderSpec : Spek({
 
             beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(true) }
 
-            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false) }
+            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, false) }
 
             itReturnsASimpleEventLogger { provider.getEventLogger(task, graph) }
         }
@@ -208,7 +210,7 @@ object EventLoggerProviderSpec : Spek({
 
             beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(true) }
 
-            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false) }
+            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, false) }
 
             itReturnsAFancyEventLogger(startupProgressDisplay) { provider.getEventLogger(task, graph) }
         }
@@ -218,7 +220,7 @@ object EventLoggerProviderSpec : Spek({
 
             beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(true) }
 
-            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, false) }
+            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, false) }
 
             itReturnsAnInterleavedEventLogger { provider.getEventLogger(task, graph) }
         }
@@ -226,12 +228,15 @@ object EventLoggerProviderSpec : Spek({
         given("no output style has been requested") {
             val requestedOutputStyle: OutputStyle? = null
 
-            on("when colored output has been disabled") {
+            given("colored output has been disabled") {
                 val disableColorOutput = true
 
-                beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(true) }
+                beforeEachTest {
+                    whenever(consoleInfo.supportsInteractivity).doReturn(true)
+                    whenever(consoleDimensions.current).doReturn(Dimensions(123, 456))
+                }
 
-                val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput) }
+                val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, disableColorOutput) }
 
                 itReturnsASimpleEventLogger { provider.getEventLogger(task, graph) }
             }
@@ -239,18 +244,33 @@ object EventLoggerProviderSpec : Spek({
             given("colored output has not been disabled") {
                 val disableColorOutput = false
 
-                on("when the console supports interactivity") {
+                given("the console supports interactivity") {
                     beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(true) }
 
-                    val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput) }
+                    given("the console's dimensions are available") {
+                        beforeEachTest { whenever(consoleDimensions.current).doReturn(Dimensions(123, 456)) }
 
-                    itReturnsAFancyEventLogger(startupProgressDisplay) { provider.getEventLogger(task, graph) }
+                        val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, disableColorOutput) }
+
+                        itReturnsAFancyEventLogger(startupProgressDisplay) { provider.getEventLogger(task, graph) }
+                    }
+
+                    given("the console's dimensions are not available") {
+                        beforeEachTest { whenever(consoleDimensions.current).doReturn(null) }
+
+                        val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, disableColorOutput) }
+
+                        itReturnsASimpleEventLogger { provider.getEventLogger(task, graph) }
+                    }
                 }
 
-                on("when the console does not support interactivity") {
-                    beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(false) }
+                given("the console does not support interactivity") {
+                    beforeEachTest {
+                        whenever(consoleInfo.supportsInteractivity).doReturn(false)
+                        whenever(consoleDimensions.current).doReturn(Dimensions(123, 456))
+                    }
 
-                    val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, requestedOutputStyle, disableColorOutput) }
+                    val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, disableColorOutput) }
 
                     itReturnsASimpleEventLogger { provider.getEventLogger(task, graph) }
                 }

@@ -38,6 +38,7 @@ class EventLoggerProvider(
     private val stdin: InputStream,
     private val startupProgressDisplayProvider: StartupProgressDisplayProvider,
     private val consoleInfo: ConsoleInfo,
+    private val consoleDimensions: ConsoleDimensions,
     private val requestedOutputStyle: OutputStyle?,
     private val disableColorOutput: Boolean
 ) {
@@ -48,7 +49,7 @@ class EventLoggerProvider(
             OutputStyle.Simple -> createSimpleLogger(graph)
             OutputStyle.All -> createInterleavedLogger(task, graph)
             null -> {
-                if (!consoleInfo.supportsInteractivity || disableColorOutput) {
+                if (!consoleInfo.supportsInteractivity || disableColorOutput || consoleDimensions.current == null) {
                     createSimpleLogger(graph)
                 } else {
                     createFancyLogger(graph)

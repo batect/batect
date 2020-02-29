@@ -335,6 +335,7 @@ private val uiModule = Kodein.Module("ui") {
             instance(StreamType.Input),
             instance(),
             instance(),
+            instance(),
             commandLineOptions().requestedOutputStyle,
             commandLineOptions().disableColorOutput
         )

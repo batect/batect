@@ -22,19 +22,13 @@ import batect.docker.api.ContainersAPI
 import batect.logging.Logger
 import batect.os.Dimensions
 import batect.ui.ConsoleDimensions
-import batect.ui.ConsoleInfo
 
 class ContainerTTYManager(
     private val api: ContainersAPI,
-    private val consoleInfo: ConsoleInfo,
     private val consoleDimensions: ConsoleDimensions,
     private val logger: Logger
 ) {
     fun monitorForSizeChanges(container: DockerContainer, frameDimensions: Dimensions): AutoCloseable {
-        if (!consoleInfo.stdinIsTTY) {
-            return AutoCloseable { }
-        }
-
         val cleanup = consoleDimensions.registerListener {
             sendCurrentDimensionsToContainer(container, frameDimensions)
         }

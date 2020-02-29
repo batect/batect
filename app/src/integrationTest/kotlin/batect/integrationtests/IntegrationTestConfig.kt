@@ -87,7 +87,7 @@ fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: Na
     val streamer = ContainerIOStreamer()
     val signalListener = SignalListener(posix)
     val consoleDimensions = ConsoleDimensions(nativeMethods, signalListener, logger)
-    val ttyManager = ContainerTTYManager(containersAPI, consoleInfo, consoleDimensions, logger)
+    val ttyManager = ContainerTTYManager(containersAPI, consoleDimensions, logger)
 
     val containersClient = DockerContainersClient(containersAPI, consoleManager, waiter, streamer, ttyManager, logger)
     val execClient = DockerExecClient(execAPI, streamer, logger)

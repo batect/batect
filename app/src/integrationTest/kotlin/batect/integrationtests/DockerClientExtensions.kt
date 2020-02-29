@@ -26,6 +26,7 @@ import batect.os.Dimensions
 import okio.Sink
 import okio.sink
 import okio.source
+import java.io.ByteArrayInputStream
 import java.nio.file.Path
 
 fun <T> DockerClient.withNetwork(action: (DockerNetwork) -> T): T {
@@ -61,7 +62,7 @@ fun DockerClient.runContainerAndWaitForCompletion(container: DockerContainer, st
 fun <T : Any> DockerClient.runContainer(container: DockerContainer, stdout: Sink = System.out.sink(), action: () -> T): T {
     lateinit var result: T
 
-    this.containers.run(container, stdout, System.`in`.source(), CancellationContext(), Dimensions(0, 0)) {
+    this.containers.run(container, stdout, ByteArrayInputStream(ByteArray(0)).source(), CancellationContext(), Dimensions(0, 0)) {
         result = action()
     }
 

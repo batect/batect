@@ -117,6 +117,7 @@ import batect.updates.UpdateInfoDownloader
 import batect.updates.UpdateInfoStorage
 import batect.updates.UpdateInfoUpdater
 import batect.updates.UpdateNotifier
+import com.hypirion.io.RevivableInputStream
 import jnr.ffi.Platform
 import jnr.posix.POSIX
 import jnr.posix.POSIXFactory
@@ -137,7 +138,7 @@ fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStrea
     bind<POSIX>() with singleton { POSIXFactory.getNativePOSIX() }
     bind<PrintStream>(StreamType.Error) with instance(errorStream)
     bind<PrintStream>(StreamType.Output) with instance(outputStream)
-    bind<InputStream>(StreamType.Input) with instance(inputStream)
+    bind<RevivableInputStream>(StreamType.Input) with instance(RevivableInputStream(inputStream))
 
     bind<OkHttpClient>() with singleton {
         OkHttpClient.Builder()

@@ -57,6 +57,7 @@ dependencies {
     implementation 'com.github.jnr:jnr-posix:3.0.54'
     implementation 'org.apache.commons:commons-compress:1.20'
     implementation 'com.charleskorn.kaml:kaml:0.15.0'
+    implementation 'com.hypirion:io:0.3.1'
 
     testImplementation 'org.araqnid:hamkrest-json:1.1.2'
     // We don't use mockito directly, but mockito-kotlin does refer to it, so override it to get the latest version.

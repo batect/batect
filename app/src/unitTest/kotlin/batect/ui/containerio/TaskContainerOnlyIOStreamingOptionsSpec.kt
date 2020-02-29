@@ -21,21 +21,25 @@ import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.on
+import batect.testutils.runNullableForEachTest
 import batect.ui.ConsoleInfo
+import com.hypirion.io.RevivableInputStream
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.never
+import com.nhaarman.mockitokotlin2.verify
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.io.InputStream
 import java.io.PrintStream
 
 object TaskContainerOnlyIOStreamingOptionsSpec : Spek({
     describe("a set of I/O streaming options that streams just the task container") {
         val taskContainer by createForEachTest { Container("task-container", imageSourceDoesNotMatter()) }
         val stdout by createForEachTest { mock<PrintStream>() }
-        val stdin by createForEachTest { mock<InputStream>() }
+        val stdin by createForEachTest { mock<RevivableInputStream>() }
         val consoleInfo by createForEachTest {
             mock<ConsoleInfo> {
                 on { terminalType } doReturn "my-terminal"
@@ -53,9 +57,16 @@ object TaskContainerOnlyIOStreamingOptionsSpec : Spek({
                 assertThat(options.stdoutForContainer(taskContainer), equalTo(UncloseableSink(stdout)))
             }
 
-            it("returns the system's stdin stream as the stream for the container") {
-                // HACK: This is the only way to verify that we got an Okio source that wraps the stream we gave it.
-                assertThat(options.stdinForContainer(taskContainer).toString(), equalTo("source($stdin)"))
+            on("getting the stdin source for the container") {
+                val source by runNullableForEachTest { options.stdinForContainer(taskContainer) }
+
+                it("returns the system's stdin stream") {
+                    assertThat(source, equalTo(RevivableSource(stdin)))
+                }
+
+                it("resurrects the stream before returning it") {
+                    verify(stdin).resurrect()
+                }
             }
         }
 
@@ -70,8 +81,16 @@ object TaskContainerOnlyIOStreamingOptionsSpec : Spek({
                 assertThat(options.stdoutForContainer(container), absent())
             }
 
-            it("does not return a stdin stream for the container") {
-                assertThat(options.stdinForContainer(container), absent())
+            on("getting the stdin source for the container") {
+                val source by runNullableForEachTest { options.stdinForContainer(container) }
+
+                it("does not return a stream") {
+                    assertThat(source, absent())
+                }
+
+                it("does not resurrect the stdin stream") {
+                    verify(stdin, never()).resurrect()
+                }
             }
         }
     }

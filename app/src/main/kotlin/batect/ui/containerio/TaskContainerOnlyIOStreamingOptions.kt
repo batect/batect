@@ -20,16 +20,15 @@ import batect.config.Container
 import batect.config.SetupCommand
 import batect.os.Dimensions
 import batect.ui.ConsoleInfo
+import com.hypirion.io.RevivableInputStream
 import okio.Sink
 import okio.Source
-import okio.source
-import java.io.InputStream
 import java.io.PrintStream
 
 data class TaskContainerOnlyIOStreamingOptions(
     private val taskContainer: Container,
     private val stdout: PrintStream,
-    private val stdin: InputStream,
+    private val stdin: RevivableInputStream,
     private val consoleInfo: ConsoleInfo
 ) : ContainerIOStreamingOptions {
     override fun terminalTypeForContainer(container: Container): String? = consoleInfo.terminalType
@@ -37,7 +36,8 @@ data class TaskContainerOnlyIOStreamingOptions(
 
     override fun stdinForContainer(container: Container): Source? {
         if (container == taskContainer) {
-            return stdin.source()
+            stdin.resurrect()
+            return RevivableSource(stdin)
         }
 
         return null

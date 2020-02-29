@@ -27,7 +27,7 @@ import batect.ui.interleaved.InterleavedOutput
 import batect.ui.quiet.QuietEventLogger
 import batect.ui.simple.SimpleEventLogger
 import batect.utils.mapToSet
-import java.io.InputStream
+import com.hypirion.io.RevivableInputStream
 import java.io.PrintStream
 
 class EventLoggerProvider(
@@ -35,7 +35,7 @@ class EventLoggerProvider(
     private val console: Console,
     private val errorConsole: Console,
     private val stdout: PrintStream,
-    private val stdin: InputStream,
+    private val stdin: RevivableInputStream,
     private val startupProgressDisplayProvider: StartupProgressDisplayProvider,
     private val consoleInfo: ConsoleInfo,
     private val consoleDimensions: ConsoleDimensions,

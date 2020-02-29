@@ -26,6 +26,7 @@ import okio.buffer
 import java.util.concurrent.CancellationException
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 
 class ContainerIOStreamer() {
     fun stream(output: OutputConnection, input: InputConnection, cancellationContext: CancellationContext) {
@@ -43,7 +44,7 @@ class ContainerIOStreamer() {
 
         try {
             val stdinHandler = if (input is InputConnection.Connected) { executor.submit { streamStdin(input) } } else null
-            val stdoutHandler = executor.submit { streamStdout(output, stdinHandler) }
+            val stdoutHandler = executor.submit { streamStdout(input, output) }
 
             cancellationContext.addCancellationCallback { cancel(stdinHandler, stdoutHandler) }.use {
                 stdinHandler?.get()
@@ -55,10 +56,15 @@ class ContainerIOStreamer() {
             executor.shutdownNow()
 
             if (input is InputConnection.Connected) {
+                input.source.close()
                 input.destination.stream.close()
             }
 
             output.destination.close()
+
+            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                throw RuntimeException("Could not terminate all container I/O streaming threads.")
+            }
         }
     }
 
@@ -73,9 +79,12 @@ class ContainerIOStreamer() {
         }
     }
 
-    private fun streamStdout(output: OutputConnection.Connected, stdinHandler: Future<*>?) {
+    private fun streamStdout(input: InputConnection, output: OutputConnection.Connected) {
         output.source.stream.copyTo(output.destination)
-        stdinHandler?.cancel(true)
+
+        if (input is InputConnection.Connected) {
+            input.source.close()
+        }
     }
 
     // This is similar to BufferedSource.readAll, except that we flush after each read from the source,

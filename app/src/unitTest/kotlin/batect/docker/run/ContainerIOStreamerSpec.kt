@@ -19,6 +19,7 @@ package batect.docker.run
 import batect.docker.DockerException
 import batect.execution.CancellationCallback
 import batect.execution.CancellationContext
+import batect.testutils.CloseableByteArrayInputStream
 import batect.testutils.CloseableByteArrayOutputStream
 import batect.testutils.createForEachTest
 import batect.testutils.doesNotThrow
@@ -49,7 +50,7 @@ object ContainerIOStreamerSpec : Spek({
 
         describe("streaming both input and output for a container") {
             on("all of the output being available immediately") {
-                val stdin by createForEachTest { ByteArrayInputStream(ByteArray(0)) }
+                val stdin by createForEachTest { CloseableByteArrayInputStream(ByteArray(0)) }
                 val stdout by createForEachTest { CloseableByteArrayOutputStream() }
 
                 val response by createForEachTest { mock<Response>() }
@@ -76,13 +77,17 @@ object ContainerIOStreamerSpec : Spek({
                     assertThat(containerInputStream.isClosed, equalTo(true))
                 }
 
+                it("closes the stdin stream") {
+                    assertThat(stdin.isClosed, equalTo(true))
+                }
+
                 it("closes the stdout stream") {
                     assertThat(stdout.isClosed, equalTo(true))
                 }
             }
 
             on("stdin closing before the output from the container has finished") {
-                val stdin by createForEachTest { ByteArrayInputStream("This is the input".toByteArray()) }
+                val stdin by createForEachTest { CloseableByteArrayInputStream("This is the input".toByteArray()) }
                 val stdout by createForEachTest { CloseableByteArrayOutputStream() }
 
                 val response by createForEachTest { mock<Response>() }
@@ -157,6 +162,10 @@ object ContainerIOStreamerSpec : Spek({
                     assertThat(containerInputStream.isClosed, equalTo(true))
                 }
 
+                it("closes the stdin stream") {
+                    assertThat(stdin.isClosed, equalTo(true))
+                }
+
                 it("closes the stdout stream") {
                     assertThat(stdout.isClosed, equalTo(true))
                 }
@@ -166,12 +175,18 @@ object ContainerIOStreamerSpec : Spek({
                 val stdin by createForEachTest {
                     object : InputStream() {
                         val readStarted = CountDownLatch(1)
+                        val closed = CountDownLatch(1)
 
                         override fun read(): Int {
                             readStarted.countDown()
 
-                            // Block forever to emulate the user not typing anything.
-                            blockForever()
+                            closed.await()
+
+                            return -1
+                        }
+
+                        override fun close() {
+                            closed.countDown()
                         }
                     }
                 }
@@ -231,9 +246,17 @@ object ContainerIOStreamerSpec : Spek({
             on("streaming being cancelled") {
                 val stdin by createForEachTest {
                     object : InputStream() {
+                        var isClosed: Boolean = false
+                            private set
+
                         override fun read(): Int {
                             Thread.sleep(10_000)
                             return -1
+                        }
+
+                        override fun close() {
+                            isClosed = true
+                            super.close()
                         }
                     }
                 }
@@ -288,6 +311,10 @@ object ContainerIOStreamerSpec : Spek({
                     assertThat(containerInputStream.isClosed, equalTo(true))
                 }
 
+                it("closes the stdin stream") {
+                    assertThat(stdin.isClosed, equalTo(true))
+                }
+
                 it("closes the stdout stream") {
                     assertThat(stdout.isClosed, equalTo(true))
                 }
@@ -337,9 +364,3 @@ object ContainerIOStreamerSpec : Spek({
         }
     }
 })
-
-private fun blockForever(): Nothing {
-    CountDownLatch(1).await()
-
-    throw RuntimeException("This should never be reached")
-}

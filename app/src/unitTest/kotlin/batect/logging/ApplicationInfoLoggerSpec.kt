@@ -28,6 +28,7 @@ import batect.testutils.on
 import batect.testutils.withAdditionalData
 import batect.testutils.withLogMessage
 import batect.testutils.withSeverity
+import batect.ui.ConsoleInfo
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
@@ -45,12 +46,13 @@ object ApplicationInfoLoggerSpec : Spek({
         val versionInfo = VersionInfo()
         val fileSystem = Jimfs.newFileSystem(Configuration.unix())
         val systemInfo = SystemInfo(OperatingSystem.Linux, "1.2.3", "line-separator", "4.5.6", "me", fileSystem.getPath("/home"), fileSystem.getPath("/tmp"))
+        val consoleInfo = mock<ConsoleInfo>()
         val environmentVariables = HostEnvironmentVariables("PATH" to "/bin:/usr/bin:/usr/local/bin")
         val dockerSystemInfoClient = mock<DockerSystemInfoClient> {
             on { getDockerVersionInfo() } doReturn DockerVersionInfoRetrievalResult.Failed("Docker version 1.2.3.4")
         }
 
-        val infoLogger = ApplicationInfoLogger(logger, versionInfo, systemInfo, dockerSystemInfoClient, environmentVariables)
+        val infoLogger = ApplicationInfoLogger(logger, versionInfo, systemInfo, consoleInfo, dockerSystemInfoClient, environmentVariables)
 
         on("logging application information") {
             val commandLineArgs = listOf("some", "values")
@@ -78,6 +80,10 @@ object ApplicationInfoLoggerSpec : Spek({
 
             it("includes system information") {
                 assertThat(logSink, hasMessage(withAdditionalData("systemInfo", systemInfo)))
+            }
+
+            it("includes console information") {
+                assertThat(logSink, hasMessage(withAdditionalData("consoleInfo", consoleInfo)))
             }
 
             it("includes the Docker version") {

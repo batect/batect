@@ -16,13 +16,22 @@
 
 package batect.ui
 
+import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.HostEnvironmentVariables
 import batect.os.NativeMethods
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
 import batect.os.data
+import kotlinx.serialization.Decoder
+import kotlinx.serialization.Encoder
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialDescriptor
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.internal.SerialClassDescImpl
+import kotlinx.serialization.internal.StringSerializer
 
+@Serializable(with = ConsoleInfo.Companion::class)
 class ConsoleInfo(
     private val nativeMethods: NativeMethods,
     private val systemInfo: SystemInfo,
@@ -65,4 +74,38 @@ class ConsoleInfo(
 
     val terminalType: String? = environment["TERM"]
     private val isTravis: Boolean = environment["TRAVIS"] == "true"
+
+    companion object : KSerializer<ConsoleInfo> {
+        private const val stdinIsTTYFieldName = "stdinIsTTY"
+        private const val stdoutIsTTYFieldName = "stdoutIsTTY"
+        private const val supportsInteractivityFieldName = "supportsInteractivity"
+        private const val terminalTypeFieldName = "terminalType"
+
+        override val descriptor: SerialDescriptor = object : SerialClassDescImpl("Configuration") {
+            init {
+                addElement(stdinIsTTYFieldName)
+                addElement(stdoutIsTTYFieldName)
+                addElement(supportsInteractivityFieldName)
+                addElement(terminalTypeFieldName)
+            }
+        }
+
+        private val stdinIsTTYFieldIndex = descriptor.getElementIndex(stdinIsTTYFieldName)
+        private val stdoutIsTTYFieldIndex = descriptor.getElementIndex(stdoutIsTTYFieldName)
+        private val supportsInteractivityFieldIndex = descriptor.getElementIndex(supportsInteractivityFieldName)
+        private val terminalTypeFieldIndex = descriptor.getElementIndex(terminalTypeFieldName)
+
+        override fun deserialize(decoder: Decoder): ConsoleInfo = throw UnsupportedOperationException()
+
+        override fun serialize(encoder: Encoder, obj: ConsoleInfo) {
+            val output = encoder.beginStructure(descriptor)
+            output.encodeBooleanElement(descriptor, stdinIsTTYFieldIndex, obj.stdinIsTTY)
+            output.encodeBooleanElement(descriptor, stdoutIsTTYFieldIndex, obj.stdoutIsTTY)
+            output.encodeBooleanElement(descriptor, supportsInteractivityFieldIndex, obj.supportsInteractivity)
+            output.encodeNullableSerializableElement(descriptor, terminalTypeFieldIndex, StringSerializer, obj.terminalType)
+            output.endStructure(descriptor)
+        }
+    }
 }
+
+fun LogMessageBuilder.data(key: String, value: ConsoleInfo) = this.data(key, value, ConsoleInfo.serializer())

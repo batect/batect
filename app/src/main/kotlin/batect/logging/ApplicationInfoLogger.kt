@@ -22,11 +22,14 @@ import batect.docker.client.DockerSystemInfoClient
 import batect.os.HostEnvironmentVariables
 import batect.os.SystemInfo
 import batect.os.data
+import batect.ui.ConsoleInfo
+import batect.ui.data
 
 class ApplicationInfoLogger(
     private val logger: Logger,
     private val versionInfo: VersionInfo,
     private val systemInfo: SystemInfo,
+    private val consoleInfo: ConsoleInfo,
     private val dockerSystemInfoClient: DockerSystemInfoClient,
     private val environmentVariables: HostEnvironmentVariables
 ) {
@@ -36,6 +39,7 @@ class ApplicationInfoLogger(
             data("commandLine", commandLineArgs)
             data("versionInfo", versionInfo)
             data("systemInfo", systemInfo)
+            data("consoleInfo", consoleInfo)
             data("dockerVersionInfo", dockerSystemInfoClient.getDockerVersionInfo().toString())
             data("environment", environmentVariables)
         }

@@ -24,10 +24,13 @@ import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
 import batect.testutils.on
+import batect.testutils.runForEachTest
+import batect.utils.Json
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -177,6 +180,26 @@ object ConsoleInfoSpec : Spek({
                 it("returns its value") {
                     assertThat(consoleInfo.terminalType, equalTo("some-terminal"))
                 }
+            }
+        }
+
+        describe("converting the console information to JSON for logging") {
+            val nativeMethods = mock<NativeMethods> {
+                on { determineIfStdinIsTTY() } doReturn true
+                on { determineIfStdoutIsTTY() } doReturn false
+            }
+
+            val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables(), logger) }
+
+            val json by runForEachTest { Json.parser.stringify(ConsoleInfo.serializer(), consoleInfo) }
+
+            it("includes all details") {
+                assertThat(json, equivalentTo("""{
+                        "stdinIsTTY": true,
+                        "stdoutIsTTY": false,
+                        "supportsInteractivity": false,
+                        "terminalType": null
+                    }""".trimIndent()))
             }
         }
     }

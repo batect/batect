@@ -1,5 +1,32 @@
 # Node.js
 
+## Example configuration
+
+```yaml
+containers:
+  build-env:
+    image: node:13.8.0
+    volumes:
+      - local: .
+        container: /code
+        options: cached
+      - type: cache
+        name: node_modules
+        container: /code/node_modules
+    working_directory: /code
+    enable_init_process: true
+```
+
+## Caching dependencies
+
+!!! tip "tl;dr"
+    Mount a cache into your container for the `node_modules` directory, otherwise you'll experience poor performance on macOS and Windows.
+
+Both NPM and Yarn download and store dependencies in the `node_modules` directory in your application's directory. However, when running on macOS and Windows,
+Docker exhibits poor I/O performance for directories mounted from the macOS or Windows host, as discussed in the section on [caches](../tips/Performance.md#io-performance).
+
+The solution to this is to mount a [cache](../tips/Performance.md#cache-volumes) that persists between builds into your container for `node_modules`.
+
 ## Issues with signals not being handled correctly
 
 !!! tip "tl;dr"

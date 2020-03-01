@@ -40,6 +40,7 @@ import batect.docker.api.ExecAPI
 import batect.docker.api.ImagesAPI
 import batect.docker.api.NetworksAPI
 import batect.docker.api.SystemInfoAPI
+import batect.docker.api.VolumesAPI
 import batect.docker.build.DockerIgnoreParser
 import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
@@ -49,6 +50,7 @@ import batect.docker.client.DockerExecClient
 import batect.docker.client.DockerImagesClient
 import batect.docker.client.DockerNetworksClient
 import batect.docker.client.DockerSystemInfoClient
+import batect.docker.client.DockerVolumesClient
 import batect.docker.pull.DockerRegistryCredentialsConfigurationFile
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.pull.DockerRegistryDomainResolver
@@ -235,6 +237,7 @@ private val dockerApiModule = Kodein.Module("docker.api") {
     bind<ImagesAPI>() with singletonWithLogger { logger -> ImagesAPI(instance(), instance(), logger) }
     bind<NetworksAPI>() with singletonWithLogger { logger -> NetworksAPI(instance(), instance(), logger) }
     bind<SystemInfoAPI>() with singletonWithLogger { logger -> SystemInfoAPI(instance(), instance(), logger) }
+    bind<VolumesAPI>() with singletonWithLogger { logger -> VolumesAPI(instance(), instance(), logger) }
 }
 
 private val dockerClientModule = Kodein.Module("docker.client") {
@@ -243,7 +246,8 @@ private val dockerClientModule = Kodein.Module("docker.client") {
     bind<DockerImagesClient>() with singletonWithLogger { logger -> DockerImagesClient(instance(), instance(), instance(), instance(), logger) }
     bind<DockerNetworksClient>() with singleton { DockerNetworksClient(instance()) }
     bind<DockerSystemInfoClient>() with singletonWithLogger { logger -> DockerSystemInfoClient(instance(), logger) }
-    bind<DockerClient>() with singleton { DockerClient(instance(), instance(), instance(), instance(), instance()) }
+    bind<DockerVolumesClient>() with singleton { DockerVolumesClient(instance()) }
+    bind<DockerClient>() with singleton { DockerClient(instance(), instance(), instance(), instance(), instance(), instance()) }
 }
 
 private val iocModule = Kodein.Module("ioc") {

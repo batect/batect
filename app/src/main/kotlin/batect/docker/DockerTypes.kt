@@ -44,6 +44,11 @@ data class DockerContainerRunResult(val exitCode: Long)
 data class DockerNetwork(val id: String)
 
 @Serializable
+data class DockerVolume(
+    @SerialName("Name") val name: String
+)
+
+@Serializable
 data class DockerEvent(val status: String)
 
 @Serializable
@@ -99,6 +104,7 @@ data class DockerExecResult(
 
 fun LogMessageBuilder.data(key: String, value: DockerImage) = this.data(key, value, DockerImage.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerContainer) = this.data(key, value, DockerContainer.serializer())
+fun LogMessageBuilder.data(key: String, value: DockerVolume) = this.data(key, value, DockerVolume.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerNetwork) = this.data(key, value, DockerNetwork.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerEvent) = this.data(key, value, DockerEvent.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerExecInstance) = this.data(key, value, DockerExecInstance.serializer())

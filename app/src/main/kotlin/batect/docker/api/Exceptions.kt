@@ -25,5 +25,7 @@ class ContainerStopFailedException(val containerId: String, val outputFromDocker
 class DockerVersionInfoRetrievalException(message: String) : DockerException(message)
 class NetworkCreationFailedException(val outputFromDocker: String) : DockerException("Creation of network failed: $outputFromDocker")
 class NetworkDeletionFailedException(val networkId: String, val outputFromDocker: String) : DockerException("Deletion of network '$networkId' failed: $outputFromDocker")
+class GetAllVolumesFailedException(val outputFromDocker: String) : DockerException("Getting all volumes failed: $outputFromDocker")
+class VolumeDeletionFailedException(val volumeName: String, val outputFromDocker: String) : DockerException("Deletion of volume '$volumeName' failed: $outputFromDocker")
 class ContainerStoppedException(message: String) : DockerException(message)
 class ExecInstanceInspectionFailedException(message: String) : DockerException(message)

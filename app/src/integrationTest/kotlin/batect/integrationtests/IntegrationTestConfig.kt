@@ -24,6 +24,7 @@ import batect.docker.api.ExecAPI
 import batect.docker.api.ImagesAPI
 import batect.docker.api.NetworksAPI
 import batect.docker.api.SystemInfoAPI
+import batect.docker.api.VolumesAPI
 import batect.docker.build.DockerIgnoreParser
 import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
@@ -33,6 +34,7 @@ import batect.docker.client.DockerExecClient
 import batect.docker.client.DockerImagesClient
 import batect.docker.client.DockerNetworksClient
 import batect.docker.client.DockerSystemInfoClient
+import batect.docker.client.DockerVolumesClient
 import batect.docker.pull.DockerRegistryCredentialsConfigurationFile
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.pull.DockerRegistryDomainResolver
@@ -76,6 +78,7 @@ fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: Na
     val imagesAPI = ImagesAPI(httpConfig, systemInfo, logger)
     val networksAPI = NetworksAPI(httpConfig, systemInfo, logger)
     val systemInfoAPI = SystemInfoAPI(httpConfig, systemInfo, logger)
+    val volumesAPI = VolumesAPI(httpConfig, systemInfo, logger)
     val consoleInfo = ConsoleInfo(nativeMethods, systemInfo, HostEnvironmentVariables.current, logger)
     val consoleManager = getConsoleManagerForPlatform(consoleInfo, processRunner, nativeMethods, logger)
     val credentialsConfigurationFile = DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger)
@@ -94,8 +97,9 @@ fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: Na
     val imagesClient = DockerImagesClient(imagesAPI, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger)
     val networksClient = DockerNetworksClient(networksAPI)
     val systemInfoClient = DockerSystemInfoClient(systemInfoAPI, logger)
+    val volumesClient = DockerVolumesClient(volumesAPI)
 
-    return DockerClient(containersClient, execClient, imagesClient, networksClient, systemInfoClient)
+    return DockerClient(containersClient, execClient, imagesClient, networksClient, systemInfoClient, volumesClient)
 }
 
 private fun getDockerHost(systemInfo: SystemInfo): String =

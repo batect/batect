@@ -22,7 +22,6 @@ import batect.cli.options.OptionParserContainer
 import batect.cli.options.OptionValueSource
 import batect.cli.options.OptionsParsingResult
 import batect.cli.options.ValueConverters
-import batect.cli.options.defaultvalues.EnumDefaultValueProvider
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.cli.options.defaultvalues.FileDefaultValueProvider
 import batect.docker.DockerHttpConfigDefaults
@@ -120,7 +119,7 @@ class CommandLineOptionsParser(
         executionOptionsGroup,
         "cache-type",
         "Storage mechanism to use for caches. Valid values are: 'volume' (use Docker volumes) or 'directory' (use directories mounted from the host).",
-        EnumDefaultValueProvider(CacheType.Volume),
+        environmentVariableDefaultValueProviderFactory.create("BATECT_CACHE_TYPE", CacheType.Volume, CacheType.Volume.name.toLowerCase(), ValueConverters.enum()),
         ValueConverters.enum()
     )
 

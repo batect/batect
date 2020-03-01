@@ -24,6 +24,13 @@ class EnvironmentVariableDefaultValueProviderFactory(private val environment: Ho
         name: String,
         fallback: StorageType,
         valueConverter: (String) -> ValueConversionResult<ValueType>
+    ) = create(name, fallback, fallback.toString(), valueConverter)
+
+    fun <StorageType, ValueType : StorageType> create(
+        name: String,
+        fallback: StorageType,
+        fallbackDisplay: String = fallback.toString(),
+        valueConverter: (String) -> ValueConversionResult<ValueType>
     ): DefaultValueProvider<StorageType> = object : DefaultValueProvider<StorageType> {
         override val value: PossibleValue<StorageType>
             get() {
@@ -45,7 +52,7 @@ class EnvironmentVariableDefaultValueProviderFactory(private val environment: Ho
         private val fallbackDescription = if (fallback == null) {
             ""
         } else {
-            " or '$fallback' if $name is not set"
+            " or '$fallbackDisplay' if $name is not set"
         }
 
         private val currentStateDescription = if (environment.containsKey(name)) {

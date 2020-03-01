@@ -62,7 +62,7 @@ nav:
     - Docker: "tools/Docker.md"
     - GitHub Actions: "tools/GitHubActions.md"
     - Golang: "tools/Golang.md"
-    - Java: "tools/Java.md"
+    - Gradle: "tools/Gradle.md"
     - Node.js: "tools/Node.md"
     - Ruby: "tools/Ruby.md"
     - Travis CI: "tools/TravisCI.md"

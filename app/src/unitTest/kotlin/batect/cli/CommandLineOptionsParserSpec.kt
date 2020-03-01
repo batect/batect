@@ -169,6 +169,8 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--list-tasks", "some-task") to defaultCommandLineOptions.copy(listTasks = true),
             listOf("--upgrade") to defaultCommandLineOptions.copy(runUpgrade = true),
             listOf("--upgrade", "some-task") to defaultCommandLineOptions.copy(runUpgrade = true),
+            listOf("--clean") to defaultCommandLineOptions.copy(runCleanup = true),
+            listOf("--clean", "some-task") to defaultCommandLineOptions.copy(runCleanup = true),
             listOf("-f=somefile.yml", "some-task") to defaultCommandLineOptions.copy(configurationFileName = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task"),
             listOf("--config-file=somefile.yml", "some-task") to defaultCommandLineOptions.copy(configurationFileName = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task"),
             listOf("--config-vars-file=somefile.yml", "some-task") to defaultCommandLineOptions.copy(configVariablesSourceFile = fileSystem.getPath("/resolved/somefile.yml"), taskName = "some-task"),

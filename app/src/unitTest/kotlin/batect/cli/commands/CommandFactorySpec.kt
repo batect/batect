@@ -37,6 +37,7 @@ object CommandFactorySpec : Spek({
             bind<ListTasksCommand>() with instance(mock())
             bind<UpgradeCommand>() with instance(mock())
             bind<RunTaskCommand>() with instance(mock())
+            bind<CleanupCachesCommand>() with instance(mock())
         }
 
         given("a set of options with the 'show help' flag set") {
@@ -79,6 +80,17 @@ object CommandFactorySpec : Spek({
             on("creating the command") {
                 it("returns a upgrade command") {
                     assertThat(command, isA<UpgradeCommand>())
+                }
+            }
+        }
+
+        given("a set of options with the 'cleanup' flag set") {
+            val options = CommandLineOptions(runCleanup = true)
+            val command = factory.createCommand(options, kodein)
+
+            on("creating the command") {
+                it("returns a cleanup command") {
+                    assertThat(command, isA<CleanupCachesCommand>())
                 }
             }
         }

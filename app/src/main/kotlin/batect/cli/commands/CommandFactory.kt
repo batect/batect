@@ -27,6 +27,7 @@ class CommandFactory {
             options.showVersionInfo -> kodein.instance<VersionInfoCommand>()
             options.listTasks -> kodein.instance<ListTasksCommand>()
             options.runUpgrade -> kodein.instance<UpgradeCommand>()
+            options.runCleanup -> kodein.instance<CleanupCachesCommand>()
             else -> kodein.instance<RunTaskCommand>()
         }
     }

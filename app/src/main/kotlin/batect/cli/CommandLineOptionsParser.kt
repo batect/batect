@@ -49,6 +49,7 @@ class CommandLineOptionsParser(
         const val helpBlurb = "For documentation and further information on batect, visit https://github.com/batect/batect."
     }
 
+    private val cacheOptionsGroup = OptionGroup("Cache management options")
     private val dockerConnectionOptionsGroup = OptionGroup("Docker connection options")
     private val executionOptionsGroup = OptionGroup("Execution options")
     private val outputOptionsGroup = OptionGroup("Output options")
@@ -58,6 +59,7 @@ class CommandLineOptionsParser(
     private val showVersionInfo: Boolean by flagOption(helpOptionsGroup, "version", "Show batect version information and exit.")
     private val runUpgrade: Boolean by flagOption(helpOptionsGroup, upgradeFlagName, "Upgrade batect to the latest available version.")
     private val listTasks: Boolean by flagOption(helpOptionsGroup, "list-tasks", "List available tasks and exit.", 'T')
+    private val runCleanup: Boolean by flagOption(cacheOptionsGroup, "clean", "Cleanup caches created on previous runs and exit.")
 
     private val disableColorOutput: Boolean by flagOption(outputOptionsGroup, "no-color", "Disable colored output from batect. Does not affect task command output. Implies --output=simple unless overridden.")
     private val disableUpdateNotification: Boolean by flagOption(executionOptionsGroup, "no-update-notification", "Disable checking for updates to batect and notifying you when a new version is available.")
@@ -116,7 +118,7 @@ class CommandLineOptionsParser(
     private val dontPropagateProxyEnvironmentVariables: Boolean by flagOption(executionOptionsGroup, "no-proxy-vars", "Don't propagate proxy-related environment variables such as http_proxy and no_proxy to image builds or containers.")
 
     private val cacheType: CacheType by valueOption(
-        executionOptionsGroup,
+        cacheOptionsGroup,
         "cache-type",
         "Storage mechanism to use for caches. Valid values are: 'volume' (use Docker volumes) or 'directory' (use directories mounted from the host).",
         environmentVariableDefaultValueProviderFactory.create("BATECT_CACHE_TYPE", CacheType.Volume, CacheType.Volume.name.toLowerCase(), ValueConverters.enum()),
@@ -201,7 +203,7 @@ class CommandLineOptionsParser(
             return CommandLineOptionsParsingResult.Failed("Fancy output mode cannot be used when colored output has been disabled.")
         }
 
-        if (showHelp || showVersionInfo || listTasks || runUpgrade) {
+        if (showHelp || showVersionInfo || listTasks || runUpgrade || runCleanup) {
             return CommandLineOptionsParsingResult.Succeeded(createOptionsObject(null, emptyList()))
         }
 
@@ -239,6 +241,7 @@ class CommandLineOptionsParser(
         showHelp = showHelp,
         showVersionInfo = showVersionInfo,
         runUpgrade = runUpgrade,
+        runCleanup = runCleanup,
         listTasks = listTasks,
         configurationFileName = configurationFileName,
         configVariablesSourceFile = configVariablesSourceFileName,

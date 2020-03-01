@@ -19,6 +19,7 @@ package batect.ioc
 import batect.VersionInfo
 import batect.cli.CommandLineOptions
 import batect.cli.CommandLineOptionsParser
+import batect.cli.commands.CleanupCachesCommand
 import batect.cli.commands.CommandFactory
 import batect.cli.commands.HelpCommand
 import batect.cli.commands.ListTasksCommand
@@ -188,6 +189,7 @@ private val cliModule = Kodein.Module("cli") {
         )
     }
 
+    bind<CleanupCachesCommand>() with singleton { CleanupCachesCommand(instance(), instance(), instance(), commandLineOptions().cacheType, instance(StreamType.Output)) }
     bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(StreamType.Output), instance()) }
     bind<ListTasksCommand>() with singleton { ListTasksCommand(commandLineOptions().configurationFileName, instance(), instance(StreamType.Output)) }
     bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(StreamType.Output), instance(), instance(), instance()) }

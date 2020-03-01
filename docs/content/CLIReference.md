@@ -111,6 +111,12 @@ Utility tasks:
 - shell: Start a shell in the development environment.
 ```
 
+## Cleanup all caches for this project <small>(`--clean`)</small>
+
+Running `./batect --clean` will remove all caches created for this project.
+
+This command respects the value of the [`--cache-type`](#customise-cache-storage-mechanism-cache-type) option and the `BATECT_CACHE_TYPE` environment variable.
+
 ## Upgrade batect <small>(`--upgrade`)</small>
 
 Running `./batect --upgrade` will automatically upgrade batect in the current project to the latest

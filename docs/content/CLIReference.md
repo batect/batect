@@ -149,7 +149,7 @@ Supported values are:
 * `directory`: use directories mounted from the project's `.batect/caches` directory
 
 The `BATECT_CACHE_TYPE` environment variable can also be used to set the default cache type. If both the environment
-variable and the `--cache-type` option are set, the value given with `--cache-type` takes precedence. 
+variable and the `--cache-type` option are set, the value given with `--cache-type` takes precedence.
 
 Example:
 

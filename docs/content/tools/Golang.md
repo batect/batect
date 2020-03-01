@@ -2,13 +2,7 @@
 
 You can see a full example of using batect with Golang in [the Golang sample project](https://github.com/batect/batect-sample-golang).
 
-## Caching dependencies
-
-!!! tip "tl;dr"
-    Mount a cache into your container for your `GOPATH` and `GOCACHE`, otherwise you'll have to download and compile your dependencies every
-    time the build runs
-
-### Example configuration
+## Example configuration
 
 ```yaml
 containers:
@@ -26,6 +20,12 @@ containers:
       # With the image above, GOPATH defaults to /go, so we don't need to set it explicitly.
       GOCACHE: /go/cache
 ```
+
+## Caching dependencies
+
+!!! tip "tl;dr"
+    Mount a cache into your container for your `GOPATH` and `GOCACHE`, otherwise you'll have to download and compile your dependencies every
+    time the build runs
 
 ### `GOPATH`
 

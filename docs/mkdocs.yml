@@ -58,6 +58,7 @@ nav:
   - Task lifecycle: "TaskLifecycle.md"
 
   - Language and tool-specific information:
+    - .NET Core: "tools/DotNetCore.md"
     - CircleCI: "tools/CircleCI.md"
     - Docker: "tools/Docker.md"
     - GitHub Actions: "tools/GitHubActions.md"

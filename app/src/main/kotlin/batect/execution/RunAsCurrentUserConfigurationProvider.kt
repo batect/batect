@@ -57,6 +57,7 @@ class RunAsCurrentUserConfigurationProvider(
 
         val commands = directories.flatMap { directory ->
             listOf(
+                """rm -rf "$directory"""",
                 """mkdir -p "$directory"""",
                 """chown $user:$group "$directory""""
             )

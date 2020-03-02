@@ -279,7 +279,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     val cacheSetupCommand by runForEachTest { provider.generateCacheSetupCommand(container) }
 
                     it("returns a command to create the cache mount directories and set the correct owner and group") {
-                        assertThat(cacheSetupCommand, equalTo("""mkdir -p "/caches/1" && chown 0:0 "/caches/1" && mkdir -p "/caches/2" && chown 0:0 "/caches/2""""))
+                        assertThat(cacheSetupCommand, equalTo("""rm -rf "/caches/1" && mkdir -p "/caches/1" && chown 0:0 "/caches/1" && rm -rf "/caches/2" && mkdir -p "/caches/2" && chown 0:0 "/caches/2""""))
                     }
                 }
             }
@@ -433,7 +433,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         val cacheSetupCommand by runForEachTest { provider.generateCacheSetupCommand(container) }
 
                         it("returns a command to create the cache mount directories and set the correct owner and group") {
-                            assertThat(cacheSetupCommand, equalTo("""mkdir -p "/caches/1" && chown 123:456 "/caches/1" && mkdir -p "/caches/2" && chown 123:456 "/caches/2""""))
+                            assertThat(cacheSetupCommand, equalTo("""rm -rf "/caches/1" && mkdir -p "/caches/1" && chown 123:456 "/caches/1" && rm -rf "/caches/2" && mkdir -p "/caches/2" && chown 123:456 "/caches/2""""))
                         }
                     }
 
@@ -564,7 +564,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         val cacheSetupCommand by runForEachTest { provider.generateCacheSetupCommand(container) }
 
                         it("returns a command to create the cache mount directories and set the correct owner and group") {
-                            assertThat(cacheSetupCommand, equalTo("""mkdir -p "/caches/1" && chown 0:0 "/caches/1" && mkdir -p "/caches/2" && chown 0:0 "/caches/2""""))
+                            assertThat(cacheSetupCommand, equalTo("""rm -rf "/caches/1" && mkdir -p "/caches/1" && chown 0:0 "/caches/1" && rm -rf "/caches/2" && mkdir -p "/caches/2" && chown 0:0 "/caches/2""""))
                         }
                     }
                 }

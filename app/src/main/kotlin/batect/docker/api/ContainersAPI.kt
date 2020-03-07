@@ -209,7 +209,7 @@ class ContainersAPI(
             .url(url)
             .build()
 
-        clientWithTimeout(20, TimeUnit.SECONDS).newCall(request).execute().use { response ->
+        clientWithTimeout(30, TimeUnit.SECONDS).newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Could not remove container.")

@@ -369,7 +369,7 @@ object ContainersAPISpec : Spek({
                     }
 
                     it("configures the HTTP client with a longer timeout") {
-                        verify(longTimeoutClientBuilder).readTimeout(20, TimeUnit.SECONDS)
+                        verify(longTimeoutClientBuilder).readTimeout(30, TimeUnit.SECONDS)
                     }
                 }
 

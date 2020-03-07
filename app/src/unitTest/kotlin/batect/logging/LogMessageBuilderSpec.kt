@@ -25,8 +25,8 @@ import com.natpryce.hamkrest.hasElement
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import kotlinx.serialization.internal.IntSerializer
-import kotlinx.serialization.internal.StringSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.builtins.serializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.ZoneOffset
@@ -38,7 +38,7 @@ object LogMessageBuilderSpec : Spek({
         val timestampSource = { timestampToUse }
 
         val standardAdditionalDataSource = mock<StandardAdditionalDataSource> {
-            on { getAdditionalData() } doReturn mapOf("@something" to JsonableObject(456, IntSerializer))
+            on { getAdditionalData() } doReturn mapOf("@something" to JsonableObject(456, Int.serializer()))
         }
 
         on("building a log message with no message or additional information") {
@@ -55,7 +55,7 @@ object LogMessageBuilderSpec : Spek({
 
             it("returns a log message with only the standard additional data") {
                 assertThat(message.additionalData, equalTo(mapOf<String, Any?>(
-                    "@something" to JsonableObject(456, IntSerializer)
+                    "@something" to JsonableObject(456, Int.serializer())
                 )))
             }
 
@@ -80,7 +80,7 @@ object LogMessageBuilderSpec : Spek({
 
             it("returns a log message with only the standard additional data") {
                 assertThat(message.additionalData, equalTo(mapOf<String, Jsonable>(
-                    "@something" to JsonableObject(456, IntSerializer)
+                    "@something" to JsonableObject(456, Int.serializer())
                 )))
             }
 
@@ -106,9 +106,9 @@ object LogMessageBuilderSpec : Spek({
 
             it("returns a log message with the standard additional data and the user-provided additional data") {
                 assertThat(message.additionalData, equalTo(mapOf<String, Jsonable>(
-                    "some-key" to JsonableObject(123, IntSerializer),
-                    "some-other-data" to JsonableObject("value", StringSerializer),
-                    "@something" to JsonableObject(456, IntSerializer)
+                    "some-key" to JsonableObject(123, Int.serializer()),
+                    "some-other-data" to JsonableObject("value", String.serializer()),
+                    "@something" to JsonableObject(456, Int.serializer())
                 )))
             }
 
@@ -118,7 +118,7 @@ object LogMessageBuilderSpec : Spek({
         }
 
         on("building a log message with some logger-provided additional data") {
-            val builder = LogMessageBuilder(Severity.Info, mapOf("@source" to JsonableObject("some.class.name", StringSerializer)))
+            val builder = LogMessageBuilder(Severity.Info, mapOf("@source" to JsonableObject("some.class.name", String.serializer())))
                 .data("some-key", 123)
                 .data("some-other-data", "value")
 
@@ -134,10 +134,10 @@ object LogMessageBuilderSpec : Spek({
 
             it("returns a log message with the standard additional data, logger-provided additional data and the user-provided additional data") {
                 assertThat(message.additionalData, equalTo(mapOf<String, Jsonable>(
-                    "some-key" to JsonableObject(123, IntSerializer),
-                    "some-other-data" to JsonableObject("value", StringSerializer),
-                    "@something" to JsonableObject(456, IntSerializer),
-                    "@source" to JsonableObject("some.class.name", StringSerializer)
+                    "some-key" to JsonableObject(123, Int.serializer()),
+                    "some-other-data" to JsonableObject("value", String.serializer()),
+                    "@something" to JsonableObject(456, Int.serializer()),
+                    "@source" to JsonableObject("some.class.name", String.serializer())
                 )))
             }
 

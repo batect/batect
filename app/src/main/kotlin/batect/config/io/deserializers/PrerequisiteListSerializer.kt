@@ -19,22 +19,19 @@ package batect.config.io.deserializers
 import batect.config.io.ConfigurationException
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.CompositeDecoder
-import kotlinx.serialization.CompositeDecoder.Companion.READ_ALL
-import kotlinx.serialization.CompositeDecoder.Companion.READ_DONE
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.ArrayListClassDesc
-import kotlinx.serialization.internal.StringSerializer
-import kotlinx.serialization.list
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.builtins.list
 
 @Serializer(forClass = List::class)
 internal object PrerequisiteListSerializer : KSerializer<List<String>> {
-    val elementSerializer = StringSerializer
+    private val elementSerializer = String.serializer()
 
-    override val descriptor: SerialDescriptor = ArrayListClassDesc(elementSerializer.descriptor)
+    override val descriptor: SerialDescriptor = elementSerializer.list.descriptor
 
     override fun deserialize(decoder: Decoder): List<String> {
         val input = decoder.beginStructure(descriptor, elementSerializer)
@@ -46,34 +43,16 @@ internal object PrerequisiteListSerializer : KSerializer<List<String>> {
     }
 
     private fun read(input: CompositeDecoder): List<String> {
-        val size = input.decodeCollectionSize(descriptor)
+        val soFar = mutableListOf<String>()
 
         while (true) {
-            when (val index = input.decodeElementIndex(descriptor)) {
-                READ_ALL -> return readAll(input, size)
-                else -> return readUntilDone(input, index)
+            val currentIndex = input.decodeElementIndex(descriptor)
+
+            if (currentIndex == CompositeDecoder.READ_DONE) {
+                break
             }
-        }
-    }
 
-    private fun readAll(input: CompositeDecoder, size: Int): List<String> {
-        val soFar = mutableListOf<String>()
-
-        for (currentIndex in 0..size) {
             soFar.add(readSingle(input, currentIndex, soFar))
-        }
-
-        return soFar
-    }
-
-    private fun readUntilDone(input: CompositeDecoder, firstIndex: Int): List<String> {
-        var currentIndex = firstIndex
-        val soFar = mutableListOf<String>()
-
-        while (currentIndex != READ_DONE) {
-            soFar.add(currentIndex, readSingle(input, currentIndex, soFar))
-
-            currentIndex = input.decodeElementIndex(descriptor)
         }
 
         return soFar
@@ -93,5 +72,5 @@ internal object PrerequisiteListSerializer : KSerializer<List<String>> {
 
     private fun getDuplicateValueMessage(value: String) = "The prerequisite '$value' is given more than once"
 
-    override fun serialize(encoder: Encoder, obj: List<String>) = StringSerializer.list.serialize(encoder, obj)
+    override fun serialize(encoder: Encoder, value: List<String>) = String.serializer().list.serialize(encoder, value)
 }

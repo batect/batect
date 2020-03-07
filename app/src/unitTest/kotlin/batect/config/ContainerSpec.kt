@@ -37,7 +37,7 @@ import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.mock
-import kotlinx.serialization.ElementValueDecoder
+import kotlinx.serialization.builtins.AbstractDecoder
 import kotlinx.serialization.modules.serializersModuleOf
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -48,7 +48,7 @@ object ContainerSpec : Spek({
         val pathDeserializer by createForEachTest {
             mock<PathDeserializer> {
                 on { deserialize(any()) } doAnswer { invocation ->
-                    val input = invocation.arguments[0] as ElementValueDecoder
+                    val input = invocation.arguments[0] as AbstractDecoder
 
                     when (val path = input.decodeString()) {
                         "/does_not_exist" -> PathResolutionResult.Resolved(path, osIndependentPath("/some_resolved_path"), PathType.DoesNotExist)

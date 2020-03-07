@@ -25,8 +25,8 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.SerialClassDescImpl
-import kotlinx.serialization.list
+import kotlinx.serialization.builtins.list
+import kotlinx.serialization.builtins.serializer
 import kotlin.math.min
 
 @Serializable(with = Expression.Companion::class)
@@ -192,10 +192,8 @@ sealed class Expression(open val originalExpression: String) {
 
         private data class ParseResult(val expression: Expression, val readUntil: Int)
 
-        override val descriptor: SerialDescriptor = object : SerialClassDescImpl("VariableExpression") {
-            init {
-                addElement("type")
-            }
+        override val descriptor: SerialDescriptor = SerialDescriptor("VariableExpression") {
+            element("type", String.serializer().descriptor)
         }
 
         override fun deserialize(decoder: Decoder): Expression = try {
@@ -208,11 +206,11 @@ sealed class Expression(open val originalExpression: String) {
             }
         }
 
-        override fun serialize(encoder: Encoder, obj: Expression) {
+        override fun serialize(encoder: Encoder, value: Expression) {
             val structureEncoder = encoder.beginStructure(descriptor)
 
-            structureEncoder.encodeStringElement(descriptor, 0, obj::class.simpleName!!)
-            obj.serialize(structureEncoder)
+            structureEncoder.encodeStringElement(descriptor, 0, value::class.simpleName!!)
+            value.serialize(structureEncoder)
 
             structureEncoder.endStructure(descriptor)
         }
@@ -223,10 +221,8 @@ data class LiteralValue(val value: String, override val originalExpression: Stri
     override fun evaluate(context: ExpressionEvaluationContext) = value
     override fun toString() = "${this::class.simpleName}(value: '$value', original expression: '$originalExpression')"
 
-    private val descriptor: SerialDescriptor = object : SerialClassDescImpl("LiteralValue") {
-        init {
-            addElement("value")
-        }
+    private val descriptor: SerialDescriptor = SerialDescriptor("LiteralValue") {
+        element("value", String.serializer().descriptor)
     }
 
     override fun serialize(encoder: CompositeEncoder) = encoder.encodeStringElement(descriptor, 0, value)
@@ -245,11 +241,9 @@ data class EnvironmentVariableReference(val referenceTo: String, val default: St
         }
     }
 
-    private val descriptor: SerialDescriptor = object : SerialClassDescImpl("EnvironmentVariableReference") {
-        init {
-            addElement("referenceTo")
-            addElement("default", isOptional = true)
-        }
+    private val descriptor: SerialDescriptor = SerialDescriptor("EnvironmentVariableReference") {
+        element("referenceTo", String.serializer().descriptor)
+        element("default", String.serializer().descriptor, isOptional = true)
     }
 
     override fun serialize(encoder: CompositeEncoder) {
@@ -288,10 +282,8 @@ data class ConfigVariableReference(val referenceTo: String, override val origina
 
     override fun toString() = "${this::class.simpleName}(reference to: '$referenceTo', original expression: '$originalExpression')"
 
-    private val descriptor: SerialDescriptor = object : SerialClassDescImpl("ConfigVariableReference") {
-        init {
-            addElement("referenceTo")
-        }
+    private val descriptor: SerialDescriptor = SerialDescriptor("ConfigVariableReference") {
+        element("referenceTo", String.serializer().descriptor)
     }
 
     override fun serialize(encoder: CompositeEncoder) = encoder.encodeStringElement(descriptor, 0, referenceTo)
@@ -306,10 +298,8 @@ data class ConcatenatedExpression(val expressions: Iterable<Expression>, overrid
     override fun evaluate(context: ExpressionEvaluationContext): String =
         expressions.joinToString("") { it.evaluate(context) }
 
-    private val descriptor: SerialDescriptor = object : SerialClassDescImpl("ConcatenatedExpression") {
-        init {
-            addElement("expressions")
-        }
+    private val descriptor: SerialDescriptor = SerialDescriptor("ConcatenatedExpression") {
+        element("expressions", Expression.serializer().list.descriptor)
     }
 
     override fun serialize(encoder: CompositeEncoder) = encoder.encodeSerializableElement(descriptor, 0, list, expressions.toList())

@@ -26,6 +26,8 @@ fun <T> YamlInput.tryToDeserializeWith(descriptor: SerialDescriptor, deserializa
         val value = deserializationAction(input)
         input.endStructure(descriptor)
         return value
+
+        // FIXME: this will capture all exceptions, not just exceptions beginning the structure
     } catch (_: IncorrectTypeException) {
         return null
     }

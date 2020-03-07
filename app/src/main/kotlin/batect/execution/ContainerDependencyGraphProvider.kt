@@ -21,9 +21,9 @@ import batect.config.Task
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.utils.mapToSet
-import kotlinx.serialization.internal.StringSerializer
-import kotlinx.serialization.map
-import kotlinx.serialization.set
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.builtins.set
 
 class ContainerDependencyGraphProvider(
     private val commandResolver: ContainerCommandResolver,
@@ -49,4 +49,4 @@ class ContainerDependencyGraphProvider(
 }
 
 private fun LogMessageBuilder.data(key: String, value: Task) = this.data(key, value, Task.serializer())
-private fun LogMessageBuilder.data(key: String, value: Map<String, Set<String>>) = this.data(key, value, (StringSerializer to StringSerializer.set).map)
+private fun LogMessageBuilder.data(key: String, value: Map<String, Set<String>>) = this.data(key, value, MapSerializer(String.serializer(), String.serializer().set))

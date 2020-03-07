@@ -28,8 +28,7 @@ import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.internal.SerialClassDescImpl
-import kotlinx.serialization.internal.StringSerializer
+import kotlinx.serialization.builtins.serializer
 
 @Serializable(with = ConsoleInfo.Companion::class)
 class ConsoleInfo(
@@ -81,13 +80,11 @@ class ConsoleInfo(
         private const val supportsInteractivityFieldName = "supportsInteractivity"
         private const val terminalTypeFieldName = "terminalType"
 
-        override val descriptor: SerialDescriptor = object : SerialClassDescImpl("Configuration") {
-            init {
-                addElement(stdinIsTTYFieldName)
-                addElement(stdoutIsTTYFieldName)
-                addElement(supportsInteractivityFieldName)
-                addElement(terminalTypeFieldName)
-            }
+        override val descriptor: SerialDescriptor = SerialDescriptor("Configuration") {
+            element(stdinIsTTYFieldName, Boolean.serializer().descriptor)
+            element(stdoutIsTTYFieldName, Boolean.serializer().descriptor)
+            element(supportsInteractivityFieldName, Boolean.serializer().descriptor)
+            element(terminalTypeFieldName, String.serializer().descriptor)
         }
 
         private val stdinIsTTYFieldIndex = descriptor.getElementIndex(stdinIsTTYFieldName)
@@ -97,12 +94,12 @@ class ConsoleInfo(
 
         override fun deserialize(decoder: Decoder): ConsoleInfo = throw UnsupportedOperationException()
 
-        override fun serialize(encoder: Encoder, obj: ConsoleInfo) {
+        override fun serialize(encoder: Encoder, value: ConsoleInfo) {
             val output = encoder.beginStructure(descriptor)
-            output.encodeBooleanElement(descriptor, stdinIsTTYFieldIndex, obj.stdinIsTTY)
-            output.encodeBooleanElement(descriptor, stdoutIsTTYFieldIndex, obj.stdoutIsTTY)
-            output.encodeBooleanElement(descriptor, supportsInteractivityFieldIndex, obj.supportsInteractivity)
-            output.encodeNullableSerializableElement(descriptor, terminalTypeFieldIndex, StringSerializer, obj.terminalType)
+            output.encodeBooleanElement(descriptor, stdinIsTTYFieldIndex, value.stdinIsTTY)
+            output.encodeBooleanElement(descriptor, stdoutIsTTYFieldIndex, value.stdoutIsTTY)
+            output.encodeBooleanElement(descriptor, supportsInteractivityFieldIndex, value.supportsInteractivity)
+            output.encodeNullableSerializableElement(descriptor, terminalTypeFieldIndex, String.serializer(), value.terminalType)
             output.endStructure(descriptor)
         }
     }

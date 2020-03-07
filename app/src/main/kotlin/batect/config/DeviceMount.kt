@@ -27,10 +27,9 @@ import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.SerialClassDescImpl
-import kotlinx.serialization.internal.StringDescriptor
-import kotlinx.serialization.internal.StringSerializer
-import kotlinx.serialization.internal.nullable
+import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.nullable
 
 @Serializable(with = DeviceMount.Companion::class)
 data class DeviceMount(
@@ -48,12 +47,10 @@ data class DeviceMount(
 
     @Serializer(forClass = DeviceMount::class)
     companion object : KSerializer<DeviceMount> {
-        override val descriptor: SerialDescriptor = object : SerialClassDescImpl("DeviceMount") {
-            init {
-                addElement("local")
-                addElement("container")
-                addElement("options", isOptional = true)
-            }
+        override val descriptor: SerialDescriptor = SerialDescriptor("DeviceMount") {
+            element("local", String.serializer().descriptor)
+            element("container", String.serializer().descriptor)
+            element("options", String.serializer().descriptor.nullable, isOptional = true)
         }
 
         private val localPathFieldIndex = descriptor.getElementIndex("local")
@@ -66,7 +63,7 @@ data class DeviceMount(
             }
 
             return decoder.tryToDeserializeWith(descriptor) { deserializeFromObject(it) }
-                ?: decoder.tryToDeserializeWith(StringDescriptor) { deserializeFromString(it) }
+                ?: decoder.tryToDeserializeWith(String.serializer().descriptor) { deserializeFromString(it) }
                 ?: throw ConfigurationException("Device mount definition is not valid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'.")
         }
 
@@ -124,12 +121,12 @@ data class DeviceMount(
             return DeviceMount(localPath, containerPath, options)
         }
 
-        override fun serialize(encoder: Encoder, obj: DeviceMount) {
+        override fun serialize(encoder: Encoder, value: DeviceMount) {
             val output = encoder.beginStructure(descriptor)
 
-            output.encodeStringElement(descriptor, localPathFieldIndex, obj.localPath)
-            output.encodeStringElement(descriptor, containerPathFieldIndex, obj.containerPath)
-            output.encodeSerializableElement(descriptor, optionsFieldIndex, StringSerializer.nullable, obj.options)
+            output.encodeStringElement(descriptor, localPathFieldIndex, value.localPath)
+            output.encodeStringElement(descriptor, containerPathFieldIndex, value.containerPath)
+            output.encodeSerializableElement(descriptor, optionsFieldIndex, String.serializer().nullable, value.options)
 
             output.endStructure(descriptor)
         }

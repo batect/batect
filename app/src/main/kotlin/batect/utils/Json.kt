@@ -20,6 +20,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 
 object Json {
-    val nonstrictParser = Json(JsonConfiguration.Stable.copy(strictMode = false))
+    val nonstrictParser = Json(JsonConfiguration.Stable.copy(ignoreUnknownKeys = true))
     val parser = Json(JsonConfiguration.Stable)
 }

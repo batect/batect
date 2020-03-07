@@ -26,9 +26,8 @@ import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.internal.StringDescriptor
-import kotlinx.serialization.internal.StringSerializer
-import kotlinx.serialization.map
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
@@ -60,7 +59,7 @@ class ConfigVariablesProvider(
         try {
             val nameSerializer = ConfigVariableNameSerializer(config, sourceFile)
 
-            return Yaml().parse((nameSerializer to StringSerializer).map, configFileContent)
+            return Yaml().parse(MapSerializer(nameSerializer, String.serializer()), configFileContent)
         } catch (e: YamlException) {
             throw ConfigurationException(e.message, absolutePath.toString(), e.line, e.column, e)
         }
@@ -75,9 +74,9 @@ class ConfigVariablesProvider(
     }
 
     private class ConfigVariableNameSerializer(private val config: Configuration, private val sourceFile: Path) : KSerializer<String> {
-        override val descriptor: SerialDescriptor = StringDescriptor
+        override val descriptor: SerialDescriptor = String.serializer().descriptor
 
-        override fun serialize(encoder: Encoder, obj: String) = encoder.encodeString(obj)
+        override fun serialize(encoder: Encoder, value: String) = encoder.encodeString(value)
 
         override fun deserialize(decoder: Decoder): String {
             val name = decoder.decodeString()

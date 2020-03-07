@@ -27,8 +27,7 @@ import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.SerialClassDescImpl
-import kotlinx.serialization.internal.StringDescriptor
+import kotlinx.serialization.builtins.serializer
 
 @Serializable(with = PortMapping.Companion::class)
 data class PortMapping(
@@ -54,11 +53,9 @@ data class PortMapping(
         private const val localPortFieldName = "local"
         private const val containerPortFieldName = "container"
 
-        override val descriptor: SerialDescriptor = object : SerialClassDescImpl("PortMapping") {
-            init {
-                addElement(localPortFieldName)
-                addElement(containerPortFieldName)
-            }
+        override val descriptor: SerialDescriptor = SerialDescriptor("PortMapping") {
+            element(localPortFieldName, Int.serializer().descriptor)
+            element(containerPortFieldName, Int.serializer().descriptor)
         }
 
         private val localPortFieldIndex = descriptor.getElementIndex("local")
@@ -70,7 +67,7 @@ data class PortMapping(
             }
 
             return decoder.tryToDeserializeWith(descriptor) { deserializeFromObject(it) }
-                ?: decoder.tryToDeserializeWith(StringDescriptor) { deserializeFromString(it) }
+                ?: decoder.tryToDeserializeWith(String.serializer().descriptor) { deserializeFromString(it) }
                 ?: throw ConfigurationException("Port mapping definition is not valid. It must either be an object or a literal in the form 'local_port:container_port'.")
         }
 
@@ -151,11 +148,11 @@ data class PortMapping(
             return PortMapping(localPort, containerPort)
         }
 
-        override fun serialize(encoder: Encoder, obj: PortMapping) {
+        override fun serialize(encoder: Encoder, value: PortMapping) {
             val output = encoder.beginStructure(descriptor)
 
-            output.encodeIntElement(descriptor, localPortFieldIndex, obj.localPort)
-            output.encodeIntElement(descriptor, containerPortFieldIndex, obj.containerPort)
+            output.encodeIntElement(descriptor, localPortFieldIndex, value.localPort)
+            output.encodeIntElement(descriptor, containerPortFieldIndex, value.containerPort)
 
             output.endStructure(descriptor)
         }

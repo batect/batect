@@ -27,9 +27,9 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
-import kotlinx.serialization.internal.BooleanSerializer
-import kotlinx.serialization.internal.IntSerializer
-import kotlinx.serialization.internal.StringSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.builtins.serializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.OutputStream
@@ -52,7 +52,7 @@ object FileLogSinkSpec : Spek({
         }
 
         val standardAdditionalDataSource = mock<StandardAdditionalDataSource> {
-            on { getAdditionalData() } doReturn mapOf("someStandardInfo" to JsonableObject(false, BooleanSerializer))
+            on { getAdditionalData() } doReturn mapOf("someStandardInfo" to JsonableObject(false, Boolean.serializer()))
         }
 
         val timestampToUse = ZonedDateTime.of(2017, 9, 25, 15, 51, 0, 0, ZoneOffset.UTC)
@@ -61,15 +61,15 @@ object FileLogSinkSpec : Spek({
         val sink = FileLogSink(path, writer, standardAdditionalDataSource, timestampSource)
 
         on("writing a log message") {
-            sink.write(Severity.Info, mapOf("someAdditionalInfo" to JsonableObject("someValue", StringSerializer))) {
+            sink.write(Severity.Info, mapOf("someAdditionalInfo" to JsonableObject("someValue", String.serializer()))) {
                 message("This is the message")
                 data("someLocalInfo", 888)
             }
 
             val expectedMessage = LogMessage(Severity.Info, "This is the message", timestampToUse, mapOf(
-                "someAdditionalInfo" to JsonableObject("someValue", StringSerializer),
-                "someLocalInfo" to JsonableObject(888, IntSerializer),
-                "someStandardInfo" to JsonableObject(false, BooleanSerializer)
+                "someAdditionalInfo" to JsonableObject("someValue", String.serializer()),
+                "someLocalInfo" to JsonableObject(888, Int.serializer()),
+                "someStandardInfo" to JsonableObject(false, Boolean.serializer())
             ))
 
             it("calls the builder function to create the log message and passes it to the writer") {

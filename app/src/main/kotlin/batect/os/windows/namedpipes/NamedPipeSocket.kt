@@ -18,8 +18,8 @@ package batect.os.windows.namedpipes
 
 import batect.os.windows.WindowsNativeMethods
 import jnr.posix.POSIXFactory
-import kotlinx.io.IOException
 import java.io.FileNotFoundException
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.InetAddress

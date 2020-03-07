@@ -25,7 +25,7 @@ import batect.os.SystemInfo
 import batect.utils.Json
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.set
+import kotlinx.serialization.builtins.set
 import okhttp3.HttpUrl
 import okhttp3.Request
 

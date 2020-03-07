@@ -23,13 +23,13 @@ import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.StringDescriptor
+import kotlinx.serialization.builtins.serializer
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 
 @Serializer(forClass = Duration::class)
 object DurationSerializer : KSerializer<Duration> {
-    override val descriptor: SerialDescriptor = StringDescriptor
+    override val descriptor: SerialDescriptor = String.serializer().descriptor
 
     private const val valueRegexString = """((\d+)|(\d+\.\d*)|(\d*\.\d+))(ns|\u00b5s|\u03bcs|us|ms|s|m|h)"""
     private val fullRegex = "^([+-])?(0|($valueRegexString)+)\$".toRegex()
@@ -84,9 +84,9 @@ object DurationSerializer : KSerializer<Duration> {
 
     private fun Sequence<Duration>.sum(): Duration = this.reduce { acc, item -> acc + item }
 
-    override fun serialize(encoder: Encoder, obj: Duration) {
+    override fun serialize(encoder: Encoder, value: Duration) {
         val builder = StringBuilder()
-        val absoluteDuration = obj.abs()
+        val absoluteDuration = value.abs()
         val micros = (absoluteDuration.toNanos() / 1000)
 
         builder.appendTimeUnit(absoluteDuration.toHours(), "h")
@@ -96,11 +96,11 @@ object DurationSerializer : KSerializer<Duration> {
         builder.appendTimeUnit(micros - (absoluteDuration.toMillis() * 1000), "us")
         builder.appendTimeUnit(absoluteDuration.toNanos() - (micros * 1000), "ns")
 
-        if (obj.isZero) {
+        if (value.isZero) {
             builder.append("0")
         }
 
-        if (obj.isNegative) {
+        if (value.isNegative) {
             builder.insert(0, "-")
         }
 

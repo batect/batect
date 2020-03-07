@@ -24,15 +24,14 @@ import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.HashSetClassDesc
-import kotlinx.serialization.internal.StringSerializer
-import kotlinx.serialization.set
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.builtins.set
 
 @Serializer(forClass = Set::class)
 internal object DependencySetSerializer : KSerializer<Set<String>> {
-    val elementSerializer = StringSerializer
+    private val elementSerializer = String.serializer()
 
-    override val descriptor: SerialDescriptor = HashSetClassDesc(elementSerializer.descriptor)
+    override val descriptor: SerialDescriptor = elementSerializer.set.descriptor
 
     override fun deserialize(decoder: Decoder): Set<String> {
         val input = decoder.beginStructure(descriptor, elementSerializer)
@@ -44,34 +43,16 @@ internal object DependencySetSerializer : KSerializer<Set<String>> {
     }
 
     private fun read(input: CompositeDecoder): Set<String> {
-        val size = input.decodeCollectionSize(descriptor)
+        val soFar = mutableSetOf<String>()
 
         while (true) {
-            when (val index = input.decodeElementIndex(descriptor)) {
-                CompositeDecoder.READ_ALL -> return readAll(input, size)
-                else -> return readUntilDone(input, index)
+            val currentIndex = input.decodeElementIndex(descriptor)
+
+            if (currentIndex == CompositeDecoder.READ_DONE) {
+                break
             }
-        }
-    }
 
-    private fun readAll(input: CompositeDecoder, size: Int): Set<String> {
-        val soFar = mutableSetOf<String>()
-
-        for (currentIndex in 0..size) {
             soFar.add(readSingle(input, currentIndex, soFar))
-        }
-
-        return soFar
-    }
-
-    private fun readUntilDone(input: CompositeDecoder, firstIndex: Int): Set<String> {
-        var currentIndex = firstIndex
-        val soFar = mutableSetOf<String>()
-
-        while (currentIndex != CompositeDecoder.READ_DONE) {
-            soFar.add(readSingle(input, currentIndex, soFar))
-
-            currentIndex = input.decodeElementIndex(descriptor)
         }
 
         return soFar
@@ -91,5 +72,5 @@ internal object DependencySetSerializer : KSerializer<Set<String>> {
 
     private fun getDuplicateValueMessage(value: String) = "The dependency '$value' is given more than once"
 
-    override fun serialize(encoder: Encoder, obj: Set<String>) = StringSerializer.set.serialize(encoder, obj)
+    override fun serialize(encoder: Encoder, value: Set<String>) = String.serializer().set.serialize(encoder, value)
 }

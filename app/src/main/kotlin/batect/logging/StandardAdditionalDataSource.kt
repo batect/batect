@@ -17,9 +17,9 @@
 package batect.logging
 
 import jnr.posix.POSIX
-import kotlinx.serialization.internal.IntSerializer
-import kotlinx.serialization.internal.LongSerializer
-import kotlinx.serialization.internal.StringSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.builtins.serializer
 
 class StandardAdditionalDataSource(
     private val posix: POSIX,
@@ -31,9 +31,9 @@ class StandardAdditionalDataSource(
         val thread = threadSource()
 
         return mapOf(
-            "@processId" to JsonableObject(pid, IntSerializer),
-            "@threadId" to JsonableObject(thread.id, LongSerializer),
-            "@threadName" to JsonableObject(thread.name, StringSerializer)
+            "@processId" to JsonableObject(pid, Int.serializer()),
+            "@threadId" to JsonableObject(thread.id, Long.serializer()),
+            "@threadName" to JsonableObject(thread.name, String.serializer())
         )
     }
 }

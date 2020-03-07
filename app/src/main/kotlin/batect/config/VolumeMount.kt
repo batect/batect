@@ -28,10 +28,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.SerialClassDescImpl
-import kotlinx.serialization.internal.StringDescriptor
-import kotlinx.serialization.internal.StringSerializer
-import kotlinx.serialization.internal.nullable
+import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.builtins.serializer
 
 @Serializable(with = VolumeMount.Companion::class)
 sealed class VolumeMount(
@@ -40,14 +38,12 @@ sealed class VolumeMount(
 ) {
     @Serializer(forClass = VolumeMount::class)
     companion object : KSerializer<VolumeMount> {
-        override val descriptor: SerialDescriptor = object : SerialClassDescImpl("VolumeMount") {
-            init {
-                addElement("local", isOptional = true)
-                addElement("container")
-                addElement("options", isOptional = true)
-                addElement("name", isOptional = true)
-                addElement("type", isOptional = true)
-            }
+        override val descriptor: SerialDescriptor = SerialDescriptor("VolumeMount") {
+            element("local", Expression.serializer().descriptor, isOptional = true)
+            element("container", String.serializer().descriptor)
+            element("options", String.serializer().descriptor, isOptional = true)
+            element("name", String.serializer().descriptor, isOptional = true)
+            element("type", String.serializer().descriptor, isOptional = true)
         }
 
         private val localPathFieldIndex = descriptor.getElementIndex("local")
@@ -62,7 +58,7 @@ sealed class VolumeMount(
             }
 
             return decoder.tryToDeserializeWith(descriptor) { deserializeFromObject(it) }
-                ?: decoder.tryToDeserializeWith(StringDescriptor) { deserializeFromString(it) }
+                ?: decoder.tryToDeserializeWith(String.serializer().descriptor) { deserializeFromString(it) }
                 ?: throw ConfigurationException("Volume mount definition is not valid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'.")
         }
 
@@ -146,20 +142,20 @@ sealed class VolumeMount(
             }
         }
 
-        override fun serialize(encoder: Encoder, obj: VolumeMount) {
+        override fun serialize(encoder: Encoder, value: VolumeMount) {
             val output = encoder.beginStructure(descriptor)
 
-            output.encodeStringElement(descriptor, containerPathFieldIndex, obj.containerPath)
-            output.encodeSerializableElement(descriptor, optionsFieldIndex, StringSerializer.nullable, obj.options)
+            output.encodeStringElement(descriptor, containerPathFieldIndex, value.containerPath)
+            output.encodeSerializableElement(descriptor, optionsFieldIndex, String.serializer().nullable, value.options)
 
-            when (obj) {
+            when (value) {
                 is LocalMount -> {
                     output.encodeStringElement(descriptor, typeFieldIndex, "local")
-                    output.encodeSerializableElement(descriptor, localPathFieldIndex, Expression.serializer(), obj.localPath)
+                    output.encodeSerializableElement(descriptor, localPathFieldIndex, Expression.serializer(), value.localPath)
                 }
                 is CacheMount -> {
                     output.encodeStringElement(descriptor, typeFieldIndex, "cache")
-                    output.encodeStringElement(descriptor, nameFieldIndex, obj.name)
+                    output.encodeStringElement(descriptor, nameFieldIndex, value.name)
                 }
             }
 

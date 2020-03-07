@@ -19,7 +19,7 @@ package batect.config
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.HashMapClassDesc
+import kotlinx.serialization.builtins.MapSerializer
 
 class ConfigVariableMap(contents: Iterable<ConfigVariableDefinition>) : NamedObjectMap<ConfigVariableDefinition>("config variable", contents) {
     constructor(vararg contents: ConfigVariableDefinition) : this(contents.asIterable())
@@ -32,6 +32,6 @@ class ConfigVariableMap(contents: Iterable<ConfigVariableDefinition>) : NamedObj
         override fun getName(element: ConfigVariableDefinition): String = element.name
         override fun createCollection(elements: Set<ConfigVariableDefinition>): ConfigVariableMap = ConfigVariableMap(elements)
 
-        override val descriptor: SerialDescriptor = HashMapClassDesc(keySerializer.descriptor, elementSerializer.descriptor)
+        override val descriptor: SerialDescriptor = MapSerializer(keySerializer, elementSerializer).descriptor
     }
 }

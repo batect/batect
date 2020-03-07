@@ -21,13 +21,13 @@ import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.PrimitiveDescriptor
+import kotlinx.serialization.PrimitiveKind
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.StringDescriptor
-import kotlinx.serialization.internal.StringSerializer
-import kotlinx.serialization.list
-import kotlinx.serialization.withName
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.builtins.list
 
 @Serializable(with = Command.Companion::class)
 data class Command private constructor(val originalCommand: String, val parsedCommand: List<String>) {
@@ -134,7 +134,7 @@ data class Command private constructor(val originalCommand: String, val parsedCo
             DoubleQuote
         }
 
-        override val descriptor: SerialDescriptor = StringDescriptor.withName("command")
+        override val descriptor: SerialDescriptor = PrimitiveDescriptor("command", PrimitiveKind.STRING)
 
         override fun deserialize(decoder: Decoder): Command = try {
             parse(decoder.decodeString())
@@ -148,7 +148,7 @@ data class Command private constructor(val originalCommand: String, val parsedCo
             }
         }
 
-        override fun serialize(encoder: Encoder, obj: Command) = StringSerializer.list.serialize(encoder, obj.parsedCommand)
+        override fun serialize(encoder: Encoder, value: Command) = String.serializer().list.serialize(encoder, value.parsedCommand)
     }
 }
 

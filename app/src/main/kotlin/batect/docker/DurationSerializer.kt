@@ -21,12 +21,12 @@ import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.LongDescriptor
+import kotlinx.serialization.builtins.serializer
 import java.time.Duration
 
 @Serializer(forClass = Duration::class)
 object DurationSerializer : KSerializer<Duration> {
-    override val descriptor: SerialDescriptor = LongDescriptor
+    override val descriptor: SerialDescriptor = Long.serializer().descriptor
     override fun deserialize(decoder: Decoder): Duration = Duration.ofNanos(decoder.decodeLong())
-    override fun serialize(encoder: Encoder, obj: Duration) = throw UnsupportedOperationException()
+    override fun serialize(encoder: Encoder, value: Duration) = throw UnsupportedOperationException()
 }

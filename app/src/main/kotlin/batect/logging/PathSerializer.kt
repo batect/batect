@@ -19,16 +19,17 @@ package batect.logging
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.PrimitiveDescriptor
+import kotlinx.serialization.PrimitiveKind
 import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.internal.StringDescriptor
 import java.nio.file.Path
 
 class PathSerializer : KSerializer<Path> {
-    override val descriptor: SerialDescriptor = StringDescriptor
+    override val descriptor: SerialDescriptor = PrimitiveDescriptor("path", PrimitiveKind.STRING)
 
     override fun deserialize(decoder: Decoder): Path = throw UnsupportedOperationException()
 
-    override fun serialize(encoder: Encoder, obj: Path) {
-        encoder.encodeString(obj.toString())
+    override fun serialize(encoder: Encoder, value: Path) {
+        encoder.encodeString(value.toString())
     }
 }

@@ -22,7 +22,7 @@ import com.charleskorn.kaml.Location
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.HashMapClassDesc
+import kotlinx.serialization.builtins.MapSerializer
 
 class ContainerMap(contents: Iterable<Container>) : NamedObjectMap<Container>("container", contents) {
     constructor(vararg contents: Container) : this(contents.asIterable())
@@ -45,6 +45,6 @@ class ContainerMap(contents: Iterable<Container>) : NamedObjectMap<Container>("c
             }
         }
 
-        override val descriptor: SerialDescriptor = HashMapClassDesc(keySerializer.descriptor, elementSerializer.descriptor)
+        override val descriptor: SerialDescriptor = MapSerializer(keySerializer, elementSerializer).descriptor
     }
 }

@@ -23,7 +23,7 @@ import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.internal.StringDescriptor
+import kotlinx.serialization.builtins.serializer
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
@@ -44,9 +44,9 @@ data class ScriptInfo(
 object ZonedDateTimeSerializer : KSerializer<ZonedDateTime> {
     private val formatter = DateTimeFormatter.ISO_DATE_TIME
 
-    override val descriptor: SerialDescriptor = StringDescriptor
+    override val descriptor: SerialDescriptor = String.serializer().descriptor
     override fun deserialize(decoder: Decoder): ZonedDateTime = ZonedDateTime.parse(decoder.decodeString(), formatter)
-    override fun serialize(encoder: Encoder, obj: ZonedDateTime) = encoder.encodeString(obj.format(formatter))
+    override fun serialize(encoder: Encoder, value: ZonedDateTime) = encoder.encodeString(value.format(formatter))
 }
 
 fun LogMessageBuilder.data(key: String, value: UpdateInfo) = data(key, value, UpdateInfo.serializer())

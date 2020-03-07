@@ -19,9 +19,10 @@ package batect.utils
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.PrimitiveDescriptor
+import kotlinx.serialization.PrimitiveKind
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.StringDescriptor
 
 data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: String = "", val metadata: String = "") : Comparable<Version> {
     override fun compareTo(other: Version): Int = this.compareTo(other, VersionComparisonMode.Normal)
@@ -85,9 +86,9 @@ data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: S
             }
         }
 
-        override val descriptor: SerialDescriptor = StringDescriptor
+        override val descriptor: SerialDescriptor = PrimitiveDescriptor("version", PrimitiveKind.STRING)
         override fun deserialize(decoder: Decoder): Version = parse(decoder.decodeString())
-        override fun serialize(encoder: Encoder, obj: Version) = encoder.encodeString(obj.toString())
+        override fun serialize(encoder: Encoder, value: Version) = encoder.encodeString(value.toString())
     }
 }
 

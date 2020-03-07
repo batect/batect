@@ -16,7 +16,7 @@
 
 package batect.logging
 
-import kotlinx.serialization.internal.StringSerializer
+import kotlinx.serialization.builtins.serializer
 
 class Logger(val sourceName: String, val destination: LogSink) {
     fun debug(build: LogMessageBuilder.() -> LogMessageBuilder) = destination.write(Severity.Debug, additionalInfo, build)
@@ -24,5 +24,5 @@ class Logger(val sourceName: String, val destination: LogSink) {
     fun warn(build: LogMessageBuilder.() -> LogMessageBuilder) = destination.write(Severity.Warning, additionalInfo, build)
     fun error(build: LogMessageBuilder.() -> LogMessageBuilder) = destination.write(Severity.Error, additionalInfo, build)
 
-    private val additionalInfo = mapOf("@source" to JsonableObject(sourceName, StringSerializer))
+    private val additionalInfo = mapOf("@source" to JsonableObject(sourceName, String.serializer()))
 }

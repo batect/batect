@@ -30,8 +30,7 @@ import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.decode
-import kotlinx.serialization.internal.SerialClassDescImpl
+import kotlinx.serialization.builtins.serializer
 
 @Serializable(with = Configuration.Companion::class)
 data class Configuration(
@@ -62,13 +61,11 @@ data class Configuration(
         private const val containersFieldName = "containers"
         private const val configVariablesFieldName = "config_variables"
 
-        override val descriptor: SerialDescriptor = object : SerialClassDescImpl("Configuration") {
-            init {
-                addElement(projectNameFieldName, isOptional = true)
-                addElement(tasksFieldName, isOptional = true)
-                addElement(containersFieldName, isOptional = true)
-                addElement(configVariablesFieldName, isOptional = true)
-            }
+        override val descriptor: SerialDescriptor = SerialDescriptor("Configuration") {
+            element(projectNameFieldName, String.serializer().descriptor, isOptional = true)
+            element(tasksFieldName, TaskMap.descriptor, isOptional = true)
+            element(containersFieldName, ContainerMap.descriptor, isOptional = true)
+            element(configVariablesFieldName, ConfigVariableMap.descriptor, isOptional = true)
         }
 
         private val projectNameFieldIndex = descriptor.getElementIndex(projectNameFieldName)
@@ -92,9 +89,9 @@ data class Configuration(
                 when (val i = input.decodeElementIndex(descriptor)) {
                     CompositeDecoder.READ_DONE -> break@loop
                     projectNameFieldIndex -> projectName = input.decodeProjectName(i)
-                    tasksFieldIndex -> tasks = input.decode(TaskMap.Companion)
-                    containersFieldIndex -> containers = input.decode(ContainerMap.Companion)
-                    configVariablesFieldIndex -> configVariables = input.decode(ConfigVariableMap.Companion)
+                    tasksFieldIndex -> tasks = input.decodeSerializableValue(TaskMap.Companion)
+                    containersFieldIndex -> containers = input.decodeSerializableValue(ContainerMap.Companion)
+                    configVariablesFieldIndex -> configVariables = input.decodeSerializableValue(ConfigVariableMap.Companion)
                     else -> throw SerializationException("Unknown index $i")
                 }
             }
@@ -139,12 +136,12 @@ data class Configuration(
             return inferredProjectName
         }
 
-        override fun serialize(encoder: Encoder, obj: Configuration) {
+        override fun serialize(encoder: Encoder, value: Configuration) {
             val output = encoder.beginStructure(descriptor)
-            output.encodeStringElement(descriptor, projectNameFieldIndex, obj.projectName)
-            output.encodeSerializableElement(descriptor, tasksFieldIndex, TaskMap.Companion, obj.tasks)
-            output.encodeSerializableElement(descriptor, containersFieldIndex, ContainerMap.Companion, obj.containers)
-            output.encodeSerializableElement(descriptor, configVariablesFieldIndex, ConfigVariableMap.Companion, obj.configVariables)
+            output.encodeStringElement(descriptor, projectNameFieldIndex, value.projectName)
+            output.encodeSerializableElement(descriptor, tasksFieldIndex, TaskMap.Companion, value.tasks)
+            output.encodeSerializableElement(descriptor, containersFieldIndex, ContainerMap.Companion, value.containers)
+            output.encodeSerializableElement(descriptor, configVariablesFieldIndex, ConfigVariableMap.Companion, value.configVariables)
             output.endStructure(descriptor)
         }
     }

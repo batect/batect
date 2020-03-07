@@ -19,7 +19,7 @@ package batect.config
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.HashMapClassDesc
+import kotlinx.serialization.builtins.MapSerializer
 
 class TaskMap(contents: Iterable<Task>) : NamedObjectMap<Task>("task", contents) {
     constructor(vararg contents: Task) : this(contents.asIterable())
@@ -32,6 +32,6 @@ class TaskMap(contents: Iterable<Task>) : NamedObjectMap<Task>("task", contents)
         override fun getName(element: Task): String = element.name
         override fun createCollection(elements: Set<Task>): TaskMap = TaskMap(elements)
 
-        override val descriptor: SerialDescriptor = HashMapClassDesc(keySerializer.descriptor, elementSerializer.descriptor)
+        override val descriptor: SerialDescriptor = MapSerializer(keySerializer, elementSerializer).descriptor
     }
 }

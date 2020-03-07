@@ -20,7 +20,7 @@ import batect.testutils.createForEachTest
 import batect.testutils.on
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
-import kotlinx.serialization.internal.StringSerializer
+import kotlinx.serialization.builtins.serializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -29,7 +29,7 @@ object LoggerSpec : Spek({
         val sink by createForEachTest { mock<LogSink>() }
         val logger by createForEachTest { Logger("some.source", sink) }
 
-        val loggerAdditionalInfo = mapOf("@source" to JsonableObject("some.source", StringSerializer))
+        val loggerAdditionalInfo = mapOf("@source" to JsonableObject("some.source", String.serializer()))
         val buildFun: LogMessageBuilder.() -> LogMessageBuilder = { this }
 
         on("logging a debug-level message") {

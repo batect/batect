@@ -26,17 +26,15 @@ import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.internal.SerialClassDescImpl
+import kotlinx.serialization.builtins.serializer
 
 @Serializable
 sealed class RunAsCurrentUserConfig {
     @Serializer(forClass = RunAsCurrentUserConfig::class)
     companion object : KSerializer<RunAsCurrentUserConfig> {
-        override val descriptor: SerialDescriptor = object : SerialClassDescImpl("RunAsCurrentUserConfig") {
-            init {
-                addElement("enabled", isOptional = true)
-                addElement("home_directory", isOptional = true)
-            }
+        override val descriptor: SerialDescriptor = SerialDescriptor("RunAsCurrentUserConfig") {
+            element("enabled", Boolean.serializer().descriptor, isOptional = true)
+            element("home_directory", String.serializer().descriptor, isOptional = true)
         }
 
         private val enabledFieldIndex = descriptor.getElementIndex("enabled")
@@ -81,18 +79,18 @@ sealed class RunAsCurrentUserConfig {
             }
         }
 
-        override fun serialize(encoder: Encoder, obj: RunAsCurrentUserConfig) {
+        override fun serialize(encoder: Encoder, value: RunAsCurrentUserConfig) {
             val output = encoder.beginStructure(descriptor)
 
-            val enabled = when (obj) {
+            val enabled = when (value) {
                 is RunAsDefaultContainerUser -> false
                 is RunAsCurrentUser -> true
             }
 
             output.encodeBooleanElement(descriptor, enabledFieldIndex, enabled)
 
-            if (obj is RunAsCurrentUser) {
-                output.encodeStringElement(descriptor, homeDirectoryFieldIndex, obj.homeDirectory)
+            if (value is RunAsCurrentUser) {
+                output.encodeStringElement(descriptor, homeDirectoryFieldIndex, value.homeDirectory)
             }
 
             output.endStructure(descriptor)

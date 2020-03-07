@@ -18,8 +18,8 @@ package batect.config.io.deserializers
 
 import batect.config.Expression
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.internal.StringSerializer
-import kotlinx.serialization.map
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 
 internal object EnvironmentSerializer :
-    KSerializer<Map<String, Expression>> by (StringSerializer to Expression.serializer()).map
+    KSerializer<Map<String, Expression>> by MapSerializer(String.serializer(), Expression.serializer())

@@ -20,13 +20,10 @@ import batect.updates.ZonedDateTimeSerializer
 import batect.utils.Version
 import batect.utils.toDetailedString
 import kotlinx.serialization.SerializationStrategy
-import kotlinx.serialization.internal.BooleanSerializer
-import kotlinx.serialization.internal.IntSerializer
-import kotlinx.serialization.internal.LongSerializer
-import kotlinx.serialization.internal.StringSerializer
-import kotlinx.serialization.internal.nullable
-import kotlinx.serialization.list
-import kotlinx.serialization.map
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.builtins.list
 import java.nio.file.Path
 import java.time.ZonedDateTime
 
@@ -39,7 +36,7 @@ class LogMessageBuilder(val severity: Severity, val loggerAdditionalData: Map<St
         return this
     }
 
-    fun exception(e: Throwable): LogMessageBuilder = data("exception", e.toDetailedString(), StringSerializer)
+    fun exception(e: Throwable): LogMessageBuilder = data("exception", e.toDetailedString(), String.serializer())
 
     fun <T> data(key: String, value: T, serializer: SerializationStrategy<T>): LogMessageBuilder {
         require(!key.startsWith('@')) { "Cannot add additional data with the key '$key': keys may not start with '@'." }
@@ -54,16 +51,16 @@ class LogMessageBuilder(val severity: Severity, val loggerAdditionalData: Map<St
         return LogMessage(severity, message, timestampSource(), additionalData)
     }
 
-    fun data(key: String, value: String) = data(key, value, StringSerializer)
-    fun data(key: String, value: Int) = data(key, value, IntSerializer)
-    fun data(key: String, value: Long) = data(key, value, LongSerializer)
-    fun data(key: String, value: Boolean) = data(key, value, BooleanSerializer)
+    fun data(key: String, value: String) = data(key, value, String.serializer())
+    fun data(key: String, value: Int) = data(key, value, Int.serializer())
+    fun data(key: String, value: Long) = data(key, value, Long.serializer())
+    fun data(key: String, value: Boolean) = data(key, value, Boolean.serializer())
     fun data(key: String, value: ZonedDateTime) = data(key, value, ZonedDateTimeSerializer)
     fun data(key: String, value: Path) = data(key, value.toString())
     fun data(key: String, value: Version) = data(key, value, Version.Companion)
-    fun data(key: String, value: Iterable<String>) = data(key, value.toList(), StringSerializer.list)
-    fun data(key: String, value: Map<String, String>) = data(key, value, (StringSerializer to StringSerializer).map)
+    fun data(key: String, value: Iterable<String>) = data(key, value.toList(), String.serializer().list)
+    fun data(key: String, value: Map<String, String>) = data(key, value, MapSerializer(String.serializer(), String.serializer()))
 
     @JvmName("nullableData")
-    fun data(key: String, value: String?) = data(key, value, StringSerializer.nullable)
+    fun data(key: String, value: String?) = data(key, value, String.serializer().nullable)
 }

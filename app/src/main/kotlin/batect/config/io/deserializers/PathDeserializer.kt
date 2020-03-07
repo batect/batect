@@ -21,13 +21,14 @@ import batect.os.PathResolver
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.PrimitiveDescriptor
+import kotlinx.serialization.PrimitiveKind
 import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.internal.StringDescriptor
 
 class PathDeserializer(val pathResolver: PathResolver) : KSerializer<PathResolutionResult> {
-    override val descriptor: SerialDescriptor = StringDescriptor
+    override val descriptor: SerialDescriptor = PrimitiveDescriptor("path", PrimitiveKind.STRING)
 
     override fun deserialize(decoder: Decoder): PathResolutionResult = pathResolver.resolve(decoder.decodeString())
 
-    override fun serialize(encoder: Encoder, obj: PathResolutionResult) = throw UnsupportedOperationException()
+    override fun serialize(encoder: Encoder, value: PathResolutionResult) = throw UnsupportedOperationException()
 }

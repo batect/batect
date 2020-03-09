@@ -23,6 +23,7 @@ import batect.execution.model.steps.runners.CreateTaskNetworkStepRunner
 import batect.execution.model.steps.runners.DeleteTaskNetworkStepRunner
 import batect.execution.model.steps.runners.DeleteTemporaryDirectoryStepRunner
 import batect.execution.model.steps.runners.DeleteTemporaryFileStepRunner
+import batect.execution.model.steps.runners.InitialiseCachesStepRunner
 import batect.execution.model.steps.runners.PullImageStepRunner
 import batect.execution.model.steps.runners.RemoveContainerStepRunner
 import batect.execution.model.steps.runners.RunContainerSetupCommandsStepRunner
@@ -38,6 +39,7 @@ class TaskStepRunner(private val kodein: DKodein) {
             is BuildImageStep -> kodein.instance<BuildImageStepRunner>().run(step, eventSink)
             is PullImageStep -> kodein.instance<PullImageStepRunner>().run(step, eventSink)
             is CreateTaskNetworkStep -> kodein.instance<CreateTaskNetworkStepRunner>().run(step, eventSink)
+            is InitialiseCachesStep -> kodein.instance<InitialiseCachesStepRunner>().run(step, eventSink)
             is CreateContainerStep -> kodein.instance<CreateContainerStepRunner>().run(step, eventSink)
             is RunContainerStep -> kodein.instance<RunContainerStepRunner>().run(step, eventSink)
             is WaitForContainerToBecomeHealthyStep -> kodein.instance<WaitForContainerToBecomeHealthyStepRunner>().run(step, eventSink)

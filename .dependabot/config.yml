@@ -10,6 +10,12 @@ update_configs:
 
   - package_manager: docker
     update_schedule: daily
+    directory: app/src/integrationTest/resources/test-images/cache-mount
+    default_labels:
+      - is:dependency-update
+
+  - package_manager: docker
+    update_schedule: daily
     directory: app/src/integrationTest/resources/test-images/image-with-expose
     default_labels:
       - is:dependency-update

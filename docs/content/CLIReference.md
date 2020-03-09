@@ -163,6 +163,20 @@ Example:
 ./batect --cache-type=directory the-task
 ```
 
+### Set cache initialisation image <small>(`--linux-cache-init-image`)</small>
+
+batect uses [an image](https://github.com/batect/batect-cache-init-image) to initialise cache volumes before they are mounted.
+Use this option to override the default image. This is useful if you have cached the initialisation image on a local registry.
+
+The `BATECT_LINUX_CACHE_INIT_IMAGE` environment variable can also be used to set the default initialisation image. If both the environment
+variable and the `--linux-cache-init-image` option are set, the value given with `--linux-cache-init-image` takes precedence.
+
+Example:
+
+```shell
+./batect --linux-cache-init-image=my.registry.com/batect-cache-init-image:abcd1234 the-task
+```
+
 ### Customise Docker connection options
 
 #### Use a non-standard Docker host <small>(`--docker-host`)</small>

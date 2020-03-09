@@ -17,11 +17,13 @@
 package batect.execution.model.rules.run
 
 import batect.config.BuildImage
+import batect.config.CacheMount
 import batect.config.Container
 import batect.config.PullImage
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.execution.ContainerRuntimeConfiguration
+import batect.execution.model.events.CachesInitialisedEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.TaskEvent
@@ -35,11 +37,17 @@ data class CreateContainerStepRule(
     val config: ContainerRuntimeConfiguration,
     val allContainersInNetwork: Set<Container>
 ) : TaskStepRule() {
+    private val needToWaitForCacheInitialisation = container.volumeMounts.any { it is CacheMount }
+
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         val network = findNetwork(pastEvents)
         val image = findImage(pastEvents)
 
         if (network == null || image == null) {
+            return TaskStepRuleEvaluationResult.NotReady
+        }
+
+        if (needToWaitForCacheInitialisation && !cachesAreInitialised(pastEvents)) {
             return TaskStepRuleEvaluationResult.NotReady
         }
 
@@ -66,6 +74,8 @@ data class CreateContainerStepRule(
                 ?.image
         }
     }
+
+    private fun cachesAreInitialised(pastEvents: Set<TaskEvent>) = pastEvents.contains(CachesInitialisedEvent)
 
     override fun toString() = "${this::class.simpleName}(container: '${container.name}', " +
         "config: $config, " +

@@ -205,7 +205,8 @@ object CommandLineOptionsParserSpec : Spek({
                 taskName = "some-task"
             ),
             listOf("--cache-type=volume", "some-task") to defaultCommandLineOptions.copy(cacheType = CacheType.Volume, taskName = "some-task"),
-            listOf("--cache-type=directory", "some-task") to defaultCommandLineOptions.copy(cacheType = CacheType.Directory, taskName = "some-task")
+            listOf("--cache-type=directory", "some-task") to defaultCommandLineOptions.copy(cacheType = CacheType.Directory, taskName = "some-task"),
+            listOf("--linux-cache-init-image=cache-init:123", "some-task") to defaultCommandLineOptions.copy(linuxCacheInitImageName = "cache-init:123", taskName = "some-task")
         ).forEach { (args, expectedResult) ->
             given("the arguments $args") {
                 on("parsing the command line") {

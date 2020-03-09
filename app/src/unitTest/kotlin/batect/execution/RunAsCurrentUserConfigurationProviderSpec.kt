@@ -131,14 +131,6 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     assertThat(userAndGroup, absent())
                 }
             }
-
-            on("generating the cache setup command") {
-                val cacheSetupCommand by runForEachTest { provider.generateCacheSetupCommand(container) }
-
-                it("returns a no-op command") {
-                    assertThat(cacheSetupCommand, equalTo("""echo "Nothing to do.""""))
-                }
-            }
         }
 
         given("the container has 'run as current user' enabled") {
@@ -272,14 +264,6 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                     it("returns a user and group configuration with root's UID and GID") {
                         assertThat(userAndGroup, equalTo(UserAndGroup(0, 0)))
-                    }
-                }
-
-                on("generating the cache setup command") {
-                    val cacheSetupCommand by runForEachTest { provider.generateCacheSetupCommand(container) }
-
-                    it("returns a command to create the cache mount directories and set the correct owner and group") {
-                        assertThat(cacheSetupCommand, equalTo("""rm -rf "/caches/1" && mkdir -p "/caches/1" && chown 0:0 "/caches/1" && rm -rf "/caches/2" && mkdir -p "/caches/2" && chown 0:0 "/caches/2""""))
                     }
                 }
             }
@@ -428,26 +412,6 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             assertThat(userAndGroup, equalTo(UserAndGroup(123, 456)))
                         }
                     }
-
-                    on("generating the cache setup command") {
-                        val cacheSetupCommand by runForEachTest { provider.generateCacheSetupCommand(container) }
-
-                        it("returns a command to create the cache mount directories and set the correct owner and group") {
-                            assertThat(cacheSetupCommand, equalTo("""rm -rf "/caches/1" && mkdir -p "/caches/1" && chown 123:456 "/caches/1" && rm -rf "/caches/2" && mkdir -p "/caches/2" && chown 123:456 "/caches/2""""))
-                        }
-                    }
-
-                    given("the container has no cache mounts") {
-                        val containerWithNoCaches = Container("the-container", imageSourceDoesNotMatter(), volumeMounts = setOf(LocalMount(LiteralValue("/some-local-path"), "/mount/local")))
-
-                        on("generating the cache setup command") {
-                            val cacheSetupCommand by runForEachTest { provider.generateCacheSetupCommand(containerWithNoCaches) }
-
-                            it("returns a no-op command") {
-                                assertThat(cacheSetupCommand, equalTo("""echo "Nothing to do.""""))
-                            }
-                        }
-                    }
                 }
 
                 given("the current user is root") {
@@ -557,14 +521,6 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                         it("returns a user and group configuration with root's UID and GID") {
                             assertThat(userAndGroup, equalTo(UserAndGroup(0, 0)))
-                        }
-                    }
-
-                    on("generating the cache setup command") {
-                        val cacheSetupCommand by runForEachTest { provider.generateCacheSetupCommand(container) }
-
-                        it("returns a command to create the cache mount directories and set the correct owner and group") {
-                            assertThat(cacheSetupCommand, equalTo("""rm -rf "/caches/1" && mkdir -p "/caches/1" && chown 0:0 "/caches/1" && rm -rf "/caches/2" && mkdir -p "/caches/2" && chown 0:0 "/caches/2""""))
                         }
                     }
                 }

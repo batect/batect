@@ -18,6 +18,7 @@ package batect.execution.model.steps.runners
 
 import batect.config.Container
 import batect.config.HealthCheckConfig
+import batect.config.VolumeMount
 import batect.docker.ContainerCreationFailedException
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequest
@@ -68,7 +69,7 @@ object CreateContainerStepRunnerSpec : Spek({
 
         val volumeMountResolver by createForEachTest {
             mock<VolumeMountResolver> {
-                on { resolve(any()) } doReturn setOf(DockerVolumeMount(DockerVolumeMountSource.LocalPath("/local-container"), "/remote-container", "some-options-from-container"))
+                on { resolve(any<Set<VolumeMount>>()) } doReturn setOf(DockerVolumeMount(DockerVolumeMountSource.LocalPath("/local-container"), "/remote-container", "some-options-from-container"))
             }
         }
 
@@ -136,7 +137,7 @@ object CreateContainerStepRunnerSpec : Spek({
 
         on("when resolving a volume mount fails") {
             beforeEachTest {
-                whenever(volumeMountResolver.resolve(any())).doThrow(VolumeMountResolutionException("Something went wrong."))
+                whenever(volumeMountResolver.resolve(any<Set<VolumeMount>>())).doThrow(VolumeMountResolutionException("Something went wrong."))
 
                 runner.run(step, eventSink)
             }

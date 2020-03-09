@@ -49,11 +49,19 @@ object CacheMountJourneyTest : Spek({
                     val secondResult by runBeforeGroup { runner.runApplication(listOf(arg, "the-task")) }
 
                     it("should not have access to the file in the cache in the first run and create it") {
-                        assertThat(firstResult.output, containsSubstring("File does not exist, creating it\r\n"))
+                        assertThat(firstResult.output, containsSubstring("File created in task does not exist, creating it\r\n"))
                     }
 
                     it("should have access to the file in the cache in the second run") {
-                        assertThat(secondResult.output, containsSubstring("File exists\r\n"))
+                        assertThat(secondResult.output, containsSubstring("File created in task exists\r\n"))
+                    }
+
+                    it("should not have access to the file from the image in the first run") {
+                        assertThat(firstResult.output, containsSubstring("File created in image does not exist\r\n"))
+                    }
+
+                    it("should not have access to the file from the image in the second run") {
+                        assertThat(secondResult.output, containsSubstring("File created in image does not exist\r\n"))
                     }
 
                     it("should succeed on the first run") {

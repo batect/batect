@@ -16,7 +16,6 @@
 
 package batect.execution
 
-import batect.config.CacheMount
 import batect.config.Container
 import batect.config.RunAsCurrentUserConfig
 import batect.docker.DockerVolumeMount
@@ -28,7 +27,6 @@ import batect.execution.model.events.TemporaryFileCreatedEvent
 import batect.os.NativeMethods
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
-import batect.utils.mapToSet
 import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.LinkOption
@@ -43,27 +41,6 @@ class RunAsCurrentUserConfigurationProvider(
     fun determineUserAndGroup(container: Container): UserAndGroup? = when (container.runAsCurrentUserConfig) {
         is RunAsCurrentUserConfig.RunAsDefaultContainerUser -> null
         is RunAsCurrentUserConfig.RunAsCurrentUser -> UserAndGroup(determineUserId(), determineGroupId())
-    }
-
-    fun generateCacheSetupCommand(container: Container): String {
-        val directories = container.volumeMounts.filterIsInstance<CacheMount>().mapToSet { it.containerPath }
-
-        if (directories.isEmpty() || container.runAsCurrentUserConfig is RunAsCurrentUserConfig.RunAsDefaultContainerUser) {
-            return """echo "Nothing to do.""""
-        }
-
-        val user = determineUserId().toString()
-        val group = determineGroupId().toString()
-
-        val commands = directories.flatMap { directory ->
-            listOf(
-                """rm -rf "$directory"""",
-                """mkdir -p "$directory"""",
-                """chown $user:$group "$directory""""
-            )
-        }
-
-        return commands.joinToString(" && ")
     }
 
     fun generateConfiguration(container: Container, mounts: Set<DockerVolumeMount>, eventSink: TaskEventSink): RunAsCurrentUserConfiguration = when (container.runAsCurrentUserConfig) {

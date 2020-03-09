@@ -14,14 +14,8 @@
    limitations under the License.
 */
 
-package batect.docker
+package batect.execution
 
-import batect.config.Container
-import batect.utils.generateId
-
-class DockerContainerNameGenerator {
-    fun generateNameFor(container: Container): String = generateNameFor(container.name)
-    fun generateNameFor(name: String): String = "$name-$suffix"
-
-    private val suffix = generateId(6)
+object CacheInitialisationImage {
+    val linuxDefault = "batect/batect-cache-init-image@sha256:5a2ca9f5ba04aa092676a63eaaf84b5003cfeddc527c3584729090979c55cef7"
 }

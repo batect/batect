@@ -14,14 +14,22 @@
    limitations under the License.
 */
 
-package batect.docker
+package batect.execution.model.events
 
-import batect.config.Container
-import batect.utils.generateId
+import batect.testutils.on
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
-class DockerContainerNameGenerator {
-    fun generateNameFor(container: Container): String = generateNameFor(container.name)
-    fun generateNameFor(name: String): String = "$name-$suffix"
+object CachesInitialisedEventSpec : Spek({
+    describe("a 'caches initialised' event") {
+        val event = CachesInitialisedEvent
 
-    private val suffix = generateId(6)
-}
+        on("toString()") {
+            it("returns a human-readable representation of itself") {
+                assertThat(event.toString(), equalTo("CachesInitialisedEvent"))
+            }
+        }
+    }
+})

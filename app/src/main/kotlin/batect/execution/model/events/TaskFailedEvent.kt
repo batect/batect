@@ -82,3 +82,7 @@ data class SetupCommandExecutionErrorEvent(val container: Container, val command
 data class SetupCommandFailedEvent(val container: Container, val command: SetupCommand, val exitCode: Int, val output: String) : TaskFailedEvent() {
     override fun toString() = "${this::class.simpleName}(container: '${container.name}', command: $command, exit code: $exitCode, output: '$output')"
 }
+
+data class CacheInitialisationFailedEvent(val message: String) : TaskFailedEvent() {
+    override fun toString() = "${this::class.simpleName}(message: '$message')"
+}

@@ -42,6 +42,14 @@ data class CreateTaskNetworkStep(val containerType: DockerContainerType) : TaskS
     override fun toString(): String = "${this.javaClass.simpleName}(container type: $containerType)"
 }
 
+data class InitialiseCachesStep(
+    val containerType: DockerContainerType,
+    val allContainersInTask: Set<Container>
+) : TaskStep() {
+    override fun toString(): String = "${this.javaClass.simpleName}(container type: $containerType, " +
+        "all containers in task: ${allContainersInTask.map { "'${it.name}'" }})"
+}
+
 data class CreateContainerStep(
     val container: Container,
     val config: ContainerRuntimeConfiguration,

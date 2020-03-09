@@ -2,7 +2,7 @@ project_name: cache-mount
 
 containers:
   build-env:
-    image: alpine:3.5
+    build_directory: build-env
     volumes:
       - type: cache
         name: batect-cache-mount-journey-test-cache
@@ -10,7 +10,6 @@ containers:
 
 tasks:
   the-task:
-    description: Check if a file exists in the cache and create it if it does not
     run:
       container: build-env
-      command: sh -c "if [ -f /cache/file ]; then echo 'File exists'; else echo 'File does not exist, creating it'; touch /cache/file; fi"
+      command: /test.sh

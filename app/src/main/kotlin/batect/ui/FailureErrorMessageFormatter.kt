@@ -21,6 +21,7 @@ import batect.config.Container
 import batect.docker.DockerContainer
 import batect.execution.CleanupOption
 import batect.execution.RunOptions
+import batect.execution.model.events.CacheInitialisationFailedEvent
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
@@ -51,6 +52,7 @@ class FailureErrorMessageFormatter(private val runOptions: RunOptions, systemInf
 
     fun formatErrorMessage(event: TaskFailedEvent): TextRun = when (event) {
         is TaskNetworkCreationFailedEvent -> formatErrorMessage("Could not create network for task", event.message)
+        is CacheInitialisationFailedEvent -> formatErrorMessage("Could not initialise caches for task", event.message)
         is ImageBuildFailedEvent -> formatErrorMessage(Text("Could not build image for container ") + Text.bold(event.container.name), event.message)
         is ImagePullFailedEvent -> formatErrorMessage(Text("Could not pull image ") + Text.bold(event.source.imageName), event.message)
         is ContainerCreationFailedEvent -> formatErrorMessage(Text("Could not create container ") + Text.bold(event.container.name), event.message)

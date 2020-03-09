@@ -14,33 +14,27 @@
    limitations under the License.
 */
 
-package batect.docker
+package batect.execution.model.steps
 
 import batect.config.Container
+import batect.docker.client.DockerContainerType
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.matches
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object DockerContainerNameGeneratorSpec : Spek({
-    describe("a Docker container name generator") {
-        val generator = DockerContainerNameGenerator()
+object InitialiseCachesStepSpec : Spek({
+    describe("an 'initialise caches' step") {
         val container1 = Container("container-1", imageSourceDoesNotMatter())
         val container2 = Container("container-2", imageSourceDoesNotMatter())
+        val step = InitialiseCachesStep(DockerContainerType.Windows, setOf(container1, container2))
 
-        val nameForContainer1 = generator.generateNameFor(container1)
-        val nameForContainer2 = generator.generateNameFor(container2)
-        val nameForOtherContainer = generator.generateNameFor("batect-cache-init")
-
-        it("returns the container's name with a random suffix") {
-            assertThat(nameForContainer1, matches("""^container\-1\-[a-z0-9]{6}$""".toRegex()))
-        }
-
-        it("uses the same suffix for other containers named by the same instance") {
-            assertThat(nameForContainer1.substringAfter("container-1-"), equalTo(nameForContainer2.substringAfter("container-2-")))
-            assertThat(nameForContainer1.substringAfter("container-1-"), equalTo(nameForOtherContainer.substringAfter("batect-cache-init-")))
+        on("toString()") {
+            it("returns a human-readable representation of itself") {
+                assertThat(step.toString(), equalTo("InitialiseCachesStep(container type: Windows, all containers in task: ['container-1', 'container-2'])"))
+            }
         }
     }
 })

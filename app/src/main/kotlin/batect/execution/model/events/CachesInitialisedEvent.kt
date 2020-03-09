@@ -14,14 +14,8 @@
    limitations under the License.
 */
 
-package batect.docker
+package batect.execution.model.events
 
-import batect.config.Container
-import batect.utils.generateId
-
-class DockerContainerNameGenerator {
-    fun generateNameFor(container: Container): String = generateNameFor(container.name)
-    fun generateNameFor(name: String): String = "$name-$suffix"
-
-    private val suffix = generateId(6)
+object CachesInitialisedEvent : TaskEvent() {
+    override fun toString() = this::class.simpleName!!
 }

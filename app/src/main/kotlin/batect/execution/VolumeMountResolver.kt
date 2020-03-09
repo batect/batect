@@ -44,7 +44,7 @@ class VolumeMountResolver(
         }
     }
 
-    private fun resolve(mount: LocalMount): DockerVolumeMount {
+    fun resolve(mount: LocalMount): DockerVolumeMount {
         val evaluatedLocalPath = evaluateLocalPath(mount)
 
         return when (val resolvedLocalPath = pathResolver.resolve(evaluatedLocalPath)) {
@@ -69,7 +69,7 @@ class VolumeMountResolver(
         }
     }
 
-    private fun resolve(mount: CacheMount): DockerVolumeMount = when (cacheType) {
+    fun resolve(mount: CacheMount): DockerVolumeMount = when (cacheType) {
         CacheType.Volume -> DockerVolumeMount(DockerVolumeMountSource.Volume("batect-cache-${cacheManager.projectCacheKey}-${mount.name}"), mount.containerPath, mount.options)
         CacheType.Directory -> {
             val path = projectPaths.cacheDirectory.resolve(mount.name)

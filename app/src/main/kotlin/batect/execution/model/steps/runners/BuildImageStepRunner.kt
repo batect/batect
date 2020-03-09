@@ -24,7 +24,6 @@ import batect.docker.ImageBuildFailedException
 import batect.docker.client.DockerImageBuildProgress
 import batect.docker.client.DockerImagesClient
 import batect.execution.CancellationContext
-import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
@@ -41,7 +40,6 @@ class BuildImageStepRunner(
     private val expressionEvaluationContext: ExpressionEvaluationContext,
     private val cancellationContext: CancellationContext,
     private val ioStreamingOptions: ContainerIOStreamingOptions,
-    private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
     private val runOptions: RunOptions,
     private val systemInfo: SystemInfo
 ) {
@@ -53,7 +51,6 @@ class BuildImageStepRunner(
 
             val buildConfig = step.container.imageSource as BuildImage
             val buildArgs = buildTimeProxyEnvironmentVariablesForOptions(runOptions) +
-                mapOf("batect_cache_setup_command" to runAsCurrentUserConfigurationProvider.generateCacheSetupCommand(step.container)) +
                 substituteBuildArgs(buildConfig.buildArgs)
 
             val image = imagesClient.build(

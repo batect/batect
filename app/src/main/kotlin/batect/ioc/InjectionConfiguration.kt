@@ -83,6 +83,7 @@ import batect.execution.model.steps.runners.CreateTaskNetworkStepRunner
 import batect.execution.model.steps.runners.DeleteTaskNetworkStepRunner
 import batect.execution.model.steps.runners.DeleteTemporaryDirectoryStepRunner
 import batect.execution.model.steps.runners.DeleteTemporaryFileStepRunner
+import batect.execution.model.steps.runners.InitialiseCachesStepRunner
 import batect.execution.model.steps.runners.PullImageStepRunner
 import batect.execution.model.steps.runners.RemoveContainerStepRunner
 import batect.execution.model.steps.runners.RunContainerSetupCommandsStepRunner
@@ -290,12 +291,13 @@ private val executionModule = Kodein.Module("execution") {
 }
 
 private val runnersModule = Kodein.Module("execution.model.steps.runners") {
-    bind<BuildImageStepRunner>() with scoped(TaskScope).singleton { BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
+    bind<BuildImageStepRunner>() with scoped(TaskScope).singleton { BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
     bind<CreateContainerStepRunner>() with scoped(TaskScope).singleton { CreateContainerStepRunner(instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
     bind<CreateTaskNetworkStepRunner>() with scoped(TaskScope).singleton { CreateTaskNetworkStepRunner(instance()) }
     bind<DeleteTaskNetworkStepRunner>() with scoped(TaskScope).singleton { DeleteTaskNetworkStepRunner(instance()) }
     bind<DeleteTemporaryDirectoryStepRunner>() with scoped(TaskScope).singleton { DeleteTemporaryDirectoryStepRunner() }
     bind<DeleteTemporaryFileStepRunner>() with scoped(TaskScope).singleton { DeleteTemporaryFileStepRunner() }
+    bind<InitialiseCachesStepRunner>() with scoped(TaskScope).singleton { InitialiseCachesStepRunner(commandLineOptions().linuxCacheInitImageName, instance(), instance(), instance(), instance(), instance(), instance()) }
     bind<PullImageStepRunner>() with scoped(TaskScope).singleton { PullImageStepRunner(instance(), instance()) }
     bind<RemoveContainerStepRunner>() with scoped(TaskScope).singleton { RemoveContainerStepRunner(instance()) }
     bind<RunContainerSetupCommandsStepRunner>() with scoped(TaskScope).singleton { RunContainerSetupCommandsStepRunner(instance(), instance(), instance(), instance(RunOptionsType.Task), instance(), instance()) }

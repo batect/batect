@@ -59,7 +59,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
         }
 
         val nameGenerator = mock<DockerContainerNameGenerator> {
-            on { generateNameFor(any()) } doReturn "the-container-name"
+            on { generateNameFor(any<Container>()) } doReturn "the-container-name"
         }
 
         val factory = DockerContainerCreationRequestFactory(environmentVariablesProvider, nameGenerator)

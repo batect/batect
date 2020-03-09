@@ -22,6 +22,7 @@ import batect.config.SetupCommand
 import batect.docker.DockerContainer
 import batect.execution.CleanupOption
 import batect.execution.RunOptions
+import batect.execution.model.events.CacheInitialisationFailedEvent
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
@@ -80,6 +81,11 @@ object FailureErrorMessageFormatterSpec : Spek({
                     "task network creation failed",
                     TaskNetworkCreationFailedEvent("Something went wrong."),
                     Text.red(Text.bold("Error: ") + Text("Could not create network for task.\n")) + Text("Something went wrong.")
+                ),
+                Scenario(
+                    "cache initialisation failed",
+                    CacheInitialisationFailedEvent("Something went wrong."),
+                    Text.red(Text.bold("Error: ") + Text("Could not initialise caches for task.\n")) + Text("Something went wrong.")
                 ),
                 Scenario(
                     "image build failed",

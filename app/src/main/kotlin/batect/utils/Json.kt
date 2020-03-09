@@ -22,4 +22,5 @@ import kotlinx.serialization.json.JsonConfiguration
 object Json {
     val nonstrictParser = Json(JsonConfiguration.Stable.copy(ignoreUnknownKeys = true))
     val parser = Json(JsonConfiguration.Stable)
+    val withoutDefaults = Json(JsonConfiguration.Stable.copy(encodeDefaults = false))
 }

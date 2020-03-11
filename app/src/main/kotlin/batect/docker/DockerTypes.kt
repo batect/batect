@@ -34,7 +34,10 @@ data class DockerVolumeMount(val source: DockerVolumeMountSource, val containerP
 
 @Serializable
 sealed class DockerVolumeMountSource(val formatted: String) {
+    @Serializable
     data class LocalPath(val path: String) : DockerVolumeMountSource(path)
+
+    @Serializable
     data class Volume(val name: String) : DockerVolumeMountSource(name)
 }
 

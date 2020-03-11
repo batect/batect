@@ -21,6 +21,7 @@ import batect.config.HealthCheckConfig
 import batect.config.PortMapping
 import batect.testutils.given
 import batect.testutils.on
+import batect.utils.Json
 import com.natpryce.hamkrest.assertion.assertThat
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
@@ -54,7 +55,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 capabilitiesToDrop = setOf(Capability.AUDIT_READ, Capability.CHOWN)
             )
 
-            on("converting it to JSON") {
+            on("converting it to JSON for submission to the Docker API") {
                 val json = request.toJson()
 
                 it("returns the request in the format expected by the Docker API") {
@@ -122,6 +123,72 @@ object DockerContainerCreationRequestSpec : Spek({
                         |}""".trimMargin()))
                 }
             }
+
+            on("converting it to JSON for logging") {
+                val json = Json.parser.stringify(DockerContainerCreationRequest.serializer(), request)
+
+                it("returns a JSON representation of the Kotlin object") {
+                    assertThat(json, equivalentTo("""
+                        |{
+                        |  "name": "the-container-name",
+                        |  "image": { "id": "the-image" },
+                        |  "network": { "id": "the-network" },
+                        |  "command": ["do-the-thing"],
+                        |  "entrypoint": ["sh"],
+                        |  "hostname": "the-hostname",
+                        |  "networkAliases": [
+                        |    "the-first-network-alias",
+                        |    "the-second-network-alias"
+                        |  ],
+                        |  "environmentVariables": {
+                        |    "SOME_VAR": "some value"
+                        |  },
+                        |  "workingDirectory": "/work-dir",
+                        |  "volumeMounts": [
+                        |    {
+                        |      "source": {
+                        |        "type": "batect.docker.DockerVolumeMountSource.LocalPath",
+                        |        "formatted": "/local",
+                        |        "path": "/local"
+                        |      },
+                        |      "containerPath": "/container-1",
+                        |      "options": "ro"
+                        |    },
+                        |    {
+                        |      "source": {
+                        |        "type": "batect.docker.DockerVolumeMountSource.Volume",
+                        |        "formatted": "my-volume",
+                        |        "name": "my-volume"
+                        |      },
+                        |      "containerPath": "/container-2",
+                        |      "options": "ro"
+                        |    }
+                        |  ],
+                        |  "deviceMounts": [
+                        |    {
+                        |      "local": "/dev/local",
+                        |      "container": "/dev/container",
+                        |      "options": "rw"
+                        |    }
+                        |  ],
+                        |  "portMappings": [
+                        |    { "local": 123, "container": 456 }
+                        |  ],
+                        |  "healthCheckConfig": {
+                        |    "interval": "555ns",
+                        |    "retries": 12,
+                        |    "start_period": "333ns",
+                        |    "command": "exit 0"
+                        |  },
+                        |  "userAndGroup": { "userId": 789, "groupId": 222 },
+                        |  "privileged": true,
+                        |  "init": true,
+                        |  "capabilitiesToAdd": ["NET_ADMIN", "KILL"],
+                        |  "capabilitiesToDrop": ["AUDIT_READ", "CHOWN"]
+                        |}
+                    """.trimMargin()))
+                }
+            }
         }
 
         given("a request with only the minimal set of values provided") {
@@ -146,7 +213,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 capabilitiesToDrop = emptySet()
             )
 
-            on("converting it to JSON") {
+            on("converting it to JSON for submission to the Docker API") {
                 val json = request.toJson()
 
                 it("returns the request in the format expected by the Docker API") {

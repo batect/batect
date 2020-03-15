@@ -43,15 +43,13 @@ class RunAsCurrentUserConfigurationProvider(
         is RunAsCurrentUserConfig.RunAsCurrentUser -> UserAndGroup(determineUserId(), determineGroupId())
     }
 
-    fun generateConfiguration(container: Container, mounts: Set<DockerVolumeMount>, eventSink: TaskEventSink): RunAsCurrentUserConfiguration = when (container.runAsCurrentUserConfig) {
+    fun generateConfiguration(container: Container, eventSink: TaskEventSink): RunAsCurrentUserConfiguration = when (container.runAsCurrentUserConfig) {
         is RunAsCurrentUserConfig.RunAsCurrentUser -> {
             val userId = determineUserId()
             val userName = determineUserName()
             val groupId = determineGroupId()
             val groupName = determineGroupName()
-
             val volumeMounts = createMounts(container, container.runAsCurrentUserConfig, userId, userName, groupId, groupName, eventSink)
-            createMissingVolumeMountDirectories(mounts)
 
             RunAsCurrentUserConfiguration(volumeMounts, UserAndGroup(userId, groupId))
         }
@@ -155,7 +153,11 @@ class RunAsCurrentUserConfigurationProvider(
 
     private fun createTempFile(name: String): Path = Files.createTempFile(systemInfo.tempDirectory, "batect-$name-", "")
 
-    private fun createMissingVolumeMountDirectories(mounts: Set<DockerVolumeMount>) {
+    fun createMissingVolumeMountDirectories(mounts: Set<DockerVolumeMount>, container: Container) {
+        if (container.runAsCurrentUserConfig is RunAsCurrentUserConfig.RunAsDefaultContainerUser) {
+            return
+        }
+
         mounts.map { it.source }.filterIsInstance<DockerVolumeMountSource.LocalPath>().forEach { mount ->
             val path = fileSystem.getPath(mount.path)
 

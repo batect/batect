@@ -48,6 +48,7 @@ import batect.ui.containerio.ContainerIOStreamingOptions
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doThrow
+import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
@@ -80,7 +81,7 @@ object CreateContainerStepRunnerSpec : Spek({
         )
 
         val runAsCurrentUserConfigurationProvider = mock<RunAsCurrentUserConfigurationProvider> {
-            on { generateConfiguration(any(), any(), any()) } doReturn runAsCurrentUserConfiguration
+            on { generateConfiguration(any(), any()) } doReturn runAsCurrentUserConfiguration
             on { determineUserAndGroup(any()) } doReturn userAndGroup
         }
 
@@ -116,6 +117,13 @@ object CreateContainerStepRunnerSpec : Spek({
 
             it("creates the container with the provided configuration") {
                 verify(containersClient).create(request)
+            }
+
+            it("creates any missing local volume mount directories before creating the container") {
+                inOrder(runAsCurrentUserConfigurationProvider, containersClient) {
+                    verify(runAsCurrentUserConfigurationProvider).createMissingVolumeMountDirectories(combinedMounts, container)
+                    verify(containersClient).create(any())
+                }
             }
 
             it("emits a 'container created' event") {

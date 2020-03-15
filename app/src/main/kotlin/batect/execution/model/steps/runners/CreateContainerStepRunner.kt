@@ -40,8 +40,10 @@ class CreateContainerStepRunner(
     fun run(step: CreateContainerStep, eventSink: TaskEventSink) {
         try {
             val resolvedMounts = volumeMountResolver.resolve(step.container.volumeMounts)
-            val runAsCurrentUserConfiguration = runAsCurrentUserConfigurationProvider.generateConfiguration(step.container, resolvedMounts, eventSink)
+            val runAsCurrentUserConfiguration = runAsCurrentUserConfigurationProvider.generateConfiguration(step.container, eventSink)
             val volumeMounts = resolvedMounts + runAsCurrentUserConfiguration.volumeMounts
+
+            runAsCurrentUserConfigurationProvider.createMissingVolumeMountDirectories(volumeMounts, step.container)
 
             val creationRequest = creationRequestFactory.create(
                 step.container,

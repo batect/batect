@@ -72,16 +72,6 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
         given("the container has 'run as current user' disabled") {
             val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
 
-            val directoryThatExists = "/existing/directory"
-            val fileThatExists = "/existing/file"
-            val directoryThatDoesNotExist = "/new/directory"
-            val volumeMounts = setOf(
-                DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatExists), "/container/existing-directory", null),
-                DockerVolumeMount(DockerVolumeMountSource.LocalPath(fileThatExists), "/container/existing-file", null),
-                DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatDoesNotExist), "/container/new-directory", null),
-                DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/containter/volume", null)
-            )
-
             val container = Container(
                 "some-container",
                 imageSourceDoesNotMatter(),
@@ -98,14 +88,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
             val nativeMethods = mock<NativeMethods>()
             val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem) }
 
-            beforeEachTest {
-                Files.createDirectories(systemInfo.tempDirectory)
-                Files.createDirectories(fileSystem.getPath(directoryThatExists))
-                Files.createFile(fileSystem.getPath(fileThatExists))
-            }
-
             on("generating the configuration") {
-                val configuration by runForEachTest { provider.generateConfiguration(container, volumeMounts, eventSink) }
+                val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
 
                 it("does not emit any events") {
                     verify(eventSink, never()).postEvent(any())
@@ -118,10 +102,6 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 it("returns an empty user and group configuration") {
                     assertThat(configuration.userAndGroup, absent())
                 }
-
-                it("does not create any new directories") {
-                    assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(false))
-                }
             }
 
             on("determining the user and group to use") {
@@ -131,11 +111,41 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     assertThat(userAndGroup, absent())
                 }
             }
+
+            on("creating missing volume mount directories") {
+                val directoryThatExists = "/existing/directory"
+                val fileThatExists = "/existing/file"
+                val directoryThatDoesNotExist = "/new/directory"
+                val volumeMounts = setOf(
+                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatExists), "/container/existing-directory", null),
+                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(fileThatExists), "/container/existing-file", null),
+                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatDoesNotExist), "/container/new-directory", null),
+                    DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/containter/volume", null)
+                )
+
+                beforeEachTest {
+                    Files.createDirectories(fileSystem.getPath(directoryThatExists))
+                    Files.createFile(fileSystem.getPath(fileThatExists))
+                }
+
+                beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+
+                it("does not create a directory for the volume mount path that does not exist") {
+                    assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(false))
+                }
+            }
         }
 
         given("the container has 'run as current user' enabled") {
             val homeDirectory = "/home/some-user"
             val runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsCurrentUser(homeDirectory)
+
+            val container = Container(
+                "some-container",
+                imageSourceDoesNotMatter(),
+                runAsCurrentUserConfig = runAsCurrentUserConfig,
+                volumeMounts = configuredMounts
+            )
 
             given("the application is running on Windows") {
                 val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.windows()) }
@@ -147,28 +157,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
                 }
 
-                val directoryThatExists = "C:\\existing\\directory"
-                val fileThatExists = "C:\\existing\\file"
-                val directoryThatDoesNotExist = "C:\\new\\directory"
-                val volumeMounts = setOf(
-                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatExists), "/container/existing-directory", null),
-                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(fileThatExists), "/container/existing-file", null),
-                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatDoesNotExist), "/container/new-directory", null),
-                    DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/containter/volume", null)
-                )
-
                 beforeEachTest {
                     Files.createDirectories(systemInfo.tempDirectory)
-                    Files.createDirectories(fileSystem.getPath(directoryThatExists))
-                    Files.createFile(fileSystem.getPath(fileThatExists))
                 }
-
-                val container = Container(
-                    "some-container",
-                    imageSourceDoesNotMatter(),
-                    runAsCurrentUserConfig = runAsCurrentUserConfig,
-                    volumeMounts = configuredMounts
-                )
 
                 val nativeMethods = mock<NativeMethods> {
                     on { getUserName() } doThrow UnsupportedOperationException("This shouldn't be called on Windows")
@@ -180,7 +171,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem) }
 
                 on("generating the configuration") {
-                    val configuration by runForEachTest { provider.generateConfiguration(container, volumeMounts, eventSink) }
+                    val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
 
                     it("returns a set of volume mounts for the passwd and group file and home directory") {
                         assertThat(
@@ -249,10 +240,6 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         assertThat(configuration.userAndGroup, equalTo(UserAndGroup(0, 0)))
                     }
 
-                    it("creates a directory for the volume mount path that does not exist") {
-                        assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
-                    }
-
                     it("creates a directory for the home directory") {
                         val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
                         assertThat(Files.exists(homeDirectoryPath), equalTo(true))
@@ -278,28 +265,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
                 }
 
-                val directoryThatExists = "/existing/directory"
-                val fileThatExists = "/existing/file"
-                val directoryThatDoesNotExist = "/new/directory"
-                val volumeMounts = setOf(
-                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatExists), "/container/existing-directory", null),
-                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(fileThatExists), "/container/existing-file", null),
-                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatDoesNotExist), "/container/new-directory", null),
-                    DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/containter/volume", null)
-                )
-
                 beforeEachTest {
                     Files.createDirectories(systemInfo.tempDirectory)
-                    Files.createDirectories(fileSystem.getPath(directoryThatExists))
-                    Files.createFile(fileSystem.getPath(fileThatExists))
                 }
-
-                val container = Container(
-                    "some-container",
-                    imageSourceDoesNotMatter(),
-                    runAsCurrentUserConfig = runAsCurrentUserConfig,
-                    volumeMounts = configuredMounts
-                )
 
                 given("the current user is not root") {
                     val nativeMethods = mock<NativeMethods> {
@@ -312,7 +280,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem) }
 
                     on("generating the configuration") {
-                        val configuration by runForEachTest { provider.generateConfiguration(container, volumeMounts, eventSink) }
+                        val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
 
                         it("returns a set of volume mounts for the passwd and group file and home directory") {
                             assertThat(
@@ -383,10 +351,6 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             assertThat(configuration.userAndGroup, equalTo(UserAndGroup(123, 456)))
                         }
 
-                        it("creates a directory for the volume mount path that does not exist") {
-                            assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
-                        }
-
                         it("creates a directory for the home directory") {
                             val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
                             assertThat(Files.exists(homeDirectoryPath), equalTo(true))
@@ -425,7 +389,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem) }
 
                     on("generating the configuration") {
-                        val configuration by runForEachTest { provider.generateConfiguration(container, volumeMounts, eventSink) }
+                        val configuration by runForEachTest { provider.generateConfiguration(container, eventSink) }
 
                         it("returns a set of volume mounts for the passwd and group file") {
                             assertThat(
@@ -494,10 +458,6 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             assertThat(configuration.userAndGroup, equalTo(UserAndGroup(0, 0)))
                         }
 
-                        it("creates a directory for the volume mount path that does not exist") {
-                            assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
-                        }
-
                         it("creates a directory for the home directory") {
                             val homeDirectoryPath = localPathToHomeDirectory(configuration.volumeMounts, homeDirectory, fileSystem)
                             assertThat(Files.exists(homeDirectoryPath), equalTo(true))
@@ -522,6 +482,34 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         it("returns a user and group configuration with root's UID and GID") {
                             assertThat(userAndGroup, equalTo(UserAndGroup(0, 0)))
                         }
+                    }
+                }
+            }
+
+            describe("regardless of the current operating system") {
+                val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix().toBuilder().setAttributeViews("posix").build()) }
+                val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(mock(), mock(), fileSystem) }
+
+                on("creating missing volume mount directories") {
+                    val directoryThatExists = "/existing/directory"
+                    val fileThatExists = "/existing/file"
+                    val directoryThatDoesNotExist = "/new/directory"
+                    val volumeMounts = setOf(
+                        DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatExists), "/container/existing-directory", null),
+                        DockerVolumeMount(DockerVolumeMountSource.LocalPath(fileThatExists), "/container/existing-file", null),
+                        DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatDoesNotExist), "/container/new-directory", null),
+                        DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/containter/volume", null)
+                    )
+
+                    beforeEachTest {
+                        Files.createDirectories(fileSystem.getPath(directoryThatExists))
+                        Files.createFile(fileSystem.getPath(fileThatExists))
+                    }
+
+                    beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+
+                    it("creates a directory for the volume mount path that does not exist") {
+                        assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
                     }
                 }
             }

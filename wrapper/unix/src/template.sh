@@ -61,6 +61,7 @@
 
         BATECT_WRAPPER_SCRIPT_DIR="$SCRIPT_PATH" \
         HOSTNAME="$HOSTNAME" \
+        exec \
             java \
             -Djava.net.useSystemProxies=true \
             $JAVA_OPTS \

@@ -53,6 +53,7 @@ object RunContainerStepRunnerSpec : Spek({
 
         val stdout = mock<Sink>()
         val stdin = mock<Source>()
+        val useTTY = true
         val frameDimensions = Dimensions(20, 30)
 
         val containersClient by createForEachTest { mock<DockerContainersClient>() }
@@ -62,6 +63,7 @@ object RunContainerStepRunnerSpec : Spek({
                 on { stdoutForContainer(container) } doReturn stdout
                 on { stdinForContainer(container) } doReturn stdin
                 on { this.frameDimensions } doReturn frameDimensions
+                on { useTTYForContainer(container) } doReturn useTTY
             }
         }
 
@@ -71,9 +73,9 @@ object RunContainerStepRunnerSpec : Spek({
 
         on("when running the container succeeds") {
             beforeEachTest {
-                whenever(containersClient.run(any(), any(), any(), any(), any(), any())).doAnswer { invocation ->
+                whenever(containersClient.run(any(), any(), any(), any(), any(), any(), any())).doAnswer { invocation ->
                     @Suppress("UNCHECKED_CAST")
-                    val onStartedHandler = invocation.arguments[5] as () -> Unit
+                    val onStartedHandler = invocation.arguments[6] as () -> Unit
 
                     onStartedHandler()
 
@@ -84,7 +86,7 @@ object RunContainerStepRunnerSpec : Spek({
             }
 
             it("runs the container with the stdin and stdout provided by the I/O streaming options") {
-                verify(containersClient).run(eq(dockerContainer), eq(stdout), eq(stdin), eq(cancellationContext), eq(frameDimensions), any())
+                verify(containersClient).run(eq(dockerContainer), eq(stdout), eq(stdin), eq(useTTY), eq(cancellationContext), eq(frameDimensions), any())
             }
 
             it("emits a 'container started' event") {
@@ -98,7 +100,7 @@ object RunContainerStepRunnerSpec : Spek({
 
         on("when running the container fails") {
             beforeEachTest {
-                whenever(containersClient.run(any(), any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong"))
+                whenever(containersClient.run(any(), any(), any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong"))
 
                 runner.run(step, eventSink)
             }

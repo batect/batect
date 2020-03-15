@@ -65,7 +65,7 @@ object CreateContainerStepRunnerSpec : Spek({
 
         val config = mock<ContainerRuntimeConfiguration>()
         val step = CreateContainerStep(container, config, setOf(container, otherContainer), image, network)
-        val request = DockerContainerCreationRequest("the-container-name", image, network, Command.parse("do-stuff").parsedCommand, Command.parse("sh").parsedCommand, "some-container", setOf("some-container"), emptyMap(), "/work-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
+        val request = DockerContainerCreationRequest("the-container-name", image, network, Command.parse("do-stuff").parsedCommand, Command.parse("sh").parsedCommand, "some-container", setOf("some-container"), emptyMap(), "/work-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet(), true, true)
 
         val containersClient by createForEachTest { mock<DockerContainersClient>() }
 
@@ -94,13 +94,15 @@ object CreateContainerStepRunnerSpec : Spek({
 
         val creationRequestFactory by createForEachTest {
             mock<DockerContainerCreationRequestFactory> {
-                on { create(container, image, network, config, combinedMounts, runOptions.propagateProxyEnvironmentVariables, runAsCurrentUserConfiguration.userAndGroup, "some-terminal", step.allContainersInNetwork) } doReturn request
+                on { create(container, image, network, config, combinedMounts, runOptions.propagateProxyEnvironmentVariables, runAsCurrentUserConfiguration.userAndGroup, "some-terminal", step.allContainersInNetwork, true, false) } doReturn request
             }
         }
 
         val ioStreamingOptions by createForEachTest {
             mock<ContainerIOStreamingOptions> {
                 on { terminalTypeForContainer(container) } doReturn "some-terminal"
+                on { attachStdinForContainer(container) } doReturn false
+                on { useTTYForContainer(container) } doReturn true
             }
         }
 

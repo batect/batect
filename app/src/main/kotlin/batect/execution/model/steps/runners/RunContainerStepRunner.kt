@@ -36,7 +36,7 @@ class RunContainerStepRunner(
             val stdout = ioStreamingOptions.stdoutForContainer(step.container)
             val stdin = ioStreamingOptions.stdinForContainer(step.container)
 
-            val result = containersClient.run(step.dockerContainer, stdout, stdin, cancellationContext, ioStreamingOptions.frameDimensions) {
+            val result = containersClient.run(step.dockerContainer, stdout, stdin, ioStreamingOptions.useTTYForContainer(step.container), cancellationContext, ioStreamingOptions.frameDimensions) {
                 eventSink.postEvent(ContainerStartedEvent(step.container))
             }
 

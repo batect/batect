@@ -43,16 +43,18 @@ data class DockerContainerCreationRequest(
     val privileged: Boolean,
     val init: Boolean,
     val capabilitiesToAdd: Set<Capability>,
-    val capabilitiesToDrop: Set<Capability>
+    val capabilitiesToDrop: Set<Capability>,
+    val useTTY: Boolean,
+    val attachStdin: Boolean
 ) {
     fun toJson(): String {
         return json {
-            "AttachStdin" to true
+            "AttachStdin" to attachStdin
             "AttachStdout" to true
             "AttachStderr" to true
-            "Tty" to true
-            "OpenStdin" to true
-            "StdinOnce" to true
+            "Tty" to useTTY
+            "OpenStdin" to attachStdin
+            "StdinOnce" to attachStdin
             "Image" to image.id
             "Hostname" to hostname
             "Env" to environmentVariables.toDockerFormatJsonArray()

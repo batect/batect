@@ -45,21 +45,28 @@ object ContainerEndToEndIntegrationTest : Spek({
                 val image by runBeforeGroup { imageSource() }
 
                 describe("using that image to create and run a container") {
-                    val output by runBeforeGroup {
-                        val outputStream = ByteArrayOutputStream()
-                        val stdout = outputStream.sink()
+                    mapOf(
+                        "using a TTY" to true,
+                        "not using a TTY" to false
+                    ).forEach { description, useTTY ->
+                        describe(description) {
+                            val output by runBeforeGroup {
+                                val outputStream = ByteArrayOutputStream()
+                                val stdout = outputStream.sink()
 
-                        client.withNetwork { network ->
-                            client.withContainer(creationRequestForContainer(image, network, ContainerCommands.exitImmediately)) { container ->
-                                client.runContainerAndWaitForCompletion(container, stdout)
+                                client.withNetwork { network ->
+                                    client.withContainer(creationRequestForContainer(image, network, ContainerCommands.exitImmediately, useTTY = useTTY)) { container ->
+                                        client.runContainerAndWaitForCompletion(container, stdout, useTTY)
+                                    }
+                                }
+
+                                outputStream.toString()
+                            }
+
+                            it("starts the container successfully") {
+                                assertThat(output.trim(), equalTo("Hello from the container"))
                             }
                         }
-
-                        outputStream.toString()
-                    }
-
-                    it("starts the container successfully") {
-                        assertThat(output.trim(), equalTo("Hello from the container"))
                     }
                 }
             }

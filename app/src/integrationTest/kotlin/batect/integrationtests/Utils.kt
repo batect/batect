@@ -33,7 +33,8 @@ fun creationRequestForContainer(
     volumeMounts: Set<DockerVolumeMount> = emptySet(),
     deviceMounts: Set<DeviceMount> = emptySet(),
     portMappings: Set<PortMapping> = emptySet(),
-    userAndGroup: UserAndGroup? = null
+    userAndGroup: UserAndGroup? = null,
+    useTTY: Boolean = true
 ): DockerContainerCreationRequest {
     return DockerContainerCreationRequest(
         "batect-integration-test-" + UUID.randomUUID().toString(),
@@ -53,7 +54,9 @@ fun creationRequestForContainer(
         privileged = false,
         init = false,
         capabilitiesToAdd = emptySet(),
-        capabilitiesToDrop = emptySet()
+        capabilitiesToDrop = emptySet(),
+        useTTY = useTTY,
+        attachStdin = true
     )
 }
 

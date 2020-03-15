@@ -52,7 +52,9 @@ object DockerContainerCreationRequestSpec : Spek({
                 privileged = true,
                 init = true,
                 capabilitiesToAdd = setOf(Capability.NET_ADMIN, Capability.KILL),
-                capabilitiesToDrop = setOf(Capability.AUDIT_READ, Capability.CHOWN)
+                capabilitiesToDrop = setOf(Capability.AUDIT_READ, Capability.CHOWN),
+                useTTY = true,
+                attachStdin = false
             )
 
             on("converting it to JSON for submission to the Docker API") {
@@ -60,12 +62,12 @@ object DockerContainerCreationRequestSpec : Spek({
 
                 it("returns the request in the format expected by the Docker API") {
                     assertThat(json, equivalentTo("""{
-                        |   "AttachStdin": true,
+                        |   "AttachStdin": false,
                         |   "AttachStdout": true,
                         |   "AttachStderr": true,
                         |   "Tty": true,
-                        |   "OpenStdin": true,
-                        |   "StdinOnce": true,
+                        |   "OpenStdin": false,
+                        |   "StdinOnce": false,
                         |   "Image": "the-image",
                         |   "Cmd": ["do-the-thing"],
                         |   "Entrypoint": ["sh"],
@@ -184,7 +186,9 @@ object DockerContainerCreationRequestSpec : Spek({
                         |  "privileged": true,
                         |  "init": true,
                         |  "capabilitiesToAdd": ["NET_ADMIN", "KILL"],
-                        |  "capabilitiesToDrop": ["AUDIT_READ", "CHOWN"]
+                        |  "capabilitiesToDrop": ["AUDIT_READ", "CHOWN"],
+                        |  "useTTY": true,
+                        |  "attachStdin": false
                         |}
                     """.trimMargin()))
                 }
@@ -210,7 +214,9 @@ object DockerContainerCreationRequestSpec : Spek({
                 privileged = false,
                 init = false,
                 capabilitiesToAdd = emptySet(),
-                capabilitiesToDrop = emptySet()
+                capabilitiesToDrop = emptySet(),
+                useTTY = false,
+                attachStdin = false
             )
 
             on("converting it to JSON for submission to the Docker API") {
@@ -218,12 +224,12 @@ object DockerContainerCreationRequestSpec : Spek({
 
                 it("returns the request in the format expected by the Docker API") {
                     assertThat(json, equivalentTo("""{
-                        |   "AttachStdin": true,
+                        |   "AttachStdin": false,
                         |   "AttachStdout": true,
                         |   "AttachStderr": true,
-                        |   "Tty": true,
-                        |   "OpenStdin": true,
-                        |   "StdinOnce": true,
+                        |   "Tty": false,
+                        |   "OpenStdin": false,
+                        |   "StdinOnce": false,
                         |   "Image": "the-image",
                         |   "Hostname": "the-hostname",
                         |   "Env": [],

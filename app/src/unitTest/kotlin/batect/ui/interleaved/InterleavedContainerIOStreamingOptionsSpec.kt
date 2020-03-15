@@ -58,9 +58,21 @@ object InterleavedContainerIOStreamingOptionsSpec : Spek({
             }
         }
 
+        on("determining if stdin should be attached for a container") {
+            it("returns that stdin should not be attached") {
+                assertThat(options.attachStdinForContainer(container), equalTo(false))
+            }
+        }
+
         on("getting the stdout stream to use") {
             it("returns an interleaved output stream") {
                 assertThat(options.stdoutForContainer(container), equalTo(InterleavedContainerOutputSink(container, output)))
+            }
+        }
+
+        on("determining if a TTY should be used for a container") {
+            it("returns that a TTY should not be used") {
+                assertThat(options.useTTYForContainer(container), equalTo(false))
             }
         }
 

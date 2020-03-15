@@ -68,6 +68,14 @@ object TaskContainerOnlyIOStreamingOptionsSpec : Spek({
                     verify(stdin).resurrect()
                 }
             }
+
+            it("indicates that a TTY should be used for the container") {
+                assertThat(options.useTTYForContainer(taskContainer), equalTo(true))
+            }
+
+            it("indicates that stdin should be attached to the container") {
+                assertThat(options.attachStdinForContainer(taskContainer), equalTo(true))
+            }
         }
 
         given("the current container is not the task container") {
@@ -91,6 +99,14 @@ object TaskContainerOnlyIOStreamingOptionsSpec : Spek({
                 it("does not resurrect the stdin stream") {
                     verify(stdin, never()).resurrect()
                 }
+            }
+
+            it("indicates that a TTY should not be used for the container") {
+                assertThat(options.useTTYForContainer(container), equalTo(false))
+            }
+
+            it("indicates that stdin should not be attached to the container") {
+                assertThat(options.attachStdinForContainer(container), equalTo(false))
             }
         }
     }

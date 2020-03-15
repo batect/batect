@@ -51,7 +51,7 @@ class DockerContainersClient(
     fun stop(container: DockerContainer) = api.stop(container)
     fun remove(container: DockerContainer) = api.remove(container)
 
-    fun run(container: DockerContainer, stdout: Sink?, stdin: Source?, cancellationContext: CancellationContext, frameDimensions: Dimensions, onStarted: () -> Unit): DockerContainerRunResult {
+    fun run(container: DockerContainer, stdout: Sink?, stdin: Source?, usesTTY: Boolean, cancellationContext: CancellationContext, frameDimensions: Dimensions, onStarted: () -> Unit): DockerContainerRunResult {
         logger.info {
             message("Running container.")
             data("container", container)
@@ -63,7 +63,7 @@ class DockerContainersClient(
 
         val exitCodeSource = waiter.startWaitingForContainerToExit(container, cancellationContext)
 
-        connectContainerOutput(container, stdout).use { outputConnection ->
+        connectContainerOutput(container, stdout, usesTTY).use { outputConnection ->
             connectContainerInput(container, stdin).use { inputConnection ->
                 api.start(container)
                 onStarted()
@@ -87,12 +87,12 @@ class DockerContainersClient(
         return DockerContainerRunResult(exitCode)
     }
 
-    private fun connectContainerOutput(container: DockerContainer, stdout: Sink?): OutputConnection {
+    private fun connectContainerOutput(container: DockerContainer, stdout: Sink?, isTTY: Boolean): OutputConnection {
         if (stdout == null) {
             return OutputConnection.Disconnected
         }
 
-        return OutputConnection.Connected(api.attachToOutput(container), stdout)
+        return OutputConnection.Connected(api.attachToOutput(container, isTTY), stdout)
     }
 
     private fun connectContainerInput(container: DockerContainer, stdin: Source?): InputConnection {

@@ -73,7 +73,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
         val containersClient by createForEachTest {
             mock<DockerContainersClient> {
                 on { create(any()) } doReturn dockerContainer
-                on { run(any(), any(), anyOrNull(), any(), any(), any()) } doReturn DockerContainerRunResult(0)
+                on { run(any(), any(), anyOrNull(), any(), any(), any(), any()) } doReturn DockerContainerRunResult(0)
             }
         }
 
@@ -113,7 +113,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
             }
 
             it("does not run any containers") {
-                verify(containersClient, never()).run(any(), any(), any(), any(), any(), any())
+                verify(containersClient, never()).run(any(), any(), any(), any(), any(), any(), any())
             }
         }
 
@@ -144,7 +144,9 @@ object InitialiseCachesStepRunnerSpec : Spek({
                         false,
                         false,
                         emptySet(),
-                        emptySet()
+                        emptySet(),
+                        false,
+                        false
                     )
                 )
             }
@@ -152,7 +154,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
 
         fun Suite.itRunsTheCacheInitContainer() {
             it("runs the cache init container") {
-                verify(containersClient).run(eq(dockerContainer), any(), eq(null), eq(cancellationContext), eq(Dimensions(0, 0)), any())
+                verify(containersClient).run(eq(dockerContainer), any(), eq(null), eq(false), eq(cancellationContext), eq(Dimensions(0, 0)), any())
             }
         }
 
@@ -205,7 +207,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
 
                         given("running the container fails with a non-zero exit code") {
                             beforeEachTest {
-                                whenever(containersClient.run(any(), any(), anyOrNull(), any(), any(), any())).then { invocation ->
+                                whenever(containersClient.run(any(), any(), anyOrNull(), any(), any(), any(), any())).then { invocation ->
                                     val stdout = invocation.arguments[1] as Sink
 
                                     stdout.buffer().writeUtf8("Something went wrong.").flush()
@@ -242,7 +244,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
 
                         given("running the container fails") {
                             beforeEachTest {
-                                whenever(containersClient.run(any(), any(), anyOrNull(), any(), any(), any())).thenThrow(DockerException("Something went wrong."))
+                                whenever(containersClient.run(any(), any(), anyOrNull(), any(), any(), any(), any())).thenThrow(DockerException("Something went wrong."))
                             }
 
                             beforeEachTest { runner.run(step, eventSink) }

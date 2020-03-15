@@ -55,7 +55,9 @@ class CreateContainerStepRunner(
                 runOptions.propagateProxyEnvironmentVariables,
                 runAsCurrentUserConfiguration.userAndGroup,
                 ioStreamingOptions.terminalTypeForContainer(step.container),
-                step.allContainersInNetwork
+                step.allContainersInNetwork,
+                ioStreamingOptions.useTTYForContainer(step.container),
+                ioStreamingOptions.attachStdinForContainer(step.container)
             )
 
             val dockerContainer = containersClient.create(creationRequest)

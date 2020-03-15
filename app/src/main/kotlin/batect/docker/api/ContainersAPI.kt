@@ -26,6 +26,7 @@ import batect.docker.DockerHttpConfig
 import batect.docker.data
 import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerInputStream
+import batect.docker.run.ContainerOutputDecoder
 import batect.docker.run.ContainerOutputStream
 import batect.docker.toJsonArray
 import batect.execution.CancellationContext
@@ -325,7 +326,7 @@ class ContainersAPI(
     // And, to make things more complicated, we can't use the same socket for both container input and container output, as we need to be able to close
     // the input stream when there's no more input without closing the output stream - Java sockets don't seem to support closing one side of the
     // connection without also closing the other at the same time.
-    fun attachToOutput(container: DockerContainer): ContainerOutputStream {
+    fun attachToOutput(container: DockerContainer, isTTY: Boolean): ContainerOutputStream {
         logger.info {
             message("Attaching to container output.")
             data("container", container)
@@ -365,7 +366,11 @@ class ContainersAPI(
             throw DockerException("Attaching to output from container '${container.id}' failed: ${error.message}")
         }
 
-        return ContainerOutputStream(response, hijacker.source!!)
+        return if (isTTY) {
+            ContainerOutputStream(response, hijacker.source!!)
+        } else {
+            ContainerOutputStream(response, ContainerOutputDecoder(hijacker.source!!))
+        }
     }
 
     fun attachToInput(container: DockerContainer): ContainerInputStream {

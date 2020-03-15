@@ -83,7 +83,7 @@ object DockerContainersClientSpec : Spek({
                 val network = DockerNetwork("the-network")
                 val command = listOf("doStuff")
                 val entrypoint = listOf("sh")
-                val request = DockerContainerCreationRequest("the-container-name", image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
+                val request = DockerContainerCreationRequest("the-container-name", image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet(), true, true)
 
                 on("creating the container") {
                     beforeEachTest { whenever(api.create(request)).doReturn(DockerContainer("abc123")) }
@@ -106,6 +106,7 @@ object DockerContainersClientSpec : Spek({
                 val container = DockerContainer("the-container-id")
                 val outputStream by createForEachTest { mock<ContainerOutputStream>() }
                 val inputStream by createForEachTest { mock<ContainerInputStream>() }
+                val useTTY = true
                 val frameDimensions = Dimensions(10, 20)
                 val terminalRestorer by createForEachTest { mock<AutoCloseable>() }
                 val resizingRestorer by createForEachTest { mock<AutoCloseable>() }
@@ -115,7 +116,7 @@ object DockerContainersClientSpec : Spek({
 
                 beforeEachTest {
                     whenever(waiter.startWaitingForContainerToExit(container, cancellationContext)).doReturn(CompletableFuture.completedFuture(123L))
-                    whenever(api.attachToOutput(container)).doReturn(outputStream)
+                    whenever(api.attachToOutput(container, useTTY)).doReturn(outputStream)
                     whenever(api.attachToInput(container)).doReturn(inputStream)
                     whenever(consoleManager.enterRawMode()).doReturn(terminalRestorer)
                     whenever(ttyManager.monitorForSizeChanges(container, frameDimensions)).doReturn(resizingRestorer)
@@ -128,7 +129,7 @@ object DockerContainersClientSpec : Spek({
                         val stdin by createForEachTest { mock<Source>() }
 
                         on("running the container") {
-                            val result by runForEachTest { client.run(container, stdout, stdin, cancellationContext, frameDimensions, onStartedHandler) }
+                            val result by runForEachTest { client.run(container, stdout, stdin, useTTY, cancellationContext, frameDimensions, onStartedHandler) }
 
                             it("returns the exit code from the container") {
                                 assertThat(result.exitCode, equalTo(123))
@@ -173,7 +174,7 @@ object DockerContainersClientSpec : Spek({
 
                             it("attaches to the container output before starting the container") {
                                 inOrder(api) {
-                                    verify(api).attachToOutput(container)
+                                    verify(api).attachToOutput(container, useTTY)
                                     verify(api).start(container)
                                 }
                             }
@@ -213,7 +214,7 @@ object DockerContainersClientSpec : Spek({
                         val stdin: Source? = null
 
                         on("running the container") {
-                            val result by runForEachTest { client.run(container, stdout, stdin, cancellationContext, frameDimensions, onStartedHandler) }
+                            val result by runForEachTest { client.run(container, stdout, stdin, useTTY, cancellationContext, frameDimensions, onStartedHandler) }
 
                             it("returns the exit code from the container") {
                                 assertThat(result.exitCode, equalTo(123))
@@ -228,7 +229,7 @@ object DockerContainersClientSpec : Spek({
                             }
 
                             it("attaches to the container output") {
-                                verify(api).attachToOutput(container)
+                                verify(api).attachToOutput(container, useTTY)
                             }
 
                             it("does not attach to the container input") {
@@ -253,7 +254,7 @@ object DockerContainersClientSpec : Spek({
                         val stdin by createForEachTest { mock<Source>() }
 
                         it("throws an appropriate exception") {
-                            assertThat({ client.run(container, stdout, stdin, cancellationContext, frameDimensions, onStartedHandler) }, throws<DockerException>(withMessage("Attempted to stream input to container without streaming container output.")))
+                            assertThat({ client.run(container, stdout, stdin, useTTY, cancellationContext, frameDimensions, onStartedHandler) }, throws<DockerException>(withMessage("Attempted to stream input to container without streaming container output.")))
                         }
                     }
 
@@ -261,7 +262,7 @@ object DockerContainersClientSpec : Spek({
                         val stdin: Source? = null
 
                         on("running the container") {
-                            val result by runForEachTest { client.run(container, stdout, stdin, cancellationContext, frameDimensions, onStartedHandler) }
+                            val result by runForEachTest { client.run(container, stdout, stdin, useTTY, cancellationContext, frameDimensions, onStartedHandler) }
 
                             it("returns the exit code from the container") {
                                 assertThat(result.exitCode, equalTo(123))
@@ -276,7 +277,7 @@ object DockerContainersClientSpec : Spek({
                             }
 
                             it("does not attach to the container output") {
-                                verify(api, never()).attachToOutput(container)
+                                verify(api, never()).attachToOutput(container, useTTY)
                             }
 
                             it("does not attach to the container input") {

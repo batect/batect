@@ -147,7 +147,9 @@ class InitialiseCachesStepRunner(
             false,
             false,
             emptySet(),
-            emptySet()
+            emptySet(),
+            false,
+            false
         )
     }
 
@@ -166,7 +168,7 @@ class InitialiseCachesStepRunner(
     private fun run(container: DockerContainer) {
         try {
             val output = ByteArrayOutputStream()
-            val result = containersClient.run(container, output.sink(), null, cancellationContext, Dimensions(0, 0), {})
+            val result = containersClient.run(container, output.sink(), null, false, cancellationContext, Dimensions(0, 0), {})
 
             if (result.exitCode != 0L) {
                 throw CacheInitialisationException("Running the cache initialisation container failed: the container exited with exit code ${result.exitCode} and output:\n$output")

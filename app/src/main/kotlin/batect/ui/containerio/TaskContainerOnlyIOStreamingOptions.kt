@@ -34,6 +34,8 @@ data class TaskContainerOnlyIOStreamingOptions(
     override fun terminalTypeForContainer(container: Container): String? = consoleInfo.terminalType
     override val frameDimensions = Dimensions(0, 0)
 
+    override fun attachStdinForContainer(container: Container): Boolean = container == taskContainer
+
     override fun stdinForContainer(container: Container): Source? {
         if (container == taskContainer) {
             stdin.resurrect()
@@ -53,4 +55,6 @@ data class TaskContainerOnlyIOStreamingOptions(
 
     override fun stdoutForContainerSetupCommand(container: Container, setupCommand: SetupCommand, index: Int): Sink? = null
     override fun stdoutForImageBuild(container: Container): Sink? = null
+
+    override fun useTTYForContainer(container: Container): Boolean = container == taskContainer
 }

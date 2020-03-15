@@ -274,6 +274,9 @@ batect offers four styles of output:
 By default, batect will automatically pick an output style that it believes is appropriate for the environment it is running in -
 `fancy` if it believes your environment supports it, or `simple` otherwise.
 
+A TTY (and stdin) are attached to the task container when using `fancy`, `simple` and `quiet` output styles. All other containers
+(and all containers when using `all`) will not have stdin or a TTY attached.
+
 Passing this flag allows you to override what batect believes is appropriate.
 
 Example:

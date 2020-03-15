@@ -33,6 +33,7 @@ import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerInputStream
+import batect.docker.run.ContainerOutputDecoder
 import batect.docker.run.ContainerOutputStream
 import batect.execution.CancellationContext
 import batect.os.Dimensions
@@ -116,7 +117,7 @@ object ContainersAPISpec : Spek({
                 val network = DockerNetwork("the-network")
                 val command = listOf("doStuff")
                 val entrypoint = listOf("sh")
-                val request = DockerContainerCreationRequest("the-container", image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet())
+                val request = DockerContainerCreationRequest("the-container", image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet(), true, true)
 
                 on("a successful creation") {
                     val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, """{"Id": "abc123"}""", 201) }
@@ -607,29 +608,51 @@ object ContainersAPISpec : Spek({
                 describe("attaching to output") {
                     val expectedUrl = "$dockerBaseUrl/v1.37/containers/the-container-id/attach?logs=true&stream=true&stdout=true&stderr=true"
 
-                    on("the attach succeeding") {
+                    given("attaching succeeds") {
                         val response = mock<Response> {
                             on { code } doReturn 101
                         }
 
                         beforeEachTest { attachHttpClient.mock("POST", expectedUrl, response, expectedHeaders) }
 
-                        val streams by runForEachTest { api.attachToOutput(container) }
+                        given("a TTY is being used") {
+                            val streams by runForEachTest { api.attachToOutput(container, isTTY = true) }
 
-                        it("returns the stream from the underlying connection") {
-                            assertThat(streams, equalTo(ContainerOutputStream(response, source)))
+                            it("returns the stream from the underlying connection") {
+                                assertThat(streams, equalTo(ContainerOutputStream(response, source)))
+                            }
+
+                            it("does not close the underlying connection") {
+                                verify(response, never()).close()
+                            }
+
+                            it("configures the HTTP client with no timeout") {
+                                verify(clientBuilder).readTimeout(eq(0), any())
+                            }
+
+                            it("configures the HTTP client with a separate connection pool that does not evict connections (because the underlying connection cannot be reused and because we don't want to evict the connection just because there hasn't been any output for a while)") {
+                                verify(clientBuilder).connectionPool(connectionPoolWithNoEviction())
+                            }
                         }
 
-                        it("does not close the underlying connection") {
-                            verify(response, never()).close()
-                        }
+                        given("a TTY is not being used") {
+                            val streams by runForEachTest { api.attachToOutput(container, isTTY = false) }
 
-                        it("configures the HTTP client with no timeout") {
-                            verify(clientBuilder).readTimeout(eq(0), any())
-                        }
+                            it("returns the stream from the underlying connection") {
+                                assertThat(streams, equalTo(ContainerOutputStream(response, ContainerOutputDecoder(source))))
+                            }
 
-                        it("configures the HTTP client with a separate connection pool that does not evict connections (because the underlying connection cannot be reused and because we don't want to evict the connection just because there hasn't been any output for a while)") {
-                            verify(clientBuilder).connectionPool(connectionPoolWithNoEviction())
+                            it("does not close the underlying connection") {
+                                verify(response, never()).close()
+                            }
+
+                            it("configures the HTTP client with no timeout") {
+                                verify(clientBuilder).readTimeout(eq(0), any())
+                            }
+
+                            it("configures the HTTP client with a separate connection pool that does not evict connections (because the underlying connection cannot be reused and because we don't want to evict the connection just because there hasn't been any output for a while)") {
+                                verify(clientBuilder).connectionPool(connectionPoolWithNoEviction())
+                            }
                         }
                     }
 
@@ -637,7 +660,7 @@ object ContainersAPISpec : Spek({
                         beforeEachTest { attachHttpClient.mockPost(expectedUrl, errorResponse, 418, expectedHeaders) }
 
                         it("raises an appropriate exception") {
-                            assertThat({ api.attachToOutput(container) }, throws<DockerException>(withMessage("Attaching to output from container 'the-container-id' failed: $errorMessageWithCorrectLineEndings")))
+                            assertThat({ api.attachToOutput(container, true) }, throws<DockerException>(withMessage("Attaching to output from container 'the-container-id' failed: $errorMessageWithCorrectLineEndings")))
                         }
                     }
                 }

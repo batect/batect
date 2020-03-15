@@ -28,6 +28,8 @@ interface ContainerIOStreamingOptions {
     fun stdoutForContainer(container: Container): Sink?
     fun stdoutForContainerSetupCommand(container: Container, setupCommand: SetupCommand, index: Int): Sink?
     fun stdoutForImageBuild(container: Container): Sink?
+    fun useTTYForContainer(container: Container): Boolean
+    fun attachStdinForContainer(container: Container): Boolean
 
     val frameDimensions: Dimensions
 }

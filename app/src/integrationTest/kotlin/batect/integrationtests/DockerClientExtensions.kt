@@ -56,13 +56,13 @@ fun DockerClient.pull(imageName: String): DockerImage = retry(3) {
 fun DockerClient.build(imageDirectory: Path, tag: String): DockerImage =
     this.images.build(imageDirectory, emptyMap(), "Dockerfile", setOf(tag), null, CancellationContext()) {}
 
-fun DockerClient.runContainerAndWaitForCompletion(container: DockerContainer, stdout: Sink = System.out.sink()) =
-    this.runContainer(container, stdout) {}
+fun DockerClient.runContainerAndWaitForCompletion(container: DockerContainer, stdout: Sink = System.out.sink(), useTTY: Boolean = true) =
+    this.runContainer(container, stdout, useTTY) {}
 
-fun <T : Any> DockerClient.runContainer(container: DockerContainer, stdout: Sink = System.out.sink(), action: () -> T): T {
+fun <T : Any> DockerClient.runContainer(container: DockerContainer, stdout: Sink = System.out.sink(), useTTY: Boolean = true, action: () -> T): T {
     lateinit var result: T
 
-    this.containers.run(container, stdout, ByteArrayInputStream(ByteArray(0)).source(), CancellationContext(), Dimensions(0, 0)) {
+    this.containers.run(container, stdout, ByteArrayInputStream(ByteArray(0)).source(), useTTY, CancellationContext(), Dimensions(0, 0)) {
         result = action()
     }
 

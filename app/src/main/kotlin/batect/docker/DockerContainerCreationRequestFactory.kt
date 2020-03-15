@@ -32,7 +32,9 @@ class DockerContainerCreationRequestFactory(
         propagateProxyEnvironmentVariables: Boolean,
         userAndGroup: UserAndGroup?,
         terminalType: String?,
-        allContainersInNetwork: Set<Container>
+        allContainersInNetwork: Set<Container>,
+        useTTY: Boolean,
+        attachStdin: Boolean
     ): DockerContainerCreationRequest {
         return DockerContainerCreationRequest(
             containerNameGenerator.generateNameFor(container),
@@ -52,7 +54,9 @@ class DockerContainerCreationRequestFactory(
             container.privileged,
             container.enableInitProcess,
             container.capabilitiesToAdd,
-            container.capabilitiesToDrop
+            container.capabilitiesToDrop,
+            useTTY,
+            attachStdin
         )
     }
 }

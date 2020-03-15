@@ -95,7 +95,9 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     propagateProxyEnvironmentVariables,
                     userAndGroup,
                     terminalType,
-                    allContainersInNetwork
+                    allContainersInNetwork,
+                    useTTY = false,
+                    attachStdin = true
                 )
 
                 it("populates the container name on the request") {
@@ -169,6 +171,14 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 it("populates the capabilities to drop on the request with the set from the container") {
                     assertThat(request.capabilitiesToDrop, equalTo(container.capabilitiesToDrop))
                 }
+
+                it("populates the 'use TTY' setting on the request with the provided value") {
+                    assertThat(request.useTTY, equalTo(false))
+                }
+
+                it("populates the stdin configuration with the provided value") {
+                    assertThat(request.attachStdin, equalTo(true))
+                }
             }
         }
 
@@ -185,7 +195,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 )
 
                 val config = ContainerRuntimeConfiguration(command, entrypoint, workingDirectory, additionalEnvironmentVariables, additionalPortMappings)
-                val request = factory.create(container, image, network, config, volumeMounts, propagateProxyEnvironmentVariables, null, terminalType, allContainersInNetwork)
+                val request = factory.create(container, image, network, config, volumeMounts, propagateProxyEnvironmentVariables, null, terminalType, allContainersInNetwork, false, false)
 
                 it("populates the port mappings on the request with the combined set of port mappings from the container and the additional port mappings") {
                     assertThat(
@@ -205,7 +215,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
             on("creating the request") {
                 val config = ContainerRuntimeConfiguration(null, entrypoint, workingDirectory, emptyMap(), emptySet())
-                val request = factory.create(container, image, network, config, emptySet(), propagateProxyEnvironmentVariables, null, terminalType, allContainersInNetwork)
+                val request = factory.create(container, image, network, config, emptySet(), propagateProxyEnvironmentVariables, null, terminalType, allContainersInNetwork, false, false)
 
                 it("does not populate the command on the request") {
                     assertThat(request.command, equalTo(emptyList()))
@@ -218,7 +228,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
             on("creating the request") {
                 val config = ContainerRuntimeConfiguration(command, null, workingDirectory, emptyMap(), emptySet())
-                val request = factory.create(container, image, network, config, emptySet(), propagateProxyEnvironmentVariables, null, terminalType, allContainersInNetwork)
+                val request = factory.create(container, image, network, config, emptySet(), propagateProxyEnvironmentVariables, null, terminalType, allContainersInNetwork, false, false)
 
                 it("does not populate the entrypoint on the request") {
                     assertThat(request.entrypoint, equalTo(emptyList()))

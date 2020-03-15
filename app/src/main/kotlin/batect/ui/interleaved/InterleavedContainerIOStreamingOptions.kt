@@ -28,7 +28,9 @@ import okio.Source
 
 data class InterleavedContainerIOStreamingOptions(private val output: InterleavedOutput) : ContainerIOStreamingOptions {
     override fun terminalTypeForContainer(container: Container): String? = "dumb"
+    override fun useTTYForContainer(container: Container): Boolean = false
     override fun stdinForContainer(container: Container): Source? = null
+    override fun attachStdinForContainer(container: Container): Boolean = false
     override fun stdoutForContainer(container: Container): Sink? = InterleavedContainerOutputSink(container, output)
     override fun stdoutForContainerSetupCommand(container: Container, setupCommand: SetupCommand, index: Int): Sink? =
         outputStreamWithPrefix(container, "Setup command ${index + 1} | ")

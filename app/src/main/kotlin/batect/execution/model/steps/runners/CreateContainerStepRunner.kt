@@ -19,6 +19,7 @@ package batect.execution.model.steps.runners
 import batect.docker.ContainerCreationFailedException
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.client.DockerContainersClient
+import batect.execution.RunAsCurrentUserConfigurationException
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
 import batect.execution.VolumeMountResolutionException
@@ -62,6 +63,8 @@ class CreateContainerStepRunner(
         } catch (e: ContainerCreationFailedException) {
             eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))
         } catch (e: VolumeMountResolutionException) {
+            eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))
+        } catch (e: RunAsCurrentUserConfigurationException) {
             eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))
         }
     }

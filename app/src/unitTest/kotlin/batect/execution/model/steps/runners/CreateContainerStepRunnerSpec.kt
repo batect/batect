@@ -32,6 +32,7 @@ import batect.docker.client.DockerContainersClient
 import batect.execution.CleanupOption
 import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.RunAsCurrentUserConfiguration
+import batect.execution.RunAsCurrentUserConfigurationException
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
 import batect.execution.VolumeMountResolutionException
@@ -146,6 +147,18 @@ object CreateContainerStepRunnerSpec : Spek({
         on("when resolving a volume mount fails") {
             beforeEachTest {
                 whenever(volumeMountResolver.resolve(any<Set<VolumeMount>>())).doThrow(VolumeMountResolutionException("Something went wrong."))
+
+                runner.run(step, eventSink)
+            }
+
+            it("emits a 'container creation failed' event") {
+                verify(eventSink).postEvent(ContainerCreationFailedEvent(container, "Something went wrong."))
+            }
+        }
+
+        on("when generating the 'run as current user' configuration fails") {
+            beforeEachTest {
+                whenever(runAsCurrentUserConfigurationProvider.generateConfiguration(any(), any())).doThrow(RunAsCurrentUserConfigurationException("Something went wrong."))
 
                 runner.run(step, eventSink)
             }

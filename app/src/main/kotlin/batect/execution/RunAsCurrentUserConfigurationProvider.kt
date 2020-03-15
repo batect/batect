@@ -21,6 +21,7 @@ import batect.config.RunAsCurrentUserConfig
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
 import batect.docker.UserAndGroup
+import batect.docker.client.DockerContainerType
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TemporaryDirectoryCreatedEvent
 import batect.execution.model.events.TemporaryFileCreatedEvent
@@ -36,7 +37,8 @@ import java.nio.file.attribute.PosixFileAttributeView
 class RunAsCurrentUserConfigurationProvider(
     private val systemInfo: SystemInfo,
     private val nativeMethods: NativeMethods,
-    private val fileSystem: FileSystem
+    private val fileSystem: FileSystem,
+    private val containerType: DockerContainerType
 ) {
     fun determineUserAndGroup(container: Container): UserAndGroup? = when (container.runAsCurrentUserConfig) {
         is RunAsCurrentUserConfig.RunAsDefaultContainerUser -> null
@@ -45,6 +47,10 @@ class RunAsCurrentUserConfigurationProvider(
 
     fun generateConfiguration(container: Container, eventSink: TaskEventSink): RunAsCurrentUserConfiguration = when (container.runAsCurrentUserConfig) {
         is RunAsCurrentUserConfig.RunAsCurrentUser -> {
+            if (containerType == DockerContainerType.Windows) {
+                throw RunAsCurrentUserConfigurationException("Container '${container.name}' has run as current user enabled, but this is not supported for Windows containers.")
+            }
+
             val userId = determineUserId()
             val userName = determineUserName()
             val groupId = determineGroupId()
@@ -167,3 +173,5 @@ class RunAsCurrentUserConfigurationProvider(
         }
     }
 }
+
+class RunAsCurrentUserConfigurationException(message: String) : RuntimeException(message)

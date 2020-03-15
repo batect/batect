@@ -270,7 +270,7 @@ private val executionModule = Kodein.Module("execution") {
     bind<ContainerEntrypointResolver>() with singleton { ContainerEntrypointResolver() }
     bind<InterruptionTrap>() with singleton { InterruptionTrap(instance()) }
     bind<ParallelExecutionManager>() with scoped(TaskScope).singletonWithLogger { logger -> ParallelExecutionManager(instance(), instance(), instance(), logger) }
-    bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance(), instance()) }
+    bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance(), instance(), instance()) }
     bind<RunOptions>(RunOptionsType.Overall) with singleton { RunOptions(commandLineOptions()) }
     bind<RunStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> RunStagePlanner(instance(), instance(), instance(), logger) }
     bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), logger) }

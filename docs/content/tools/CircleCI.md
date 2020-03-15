@@ -28,6 +28,35 @@ jobs:
 You can see a full example of using batect with CircleCI in
 [the Golang sample project](https://github.com/batect/batect-sample-golang).
 
+## Caching between builds
+
+If you're using [caches](../tips/Performance.md#cache-volumes), you can persist these between builds with the following configuration:
+
+```yaml
+version: 2
+
+jobs:
+  build:
+    machine:
+      enabled: true
+      image: circleci/classic:201808-01
+    environment:
+      BATECT_CACHE_TYPE: directory
+    steps:
+      - checkout
+      - restore_cache:
+          key: batect-caches-{{ arch }}-{{ checksum "path to a file that uniquely identifies the contents of the caches" }}
+      - # ...other build steps
+      - save_cache:
+          key: batect-caches-{{ arch }}-{{ checksum "path to a file that uniquely identifies the contents of the caches" }}
+          paths:
+            - .batect/caches
+```
+
+The `key` should be a value that changes when the contents of the cache change, and remains constant otherwise. A good candidate is the hash of a dependency lockfile,
+such as `Gemfile.lock`, `package-lock.json`, `yarn.lock` or `go.sum`. The [documentation for caching](https://circleci.com/docs/2.0/caching/) has
+more details on `key`.
+
 ## Simplifying configuration with CircleCI
 
 CircleCI supports [defining reusable commands](https://circleci.com/docs/2.0/reusing-config/#authoring-reusable-commands) within your configuration file.

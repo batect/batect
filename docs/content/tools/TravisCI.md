@@ -15,5 +15,22 @@ services:
   - docker
 ```
 
-You can see a full example of using batect with Travis CI in
-[the Java sample project](https://github.com/batect/batect-sample-java).
+You can see a full example of using batect with Travis CI in [the Java sample project](https://github.com/batect/batect-sample-java).
+
+## Caching between builds
+
+If you're using [caches](../tips/Performance.md#cache-volumes), you can persist these between builds with the following configuration:
+
+```yaml
+dist: xenial
+
+services:
+  - docker
+
+env:
+  - BATECT_CACHE_TYPE=directory
+
+cache:
+  directories:
+    - .batect/caches
+```

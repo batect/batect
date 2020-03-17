@@ -26,6 +26,7 @@ import kotlinx.serialization.json.json
 import okhttp3.HttpUrl
 import okhttp3.Request
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 class NetworksAPI(
     httpConfig: DockerHttpConfig,
@@ -52,7 +53,7 @@ class NetworksAPI(
             .url(url)
             .build()
 
-        httpConfig.client.newCall(request).execute().use { response ->
+        clientWithTimeout(30, TimeUnit.SECONDS).newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Could not create network.")

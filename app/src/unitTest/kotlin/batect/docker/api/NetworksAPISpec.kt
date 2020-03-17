@@ -30,6 +30,7 @@ import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
@@ -39,12 +40,27 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.util.concurrent.TimeUnit
 
 object NetworksAPISpec : Spek({
     describe("a Docker networks API client") {
         val dockerHost = "the-docker-daemon"
         val dockerBaseUrl = "http://$dockerHost"
-        val httpClient by createForEachTest { mock<OkHttpClient>() }
+
+        val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
+        val longTimeoutClientBuilder by createForEachTest {
+            mock<OkHttpClient.Builder> { mock ->
+                on { readTimeout(any(), any()) } doReturn mock
+                on { build() } doReturn clientWithLongTimeout
+            }
+        }
+
+        val httpClient by createForEachTest {
+            mock<OkHttpClient> {
+                on { newBuilder() } doReturn longTimeoutClientBuilder
+            }
+        }
+
         val httpConfig by createForEachTest {
             mock<DockerHttpConfig> {
                 on { client } doReturn httpClient
@@ -68,7 +84,7 @@ object NetworksAPISpec : Spek({
             val expectedUrl = "$dockerBaseUrl/v1.37/networks/create"
 
             on("a successful creation") {
-                val call by createForEachTest { httpClient.mockPost(expectedUrl, """{"Id": "the-network-ID"}""", 201) }
+                val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, """{"Id": "the-network-ID"}""", 201) }
                 val result by runForEachTest { api.create("the-driver") }
 
                 it("creates the network") {
@@ -76,7 +92,7 @@ object NetworksAPISpec : Spek({
                 }
 
                 it("creates the network with the expected settings") {
-                    verify(httpClient).newCall(requestWithJsonBody { body ->
+                    verify(clientWithLongTimeout).newCall(requestWithJsonBody { body ->
                         assertThat(body.getValue("Name").content, isUUID)
                         assertThat(body.getValue("CheckDuplicate").boolean, equalTo(true))
                         assertThat(body.getValue("Driver").content, equalTo("the-driver"))
@@ -86,10 +102,14 @@ object NetworksAPISpec : Spek({
                 it("returns the ID of the created network") {
                     assertThat(result.id, equalTo("the-network-ID"))
                 }
+
+                it("configures the HTTP client with a longer timeout to allow for the network to be created") {
+                    verify(longTimeoutClientBuilder).readTimeout(30, TimeUnit.SECONDS)
+                }
             }
 
             on("an unsuccessful creation") {
-                beforeEachTest { httpClient.mockPost(expectedUrl, errorResponse, 418) }
+                beforeEachTest { clientWithLongTimeout.mockPost(expectedUrl, errorResponse, 418) }
 
                 it("throws an appropriate exception") {
                     assertThat({ api.create("the-driver") }, throws<NetworkCreationFailedException>(withMessage("Creation of network failed: $errorMessageWithCorrectLineEndings")))

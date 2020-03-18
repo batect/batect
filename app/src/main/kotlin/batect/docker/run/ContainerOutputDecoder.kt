@@ -27,22 +27,43 @@ import okio.buffer
 import java.io.InputStream
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
+import kotlin.math.min
 
 data class ContainerOutputDecoder(val source: BufferedSource) : BufferedSource {
     private val decoded = object : Source {
-        override fun close() = source.close()
+        private var remainingBytesInCurrentFrame = 0L
 
         override fun read(sink: Buffer, byteCount: Long): Long {
-            if (!source.request(8)) {
+            if (remainingBytesInCurrentFrame == 0L) {
+                if (!readFrame()) {
+                    return -1
+                }
+            }
+
+            val bytesToRead = min(byteCount, remainingBytesInCurrentFrame)
+            val bytesRead = source.read(sink, bytesToRead)
+
+            if (bytesRead == -1L) {
                 return -1
             }
 
-            source.skip(4) // The first byte of the header indicates the stream (stdout or stderr), but we don't (currently) need to differentiate between the two.
-            val size = source.readInt()
+            remainingBytesInCurrentFrame -= bytesRead
 
-            return source.read(sink, size.toLong())
+            return bytesRead
         }
 
+        private fun readFrame(): Boolean {
+            if (!source.request(8)) {
+                return false
+            }
+
+            source.skip(4) // The first byte of the header indicates the stream (stdout or stderr), but we don't (currently) need to differentiate between the two.
+            remainingBytesInCurrentFrame = source.readInt().toLong()
+
+            return true
+        }
+
+        override fun close() = source.close()
         override fun timeout(): Timeout = source.timeout()
     }
 

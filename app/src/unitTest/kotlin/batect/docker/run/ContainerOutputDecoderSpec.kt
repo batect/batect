@@ -109,6 +109,25 @@ object ContainerOutputDecoderSpec : Spek({
             }
         }
 
+        given("the underlying stream contains a single frame larger than Okio's default read size (8192 bytes)") {
+            val frameContent = "a".repeat(9000).toByteArray(Charsets.UTF_8)
+            val source by createForEachTest { ByteArrayInputStream(byteArrayOf(1, 0, 0, 0, 0, 0, 0b0010_0011, 0b0010_1000, *frameContent)) }
+
+            on("reading the entire stream") {
+                val decoder by createForEachTest { ContainerOutputDecoder(source.source().buffer()) }
+                val buffer by createForEachTest { Buffer() }
+                val bytesRead by createForEachTest { decoder.readAll(buffer) }
+
+                it("returns the number of bytes read") {
+                    assertThat(bytesRead, equalTo(9000))
+                }
+
+                it("reads the whole stream") {
+                    assertThat(buffer.readString(Charsets.UTF_8), equalTo("a".repeat(9000)))
+                }
+            }
+        }
+
         given("the underlying stream contains multiple frames") {
             val helloBytes = "hello".toByteArray(Charsets.UTF_8)
             val worldBytes = " world".toByteArray(Charsets.UTF_8)
@@ -130,6 +149,32 @@ object ContainerOutputDecoderSpec : Spek({
 
                 it("reads the whole stream") {
                     assertThat(buffer.readString(Charsets.UTF_8), equalTo("hello world"))
+                }
+            }
+        }
+
+        given("the underlying stream contains multiple frames larger than Okio's default read size (8192 bytes)") {
+            val frame1Content = "a".repeat(9000).toByteArray(Charsets.UTF_8)
+            val frame2Content = "b".repeat(9000).toByteArray(Charsets.UTF_8)
+
+            val source by createForEachTest {
+                ByteArrayInputStream(byteArrayOf(
+                    1, 0, 0, 0, 0, 0, 0b0010_0011, 0b0010_1000, *frame1Content,
+                    1, 0, 0, 0, 0, 0, 0b0010_0011, 0b0010_1000, *frame2Content
+                ))
+            }
+
+            on("reading the entire stream") {
+                val decoder by createForEachTest { ContainerOutputDecoder(source.source().buffer()) }
+                val buffer by createForEachTest { Buffer() }
+                val bytesRead by createForEachTest { decoder.readAll(buffer) }
+
+                it("returns the number of bytes read") {
+                    assertThat(bytesRead, equalTo(18000))
+                }
+
+                it("reads the whole stream") {
+                    assertThat(buffer.readString(Charsets.UTF_8), equalTo("a".repeat(9000) + "b".repeat(9000)))
                 }
             }
         }

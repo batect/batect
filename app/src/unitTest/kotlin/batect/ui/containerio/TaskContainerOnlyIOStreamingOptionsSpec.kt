@@ -31,6 +31,7 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.PrintStream
@@ -69,16 +70,36 @@ object TaskContainerOnlyIOStreamingOptionsSpec : Spek({
                 }
             }
 
-            it("indicates that a TTY should be used for the container") {
-                assertThat(options.useTTYForContainer(taskContainer), equalTo(true))
-            }
-
             it("indicates that stdin should be attached to the container") {
                 assertThat(options.attachStdinForContainer(taskContainer), equalTo(true))
+            }
+
+            given("stdout is a TTY") {
+                beforeEachTest {
+                    whenever(consoleInfo.stdoutIsTTY).doReturn(true)
+                }
+
+                it("indicates that a TTY should be used for the container") {
+                    assertThat(options.useTTYForContainer(taskContainer), equalTo(true))
+                }
+            }
+
+            given("stdout is not a TTY") {
+                beforeEachTest {
+                    whenever(consoleInfo.stdoutIsTTY).doReturn(false)
+                }
+
+                it("indicates that a TTY should not be used for the container") {
+                    assertThat(options.useTTYForContainer(taskContainer), equalTo(false))
+                }
             }
         }
 
         given("the current container is not the task container") {
+            beforeEachTest {
+                whenever(consoleInfo.stdoutIsTTY).doReturn(true)
+            }
+
             val container by createForEachTest { Container("other-container", imageSourceDoesNotMatter()) }
 
             it("returns the current console's terminal type") {

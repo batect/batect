@@ -142,12 +142,6 @@ If there's something you're really keen to see, pull requests are always welcome
   (eg. database where data is shared between invocations and we don't want to corrupt it)
 * add dependency relationship between containers and tasks (eg. running the app container requires running the build first - removes the need to specify
   build task as a prerequisite on every task that starts the app)
-* allow piping files into tasks (eg. `cat thefile.txt | ./batect the-task`)
-  * would require:
-     * creating container in non-TTY mode
-     * not putting input and output in raw mode
-     * not monitoring console size changes
-     * streaming I/O to container in multiplexed mode (see attach API documentation)
 * some way to check for outdated base images (eg. using `postgres:10.0` and suggests updating to `postgres:10.5`)
   * maybe contribute support for batect to Dependabot?
 * make the last mile easier: pushing images and deploying applications

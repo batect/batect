@@ -69,7 +69,7 @@ class DockerContainersClient(
                 onStarted()
 
                 ttyManager.monitorForSizeChanges(container, frameDimensions).use {
-                    startRawModeIfRequired(stdin).use {
+                    startRawModeIfRequired(stdin, usesTTY).use {
                         ioStreamer.stream(outputConnection, inputConnection, cancellationContext)
                     }
                 }
@@ -103,8 +103,8 @@ class DockerContainersClient(
         return InputConnection.Connected(stdin, api.attachToInput(container))
     }
 
-    private fun startRawModeIfRequired(stdin: Source?): AutoCloseable {
-        if (stdin == null) {
+    private fun startRawModeIfRequired(stdin: Source?, isTTY: Boolean): AutoCloseable {
+        if (stdin == null || !isTTY) {
             return AutoCloseable { }
         }
 

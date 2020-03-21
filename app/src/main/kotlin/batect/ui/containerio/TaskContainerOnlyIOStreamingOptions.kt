@@ -56,5 +56,5 @@ data class TaskContainerOnlyIOStreamingOptions(
     override fun stdoutForContainerSetupCommand(container: Container, setupCommand: SetupCommand, index: Int): Sink? = null
     override fun stdoutForImageBuild(container: Container): Sink? = null
 
-    override fun useTTYForContainer(container: Container): Boolean = container == taskContainer
+    override fun useTTYForContainer(container: Container): Boolean = consoleInfo.stdoutIsTTY && container == taskContainer
 }

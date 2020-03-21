@@ -171,7 +171,38 @@ class RunAsCurrentUserConfigurationProvider(
                 Files.createDirectories(path)
             }
         }
+
+        mounts.forEach { mount ->
+            val parentMount = mounts.findClosestParentMount(mount)
+
+            if (parentMount != null && parentMount.source is DockerVolumeMountSource.LocalPath) {
+                val thisPath = mount.containerPath.splitToPathSegments()
+                val parentPath = parentMount.containerPath.splitToPathSegments()
+
+                val directoriesToCreate = parentPath.relativePathTo(thisPath)
+                val path = fileSystem.getPath(parentMount.source.path, *directoriesToCreate.toTypedArray())
+                Files.createDirectories(path)
+            }
+        }
     }
+
+    private fun Set<DockerVolumeMount>.findClosestParentMount(mount: DockerVolumeMount): DockerVolumeMount? {
+        val thisPath = mount.containerPath.splitToPathSegments()
+
+        return this
+            .filter { it != mount }
+            .associateWith { it.containerPath.splitToPathSegments() }
+            .filterValues { it.size < thisPath.size }
+            .filterValues { it == thisPath.subList(0, it.lastIndex + 1) }
+            .entries
+            .maxBy { it.value.size }
+            ?.key
+    }
+
+    private fun List<String>.relativePathTo(other: List<String>) = other.subList(this.lastIndex + 1, other.lastIndex + 1)
+
+    // This method assumes that paths can't contain forward slashes except as path separators, which appears to be true for Linux.
+    private fun String.splitToPathSegments() = this.split('/')
 }
 
 class RunAsCurrentUserConfigurationException(message: String) : RuntimeException(message)

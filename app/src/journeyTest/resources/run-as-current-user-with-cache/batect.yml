@@ -12,6 +12,9 @@ containers:
       - type: cache
         name: run-as-current-user-with-cache-test-nested-cache
         container: /home/special-place/cache
+      - type: cache
+        name: run-as-current-user-with-cache-test-deeply-nested-cache
+        container: /home/special-place/subdir/cache
     run_as_current_user:
       enabled: true
       home_directory: /home/special-place

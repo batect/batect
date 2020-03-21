@@ -126,7 +126,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatExists), "/container/existing-directory", null),
                             DockerVolumeMount(DockerVolumeMountSource.LocalPath(fileThatExists), "/container/existing-file", null),
                             DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatDoesNotExist), "/container/new-directory", null),
-                            DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/containter/volume", null)
+                            DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container/volume", null)
                         )
 
                         beforeEachTest {
@@ -507,29 +507,192 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
             }
 
             describe("regardless of the current operating system") {
-                val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix().toBuilder().setAttributeViews("posix").build()) }
+                val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
                 val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(mock(), mock(), fileSystem, mock()) }
 
-                on("creating missing volume mount directories") {
-                    val directoryThatExists = "/existing/directory"
-                    val fileThatExists = "/existing/file"
-                    val directoryThatDoesNotExist = "/new/directory"
-                    val volumeMounts = setOf(
-                        DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatExists), "/container/existing-directory", null),
-                        DockerVolumeMount(DockerVolumeMountSource.LocalPath(fileThatExists), "/container/existing-file", null),
-                        DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatDoesNotExist), "/container/new-directory", null),
-                        DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/containter/volume", null)
-                    )
+                describe("creating missing volume mount directories") {
+                    given("mounts for existing local directories and files and a non-existent local path") {
+                        val directoryThatExists = "/existing/directory"
+                        val fileThatExists = "/existing/file"
+                        val directoryThatDoesNotExist = "/new/directory"
+                        val volumeMounts = setOf(
+                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatExists), "/container/existing-directory", null),
+                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(fileThatExists), "/container/existing-file", null),
+                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatDoesNotExist), "/container/new-directory", null),
+                            DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container/volume", null)
+                        )
 
-                    beforeEachTest {
-                        Files.createDirectories(fileSystem.getPath(directoryThatExists))
-                        Files.createFile(fileSystem.getPath(fileThatExists))
+                        beforeEachTest {
+                            Files.createDirectories(fileSystem.getPath(directoryThatExists))
+                            Files.createFile(fileSystem.getPath(fileThatExists))
+                        }
+
+                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+
+                        it("creates a directory for the volume mount path that does not exist") {
+                            assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
+                        }
                     }
 
-                    beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+                    given("a local path is mounted in another local mount's container path") {
+                        val outerLocalPath = "/local/source/outer"
+                        val innerLocalPath = "/local/source/inner"
 
-                    it("creates a directory for the volume mount path that does not exist") {
-                        assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
+                        val volumeMounts = setOf(
+                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(outerLocalPath), "/container/local-mount", null),
+                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(innerLocalPath), "/container/local-mount/path", null)
+                        )
+
+                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+
+                        it("creates a directory for the local paths that does not exist") {
+                            assertThat(Files.exists(fileSystem.getPath(outerLocalPath)), equalTo(true))
+                            assertThat(Files.exists(fileSystem.getPath(innerLocalPath)), equalTo(true))
+                        }
+
+                        it("creates directories within the outer local path for the inner mount's mount point") {
+                            assertThat(Files.exists(fileSystem.getPath(outerLocalPath, "path")), equalTo(true))
+                        }
+                    }
+
+                    given("a volume mount and a local mount that do not have overlapping container paths") {
+                        val localPath = "/local/source"
+                        val volumeMounts = setOf(
+                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(localPath), "/container/local-mount", null),
+                            DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container/volume", null)
+                        )
+
+                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+
+                        it("creates a directory for the local path that does not exist") {
+                            assertThat(Files.exists(fileSystem.getPath(localPath)), equalTo(true))
+                        }
+
+                        it("does not create anything inside the local directory") {
+                            assertThat(Files.list(fileSystem.getPath(localPath)).toArray().toList(), isEmpty)
+                        }
+                    }
+
+                    given("a volume mount and a local mount where the local path is mounted inside the volume mount's container path") {
+                        val localPath = "/local/source"
+                        val volumeMounts = setOf(
+                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(localPath), "/container/volume/local-mount", null),
+                            DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container/volume", null)
+                        )
+
+                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+
+                        it("creates a directory for the local path that does not exist") {
+                            assertThat(Files.exists(fileSystem.getPath(localPath)), equalTo(true))
+                        }
+
+                        it("does not create anything inside the local directory") {
+                            assertThat(Files.list(fileSystem.getPath(localPath)).toArray().toList(), isEmpty)
+                        }
+                    }
+
+                    given("a volume is mounted within a local mount's container path") {
+                        val localPath = "/local/source"
+                        val volumeMounts = setOf(
+                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(localPath), "/container/local-mount", null),
+                            DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container/local-mount/volume", null)
+                        )
+
+                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+
+                        it("creates a directory for the local path that does not exist") {
+                            assertThat(Files.exists(fileSystem.getPath(localPath)), equalTo(true))
+                        }
+
+                        it("creates directories within the local path for the volume's mount point") {
+                            assertThat(Files.exists(fileSystem.getPath(localPath, "volume")), equalTo(true))
+                        }
+                    }
+
+                    given("a volume is mounted nested within a local mount's container path") {
+                        val localPath = "/local/source"
+                        val volumeMounts = setOf(
+                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(localPath), "/container/local-mount", null),
+                            DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container/local-mount/path/to/volume", null)
+                        )
+
+                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+
+                        it("creates a directory for the local path that does not exist") {
+                            assertThat(Files.exists(fileSystem.getPath(localPath)), equalTo(true))
+                        }
+
+                        it("creates directories within the local path for the volume's mount point") {
+                            assertThat(Files.exists(fileSystem.getPath(localPath, "path", "to", "volume")), equalTo(true))
+                        }
+                    }
+
+                    given("a volume is mounted with a local mount's container path which is within another local mount's container path") {
+                        val outerLocalPath = "/local/source/outer"
+                        val innerLocalPath = "/local/source/inner"
+
+                        val volumeMounts = setOf(
+                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(outerLocalPath), "/container/local-mount", null),
+                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(innerLocalPath), "/container/local-mount/path", null),
+                            DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container/local-mount/path/to/volume", null)
+                        )
+
+                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+
+                        it("creates a directory for the local paths that does not exist") {
+                            assertThat(Files.exists(fileSystem.getPath(outerLocalPath)), equalTo(true))
+                            assertThat(Files.exists(fileSystem.getPath(innerLocalPath)), equalTo(true))
+                        }
+
+                        it("creates directories within the outer local path for the inner mount's mount point") {
+                            assertThat(Files.exists(fileSystem.getPath(outerLocalPath, "path")), equalTo(true))
+                        }
+
+                        it("creates directories within the closest enclosing local path for the volume's mount point") {
+                            assertThat(Files.exists(fileSystem.getPath(innerLocalPath, "to", "volume")), equalTo(true))
+                        }
+                    }
+
+                    given("a volume is mounted within a second volume's container path, and that second volume is mounted inside a local mount's container path") {
+                        val localPath = "/local/source"
+                        val volumeMounts = setOf(
+                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(localPath), "/container/local-mount", null),
+                            DockerVolumeMount(DockerVolumeMountSource.Volume("volume-1"), "/container/local-mount/volume-1", null),
+                            DockerVolumeMount(DockerVolumeMountSource.Volume("volume-2"), "/container/local-mount/volume-1/volume-2", null)
+                        )
+
+                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+
+                        it("creates a directory for the local path that does not exist") {
+                            assertThat(Files.exists(fileSystem.getPath(localPath)), equalTo(true))
+                        }
+
+                        it("creates directories within the local path for the second volume's mount point") {
+                            assertThat(Files.exists(fileSystem.getPath(localPath, "volume-1")), equalTo(true))
+                        }
+
+                        it("does not create a directory within the local path for the first volume's mount point") {
+                            assertThat(Files.exists(fileSystem.getPath(localPath, "volume-1", "volume-2")), equalTo(false))
+                        }
+                    }
+
+                    given("a volume is mounted within a local mount's container path, and that local mount is mounted within a second volume's container path") {
+                        val localPath = "/local/source"
+                        val volumeMounts = setOf(
+                            DockerVolumeMount(DockerVolumeMountSource.Volume("volume-1"), "/container/volume-1", null),
+                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(localPath), "/container/volume-1/local-mount", null),
+                            DockerVolumeMount(DockerVolumeMountSource.Volume("volume-2"), "/container/volume-1/local-mount/volume-2", null)
+                        )
+
+                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+
+                        it("creates a directory for the local path that does not exist") {
+                            assertThat(Files.exists(fileSystem.getPath(localPath)), equalTo(true))
+                        }
+
+                        it("creates directories within the local path for the first volume's mount point") {
+                            assertThat(Files.exists(fileSystem.getPath(localPath, "volume-2")), equalTo(true))
+                        }
                     }
                 }
             }

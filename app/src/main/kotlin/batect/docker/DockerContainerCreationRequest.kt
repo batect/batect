@@ -85,6 +85,9 @@ data class DockerContainerCreationRequest(
                 "Init" to init
                 "CapAdd" to formatCapabilitySet(capabilitiesToAdd)
                 "CapDrop" to formatCapabilitySet(capabilitiesToDrop)
+                "LogConfig" to json {
+                    "Type" to "json-file"
+                }
             }
 
             "Healthcheck" to json {

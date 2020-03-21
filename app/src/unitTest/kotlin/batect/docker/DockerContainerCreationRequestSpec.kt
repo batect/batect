@@ -104,7 +104,8 @@ object DockerContainerCreationRequestSpec : Spek({
                         |       "Privileged": true,
                         |       "Init": true,
                         |       "CapAdd": ["NET_ADMIN", "KILL"],
-                        |       "CapDrop": ["AUDIT_READ", "CHOWN"]
+                        |       "CapDrop": ["AUDIT_READ", "CHOWN"],
+                        |       "LogConfig": { "Type": "json-file" }
                         |   },
                         |   "Healthcheck": {
                         |       "Test": ["CMD-SHELL", "exit 0"],
@@ -242,7 +243,8 @@ object DockerContainerCreationRequestSpec : Spek({
                         |       "Privileged": false,
                         |       "Init": false,
                         |       "CapAdd": [],
-                        |       "CapDrop": []
+                        |       "CapDrop": [],
+                        |       "LogConfig": { "Type": "json-file" }
                         |   },
                         |   "Healthcheck": {
                         |       "Test": [],

@@ -64,7 +64,7 @@ object RunAsCurrentUserJourneyTest : Spek({
                         "Home directory exists",
                         "Home directory owned by user: $expectedContainerUserName",
                         "Home directory owned by group: $expectedContainerGroupName"
-                    ).joinToString("\r\n")
+                    ).joinToString("\n")
 
                     assertThat(result.output, containsSubstring(expectedOutput))
                 }

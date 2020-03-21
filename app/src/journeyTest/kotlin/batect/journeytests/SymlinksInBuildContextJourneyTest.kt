@@ -36,7 +36,7 @@ object SymlinksInBuildContextJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
             it("prints the output from that task") {
-                assertThat(result.output, containsSubstring("original.txt: This is the file content.\r\nlink-to-original.txt: This is the file content.\r\n"))
+                assertThat(result.output, containsSubstring("original.txt: This is the file content.\nlink-to-original.txt: This is the file content.\n"))
             }
 
             it("returns the exit code from that task") {

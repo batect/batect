@@ -50,9 +50,7 @@ object ProxyVariablesJourneyTest : Spek({
             }
 
             it("prints the output from that task, which shows that the proxy environment variables were set at both build and run time") {
-                assertThat(
-                    result.output, containsSubstring(
-                        """
+                assertThat(result.output, containsSubstring("""
                     At build time, environment variables were:
                     http_proxy: $httpProxy
                     https_proxy: $httpsProxy
@@ -64,9 +62,7 @@ object ProxyVariablesJourneyTest : Spek({
                     https_proxy: $httpsProxy
                     ftp_proxy: $ftpProxy
                     no_proxy: $noProxy,build-env
-                """.trimIndent().replace("\n", "\r\n")
-                    )
-                )
+                """.trimIndent()))
             }
 
             it("returns the exit code from that task") {

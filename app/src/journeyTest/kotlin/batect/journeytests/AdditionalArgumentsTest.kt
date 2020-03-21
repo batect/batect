@@ -36,7 +36,7 @@ object AdditionalArgumentsTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("the-task", "--", "This is some output from the additional arguments.")) }
 
             it("prints the output from the main task (which includes the additional arguments") {
-                assertThat(result.output, containsSubstring("This is the output from the config file. This is some output from the additional arguments.\r\n"))
+                assertThat(result.output, containsSubstring("This is the output from the config file. This is some output from the additional arguments.\n"))
             }
 
             it("returns the exit code from that task") {

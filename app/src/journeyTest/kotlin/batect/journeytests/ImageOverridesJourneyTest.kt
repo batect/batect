@@ -36,7 +36,7 @@ object ImageOverridesJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--override-image", "build-env=alpine:3.6", "the-task")) }
 
             it("prints the output from that task") {
-                assertThat(result.output, containsSubstring("This is some output from the task\r\n"))
+                assertThat(result.output, containsSubstring("This is some output from the task\n"))
             }
 
             it("returns the exit code from that task") {

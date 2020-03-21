@@ -36,7 +36,7 @@ object ConfigVarsJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--config-var", "FROM_COMMAND_LINE=Hello from the command line", "the-task")) }
 
             it("prints the output from that task") {
-                assertThat(result.output, containsSubstring("Hello from the file\r\nHello from the command line\r\nHello from the default value\r\n"))
+                assertThat(result.output, containsSubstring("Hello from the file\nHello from the command line\nHello from the default value\n"))
             }
 
             it("returns the exit code from that task") {

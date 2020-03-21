@@ -36,7 +36,7 @@ object WorkingDirectoryOverrideTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
             it("runs the container with the task's working directory, not the container's default") {
-                assertThat(result.output, containsSubstring("/usr/bin\r\n"))
+                assertThat(result.output, containsSubstring("/usr/bin\n"))
             }
 
             it("returns the exit code from that task") {

@@ -36,7 +36,7 @@ object NoStdinJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("the-task"), afterStart = ::closeStdin) }
 
             it("prints the output from that task") {
-                assertThat(result.output, containsSubstring("This is some output from the task\r\n"))
+                assertThat(result.output, containsSubstring("This is some output from the task\n"))
             }
 
             it("returns the exit code from that task") {

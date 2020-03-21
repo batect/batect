@@ -36,11 +36,11 @@ object TaskWithPrerequisiteTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("do-stuff")) }
 
             it("prints the output from the main task") {
-                assertThat(result.output, containsSubstring("This is some output from the main task\r\n"))
+                assertThat(result.output, containsSubstring("This is some output from the main task\n"))
             }
 
             it("prints the output from the prerequisite task") {
-                assertThat(result.output, containsSubstring("This is some output from the build task\r\n"))
+                assertThat(result.output, containsSubstring("This is some output from the build task\n"))
             }
 
             it("returns the exit code from that task") {

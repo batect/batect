@@ -47,7 +47,7 @@ object RunAsCurrentUserWithCacheJourneyTest : Spek({
                     "/cache/created-file created",
                     "/home/special-place/cache exists",
                     "/home/special-place/cache/created-file created"
-                ).joinToString("\r\n")
+                ).joinToString("\n")
 
                 assertThat(result.output, containsSubstring(expectedOutput))
             }

@@ -36,7 +36,7 @@ object ContainerWithCapabilityTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
             it("runs the container with that capability") {
-                assertThat(result.output, containsSubstring("Container has capability\r\n"))
+                assertThat(result.output, containsSubstring("Container has capability\n"))
             }
 
             it("runs successfully") {

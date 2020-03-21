@@ -37,7 +37,7 @@ object QuietOutputTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--output=quiet", "do-stuff")) }
 
             it("prints the only the output from the task commands") {
-                assertThat(result.output, containsSubstring("This is some output from the build task\r\n${platformLineSeparator}This is some output from the main task\r\n"))
+                assertThat(result.output, containsSubstring("This is some output from the build task\n${platformLineSeparator}This is some output from the main task\n"))
             }
 
             it("returns the exit code from that task") {

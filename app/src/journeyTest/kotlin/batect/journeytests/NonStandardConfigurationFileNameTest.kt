@@ -53,7 +53,7 @@ object NonStandardConfigurationFileNameTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("-f", "another-name.yml", "task-1")) }
 
             it("prints the output of the task ") {
-                assertThat(result.output, containsSubstring("This is some output from task 1\r\n"))
+                assertThat(result.output, containsSubstring("This is some output from task 1\n"))
             }
 
             it("returns the exit code from the task") {

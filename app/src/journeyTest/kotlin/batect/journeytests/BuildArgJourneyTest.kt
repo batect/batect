@@ -36,7 +36,7 @@ object BuildArgJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
             it("prints the output from that task") {
-                assertThat(result.output, containsSubstring("This is the value of the build arg\r\n"))
+                assertThat(result.output, containsSubstring("This is the value of the build arg\n"))
             }
 
             it("returns the exit code from that task") {

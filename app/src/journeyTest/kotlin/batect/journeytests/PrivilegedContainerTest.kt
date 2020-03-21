@@ -36,7 +36,7 @@ object PrivilegedContainerTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
             it("runs the container in privileged mode") {
-                assertThat(result.output, containsSubstring("Container is privileged\r\n"))
+                assertThat(result.output, containsSubstring("Container is privileged\n"))
             }
 
             it("runs successfully") {

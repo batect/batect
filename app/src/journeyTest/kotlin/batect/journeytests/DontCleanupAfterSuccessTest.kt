@@ -73,11 +73,11 @@ object DontCleanupAfterSuccessTest : Spek({
             }
 
             it("prints the output from the main task") {
-                assertThat(result.output, containsSubstring("This is some output from the main task\r\n"))
+                assertThat(result.output, containsSubstring("This is some output from the main task\n"))
             }
 
             it("prints the output from the prerequisite task") {
-                assertThat(result.output, containsSubstring("This is some output from the build task\r\n"))
+                assertThat(result.output, containsSubstring("This is some output from the build task\n"))
             }
 
             it("returns a non-zero exit code") {

@@ -51,6 +51,50 @@ Container names must be valid Docker references:
 
 [Detailed reference for `containers`](Containers.md)
 
+## `include`
+
+List of configuration files to include in this project.
+
+This is useful for breaking up a large project into smaller files, or for sharing configuration between projects.
+
+The format for included files is the same as described on this page. Included files can include further files, but
+cannot include a [project name](#project_name).
+
+Relative paths will be resolved relative to the configuration file's directory.
+
+For example, if `my-project/a.yml` contains:
+
+```yaml
+containers:
+  my-container:
+    image: alpine:1.2.3
+
+include:
+  - b.yml
+```
+
+And `my-project/b.yml` contains:
+
+```yaml
+tasks:
+  my-task:
+    run:
+      container: my-container
+```
+
+Then the resulting configuration is as if `a.yml` was:
+
+```yaml
+containers:
+  my-container:
+    image: alpine:1.2.3
+
+tasks:
+  my-task:
+    run:
+      container: my-container
+```
+
 ## `tasks`
 
 Definitions for each of your tasks, the actions you launch through batect, in `name: options` format.

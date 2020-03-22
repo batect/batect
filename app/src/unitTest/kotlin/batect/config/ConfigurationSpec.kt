@@ -25,6 +25,7 @@ import batect.testutils.given
 import batect.testutils.osIndependentPath
 import batect.testutils.withMessage
 import batect.utils.Json
+import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import org.araqnid.hamkrest.json.equivalentTo
@@ -97,6 +98,8 @@ object ConfigurationSpec : Spek({
             }
 
             given("a single container with many options that pulls an image and runs as the current user") {
+                val fileSystem = Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix())
+
                 val container = Container(
                     "the-container",
                     PullImage("the-image"),
@@ -104,7 +107,7 @@ object ConfigurationSpec : Spek({
                     Command.parse("sh"),
                     mapOf("SOME_VAR" to LiteralValue("some-value")),
                     "/some/working/dir",
-                    setOf(LocalMount(LiteralValue("/local/path"), "/container/path", "some-options")),
+                    setOf(LocalMount(LiteralValue("/local/path"), fileSystem.getPath("/relative-to"), "/container/path", "some-options")),
                     setOf(DeviceMount("/dev/local", "/dev/container", "device-options")),
                     setOf(PortMapping(123, 456)),
                     setOf("other-container"),
@@ -140,6 +143,7 @@ object ConfigurationSpec : Spek({
                                         {
                                             "type": "local",
                                             "local": {"type":"LiteralValue", "value":"/local/path"},
+                                            "relativeTo": "/relative-to",
                                             "container": "/container/path",
                                             "options": "some-options"
                                         }

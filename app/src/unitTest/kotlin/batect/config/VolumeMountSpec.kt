@@ -16,9 +16,13 @@
 
 package batect.config
 
+import batect.config.io.deserializers.PathDeserializer
+import batect.os.PathResolutionResult
+import batect.os.PathResolver
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.on
+import batect.testutils.osIndependentPath
 import batect.testutils.runForEachTest
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
@@ -31,6 +35,9 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
+import kotlinx.serialization.modules.serializersModuleOf
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -38,7 +45,19 @@ import org.spekframework.spek2.style.specification.describe
 object VolumeMountSpec : Spek({
     describe("a volume mount") {
         describe("deserializing from YAML") {
-            val parser by createForEachTest { Yaml() }
+            val pathResolver by createForEachTest {
+                mock<PathResolver> {
+                    on { relativeTo } doReturn osIndependentPath("/relative-to")
+                }
+            }
+
+            val pathDeserializer by createForEachTest {
+                mock<PathDeserializer> {
+                    on { this.pathResolver } doReturn pathResolver
+                }
+            }
+
+            val parser by createForEachTest { Yaml(context = serializersModuleOf(PathResolutionResult::class, pathDeserializer)) }
 
             describe("deserializing a local mount from compact form") {
                 on("parsing a valid volume mount definition with no options") {
@@ -55,6 +74,10 @@ object VolumeMountSpec : Spek({
                     it("returns the correct options") {
                         assertThat(volumeMount.options, absent())
                     }
+
+                    it("returns the correct path to resolve the local path relative to") {
+                        assertThat((volumeMount as LocalMount).relativeTo, equalTo(osIndependentPath("/relative-to")))
+                    }
                 }
 
                 on("parsing a valid volume mount definition with options") {
@@ -70,6 +93,10 @@ object VolumeMountSpec : Spek({
 
                     it("returns the correct options") {
                         assertThat(volumeMount.options, equalTo("some_options"))
+                    }
+
+                    it("returns the correct path to resolve the local path relative to") {
+                        assertThat((volumeMount as LocalMount).relativeTo, equalTo(osIndependentPath("/relative-to")))
                     }
                 }
 
@@ -91,6 +118,10 @@ object VolumeMountSpec : Spek({
                         it("returns the correct options") {
                             assertThat(volumeMount.options, absent())
                         }
+
+                        it("returns the correct path to resolve the local path relative to") {
+                            assertThat((volumeMount as LocalMount).relativeTo, equalTo(osIndependentPath("/relative-to")))
+                        }
                     }
 
                     on("parsing a valid Windows volume mount definition with $description and options") {
@@ -106,6 +137,10 @@ object VolumeMountSpec : Spek({
 
                         it("returns the correct options") {
                             assertThat(volumeMount.options, equalTo("cached"))
+                        }
+
+                        it("returns the correct path to resolve the local path relative to") {
+                            assertThat((volumeMount as LocalMount).relativeTo, equalTo(osIndependentPath("/relative-to")))
                         }
                     }
                 }
@@ -159,6 +194,10 @@ object VolumeMountSpec : Spek({
                     it("returns the correct options") {
                         assertThat(volumeMount.options, absent())
                     }
+
+                    it("returns the correct path to resolve the local path relative to") {
+                        assertThat((volumeMount as LocalMount).relativeTo, equalTo(osIndependentPath("/relative-to")))
+                    }
                 }
 
                 on("parsing a valid volume mount definition with options") {
@@ -181,6 +220,10 @@ object VolumeMountSpec : Spek({
                     it("returns the correct options") {
                         assertThat(volumeMount.options, equalTo("some_options"))
                     }
+
+                    it("returns the correct path to resolve the local path relative to") {
+                        assertThat((volumeMount as LocalMount).relativeTo, equalTo(osIndependentPath("/relative-to")))
+                    }
                 }
 
                 on("parsing a valid volume mount definition with the type explicitly specified") {
@@ -202,6 +245,10 @@ object VolumeMountSpec : Spek({
 
                     it("returns the correct options") {
                         assertThat(volumeMount.options, absent())
+                    }
+
+                    it("returns the correct path to resolve the local path relative to") {
+                        assertThat((volumeMount as LocalMount).relativeTo, equalTo(osIndependentPath("/relative-to")))
                     }
                 }
 
@@ -369,13 +416,14 @@ object VolumeMountSpec : Spek({
 
         describe("serializing to JSON for logs") {
             describe("serializing a local path mount") {
-                val mount = LocalMount(LiteralValue("/local"), "/container", "ro")
+                val mount = LocalMount(LiteralValue("/local"), osIndependentPath("/relative-to"), "/container", "ro")
 
                 it("serializes to the expected format") {
                     assertThat(Json.parser.stringify(VolumeMount.serializer(), mount), equivalentTo("""
                         |{
                         |   "type": "local",
                         |   "local": {"type":"LiteralValue","value":"/local"},
+                        |   "relativeTo": "/relative-to",
                         |   "container": "/container",
                         |   "options": "ro"
                         |}

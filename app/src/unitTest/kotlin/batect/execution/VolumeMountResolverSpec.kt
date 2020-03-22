@@ -27,6 +27,7 @@ import batect.docker.DockerVolumeMountSource
 import batect.os.HostEnvironmentVariables
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
+import batect.os.PathResolverFactory
 import batect.os.PathType
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
@@ -47,6 +48,8 @@ object VolumeMountResolverSpec : Spek({
         val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
 
         describe("resolving local mounts") {
+            val relativeTo by createForEachTest { fileSystem.getPath("/relative-to-path") }
+
             val pathResolver by createForEachTest {
                 mock<PathResolver> {
                     on { resolve("file") } doReturn PathResolutionResult.Resolved("file", fileSystem.getPath("/resolved/file"), PathType.File)
@@ -57,17 +60,25 @@ object VolumeMountResolverSpec : Spek({
                 }
             }
 
+            val pathResolverFactory by createForEachTest {
+                mock<PathResolverFactory> {
+                    on { createResolver(relativeTo) } doReturn pathResolver
+                }
+            }
+
             val expressionEvaluationContext = ExpressionEvaluationContext(HostEnvironmentVariables("INVALID" to "invalid"), emptyMap())
 
-            val resolver by createForEachTest { VolumeMountResolver(pathResolver, expressionEvaluationContext, mock(), mock(), mock()) }
+            val resolver by createForEachTest { VolumeMountResolver(pathResolverFactory, expressionEvaluationContext, mock(), mock(), mock()) }
 
             given("a set of volume mounts from the configuration file that resolve to valid paths") {
-                val mounts = setOf(
-                    LocalMount(LiteralValue("file"), "/container-1"),
-                    LocalMount(LiteralValue("directory"), "/container-2", "options-2"),
-                    LocalMount(LiteralValue("other"), "/container-3"),
-                    LocalMount(LiteralValue("does-not-exist"), "/container-4")
-                )
+                val mounts by createForEachTest {
+                    setOf(
+                        LocalMount(LiteralValue("file"), relativeTo, "/container-1"),
+                        LocalMount(LiteralValue("directory"), relativeTo, "/container-2", "options-2"),
+                        LocalMount(LiteralValue("other"), relativeTo, "/container-3"),
+                        LocalMount(LiteralValue("does-not-exist"), relativeTo, "/container-4")
+                    )
+                }
 
                 it("resolves the local mount paths, preserving the container path and options") {
                     assertThat(
@@ -85,9 +96,11 @@ object VolumeMountResolverSpec : Spek({
 
             given("a volume mount with an invalid path") {
                 given("the path does not contain an expression") {
-                    val mounts = setOf(
-                        LocalMount(LiteralValue("invalid"), "/container-1")
-                    )
+                    val mounts by createForEachTest {
+                        setOf(
+                            LocalMount(LiteralValue("invalid"), relativeTo, "/container-1")
+                        )
+                    }
 
                     it("throws an appropriate exception") {
                         assertThat({ resolver.resolve(mounts) }, throws<VolumeMountResolutionException>(withMessage("Could not resolve volume mount path: 'invalid' is not a valid path.")))
@@ -95,9 +108,11 @@ object VolumeMountResolverSpec : Spek({
                 }
 
                 given("the path contains an expression") {
-                    val mounts = setOf(
-                        LocalMount(EnvironmentVariableReference("INVALID", originalExpression = "the-original-invalid-expression"), "/container-1")
-                    )
+                    val mounts by createForEachTest {
+                        setOf(
+                            LocalMount(EnvironmentVariableReference("INVALID", originalExpression = "the-original-invalid-expression"), relativeTo, "/container-1")
+                        )
+                    }
 
                     it("throws an appropriate exception") {
                         assertThat({ resolver.resolve(mounts) }, throws<VolumeMountResolutionException>(withMessage("Could not resolve volume mount path: expression 'the-original-invalid-expression' (evaluated as 'invalid') is not a valid path.")))
@@ -106,9 +121,11 @@ object VolumeMountResolverSpec : Spek({
             }
 
             given("a volume mount with an expression that cannot be evaluated") {
-                val mounts = setOf(
-                    LocalMount(EnvironmentVariableReference("DOES_NOT_EXIST", originalExpression = "the-original-expression"), "/container-1")
-                )
+                val mounts by createForEachTest {
+                    setOf(
+                        LocalMount(EnvironmentVariableReference("DOES_NOT_EXIST", originalExpression = "the-original-expression"), relativeTo, "/container-1")
+                    )
+                }
 
                 it("throws an appropriate exception") {
                     assertThat(

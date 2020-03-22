@@ -42,7 +42,8 @@ object SimpleTaskJourneyTests : Spek({
         "build-image-dockerignore" to "a task that builds an image with a .dockerignore file",
         "simple-task-using-dockerfile-with-add-from-url" to "a simple task that uses a Dockerfile with an ADD command that downloads a file from a URL",
         "dependency-container-with-setup-command" to "a simple task that uses a setup command on a dependency container",
-        "task-container-with-setup-command" to "a simple task that uses a setup command on the task container"
+        "task-container-with-setup-command" to "a simple task that uses a setup command on the task container",
+        "config-with-includes" to "a configuration file that uses includes"
     ).forEach { (testName, description) ->
         describe(description) {
             val runner by createForGroup { ApplicationRunner(testName) }

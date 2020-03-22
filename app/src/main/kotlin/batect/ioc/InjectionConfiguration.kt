@@ -278,16 +278,7 @@ private val executionModule = Kodein.Module("execution") {
     bind<TaskStateMachine>() with scoped(TaskScope).singletonWithLogger { logger -> TaskStateMachine(instance(), instance(RunOptionsType.Task), instance(), instance(), instance(), instance(), logger) }
     bind<TaskStepRunner>() with scoped(TaskScope).singleton { TaskStepRunner(dkodein) }
     bind<TaskSuggester>() with singleton { TaskSuggester() }
-
-    bind<VolumeMountResolver>() with scoped(TaskScope).singleton {
-        VolumeMountResolver(
-            instance<PathResolverFactory>().createResolver(instance<ProjectPaths>().projectRootDirectory),
-            instance(),
-            instance(),
-            instance(),
-            commandLineOptions().cacheType
-        )
-    }
+    bind<VolumeMountResolver>() with scoped(TaskScope).singleton { VolumeMountResolver(instance(), instance(), instance(), instance(), commandLineOptions().cacheType) }
 }
 
 private val runnersModule = Kodein.Module("execution.model.steps.runners") {

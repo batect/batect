@@ -4,10 +4,6 @@
   "id": "https://batect.dev/configSchema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "containers",
-    "tasks"
-  ],
   "properties": {
     "containers": {
       "$ref": "#/definitions/containers"
@@ -22,6 +18,9 @@
       "type": "string",
       "description": "The name of your project. Used to label any images built.",
       "minLength": 1
+    },
+    "include": {
+      "$ref": "#/definitions/includesList"
     }
   },
   "patternProperties": {
@@ -530,6 +529,13 @@
           "description": "Default value of the variable if one is not provided elsewhere",
           "minLength": 1
         }
+      }
+    },
+    "includesList": {
+      "type": "array",
+      "description": "List of configuration files to include in this project",
+      "items": {
+        "type": "string"
       }
     }
   }

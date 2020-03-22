@@ -25,6 +25,7 @@ data class ConfigurationException(
 ) : RuntimeException(message, cause) {
 
     constructor(message: String) : this(message, null, null, null, null)
+    constructor(message: String, fileName: String) : this(message, fileName, null, null, null)
     constructor(message: String, lineNumber: Int, column: Int, cause: Throwable? = null) : this(message, null, lineNumber, column, cause)
 
     override fun toString(): String {

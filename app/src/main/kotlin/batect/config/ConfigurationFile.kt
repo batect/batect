@@ -16,14 +16,17 @@
 
 package batect.config
 
+import batect.config.io.deserializers.IncludeSetSerializer
 import batect.config.io.deserializers.ProjectNameSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.nio.file.Path
 
 @Serializable
 data class ConfigurationFile(
     @SerialName("project_name") @Serializable(with = ProjectNameSerializer::class) val projectName: String? = null,
     val tasks: TaskMap = TaskMap(),
     val containers: ContainerMap = ContainerMap(),
-    @SerialName("config_variables") val configVariables: ConfigVariableMap = ConfigVariableMap()
+    @SerialName("config_variables") val configVariables: ConfigVariableMap = ConfigVariableMap(),
+    @SerialName("include") @Serializable(with = IncludeSetSerializer::class) val includes: Set<Path> = emptySet()
 )

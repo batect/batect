@@ -132,7 +132,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * rather than showing output from target, show output from all containers
   * logging options (all or particular container)
   * return code options (any non-zero, particular container, first to exit)
-* allow configuration includes (ie. allow splitting the configuration over multiple files)
 * wildcard includes (eg. `include: containers/*.yaml`)
 * support port ranges in mappings
 * support protocols other than TCP in port mappings

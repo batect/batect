@@ -26,12 +26,12 @@ import batect.config.VolumeMount
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
 import batect.os.PathResolutionResult
-import batect.os.PathResolver
+import batect.os.PathResolverFactory
 import batect.utils.mapToSet
 import java.nio.file.Files
 
 class VolumeMountResolver(
-    private val pathResolver: PathResolver,
+    private val pathResolverFactory: PathResolverFactory,
     private val expressionEvaluationContext: ExpressionEvaluationContext,
     private val cacheManager: CacheManager,
     private val projectPaths: ProjectPaths,
@@ -46,6 +46,7 @@ class VolumeMountResolver(
 
     fun resolve(mount: LocalMount): DockerVolumeMount {
         val evaluatedLocalPath = evaluateLocalPath(mount)
+        val pathResolver = pathResolverFactory.createResolver(mount.relativeTo)
 
         return when (val resolvedLocalPath = pathResolver.resolve(evaluatedLocalPath)) {
             is PathResolutionResult.Resolved -> DockerVolumeMount(DockerVolumeMountSource.LocalPath(resolvedLocalPath.absolutePath.toString()), mount.containerPath, mount.options)

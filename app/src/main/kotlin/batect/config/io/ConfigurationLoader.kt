@@ -16,8 +16,12 @@
 
 package batect.config.io
 
+import batect.config.ConfigVariableMap
 import batect.config.Configuration
 import batect.config.ConfigurationFile
+import batect.config.ContainerMap
+import batect.config.NamedObjectMap
+import batect.config.TaskMap
 import batect.config.io.deserializers.PathDeserializer
 import batect.docker.DockerImageNameValidator
 import batect.logging.LogMessageBuilder
@@ -25,6 +29,7 @@ import batect.logging.Logger
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
 import batect.os.PathResolverFactory
+import batect.utils.flatMapToSet
 import com.charleskorn.kaml.EmptyYamlDocumentException
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlConfiguration
@@ -38,25 +43,41 @@ class ConfigurationLoader(
     private val pathResolverFactory: PathResolverFactory,
     private val logger: Logger
 ) {
-    fun loadConfig(path: Path): Configuration {
-        val absolutePath = path.toAbsolutePath()
+    fun loadConfig(rootConfigFilePath: Path): Configuration {
+        val absolutePathToRootConfigFile = rootConfigFilePath.toAbsolutePath()
 
         logger.info {
             message("Loading configuration.")
-            data("path", absolutePath.toString())
+            data("rootConfigFilePath", absolutePathToRootConfigFile)
         }
 
-        if (!Files.exists(absolutePath)) {
+        if (!Files.exists(absolutePathToRootConfigFile)) {
             logger.error {
-                message("Configuration file could not be found.")
-                data("path", absolutePath.toString())
+                message("Root configuration file could not be found.")
+                data("rootConfigFilePath", absolutePathToRootConfigFile)
             }
 
-            throw ConfigurationException("The file '$absolutePath' does not exist.")
+            throw ConfigurationException("The file '$absolutePathToRootConfigFile' does not exist.")
         }
 
-        val configFileContent = Files.readAllBytes(absolutePath).toString(Charset.defaultCharset())
-        val config = loadConfig(configFileContent, absolutePath)
+        val rootConfigFile = loadConfigFile(absolutePathToRootConfigFile)
+        val filesLoaded = mutableMapOf(absolutePathToRootConfigFile to rootConfigFile)
+        val remainingPathsToLoad = mutableSetOf<Path>()
+        remainingPathsToLoad += rootConfigFile.includes
+
+        while (remainingPathsToLoad.isNotEmpty()) {
+            val pathToLoad = remainingPathsToLoad.first()
+            val file = loadConfigFile(pathToLoad)
+            checkForProjectName(file, pathToLoad)
+
+            filesLoaded[pathToLoad] = file
+            remainingPathsToLoad.remove(pathToLoad)
+            remainingPathsToLoad += file.includes
+            remainingPathsToLoad -= filesLoaded.keys
+        }
+
+        val projectName = rootConfigFile.projectName ?: inferProjectName(absolutePathToRootConfigFile)
+        val config = Configuration(projectName, mergeTasks(filesLoaded), mergeContainers(filesLoaded), mergeConfigVariables(filesLoaded))
 
         logger.info {
             message("Configuration loaded.")
@@ -66,25 +87,92 @@ class ConfigurationLoader(
         return config
     }
 
-    private fun loadConfig(configFileContent: String, filePath: Path): Configuration {
-        val pathResolver = pathResolverFactory.createResolver(filePath.parent)
+    private fun loadConfigFile(path: Path): ConfigurationFile {
+        logger.info {
+            message("Loading configuration file.")
+            data("path", path)
+        }
+
+        val content = Files.readAllBytes(path).toString(Charset.defaultCharset())
+        val pathResolver = pathResolverFor(path)
         val pathDeserializer = PathDeserializer(pathResolver)
         val module = serializersModuleOf(PathResolutionResult::class, pathDeserializer)
         val config = YamlConfiguration(extensionDefinitionPrefix = ".")
         val parser = Yaml(configuration = config, context = module)
 
         try {
-            val file = parser.parse(ConfigurationFile.serializer(), configFileContent)
-            val projectName = file.projectName ?: inferProjectName(pathResolver)
+            val file = parser.parse(ConfigurationFile.serializer(), content)
 
-            return Configuration(projectName, file.tasks, file.containers, file.configVariables)
+            logger.info {
+                message("Configuration file loaded.")
+                data("path", path)
+                data("file", file)
+            }
+
+            return file
         } catch (e: Throwable) {
             logger.error {
                 message("Exception thrown while loading configuration.")
+                data("path", path)
                 exception(e)
             }
 
-            throw mapException(e, filePath.toString())
+            throw mapException(e, path.toString())
+        }
+    }
+
+    private fun checkForProjectName(file: ConfigurationFile, path: Path) {
+        if (file.projectName != null) {
+            throw ConfigurationException("Only the root configuration file can contain the project name, but this file has a project name.", path.toString())
+        }
+    }
+
+    private fun inferProjectName(pathToRootConfigFile: Path): String {
+        val pathResolver = pathResolverFor(pathToRootConfigFile)
+
+        if (pathResolver.relativeTo.root == pathResolver.relativeTo) {
+            throw ConfigurationException("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.", pathToRootConfigFile.toString())
+        }
+
+        val inferredProjectName = pathResolver.relativeTo.fileName.toString().toLowerCase()
+
+        if (!DockerImageNameValidator.isValidImageName(inferredProjectName)) {
+            throw ConfigurationException(
+                "The inferred project name '$inferredProjectName' is invalid. The project name must be a valid Docker reference: it ${DockerImageNameValidator.validNameDescription}. Provide a valid project name explicitly with 'project_name'.",
+                pathToRootConfigFile.toString()
+            )
+        }
+
+        return inferredProjectName
+    }
+
+    private fun mergeContainers(filesLoaded: Map<Path, ConfigurationFile>): ContainerMap {
+        checkForDuplicateDefinitions("container", filesLoaded) { it.containers }
+
+        return ContainerMap(filesLoaded.flatMap { it.value.containers })
+    }
+
+    private fun mergeTasks(filesLoaded: Map<Path, ConfigurationFile>): TaskMap {
+        checkForDuplicateDefinitions("task", filesLoaded) { it.tasks }
+
+        return TaskMap(filesLoaded.flatMap { it.value.tasks })
+    }
+
+    private fun mergeConfigVariables(filesLoaded: Map<Path, ConfigurationFile>): ConfigVariableMap {
+        checkForDuplicateDefinitions("config variable", filesLoaded) { it.configVariables }
+
+        return ConfigVariableMap(filesLoaded.flatMap { it.value.configVariables })
+    }
+
+    private fun <T> checkForDuplicateDefinitions(type: String, filesLoaded: Map<Path, ConfigurationFile>, collectionSelector: (ConfigurationFile) -> NamedObjectMap<T>) {
+        val allNames = filesLoaded.values.flatMapToSet { collectionSelector(it).keys }
+
+        allNames.forEach { name ->
+            val files = filesLoaded.filterValues { collectionSelector(it).containsKey(name) }.keys
+
+            if (files.size > 1) {
+                throw ConfigurationException("The $type '$name' is defined in multiple files: ${files.joinToString(", ")}")
+            }
         }
     }
 
@@ -99,19 +187,8 @@ class ConfigurationLoader(
         else -> e.message
     }
 
-    private fun inferProjectName(pathResolver: PathResolver): String {
-        if (pathResolver.relativeTo.root == pathResolver.relativeTo) {
-            throw ConfigurationException("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.")
-        }
-
-        val inferredProjectName = pathResolver.relativeTo.fileName.toString().toLowerCase()
-
-        if (!DockerImageNameValidator.isValidImageName(inferredProjectName)) {
-            throw ConfigurationException("The inferred project name '$inferredProjectName' is invalid. The project name must be a valid Docker reference: it ${DockerImageNameValidator.validNameDescription}. Provide a valid project name explicitly with 'project_name'.")
-        }
-
-        return inferredProjectName
-    }
+    private fun pathResolverFor(file: Path): PathResolver = pathResolverFactory.createResolver(file.parent)
 }
 
 private fun LogMessageBuilder.data(key: String, value: Configuration) = this.data(key, value, Configuration.serializer())
+private fun LogMessageBuilder.data(key: String, value: ConfigurationFile) = this.data(key, value, ConfigurationFile.serializer())

@@ -20,6 +20,7 @@ import batect.config.io.deserializers.PathDeserializer
 import batect.docker.Capability
 import batect.os.Command
 import batect.os.PathResolutionResult
+import batect.os.PathResolver
 import batect.os.PathType
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
@@ -36,6 +37,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import kotlinx.serialization.builtins.AbstractDecoder
 import kotlinx.serialization.modules.serializersModuleOf
@@ -45,8 +47,16 @@ import java.time.Duration
 
 object ContainerSpec : Spek({
     describe("a container") {
+        val pathResolver by createForEachTest {
+            mock<PathResolver> {
+                on { relativeTo } doReturn osIndependentPath("/relative-to")
+            }
+        }
+
         val pathDeserializer by createForEachTest {
             mock<PathDeserializer> {
+                on { this.pathResolver } doReturn pathResolver
+
                 on { deserialize(any()) } doAnswer { invocation ->
                     val input = invocation.arguments[0] as AbstractDecoder
 
@@ -107,7 +117,7 @@ object ContainerSpec : Spek({
                         it("throws an appropriate exception") {
                             assertThat(
                                 { parser.parse(Container.Companion, yaml) },
-                                throws(withMessage(expectedMessage) and withLineNumber(1) and withColumn(1))
+                                throws(withMessage(expectedMessage) and withLineNumber(1) and withColumn(18))
                             )
                         }
                     }
@@ -260,8 +270,8 @@ object ContainerSpec : Spek({
                     assertThat(
                         result.volumeMounts, equalTo(
                             setOf(
-                                LocalMount(LiteralValue("/volume1"), "/here", null),
-                                LocalMount(LiteralValue("/somewhere"), "/else", "ro")
+                                LocalMount(LiteralValue("/volume1"), osIndependentPath("/relative-to"), "/here", null),
+                                LocalMount(LiteralValue("/somewhere"), osIndependentPath("/relative-to"), "/else", "ro")
                             )
                         )
                     )

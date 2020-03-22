@@ -1,0 +1,5 @@
+project_name: config-with-includes-test
+
+include:
+  - container.yml
+  - task.yml

@@ -18,15 +18,22 @@ package batect.config.io
 
 import batect.config.BuildImage
 import batect.config.ConfigVariableDefinition
+import batect.config.ConfigVariableMap
 import batect.config.Configuration
+import batect.config.Container
+import batect.config.ContainerMap
 import batect.config.HealthCheckConfig
 import batect.config.LiteralValue
 import batect.config.LocalMount
 import batect.config.PortMapping
 import batect.config.PullImage
 import batect.config.RunAsCurrentUserConfig
+import batect.config.Task
+import batect.config.TaskRunConfiguration
+import batect.config.TaskMap
 import batect.os.Command
 import batect.os.PathResolutionResult
+import batect.os.PathResolver
 import batect.os.PathResolverFactory
 import batect.os.PathType
 import batect.testutils.createForEachTest
@@ -50,6 +57,7 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
 import org.mockito.ArgumentMatchers.anyString
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -68,8 +76,16 @@ object ConfigurationLoaderSpec : Spek({
 
                     mock {
                         on { resolve(anyString()) } doAnswer { invocation ->
-                            val path = invocation.arguments[0] as String
-                            PathResolutionResult.Resolved(path, fileSystem.getPath("/resolved/$path"), PathType.Directory)
+                            val originalPath = invocation.arguments[0] as String
+                            val resolvedPath = fileSystem.getPath("/resolved/$originalPath")
+
+                            if (originalPath.contains("does_not_exist")) {
+                                PathResolutionResult.Resolved(originalPath, resolvedPath, PathType.DoesNotExist)
+                            } else if (Files.isRegularFile(resolvedPath)) {
+                                PathResolutionResult.Resolved(originalPath, resolvedPath, PathType.File)
+                            } else {
+                                PathResolutionResult.Resolved(originalPath, resolvedPath, PathType.Directory)
+                            }
                         }
 
                         on { relativeTo } doReturn rootPath
@@ -82,21 +98,27 @@ object ConfigurationLoaderSpec : Spek({
         val testFileName = "/theTestFile.yml"
         val loader by createForEachTest { ConfigurationLoader(pathResolverFactory, logger) }
 
-        fun loadConfiguration(config: String, path: String = testFileName): Configuration {
-            val filePath = fileSystem.getPath(path)
-            val directory = filePath.parent
+        fun createFile(path: Path, contents: String) {
+            val directory = path.parent
 
             if (directory != null) {
                 Files.createDirectories(directory)
             }
 
-            Files.write(filePath, config.toByteArray())
+            Files.write(path, contents.toByteArray())
+        }
 
-            try {
-                return loader.loadConfig(filePath)
-            } finally {
-                Files.delete(filePath)
-            }
+        fun loadConfiguration(config: String, path: String = testFileName): Configuration {
+            val filePath = fileSystem.getPath(path)
+            createFile(filePath, config)
+
+            return loader.loadConfig(filePath)
+        }
+
+        fun loadConfiguration(files: Map<Path, String>, rootConfig: Path): Configuration {
+            files.forEach { (path, contents) -> createFile(path, contents) }
+
+            return loader.loadConfig(rootConfig)
         }
 
         on("loading an empty configuration file") {
@@ -533,8 +555,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.healthCheckConfig, equalTo(HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(1))))
                 assertThat(container.runAsCurrentUserConfig, equalTo(RunAsCurrentUserConfig.RunAsCurrentUser("/home/something")))
                 assertThat(container.volumeMounts, equalTo(setOf(
-                    LocalMount(LiteralValue("../"), "/here", null),
-                    LocalMount(LiteralValue("/somewhere"), "/else", "ro")
+                    LocalMount(LiteralValue("../"), fileSystem.getPath("/"), "/here", null),
+                    LocalMount(LiteralValue("/somewhere"), fileSystem.getPath("/"), "/else", "ro")
                 )))
             }
         }
@@ -569,8 +591,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.name, equalTo("container-1"))
                 assertThat(container.imageSource, equalTo(BuildImage(fileSystem.getPath("/resolved/container-1-build-dir"))))
                 assertThat(container.volumeMounts, equalTo(setOf(
-                    LocalMount(LiteralValue("../"), "/here", null),
-                    LocalMount(LiteralValue("/somewhere"), "/else", "ro")
+                    LocalMount(LiteralValue("../"), fileSystem.getPath("/"), "/here", null),
+                    LocalMount(LiteralValue("/somewhere"), fileSystem.getPath("/"), "/else", "ro")
                 )))
             }
         }
@@ -717,7 +739,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Unknown property 'thing'. Known properties are: config_variables, containers, project_name, tasks") and withLineNumber(2) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Unknown property 'thing'. Known properties are: config_variables, containers, include, project_name, tasks") and withLineNumber(2) and withFileName(testFileName)))
             }
         }
 
@@ -1206,6 +1228,364 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should fail with an error message") {
                 assertThat({ loadConfiguration(configString) }, throws(withMessage("Invalid project name '-invalid'. The project name must be a valid Docker reference: it must contain only lowercase letters, digits, dashes (-), single consecutive periods (.) or one or two consecutive underscores (_), and must not start or end with dashes, periods or underscores.") and withLineNumber(1) and withColumn(15) and withFileName(testFileName)))
+            }
+        }
+
+        on("loading a configuration file with an include for a file that does not exist") {
+            val configString = """
+                |include:
+                | - does_not_exist.yml
+            """.trimMargin()
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Included file 'does_not_exist.yml' (resolved to '/resolved/does_not_exist.yml') does not exist.") and withLineNumber(2) and withColumn(4) and withFileName(testFileName)))
+            }
+        }
+
+        on("loading a configuration file that references other configuration files") {
+            val rootConfigPath by createForEachTest { fileSystem.getPath("project/batect.yml") }
+            val files by createForEachTest {
+                mapOf(
+                    rootConfigPath to """
+                        |include:
+                        | - 1.yml
+                        | - 2.yml
+                        | - 3.yml
+                    """.trimMargin(),
+                    fileSystem.getPath("/resolved/1.yml") to """
+                        |tasks:
+                        |  task-1:
+                        |    run:
+                        |      container: container-1
+                    """.trimMargin(),
+                    fileSystem.getPath("/resolved/2.yml") to """
+                        |containers:
+                        |  container-1:
+                        |    image: alpine:1.2.3
+                    """.trimMargin(),
+                    fileSystem.getPath("/resolved/3.yml") to """
+                        |config_variables:
+                        |  config-var-1: {}
+                    """.trimMargin()
+                )
+            }
+
+            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+
+            it("should merge the tasks from the referenced files") {
+                assertThat(config.tasks, equalTo(TaskMap(Task("task-1", TaskRunConfiguration("container-1")))))
+            }
+
+            it("should merge the containers from the referenced files") {
+                assertThat(config.containers, equalTo(ContainerMap(Container("container-1", PullImage("alpine:1.2.3")))))
+            }
+
+            it("should merge the config variables from the referenced files") {
+                assertThat(config.configVariables, equalTo(ConfigVariableMap(ConfigVariableDefinition("config-var-1"))))
+            }
+
+            it("should infer the project name based on the root configuration file's directory") {
+                assertThat(config.projectName, equalTo("project"))
+            }
+        }
+
+        on("loading a configuration file that references another configuration file which itself references another configuration file") {
+            val rootConfigPath by createForEachTest { fileSystem.getPath("project/batect.yml") }
+            val files by createForEachTest {
+                mapOf(
+                    rootConfigPath to """
+                        |include:
+                        | - 1.yml
+                    """.trimMargin(),
+                    fileSystem.getPath("/resolved/1.yml") to """
+                        |tasks:
+                        |  task-1:
+                        |    run:
+                        |      container: container-1
+                        |
+                        |include:
+                        | - 2.yml
+                    """.trimMargin(),
+                    fileSystem.getPath("/resolved/2.yml") to """
+                        |containers:
+                        |  container-1:
+                        |    image: alpine:1.2.3
+                    """.trimMargin()
+                )
+            }
+
+            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+
+            it("should merge the tasks from the referenced files") {
+                assertThat(config.tasks, equalTo(TaskMap(Task("task-1", TaskRunConfiguration("container-1")))))
+            }
+
+            it("should merge the containers from the referenced files") {
+                assertThat(config.containers, equalTo(ContainerMap(Container("container-1", PullImage("alpine:1.2.3")))))
+            }
+
+            it("should infer the project name based on the root configuration file's directory") {
+                assertThat(config.projectName, equalTo("project"))
+            }
+        }
+
+        on("loading a configuration file that contains configuration and a reference to another configuration file") {
+            val rootConfigPath by createForEachTest { fileSystem.getPath("project/batect.yml") }
+            val files by createForEachTest {
+                mapOf(
+                    rootConfigPath to """
+                        |tasks:
+                        |  task-1:
+                        |    run:
+                        |      container: container-1
+                        |
+                        |containers:
+                        |  container-1:
+                        |    image: alpine:1.2.3
+                        |
+                        |config_variables:
+                        |  config-var-1: {}
+                        |
+                        |include:
+                        | - 1.yml
+                    """.trimMargin(),
+                    fileSystem.getPath("/resolved/1.yml") to """
+                        |tasks:
+                        |  task-2:
+                        |    run:
+                        |      container: container-2
+                        |
+                        |containers:
+                        |  container-2:
+                        |    image: alpine:4.5.6
+                        |
+                        |config_variables:
+                        |  config-var-2: {}
+                    """.trimMargin()
+                )
+            }
+
+            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+
+            it("should merge the tasks from the referenced file with the tasks in the root configuration file") {
+                assertThat(config.tasks, equalTo(TaskMap(
+                    Task("task-1", TaskRunConfiguration("container-1")),
+                    Task("task-2", TaskRunConfiguration("container-2"))
+                )))
+            }
+
+            it("should merge the containers from the referenced file with the containers in the root configuration file") {
+                assertThat(config.containers, equalTo(ContainerMap(
+                    Container("container-1", PullImage("alpine:1.2.3")),
+                    Container("container-2", PullImage("alpine:4.5.6"))
+                )))
+            }
+
+            it("should merge the config variables from the referenced file with the config variables in the root configuration file") {
+                assertThat(config.configVariables, equalTo(ConfigVariableMap(
+                    ConfigVariableDefinition("config-var-1"),
+                    ConfigVariableDefinition("config-var-2")
+                )))
+            }
+
+            it("should infer the project name based on the root configuration file's directory") {
+                assertThat(config.projectName, equalTo("project"))
+            }
+        }
+
+        on("loading a configuration file that contains an explicit project name and references another configuration file") {
+            val rootConfigPath by createForEachTest { fileSystem.getPath("project/batect.yml") }
+            val files by createForEachTest {
+                mapOf(
+                    rootConfigPath to """
+                        |project_name: some_project
+                        |include:
+                        | - 1.yml
+                    """.trimMargin(),
+                    fileSystem.getPath("/resolved/1.yml") to """
+                        |containers: {}
+                    """.trimMargin()
+                )
+            }
+
+            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+
+            it("should use the provided project name") {
+                assertThat(config.projectName, equalTo("some_project"))
+            }
+        }
+
+        on("loading a configuration file that references another configuration file which contains an explicit project name") {
+            val rootConfigPath by createForEachTest { fileSystem.getPath("project/batect.yml") }
+            val files by createForEachTest {
+                mapOf(
+                    rootConfigPath to """
+                        |include:
+                        | - 1.yml
+                    """.trimMargin(),
+                    fileSystem.getPath("/resolved/1.yml") to """
+                        |project_name: some_project
+                    """.trimMargin()
+                )
+            }
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("Only the root configuration file can contain the project name, but this file has a project name.") and withFileName("/resolved/1.yml")))
+            }
+        }
+
+        on("loading a configuration file that contains a include dependency cycle") {
+            val rootConfigPath by createForEachTest { fileSystem.getPath("/resolved/1.yml") }
+            val files by createForEachTest {
+                mapOf(
+                    rootConfigPath to """
+                        |config_variables:
+                        |  config-var-1: {}
+                        |
+                        |include:
+                        | - 2.yml
+                    """.trimMargin(),
+                    fileSystem.getPath("/resolved/2.yml") to """
+                        |config_variables:
+                        |  config-var-2: {}
+                        |
+                        |include:
+                        | - 1.yml
+                    """.trimMargin()
+                )
+            }
+
+            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+
+            it("should load and merge the configuration from both files without error") {
+                assertThat(config.configVariables, equalTo(ConfigVariableMap(
+                    ConfigVariableDefinition("config-var-1"),
+                    ConfigVariableDefinition("config-var-2")
+                )))
+            }
+        }
+
+        on("loading a configuration file that references another configuration file both of which contain a definition for the same container") {
+            val rootConfigPath by createForEachTest { fileSystem.getPath("/project/batect.yml") }
+            val files by createForEachTest {
+                mapOf(
+                    rootConfigPath to """
+                        |containers:
+                        |  container-1:
+                        |    image: alpine:1.2.3
+                        |
+                        |include:
+                        | - 1.yml
+                    """.trimMargin(),
+                    fileSystem.getPath("/resolved/1.yml") to """
+                        |containers:
+                        |  container-1:
+                        |    image: alpine:4.5.6
+                    """.trimMargin()
+                )
+            }
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("The container 'container-1' is defined in multiple files: /project/batect.yml, /resolved/1.yml")))
+            }
+        }
+
+        on("loading a configuration file that references another configuration file both of which contain a definition for the same task") {
+            val rootConfigPath by createForEachTest { fileSystem.getPath("/project/batect.yml") }
+            val files by createForEachTest {
+                mapOf(
+                    rootConfigPath to """
+                        |tasks:
+                        |  task-1:
+                        |    run:
+                        |      container: container-1
+                        |
+                        |include:
+                        | - 1.yml
+                    """.trimMargin(),
+                    fileSystem.getPath("/resolved/1.yml") to """
+                        |tasks:
+                        |  task-1:
+                        |    run:
+                        |      container: container-2
+                    """.trimMargin()
+                )
+            }
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("The task 'task-1' is defined in multiple files: /project/batect.yml, /resolved/1.yml")))
+            }
+        }
+
+        on("loading a configuration file that references another configuration file both of which contain a definition for the same config variable") {
+            val rootConfigPath by createForEachTest { fileSystem.getPath("/project/batect.yml") }
+            val files by createForEachTest {
+                mapOf(
+                    rootConfigPath to """
+                        |config_variables:
+                        |  config-var-1: {}
+                        |
+                        |include:
+                        | - 1.yml
+                    """.trimMargin(),
+                    fileSystem.getPath("/resolved/1.yml") to """
+                        |config_variables:
+                        |  config-var-1: {}
+                    """.trimMargin()
+                )
+            }
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("The config variable 'config-var-1' is defined in multiple files: /project/batect.yml, /resolved/1.yml")))
+            }
+        }
+
+        on("loading a configuration file that references another configuration file which contains relative paths") {
+            val rootConfigPath by createForEachTest { fileSystem.getPath("/project/batect.yml") }
+            val files by createForEachTest {
+                mapOf(
+                    rootConfigPath to """
+                        |include:
+                        | - 1.yml
+                    """.trimMargin(),
+                    fileSystem.getPath("/resolved/1.yml") to """
+                        |containers:
+                        |  container-1:
+                        |    build_directory: some_build_directory
+                        |    volumes:
+                        |      - local: some_mount_directory
+                        |        container: /mount
+                    """.trimMargin()
+                )
+            }
+
+            beforeEachTest {
+                val pathResolver = mock<PathResolver> {
+                    on { relativeTo } doReturn fileSystem.getPath("/resolved_relative_to_config")
+
+                    on { resolve(anyString()) } doAnswer { invocation ->
+                        val originalPath = invocation.arguments[0] as String
+                        val resolvedPath = fileSystem.getPath("/resolved_relative_to_config/$originalPath")
+
+                        PathResolutionResult.Resolved(originalPath, resolvedPath, PathType.Directory)
+                    }
+                }
+
+                whenever(pathResolverFactory.createResolver(fileSystem.getPath("/resolved"))).doReturn(pathResolver)
+            }
+
+            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+
+            it("should resolve paths in the included file relative to the included file, not the root file") {
+                assertThat(config.containers.getValue("container-1"), equalTo(
+                    Container(
+                        "container-1",
+                        BuildImage(fileSystem.getPath("/resolved_relative_to_config/some_build_directory")),
+                        volumeMounts = setOf(
+                            LocalMount(LiteralValue("some_mount_directory"), fileSystem.getPath("/resolved_relative_to_config"), "/mount")
+                        )
+                    )
+                ))
             }
         }
     }

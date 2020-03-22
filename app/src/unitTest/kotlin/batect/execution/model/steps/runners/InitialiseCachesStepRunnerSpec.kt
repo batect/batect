@@ -45,6 +45,7 @@ import batect.os.Dimensions
 import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.osIndependentPath
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.anyOrNull
 import com.nhaarman.mockitokotlin2.doReturn
@@ -169,7 +170,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
 
             given("no containers have caches") {
                 val container1 = Container("container-1", imageSourceDoesNotMatter())
-                val container2 = Container("container-2", imageSourceDoesNotMatter(), volumeMounts = setOf(LocalMount(LiteralValue("/some-path"), "/container-path")))
+                val container2 = Container("container-2", imageSourceDoesNotMatter(), volumeMounts = setOf(LocalMount(LiteralValue("/some-path"), osIndependentPath("/relative-to"), "/container-path")))
                 val step = InitialiseCachesStep(containerType, setOf(container1, container2))
 
                 beforeEachTest { runner.run(step, eventSink) }

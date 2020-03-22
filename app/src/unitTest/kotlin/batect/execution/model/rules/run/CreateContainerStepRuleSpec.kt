@@ -37,6 +37,7 @@ import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
+import batect.testutils.osIndependentPath
 import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.mock
@@ -55,7 +56,7 @@ object CreateContainerStepRuleSpec : Spek({
             val imageSource = PullImage(imageName)
 
             given("the container has no cache mounts") {
-                val container = Container("the-container", imageSource, volumeMounts = setOf(LocalMount(LiteralValue("/some-local-path"), "/some-container-path")))
+                val container = Container("the-container", imageSource, volumeMounts = setOf(LocalMount(LiteralValue("/some-local-path"), osIndependentPath("/relative-to"), "/some-container-path")))
                 val allContainersInNetwork = setOf(container, otherContainer)
                 val rule = CreateContainerStepRule(container, config, allContainersInNetwork)
 

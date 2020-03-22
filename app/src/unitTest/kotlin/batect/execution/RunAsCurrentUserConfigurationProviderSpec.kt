@@ -16,10 +16,7 @@
 
 package batect.execution
 
-import batect.config.CacheMount
 import batect.config.Container
-import batect.config.LiteralValue
-import batect.config.LocalMount
 import batect.config.RunAsCurrentUserConfig
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
@@ -66,20 +63,13 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
     describe("a 'run as current user' configuration provider") {
         val eventSink by createForEachTest { mock<TaskEventSink>() }
 
-        val configuredMounts = setOf(
-            CacheMount("cache-1", "/caches/1"),
-            CacheMount("cache-2", "/caches/2"),
-            LocalMount(LiteralValue("/some-local-path"), "/mount/local")
-        )
-
         given("the container has 'run as current user' disabled") {
             val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
 
             val container = Container(
                 "some-container",
                 imageSourceDoesNotMatter(),
-                runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser,
-                volumeMounts = configuredMounts
+                runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
             )
 
             val systemInfo by createForEachTest {
@@ -151,8 +141,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
             val container = Container(
                 "some-container",
                 imageSourceDoesNotMatter(),
-                runAsCurrentUserConfig = runAsCurrentUserConfig,
-                volumeMounts = configuredMounts
+                runAsCurrentUserConfig = runAsCurrentUserConfig
             )
 
             given("the application is running on Windows") {

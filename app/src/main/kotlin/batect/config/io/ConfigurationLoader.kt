@@ -17,10 +17,13 @@
 package batect.config.io
 
 import batect.config.Configuration
+import batect.config.ConfigurationFile
 import batect.config.io.deserializers.PathDeserializer
+import batect.docker.DockerImageNameValidator
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.PathResolutionResult
+import batect.os.PathResolver
 import batect.os.PathResolverFactory
 import com.charleskorn.kaml.EmptyYamlDocumentException
 import com.charleskorn.kaml.Yaml
@@ -71,7 +74,10 @@ class ConfigurationLoader(
         val parser = Yaml(configuration = config, context = module)
 
         try {
-            return parser.parse(Configuration.serializer(), configFileContent)
+            val file = parser.parse(ConfigurationFile.serializer(), configFileContent)
+            val projectName = file.projectName ?: inferProjectName(pathResolver)
+
+            return Configuration(projectName, file.tasks, file.containers, file.configVariables)
         } catch (e: Throwable) {
             logger.error {
                 message("Exception thrown while loading configuration.")
@@ -92,6 +98,20 @@ class ConfigurationLoader(
         is EmptyYamlDocumentException -> "File '$fileName' contains no configuration."
         else -> e.message
     }
+
+    private fun inferProjectName(pathResolver: PathResolver): String {
+        if (pathResolver.relativeTo.root == pathResolver.relativeTo) {
+            throw ConfigurationException("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.")
+        }
+
+        val inferredProjectName = pathResolver.relativeTo.fileName.toString().toLowerCase()
+
+        if (!DockerImageNameValidator.isValidImageName(inferredProjectName)) {
+            throw ConfigurationException("The inferred project name '$inferredProjectName' is invalid. The project name must be a valid Docker reference: it ${DockerImageNameValidator.validNameDescription}. Provide a valid project name explicitly with 'project_name'.")
+        }
+
+        return inferredProjectName
+    }
 }
 
-private fun LogMessageBuilder.data(key: String, value: Configuration) = this.data(key, value, Configuration.Companion)
+private fun LogMessageBuilder.data(key: String, value: Configuration) = this.data(key, value, Configuration.serializer())

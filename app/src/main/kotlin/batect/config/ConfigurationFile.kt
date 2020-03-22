@@ -16,29 +16,14 @@
 
 package batect.config
 
-import batect.config.io.ConfigurationException
+import batect.config.io.deserializers.ProjectNameSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Configuration(
-    @SerialName("project_name") val projectName: String,
+data class ConfigurationFile(
+    @SerialName("project_name") @Serializable(with = ProjectNameSerializer::class) val projectName: String? = null,
     val tasks: TaskMap = TaskMap(),
     val containers: ContainerMap = ContainerMap(),
     @SerialName("config_variables") val configVariables: ConfigVariableMap = ConfigVariableMap()
-) {
-    fun applyImageOverrides(overrides: Map<String, ImageSource>): Configuration {
-        val updatedContainers = overrides.entries.fold(containers.values) { updatedContainers, override ->
-            val containerName = override.key
-            val oldContainer = containers[containerName]
-
-            if (oldContainer == null) {
-                throw ConfigurationException("Cannot override image for container '${override.key}' because there is no container named '${override.key}' defined.")
-            }
-
-            updatedContainers - oldContainer + oldContainer.copy(imageSource = override.value)
-        }
-
-        return this.copy(containers = ContainerMap(updatedContainers))
-    }
-}
+)

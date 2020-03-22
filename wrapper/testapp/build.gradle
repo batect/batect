@@ -30,7 +30,7 @@ jar {
         )
     }
 
-    archiveName = 'testapp.jar'
+    archiveFileName = 'testapp.jar'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8

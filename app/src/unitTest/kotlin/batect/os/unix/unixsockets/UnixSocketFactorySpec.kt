@@ -130,7 +130,7 @@ private fun getTemporarySocketFileName(): Path {
     return socketPath
 }
 
-private fun createSocketServer(socketPath: Path): UnixServerSocketChannel {
+private fun createSocketServer(socketPath: Path): AutoCloseable {
     val address = UnixSocketAddress(socketPath.toString())
     val channel = UnixServerSocketChannel.open()
     channel.configureBlocking(false)
@@ -161,5 +161,8 @@ private fun createSocketServer(socketPath: Path): UnixServerSocketChannel {
         }
     }
 
-    return channel
+    return AutoCloseable {
+        channel.close()
+        selector.close()
+    }
 }

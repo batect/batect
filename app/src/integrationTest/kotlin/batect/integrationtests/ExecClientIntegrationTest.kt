@@ -44,7 +44,7 @@ object ExecClientIntegrationTest : Spek({
                     client.withContainer(creationRequestForContainer(image, network, command)) { container ->
                         lateinit var execResult: DockerExecResult
 
-                        client.containers.run(container, System.out.sink(), System.`in`.source(), true, CancellationContext(), Dimensions(0, 0)) {
+                        client.containers.run(container, System.out.sink(), null, true, CancellationContext(), Dimensions(0, 0)) {
                             execResult = client.exec.run(Command.parse("echo -n 'Output from exec'"), container, emptyMap(), false, null, null, null, CancellationContext())
 
                             client.containers.stop(container)

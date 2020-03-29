@@ -25,7 +25,6 @@ import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import okio.sink
-import okio.source
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 

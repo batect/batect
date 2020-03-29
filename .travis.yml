@@ -21,7 +21,7 @@ stages:
   - Release
 
 env:
-  - GRADLE_OPTS=-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false
+  - GRADLE_OPTS="-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false -DgenerateCoverage=true"
 
 jobs:
   include:

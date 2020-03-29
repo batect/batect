@@ -28,6 +28,7 @@ import batect.execution.model.events.TemporaryFileCreatedEvent
 import batect.execution.model.events.TemporaryFileDeletedEvent
 import batect.ui.text.Text
 import batect.ui.text.TextRun
+import batect.utils.pluralize
 import java.nio.file.Path
 
 class CleanupProgressDisplayLine {

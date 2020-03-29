@@ -164,7 +164,7 @@ object VolumeMountSpec : Spek({
                         it("fails with an appropriate error message") {
                             assertThat(
                                 { parser.parse(VolumeMount.Companion, "'$it'") }, throws(
-                                    withMessage("Volume mount definition '$it' is not valid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.")
+                                    withMessage("Volume mount definition '$it' is invalid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.")
                                         and withLineNumber(1)
                                         and withColumn(1)
                                 )
@@ -407,7 +407,7 @@ object VolumeMountSpec : Spek({
                 it("fails with an appropriate error message") {
                     assertThat(
                         { parser.parse(VolumeMount.Companion, yaml) }, throws(
-                            withMessage("Volume mount definition is not valid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'.")
+                            withMessage("Volume mount definition is invalid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'.")
                         )
                     )
                 }

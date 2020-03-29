@@ -123,7 +123,7 @@ Both local mounts (mounting a directory on the host into a container) and [cache
 
 Two formats are supported:
 
-* Standard Docker `local:container` or `local:container:options` format
+* `local:container` or `local:container:options` format
 
 * An expanded format:
 
@@ -182,7 +182,7 @@ List of device mounts to create for the container.
 
 Two formats are supported:
 
-* Standard Docker `local:container` or `local:container:options` format
+* `local:container` or `local:container:options` format
 
 * An expanded format:
   ```yaml
@@ -201,16 +201,16 @@ Note that the `local` device mounts will be different for Windows and Unix-like 
 ## `ports`
 List of ports to make available to the host machine.
 
-Only TCP ports are supported at present.
+Three formats are supported:
 
-Note that this does not affect how containers launched by batect as part of the same task access ports used by each other. Any container started as part of a
-task will be able to access any port on any other container at the address `container_name:container_port`. For example, if a process running in the `http-server`
-container listens on port 2000, any other container in the task can access that at `http-server:2000` without port 2000 being listed in `ports` (or an `EXPOSE`
-Dockerfile instruction).
+* `local:container` format
 
-Two formats are supported:
+    For example, `1234:5678` will make port 5678 inside the container available on the host machine at port 1234.
 
-* Standard Docker `local:container` format. For example, `1234:5678` will make port 5678 inside the container available on the host machine at port 1234.
+* `local_from-local_to:container_from:container-to` format
+
+    For example, `1000-1001:2025-2026` will make port 2025 inside the container available
+    on the host machine at port 1000, and port 2026 inside the container available on the host machine at port 1001.
 
 * An expanded format:
   ```yaml
@@ -221,7 +221,21 @@ Two formats are supported:
         # This is equivalent to 1234:5678
         - local: 1234
           container: 5678
+        # This is equivalent to 1000-1001:2025-2026
+        - local: 1000-1001
+          container: 2025-2026
   ```
+
+Only TCP ports are supported.
+
+!!! tip
+    Exposing ports is only required if you need to access the container from the host machine.
+
+    Any container started as part of a task will be able to access any port on any other container at the address `container_name:container_port`, even if that port
+    is not listed in `ports`.
+
+    For example, if a process running in the `http-server` container listens on port 2000, any other container in the task can access that at `http-server:2000`
+    without port 2000 being listed in `ports` (or an `EXPOSE` Dockerfile instruction).
 
 ## `dependencies`
 List of other containers that should be started and healthy before starting this container.

@@ -19,6 +19,7 @@ package batect.docker
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
 import batect.config.DeviceMount
+import batect.config.PortRange
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -124,25 +125,34 @@ data class DockerContainerCreationRequest(
         } })
 
     private fun formatPortMappings(): JsonObject = json {
-        portMappings.forEach {
-            "${it.containerPort}/tcp" to JsonArray(listOf(
-                json {
-                    "HostIp" to ""
-                    "HostPort" to it.localPort.toString()
-                }
-            ))
+        portMappings.forEach { mapping ->
+            val localPorts = mapping.local.ports()
+            val containerPorts = mapping.container.ports()
+
+            localPorts.zip(containerPorts).forEach { (local, container) ->
+                "$container/tcp" to JsonArray(listOf(
+                    json {
+                        "HostIp" to ""
+                        "HostPort" to local.toString()
+                    }
+                ))
+            }
         }
     }
 
     private fun formatExposedPorts(): JsonObject = json {
-        portMappings.forEach {
-            "${it.containerPort}/tcp" to json {}
+        portMappings.forEach { mapping ->
+            mapping.container.ports().forEach { port ->
+                "$port/tcp" to json {}
+            }
         }
     }
 
     private fun formatCapabilitySet(set: Set<Capability>): JsonArray = set
         .map { it.toString() }
         .toJsonArray()
+
+    private fun PortRange.ports() = this.from..this.to
 }
 
 @Serializable

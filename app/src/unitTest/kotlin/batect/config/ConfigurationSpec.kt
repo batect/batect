@@ -80,7 +80,7 @@ object ConfigurationSpec : Spek({
                                             "SOME_CONFIG_VAR": {"type":"ConfigVariableReference", "referenceTo":"REF_3"}
                                         },
                                         "ports": [
-                                            { "local": 123, "container": 456 }
+                                            { "local": "123", "container": "456" }
                                         ],
                                         "working_directory": "/some/work/dir"
                                     },
@@ -156,7 +156,7 @@ object ConfigurationSpec : Spek({
                                         }
                                     ],
                                     "ports": [
-                                        { "local": 123, "container": 456 }
+                                        { "local": "123", "container": "456" }
                                     ],
                                     "dependencies": ["other-container"],
                                     "health_check": {

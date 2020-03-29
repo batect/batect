@@ -35,8 +35,11 @@ containers:
         options: ro
     ports:
       - 123:456
+      - 1000-1001:2000-2001
       - local: 789
         container: 111
+      - local: 22000-22001
+        container: 23000-23001
     dependencies:
       - abc
     health_check:
@@ -159,8 +162,11 @@ tasks:
         VAR: value
       ports:
         - 222:333
+        - 6000-6001:7000-7001
         - local: 444
           container: 555
+        - local: 8000-8001
+          container: 9000-9001
 
 config_variables:
   my_empty_var: {}

@@ -18,6 +18,7 @@ package batect.config
 
 import batect.config.io.ConfigurationException
 import batect.config.io.deserializers.tryToDeserializeWith
+import batect.utils.pluralize
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.CompositeDecoder
 import kotlinx.serialization.Decoder
@@ -31,21 +32,13 @@ import kotlinx.serialization.builtins.serializer
 
 @Serializable(with = PortMapping.Companion::class)
 data class PortMapping(
-    val localPort: Int,
-    val containerPort: Int
+    val local: PortRange,
+    val container: PortRange
 ) {
-    init {
-        if (localPort <= 0) {
-            throw InvalidPortMappingException("Local port must be positive.")
-        }
-
-        if (containerPort <= 0) {
-            throw InvalidPortMappingException("Container port must be positive.")
-        }
-    }
+    constructor(localPort: Int, containerPort: Int) : this(PortRange(localPort), PortRange(containerPort))
 
     override fun toString(): String {
-        return "$localPort:$containerPort"
+        return "$local:$container"
     }
 
     @Serializer(forClass = PortMapping::class)
@@ -54,8 +47,8 @@ data class PortMapping(
         private const val containerPortFieldName = "container"
 
         override val descriptor: SerialDescriptor = SerialDescriptor("PortMapping") {
-            element(localPortFieldName, Int.serializer().descriptor)
-            element(containerPortFieldName, Int.serializer().descriptor)
+            element(localPortFieldName, PortRange.descriptor)
+            element(containerPortFieldName, PortRange.descriptor)
         }
 
         private val localPortFieldIndex = descriptor.getElementIndex("local")
@@ -68,7 +61,7 @@ data class PortMapping(
 
             return decoder.tryToDeserializeWith(descriptor) { deserializeFromObject(it) }
                 ?: decoder.tryToDeserializeWith(String.serializer().descriptor) { deserializeFromString(it) }
-                ?: throw ConfigurationException("Port mapping definition is not valid. It must either be an object or a literal in the form 'local_port:container_port'.")
+                ?: throw ConfigurationException("Port mapping definition is invalid. It must either be an object or a literal in the form 'local:container' or 'from-to:from-to'.", decoder.getCurrentLocation().line, decoder.getCurrentLocation().column)
         }
 
         private fun deserializeFromString(input: YamlInput): PortMapping {
@@ -93,70 +86,84 @@ data class PortMapping(
             }
 
             try {
-                val localPort = localString.toInt()
-                val containerPort = containerString.toInt()
+                val localRange = PortRange.parse(localString)
+                val containerRange = PortRange.parse(containerString)
 
-                return PortMapping(localPort, containerPort)
+                if (localRange.size != containerRange.size) {
+                    throw ConfigurationException(
+                        "Port mapping definition '$value' is invalid. The local port range has ${pluralize(localRange.size, "port")} and the container port range has ${pluralize(containerRange.size, "port")}, but the ranges must be the same size.",
+                        input.node.location.line,
+                        input.node.location.column
+                    )
+                }
+
+                return PortMapping(localRange, containerRange)
             } catch (e: NumberFormatException) {
                 throw invalidMappingDefinitionException(value, input, e)
-            } catch (e: InvalidPortMappingException) {
+            } catch (e: InvalidPortRangeException) {
                 throw invalidMappingDefinitionException(value, input, e)
             }
         }
 
         private fun invalidMappingDefinitionException(value: String, input: YamlInput, cause: Throwable? = null) =
             ConfigurationException(
-                "Port mapping definition '$value' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.",
+                "Port mapping definition '$value' is invalid. It must be in the form 'local:container' or 'from-to:from-to' and each port must be a positive integer.",
                 input.node.location.line,
                 input.node.location.column,
                 cause
             )
 
         private fun deserializeFromObject(input: YamlInput): PortMapping {
-            var localPort: Int? = null
-            var containerPort: Int? = null
+            var localRange: PortRange? = null
+            var containerRange: PortRange? = null
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
                     CompositeDecoder.READ_DONE -> break@loop
                     localPortFieldIndex -> {
-                        localPort = input.decodeIntElement(descriptor, i)
-
-                        if (localPort <= 0) {
-                            throw ConfigurationException("Field '$localPortFieldName' is invalid: it must be a positive integer.", input.getCurrentLocation().line, input.getCurrentLocation().column)
+                        try {
+                            localRange = input.decodeSerializableElement(descriptor, i, PortRange.serializer())
+                        } catch (e: ConfigurationException) {
+                            throw ConfigurationException("Field '$localPortFieldName' is invalid: ${e.message}", input.getCurrentLocation().line, input.getCurrentLocation().column, e)
                         }
                     }
                     containerPortFieldIndex -> {
-                        containerPort = input.decodeIntElement(descriptor, i)
-
-                        if (containerPort <= 0) {
-                            throw ConfigurationException("Field '$containerPortFieldName' is invalid: it must be a positive integer.", input.getCurrentLocation().line, input.getCurrentLocation().column)
+                        try {
+                            containerRange = input.decodeSerializableElement(descriptor, i, PortRange.serializer())
+                        } catch (e: ConfigurationException) {
+                            throw ConfigurationException("Field '$containerPortFieldName' is invalid: ${e.message}", input.getCurrentLocation().line, input.getCurrentLocation().column, e)
                         }
                     }
                     else -> throw SerializationException("Unknown index $i")
                 }
             }
 
-            if (localPort == null) {
+            if (localRange == null) {
                 throw ConfigurationException("Field '$localPortFieldName' is required but it is missing.", input.node.location.line, input.node.location.column)
             }
 
-            if (containerPort == null) {
+            if (containerRange == null) {
                 throw ConfigurationException("Field '$containerPortFieldName' is required but it is missing.", input.node.location.line, input.node.location.column)
             }
 
-            return PortMapping(localPort, containerPort)
+            if (localRange.size != containerRange.size) {
+                throw ConfigurationException(
+                    "Port mapping definition is invalid. The local port range has ${pluralize(localRange.size, "port")} and the container port range has ${pluralize(containerRange.size, "port")}, but the ranges must be the same size.",
+                    input.node.location.line,
+                    input.node.location.column
+                )
+            }
+
+            return PortMapping(localRange, containerRange)
         }
 
         override fun serialize(encoder: Encoder, value: PortMapping) {
             val output = encoder.beginStructure(descriptor)
 
-            output.encodeIntElement(descriptor, localPortFieldIndex, value.localPort)
-            output.encodeIntElement(descriptor, containerPortFieldIndex, value.containerPort)
+            output.encodeSerializableElement(descriptor, localPortFieldIndex, PortRange.serializer(), value.local)
+            output.encodeSerializableElement(descriptor, containerPortFieldIndex, PortRange.serializer(), value.container)
 
             output.endStructure(descriptor)
         }
     }
 }
-
-class InvalidPortMappingException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

@@ -253,7 +253,7 @@
         "oneOf": [
           {
             "type": "string",
-            "pattern": "^\\d+:\\d+$"
+            "pattern": "^\\d+(-\\d+)?:\\d+(-\\d+)?$"
           },
           {
             "type": "object",
@@ -268,6 +268,22 @@
                 "type": "integer",
                 "description": "Port inside the container to map",
                 "minimum": 1
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "local": {
+                "type": "string",
+                "description": "Ports on the host machine to map",
+                "pattern": "^\\d+-\\d+$"
+              },
+              "container": {
+                "type": "string",
+                "description": "Ports inside the container to map",
+                "pattern": "^\\d+-\\d+$"
               }
             },
             "required": [

@@ -35,3 +35,10 @@ fun String.breakAt(width: Int): String {
 
     return builder.trimEnd().toString()
 }
+
+fun pluralize(count: Int, singular: String, plural: String = singular + "s"): String =
+    if (count == 1) {
+        "$count $singular"
+    } else {
+        "$count $plural"
+    }

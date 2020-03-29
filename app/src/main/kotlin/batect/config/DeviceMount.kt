@@ -64,7 +64,7 @@ data class DeviceMount(
 
             return decoder.tryToDeserializeWith(descriptor) { deserializeFromObject(it) }
                 ?: decoder.tryToDeserializeWith(String.serializer().descriptor) { deserializeFromString(it) }
-                ?: throw ConfigurationException("Device mount definition is not valid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'.")
+                ?: throw ConfigurationException("Device mount definition is invalid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'.")
         }
 
         private fun deserializeFromString(input: YamlInput): DeviceMount {
@@ -90,7 +90,7 @@ data class DeviceMount(
 
         private fun invalidMountDefinitionException(value: String, input: YamlInput) =
             ConfigurationException(
-                "Device mount definition '$value' is not valid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.",
+                "Device mount definition '$value' is invalid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.",
                 input.node.location.line,
                 input.node.location.column
             )

@@ -32,21 +32,39 @@ object PortMappingSpec : Spek({
     describe("a port mapping") {
         describe("deserializing from YAML") {
             describe("deserializing from compact form") {
-                on("parsing a valid port mapping definition") {
+                on("parsing a valid port mapping definition with single ports for both local and container ports") {
                     val portMapping = fromYaml("123:456")
 
-                    it("returns the correct local path") {
-                        assertThat(portMapping.localPort, equalTo(123))
+                    it("returns the correct local port") {
+                        assertThat(portMapping.local, equalTo(PortRange(123)))
                     }
 
-                    it("returns the correct container path") {
-                        assertThat(portMapping.containerPort, equalTo(456))
+                    it("returns the correct container port") {
+                        assertThat(portMapping.container, equalTo(PortRange(456)))
+                    }
+                }
+
+                on("parsing a valid port mapping definition with ranges for both local and container ports") {
+                    val portMapping = fromYaml("123-126:456-459")
+
+                    it("returns the correct local ports") {
+                        assertThat(portMapping.local, equalTo(PortRange(123, 126)))
+                    }
+
+                    it("returns the correct container ports") {
+                        assertThat(portMapping.container, equalTo(PortRange(456, 459)))
                     }
                 }
 
                 on("parsing an empty port mapping definition") {
                     it("fails with an appropriate error message") {
-                        assertThat({ fromYaml("''") }, throws(withMessage("Port mapping definition cannot be empty.")))
+                        assertThat({ fromYaml("''") }, throws(withMessage("Port mapping definition cannot be empty.") and withLineNumber(1) and withColumn(1)))
+                    }
+                }
+
+                on("parsing a port mapping definition with ranges of different sizes") {
+                    it("fails with an appropriate error message") {
+                        assertThat({ fromYaml("10-11:20-23") }, throws(withMessage("Port mapping definition '10-11:20-23' is invalid. The local port range has 2 ports and the container port range has 4 ports, but the ranges must be the same size.") and withLineNumber(1) and withColumn(1)))
                     }
                 }
 
@@ -68,14 +86,14 @@ object PortMappingSpec : Spek({
                 ).map {
                     on("parsing the invalid port mapping definition '$it'") {
                         it("fails with an appropriate error message") {
-                            assertThat({ fromYaml("'$it'") }, throws(withMessage("Port mapping definition '$it' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.")))
+                            assertThat({ fromYaml("'$it'") }, throws(withMessage("Port mapping definition '$it' is invalid. It must be in the form 'local:container' or 'from-to:from-to' and each port must be a positive integer.") and withLineNumber(1) and withColumn(1)))
                         }
                     }
                 }
             }
 
             describe("deserializing from expanded form") {
-                on("parsing a valid port mapping definition") {
+                on("parsing a valid port mapping definition with single ports for both local and container ports") {
                     val portMapping = fromYaml(
                         """
                             local: 123
@@ -83,12 +101,29 @@ object PortMappingSpec : Spek({
                         """.trimIndent()
                     )
 
-                    it("returns the correct local path") {
-                        assertThat(portMapping.localPort, equalTo(123))
+                    it("returns the correct local port") {
+                        assertThat(portMapping.local, equalTo(PortRange(123)))
                     }
 
-                    it("returns the correct container path") {
-                        assertThat(portMapping.containerPort, equalTo(456))
+                    it("returns the correct container port") {
+                        assertThat(portMapping.container, equalTo(PortRange(456)))
+                    }
+                }
+
+                on("parsing a valid port mapping definition with ranges for both local and container ports") {
+                    val portMapping = fromYaml(
+                        """
+                            local: 123-126
+                            container: 456-459
+                        """.trimIndent()
+                    )
+
+                    it("returns the correct local ports") {
+                        assertThat(portMapping.local, equalTo(PortRange(123, 126)))
+                    }
+
+                    it("returns the correct container ports") {
+                        assertThat(portMapping.container, equalTo(PortRange(456, 459)))
                     }
                 }
 
@@ -101,7 +136,7 @@ object PortMappingSpec : Spek({
                     it("fails with an appropriate error message") {
                         assertThat(
                             { fromYaml(yaml) }, throws(
-                                withMessage("Field 'local' is invalid: it must be a positive integer.")
+                                withMessage("Field 'local' is invalid: Port range '0' is invalid. Ports must be positive integers.")
                                     and withLineNumber(1)
                                     and withColumn(8)
                             )
@@ -118,7 +153,7 @@ object PortMappingSpec : Spek({
                     it("fails with an appropriate error message") {
                         assertThat(
                             { fromYaml(yaml) }, throws(
-                                withMessage("Field 'container' is invalid: it must be a positive integer.")
+                                withMessage("Field 'container' is invalid: Port range '0' is invalid. Ports must be positive integers.")
                                     and withLineNumber(2)
                                     and withColumn(12)
                             )
@@ -153,6 +188,17 @@ object PortMappingSpec : Spek({
                         )
                     }
                 }
+
+                on("parsing a port mapping definition with ranges of different sizes") {
+                    val yaml = """
+                            local: 10-11
+                            container: 20-23
+                        """.trimIndent()
+
+                    it("fails with an appropriate error message") {
+                        assertThat({ fromYaml(yaml) }, throws(withMessage("Port mapping definition is invalid. The local port range has 2 ports and the container port range has 4 ports, but the ranges must be the same size.") and withLineNumber(1) and withColumn(1)))
+                    }
+                }
             }
 
             describe("deserializing from something that is neither a string nor a map") {
@@ -163,7 +209,7 @@ object PortMappingSpec : Spek({
                 it("fails with an appropriate error message") {
                     assertThat(
                         { fromYaml(yaml) }, throws(
-                            withMessage("Port mapping definition is not valid. It must either be an object or a literal in the form 'local_port:container_port'.")
+                            withMessage("Port mapping definition is invalid. It must either be an object or a literal in the form 'local:container' or 'from-to:from-to'.") and withLineNumber(1) and withColumn(1)
                         )
                     )
                 }

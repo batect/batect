@@ -967,7 +967,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'local' is invalid: Value 'abc123' is not a valid integer value.") and withLineNumber(7) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Field 'local' is invalid: Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(7) and withFileName(testFileName)))
             }
         }
 
@@ -984,7 +984,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'container' is invalid: Value 'abc123' is not a valid integer value.") and withLineNumber(8) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Field 'container' is invalid: Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(8) and withFileName(testFileName)))
             }
         }
 
@@ -1000,7 +1000,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.") and withLineNumber(7) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is invalid. It must be in the form 'local:container' or 'from-to:from-to' and each port must be a positive integer.") and withLineNumber(7) and withFileName(testFileName)))
             }
         }
 
@@ -1018,7 +1018,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'local' is invalid: Value 'abc123' is not a valid integer value.") and withLineNumber(8) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Field 'local' is invalid: Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(8) and withFileName(testFileName)))
             }
         }
 
@@ -1036,7 +1036,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'container' is invalid: Value 'abc123' is not a valid integer value.") and withLineNumber(9) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Field 'container' is invalid: Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(9) and withFileName(testFileName)))
             }
         }
 
@@ -1053,7 +1053,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is not valid. It must be in the form 'local_port:container_port' and each port must be a positive integer.") and withLineNumber(8) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is invalid. It must be in the form 'local:container' or 'from-to:from-to' and each port must be a positive integer.") and withLineNumber(8) and withFileName(testFileName)))
             }
         }
 

@@ -66,7 +66,7 @@ sealed class VolumeMount(
 
             return decoder.tryToDeserializeWith(descriptor) { deserializeFromObject(it) }
                 ?: decoder.tryToDeserializeWith(String.serializer().descriptor) { deserializeFromString(it) }
-                ?: throw ConfigurationException("Volume mount definition is not valid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'.")
+                ?: throw ConfigurationException("Volume mount definition is invalid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'.")
         }
 
         private fun deserializeFromString(input: YamlInput): VolumeMount {
@@ -94,7 +94,7 @@ sealed class VolumeMount(
 
         private fun invalidMountDefinitionException(value: String, input: YamlInput) =
             ConfigurationException(
-                "Volume mount definition '$value' is not valid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.",
+                "Volume mount definition '$value' is invalid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.",
                 input.node.location.line,
                 input.node.location.column
             )

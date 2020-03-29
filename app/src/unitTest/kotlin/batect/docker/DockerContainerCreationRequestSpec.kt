@@ -19,6 +19,7 @@ package batect.docker
 import batect.config.DeviceMount
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
+import batect.config.PortRange
 import batect.testutils.given
 import batect.testutils.on
 import batect.utils.Json
@@ -46,7 +47,7 @@ object DockerContainerCreationRequestSpec : Spek({
                     DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container-2", "ro")
                 ),
                 setOf(DeviceMount("/dev/local", "/dev/container", "rw")),
-                setOf(PortMapping(123, 456)),
+                setOf(PortMapping(123, 456), PortMapping(PortRange(1000, 1001), PortRange(2000, 2001))),
                 HealthCheckConfig(Duration.ofNanos(555), 12, Duration.ofNanos(333), "exit 0"),
                 UserAndGroup(789, 222),
                 privileged = true,
@@ -78,7 +79,9 @@ object DockerContainerCreationRequestSpec : Spek({
                         |       "SOME_VAR=some value"
                         |   ],
                         |   "ExposedPorts": {
-                        |       "456/tcp": {}
+                        |       "456/tcp": {},
+                        |       "2000/tcp": {},
+                        |       "2001/tcp": {}
                         |   },
                         |   "HostConfig": {
                         |       "NetworkMode": "the-network",
@@ -98,6 +101,18 @@ object DockerContainerCreationRequestSpec : Spek({
                         |               {
                         |                   "HostIp": "",
                         |                   "HostPort": "123"
+                        |               }
+                        |           ],
+                        |           "2000/tcp": [
+                        |               {
+                        |                   "HostIp": "",
+                        |                   "HostPort": "1000"
+                        |               }
+                        |           ],
+                        |           "2001/tcp": [
+                        |               {
+                        |                   "HostIp": "",
+                        |                   "HostPort": "1001"
                         |               }
                         |           ]
                         |       },
@@ -175,7 +190,8 @@ object DockerContainerCreationRequestSpec : Spek({
                         |    }
                         |  ],
                         |  "portMappings": [
-                        |    { "local": 123, "container": 456 }
+                        |    { "local": "123", "container": "456" },
+                        |    { "local": "1000-1001", "container": "2000-2001" }
                         |  ],
                         |  "healthCheckConfig": {
                         |    "interval": "555ns",

@@ -76,7 +76,7 @@ object NetworkingEndToEndIntegrationTest : Spek({
 })
 
 private fun httpGet(url: String): Response {
-    retry(3) {
+    retry(20) {
         val client = OkHttpClient.Builder().build()
         val request = Request.Builder()
             .url(url)

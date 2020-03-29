@@ -60,7 +60,7 @@ fun creationRequestForContainer(
     )
 }
 
-inline fun <T> retry(retries: Int, operation: () -> T): T {
+inline fun <T> retry(retries: Int, delayMillisecondsBetweenAttempts: Long = 200, operation: () -> T): T {
     val exceptions = mutableListOf<Throwable>()
 
     for (retry in 1..retries) {
@@ -68,6 +68,8 @@ inline fun <T> retry(retries: Int, operation: () -> T): T {
             return operation()
         } catch (e: Throwable) {
             exceptions.add(e)
+
+            Thread.sleep(delayMillisecondsBetweenAttempts)
         }
     }
 

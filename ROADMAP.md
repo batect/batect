@@ -10,7 +10,6 @@ If there's something you're really keen to see, pull requests are always welcome
 ### Features
 * automatically enable `--no-color` or `--simple-output` if console doesn't support it (use terminfo database rather than current detection system)
 * performance improvements
-  * prioritise running steps that lie on the critical path (eg. favour pulling image for leaf of dependency graph over creating container for task container)
   * print updates to the console asynchronously (they currently block whatever thread posts the event or is starting the step)
   * batch up printing updates to the console when using fancy output mode, rather than reprinting progress information on every event
 * `brew doctor` equivalent (`./batect doctor`? `lint`?)
@@ -129,11 +128,8 @@ If there's something you're really keen to see, pull requests are always welcome
 * warn if dependency exits before task finishes (include exit code)
 * running multiple containers at once (eg. stereotypical 'run' configuration that starts up the service with its dependencies)
   * exit options (close all after any container stops, wait for all to stop)
-  * rather than showing output from target, show output from all containers
-  * logging options (all or particular container)
   * return code options (any non-zero, particular container, first to exit)
 * wildcard includes (eg. `include: containers/*.yaml`)
-* support port ranges in mappings
 * support protocols other than TCP in port mappings
 * requires / provides relationships (eg. 'app' requires 'service-a', and 'service-a-fake' and 'service-a-real' provide 'service-a')
 * when starting up containers and displaying progress, show countdown to health check (eg. 'waiting for container to become healthy, next check in 3 seconds, will timeout after 2 more retries')
@@ -146,4 +142,3 @@ If there's something you're really keen to see, pull requests are always welcome
 * make the last mile easier: pushing images and deploying applications
 * init containers: containers that must start, run and complete before a container can start (eg. populating a database with data)
 * some way to handle secrets easily
-* add support for `docker-sync` to improve I/O performance on macOS

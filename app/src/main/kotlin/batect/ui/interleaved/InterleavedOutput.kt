@@ -46,12 +46,13 @@ data class InterleavedOutput(
 
     private val taskPrefix = prefixFor(taskName, ConsoleColor.White)
     private val taskErrorPrefix = errorPrefixFor(taskName, ConsoleColor.White)
+    private val multilineErrorPrefix = errorPrefixFor("", null)
 
     fun printForContainer(container: Container, output: TextRun) = printWithPrefix(containerPrefixes.getValue(container), output)
     fun printForTask(output: TextRun) = printWithPrefix(taskPrefix, output)
 
-    fun printErrorForContainer(container: Container, output: TextRun) = printWithPrefix(containerErrorPrefixes.getValue(container), output)
-    fun printErrorForTask(output: TextRun) = printWithPrefix(taskErrorPrefix, output)
+    fun printErrorForContainer(container: Container, output: TextRun) = printWithPrefix(containerErrorPrefixes.getValue(container), output, multilineErrorPrefix)
+    fun printErrorForTask(output: TextRun) = printWithPrefix(taskErrorPrefix, output, multilineErrorPrefix)
 
     private fun printWithPrefix(prefix: Text, text: TextRun) {
         synchronized(lock) {
@@ -61,10 +62,17 @@ data class InterleavedOutput(
         }
     }
 
-    private fun printWithPrefix(prefix: TextRun, text: TextRun) {
+    private fun printWithPrefix(prefixForFirstLine: TextRun, text: TextRun, prefixForSubsequentLines: TextRun = prefixForFirstLine) {
+        var havePrintedFirstLine = false
+
         synchronized(lock) {
             text.lines.forEach { line ->
-                console.println(prefix + line)
+                if (!havePrintedFirstLine) {
+                    console.println(prefixForFirstLine + line)
+                    havePrintedFirstLine = true
+                } else {
+                    console.println(prefixForSubsequentLines + line)
+                }
             }
         }
     }

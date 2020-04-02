@@ -68,11 +68,14 @@ object InterleavedOutputSpec : Spek({
 
             on("printing an error for a container") {
                 beforeEachTest {
-                    output.printErrorForContainer(container1, TextRun("Some container error"))
+                    output.printErrorForContainer(container1, TextRun("Some container error\nSome more details"))
                 }
 
                 it("prints the output prefixed with a red exclamation mark") {
-                    verify(console).println(Text.bold(Text.black("c1    ") + Text.red("! ")) + Text("Some container error"))
+                    inOrder(console) {
+                        verify(console).println(Text.bold(Text.black("c1    ") + Text.red("! ")) + Text("Some container error"))
+                        verify(console).println(Text.bold(Text("      ") + Text.red("! ")) + Text("Some more details"))
+                    }
                 }
             }
 
@@ -97,11 +100,14 @@ object InterleavedOutputSpec : Spek({
 
             on("printing an error for the task") {
                 beforeEachTest {
-                    output.printErrorForTask(TextRun("Some task error"))
+                    output.printErrorForTask(TextRun("Some task error\nSome more details"))
                 }
 
                 it("prints the output prefixed with a red exclamation mark") {
-                    verify(console).println(Text.bold(Text.white("short ") + Text.red("! ")) + Text("Some task error"))
+                    inOrder(console) {
+                        verify(console).println(Text.bold(Text.white("short ") + Text.red("! ")) + Text("Some task error"))
+                        verify(console).println(Text.bold(Text("      ") + Text.red("! ")) + Text("Some more details"))
+                    }
                 }
             }
 

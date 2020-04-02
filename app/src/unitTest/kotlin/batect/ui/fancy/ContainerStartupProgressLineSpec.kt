@@ -81,7 +81,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving an 'image build starting' notification") {
                 on("that notification being for this line's container") {
-                    val step = BuildImageStep(container, "the-image-tag")
+                    val step = BuildImageStep(container)
                     beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
@@ -91,7 +91,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val step = BuildImageStep(otherContainer, "the-image-tag")
+                    val step = BuildImageStep(otherContainer)
                     beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
@@ -207,7 +207,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("when the image is still building") {
                     beforeEachTest {
-                        line.onEventPosted(StepStartingEvent(BuildImageStep(container, "the-image-tag")))
+                        line.onEventPosted(StepStartingEvent(BuildImageStep(container)))
                         line.onEventPosted(event)
                     }
 

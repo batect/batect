@@ -184,7 +184,7 @@ object InterleavedEventLoggerSpec : Spek({
             describe("when a 'step starting' event is posted") {
                 on("when a 'build image' step is starting") {
                     beforeEachTest {
-                        val step = BuildImageStep(container1, "the-image-tag")
+                        val step = BuildImageStep(container1)
                         logger.postEvent(StepStartingEvent(step))
                     }
 

@@ -17,7 +17,6 @@
 package batect.execution.model.stages
 
 import batect.config.BuildImage
-import batect.config.Configuration
 import batect.config.Container
 import batect.config.PullImage
 import batect.execution.ContainerDependencyGraph
@@ -36,7 +35,6 @@ import batect.utils.flatMapToSet
 import batect.utils.mapToSet
 
 class RunStagePlanner(
-    private val config: Configuration,
     private val graph: ContainerDependencyGraph,
     private val logger: Logger
 ) {
@@ -65,8 +63,6 @@ class RunStagePlanner(
 
     private fun imageCreationRuleFor(container: Container): TaskStepRule = when (container.imageSource) {
         is PullImage -> PullImageStepRule(container.imageSource)
-        is BuildImage -> BuildImageStepRule(container, imageTagFor(container))
+        is BuildImage -> BuildImageStepRule(container)
     }
-
-    private fun imageTagFor(container: Container) = "${config.projectName}-${container.name}"
 }

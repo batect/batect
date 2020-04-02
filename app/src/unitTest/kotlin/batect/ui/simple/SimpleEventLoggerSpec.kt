@@ -211,7 +211,7 @@ object SimpleEventLoggerSpec : Spek({
             describe("when a 'step starting' event is posted") {
                 on("when a 'build image' step is starting") {
                     beforeEachTest {
-                        val step = BuildImageStep(otherContainer, "the-image-tag")
+                        val step = BuildImageStep(otherContainer)
                         logger.postEvent(StepStartingEvent(step))
                     }
 

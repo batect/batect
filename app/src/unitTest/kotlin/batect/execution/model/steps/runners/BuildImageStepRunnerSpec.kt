@@ -17,6 +17,7 @@
 package batect.execution.model.steps.runners
 
 import batect.config.BuildImage
+import batect.config.Configuration
 import batect.config.Container
 import batect.config.EnvironmentVariableReference
 import batect.config.LiteralValue
@@ -58,11 +59,11 @@ object BuildImageStepRunnerSpec : Spek({
         val buildDirectory = Paths.get("/some-build-dir")
         val buildArgs = mapOf("some_arg" to LiteralValue("some_value"), "SOME_PROXY_CONFIG" to LiteralValue("overridden"), "SOME_HOST_VAR" to EnvironmentVariableReference("SOME_ENV_VAR"))
         val dockerfilePath = "some-Dockerfile-path"
-        val imageTag = "some_image_tag"
         val container = Container("some-container", BuildImage(buildDirectory, buildArgs, dockerfilePath))
-        val step = BuildImageStep(container, imageTag)
+        val step = BuildImageStep(container)
         val outputSink by createForEachTest { mock<Sink>() }
 
+        val config = Configuration("some-project")
         val imagesClient by createForEachTest { mock<DockerImagesClient>() }
         val proxyVariables = mapOf("SOME_PROXY_CONFIG" to "some_proxy", "SOME_OTHER_PROXY_CONFIG" to "some_other_value")
         val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider> {
@@ -87,6 +88,7 @@ object BuildImageStepRunnerSpec : Spek({
 
         val runner by createForEachTest {
             BuildImageStepRunner(
+                config,
                 imagesClient,
                 proxyEnvironmentVariablesProvider,
                 expressionEvaluationContext,
@@ -104,7 +106,7 @@ object BuildImageStepRunnerSpec : Spek({
                 val update2 = DockerImageBuildProgress(2, 2, "Second step", null)
 
                 beforeEachTest {
-                    whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(setOf(imageTag)), eq(outputSink), eq(cancellationContext), any()))
+                    whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(setOf("some-project-some-container")), eq(outputSink), eq(cancellationContext), any()))
                         .then { invocation ->
                             @Suppress("UNCHECKED_CAST")
                             val onStatusUpdate = invocation.arguments[6] as (DockerImageBuildProgress) -> Unit
@@ -144,6 +146,7 @@ object BuildImageStepRunnerSpec : Spek({
                 val runOptionsWithProxyEnvironmentVariablePropagationDisabled = runOptions.copy(propagateProxyEnvironmentVariables = false)
                 val runnerWithProxyEnvironmentVariablePropagationDisabled by createForEachTest {
                     BuildImageStepRunner(
+                        config,
                         imagesClient,
                         proxyEnvironmentVariablesProvider,
                         expressionEvaluationContext,
@@ -155,7 +158,7 @@ object BuildImageStepRunnerSpec : Spek({
                 }
 
                 beforeEachTest {
-                    whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(setOf(imageTag)), eq(outputSink), eq(cancellationContext), any())).thenReturn(image)
+                    whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(setOf("some-project-some-container")), eq(outputSink), eq(cancellationContext), any())).thenReturn(image)
 
                     runnerWithProxyEnvironmentVariablePropagationDisabled.run(step, eventSink)
                 }
@@ -178,7 +181,7 @@ object BuildImageStepRunnerSpec : Spek({
 
         on("when building the image fails") {
             beforeEachTest {
-                whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(setOf(imageTag)), eq(outputSink), eq(cancellationContext), any())).thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
+                whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(setOf("some-project-some-container")), eq(outputSink), eq(cancellationContext), any())).thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
                 runner.run(step, eventSink)
             }
 
@@ -195,7 +198,7 @@ object BuildImageStepRunnerSpec : Spek({
             val imageSourceWithInvalidBuildArgReference = BuildImage(buildDirectory, mapOf("SOME_HOST_VAR" to invalidReference), dockerfilePath)
             val containerWithInvalidBuildArgReference = Container("some-container", imageSourceWithInvalidBuildArgReference)
 
-            val stepWithInvalidBuildArgReference = BuildImageStep(containerWithInvalidBuildArgReference, imageTag)
+            val stepWithInvalidBuildArgReference = BuildImageStep(containerWithInvalidBuildArgReference)
 
             beforeEachTest {
                 runner.run(stepWithInvalidBuildArgReference, eventSink)

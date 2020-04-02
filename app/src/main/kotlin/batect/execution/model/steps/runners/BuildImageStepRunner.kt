@@ -17,6 +17,7 @@
 package batect.execution.model.steps.runners
 
 import batect.config.BuildImage
+import batect.config.Configuration
 import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
@@ -35,6 +36,7 @@ import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.ui.containerio.ContainerIOStreamingOptions
 
 class BuildImageStepRunner(
+    private val config: Configuration,
     private val imagesClient: DockerImagesClient,
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
     private val expressionEvaluationContext: ExpressionEvaluationContext,
@@ -57,7 +59,7 @@ class BuildImageStepRunner(
                 buildConfig.buildDirectory,
                 buildArgs,
                 buildConfig.dockerfilePath,
-                setOf(step.imageTag),
+                setOf(imageTagFor(step)),
                 ioStreamingOptions.stdoutForImageBuild(step.container),
                 cancellationContext,
                 onStatusUpdate
@@ -87,4 +89,6 @@ class BuildImageStepRunner(
     } else {
         emptyMap()
     }
+
+    private fun imageTagFor(step: BuildImageStep): String = "${config.projectName}-${step.container.name}"
 }

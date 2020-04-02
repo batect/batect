@@ -30,19 +30,19 @@ object BuildImageStepRuleSpec : Spek({
     describe("a build image step rule") {
         val source = Container("the-container", imageSourceDoesNotMatter())
         val imageTag = "the-image-tag"
-        val rule = BuildImageStepRule(source, imageTag)
+        val rule = BuildImageStepRule(source)
 
         on("evaluating the rule") {
             val result = rule.evaluate(emptySet())
 
             it("returns a 'build image' step") {
-                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(BuildImageStep(source, imageTag))))
+                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(BuildImageStep(source))))
             }
         }
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(rule.toString(), equalTo("BuildImageStepRule(container: 'the-container', image tag: 'the-image-tag')"))
+                assertThat(rule.toString(), equalTo("BuildImageStepRule(container: 'the-container')"))
             }
         }
     }

@@ -27,11 +27,11 @@ import org.spekframework.spek2.style.specification.describe
 object BuildImageStepSpec : Spek({
     describe("a 'build image' step") {
         val container = Container("the-container", imageSourceDoesNotMatter())
-        val step = BuildImageStep(container, "some_image_tag")
+        val step = BuildImageStep(container)
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(step.toString(), equalTo("BuildImageStep(container: 'the-container', image tag: 'some_image_tag')"))
+                assertThat(step.toString(), equalTo("BuildImageStep(container: 'the-container')"))
             }
         }
     }

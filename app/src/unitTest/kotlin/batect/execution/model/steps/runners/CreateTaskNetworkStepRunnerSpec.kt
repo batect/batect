@@ -23,7 +23,6 @@ import batect.docker.client.DockerNetworksClient
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
-import batect.execution.model.steps.CreateTaskNetworkStep
 import batect.testutils.createForEachTest
 import batect.testutils.given
 import com.nhaarman.mockitokotlin2.any
@@ -40,8 +39,6 @@ object CreateTaskNetworkStepRunnerSpec : Spek({
         val networksClient by createForEachTest { mock<DockerNetworksClient>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
 
-        val runner by createForEachTest { CreateTaskNetworkStepRunner(networksClient) }
-
         given("creating the network succeeds") {
             val network = DockerNetwork("some-network")
 
@@ -50,10 +47,10 @@ object CreateTaskNetworkStepRunnerSpec : Spek({
             }
 
             given("the active container type is Linux") {
-                val step = CreateTaskNetworkStep(DockerContainerType.Linux)
+                val runner by createForEachTest { CreateTaskNetworkStepRunner(DockerContainerType.Linux, networksClient) }
 
                 beforeEachTest {
-                    runner.run(step, eventSink)
+                    runner.run(eventSink)
                 }
 
                 it("emits a 'network created' event") {
@@ -66,10 +63,10 @@ object CreateTaskNetworkStepRunnerSpec : Spek({
             }
 
             given("the active container type is Windows") {
-                val step = CreateTaskNetworkStep(DockerContainerType.Windows)
+                val runner by createForEachTest { CreateTaskNetworkStepRunner(DockerContainerType.Windows, networksClient) }
 
                 beforeEachTest {
-                    runner.run(step, eventSink)
+                    runner.run(eventSink)
                 }
 
                 it("emits a 'network created' event") {
@@ -83,12 +80,12 @@ object CreateTaskNetworkStepRunnerSpec : Spek({
         }
 
         given("creating the network fails") {
-            val step = CreateTaskNetworkStep(DockerContainerType.Linux)
+            val runner by createForEachTest { CreateTaskNetworkStepRunner(DockerContainerType.Linux, networksClient) }
 
             beforeEachTest {
                 whenever(networksClient.create(any())).doThrow(NetworkCreationFailedException("Something went wrong."))
 
-                runner.run(step, eventSink)
+                runner.run(eventSink)
             }
 
             it("emits a 'network creation failed' event") {

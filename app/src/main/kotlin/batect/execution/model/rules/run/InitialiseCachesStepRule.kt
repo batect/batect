@@ -17,21 +17,18 @@
 package batect.execution.model.rules.run
 
 import batect.config.Container
-import batect.docker.client.DockerContainerType
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.InitialiseCachesStep
 
 data class InitialiseCachesStepRule(
-    val containerType: DockerContainerType,
     val allContainersInTask: Set<Container>
 ) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
-        return TaskStepRuleEvaluationResult.Ready(InitialiseCachesStep(containerType, allContainersInTask))
+        return TaskStepRuleEvaluationResult.Ready(InitialiseCachesStep(allContainersInTask))
     }
 
     override fun toString(): String = "${this::class.simpleName!!}(" +
-        "container type: $containerType, " +
         "all containers in task: ${allContainersInTask.map { "'${it.name}'" }})"
 }

@@ -38,7 +38,7 @@ class TaskStepRunner(private val kodein: DKodein) {
         when (step) {
             is BuildImageStep -> kodein.instance<BuildImageStepRunner>().run(step, eventSink)
             is PullImageStep -> kodein.instance<PullImageStepRunner>().run(step, eventSink)
-            is CreateTaskNetworkStep -> kodein.instance<CreateTaskNetworkStepRunner>().run(step, eventSink)
+            is CreateTaskNetworkStep -> kodein.instance<CreateTaskNetworkStepRunner>().run(eventSink)
             is InitialiseCachesStep -> kodein.instance<InitialiseCachesStepRunner>().run(step, eventSink)
             is CreateContainerStep -> kodein.instance<CreateContainerStepRunner>().run(step, eventSink)
             is RunContainerStep -> kodein.instance<RunContainerStepRunner>().run(step, eventSink)

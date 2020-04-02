@@ -90,7 +90,6 @@ object InitialiseCachesStepRunnerSpec : Spek({
         val runAsCurrentUserConfigurationProvider by createForEachTest { mock<RunAsCurrentUserConfigurationProvider>() }
 
         val eventSink by createForEachTest { mock<TaskEventSink>() }
-        val runner by createForEachTest { InitialiseCachesStepRunner(cacheInitImageName, imagesClient, containersClient, cancellationContext, containerNameGenerator, volumeMountResolver, runAsCurrentUserConfigurationProvider) }
 
         fun Suite.itEmitsACachesInitialisedEvent() {
             it("emits a 'caches initialised' event") {
@@ -167,11 +166,12 @@ object InitialiseCachesStepRunnerSpec : Spek({
 
         given("Linux containers are being used") {
             val containerType = DockerContainerType.Linux
+            val runner by createForEachTest { InitialiseCachesStepRunner(containerType, cacheInitImageName, imagesClient, containersClient, cancellationContext, containerNameGenerator, volumeMountResolver, runAsCurrentUserConfigurationProvider) }
 
             given("no containers have caches") {
                 val container1 = Container("container-1", imageSourceDoesNotMatter())
                 val container2 = Container("container-2", imageSourceDoesNotMatter(), volumeMounts = setOf(LocalMount(LiteralValue("/some-path"), osIndependentPath("/relative-to"), "/container-path")))
-                val step = InitialiseCachesStep(containerType, setOf(container1, container2))
+                val step = InitialiseCachesStep(setOf(container1, container2))
 
                 beforeEachTest { runner.run(step, eventSink) }
 
@@ -182,7 +182,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
             given("a single container with a single cache") {
                 val mount = CacheMount("some-cache", "/cache-mount-point")
                 val container = Container("container-1", imageSourceDoesNotMatter(), volumeMounts = setOf(mount))
-                val step = InitialiseCachesStep(containerType, setOf(container))
+                val step = InitialiseCachesStep(setOf(container))
 
                 given("volumes are being used for caches") {
                     beforeEachTest {
@@ -298,7 +298,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                 val mount1 = CacheMount("some-cache", "/cache-mount-point")
                 val mount2 = CacheMount("some-other-cache", "/other-cache-mount-point")
                 val container = Container("container-1", imageSourceDoesNotMatter(), volumeMounts = setOf(mount1, mount2))
-                val step = InitialiseCachesStep(containerType, setOf(container))
+                val step = InitialiseCachesStep(setOf(container))
 
                 beforeEachTest {
                     whenever(volumeMountResolver.resolve(mount1)).doReturn(DockerVolumeMount(DockerVolumeMountSource.Volume("some-cache-abc123"), "/cache-mount-point"))
@@ -322,7 +322,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                 val container1 = Container("container-1", imageSourceDoesNotMatter(), volumeMounts = setOf(container1Mount))
                 val container2Mount = CacheMount("some-other-cache", "/other-cache-mount-point")
                 val container2 = Container("container-2", imageSourceDoesNotMatter(), volumeMounts = setOf(container2Mount))
-                val step = InitialiseCachesStep(containerType, setOf(container1, container2))
+                val step = InitialiseCachesStep(setOf(container1, container2))
 
                 beforeEachTest {
                     whenever(volumeMountResolver.resolve(container1Mount)).doReturn(DockerVolumeMount(DockerVolumeMountSource.Volume("some-cache-abc123"), "/cache-mount-point"))
@@ -348,7 +348,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                 val container1 = Container("container-1", imageSourceDoesNotMatter(), volumeMounts = setOf(container1Mount))
                 val container2Mount = CacheMount("some-cache", "/other-cache-mount-point")
                 val container2 = Container("container-2", imageSourceDoesNotMatter(), volumeMounts = setOf(container2Mount))
-                val step = InitialiseCachesStep(containerType, setOf(container1, container2))
+                val step = InitialiseCachesStep(setOf(container1, container2))
 
                 beforeEachTest {
                     whenever(volumeMountResolver.resolve(container1Mount)).doReturn(DockerVolumeMount(DockerVolumeMountSource.Volume("some-cache-abc123"), "/cache-mount-point"))
@@ -404,9 +404,12 @@ object InitialiseCachesStepRunnerSpec : Spek({
         }
 
         given("Windows containers are being used") {
+            val containerType = DockerContainerType.Windows
+            val runner by createForEachTest { InitialiseCachesStepRunner(containerType, cacheInitImageName, imagesClient, containersClient, cancellationContext, containerNameGenerator, volumeMountResolver, runAsCurrentUserConfigurationProvider) }
+
             val container1 = Container("container-1", imageSourceDoesNotMatter())
             val container2 = Container("container-2", imageSourceDoesNotMatter())
-            val step = InitialiseCachesStep(DockerContainerType.Windows, setOf(container1, container2))
+            val step = InitialiseCachesStep(setOf(container1, container2))
 
             beforeEachTest { runner.run(step, eventSink) }
 

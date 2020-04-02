@@ -45,6 +45,7 @@ import kotlinx.serialization.Serializable
 import okio.sink
 
 class InitialiseCachesStepRunner(
+    private val containerType: DockerContainerType,
     private val cacheInitImageName: String,
     private val imagesClient: DockerImagesClient,
     private val containersClient: DockerContainersClient,
@@ -54,7 +55,7 @@ class InitialiseCachesStepRunner(
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider
 ) {
     fun run(step: InitialiseCachesStep, eventSink: TaskEventSink) {
-        if (step.containerType == DockerContainerType.Windows) {
+        if (containerType == DockerContainerType.Windows) {
             eventSink.postEvent(CachesInitialisedEvent)
             return
         }

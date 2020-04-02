@@ -17,7 +17,6 @@
 package batect.execution.model.steps
 
 import batect.config.Container
-import batect.docker.client.DockerContainerType
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
@@ -29,11 +28,11 @@ object InitialiseCachesStepSpec : Spek({
     describe("an 'initialise caches' step") {
         val container1 = Container("container-1", imageSourceDoesNotMatter())
         val container2 = Container("container-2", imageSourceDoesNotMatter())
-        val step = InitialiseCachesStep(DockerContainerType.Windows, setOf(container1, container2))
+        val step = InitialiseCachesStep(setOf(container1, container2))
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(step.toString(), equalTo("InitialiseCachesStep(container type: Windows, all containers in task: ['container-1', 'container-2'])"))
+                assertThat(step.toString(), equalTo("InitialiseCachesStep(all containers in task: ['container-1', 'container-2'])"))
             }
         }
     }

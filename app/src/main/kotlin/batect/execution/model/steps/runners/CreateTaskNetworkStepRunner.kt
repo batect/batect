@@ -22,14 +22,14 @@ import batect.docker.client.DockerNetworksClient
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
-import batect.execution.model.steps.CreateTaskNetworkStep
 
 class CreateTaskNetworkStepRunner(
-    val networksClient: DockerNetworksClient
+    private val containerType: DockerContainerType,
+    private val networksClient: DockerNetworksClient
 ) {
-    fun run(step: CreateTaskNetworkStep, eventSink: TaskEventSink) {
+    fun run(eventSink: TaskEventSink) {
         try {
-            val driver = when (step.containerType) {
+            val driver = when (containerType) {
                 DockerContainerType.Linux -> "bridge"
                 DockerContainerType.Windows -> "nat"
             }

@@ -16,7 +16,6 @@
 
 package batect.execution.model.rules.run
 
-import batect.docker.client.DockerContainerType
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.CreateTaskNetworkStep
 import batect.testutils.equalTo
@@ -27,19 +26,19 @@ import org.spekframework.spek2.style.specification.describe
 
 object CreateTaskNetworkStepRuleSpec : Spek({
     describe("a create task network step rule") {
-        val rule = CreateTaskNetworkStepRule(DockerContainerType.Windows)
+        val rule = CreateTaskNetworkStepRule
 
         on("evaluating the rule") {
             val result = rule.evaluate(emptySet())
 
             it("returns a 'create task network' step") {
-                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateTaskNetworkStep(DockerContainerType.Windows))))
+                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateTaskNetworkStep)))
             }
         }
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(rule.toString(), equalTo("CreateTaskNetworkStepRule(container type: Windows)"))
+                assertThat(rule.toString(), equalTo("CreateTaskNetworkStepRule"))
             }
         }
     }

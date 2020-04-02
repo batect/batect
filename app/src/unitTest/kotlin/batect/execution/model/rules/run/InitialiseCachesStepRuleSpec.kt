@@ -17,7 +17,6 @@
 package batect.execution.model.rules.run
 
 import batect.config.Container
-import batect.docker.client.DockerContainerType
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.InitialiseCachesStep
 import batect.testutils.equalTo
@@ -31,19 +30,19 @@ object InitialiseCachesStepRuleSpec : Spek({
     describe("an initialise caches step rule") {
         val container1 = Container("container-1", imageSourceDoesNotMatter())
         val container2 = Container("container-2", imageSourceDoesNotMatter())
-        val rule = InitialiseCachesStepRule(DockerContainerType.Windows, setOf(container1, container2))
+        val rule = InitialiseCachesStepRule(setOf(container1, container2))
 
         on("evaluating the rule") {
             val result = rule.evaluate(emptySet())
 
-            it("returns a 'create task network' step") {
-                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(InitialiseCachesStep(DockerContainerType.Windows, setOf(container1, container2)))))
+            it("returns a 'initialise caches step' step") {
+                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(InitialiseCachesStep(setOf(container1, container2)))))
             }
         }
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(rule.toString(), equalTo("InitialiseCachesStepRule(container type: Windows, all containers in task: ['container-1', 'container-2'])"))
+                assertThat(rule.toString(), equalTo("InitialiseCachesStepRule(all containers in task: ['container-1', 'container-2'])"))
             }
         }
     }

@@ -107,6 +107,14 @@ class WrapperScriptTests(unittest.TestCase):
 
                 self.assertEqual(result.returncode, 0)
 
+    def test_supported_java_with_tool_options_set(self):
+        path_dir = self.create_limited_path_for_specific_java_version("8")
+
+        result = self.run_script([], path=path_dir, with_java_tool_options="true")
+
+        self.assertIn("The application has started.", result.stdout)
+        self.assertEqual(result.returncode, 0)
+
     def test_non_zero_exit(self):
         result = self.run_script(["exit-non-zero"])
         output = result.stdout
@@ -150,13 +158,16 @@ class WrapperScriptTests(unittest.TestCase):
             javaDir
         ])
 
-    def run_script(self, args, download_url=default_download_url, path=os.environ["PATH"]):
+    def run_script(self, args, download_url=default_download_url, path=os.environ["PATH"], with_java_tool_options=None):
         env = {
             **os.environ,
             "BATECT_CACHE_DIR": self.cache_dir,
             "BATECT_DOWNLOAD_URL": download_url,
             "PATH": path
         }
+
+        if with_java_tool_options is not None:
+            env["JAVA_TOOL_OPTIONS"] = "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
 
         path = self.get_script_path()
         command = [path] + args

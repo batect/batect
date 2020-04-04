@@ -94,7 +94,7 @@
     }
 
     function getJavaVersion() {
-        java -version 2>&1 | head -n1 | sed -En ';s/.* version "([0-9]+)(\.([0-9]+))?.*".*/\1.\3/p;'
+        java -version 2>&1 | grep version | sed -En ';s/.* version "([0-9]+)(\.([0-9]+))?.*".*/\1.\3/p;'
     }
 
     function extractJavaMajorVersion() {

@@ -29,7 +29,6 @@ import org.spekframework.spek2.style.specification.describe
 object BuildImageStepRuleSpec : Spek({
     describe("a build image step rule") {
         val source = Container("the-container", imageSourceDoesNotMatter())
-        val imageTag = "the-image-tag"
         val rule = BuildImageStepRule(source)
 
         on("evaluating the rule") {

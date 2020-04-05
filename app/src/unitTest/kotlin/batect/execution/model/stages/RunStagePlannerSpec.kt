@@ -90,7 +90,7 @@ object RunStagePlannerSpec : Spek({
                 val task = Task("the-task", TaskRunConfiguration("the-container"))
 
                 on("that container pulls an existing image") {
-                    val container = Container(task.runConfiguration.container, PullImage("some-image"))
+                    val container = Container(task.runConfiguration!!.container, PullImage("some-image"))
                     val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                     val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
                     val allContainersInTask = setOf(container)
@@ -111,7 +111,7 @@ object RunStagePlannerSpec : Spek({
 
                 on("that container builds an image from a Dockerfile") {
                     val imageSource = BuildImage(Paths.get("./my-image"), mapOf("some_arg" to LiteralValue("some_value")), "some-Dockerfile")
-                    val container = Container(task.runConfiguration.container, imageSource)
+                    val container = Container(task.runConfiguration!!.container, imageSource)
                     val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                     val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
                     val allContainersInTask = setOf(container)
@@ -133,7 +133,7 @@ object RunStagePlannerSpec : Spek({
 
             on("the task has some additional environment variables") {
                 val task = Task("the-task", TaskRunConfiguration("the-container", additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value"))))
-                val container = Container(task.runConfiguration.container, PullImage("some-image"))
+                val container = Container(task.runConfiguration!!.container, PullImage("some-image"))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                 val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
                 val allContainersInTask = setOf(container)
@@ -154,7 +154,7 @@ object RunStagePlannerSpec : Spek({
 
             on("the task some additional port mappings") {
                 val task = Task("the-task", TaskRunConfiguration("the-container", additionalPortMappings = setOf(PortMapping(123, 456))))
-                val container = Container(task.runConfiguration.container, PullImage("some-image"))
+                val container = Container(task.runConfiguration!!.container, PullImage("some-image"))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                 val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
                 val allContainersInTask = setOf(container)
@@ -185,7 +185,7 @@ object RunStagePlannerSpec : Spek({
                 val container3ImageSource = PullImage("image-3")
                 val container3 = Container("container-3", container3ImageSource, dependencies = setOf(container2.name))
                 val taskContainerImageSource = BuildImage(Paths.get("./task-container"))
-                val taskContainer = Container(task.runConfiguration.container, taskContainerImageSource, dependencies = setOf(container1.name, container2.name, container3.name))
+                val taskContainer = Container(task.runConfiguration!!.container, taskContainerImageSource, dependencies = setOf(container1.name, container2.name, container3.name))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2, container3))
                 val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
                 val allContainersInTask = setOf(taskContainer, container1, container2, container3)
@@ -224,7 +224,7 @@ object RunStagePlannerSpec : Spek({
                 val container1 = Container("container-1", sharedImageSource)
                 val container2 = Container("container-2", sharedImageSource)
                 val taskContainerImageSource = PullImage("task-image")
-                val taskContainer = Container(task.runConfiguration.container, taskContainerImageSource, dependencies = setOf(container1.name, container2.name))
+                val taskContainer = Container(task.runConfiguration!!.container, taskContainerImageSource, dependencies = setOf(container1.name, container2.name))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2))
                 val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
                 val allContainersInTask = setOf(taskContainer, container1, container2)

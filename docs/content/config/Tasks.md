@@ -4,7 +4,9 @@
     This page reflects the options available in the [most recent version](https://github.com/batect/batect/releases/latest)
     of batect.
 
-Each task definition is made up of:
+Each task definition is made up of the following fields. 
+
+At least one of `run` or `prerequisites` is required.
 
 ## `description`
 Description shown when running `batect --list-tasks`.
@@ -13,7 +15,11 @@ Description shown when running `batect --list-tasks`.
 Group name used to group tasks when running `batect --list-tasks`.
 
 ## `run`
-Specifies what to do when this task starts:
+Specifies what to do when this task starts. 
+
+If `run` is not provided, then `prerequisites` is required and the tasks listed in `prerequisites` are run to completion before considering this task complete.
+
+`run` is made up of the following fields: 
 
 * `container` [Container](Containers.md) to run for this task. **Required.**
 
@@ -64,7 +70,7 @@ List of other tasks that should be run to completion before running this task.
 If a prerequisite task finishes with a non-zero exit code, then neither this task nor any other prerequisites will be run.
 
 The tasks are run in the same order that they are declared in, unless reordering is required to satisfy the prerequisites of
-of of this task's prerequisites.
+this task's prerequisites.
 
 ## Examples
 

@@ -35,12 +35,12 @@ class ContainerCommandResolver(private val runOptions: RunOptions) {
         return baseCommand
     }
 
-    private fun isTaskContainer(container: Container, task: Task): Boolean = container.name == task.runConfiguration.container
+    private fun isTaskContainer(container: Container, task: Task): Boolean = container.name == task.runConfiguration?.container
     private fun isMainTask(task: Task): Boolean = task.name == runOptions.taskName
     private fun extraArgsApply(container: Container, task: Task): Boolean = isTaskContainer(container, task) && isMainTask(task) && runOptions.additionalTaskCommandArguments.any()
 
     private fun resolveBaseCommand(container: Container, task: Task): Command? {
-        if (isTaskContainer(container, task) && task.runConfiguration.command != null) {
+        if (task.runConfiguration != null && isTaskContainer(container, task) && task.runConfiguration.command != null) {
             return task.runConfiguration.command
         }
 

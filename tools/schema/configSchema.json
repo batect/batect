@@ -24,7 +24,7 @@
     }
   },
   "patternProperties": {
-    "^\\.": { }
+    "^\\.": {}
   },
   "definitions": {
     "containers": {
@@ -177,8 +177,23 @@
           }
         }
       },
-      "required": [
-        "run"
+      "anyOf": [
+        {
+          "required": [
+            "run"
+          ]
+        },
+        {
+          "required": [
+            "prerequisites"
+          ],
+          "not": {
+            "required": [
+              "dependencies",
+              "run"
+            ]
+          }
+        }
       ]
     },
     "taskRunOptions": {

@@ -19,7 +19,9 @@ package batect.execution
 import batect.config.Task
 import batect.ioc.TaskKodeinFactory
 import batect.logging.Logger
+import batect.ui.Console
 import batect.ui.EventLogger
+import batect.ui.text.Text
 import org.kodein.di.generic.instance
 import java.time.Duration
 import java.time.Instant
@@ -27,9 +29,21 @@ import java.time.Instant
 data class TaskRunner(
     private val taskKodeinFactory: TaskKodeinFactory,
     private val interruptionTrap: InterruptionTrap,
+    private val console: Console,
     private val logger: Logger
 ) {
     fun run(task: Task, runOptions: RunOptions): Int {
+        if (task.runConfiguration == null) {
+            logger.info {
+                message("Task has no run configuration, skipping.")
+                data("taskName", task.name)
+            }
+
+            console.println(Text.white(Text("The task ") + Text.bold(task.name) + Text(" only defines prerequisite tasks, nothing to do.")))
+
+            return 0
+        }
+
         logger.info {
             message("Preparing task.")
             data("taskName", task.name)

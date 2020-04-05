@@ -273,7 +273,7 @@ private val executionModule = Kodein.Module("execution") {
     bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance(), instance(), instance()) }
     bind<RunOptions>(RunOptionsType.Overall) with singleton { RunOptions(commandLineOptions()) }
     bind<RunStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> RunStagePlanner(instance(), logger) }
-    bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), logger) }
+    bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(StreamType.Output), logger) }
     bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(instance(), logger) }
     bind<TaskStateMachine>() with scoped(TaskScope).singletonWithLogger { logger -> TaskStateMachine(instance(), instance(RunOptionsType.Task), instance(), instance(), instance(), instance(), logger) }
     bind<TaskStepRunner>() with scoped(TaskScope).singleton { TaskStepRunner(dkodein) }

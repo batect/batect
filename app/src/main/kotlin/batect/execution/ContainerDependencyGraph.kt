@@ -28,27 +28,24 @@ data class ContainerDependencyGraph(
     private val commandResolver: ContainerCommandResolver,
     private val entrypointResolver: ContainerEntrypointResolver
 ) {
+    private val runConfiguration = task.runConfiguration ?: throw IllegalArgumentException("Cannot create a container dependency graph for a task that only has prerequisites.")
     private val nodesMap = createNodes()
 
-    val taskContainerNode: ContainerDependencyGraphNode by lazy { nodeFor(config.containers[task.runConfiguration.container]!!) }
+    val taskContainerNode: ContainerDependencyGraphNode by lazy { nodeFor(config.containers[runConfiguration.container]!!) }
     val allNodes = nodesMap.values
 
     fun nodeFor(container: Container): ContainerDependencyGraphNode {
-        val node = nodesMap[container]
-
-        if (node == null) {
-            throw IllegalArgumentException("Container '${container.name}' is not part of this dependency graph.")
-        }
+        val node = nodesMap[container] ?: throw IllegalArgumentException("Container '${container.name}' is not part of this dependency graph.")
 
         return node
     }
 
     private fun createNodes(): Map<Container, ContainerDependencyGraphNode> {
-        if (task.dependsOnContainers.contains(task.runConfiguration.container)) {
-            throw DependencyResolutionFailedException("The task '${task.name}' cannot start the container '${task.runConfiguration.container}' and also run it.")
+        if (task.dependsOnContainers.contains(runConfiguration.container)) {
+            throw DependencyResolutionFailedException("The task '${task.name}' cannot start the container '${runConfiguration.container}' and also run it.")
         }
 
-        val taskContainer = findContainer(task.runConfiguration.container, "task '${task.name}'")
+        val taskContainer = findContainer(runConfiguration.container, "task '${task.name}'")
         val nodesCreated = mutableMapOf<Container, ContainerDependencyGraphNode>()
         val taskDependencies = findContainers(task.dependsOnContainers, "task '${task.name}'") + findContainers(taskContainer.dependencies, "container '${taskContainer.name}'")
         getOrCreateNode(taskContainer, taskDependencies, true, nodesCreated, emptyList())
@@ -79,7 +76,7 @@ data class ContainerDependencyGraph(
             val overrides = ContainerRuntimeConfiguration(
                 commandResolver.resolveCommand(container, task),
                 entrypointResolver.resolveEntrypoint(container, task),
-                workingDirectory(isRootNode, container, task),
+                workingDirectory(isRootNode, container),
                 additionalEnvironmentVariables(isRootNode),
                 additionalPortMappings(isRootNode)
             )
@@ -127,7 +124,7 @@ data class ContainerDependencyGraph(
         val names = pathWithoutTaskContainer.map { "'${it.name}'" }
         val descriptionOfFirst = "Container ${names.first()} (which is explicitly started by the task)"
 
-        val isCycleBackToTaskContainer = path.last().name == task.runConfiguration.container
+        val isCycleBackToTaskContainer = path.last().name == runConfiguration.container
         val descriptionOfLast = if (isCycleBackToTaskContainer) "the task container ${names.last()}" else names.last()
 
         val containersWithOutgoingDependencies = listOf(descriptionOfFirst) + names.drop(1).dropLast(1)
@@ -147,20 +144,20 @@ data class ContainerDependencyGraph(
 
     private fun additionalEnvironmentVariables(isRootNode: Boolean): Map<String, Expression> =
         if (isRootNode) {
-            task.runConfiguration.additionalEnvironmentVariables
+            runConfiguration.additionalEnvironmentVariables
         } else {
             emptyMap()
         }
 
     private fun additionalPortMappings(isRootNode: Boolean): Set<PortMapping> =
         if (isRootNode) {
-            task.runConfiguration.additionalPortMappings
+            runConfiguration.additionalPortMappings
         } else {
             emptySet()
         }
 
-    private fun workingDirectory(isRootNode: Boolean, container: Container, task: Task): String? = if (isRootNode) {
-        task.runConfiguration.workingDiretory ?: container.workingDirectory
+    private fun workingDirectory(isRootNode: Boolean, container: Container): String? = if (isRootNode) {
+        runConfiguration.workingDiretory ?: container.workingDirectory
     } else {
         container.workingDirectory
     }

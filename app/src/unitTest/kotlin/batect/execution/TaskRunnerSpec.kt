@@ -27,7 +27,9 @@ import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import batect.testutils.runForEachTest
+import batect.ui.Console
 import batect.ui.EventLogger
+import batect.ui.text.Text
 import batect.ui.text.TextRun
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -38,6 +40,7 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
 import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
@@ -48,25 +51,9 @@ import java.time.Duration
 
 object TaskRunnerSpec : Spek({
     describe("a task runner") {
-        val container = Container("some-container", imageSourceDoesNotMatter())
-        val runConfiguration = TaskRunConfiguration(container.name)
-        val task = Task("some-task", runConfiguration)
         val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true, emptyMap())
 
-        val eventLogger by createForEachTest { mock<EventLogger>() }
-        val stateMachine by createForEachTest { mock<TaskStateMachine>() }
-        val executionManager by createForEachTest { mock<ParallelExecutionManager>() }
-
-        val taskKodeinFactory by createForEachTest {
-            mock<TaskKodeinFactory>() {
-                on { create(any(), any()) } doReturn TaskKodein(task, Kodein.direct {
-                    bind<EventLogger>() with instance(eventLogger)
-                    bind<TaskStateMachine>() with instance(stateMachine)
-                    bind<ParallelExecutionManager>() with instance(executionManager)
-                })
-            }
-        }
-
+        val taskKodeinFactory by createForEachTest { mock<TaskKodeinFactory>() }
         val interruptionTrapCleanup by createForEachTest { mock<AutoCloseable>() }
         val interruptionTrap by createForEachTest {
             mock<InterruptionTrap> {
@@ -74,18 +61,110 @@ object TaskRunnerSpec : Spek({
             }
         }
 
+        val console by createForEachTest { mock<Console>() }
         val logger by createLoggerForEachTest()
-        val taskRunner by createForEachTest { TaskRunner(taskKodeinFactory, interruptionTrap, logger) }
+        val taskRunner by createForEachTest { TaskRunner(taskKodeinFactory, interruptionTrap, console, logger) }
 
         describe("running a task") {
-            given("the task succeeds") {
+            given("the task has a container to run") {
+                val container = Container("some-container", imageSourceDoesNotMatter())
+                val runConfiguration = TaskRunConfiguration(container.name)
+                val task = Task("some-task", runConfiguration)
+
+                val eventLogger by createForEachTest { mock<EventLogger>() }
+                val stateMachine by createForEachTest { mock<TaskStateMachine>() }
+                val executionManager by createForEachTest { mock<ParallelExecutionManager>() }
+
                 beforeEachTest {
-                    whenever(stateMachine.taskHasFailed).thenReturn(false)
-                    whenever(stateMachine.taskExitCode).thenReturn(100)
-                    whenever(executionManager.run()).then { Thread.sleep(50) }
+                    whenever(taskKodeinFactory.create(any(), any())).thenReturn(TaskKodein(task, Kodein.direct {
+                        bind<EventLogger>() with instance(eventLogger)
+                        bind<TaskStateMachine>() with instance(stateMachine)
+                        bind<ParallelExecutionManager>() with instance(executionManager)
+                    }))
                 }
 
-                given("cleanup after success is enabled") {
+                given("the task succeeds") {
+                    beforeEachTest {
+                        whenever(stateMachine.taskHasFailed).thenReturn(false)
+                        whenever(stateMachine.taskExitCode).thenReturn(100)
+                        whenever(executionManager.run()).then { Thread.sleep(50) }
+                    }
+
+                    given("cleanup after success is enabled") {
+                        on("running the task") {
+                            val exitCode by runForEachTest { taskRunner.run(task, runOptions) }
+
+                            it("logs that the task is starting") {
+                                verify(eventLogger).onTaskStarting("some-task")
+                            }
+
+                            it("runs the task") {
+                                verify(executionManager).run()
+                            }
+
+                            it("logs that the task is starting before running the task") {
+                                inOrder(eventLogger, executionManager) {
+                                    verify(eventLogger).onTaskStarting("some-task")
+                                    verify(executionManager).run()
+                                }
+                            }
+
+                            it("starts listening for interrupts before running the task, and stops listening after the task has finished") {
+                                inOrder(interruptionTrap, executionManager, interruptionTrapCleanup) {
+                                    verify(interruptionTrap).trapInterruptions(executionManager)
+                                    verify(executionManager).run()
+                                    verify(interruptionTrapCleanup).close()
+                                }
+                            }
+
+                            it("logs that the task finished after running the task") {
+                                inOrder(eventLogger, executionManager) {
+                                    verify(executionManager).run()
+                                    verify(eventLogger).onTaskFinished(eq("some-task"), eq(100), argThat { this >= Duration.ofMillis(50) })
+                                }
+                            }
+
+                            it("returns the exit code from the task") {
+                                assertThat(exitCode, equalTo(100))
+                            }
+
+                            it("does not write anything directly to the console") {
+                                verifyZeroInteractions(console)
+                            }
+                        }
+                    }
+
+                    given("cleanup after success is disabled") {
+                        val runOptionsWithCleanupDisabled = runOptions.copy(behaviourAfterSuccess = CleanupOption.DontCleanup)
+
+                        beforeEachTest {
+                            whenever(stateMachine.manualCleanupInstructions).doReturn(TextRun("Do this to clean up"))
+                        }
+
+                        on("running the task") {
+                            val exitCode by runForEachTest { taskRunner.run(task, runOptionsWithCleanupDisabled) }
+
+                            it("logs that the task finished after running the task, then logs the manual cleanup instructions") {
+                                inOrder(eventLogger, executionManager) {
+                                    verify(executionManager).run()
+                                    verify(eventLogger).onTaskFinished(eq("some-task"), eq(100), argThat { this >= Duration.ofMillis(50) })
+                                    verify(eventLogger).onTaskFinishedWithCleanupDisabled(TextRun("Do this to clean up"))
+                                }
+                            }
+
+                            it("returns a non-zero exit code") {
+                                assertThat(exitCode, equalTo(-1))
+                            }
+                        }
+                    }
+                }
+
+                given("the task fails") {
+                    beforeEachTest {
+                        whenever(stateMachine.taskHasFailed).thenReturn(true)
+                        whenever(stateMachine.manualCleanupInstructions).thenReturn(TextRun("Do this to clean up"))
+                    }
+
                     on("running the task") {
                         val exitCode by runForEachTest { taskRunner.run(task, runOptions) }
 
@@ -97,90 +176,45 @@ object TaskRunnerSpec : Spek({
                             verify(executionManager).run()
                         }
 
-                        it("logs that the task is starting before running the task") {
+                        it("logs that the task failed") {
+                            verify(eventLogger).onTaskFailed("some-task", TextRun("Do this to clean up"))
+                        }
+
+                        it("logs that the task is starting before running the task and then logs that the task failed") {
                             inOrder(eventLogger, executionManager) {
                                 verify(eventLogger).onTaskStarting("some-task")
                                 verify(executionManager).run()
-                            }
-                        }
-
-                        it("starts listening for interrupts before running the task, and stops listening after the task has finished") {
-                            inOrder(interruptionTrap, executionManager, interruptionTrapCleanup) {
-                                verify(interruptionTrap).trapInterruptions(executionManager)
-                                verify(executionManager).run()
-                                verify(interruptionTrapCleanup).close()
-                            }
-                        }
-
-                        it("logs that the task finished after running the task") {
-                            inOrder(eventLogger, executionManager) {
-                                verify(executionManager).run()
-                                verify(eventLogger).onTaskFinished(eq("some-task"), eq(100), argThat { this >= Duration.ofMillis(50) })
-                            }
-                        }
-
-                        it("returns the exit code from the task") {
-                            assertThat(exitCode, equalTo(100))
-                        }
-                    }
-                }
-
-                given("cleanup after success is disabled") {
-                    val runOptionsWithCleanupDisabled = runOptions.copy(behaviourAfterSuccess = CleanupOption.DontCleanup)
-
-                    beforeEachTest {
-                        whenever(stateMachine.manualCleanupInstructions).doReturn(TextRun("Do this to clean up"))
-                    }
-
-                    on("running the task") {
-                        val exitCode by runForEachTest { taskRunner.run(task, runOptionsWithCleanupDisabled) }
-
-                        it("logs that the task finished after running the task, then logs the manual cleanup instructions") {
-                            inOrder(eventLogger, executionManager) {
-                                verify(executionManager).run()
-                                verify(eventLogger).onTaskFinished(eq("some-task"), eq(100), argThat { this >= Duration.ofMillis(50) })
-                                verify(eventLogger).onTaskFinishedWithCleanupDisabled(TextRun("Do this to clean up"))
+                                verify(eventLogger).onTaskFailed("some-task", TextRun("Do this to clean up"))
                             }
                         }
 
                         it("returns a non-zero exit code") {
-                            assertThat(exitCode, equalTo(-1))
+                            assertThat(exitCode, !equalTo(0))
+                        }
+
+                        it("does not write anything directly to the console") {
+                            verifyZeroInteractions(console)
                         }
                     }
                 }
             }
 
-            given("the task fails") {
-                beforeEachTest {
-                    whenever(stateMachine.taskHasFailed).thenReturn(true)
-                    whenever(stateMachine.manualCleanupInstructions).thenReturn(TextRun("Do this to clean up"))
-                }
+            given("the task does not have a container to run") {
+                val task = Task("some-task", runConfiguration = null)
 
                 on("running the task") {
                     val exitCode by runForEachTest { taskRunner.run(task, runOptions) }
 
-                    it("logs that the task is starting") {
-                        verify(eventLogger).onTaskStarting("some-task")
+                    it("returns a zero exit code") {
+                        assertThat(exitCode, equalTo(0))
                     }
 
-                    it("runs the task") {
-                        verify(executionManager).run()
+                    it("does not create a task Kodein instance") {
+                        verifyZeroInteractions(taskKodeinFactory)
                     }
 
-                    it("logs that the task failed") {
-                        verify(eventLogger).onTaskFailed("some-task", TextRun("Do this to clean up"))
-                    }
-
-                    it("logs that the task is starting before running the task and then logs that the task failed") {
-                        inOrder(eventLogger, executionManager) {
-                            verify(eventLogger).onTaskStarting("some-task")
-                            verify(executionManager).run()
-                            verify(eventLogger).onTaskFailed("some-task", TextRun("Do this to clean up"))
-                        }
-                    }
-
-                    it("returns a non-zero exit code") {
-                        assertThat(exitCode, !equalTo(0))
+                    it("writes a message to the console indicating that the task only has prerequisite tasks") {
+                        verify(console).println(Text.white(Text("The task ") + Text.bold("some-task") + Text(" only defines prerequisite tasks, nothing to do.")))
                     }
                 }
             }

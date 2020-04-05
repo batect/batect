@@ -84,7 +84,7 @@ data class Container(
         private const val additionalHostnamesFieldName = "additional_hostnames"
         private const val setupCommandsFieldName = "setup_commands"
 
-        override val descriptor: SerialDescriptor = SerialDescriptor("ContainerFromFile") {
+        override val descriptor: SerialDescriptor = SerialDescriptor("Container") {
             element(buildDirectoryFieldName, String.serializer().descriptor, isOptional = true)
             element(buildArgsFieldName, EnvironmentSerializer.descriptor, isOptional = true)
             element(dockerfileFieldName, String.serializer().descriptor, isOptional = true)

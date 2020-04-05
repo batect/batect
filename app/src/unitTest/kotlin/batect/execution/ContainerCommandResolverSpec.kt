@@ -94,7 +94,7 @@ object ContainerCommandResolverSpec : Spek({
                             val command = resolver.resolveCommand(container, task)
 
                             it("returns the command from the task") {
-                                assertThat(command, equalTo(task.runConfiguration.command))
+                                assertThat(command, equalTo(task.runConfiguration!!.command))
                             }
                         }
                     }
@@ -127,7 +127,7 @@ object ContainerCommandResolverSpec : Spek({
                         val command = resolver.resolveCommand(container, task)
 
                         it("returns the command from the task") {
-                            assertThat(command, equalTo(task.runConfiguration.command))
+                            assertThat(command, equalTo(task.runConfiguration!!.command))
                         }
                     }
                 }

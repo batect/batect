@@ -16,30 +16,105 @@
 
 package batect.config
 
+import batect.config.io.ConfigurationException
 import batect.config.io.deserializers.DependencySetSerializer
-import batect.config.io.deserializers.EnvironmentSerializer
 import batect.config.io.deserializers.PrerequisiteListSerializer
-import batect.os.Command
-import kotlinx.serialization.SerialName
+import com.charleskorn.kaml.YamlInput
+import kotlinx.serialization.CompositeDecoder
+import kotlinx.serialization.Decoder
+import kotlinx.serialization.Encoder
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.builtins.serializer
 
-@Serializable
+@Serializable(with = Task.Companion::class)
 data class Task(
-    @Transient val name: String = "",
-    @SerialName("run") val runConfiguration: TaskRunConfiguration,
+    val name: String = "",
+    val runConfiguration: TaskRunConfiguration?,
     val description: String = "",
     val group: String = "",
-    @SerialName("dependencies") @Serializable(with = DependencySetSerializer::class) val dependsOnContainers: Set<String> = emptySet(),
-    @SerialName("prerequisites") @Serializable(with = PrerequisiteListSerializer::class) val prerequisiteTasks: List<String> = emptyList()
-)
+    val dependsOnContainers: Set<String> = emptySet(),
+    val prerequisiteTasks: List<String> = emptyList()
+) {
+    companion object : KSerializer<Task> {
+        private const val runConfigurationFieldName = "run"
+        private const val descriptionFieldName = "description"
+        private const val groupFieldName = "group"
+        private const val dependsOnContainersFieldName = "dependencies"
+        private const val prerequisiteTasksFieldName = "prerequisites"
 
-@Serializable
-data class TaskRunConfiguration(
-    val container: String,
-    val command: Command? = null,
-    val entrypoint: Command? = null,
-    @SerialName("environment") @Serializable(with = EnvironmentSerializer::class) val additionalEnvironmentVariables: Map<String, Expression> = emptyMap(),
-    @SerialName("ports") val additionalPortMappings: Set<PortMapping> = emptySet(),
-    @SerialName("working_directory") val workingDiretory: String? = null
-)
+        override val descriptor: SerialDescriptor = SerialDescriptor("Task") {
+            element(runConfigurationFieldName, TaskRunConfiguration.serializer().descriptor, isOptional = true)
+            element(descriptionFieldName, String.serializer().descriptor, isOptional = true)
+            element(groupFieldName, String.serializer().descriptor, isOptional = true)
+            element(dependsOnContainersFieldName, DependencySetSerializer.descriptor, isOptional = true)
+            element(prerequisiteTasksFieldName, PrerequisiteListSerializer.descriptor, isOptional = true)
+        }
+
+        private val runConfigurationFieldIndex = descriptor.getElementIndex(runConfigurationFieldName)
+        private val descriptionFieldIndex = descriptor.getElementIndex(descriptionFieldName)
+        private val groupFieldIndex = descriptor.getElementIndex(groupFieldName)
+        private val dependsOnContainersFieldIndex = descriptor.getElementIndex(dependsOnContainersFieldName)
+        private val prerequisiteTasksFieldIndex = descriptor.getElementIndex(prerequisiteTasksFieldName)
+
+        override fun deserialize(decoder: Decoder): Task {
+            val input = decoder.beginStructure(descriptor) as YamlInput
+
+            return deserializeFromObject(input).also { input.endStructure(descriptor) }
+        }
+
+        private fun deserializeFromObject(input: YamlInput): Task {
+            val location = input.getCurrentLocation()
+
+            var runConfiguration: TaskRunConfiguration? = null
+            var description = ""
+            var group = ""
+            var dependsOnContainers: Set<String> = emptySet()
+            var prerequisiteTasks: List<String> = emptyList()
+
+            loop@ while (true) {
+                when (val i = input.decodeElementIndex(descriptor)) {
+                    runConfigurationFieldIndex -> runConfiguration = input.decodeSerializableValue(TaskRunConfiguration.serializer())
+                    descriptionFieldIndex -> description = input.decodeStringElement(descriptor, i)
+                    groupFieldIndex -> group = input.decodeStringElement(descriptor, i)
+                    dependsOnContainersFieldIndex -> dependsOnContainers = input.decodeSerializableValue(DependencySetSerializer)
+                    prerequisiteTasksFieldIndex -> prerequisiteTasks = input.decodeSerializableValue(PrerequisiteListSerializer)
+
+                    CompositeDecoder.READ_DONE -> break@loop
+                    else -> throw SerializationException("Unknown index $i")
+                }
+            }
+
+            if (runConfiguration == null && prerequisiteTasks.isEmpty()) {
+                throw ConfigurationException("At least one of '$runConfigurationFieldName' or '$prerequisiteTasksFieldName' is required.", location.line, location.column)
+            }
+
+            if (dependsOnContainers.isNotEmpty() && runConfiguration == null) {
+                throw ConfigurationException("'$runConfigurationFieldName' is required if '$dependsOnContainersFieldName' is provided.", location.line, location.column)
+            }
+
+            return Task(
+                runConfiguration = runConfiguration,
+                description = description,
+                group = group,
+                dependsOnContainers = dependsOnContainers,
+                prerequisiteTasks = prerequisiteTasks
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: Task) {
+            val output = encoder.beginStructure(descriptor)
+
+            output.encodeSerializableElement(descriptor, runConfigurationFieldIndex, TaskRunConfiguration.serializer().nullable, value.runConfiguration)
+            output.encodeStringElement(descriptor, descriptionFieldIndex, value.description)
+            output.encodeStringElement(descriptor, groupFieldIndex, value.group)
+            output.encodeSerializableElement(descriptor, dependsOnContainersFieldIndex, DependencySetSerializer, value.dependsOnContainers)
+            output.encodeSerializableElement(descriptor, prerequisiteTasksFieldIndex, PrerequisiteListSerializer, value.prerequisiteTasks)
+
+            output.endStructure(descriptor)
+        }
+    }
+}

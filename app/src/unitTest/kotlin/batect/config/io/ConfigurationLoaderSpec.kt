@@ -223,18 +223,18 @@ object ConfigurationLoaderSpec : Spek({
             it("should load the configuration for the task") {
                 val task = config.tasks["first_task"]!!
                 assertThat(task.name, equalTo("first_task"))
-                assertThat(task.runConfiguration.container, equalTo("build-env"))
-                assertThat(task.runConfiguration.command, equalTo(Command.parse("./gradlew doStuff")))
-                assertThat(task.runConfiguration.entrypoint, equalTo(Command.parse("some-entrypoint")))
-                assertThat(task.runConfiguration.additionalEnvironmentVariables, equalTo(mapOf(
+                assertThat(task.runConfiguration!!.container, equalTo("build-env"))
+                assertThat(task.runConfiguration!!.command, equalTo(Command.parse("./gradlew doStuff")))
+                assertThat(task.runConfiguration!!.entrypoint, equalTo(Command.parse("some-entrypoint")))
+                assertThat(task.runConfiguration!!.additionalEnvironmentVariables, equalTo(mapOf(
                     "OPTS" to LiteralValue("-Dthing"),
                     "INT_VALUE" to LiteralValue("1"),
                     "FLOAT_VALUE" to LiteralValue("12.6000"),
                     "BOOL_VALUE" to LiteralValue("true"),
                     "OTHER_VALUE" to LiteralValue("the value")
                 )))
-                assertThat(task.runConfiguration.additionalPortMappings, equalTo(setOf(PortMapping(123, 456), PortMapping(1000, 2000))))
-                assertThat(task.runConfiguration.workingDiretory, equalTo("/some/dir"))
+                assertThat(task.runConfiguration!!.additionalPortMappings, equalTo(setOf(PortMapping(123, 456), PortMapping(1000, 2000))))
+                assertThat(task.runConfiguration!!.workingDiretory, equalTo("/some/dir"))
                 assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, isEmptyString)
@@ -264,10 +264,10 @@ object ConfigurationLoaderSpec : Spek({
             it("should load the configuration for the task") {
                 val task = config.tasks["first_task"]!!
                 assertThat(task.name, equalTo("first_task"))
-                assertThat(task.runConfiguration.container, equalTo("build-env"))
-                assertThat(task.runConfiguration.command, absent())
-                assertThat(task.runConfiguration.entrypoint, absent())
-                assertThat(task.runConfiguration.workingDiretory, absent())
+                assertThat(task.runConfiguration!!.container, equalTo("build-env"))
+                assertThat(task.runConfiguration!!.command, absent())
+                assertThat(task.runConfiguration!!.entrypoint, absent())
+                assertThat(task.runConfiguration!!.workingDiretory, absent())
                 assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, isEmptyString)
@@ -299,9 +299,9 @@ object ConfigurationLoaderSpec : Spek({
             it("should load the configuration for the task") {
                 val task = config.tasks["first_task"]!!
                 assertThat(task.name, equalTo("first_task"))
-                assertThat(task.runConfiguration.container, equalTo("build-env"))
-                assertThat(task.runConfiguration.command, absent())
-                assertThat(task.runConfiguration.entrypoint, absent())
+                assertThat(task.runConfiguration!!.container, equalTo("build-env"))
+                assertThat(task.runConfiguration!!.command, absent())
+                assertThat(task.runConfiguration!!.entrypoint, absent())
                 assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, equalTo("The very first task."))
@@ -336,8 +336,8 @@ object ConfigurationLoaderSpec : Spek({
             it("should load the configuration for the task") {
                 val task = config.tasks["first_task"]!!
                 assertThat(task.name, equalTo("first_task"))
-                assertThat(task.runConfiguration.container, equalTo("build-env"))
-                assertThat(task.runConfiguration.command, equalTo(Command.parse("./gradlew doStuff")))
+                assertThat(task.runConfiguration!!.container, equalTo("build-env"))
+                assertThat(task.runConfiguration!!.command, equalTo(Command.parse("./gradlew doStuff")))
                 assertThat(task.dependsOnContainers, equalTo(setOf("dependency-1", "dependency-2")))
                 assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, isEmptyString)
@@ -389,8 +389,8 @@ object ConfigurationLoaderSpec : Spek({
             it("should load the configuration for the task") {
                 val task = config.tasks["first_task"]!!
                 assertThat(task.name, equalTo("first_task"))
-                assertThat(task.runConfiguration.container, equalTo("build-env"))
-                assertThat(task.runConfiguration.command, equalTo(Command.parse("./gradlew doStuff")))
+                assertThat(task.runConfiguration!!.container, equalTo("build-env"))
+                assertThat(task.runConfiguration!!.command, equalTo(Command.parse("./gradlew doStuff")))
                 assertThat(task.dependsOnContainers, isEmpty)
                 assertThat(task.prerequisiteTasks, equalTo(listOf("other-task", "another-task")))
                 assertThat(task.description, isEmptyString)

@@ -58,6 +58,17 @@ object ContainerDependencyGraphSpec : Spek({
             }
         }
 
+        given("a task with only prerequisites") {
+            val task = Task("the-task", runConfiguration = null)
+            val config = Configuration("the-project", TaskMap(task))
+
+            on("creating the dependency graph") {
+                it("throws an appropriate exception") {
+                    assertThat({ ContainerDependencyGraph(config, task, commandResolver, entrypointResolver) }, throws(withMessage("Cannot create a container dependency graph for a task that only has prerequisites.")))
+                }
+            }
+        }
+
         given("a task with no dependencies") {
             given("the task does not override the container's working directory") {
                 val container = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("some-container-command"), entrypoint = Command.parse("some-task-entrypoint"), workingDirectory = "task-working-dir-that-wont-be-used")

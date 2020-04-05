@@ -30,7 +30,6 @@ If there's something you're really keen to see, pull requests are always welcome
       they use a different interface, so this command needs to be adjusted to match)
     * Local proxy needs to be listening on correct IP(s) - need to warn users about this and about exposing them to the outside world (and thus allowing other people to access their proxy)
 * some way to clean up old images when they're no longer needed
-* allow tasks to not start any containers if they just have prerequisites (eg. pre-commit task)
 * some way to reference another Dockerfile as the base image for a Dockerfile
 * support setting `ulimit` values (`--ulimit` - https://docs.docker.com/engine/reference/commandline/run/#set-ulimits-in-container---ulimit)
 * allow `home_directory` to match local user's home directory path

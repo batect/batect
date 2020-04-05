@@ -18,16 +18,18 @@ package batect.execution
 
 import batect.config.Container
 import batect.config.Task
+import batect.config.TaskRunConfiguration
 import batect.os.Command
 
 class ContainerEntrypointResolver {
     fun resolveEntrypoint(container: Container, task: Task): Command? {
-        if (isTaskContainer(container, task) && task.runConfiguration.entrypoint != null) {
+        if (task.runConfiguration != null && isTaskContainer(container, task.runConfiguration) && task.runConfiguration.entrypoint != null) {
             return task.runConfiguration.entrypoint
         }
 
         return container.entrypoint
     }
 
-    private fun isTaskContainer(container: Container, task: Task): Boolean = container.name == task.runConfiguration.container
+    private fun isTaskContainer(container: Container, runConfiguration: TaskRunConfiguration): Boolean =
+        container.name == runConfiguration.container
 }

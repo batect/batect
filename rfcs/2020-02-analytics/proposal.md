@@ -70,7 +70,7 @@ There are also a number of other considerations:
 
 ## Documentation changes
 
-A privacy policy will be added to the documentation to explain what information is collected, how it is collected, who has access to it and how to opt-out or block submission of this information. 
+A privacy policy will be added to the documentation to explain what information is collected, how it is collected, who has access to it and how to opt-out or block submission of this information.
 
 [Automattic's privacy policy](https://github.com/Automattic/legalmattic/blob/master/Privacy-Policy.md) is available under a Creative Commons license and could be used as a template.
 
@@ -84,7 +84,7 @@ Opting out or blocking collection of analytics information would be supported th
 
 ## CLI changes
 
-`./batect --disable-analytics` would disable both collection of analytics information and submission of cached data from previous invocations. 
+`./batect --disable-analytics` would disable both collection of analytics information and submission of cached data from previous invocations.
 
 Setting the `BATECT_DISABLE_ANALYTICS` environment variable to `1` or `true` would have the same result.
 
@@ -114,7 +114,7 @@ More information, including details on what information is collected, how to opt
 
 In the background upon startup, batect would check for cached information from previous runs written to `~/.batect/analytics`. If any is present, it will upload each run (one at a time) and delete each run after a successful upload. If a run fails to upload and is less than 30 days old, it is left on disk to be retried as part of a subsequent run. If a run fails to upload and is more than 30 days old, it is deleted.
 
-To prevent a malformed run from preventing other runs from being uploaded, the upload order of the cached runs will be randomised. 
+To prevent a malformed run from preventing other runs from being uploaded, the upload order of the cached runs will be randomised.
 
 All data will be uploaded over a HTTPS connection.
 

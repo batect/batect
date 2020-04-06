@@ -21,6 +21,7 @@ import batect.journeytests.testutils.itCleansUpAllContainersItCreates
 import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
 import batect.testutils.createForGroup
 import batect.testutils.on
+import batect.testutils.platformLineSeparator
 import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
@@ -40,7 +41,7 @@ object TaskWithOnlyPrerequisiteTest : Spek({
             }
 
             it("prints a message indicating that the main task only defines prerequisites") {
-                assertThat(result.output, containsSubstring("The task do-stuff only defines prerequisite tasks, nothing to do.\n"))
+                assertThat(result.output, containsSubstring("The task do-stuff only defines prerequisite tasks, nothing to do.$platformLineSeparator"))
             }
 
             it("returns a zero exit code") {

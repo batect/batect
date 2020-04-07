@@ -47,7 +47,7 @@ dependencies {
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.4.1"))
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0-mpp-dev-1"
     implementation 'org.kodein.di:kodein-di-core-jvm:6.5.4'
     implementation 'org.kodein.di:kodein-di-generic-jvm:6.5.4'
     implementation 'com.squareup.okio:okio:2.5.0'

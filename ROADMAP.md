@@ -141,3 +141,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * make the last mile easier: pushing images and deploying applications
 * init containers: containers that must start, run and complete before a container can start (eg. populating a database with data)
 * some way to handle secrets easily
+* YAML aliases and anchors across files ([chat message](https://spectrum.chat/batect/general/anchors-aliases-and-includes~62eccc45-9b8c-4592-8664-a313a773409f))
+* include file from URL / some kind of repository of shared config snippets that can be included (eg. shared tasks)
+* merge or replace containers or tasks when including files
+  * eg. scenario described in [Cam's chat message](https://spectrum.chat/batect/general/workflows-for-making-changes-across-multiple-repos~99e11eee-cc8a-4118-ba4c-52d8e188813a)

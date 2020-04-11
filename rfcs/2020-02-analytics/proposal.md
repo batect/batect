@@ -137,3 +137,19 @@ To compensate for this, when batect detects that it is running on CI, it would a
 ## Impacts on other features
 
 None anticipated.
+
+
+
+## Prior art
+
+A summary of the data collection practices of other similar tools:
+
+| Name                      | Data collected                                               | Default state                                                | Notes                                                        |
+| ------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| GCP CLI                   | "anonymized `gcloud` command and other Cloud SDK command-line tool executions" ([source](https://cloud.google.com/sdk/usage-statistics)) | [Permission requested on first run](https://cloud.google.com/sdk/usage-statistics) | Privacy policy is global Google privacy policy               |
+| Docker Desktop            | "error reports, system version and language as well as Docker Desktop lifecycle information (e.g., starts, stops, resets)" | [Enabled by default, message on first run](https://docs.docker.com/docker-for-windows/#general) | Image in [this section of the documentation](https://docs.docker.com/docker-for-windows/install/#start-docker-desktop) shows first run message, no link to privacy policy |
+| IntelliJ                  | Listed at https://www.jetbrains.com/help/idea/settings-usage-statistics.html | Permission requested on first run                            | Mentioned in global [privacy policy](https://www.jetbrains.com/company/privacy.html), settings apply to all JetBrains IDEs |
+| [Fork](https://fork.dev/) | Unclear                                                      | [Enabled by default, no message](https://github.com/ForkIssues/Tracker/issues/313) | No privacy policy, can't find details on data collected      |
+| SourceTree                | "the number of repos you've interacted with and the provider you're using" ([source](https://community.atlassian.com/t5/Sourcetree-questions/Security-information-about-Sourcetree/qaq-p/1104747#M29899)) | [Permission requested on first run](https://community.atlassian.com/t5/Sourcetree-questions/Security-information-about-Sourcetree/qaq-p/1104747#M29899) | Data collection removed altogether as of v4 (October 2019)   |
+| Homebrew                  | Listed at https://docs.brew.sh/Analytics                     | [Enabled by default, message on first run](https://docs.brew.sh/Analytics) | No privacy policy                                            |
+

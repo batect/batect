@@ -23,6 +23,7 @@ import batect.ui.ConsoleInfo
 
 class UnixConsoleManager(
     private val consoleInfo: ConsoleInfo,
+    private val applicationResolver: ApplicationResolver,
     private val processRunner: ProcessRunner,
     private val logger: Logger
 ) : ConsoleManager {
@@ -42,21 +43,21 @@ class UnixConsoleManager(
         val existingState = getExistingTerminalState()
         startRawMode()
 
-        return TerminalStateRestorer(existingState, processRunner)
+        return TerminalStateRestorer(applicationResolver.stty, existingState, processRunner)
     }
 
     private fun getExistingTerminalState(): String {
-        val output = processRunner.runWithStdinAttached(listOf("stty", "-g"))
+        val output = processRunner.runWithStdinAttached(listOf(applicationResolver.stty, "-g"))
 
         if (output.exitCode != 0) {
-            throw RuntimeException("Invoking 'stty -g' failed with exit code ${output.exitCode}: ${output.output.trim()}")
+            throw RuntimeException("Invoking '${applicationResolver.stty} -g' failed with exit code ${output.exitCode}: ${output.output.trim()}")
         }
 
         return output.output.trim()
     }
 
     private fun startRawMode() {
-        val command = listOf("stty", "-ignbrk", "-brkint", "-parmrk", "-istrip", "-inlcr", "-igncr", "-icrnl", "-ixon", "-opost", "-echo", "-echonl",
+        val command = listOf(applicationResolver.stty, "-ignbrk", "-brkint", "-parmrk", "-istrip", "-inlcr", "-igncr", "-icrnl", "-ixon", "-opost", "-echo", "-echonl",
             "-icanon", "-isig", "-iexten", "-parenb", "cs8", "min", "1", "time", "0")
 
         val output = processRunner.runWithStdinAttached(command)
@@ -67,12 +68,12 @@ class UnixConsoleManager(
     }
 }
 
-data class TerminalStateRestorer(private val oldState: String, private val processRunner: ProcessRunner) : AutoCloseable {
+data class TerminalStateRestorer(private val stty: String, private val oldState: String, private val processRunner: ProcessRunner) : AutoCloseable {
     override fun close() {
-        val output = processRunner.runWithStdinAttached(listOf("stty", oldState))
+        val output = processRunner.runWithStdinAttached(listOf(stty, oldState))
 
         if (output.exitCode != 0) {
-            throw RuntimeException("Invoking 'stty $oldState' failed with exit code ${output.exitCode}: ${output.output.trim()}")
+            throw RuntimeException("Invoking '$stty $oldState' failed with exit code ${output.exitCode}: ${output.output.trim()}")
         }
     }
 }

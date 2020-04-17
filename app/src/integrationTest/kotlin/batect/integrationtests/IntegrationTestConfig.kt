@@ -49,6 +49,7 @@ import batect.os.NativeMethods
 import batect.os.ProcessRunner
 import batect.os.SignalListener
 import batect.os.SystemInfo
+import batect.os.unix.ApplicationResolver
 import batect.os.unix.UnixConsoleManager
 import batect.os.unix.UnixNativeMethods
 import batect.os.windows.WindowsConsoleManager
@@ -123,7 +124,7 @@ private fun getDockerTLSConfig(): DockerTLSConfig {
 private fun getConsoleManagerForPlatform(consoleInfo: ConsoleInfo, processRunner: ProcessRunner, nativeMethods: NativeMethods, logger: Logger): ConsoleManager =
     when (Platform.getNativePlatform().os) {
         Platform.OS.WINDOWS -> WindowsConsoleManager(consoleInfo, nativeMethods as WindowsNativeMethods, logger)
-        else -> UnixConsoleManager(consoleInfo, processRunner, logger)
+        else -> UnixConsoleManager(consoleInfo, ApplicationResolver(FileSystems.getDefault()), processRunner, logger)
     }
 
 fun getNativeMethodsForPlatform(posix: POSIX): NativeMethods = when (Platform.getNativePlatform().os) {

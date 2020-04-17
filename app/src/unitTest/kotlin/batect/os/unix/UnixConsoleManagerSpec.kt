@@ -40,9 +40,15 @@ import org.spekframework.spek2.style.specification.describe
 object UnixConsoleManagerSpec : Spek({
     describe("a Unix console manager") {
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
+        val applicationResolver by createForEachTest {
+            mock<ApplicationResolver> {
+                on { stty } doReturn "/bin/blah/stty"
+            }
+        }
+
         val processRunner by createForEachTest { mock<ProcessRunner>() }
         val logger by createLoggerForEachTest()
-        val consoleManager by createForEachTest { UnixConsoleManager(consoleInfo, processRunner, logger) }
+        val consoleManager by createForEachTest { UnixConsoleManager(consoleInfo, applicationResolver, processRunner, logger) }
 
         describe("entering and exiting raw mode") {
             given("the terminal is a TTY") {
@@ -50,10 +56,12 @@ object UnixConsoleManagerSpec : Spek({
 
                 describe("entering raw mode") {
                     given("invoking 'stty -g' succeeds") {
-                        val rawCommand = listOf("stty", "-ignbrk", "-brkint", "-parmrk", "-istrip", "-inlcr", "-igncr", "-icrnl", "-ixon", "-opost", "-echo", "-echonl",
-                            "-icanon", "-isig", "-iexten", "-parenb", "cs8", "min", "1", "time", "0")
+                        val rawCommand = listOf(
+                            "/bin/blah/stty", "-ignbrk", "-brkint", "-parmrk", "-istrip", "-inlcr", "-igncr", "-icrnl", "-ixon", "-opost", "-echo", "-echonl",
+                            "-icanon", "-isig", "-iexten", "-parenb", "cs8", "min", "1", "time", "0"
+                        )
 
-                        beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "-g"))).doReturn(ProcessOutput(0, "existing_terminal_state\n")) }
+                        beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("/bin/blah/stty", "-g"))).doReturn(ProcessOutput(0, "existing_terminal_state\n")) }
 
                         given("invoking 'stty raw' succeeds") {
                             beforeEachTest { whenever(processRunner.runWithStdinAttached(rawCommand)).doReturn(ProcessOutput(0, "")) }
@@ -66,7 +74,7 @@ object UnixConsoleManagerSpec : Spek({
                                 }
 
                                 it("returns an object that can be used to restore the terminal to its previous state") {
-                                    assertThat(restorer, equalTo(TerminalStateRestorer("existing_terminal_state", processRunner)))
+                                    assertThat(restorer, equalTo(TerminalStateRestorer("/bin/blah/stty", "existing_terminal_state", processRunner)))
                                 }
                             }
                         }
@@ -83,37 +91,37 @@ object UnixConsoleManagerSpec : Spek({
                     }
 
                     given("invoking 'stty -g' fails") {
-                        beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "-g"))).doReturn(ProcessOutput(1, "Something went wrong.\n")) }
+                        beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("/bin/blah/stty", "-g"))).doReturn(ProcessOutput(1, "Something went wrong.\n")) }
 
                         on("entering raw mode") {
                             it("throws an appropriate exception") {
-                                assertThat({ consoleManager.enterRawMode() }, throws<RuntimeException>(withMessage("Invoking 'stty -g' failed with exit code 1: Something went wrong.")))
+                                assertThat({ consoleManager.enterRawMode() }, throws<RuntimeException>(withMessage("Invoking '/bin/blah/stty -g' failed with exit code 1: Something went wrong.")))
                             }
                         }
                     }
                 }
 
                 describe("exiting raw mode") {
-                    val restorer by createForEachTest { TerminalStateRestorer("some_old_state", processRunner) }
+                    val restorer by createForEachTest { TerminalStateRestorer("/bin/blah/stty", "some_old_state", processRunner) }
 
                     given("invoking 'stty' succeeds'") {
-                        beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "some_old_state"))).doReturn(ProcessOutput(0, "")) }
+                        beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("/bin/blah/stty", "some_old_state"))).doReturn(ProcessOutput(0, "")) }
 
                         on("exiting raw mode") {
                             beforeEachTest { restorer.close() }
 
                             it("calls stty to restore the previous state") {
-                                verify(processRunner).runWithStdinAttached(listOf("stty", "some_old_state"))
+                                verify(processRunner).runWithStdinAttached(listOf("/bin/blah/stty", "some_old_state"))
                             }
                         }
                     }
 
                     given("invoking 'stty' fails") {
-                        beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("stty", "some_old_state"))).doReturn(ProcessOutput(1, "Something went wrong.\n")) }
+                        beforeEachTest { whenever(processRunner.runWithStdinAttached(listOf("/bin/blah/stty", "some_old_state"))).doReturn(ProcessOutput(1, "Something went wrong.\n")) }
 
                         on("exiting raw mode") {
                             it("throws an appropriate exception") {
-                                assertThat({ restorer.close() }, throws<RuntimeException>(withMessage("Invoking 'stty some_old_state' failed with exit code 1: Something went wrong.")))
+                                assertThat({ restorer.close() }, throws<RuntimeException>(withMessage("Invoking '/bin/blah/stty some_old_state' failed with exit code 1: Something went wrong.")))
                             }
                         }
                     }

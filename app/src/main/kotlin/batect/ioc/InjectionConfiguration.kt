@@ -105,6 +105,7 @@ import batect.os.SignalListener
 import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablePreprocessor
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
+import batect.os.unix.ApplicationResolver
 import batect.os.unix.UnixConsoleManager
 import batect.os.unix.UnixNativeMethods
 import batect.os.windows.WindowsConsoleManager
@@ -315,7 +316,8 @@ private val osModule = Kodein.Module("os") {
 }
 
 private val unixModule = Kodein.Module("os.unix") {
-    bind<ConsoleManager>() with singletonWithLogger { logger -> UnixConsoleManager(instance(), instance(), logger) }
+    bind<ApplicationResolver>() with singleton { ApplicationResolver(instance()) }
+    bind<ConsoleManager>() with singletonWithLogger { logger -> UnixConsoleManager(instance(), instance(), instance(), logger) }
     bind<NativeMethods>() with singleton { UnixNativeMethods(instance()) }
 }
 

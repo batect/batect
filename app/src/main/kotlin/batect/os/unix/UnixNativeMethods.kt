@@ -63,7 +63,7 @@ class UnixNativeMethods(
                 throw NoConsoleException()
             }
 
-            throw UnixNativeMethodException("ioctl", error)
+            throw UnixNativeMethodException(libc::ioctl.name, error)
         }
 
         return Dimensions(size.ws_row.get(), size.ws_col.get())
@@ -75,8 +75,40 @@ class UnixNativeMethods(
 
     override fun getUserId(): Int = posix.geteuid()
     override fun getGroupId(): Int = posix.getegid()
-    override fun getUserName(): String = posix.getpwuid(posix.geteuid()).loginName
-    override fun getGroupName(): String = posix.getgrgid(posix.getegid()).name
+
+    override fun getUserName(): String {
+        val uid = getUserId()
+        val user = posix.getpwuid(uid)
+
+        if (user == null) {
+            val errno = posix.errno().toLong()
+
+            if (errno == 0L) {
+                throw RuntimeException("User with UID $uid does not exist.")
+            }
+
+            throw UnixNativeMethodException(posix::getpwuid.name, Errno.valueOf(errno))
+        }
+
+        return user.loginName
+    }
+
+    override fun getGroupName(): String {
+        val gid = getGroupId()
+        val group = posix.getgrgid(gid)
+
+        if (group == null) {
+            val errno = posix.errno().toLong()
+
+            if (errno == 0L) {
+                throw RuntimeException("Group with GID $gid does not exist.")
+            }
+
+            throw UnixNativeMethodException(posix::getgrgid.name, Errno.valueOf(errno))
+        }
+
+        return group.name
+    }
 
     private val TIOCGWINSZ = PlatformSpecificConstant(darwinValue = 0x40087468, linuxValue = 0x00005413)
 

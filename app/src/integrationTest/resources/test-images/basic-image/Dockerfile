@@ -1,3 +1,3 @@
-FROM alpine:3.11.5
+FROM alpine:3.11.6
 
 HEALTHCHECK --interval=0.1s CMD echo -n "Hello from the healthcheck"

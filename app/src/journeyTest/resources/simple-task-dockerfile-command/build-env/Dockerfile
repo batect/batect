@@ -1,3 +1,3 @@
-FROM alpine:3.11.5
+FROM alpine:3.11.6
 
 CMD echo 'This is some output from the task' && exit 123

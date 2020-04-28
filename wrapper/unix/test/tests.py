@@ -14,6 +14,18 @@ class WrapperScriptTests(unittest.TestCase):
     http_port = 8080
     default_download_url = "http://localhost:" + str(http_port) + "/test/testapp.jar"
 
+    minimum_script_dependencies = [
+        "/usr/bin/bash",
+        "/usr/bin/basename",
+        "/usr/bin/dirname",
+        "/usr/bin/grep",
+        "/usr/bin/head",
+        "/usr/bin/mkdir",
+        "/usr/bin/mktemp",
+        "/usr/bin/mv",
+        "/usr/bin/sed",
+    ]
+
     def setUp(self):
         self.start_server()
         self.cache_dir = tempfile.mkdtemp()
@@ -77,7 +89,7 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
 
     def test_no_curl(self):
-        path_dir = self.create_limited_path(["/usr/bin/basename", "/usr/bin/dirname"])
+        path_dir = self.create_limited_path(self.minimum_script_dependencies)
 
         result = self.run_script([], path=path_dir)
 
@@ -85,7 +97,7 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
 
     def test_no_java(self):
-        path_dir = self.create_limited_path(["/usr/bin/basename", "/usr/bin/dirname", "/usr/bin/curl"])
+        path_dir = self.create_limited_path(self.minimum_script_dependencies + ["/usr/bin/curl"])
 
         result = self.run_script([], path=path_dir)
 
@@ -129,13 +141,11 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertEqual(result.returncode, 123)
 
     def create_limited_path_for_specific_java_version(self, java_version):
-        return self.create_limited_path([
-            "/usr/bin/basename",
-            "/usr/bin/dirname",
-            "/usr/bin/curl",
-            "/usr/bin/head",
-            "/usr/lib/jvm/java-{}-openjdk-amd64/bin/java".format(java_version),
-        ])
+        return self.create_limited_path(self.minimum_script_dependencies +
+                                        [
+                                            "/usr/bin/curl",
+                                            "/usr/lib/jvm/java-{}-openjdk-amd64/bin/java".format(java_version),
+                                        ])
 
     def create_limited_path(self, executables):
         path_dir = tempfile.mkdtemp()
@@ -145,7 +155,7 @@ class WrapperScriptTests(unittest.TestCase):
             base_name = os.path.basename(executable)
             os.symlink(executable, os.path.join(path_dir, base_name))
 
-        return path_dir + ":/bin"
+        return path_dir
 
     def run_script(self, args, download_url=default_download_url, path=os.environ["PATH"], quiet_download=None, with_java_tool_options=None):
         env = {

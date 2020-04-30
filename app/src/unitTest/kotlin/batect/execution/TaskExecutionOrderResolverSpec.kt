@@ -81,7 +81,7 @@ object TaskExecutionOrderResolverSpec : Spek({
 
                 it("throws an appropriate exception without any correction suggestions") {
                     assertThat({ resolver.resolveExecutionOrder(config, "some-task") },
-                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist.")))
+                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")))
                 }
             }
 
@@ -90,7 +90,7 @@ object TaskExecutionOrderResolverSpec : Spek({
 
                 it("throws an appropriate exception without any correction suggestions") {
                     assertThat({ resolver.resolveExecutionOrder(config, "some-task") },
-                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task'?")))
+                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")))
                 }
             }
 
@@ -99,7 +99,7 @@ object TaskExecutionOrderResolverSpec : Spek({
 
                 it("throws an appropriate exception without any correction suggestions") {
                     assertThat({ resolver.resolveExecutionOrder(config, "some-task") },
-                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'?")))
+                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")))
                 }
             }
 
@@ -108,7 +108,7 @@ object TaskExecutionOrderResolverSpec : Spek({
 
                 it("throws an appropriate exception without any correction suggestions") {
                     assertThat({ resolver.resolveExecutionOrder(config, "some-task") },
-                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'?")))
+                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")))
                 }
             }
         }

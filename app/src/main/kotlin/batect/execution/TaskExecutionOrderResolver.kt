@@ -28,7 +28,7 @@ class TaskExecutionOrderResolver(
         val task = config.tasks[taskName]
 
         if (task == null) {
-            throw TaskExecutionOrderResolutionException("The task '$taskName' does not exist." + formatTaskSuggestions(config, taskName))
+            throw TaskExecutionOrderResolutionException("The task '$taskName' does not exist." + formatTaskSuggestions(config, taskName) + " (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")
         }
 
         val executionOrder = resolvePrerequisitesForTask(config, task, listOf(task), emptyList())

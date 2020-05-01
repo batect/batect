@@ -55,7 +55,9 @@ object DockerContainerCreationRequestSpec : Spek({
                 capabilitiesToAdd = setOf(Capability.NET_ADMIN, Capability.KILL),
                 capabilitiesToDrop = setOf(Capability.AUDIT_READ, Capability.CHOWN),
                 useTTY = true,
-                attachStdin = false
+                attachStdin = false,
+                logDriver = "some-log-driver",
+                logOptions = mapOf("option-1" to "value-1")
             )
 
             on("converting it to JSON for submission to the Docker API") {
@@ -120,7 +122,7 @@ object DockerContainerCreationRequestSpec : Spek({
                         |       "Init": true,
                         |       "CapAdd": ["NET_ADMIN", "KILL"],
                         |       "CapDrop": ["AUDIT_READ", "CHOWN"],
-                        |       "LogConfig": { "Type": "json-file" }
+                        |       "LogConfig": { "Type": "some-log-driver", "Config": { "option-1": "value-1" } }
                         |   },
                         |   "Healthcheck": {
                         |       "Test": ["CMD-SHELL", "exit 0"],
@@ -205,7 +207,9 @@ object DockerContainerCreationRequestSpec : Spek({
                         |  "capabilitiesToAdd": ["NET_ADMIN", "KILL"],
                         |  "capabilitiesToDrop": ["AUDIT_READ", "CHOWN"],
                         |  "useTTY": true,
-                        |  "attachStdin": false
+                        |  "attachStdin": false,
+                        |  "logDriver": "some-log-driver",
+                        |  "logOptions": { "option-1": "value-1" }
                         |}
                     """.trimMargin()))
                 }
@@ -233,7 +237,9 @@ object DockerContainerCreationRequestSpec : Spek({
                 capabilitiesToAdd = emptySet(),
                 capabilitiesToDrop = emptySet(),
                 useTTY = false,
-                attachStdin = false
+                attachStdin = false,
+                logDriver = "json-file",
+                logOptions = emptyMap()
             )
 
             on("converting it to JSON for submission to the Docker API") {
@@ -260,7 +266,7 @@ object DockerContainerCreationRequestSpec : Spek({
                         |       "Init": false,
                         |       "CapAdd": [],
                         |       "CapDrop": [],
-                        |       "LogConfig": { "Type": "json-file" }
+                        |       "LogConfig": { "Type": "json-file", "Config": {} }
                         |   },
                         |   "Healthcheck": {
                         |       "Test": [],

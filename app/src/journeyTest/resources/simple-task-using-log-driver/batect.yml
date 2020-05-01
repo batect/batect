@@ -1,0 +1,14 @@
+project_name: simple-task-using-log-driver-test
+
+containers:
+  build-env:
+    image: alpine:3.6
+    log_driver: gelf
+    log_options:
+      gelf-address: udp://localhost:12201
+
+tasks:
+  the-task:
+    run:
+      container: build-env
+      command: sh -c "echo 'This is some output from the task' && exit 123"

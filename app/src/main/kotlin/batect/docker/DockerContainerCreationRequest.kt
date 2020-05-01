@@ -46,7 +46,9 @@ data class DockerContainerCreationRequest(
     val capabilitiesToAdd: Set<Capability>,
     val capabilitiesToDrop: Set<Capability>,
     val useTTY: Boolean,
-    val attachStdin: Boolean
+    val attachStdin: Boolean,
+    val logDriver: String,
+    val logOptions: Map<String, String>
 ) {
     fun toJson(): String {
         return json {
@@ -87,7 +89,8 @@ data class DockerContainerCreationRequest(
                 "CapAdd" to formatCapabilitySet(capabilitiesToAdd)
                 "CapDrop" to formatCapabilitySet(capabilitiesToDrop)
                 "LogConfig" to json {
-                    "Type" to "json-file"
+                    "Type" to logDriver
+                    "Config" to logOptions.toJsonObject()
                 }
             }
 

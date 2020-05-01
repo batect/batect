@@ -56,7 +56,9 @@ class DockerContainerCreationRequestFactory(
             container.capabilitiesToAdd,
             container.capabilitiesToDrop,
             useTTY,
-            attachStdin
+            attachStdin,
+            container.logDriver,
+            container.logOptions
         )
     }
 }

@@ -137,6 +137,9 @@ containers:
       - command: do-the-thing
         working_directory: /some/dir
       - command: do-the-other-thing
+    log_driver: the-log-driver
+    log_options:
+      option-1: value-1
 
   with-build-dir:
     build_directory: test

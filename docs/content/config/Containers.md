@@ -322,6 +322,38 @@ of different processes running as PID 1 and why this flag was introduced.
 ## `additional_hostnames`
 List of hostnames to associate with this container, in addition to the default hostname (the name of the container).
 
+## `log_driver`
+
+The Docker log driver to use when running the container.
+
+Defaults to `json-file` if not set.
+
+A full list of built-in log drivers is available in [the logging section of Docker documentation](https://docs.docker.com/config/containers/logging/configure/#supported-logging-drivers),
+and [logging plugins](https://docs.docker.com/config/containers/logging/plugins/) can be used as well.
+
+Options for the log driver can be provided with [`log_options`](#log_options).
+
+!!! warning
+    Some log drivers do not support streaming container output to the console, as described in
+    [the limitations section of Docker's logging documentation](https://docs.docker.com/config/containers/logging/configure/#limitations-of-logging-drivers).
+
+    If the selected log driver does not support streaming container output to the console, you will see error messages similar to
+    `Error attaching: configured logging driver does not support reading` in batect's output. This does not affect the execution of the task, which
+    will run to completion as per normal.
+
+## `log_options`
+
+Options to provide to the Docker log driver used when running the container.
+
+For example, to set [the tag used to identify the container in logs](https://docs.docker.com/config/containers/logging/log_tags/):
+
+```yaml
+log_options:
+  tag: "my-container"
+```
+
+The options available for each log driver are described in the Docker documentation for that log driver, such as [this page](https://docs.docker.com/config/containers/logging/json-file/) for the `json-file` driver.
+
 ## Examples
 
 For more examples and real-world scenarios, take a look at the [sample projects](../SampleProjects.md).

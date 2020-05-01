@@ -16,6 +16,7 @@
 
 package batect.integrationtests
 
+import batect.config.Container
 import batect.config.DeviceMount
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
@@ -56,7 +57,9 @@ fun creationRequestForContainer(
         capabilitiesToAdd = emptySet(),
         capabilitiesToDrop = emptySet(),
         useTTY = useTTY,
-        attachStdin = true
+        attachStdin = true,
+        logDriver = Container.defaultLogDriver,
+        logOptions = emptyMap()
     )
 }
 

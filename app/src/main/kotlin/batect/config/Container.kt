@@ -33,6 +33,7 @@ import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Serializer
+import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.list
 import kotlinx.serialization.builtins.serializer
@@ -59,10 +60,14 @@ data class Container(
     val capabilitiesToAdd: Set<Capability> = emptySet(),
     val capabilitiesToDrop: Set<Capability> = emptySet(),
     val additionalHostnames: Set<String> = emptySet(),
-    val setupCommands: List<SetupCommand> = emptyList()
+    val setupCommands: List<SetupCommand> = emptyList(),
+    val logDriver: String = Container.defaultLogDriver,
+    val logOptions: Map<String, String> = emptyMap()
 ) {
     @Serializer(forClass = Container::class)
     companion object : KSerializer<Container> {
+        const val defaultLogDriver = "json-file"
+
         private const val buildDirectoryFieldName = "build_directory"
         private const val buildArgsFieldName = "build_args"
         private const val dockerfileFieldName = "dockerfile"
@@ -83,6 +88,8 @@ data class Container(
         private const val capabilitiesToDropFieldName = "capabilities_to_drop"
         private const val additionalHostnamesFieldName = "additional_hostnames"
         private const val setupCommandsFieldName = "setup_commands"
+        private const val logDriverFieldName = "log_driver"
+        private const val logOptionsFieldName = "log_options"
 
         override val descriptor: SerialDescriptor = SerialDescriptor("Container") {
             element(buildDirectoryFieldName, String.serializer().descriptor, isOptional = true)
@@ -105,6 +112,8 @@ data class Container(
             element(capabilitiesToDropFieldName, Capability.serializer().set.descriptor, isOptional = true)
             element(additionalHostnamesFieldName, String.serializer().set.descriptor, isOptional = true)
             element(setupCommandsFieldName, SetupCommand.serializer().list.descriptor, isOptional = true)
+            element(logDriverFieldName, String.serializer().descriptor, isOptional = true)
+            element(logOptionsFieldName, MapSerializer(String.serializer(), String.serializer()).descriptor, isOptional = true)
         }
 
         private val buildDirectoryFieldIndex = descriptor.getElementIndex(buildDirectoryFieldName)
@@ -127,6 +136,8 @@ data class Container(
         private val capabilitiesToDropFieldIndex = descriptor.getElementIndex(capabilitiesToDropFieldName)
         private val additionalHostnamesFieldIndex = descriptor.getElementIndex(additionalHostnamesFieldName)
         private val setupCommandsFieldIndex = descriptor.getElementIndex(setupCommandsFieldName)
+        private val logDriverFieldIndex = descriptor.getElementIndex(logDriverFieldName)
+        private val logOptionsFieldIndex = descriptor.getElementIndex(logOptionsFieldName)
 
         override fun deserialize(decoder: Decoder): Container {
             val input = decoder.beginStructure(descriptor) as YamlInput
@@ -155,6 +166,8 @@ data class Container(
             var capabilitiesToDrop = emptySet<Capability>()
             var additionalHostnames = emptySet<String>()
             var setupCommands = emptyList<SetupCommand>()
+            var logDriver = Container.defaultLogDriver
+            var logOptions = emptyMap<String, String>()
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
@@ -179,6 +192,8 @@ data class Container(
                     capabilitiesToDropFieldIndex -> capabilitiesToDrop = input.decodeSerializableValue(Capability.serializer().set)
                     additionalHostnamesFieldIndex -> additionalHostnames = input.decodeSerializableValue(String.serializer().set)
                     setupCommandsFieldIndex -> setupCommands = input.decodeSerializableValue(SetupCommand.serializer().list)
+                    logDriverFieldIndex -> logDriver = input.decodeStringElement(descriptor, i)
+                    logOptionsFieldIndex -> logOptions = input.decodeSerializableValue(MapSerializer(String.serializer(), String.serializer()))
 
                     else -> throw SerializationException("Unknown index $i")
                 }
@@ -202,7 +217,9 @@ data class Container(
                 capabilitiesToAdd,
                 capabilitiesToDrop,
                 additionalHostnames,
-                setupCommands
+                setupCommands,
+                logDriver,
+                logOptions
             )
         }
 
@@ -283,6 +300,8 @@ data class Container(
             output.encodeSerializableElement(descriptor, capabilitiesToDropFieldIndex, Capability.serializer().set, value.capabilitiesToDrop)
             output.encodeSerializableElement(descriptor, additionalHostnamesFieldIndex, String.serializer().set, value.additionalHostnames)
             output.encodeSerializableElement(descriptor, setupCommandsFieldIndex, SetupCommand.serializer().list, value.setupCommands)
+            output.encodeStringElement(descriptor, logDriverFieldIndex, value.logDriver)
+            output.encodeSerializableElement(descriptor, logOptionsFieldIndex, MapSerializer(String.serializer(), String.serializer()), value.logOptions)
 
             output.endStructure(descriptor)
         }

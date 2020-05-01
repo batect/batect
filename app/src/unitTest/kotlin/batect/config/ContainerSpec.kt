@@ -246,6 +246,9 @@ object ContainerSpec : Spek({
                   - command: /do/the/thing.sh
                   - command: /some/other/thing.sh
                     working_directory: /some/dir
+                log_driver: my_log_driver
+                log_options:
+                  option_1: value_1
             """.trimIndent()
 
             on("loading the configuration from the config file") {
@@ -295,6 +298,8 @@ object ContainerSpec : Spek({
                         SetupCommand(Command.parse("/do/the/thing.sh")),
                         SetupCommand(Command.parse("/some/other/thing.sh"), "/some/dir")
                     )))
+                    assertThat(result.logDriver, equalTo("my_log_driver"))
+                    assertThat(result.logOptions, equalTo(mapOf("option_1" to "value_1")))
                 }
             }
         }

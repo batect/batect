@@ -150,7 +150,9 @@ class InitialiseCachesStepRunner(
             emptySet(),
             emptySet(),
             false,
-            false
+            false,
+            Container.defaultLogDriver,
+            emptyMap()
         )
     }
 

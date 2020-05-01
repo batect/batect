@@ -64,7 +64,7 @@
         },
         "entrypoint": {
           "type": "string",
-          "description": "Entrypoint to use to run the command.",
+          "description": "Entrypoint to use to run the command",
           "minLength": 1
         },
         "environment": {
@@ -112,12 +112,23 @@
           "$ref": "#/definitions/capabilityList"
         },
         "additional_hostnames": {
-          "description": "Hostnames to associate with this container in addition to the default hostname.",
+          "description": "Hostnames to associate with this container in addition to the default hostname",
           "$ref": "#/definitions/additionalHostnamesList"
         },
         "setup_commands": {
-          "description": "Commands to run after the container reports as healthy but before dependency containers start.",
+          "description": "Commands to run after the container reports as healthy but before dependency containers start",
           "$ref": "#/definitions/setupCommandsList"
+        },
+        "log_driver": {
+          "type": "string",
+          "description": "Docker log driver to use"
+        },
+        "log_options": {
+          "description": "Additional options to pass to Docker log driver",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "oneOf": [
@@ -213,7 +224,7 @@
         },
         "entrypoint": {
           "type": "string",
-          "description": "Entrypoint to use to run the command for this task.",
+          "description": "Entrypoint to use to run the command for this task",
           "minLength": 1
         },
         "environment": {
@@ -454,7 +465,7 @@
             },
             "home_directory": {
               "type": "string",
-              "description": "Directory to use as home directory for user inside container.",
+              "description": "Directory to use as home directory for user inside container",
               "minLength": 1
             }
           },

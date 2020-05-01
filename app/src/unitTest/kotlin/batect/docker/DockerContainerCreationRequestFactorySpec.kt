@@ -81,7 +81,9 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     enableInitProcess = true,
                     capabilitiesToAdd = setOf(Capability.NET_ADMIN),
                     capabilitiesToDrop = setOf(Capability.KILL),
-                    additionalHostnames = setOf("some-alias")
+                    additionalHostnames = setOf("some-alias"),
+                    logDriver = "the-log-driver",
+                    logOptions = mapOf("option-1" to "value-1")
                 )
 
                 val userAndGroup = UserAndGroup(123, 456)
@@ -178,6 +180,14 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
                 it("populates the stdin configuration with the provided value") {
                     assertThat(request.attachStdin, equalTo(true))
+                }
+
+                it("populates the log driver with the value from the container") {
+                    assertThat(request.logDriver, equalTo(container.logDriver))
+                }
+
+                it("populates the log options with the value from the container") {
+                    assertThat(request.logOptions, equalTo(container.logOptions))
                 }
             }
         }

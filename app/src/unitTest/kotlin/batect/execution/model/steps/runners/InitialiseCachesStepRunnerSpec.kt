@@ -146,7 +146,9 @@ object InitialiseCachesStepRunnerSpec : Spek({
                         emptySet(),
                         emptySet(),
                         false,
-                        false
+                        false,
+                        Container.defaultLogDriver,
+                        emptyMap()
                     )
                 )
             }

@@ -118,7 +118,9 @@ object ConfigurationSpec : Spek({
                     setOf(Capability.AUDIT_CONTROL),
                     setOf(Capability.BLOCK_SUSPEND),
                     setOf("other-name"),
-                    listOf(SetupCommand(Command.parse("some-command"), "/some/dir"))
+                    listOf(SetupCommand(Command.parse("some-command"), "/some/dir")),
+                    "the-log-driver",
+                    mapOf("option-1" to "value-1")
                 )
 
                 val configuration = Configuration("the-project", TaskMap(), ContainerMap(container))
@@ -176,7 +178,9 @@ object ConfigurationSpec : Spek({
                                     "additional_hostnames": ["other-name"],
                                     "setup_commands": [
                                         { "command": ["some-command"], "working_directory": "/some/dir" }
-                                    ]
+                                    ],
+                                    "log_driver": "the-log-driver",
+                                    "log_options": { "option-1": "value-1" }
                                 }
                             },
                             "config_variables": {}
@@ -236,7 +240,9 @@ object ConfigurationSpec : Spek({
                                     "capabilities_to_add": [],
                                     "capabilities_to_drop": [],
                                     "additional_hostnames": [],
-                                    "setup_commands": []
+                                    "setup_commands": [],
+                                    "log_driver": "json-file",
+                                    "log_options": {}
                                 }
                             },
                             "config_variables": {}

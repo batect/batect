@@ -16,6 +16,7 @@
 
 package batect.docker.client
 
+import batect.config.Container
 import batect.config.HealthCheckConfig
 import batect.docker.ContainerHealthCheckException
 import batect.docker.DockerContainer
@@ -83,7 +84,7 @@ object DockerContainersClientSpec : Spek({
                 val network = DockerNetwork("the-network")
                 val command = listOf("doStuff")
                 val entrypoint = listOf("sh")
-                val request = DockerContainerCreationRequest("the-container-name", image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet(), true, true)
+                val request = DockerContainerCreationRequest("the-container-name", image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet(), true, true, Container.defaultLogDriver, emptyMap())
 
                 on("creating the container") {
                     beforeEachTest { whenever(api.create(request)).doReturn(DockerContainer("abc123")) }

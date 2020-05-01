@@ -35,24 +35,64 @@ object PortMappingSpec : Spek({
                 on("parsing a valid port mapping definition with single ports for both local and container ports") {
                     val portMapping = fromYaml("123:456")
 
-                    it("returns the correct local port") {
+                    it("returns the provided local port") {
                         assertThat(portMapping.local, equalTo(PortRange(123)))
                     }
 
-                    it("returns the correct container port") {
+                    it("returns the provided container port") {
                         assertThat(portMapping.container, equalTo(PortRange(456)))
+                    }
+
+                    it("returns TCP as the protocol") {
+                        assertThat(portMapping.protocol, equalTo("tcp"))
+                    }
+                }
+
+                on("parsing a valid port mapping definition with single ports for both local and container ports and a non-default protocol") {
+                    val portMapping = fromYaml("123:456/abc")
+
+                    it("returns the provided local port") {
+                        assertThat(portMapping.local, equalTo(PortRange(123)))
+                    }
+
+                    it("returns the provided container port") {
+                        assertThat(portMapping.container, equalTo(PortRange(456)))
+                    }
+
+                    it("returns the provided protocol") {
+                        assertThat(portMapping.protocol, equalTo("abc"))
                     }
                 }
 
                 on("parsing a valid port mapping definition with ranges for both local and container ports") {
                     val portMapping = fromYaml("123-126:456-459")
 
-                    it("returns the correct local ports") {
+                    it("returns the provided local ports") {
                         assertThat(portMapping.local, equalTo(PortRange(123, 126)))
                     }
 
-                    it("returns the correct container ports") {
+                    it("returns the provided container ports") {
                         assertThat(portMapping.container, equalTo(PortRange(456, 459)))
+                    }
+
+                    it("returns TCP as the protocol") {
+                        assertThat(portMapping.protocol, equalTo("tcp"))
+                    }
+                }
+
+                on("parsing a valid port mapping definition with ranges for both local and container ports and a non-default protocol") {
+                    val portMapping = fromYaml("123-126:456-459/abc")
+
+                    it("returns the provided local ports") {
+                        assertThat(portMapping.local, equalTo(PortRange(123, 126)))
+                    }
+
+                    it("returns the provided container ports") {
+                        assertThat(portMapping.container, equalTo(PortRange(456, 459)))
+                    }
+
+                    it("returns the provided protocol") {
+                        assertThat(portMapping.protocol, equalTo("abc"))
                     }
                 }
 
@@ -82,11 +122,16 @@ object PortMappingSpec : Spek({
                     "0:12",
                     "12:0",
                     " ",
-                    ":"
+                    ":",
+                    "/thing",
+                    "1:2/",
+                    ":2/thing",
+                    "1:/thing",
+                    "1/2:thing"
                 ).map {
                     on("parsing the invalid port mapping definition '$it'") {
                         it("fails with an appropriate error message") {
-                            assertThat({ fromYaml("'$it'") }, throws(withMessage("Port mapping definition '$it' is invalid. It must be in the form 'local:container' or 'from-to:from-to' and each port must be a positive integer.") and withLineNumber(1) and withColumn(1)))
+                            assertThat({ fromYaml("'$it'") }, throws(withMessage("Port mapping definition '$it' is invalid. It must be in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol' and each port must be a positive integer.") and withLineNumber(1) and withColumn(1)))
                         }
                     }
                 }
@@ -101,12 +146,38 @@ object PortMappingSpec : Spek({
                         """.trimIndent()
                     )
 
-                    it("returns the correct local port") {
+                    it("returns the provided local port") {
                         assertThat(portMapping.local, equalTo(PortRange(123)))
                     }
 
-                    it("returns the correct container port") {
+                    it("returns the provided container port") {
                         assertThat(portMapping.container, equalTo(PortRange(456)))
+                    }
+
+                    it("returns TCP as the protocol") {
+                        assertThat(portMapping.protocol, equalTo("tcp"))
+                    }
+                }
+
+                on("parsing a valid port mapping definition with single ports for both local and container ports and a non-default protocol") {
+                    val portMapping = fromYaml(
+                        """
+                            local: 123
+                            container: 456
+                            protocol: abc
+                        """.trimIndent()
+                    )
+
+                    it("returns the provided local port") {
+                        assertThat(portMapping.local, equalTo(PortRange(123)))
+                    }
+
+                    it("returns the provided container port") {
+                        assertThat(portMapping.container, equalTo(PortRange(456)))
+                    }
+
+                    it("returns the provided protocol") {
+                        assertThat(portMapping.protocol, equalTo("abc"))
                     }
                 }
 
@@ -118,12 +189,38 @@ object PortMappingSpec : Spek({
                         """.trimIndent()
                     )
 
-                    it("returns the correct local ports") {
+                    it("returns the provided local ports") {
                         assertThat(portMapping.local, equalTo(PortRange(123, 126)))
                     }
 
-                    it("returns the correct container ports") {
+                    it("returns the provided container ports") {
                         assertThat(portMapping.container, equalTo(PortRange(456, 459)))
+                    }
+
+                    it("returns TCP as the protocol") {
+                        assertThat(portMapping.protocol, equalTo("tcp"))
+                    }
+                }
+
+                on("parsing a valid port mapping definition with ranges for both local and container ports and a non-default protocol") {
+                    val portMapping = fromYaml(
+                        """
+                            local: 123-126
+                            container: 456-459
+                            protocol: abc
+                        """.trimIndent()
+                    )
+
+                    it("returns the provided local ports") {
+                        assertThat(portMapping.local, equalTo(PortRange(123, 126)))
+                    }
+
+                    it("returns the provided container ports") {
+                        assertThat(portMapping.container, equalTo(PortRange(456, 459)))
+                    }
+
+                    it("returns the provided protocol") {
+                        assertThat(portMapping.protocol, equalTo("abc"))
                     }
                 }
 
@@ -209,7 +306,7 @@ object PortMappingSpec : Spek({
                 it("fails with an appropriate error message") {
                     assertThat(
                         { fromYaml(yaml) }, throws(
-                            withMessage("Port mapping definition is invalid. It must either be an object or a literal in the form 'local:container' or 'from-to:from-to'.") and withLineNumber(1) and withColumn(1)
+                            withMessage("Port mapping definition is invalid. It must either be an object or a literal in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol'.") and withLineNumber(1) and withColumn(1)
                         )
                     )
                 }

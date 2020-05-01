@@ -129,7 +129,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * exit options (close all after any container stops, wait for all to stop)
   * return code options (any non-zero, particular container, first to exit)
 * wildcard includes (eg. `include: containers/*.yaml`)
-* support protocols other than TCP in port mappings
 * requires / provides relationships (eg. 'app' requires 'service-a', and 'service-a-fake' and 'service-a-real' provide 'service-a')
 * when starting up containers and displaying progress, show countdown to health check (eg. 'waiting for container to become healthy, next check in 3 seconds, will timeout after 2 more retries')
 * default to just terminating all containers at clean up time with option to gracefully shut down on individual containers

@@ -1000,7 +1000,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is invalid. It must be in the form 'local:container' or 'from-to:from-to' and each port must be a positive integer.") and withLineNumber(7) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is invalid. It must be in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol' and each port must be a positive integer.") and withLineNumber(7) and withFileName(testFileName)))
             }
         }
 
@@ -1053,7 +1053,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is invalid. It must be in the form 'local:container' or 'from-to:from-to' and each port must be a positive integer.") and withLineNumber(8) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is invalid. It must be in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol' and each port must be a positive integer.") and withLineNumber(8) and withFileName(testFileName)))
             }
         }
 
@@ -1144,7 +1144,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(configString) }, throws(withMessage("Unknown property 'something_else'. Known properties are: container, local") and withLineNumber(7) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Unknown property 'something_else'. Known properties are: container, local, protocol") and withLineNumber(7) and withFileName(testFileName)))
             }
         }
 
@@ -1191,7 +1191,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(configString) }, throws(withMessage("Unknown property 'something_else'. Known properties are: container, local") and withLineNumber(8) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Unknown property 'something_else'. Known properties are: container, local, protocol") and withLineNumber(8) and withFileName(testFileName)))
             }
         }
 

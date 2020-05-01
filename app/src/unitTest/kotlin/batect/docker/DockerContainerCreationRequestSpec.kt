@@ -47,7 +47,7 @@ object DockerContainerCreationRequestSpec : Spek({
                     DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container-2", "ro")
                 ),
                 setOf(DeviceMount("/dev/local", "/dev/container", "rw")),
-                setOf(PortMapping(123, 456), PortMapping(PortRange(1000, 1001), PortRange(2000, 2001))),
+                setOf(PortMapping(123, 456, "udp"), PortMapping(PortRange(1000, 1001), PortRange(2000, 2001), "my-protocol")),
                 HealthCheckConfig(Duration.ofNanos(555), 12, Duration.ofNanos(333), "exit 0"),
                 UserAndGroup(789, 222),
                 privileged = true,
@@ -81,9 +81,9 @@ object DockerContainerCreationRequestSpec : Spek({
                         |       "SOME_VAR=some value"
                         |   ],
                         |   "ExposedPorts": {
-                        |       "456/tcp": {},
-                        |       "2000/tcp": {},
-                        |       "2001/tcp": {}
+                        |       "456/udp": {},
+                        |       "2000/my-protocol": {},
+                        |       "2001/my-protocol": {}
                         |   },
                         |   "HostConfig": {
                         |       "NetworkMode": "the-network",
@@ -99,19 +99,19 @@ object DockerContainerCreationRequestSpec : Spek({
                         |           }
                         |       ],
                         |       "PortBindings": {
-                        |           "456/tcp": [
+                        |           "456/udp": [
                         |               {
                         |                   "HostIp": "",
                         |                   "HostPort": "123"
                         |               }
                         |           ],
-                        |           "2000/tcp": [
+                        |           "2000/my-protocol": [
                         |               {
                         |                   "HostIp": "",
                         |                   "HostPort": "1000"
                         |               }
                         |           ],
-                        |           "2001/tcp": [
+                        |           "2001/my-protocol": [
                         |               {
                         |                   "HostIp": "",
                         |                   "HostPort": "1001"

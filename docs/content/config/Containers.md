@@ -203,14 +203,15 @@ List of ports to make available to the host machine.
 
 Three formats are supported:
 
-* `local:container` format
+* `local:container` or `local:container/protocol` format
 
-    For example, `1234:5678` will make port 5678 inside the container available on the host machine at port 1234.
+    For example, `1234:5678` or `1234:5678/tcp` will make TCP port 5678 inside the container available on the host machine at TCP port 1234, and
+    `1234:5678/udp` will make UDP port 5678 inside the container available on the host machine at UDP port 1234.
 
-* `local_from-local_to:container_from:container-to` format
+* `local_from-local_to:container_from:container-to` or `local_from-local_to:container_from:container-to/protocol` format
 
-    For example, `1000-1001:2025-2026` will make port 2025 inside the container available
-    on the host machine at port 1000, and port 2026 inside the container available on the host machine at port 1001.
+    For example, `1000-1001:2025-2026` or `1000-1001:2025-2026/tcp` will make TCP port 2025 inside the container available
+    on the host machine at TCP port 1000, and TCP port 2026 inside the container available on the host machine at TCP port 1001.
 
 * An expanded format:
   ```yaml
@@ -218,15 +219,23 @@ Three formats are supported:
     my-container:
       ...
       ports:
-        # This is equivalent to 1234:5678
+        # This is equivalent to 1234:5678 or 1234:5678/tcp
         - local: 1234
           container: 5678
-        # This is equivalent to 1000-1001:2025-2026
+        # This is equivalent to 3000:4000/udp
+        - local: 3000
+          container: 4000
+          protocol: udp
+        # This is equivalent to 1000-1001:2025-2026 or 1000-1001:2025-2026/tcp
         - local: 1000-1001
           container: 2025-2026
+        # This is equivalent to 5000-5001:6025-6026/udp
+        - local: 5000-5001
+          container: 6025-6026
+          protocol: udp
   ```
 
-Only TCP ports are supported.
+All protocols supported by Docker are supported. The default protocol is TCP if none is provided.
 
 !!! tip
     Exposing ports is only required if you need to access the container from the host machine.

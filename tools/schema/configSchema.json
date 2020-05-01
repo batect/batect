@@ -279,7 +279,7 @@
         "oneOf": [
           {
             "type": "string",
-            "pattern": "^\\d+(-\\d+)?:\\d+(-\\d+)?$"
+            "pattern": "^\\d+(-\\d+)?:\\d+(-\\d+)?(/.*)?$"
           },
           {
             "type": "object",
@@ -294,8 +294,17 @@
                 "type": "integer",
                 "description": "Port inside the container to map",
                 "minimum": 1
+              },
+              "protocol": {
+                "type": "string",
+                "description": "Protocol to use (eg. TCP or UDP)",
+                "minLength": 1
               }
-            }
+            },
+            "required": [
+              "local",
+              "container"
+            ]
           },
           {
             "type": "object",
@@ -310,6 +319,11 @@
                 "type": "string",
                 "description": "Ports inside the container to map",
                 "pattern": "^\\d+-\\d+$"
+              },
+              "protocol": {
+                "type": "string",
+                "description": "Protocol to use (eg. TCP or UDP)",
+                "minLength": 1
               }
             },
             "required": [

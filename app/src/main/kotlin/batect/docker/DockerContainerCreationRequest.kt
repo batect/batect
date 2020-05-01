@@ -133,7 +133,7 @@ data class DockerContainerCreationRequest(
             val containerPorts = mapping.container.ports()
 
             localPorts.zip(containerPorts).forEach { (local, container) ->
-                "$container/tcp" to JsonArray(listOf(
+                "$container/${mapping.protocol}" to JsonArray(listOf(
                     json {
                         "HostIp" to ""
                         "HostPort" to local.toString()
@@ -146,7 +146,7 @@ data class DockerContainerCreationRequest(
     private fun formatExposedPorts(): JsonObject = json {
         portMappings.forEach { mapping ->
             mapping.container.ports().forEach { port ->
-                "$port/tcp" to json {}
+                "$port/${mapping.protocol}" to json {}
             }
         }
     }

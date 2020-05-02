@@ -68,9 +68,11 @@ class DockerContainersClient(
                 api.start(container)
                 onStarted()
 
-                ttyManager.monitorForSizeChanges(container, frameDimensions).use {
-                    startRawModeIfRequired(stdin, usesTTY).use {
-                        ioStreamer.stream(outputConnection, inputConnection, cancellationContext)
+                cancellationContext.addCancellationCallback { onRunCancelled(container) }.use {
+                    ttyManager.monitorForSizeChanges(container, frameDimensions).use {
+                        startRawModeIfRequired(stdin, usesTTY).use {
+                            ioStreamer.stream(outputConnection, inputConnection, cancellationContext)
+                        }
                     }
                 }
             }
@@ -109,6 +111,20 @@ class DockerContainersClient(
         }
 
         return consoleManager.enterRawMode()
+    }
+
+    private fun onRunCancelled(container: DockerContainer) {
+        logger.info {
+            message("Run cancelled, stopping container.")
+            data("container", container)
+        }
+
+        api.stop(container)
+
+        logger.info {
+            message("Container stopped successfully.")
+            data("container", container)
+        }
     }
 
     fun waitForHealthStatus(container: DockerContainer, cancellationContext: CancellationContext): HealthStatus {

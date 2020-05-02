@@ -40,6 +40,7 @@ import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.docker.run.InputConnection
 import batect.docker.run.OutputConnection
+import batect.execution.CancellationCallback
 import batect.execution.CancellationContext
 import batect.os.ConsoleManager
 import batect.os.Dimensions
@@ -53,6 +54,7 @@ import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.eq
@@ -209,6 +211,31 @@ object DockerContainersClientSpec : Spek({
                                         verify(ioStreamer).stream(OutputConnection.Connected(outputStream, stdout), InputConnection.Connected(stdin, inputStream), cancellationContext)
                                         verify(inputStream).close()
                                     }
+                                }
+
+                                it("does not stop the container") {
+                                    verify(api, never()).stop(any())
+                                }
+                            }
+
+                            on("cancelling the run") {
+                                val cancellationContextThatImmediatelyCancels by createForEachTest {
+                                    mock<CancellationContext> {
+                                        on { addCancellationCallback(any()) } doAnswer { invocation ->
+                                            @Suppress("UNCHECKED_CAST")
+                                            val callback = invocation.arguments[0] as CancellationCallback
+
+                                            callback()
+
+                                            AutoCloseable { }
+                                        }
+                                    }
+                                }
+
+                                runForEachTest { client.run(container, stdout, stdin, useTTY, cancellationContextThatImmediatelyCancels, frameDimensions, onStartedHandler) }
+
+                                it("stops the container") {
+                                    verify(api).stop(container)
                                 }
                             }
                         }

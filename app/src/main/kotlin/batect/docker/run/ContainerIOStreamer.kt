@@ -28,7 +28,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
-class ContainerIOStreamer() {
+class ContainerIOStreamer {
     fun stream(output: OutputConnection, input: InputConnection, cancellationContext: CancellationContext) {
         when (output) {
             is OutputConnection.Disconnected -> when (input) {
@@ -62,7 +62,7 @@ class ContainerIOStreamer() {
 
             output.destination.close()
 
-            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+            if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
                 throw RuntimeException("Could not terminate all container I/O streaming threads.")
             }
         }

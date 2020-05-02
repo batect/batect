@@ -66,6 +66,7 @@ nav:
     - Gradle: "tools/Gradle.md"
     - Node.js: "tools/Node.md"
     - Ruby: "tools/Ruby.md"
+    - Seq: "tools/Seq.md"
     - Travis CI: "tools/TravisCI.md"
 
   - Tips and tricks:

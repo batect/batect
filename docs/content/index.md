@@ -2,18 +2,23 @@
 
 ## What is batect?
 
-batect is a tool that makes setting up, sharing and maintaining Docker-based development and testing environments much, much easier.
+batect allows you to define your development tasks (building, running, testing, linting and more) in terms of one or more
+Docker containers, run those tasks quickly and consistently everywhere, and easily share them with your team.
 
-The main benefits of batect are:
+batect is:
 
-* Consistent, fast, repeatable, isolated builds and test runs everywhere: your computer, your colleagues' computers and on CI
-* Document and share common tasks within your team in a structured way - it's a
-  [go script](https://www.thoughtworks.com/insights/blog/praise-go-script-part-i) based on Docker
-* Manage dependencies for integration and end-to-end testing (like databases) with ease
-* Onboard new team members in minutes: no installation required
-* Supports Linux, macOS and Windows
-* Works with any language or framework, your existing CI system, and your chosen language's existing tooling
-* Take advantage of existing Docker images to get started quickly
+* :rocket: **fast**: Tasks start quickly due to parallelisation, run quickly thanks to caching, and clean up reliably every time - we've
+  seen 17% quicker execution than Docker Compose.
+
+* :relieved: **easy to use**: Easily share your development tasks with your whole team, and free them from manual setup of build tools and dependencies
+  for tasks like running your app locally or integration testing. And no installation is required either - just drop the script in your
+  project and batect takes care of the rest.
+
+* :sparkles: **consistent**: batect uses Docker to create a clean, isolated environment every time you run a task, freeing you from "works on my machine"
+  issues - including on CI.
+
+* :white_check_mark: **versatile**: Anything that can run in a Docker container can be run with batect - builds, unit testing, integration testing, linting,
+  local environments, deployments; frontend, backend or somewhere in between, batect can do it all.
 
 ## What is batect not?
 
@@ -26,7 +31,7 @@ The main benefits of batect are:
 batect requires Docker 18.03.1 or newer, Java 8 or newer (although this requirement will be removed before v1.0), and:
 
 * On Linux and macOS: Bash and `curl`
-* On Windows: Windows 10
+* On Windows: Windows 10 / Windows Server 2016 or later
 
 batect supports both Linux and Windows containers.
 

@@ -1,34 +1,42 @@
 # batect
 [![Build Status](https://img.shields.io/travis/batect/batect/master.svg)](https://travis-ci.com/batect/batect)
 [![Coverage](https://img.shields.io/codecov/c/github/batect/batect.svg)](https://codecov.io/gh/batect/batect)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2698/badge)](https://bestpractices.coreinfrastructure.org/projects/2698)
 [![License](https://img.shields.io/github/license/batect/batect.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Chat](https://img.shields.io/badge/chat-on%20spectrum-brightgreen.svg)](https://spectrum.chat/batect)
 
-**b**uild **a**nd **t**esting **e**nvironments as **c**ode **t**ool: Dockerised build and testing environments made easy
+**b**uild **a**nd **t**esting **e**nvironments as **c**ode **t**ool
 
-## The sales pitch
+batect allows you to define your development tasks (building, running, testing, linting and more) in terms of one or more
+Docker containers, run those tasks quickly and consistently everywhere, and easily share them with your team.
 
-* Consistent, fast, repeatable, isolated builds and test runs everywhere: your computer, your colleagues' computers and on CI
-* Document and share common tasks within your team in a structured way - it's a
-  [go script](https://www.thoughtworks.com/insights/blog/praise-go-script-part-i) based on Docker
-* Manage dependencies for integration and end-to-end testing (like databases) with ease
-* Onboard new team members in minutes: no installation required
-* Supports Linux, macOS and Windows
-* Works with any language or framework, your existing CI system, and your chosen language's existing tooling
-* Take advantage of existing Docker images to get started quickly
+batect is:
+
+* :rocket: **fast**: Tasks start quickly due to parallelisation, run quickly thanks to caching, and clean up reliably every time - we've
+  seen 17% quicker execution than Docker Compose.
+
+* :relieved: **easy to use**: Easily share your development tasks with your whole team, and free them from manual setup of build tools and dependencies
+  for tasks like running your app locally or integration testing. And no installation is required either - just drop the script in your
+  project and batect takes care of the rest.
+
+* :sparkles: **consistent**: batect uses Docker to create a clean, isolated environment every time you run a task, freeing you from "works on my machine"
+  issues - including on CI.
+
+* :white_check_mark: **versatile**: Anything that can run in a Docker container can be run with batect - builds, unit testing, integration testing, linting,
+  local environments, deployments; frontend, backend or somewhere in between, batect can do it all.
 
 [![asciicast](https://asciinema.org/a/714gRQsQW1VDHQMuWzwRuAdU4.svg)](https://asciinema.org/a/714gRQsQW1VDHQMuWzwRuAdU4)
 
 ## Getting started
 
-The `batect` and `batect.cmd` scripts are designed to be committed alongside your project, and not installed globally. Committing
-them alongside your code improves consistency within your team, as everyone uses the same version of batect. They will
-automatically pull down the correct version of batect for your operating system.
-
 1. Download the latest version of `batect` and `batect.cmd` from the [releases page](https://github.com/batect/batect/releases),
    and copy them into your project.
 
     Note that you only need the scripts - you don't need to download `batect.jar`.
+
+    The `batect` and `batect.cmd` scripts are designed to be committed alongside your project, and not installed globally. Committing
+    them alongside your code improves consistency within your team, as everyone uses the same version of batect. They will
+    automatically pull down the correct version of batect for your operating system.
 
 2. If you're on Linux or macOS, make sure the script is executable: run `chmod +x batect`.
 
@@ -40,12 +48,12 @@ automatically pull down the correct version of batect for your operating system.
       [batectify](https://batectify.enchanting.dev/) by [@ineffyble](https://github.com/ineffyble) can convert files from
       other tools to batect's format
 
-## System requirements
+## Requirements
 
 batect requires Docker 18.03.1 or newer, Java 8 or newer (although this requirement will be removed before v1.0), and:
 
 * On Linux and macOS: Bash and `curl`
-* On Windows: Windows 10
+* On Windows: Windows 10 / Windows Server 2016 or later
 
 batect supports both Linux and Windows containers.
 

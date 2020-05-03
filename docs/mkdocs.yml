@@ -2,7 +2,7 @@ site_name: batect documentation
 site_url: https://batect.dev
 site_description: Documentation for batect, the build and testing environments as code tool
 site_author: Charles Korn
-copyright: Copyright &copy; 2017-2020 Charles Korn.
+copyright: Copyright &copy; 2017-2020 Charles Korn. Documentation uses <a href="https://twemoji.twitter.com/">Twemoji</a>, licensed under the CC-BY 4.0 license.
 
 repo_name: batect/batect
 repo_url: https://github.com/batect/batect
@@ -39,6 +39,9 @@ markdown_extensions:
   - toc:
       permalink: true
   - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:pymdownx.emoji.twemoji
+      emoji_generator: !!python/name:pymdownx.emoji.to_svg
   - pymdownx.superfences
 
 nav:

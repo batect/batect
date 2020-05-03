@@ -11,7 +11,7 @@ automatically pull down the correct version of batect for your operating system.
 
 2. If you're on Linux or macOS, make sure the script is executable: run `chmod +x batect`.
 
-3. Create your `batect.yml` to define your environment:
+3. Create your `batect.yml` to define your tasks and the environments they run in:
     * Take a look at the [sample projects](SampleProjects.md) for inspiration
     * Dive straight into [the configuration file reference](config/Overview.md)
     * Follow the [getting started tutorial](GettingStarted.md)

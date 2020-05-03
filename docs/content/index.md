@@ -35,7 +35,15 @@ batect requires Docker 18.03.1 or newer, Java 8 or newer (although this requirem
 
 batect supports both Linux and Windows containers.
 
-## Why would you use batect?
+## I'm sold! How do I get started?
+
+Take a look at [the setup instructions](Setup.md).
+
+## What's going on under the hood?
+
+Take a look at [the task lifecycle](TaskLifecycle.md) to understand how batect executes tasks.
+
+## Why would I use batect?
 
 Every application has a build environment - the tools and configuration needed to take the source code and produce an artifact
 ready for use.

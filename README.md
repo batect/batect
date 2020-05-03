@@ -27,6 +27,43 @@ batect is:
 
 [![asciicast](https://asciinema.org/a/714gRQsQW1VDHQMuWzwRuAdU4.svg)](https://asciinema.org/a/714gRQsQW1VDHQMuWzwRuAdU4)
 
+## Hello World
+
+The simplest possible `batect.yml`:
+
+```yaml
+containers:
+  my-container:
+    image: alpine:3.11.3
+
+tasks:
+  say-hello:
+    description: Say hello to the nice person reading the batect README
+    run:
+      container: my-container
+      command: echo 'Hello world!'
+```
+
+Run it with `./batect say-hello`:
+
+```
+$ ./batect say-hello
+Running say-hello...
+my-container: running echo 'Hello world!'
+
+Hello world!
+
+say-hello finished with exit code 0 in 1.2s.
+```
+
+Get a list of available tasks with `./batect --list-tasks`:
+
+```
+$ ./batect --list-tasks
+Available tasks:
+- say-hello: Say hello to the nice person reading the batect README
+```
+
 ## Getting started
 
 1. Download the latest version of `batect` and `batect.cmd` from the [releases page](https://github.com/batect/batect/releases),
@@ -40,7 +77,7 @@ batect is:
 
 2. If you're on Linux or macOS, make sure the script is executable: run `chmod +x batect`.
 
-3. Create your `batect.yml` to define your environment:
+3. Create your `batect.yml` to define your tasks and the environments they run in:
     * Take a look at the [sample projects](https://batect.dev/SampleProjects.html) for inspiration
     * Dive straight into [the configuration file reference](https://batect.dev/config/Overview.html)
     * Follow the [getting started tutorial](https://batect.dev/GettingStarted.html)
@@ -56,6 +93,10 @@ batect requires Docker 18.03.1 or newer, Java 8 or newer (although this requirem
 * On Windows: Windows 10 / Windows Server 2016 or later
 
 batect supports both Linux and Windows containers.
+
+## Under the hood
+
+Take a look at [the task lifecycle](https://batect.dev/TaskLifecycle.html) to understand how batect executes tasks.
 
 ## Documentation
 
@@ -79,6 +120,10 @@ There's a batect community on [Spectrum](https://spectrum.chat/batect/) - anyone
 Please [open an issue on GitHub](https://github.com/batect/batect/issues/new) if you run into a problem or have a suggestion.
 
 You can see what new features and improvements are planned in the [roadmap](ROADMAP.md).
+
+## Contributing
+
+See [the contribution guide](CONTRIBUTING.md).
 
 ## Acknowledgements
 

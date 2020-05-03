@@ -4,7 +4,7 @@ The samples shown below are taken from the [Java sample project](https://github.
 
 ## Installation
 
-Before you begin, follow the [installation steps](QuickStart.md) to setup batect.
+Before you begin, follow the [setup instructions](Setup.md) to setup batect.
 
 ## First steps: build environment
 

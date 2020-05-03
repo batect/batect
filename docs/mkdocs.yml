@@ -48,7 +48,7 @@ markdown_extensions:
 
 nav:
   - Introduction: "index.md"
-  - Quick start: "QuickStart.md"
+  - Setup: "Setup.md"
   - Getting started tutorial: "GettingStarted.md"
   - Comparison with other tools: "Comparison.md"
 

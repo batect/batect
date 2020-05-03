@@ -15,7 +15,7 @@
 */
 
 def outputDir = getBuildDir().toPath().resolve("docs")
-def imageName = 'squidfunk/mkdocs-material:4.6.0'
+def imageName = 'squidfunk/mkdocs-material:5.1.4'
 
 task buildDocs(type: Exec) {
     commandLine 'docker', 'run', '--rm', '-v', "${project.projectDir}:/docs", '--entrypoint', 'sh', imageName, 'build.sh'
@@ -40,7 +40,7 @@ task serve(type: Exec) {
     description 'Serve the documentation from a local web server and rebuild it when the source changes.'
     group 'Build'
 
-    commandLine 'docker', 'run', '--rm', '-i', '-p', '8000:8000', '-v', "${project.projectDir}:/docs", imageName
+    commandLine 'docker', 'run', '--rm', '-i', '-p', '8000:8000', '-v', "${project.projectDir}:/docs", imageName, "serve", "-a", "0.0.0.0:8000"
 }
 
 task clean(type: Delete) {

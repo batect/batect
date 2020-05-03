@@ -17,7 +17,9 @@ theme:
   name: 'material'
   palette:
     primary: 'blue'
-    accent: 'blue'
+    accent: 'light blue'
+  icon:
+    repo: fontawesome/brands/github
 
 extra_css:
   - assets/3rdparty/asciinema-player.css
@@ -27,10 +29,10 @@ extra_javascript:
 
 extra:
   social:
-  - type: 'github'
-    link: 'https://github.com/batect/batect'
-  - type: 'comments'
-    link: 'https://spectrum.chat/batect'
+  - icon: fontawesome/brands/github
+    link: https://github.com/batect/batect
+  - icon: fontawesome/solid/comments
+    link: https://spectrum.chat/batect
 
 markdown_extensions:
   - admonition

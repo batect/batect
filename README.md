@@ -110,8 +110,15 @@ All documentation is available on [the documentation site](https://batect.dev). 
 * [Sample projects](https://batect.dev/SampleProjects.html)
 * [Comparison with other tools](https://batect.dev/Comparison.html)
 
-If you prefer watching videos to reading documentation, you can also watch Charles introduce batect and the rationale behind it
-at the [Evolution by ThoughtWorks conference](https://www.thoughtworks.com/evolution-by-thoughtworks/content#Presentations).
+## Presentations
+
+* *Dockerised local build and testing environments made easy* at Container Camp AU (July 2019): [video](https://www.youtube.com/watch?v=qNzv7IuTp50)
+
+  Also presented at DevOpsDays Auckland (October 2019), DDD Sydney (September 2019) and DDD Melbourne (August 2019).
+
+* *Build & Testing Environments as Code: Because Life's Too Short Not To* at Evolution by ThoughtWorks (June 2018):
+  [video](https://www.thoughtworks.com/evolution-by-thoughtworks/content#Presentations),
+  [slides](https://www.slideshare.net/ThoughtWorks/charles-korn-build-testing-environments-as-code-because-lifes-too-short-not-to-evolution-102970374)
 
 ## Support and community
 

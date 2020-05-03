@@ -21,12 +21,21 @@
 
 ## Getting started
 
-1. Drop the latest `batect` and `batect.cmd` scripts from the [releases page](https://github.com/batect/batect/releases)
-   into the root folder of your project.
+The `batect` and `batect.cmd` scripts are designed to be committed alongside your project, and not installed globally. Committing
+them alongside your code improves consistency within your team, as everyone uses the same version of batect. They will
+automatically pull down the correct version of batect for your operating system.
+
+1. Download the latest version of `batect` and `batect.cmd` from the [releases page](https://github.com/batect/batect/releases),
+   and copy them into your project.
+
+    Note that you only need the scripts - you don't need to download `batect.jar`.
+
 2. If you're on Linux or macOS, make sure the script is executable: run `chmod +x batect`.
+
 3. Create your `batect.yml` to define your environment:
     * Take a look at the [sample projects](https://batect.dev/SampleProjects.html) for inspiration
     * Dive straight into [the configuration file reference](https://batect.dev/config/Overview.html)
+    * Follow the [getting started tutorial](https://batect.dev/GettingStarted.html)
     * Or, if you're using another tool already and want to switch to batect,
       [batectify](https://batectify.enchanting.dev/) by [@ineffyble](https://github.com/ineffyble) can convert files from
       other tools to batect's format

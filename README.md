@@ -64,6 +64,8 @@ Available tasks:
 - say-hello: Say hello to the nice person reading the batect README
 ```
 
+Take a look at the [sample projects](https://batect.dev/SampleProjects.html) for more examples.
+
 ## Getting started
 
 1. Download the latest version of `batect` and `batect.cmd` from the [releases page](https://github.com/batect/batect/releases),

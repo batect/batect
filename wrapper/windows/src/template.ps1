@@ -16,8 +16,8 @@ $UrlEncodedVersion = [Uri]::EscapeDataString($Version)
 $DownloadUrl = getValueOrDefault $env:BATECT_DOWNLOAD_URL "$DownloadUrlRoot/$UrlEncodedVersion/bin/batect-$UrlEncodedVersion.jar"
 
 $RootCacheDir = getValueOrDefault $env:BATECT_CACHE_DIR "$env:USERPROFILE\.batect\cache"
-$CacheDir = "$RootCacheDir\$Version"
-$JarPath = "$CacheDir\batect-$Version.jar"
+$VersionCacheDir = "$RootCacheDir\$Version"
+$JarPath = "$VersionCacheDir\batect-$Version.jar"
 
 function main() {
     if (-not (haveVersionCachedLocally)) {
@@ -56,8 +56,8 @@ function download() {
 }
 
 function createCacheDir() {
-    if (-not (Test-Path $CacheDir)) {
-        New-Item -ItemType Directory -Path $CacheDir | Out-Null
+    if (-not (Test-Path $VersionCacheDir)) {
+        New-Item -ItemType Directory -Path $VersionCacheDir | Out-Null
     }
 }
 
@@ -73,6 +73,7 @@ function runApplication() {
 
     $combinedArgs = $javaArgs + @("-Djava.net.useSystemProxies=true", "-jar", $JarPath) + $args
     $env:HOSTNAME = $env:COMPUTERNAME
+    $env:BATECT_WRAPPER_CACHE_DIR = $RootCacheDir
 
     $info = New-Object System.Diagnostics.ProcessStartInfo
     $info.FileName = $java.Source

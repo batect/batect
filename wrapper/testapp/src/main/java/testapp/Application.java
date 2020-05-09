@@ -22,6 +22,7 @@ public class Application {
     public static void main(String[] args) {
         System.out.println("The Java application has started.");
         System.out.println("BATECT_WRAPPER_SCRIPT_DIR is: " + System.getenv("BATECT_WRAPPER_SCRIPT_DIR"));
+        System.out.println("BATECT_WRAPPER_CACHE_DIR is: " + System.getenv("BATECT_WRAPPER_CACHE_DIR"));
         System.out.println("HOSTNAME is: " + System.getenv("HOSTNAME"));
         System.out.println("I received " + args.length + " arguments.");
 

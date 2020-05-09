@@ -13,9 +13,9 @@
     DOWNLOAD_URL=${BATECT_DOWNLOAD_URL:-"$DOWNLOAD_URL_ROOT/$VERSION/bin/batect-$VERSION.jar"}
     QUIET_DOWNLOAD=${BATECT_QUIET_DOWNLOAD:-false}
 
-    ROOT_CACHE_DIR=${BATECT_CACHE_DIR:-"$HOME/.batect/cache"}
-    CACHE_DIR="$ROOT_CACHE_DIR/$VERSION"
-    JAR_PATH="$CACHE_DIR/batect-$VERSION.jar"
+    BATECT_WRAPPER_CACHE_DIR=${BATECT_CACHE_DIR:-"$HOME/.batect/cache"}
+    VERSION_CACHE_DIR="$BATECT_WRAPPER_CACHE_DIR/$VERSION"
+    JAR_PATH="$VERSION_CACHE_DIR/batect-$VERSION.jar"
 
     SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -35,7 +35,7 @@
         checkForCurl
 
         echo "Downloading batect version $VERSION from $DOWNLOAD_URL..."
-        mkdir -p "$CACHE_DIR"
+        mkdir -p "$VERSION_CACHE_DIR"
         temp_file=$(mktemp)
 
         if [[ $QUIET_DOWNLOAD == 'true' ]]; then
@@ -60,6 +60,7 @@
         fi
 
         BATECT_WRAPPER_SCRIPT_DIR="$SCRIPT_PATH" \
+        BATECT_WRAPPER_CACHE_DIR="$BATECT_WRAPPER_CACHE_DIR" \
         HOSTNAME="$HOSTNAME" \
         exec \
             java \

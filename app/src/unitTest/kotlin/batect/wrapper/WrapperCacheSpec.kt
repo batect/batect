@@ -316,6 +316,54 @@ object WrapperCacheSpec : Spek({
                 }
             }
         }
+
+        describe("deleting a cached version") {
+            val version = Version(1, 2, 3)
+            val versionDirectory by createForEachTest { fileSystem.getPath("/version-1.2.3") }
+            val wrapperVersion by createForEachTest { CachedWrapperVersion(version, null, versionDirectory) }
+            val wrapperCache by createForEachTest { WrapperCache(fileSystem, HostEnvironmentVariables(), logger) }
+
+            beforeEachTest { Files.createDirectories(versionDirectory) }
+
+            given("the version cache directory is empty") {
+                beforeEachTest { wrapperCache.delete(wrapperVersion) }
+
+                it("deletes the version's directory") {
+                    assertThat(Files.exists(versionDirectory), equalTo(false))
+                }
+            }
+
+            given("the version cache directory contains files") {
+                beforeEachTest {
+                    Files.createFile(versionDirectory.resolve("file1"))
+                    Files.createFile(versionDirectory.resolve("file2"))
+                }
+
+                given("the version cache directory does not contain a last used time file") {
+                    beforeEachTest { wrapperCache.delete(wrapperVersion) }
+
+                    it("deletes the version's directory") {
+                        assertThat(Files.exists(versionDirectory), equalTo(false))
+                    }
+                }
+
+                given("the version cache directory does contain a last used time file") {
+                    // FIXME: Originally this test used a WatchService to observe the file deletion order, but WatchService in Jimfs does not behave correctly when the directory being watched
+                    // is deleted (see https://github.com/google/jimfs/issues/72).
+
+                    val lastUsedFilePath by createForEachTest { versionDirectory.resolve("lastUsed") }
+
+                    beforeEachTest {
+                        Files.createFile(lastUsedFilePath)
+                        wrapperCache.delete(wrapperVersion)
+                    }
+
+                    it("deletes the version's directory") {
+                        assertThat(Files.exists(versionDirectory), equalTo(false))
+                    }
+                }
+            }
+        }
     }
 })
 

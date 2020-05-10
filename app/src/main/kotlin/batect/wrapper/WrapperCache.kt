@@ -142,6 +142,26 @@ class WrapperCache(
         }
     }
 
+    // Note: this assumes the version directory contains only files and will break if the directory contains subdirectories.
+    fun delete(cachedWrapper: CachedWrapperVersion) {
+        logger.info {
+            message("Deleting cached version.")
+            data("version", cachedWrapper.version)
+            data("versionDirectory", cachedWrapper.cacheDirectory)
+            data("lastUsed", cachedWrapper.lastUsed.toString())
+        }
+
+        val contents = Files.list(cachedWrapper.cacheDirectory)
+
+        contents
+            .filter { !it.endsWith("lastUsed") }
+            .forEach { Files.delete(it) }
+
+        // Delete the last used time file last so that it is preserved (where possible) if this method is interrupted
+        Files.deleteIfExists(cachedWrapper.cacheDirectory.resolve("lastUsed"))
+        Files.delete(cachedWrapper.cacheDirectory)
+    }
+
     companion object {
         private const val cacheDirectoryEnvironmentVariableName: String = "BATECT_WRAPPER_CACHE_DIR"
     }

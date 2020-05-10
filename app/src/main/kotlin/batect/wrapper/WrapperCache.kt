@@ -20,11 +20,14 @@ import batect.VersionInfo
 import batect.logging.Logger
 import batect.os.HostEnvironmentVariables
 import batect.utils.Version
+import batect.utils.VersionParseException
 import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import java.time.format.DateTimeParseException
+import kotlin.streams.toList
 
 class WrapperCache(
     fileSystem: FileSystem,
@@ -56,7 +59,7 @@ class WrapperCache(
             logger.warn {
                 message("Cache directory for version does not exist, not storing last used time.")
                 data("version", version)
-                data("directory", versionDirectory)
+                data("versionDirectory", versionDirectory)
             }
 
             return
@@ -66,6 +69,77 @@ class WrapperCache(
         val timeInUTC = time.withZoneSameInstant(ZoneOffset.UTC)
 
         Files.write(lastUsedFile, listOf(timeInUTC.toString()), Charsets.UTF_8)
+    }
+
+    fun getCachedVersions(): Set<CachedWrapperVersion> {
+        if (cacheDirectory == null) {
+            logger.warn {
+                message("Wrapper cache directory environment variable ($cacheDirectoryEnvironmentVariableName) not set, returning empty list of versions.")
+            }
+
+            return emptySet()
+        }
+
+        if (!Files.exists(cacheDirectory)) {
+            logger.warn {
+                message("Cache directory does not exist, returning empty list of versions.")
+                data("cacheDirectory", cacheDirectory)
+            }
+
+            return emptySet()
+        }
+
+        return Files.list(cacheDirectory).toList()
+            .filter { Files.isDirectory(it) }
+            .mapNotNull { versionDirectory -> loadCachedVersionFromDirectory(versionDirectory) }
+            .toSet()
+    }
+
+    private fun loadCachedVersionFromDirectory(versionDirectory: Path): CachedWrapperVersion? {
+        val version = try {
+            Version.parse(versionDirectory.fileName.toString())
+        } catch (e: VersionParseException) {
+            logger.warn {
+                message("Directory name cannot be parsed as a version, ignoring directory.")
+                data("directory", versionDirectory)
+            }
+
+            return null
+        }
+
+        val lastUsed = loadLastUsedTimeFromDirectory(versionDirectory, version)
+
+        return CachedWrapperVersion(version, lastUsed, versionDirectory)
+    }
+
+    private fun loadLastUsedTimeFromDirectory(versionDirectory: Path, version: Version): ZonedDateTime? {
+        val lastUsedFilePath = versionDirectory.resolve("lastUsed")
+
+        if (!Files.exists(lastUsedFilePath)) {
+            logger.warn {
+                message("Version cache directory does not contain a last used time file.")
+                data("version", version)
+                data("versionDirectory", versionDirectory)
+            }
+
+            return null
+        }
+
+        val contents = Files.readAllLines(lastUsedFilePath, Charsets.UTF_8).joinToString("\n")
+
+        return try {
+            ZonedDateTime.parse(contents)
+        } catch (e: DateTimeParseException) {
+            logger.warn {
+                message("Last used time file does not contain a valid time, ignoring.")
+                exception(e)
+                data("version", version)
+                data("versionDirectory", versionDirectory)
+                data("lastUsedFilePath", lastUsedFilePath)
+            }
+
+            null
+        }
     }
 
     companion object {

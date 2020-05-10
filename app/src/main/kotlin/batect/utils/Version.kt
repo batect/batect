@@ -51,11 +51,7 @@ data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: S
         private val regex = """^(?<major>\d+)(\.(?<minor>\d+)(\.(?<patch>\d+)(-(?<suffix>[a-zA-Z0-9-.]+))?(\+(?<metadata>[a-zA-Z0-9-.]+))?)?)?$""".toRegex()
 
         fun parse(value: String): Version {
-            val match = regex.matchEntire(value)
-
-            if (match == null) {
-                throw IllegalArgumentException("The value '$value' is not recognised as a valid version.")
-            }
+            val match = regex.matchEntire(value) ?: throw VersionParseException(value)
 
             val major = match.getIntegerMatch(1)
             val minor = match.getIntegerMatch(3)
@@ -96,3 +92,5 @@ enum class VersionComparisonMode {
     Normal,
     DockerStyle
 }
+
+class VersionParseException(val invalidValue: String) : IllegalArgumentException("The value '$invalidValue' is not recognised as a valid version.")

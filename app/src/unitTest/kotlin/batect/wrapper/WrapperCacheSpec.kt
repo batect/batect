@@ -24,6 +24,7 @@ import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.hasMessage
+import batect.testutils.runForEachTest
 import batect.testutils.withAdditionalData
 import batect.testutils.withLogMessage
 import batect.testutils.withSeverity
@@ -32,6 +33,7 @@ import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.isEmpty
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
@@ -71,7 +73,7 @@ object WrapperCacheSpec : Spek({
                                 hasMessage(
                                     withLogMessage("Cache directory for version does not exist, not storing last used time.") and
                                         withAdditionalData("version", version) and
-                                        withAdditionalData("directory", versionDirectory.toString()) and
+                                        withAdditionalData("versionDirectory", versionDirectory.toString()) and
                                         withSeverity(Severity.Warning)
                                 )
                             )
@@ -87,6 +89,160 @@ object WrapperCacheSpec : Spek({
 
                         it("writes the last used time to the version's directory") {
                             assertThat(Files.readAllLines(versionDirectory.resolve("lastUsed"), Charsets.UTF_8), equalTo(listOf("2020-05-10T01:50:12.123456789Z")))
+                        }
+                    }
+                }
+
+                describe("getting details of all cached versions") {
+                    given("the cache directory is empty") {
+                        val result by runForEachTest { wrapperCache.getCachedVersions() }
+
+                        it("returns an empty set of versions") {
+                            assertThat(result, isEmpty)
+                        }
+                    }
+
+                    given("the cache directory contains a single version directory") {
+                        val version = Version(1, 2, 3)
+                        val versionDirectory by createForEachTest { cacheDirectory.resolve("1.2.3") }
+
+                        beforeEachTest {
+                            Files.createDirectories(versionDirectory)
+                        }
+
+                        given("the version directory does not contain a last used time file") {
+                            val result by runForEachTest { wrapperCache.getCachedVersions() }
+
+                            it("returns the version with no last used time") {
+                                assertThat(result, equalTo(setOf(CachedWrapperVersion(version, null, versionDirectory))))
+                            }
+
+                            it("logs a warning") {
+                                assertThat(logSink,
+                                    hasMessage(
+                                        withLogMessage("Version cache directory does not contain a last used time file.") and
+                                            withAdditionalData("version", version) and
+                                            withAdditionalData("versionDirectory", versionDirectory.toString()) and
+                                            withSeverity(Severity.Warning)
+                                    )
+                                )
+                            }
+                        }
+
+                        given("the version directory contains a last used time file") {
+                            val lastUsedFilePath by createForEachTest { versionDirectory.resolve("lastUsed") }
+
+                            given("the file contains a valid time") {
+                                beforeEachTest {
+                                    Files.write(lastUsedFilePath, listOf("2020-05-10T11:12:13.123456789Z"))
+                                }
+
+                                val result by runForEachTest { wrapperCache.getCachedVersions() }
+
+                                it("returns the version with the last used time from the file") {
+                                    assertThat(result, equalTo(setOf(CachedWrapperVersion(version, ZonedDateTime.of(2020, 5, 10, 11, 12, 13, 123456789, ZoneOffset.UTC), versionDirectory))))
+                                }
+                            }
+
+                            given("the file does not contain a valid time") {
+                                beforeEachTest {
+                                    Files.write(lastUsedFilePath, listOf("blah"))
+                                }
+
+                                val result by runForEachTest { wrapperCache.getCachedVersions() }
+
+                                it("returns the version with no last used time") {
+                                    assertThat(result, equalTo(setOf(CachedWrapperVersion(version, null, versionDirectory))))
+                                }
+
+                                it("logs a warning") {
+                                    assertThat(logSink,
+                                        hasMessage(
+                                            withLogMessage("Last used time file does not contain a valid time, ignoring.") and
+                                                withAdditionalData("version", version) and
+                                                withAdditionalData("versionDirectory", versionDirectory.toString()) and
+                                                withAdditionalData("lastUsedFilePath", lastUsedFilePath.toString()) and
+                                                withSeverity(Severity.Warning)
+                                        )
+                                    )
+                                }
+                            }
+
+                            given("the file is empty") {
+                                beforeEachTest { Files.createFile(lastUsedFilePath) }
+
+                                val result by runForEachTest { wrapperCache.getCachedVersions() }
+
+                                it("returns the version with no last used time") {
+                                    assertThat(result, equalTo(setOf(CachedWrapperVersion(version, null, versionDirectory))))
+                                }
+
+                                it("logs a warning") {
+                                    assertThat(logSink,
+                                        hasMessage(
+                                            withLogMessage("Last used time file does not contain a valid time, ignoring.") and
+                                                withAdditionalData("version", version) and
+                                                withAdditionalData("versionDirectory", versionDirectory.toString()) and
+                                                withAdditionalData("lastUsedFilePath", lastUsedFilePath.toString()) and
+                                                withSeverity(Severity.Warning)
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    given("the cache directory contains two version directories, each with a valid last used date") {
+                        val version1 = Version(1, 2, 3)
+                        val version2 = Version(1, 3, 4)
+
+                        val version1Directory by createForEachTest { cacheDirectory.resolve("1.2.3") }
+                        val version2Directory by createForEachTest { cacheDirectory.resolve("1.3.4") }
+
+                        beforeEachTest {
+                            Files.createDirectories(version1Directory)
+                            Files.createDirectories(version2Directory)
+
+                            Files.write(version1Directory.resolve("lastUsed"), listOf("2020-05-10T11:12:13.123456789Z"))
+                            Files.write(version2Directory.resolve("lastUsed"), listOf("2021-06-10T11:12:13.123456789Z"))
+                        }
+
+                        val result by runForEachTest { wrapperCache.getCachedVersions() }
+
+                        it("returns both versions") {
+                            assertThat(result, equalTo(setOf(
+                                CachedWrapperVersion(version1, ZonedDateTime.of(2020, 5, 10, 11, 12, 13, 123456789, ZoneOffset.UTC), version1Directory),
+                                CachedWrapperVersion(version2, ZonedDateTime.of(2021, 6, 10, 11, 12, 13, 123456789, ZoneOffset.UTC), version2Directory)
+                            )))
+                        }
+                    }
+
+                    given("the cache directory contains a version directory and a directory with another name") {
+                        val version = Version(1, 2, 3)
+                        val versionDirectory by createForEachTest { cacheDirectory.resolve("1.2.3") }
+                        val nonVersionDirectory by createForEachTest { cacheDirectory.resolve("not a version") }
+
+                        beforeEachTest {
+                            Files.createDirectories(versionDirectory)
+                            Files.write(versionDirectory.resolve("lastUsed"), listOf("2020-05-10T11:12:13.123456789Z"))
+
+                            Files.createDirectories(nonVersionDirectory)
+                        }
+
+                        val result by runForEachTest { wrapperCache.getCachedVersions() }
+
+                        it("returns the version") {
+                            assertThat(result, equalTo(setOf(CachedWrapperVersion(version, ZonedDateTime.of(2020, 5, 10, 11, 12, 13, 123456789, ZoneOffset.UTC), versionDirectory))))
+                        }
+
+                        it("logs a warning") {
+                            assertThat(logSink,
+                                hasMessage(
+                                    withLogMessage("Directory name cannot be parsed as a version, ignoring directory.") and
+                                        withAdditionalData("directory", nonVersionDirectory.toString()) and
+                                        withSeverity(Severity.Warning)
+                                )
+                            )
                         }
                     }
                 }
@@ -109,10 +265,26 @@ object WrapperCacheSpec : Spek({
                             hasMessage(
                                 withLogMessage("Cache directory for version does not exist, not storing last used time.") and
                                     withAdditionalData("version", version) and
-                                    withAdditionalData("directory", versionDirectory.toString()) and
+                                    withAdditionalData("versionDirectory", versionDirectory.toString()) and
                                     withSeverity(Severity.Warning)
                             )
                         )
+                    }
+                }
+
+                describe("getting details of all cached versions") {
+                    val result by runForEachTest { wrapperCache.getCachedVersions() }
+
+                    it("returns an empty set") {
+                        assertThat(result, isEmpty)
+                    }
+
+                    it("logs a warning") {
+                        assertThat(logSink, hasMessage(
+                            withLogMessage("Cache directory does not exist, returning empty list of versions.") and
+                                withAdditionalData("cacheDirectory", cacheDirectory.toString()) and
+                                withSeverity(Severity.Warning)
+                        ))
                     }
                 }
             }
@@ -129,6 +301,18 @@ object WrapperCacheSpec : Spek({
 
                 it("logs a warning") {
                     assertThat(logSink, hasMessage(withLogMessage("Wrapper cache directory environment variable (BATECT_WRAPPER_CACHE_DIR) not set, not storing last used time.") and withSeverity(Severity.Warning)))
+                }
+            }
+
+            describe("getting details of all cached versions") {
+                val result by runForEachTest { wrapperCache.getCachedVersions() }
+
+                it("returns an empty set") {
+                    assertThat(result, isEmpty)
+                }
+
+                it("logs a warning") {
+                    assertThat(logSink, hasMessage(withLogMessage("Wrapper cache directory environment variable (BATECT_WRAPPER_CACHE_DIR) not set, returning empty list of versions.") and withSeverity(Severity.Warning)))
                 }
             }
         }

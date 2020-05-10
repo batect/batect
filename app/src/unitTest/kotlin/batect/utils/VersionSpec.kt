@@ -219,7 +219,7 @@ object VersionSpec : Spek({
             ).forEach { value ->
                 on("when the value '$value' is parsed") {
                     it("throws an appropriate exception") {
-                        assertThat({ Version.parse(value) }, throws<IllegalArgumentException>(withMessage("The value '$value' is not recognised as a valid version.")))
+                        assertThat({ Version.parse(value) }, throws<VersionParseException>(withMessage("The value '$value' is not recognised as a valid version.")))
                     }
                 }
             }

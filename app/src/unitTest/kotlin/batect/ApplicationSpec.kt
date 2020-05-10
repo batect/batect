@@ -39,6 +39,7 @@ import batect.testutils.withPlatformSpecificLineSeparator
 import batect.testutils.withSeverity
 import batect.ui.Console
 import batect.ui.text.Text
+import batect.wrapper.WrapperCache
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -90,6 +91,7 @@ object ApplicationSpec : Spek({
 
                 val consoleManager by createForEachTest { mock<ConsoleManager>() }
                 val errorConsole by createForEachTest { mock<Console>() }
+                val wrapperCache by createForEachTest { mock<WrapperCache>() }
 
                 val extendedDependencies by createForEachTest {
                     Kodein.direct {
@@ -97,6 +99,7 @@ object ApplicationSpec : Spek({
                         bind<LoggerFactory>() with instance(loggerFactory)
                         bind<Console>(StreamType.Error) with instance(errorConsole)
                         bind<ConsoleManager>() with instance(consoleManager)
+                        bind<WrapperCache>() with instance(wrapperCache)
                     }
                 }
 
@@ -130,10 +133,11 @@ object ApplicationSpec : Spek({
                             assertThat(exitCode, equalTo(123))
                         }
 
-                        it("logs information about the application and enables console escape sequences before running the command") {
-                            inOrder(command, applicationInfoLogger, consoleManager) {
+                        it("logs information about the application, enables console escape sequences and updates the last used time for the wrapper script before running the command") {
+                            inOrder(consoleManager, applicationInfoLogger, wrapperCache, command) {
                                 verify(applicationInfoLogger).logApplicationInfo(args)
                                 verify(consoleManager).enableConsoleEscapeSequences()
+                                verify(wrapperCache).setLastUsedForCurrentVersion()
                                 verify(command).run()
                             }
                         }

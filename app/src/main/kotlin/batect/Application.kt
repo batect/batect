@@ -28,6 +28,7 @@ import batect.os.ConsoleManager
 import batect.os.SystemInfo
 import batect.ui.Console
 import batect.ui.text.Text
+import batect.wrapper.WrapperCache
 import org.kodein.di.DKodein
 import org.kodein.di.DKodeinAware
 import org.kodein.di.generic.instance
@@ -72,12 +73,14 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
         val logger = extendedKodein.logger<Application>()
         val consoleManager = extendedKodein.instance<ConsoleManager>()
         val errorConsole = extendedKodein.instance<Console>(StreamType.Error)
+        val wrapperCache = extendedKodein.instance<WrapperCache>()
 
         try {
             val applicationInfoLogger = extendedKodein.instance<ApplicationInfoLogger>()
             applicationInfoLogger.logApplicationInfo(args)
 
             consoleManager.enableConsoleEscapeSequences()
+            wrapperCache.setLastUsedForCurrentVersion()
 
             val command = commandFactory.createCommand(options, extendedKodein)
             return command.run()

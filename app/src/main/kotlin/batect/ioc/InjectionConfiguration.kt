@@ -122,6 +122,7 @@ import batect.updates.UpdateInfoDownloader
 import batect.updates.UpdateInfoStorage
 import batect.updates.UpdateInfoUpdater
 import batect.updates.UpdateNotifier
+import batect.wrapper.WrapperCache
 import com.hypirion.io.RevivableInputStream
 import jnr.ffi.Platform
 import jnr.posix.POSIX
@@ -160,6 +161,7 @@ fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStrea
     import(osModule)
     import(uiModule)
     import(updatesModule)
+    import(wrapperModule)
     import(coreModule)
 
     if (Platform.getNativePlatform().os in setOf(Platform.OS.DARWIN, Platform.OS.LINUX)) {
@@ -358,6 +360,10 @@ private val updatesModule = Kodein.Module("updates") {
     bind<UpdateInfoStorage>() with singletonWithLogger { logger -> UpdateInfoStorage(instance(), logger) }
     bind<UpdateInfoUpdater>() with singletonWithLogger { logger -> UpdateInfoUpdater(instance(), instance(), logger) }
     bind<UpdateNotifier>() with singletonWithLogger { logger -> UpdateNotifier(commandLineOptions().disableUpdateNotification, instance(), instance(), instance(), instance(StreamType.Output), logger) }
+}
+
+private val wrapperModule = Kodein.Module("wrapper") {
+    bind<WrapperCache>() with singletonWithLogger { logger -> WrapperCache(instance(), instance(), logger) }
 }
 
 private val coreModule = Kodein.Module("core") {

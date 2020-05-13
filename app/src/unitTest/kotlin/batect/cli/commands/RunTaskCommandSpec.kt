@@ -46,6 +46,7 @@ import batect.testutils.withSeverity
 import batect.ui.Console
 import batect.ui.text.Text
 import batect.updates.UpdateNotifier
+import batect.wrapper.WrapperCacheCleanupTask
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
@@ -86,6 +87,7 @@ object RunTaskCommandSpec : Spek({
             }
 
             val updateNotifier by createForEachTest { mock<UpdateNotifier>() }
+            val wrapperCacheCleanupTask by createForEachTest { mock<WrapperCacheCleanupTask>() }
             val console by createForEachTest { mock<Console>() }
             val errorConsole by createForEachTest { mock<Console>() }
             val taskRunner by createForEachTest { mock<TaskRunner>() }
@@ -114,7 +116,7 @@ object RunTaskCommandSpec : Spek({
                                 whenever(taskRunner.run(mainTask, runOptions)).thenReturn(expectedTaskExitCode)
                             }
 
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, wrapperCacheCleanupTask, dockerSystemInfoClient, console, errorConsole, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the task") {
@@ -136,6 +138,13 @@ object RunTaskCommandSpec : Spek({
                                 }
                             }
 
+                            it("triggers wrapper cache cleanup before running the task") {
+                                inOrder(wrapperCacheCleanupTask, taskRunner) {
+                                    verify(wrapperCacheCleanupTask).start()
+                                    verify(taskRunner).run(any(), any())
+                                }
+                            }
+
                             it("does not print anything to the error console") {
                                 verifyZeroInteractions(errorConsole)
                             }
@@ -146,7 +155,7 @@ object RunTaskCommandSpec : Spek({
                                 whenever(taskRunner.run(mainTask, runOptions)).thenReturn(0)
                             }
 
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, wrapperCacheCleanupTask, dockerSystemInfoClient, console, errorConsole, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the task") {
@@ -164,6 +173,13 @@ object RunTaskCommandSpec : Spek({
                             it("displays any update notifications before running the task") {
                                 inOrder(taskRunner, updateNotifier) {
                                     verify(updateNotifier).run()
+                                    verify(taskRunner).run(any(), any())
+                                }
+                            }
+
+                            it("triggers wrapper cache cleanup before running the task") {
+                                inOrder(wrapperCacheCleanupTask, taskRunner) {
+                                    verify(wrapperCacheCleanupTask).start()
                                     verify(taskRunner).run(any(), any())
                                 }
                             }
@@ -188,7 +204,7 @@ object RunTaskCommandSpec : Spek({
                                 whenever(taskRunner.run(mainTask, runOptions)).thenReturn(expectedTaskExitCode)
                             }
 
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, wrapperCacheCleanupTask, dockerSystemInfoClient, console, errorConsole, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the dependency task with cleanup on success enabled") {
@@ -218,6 +234,13 @@ object RunTaskCommandSpec : Spek({
                                 }
                             }
 
+                            it("triggers wrapper cache cleanup before running the task") {
+                                inOrder(wrapperCacheCleanupTask, taskRunner) {
+                                    verify(wrapperCacheCleanupTask).start()
+                                    verify(taskRunner, atLeastOnce()).run(any(), any())
+                                }
+                            }
+
                             it("does not print anything to the error console") {
                                 verifyZeroInteractions(errorConsole)
                             }
@@ -228,7 +251,7 @@ object RunTaskCommandSpec : Spek({
                                 whenever(taskRunner.run(otherTask, runOptionsForOtherTask)).thenReturn(1)
                             }
 
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, wrapperCacheCleanupTask, dockerSystemInfoClient, console, errorConsole, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the dependency task") {
@@ -250,6 +273,13 @@ object RunTaskCommandSpec : Spek({
                                 }
                             }
 
+                            it("triggers wrapper cache cleanup before running the task") {
+                                inOrder(wrapperCacheCleanupTask, taskRunner) {
+                                    verify(wrapperCacheCleanupTask).start()
+                                    verify(taskRunner).run(any(), any())
+                                }
+                            }
+
                             it("does not print anything to the error console") {
                                 verifyZeroInteractions(errorConsole)
                             }
@@ -262,7 +292,7 @@ object RunTaskCommandSpec : Spek({
                             on { resolveExecutionOrder(configWithImageOverrides, taskName) } doThrow exception
                         }
 
-                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
+                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, wrapperCacheCleanupTask, dockerSystemInfoClient, console, errorConsole, logger) }
                         val exitCode by runForEachTest { command.run() }
 
                         it("prints a message to the output") {
@@ -285,7 +315,7 @@ object RunTaskCommandSpec : Spek({
                         on { checkConnectivity() } doReturn DockerConnectivityCheckResult.Failed("Something went wrong.")
                     }
 
-                    val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, dockerSystemInfoClient, console, errorConsole, logger) }
+                    val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, sessionKodeinFactory, updateNotifier, wrapperCacheCleanupTask, dockerSystemInfoClient, console, errorConsole, logger) }
                     val exitCode by runForEachTest { command.run() }
 
                     it("prints a message to the output") {

@@ -23,13 +23,8 @@ class UpdateInfoUpdater(
     private val updateInfoDownloader: UpdateInfoDownloader,
     private val updateInfoStorage: UpdateInfoStorage,
     private val logger: Logger,
-    private val threadRunner: (BackgroundProcess) -> Unit
+    private val threadRunner: ThreadRunner = defaultThreadRunner
 ) {
-    constructor(updateInfoDownloader: UpdateInfoDownloader, updateInfoStorage: UpdateInfoStorage, logger: Logger)
-        : this(updateInfoDownloader, updateInfoStorage, logger, { code ->
-        thread(start = true, isDaemon = true, name = UpdateInfoUpdater::class.qualifiedName, block = code)
-    })
-
     fun updateCachedInfo() {
         threadRunner {
             try {
@@ -43,6 +38,11 @@ class UpdateInfoUpdater(
             }
         }
     }
+
+    companion object {
+        private val defaultThreadRunner: ThreadRunner = { block -> thread(isDaemon = true, name = UpdateInfoUpdater::class.qualifiedName, block = block) }
+    }
 }
 
+typealias ThreadRunner = (BackgroundProcess) -> Unit
 typealias BackgroundProcess = () -> Unit

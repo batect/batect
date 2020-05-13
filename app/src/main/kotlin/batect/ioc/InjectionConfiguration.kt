@@ -123,6 +123,7 @@ import batect.updates.UpdateInfoStorage
 import batect.updates.UpdateInfoUpdater
 import batect.updates.UpdateNotifier
 import batect.wrapper.WrapperCache
+import batect.wrapper.WrapperCacheCleanupTask
 import com.hypirion.io.RevivableInputStream
 import jnr.ffi.Platform
 import jnr.posix.POSIX
@@ -182,6 +183,7 @@ private val cliModule = Kodein.Module("cli") {
         RunTaskCommand(
             commandLineOptions().configurationFileName,
             instance(RunOptionsType.Overall),
+            instance(),
             instance(),
             instance(),
             instance(),
@@ -364,6 +366,7 @@ private val updatesModule = Kodein.Module("updates") {
 
 private val wrapperModule = Kodein.Module("wrapper") {
     bind<WrapperCache>() with singletonWithLogger { logger -> WrapperCache(instance(), instance(), logger) }
+    bind<WrapperCacheCleanupTask>() with singletonWithLogger { logger -> WrapperCacheCleanupTask(instance(), instance(), logger) }
 }
 
 private val coreModule = Kodein.Module("core") {

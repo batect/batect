@@ -33,20 +33,22 @@ import batect.logging.Logger
 import batect.ui.Console
 import batect.ui.text.Text
 import batect.updates.UpdateNotifier
+import batect.wrapper.WrapperCacheCleanupTask
 import org.kodein.di.generic.instance
 import java.nio.file.Path
 
 class RunTaskCommand(
-    val configFile: Path,
-    val runOptions: RunOptions,
-    val configLoader: ConfigurationLoader,
-    val taskExecutionOrderResolver: TaskExecutionOrderResolver,
-    val sessionKodeinFactory: SessionKodeinFactory,
-    val updateNotifier: UpdateNotifier,
-    val dockerSystemInfoClient: DockerSystemInfoClient,
-    val console: Console,
-    val errorConsole: Console,
-    val logger: Logger
+    private val configFile: Path,
+    private val runOptions: RunOptions,
+    private val configLoader: ConfigurationLoader,
+    private val taskExecutionOrderResolver: TaskExecutionOrderResolver,
+    private val sessionKodeinFactory: SessionKodeinFactory,
+    private val updateNotifier: UpdateNotifier,
+    private val wrapperCacheCleanupTask: WrapperCacheCleanupTask,
+    private val dockerSystemInfoClient: DockerSystemInfoClient,
+    private val console: Console,
+    private val errorConsole: Console,
+    private val logger: Logger
 ) : Command {
 
     override fun run(): Int {
@@ -75,6 +77,7 @@ class RunTaskCommand(
             val tasks = taskExecutionOrderResolver.resolveExecutionOrder(config, runOptions.taskName)
 
             updateNotifier.run()
+            wrapperCacheCleanupTask.start()
 
             return runTasks(config, tasks, containerType)
         } catch (e: TaskExecutionOrderResolutionException) {

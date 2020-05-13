@@ -160,6 +160,12 @@ class WrapperCache(
         // Delete the last used time file last so that it is preserved (where possible) if this method is interrupted
         Files.deleteIfExists(cachedWrapper.cacheDirectory.resolve("lastUsed"))
         Files.delete(cachedWrapper.cacheDirectory)
+
+        logger.info {
+            message("Cached version deleted.")
+            data("version", cachedWrapper.version)
+            data("versionDirectory", cachedWrapper.cacheDirectory)
+        }
     }
 
     companion object {

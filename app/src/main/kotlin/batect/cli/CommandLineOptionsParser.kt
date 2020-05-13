@@ -64,6 +64,7 @@ class CommandLineOptionsParser(
 
     private val disableColorOutput: Boolean by flagOption(outputOptionsGroup, "no-color", "Disable colored output from batect. Does not affect task command output. Implies --output=simple unless overridden.")
     private val disableUpdateNotification: Boolean by flagOption(executionOptionsGroup, "no-update-notification", "Disable checking for updates to batect and notifying you when a new version is available.")
+    private val disableWrapperCacheCleanup: Boolean by flagOption(executionOptionsGroup, "no-wrapper-cache-cleanup", "Disable cleaning up downloaded versions of batect that have not been used recently.")
 
     private val configurationFileName: Path by valueOption(
         executionOptionsGroup,
@@ -258,6 +259,7 @@ class CommandLineOptionsParser(
         requestedOutputStyle = requestedOutputStyle,
         disableColorOutput = disableColorOutput,
         disableUpdateNotification = disableUpdateNotification,
+        disableWrapperCacheCleanup = disableWrapperCacheCleanup,
         disableCleanupAfterFailure = disableCleanupAfterFailure || disableCleanup,
         disableCleanupAfterSuccess = disableCleanupAfterSuccess || disableCleanup,
         dontPropagateProxyEnvironmentVariables = dontPropagateProxyEnvironmentVariables,

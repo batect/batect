@@ -251,6 +251,12 @@ batect automatically checks for updates at most once every 24 hours and displays
 
 Passing this flag will disable both the update check and notification.
 
+### Disable wrapper cache cleanup <small>(`--no-wrapper-cache-cleanup`)</small>
+
+batect automatically removes old versions of itself that have been downloaded and cached locally if they haven't been used in 30 days.
+
+Passing this flag will disable this cleanup process. You can manually remove these files from `~/.batect/cache` yourself at any time.
+
 ### Force a particular output style <small>(`--output` or `-o`)</small>
 
 batect offers four styles of output:

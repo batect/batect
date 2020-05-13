@@ -366,7 +366,7 @@ private val updatesModule = Kodein.Module("updates") {
 
 private val wrapperModule = Kodein.Module("wrapper") {
     bind<WrapperCache>() with singletonWithLogger { logger -> WrapperCache(instance(), instance(), logger) }
-    bind<WrapperCacheCleanupTask>() with singletonWithLogger { logger -> WrapperCacheCleanupTask(instance(), instance(), logger) }
+    bind<WrapperCacheCleanupTask>() with singletonWithLogger { logger -> WrapperCacheCleanupTask(!commandLineOptions().disableWrapperCacheCleanup, instance(), instance(), logger) }
 }
 
 private val coreModule = Kodein.Module("core") {

@@ -180,6 +180,7 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--output=fancy", "some-task") to defaultCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Fancy, taskName = "some-task"),
             listOf("--no-color", "some-task") to defaultCommandLineOptions.copy(disableColorOutput = true, taskName = "some-task"),
             listOf("--no-update-notification", "some-task") to defaultCommandLineOptions.copy(disableUpdateNotification = true, taskName = "some-task"),
+            listOf("--no-wrapper-cache-cleanup", "some-task") to defaultCommandLineOptions.copy(disableWrapperCacheCleanup = true, taskName = "some-task"),
             listOf("--no-cleanup-after-failure", "some-task") to defaultCommandLineOptions.copy(disableCleanupAfterFailure = true, taskName = "some-task"),
             listOf("--no-cleanup-after-success", "some-task") to defaultCommandLineOptions.copy(disableCleanupAfterSuccess = true, taskName = "some-task"),
             listOf("--no-cleanup", "some-task") to defaultCommandLineOptions.copy(disableCleanupAfterFailure = true, disableCleanupAfterSuccess = true, taskName = "some-task"),

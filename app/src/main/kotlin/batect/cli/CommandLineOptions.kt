@@ -44,6 +44,7 @@ data class CommandLineOptions(
     val requestedOutputStyle: OutputStyle? = null,
     val disableColorOutput: Boolean = false,
     val disableUpdateNotification: Boolean = false,
+    val disableWrapperCacheCleanup: Boolean = false,
     val disableCleanupAfterFailure: Boolean = false,
     val disableCleanupAfterSuccess: Boolean = false,
     val dontPropagateProxyEnvironmentVariables: Boolean = false,

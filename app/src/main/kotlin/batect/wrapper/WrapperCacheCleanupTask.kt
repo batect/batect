@@ -23,6 +23,7 @@ import java.time.ZonedDateTime
 import kotlin.concurrent.thread
 
 class WrapperCacheCleanupTask(
+    private val enabled: Boolean,
     private val wrapperCache: WrapperCache,
     private val versionInfo: VersionInfo,
     private val logger: Logger,
@@ -30,6 +31,14 @@ class WrapperCacheCleanupTask(
     private val timeSource: TimeSource = ZonedDateTime::now
 ) {
     fun start() {
+        if (!enabled) {
+            logger.info {
+                message("Wrapper cache cleanup disabled, not running cleanup task.")
+            }
+
+            return
+        }
+
         threadRunner {
             val allVersions = wrapperCache.getCachedVersions()
 

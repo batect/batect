@@ -72,6 +72,7 @@ nav:
     - Seq: "tools/Seq.md"
 
   - Using batect with CI systems:
+    - Buildkite: "tools/Buildkite.md"
     - CircleCI: "tools/CircleCI.md"
     - GitHub Actions: "tools/GitHubActions.md"
     - Travis CI: "tools/TravisCI.md"

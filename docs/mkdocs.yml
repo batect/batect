@@ -62,16 +62,18 @@ nav:
 
   - Task lifecycle: "TaskLifecycle.md"
 
-  - Language and tool-specific information:
+  - Using batect with languages and developer tools:
     - .NET Core: "tools/DotNetCore.md"
-    - CircleCI: "tools/CircleCI.md"
     - Docker: "tools/Docker.md"
-    - GitHub Actions: "tools/GitHubActions.md"
     - Golang: "tools/Golang.md"
     - Gradle: "tools/Gradle.md"
     - Node.js: "tools/Node.md"
     - Ruby: "tools/Ruby.md"
     - Seq: "tools/Seq.md"
+
+  - Using batect with CI systems:
+    - CircleCI: "tools/CircleCI.md"
+    - GitHub Actions: "tools/GitHubActions.md"
     - Travis CI: "tools/TravisCI.md"
 
   - Tips and tricks:

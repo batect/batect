@@ -26,8 +26,9 @@ configurations {
     journeyTestRuntimeOnly.extendsFrom testRuntimeOnly
 }
 
-task journeyTest(type: Test) {
-    description 'Runs the journey tests.'
+abstract class JourneyTest extends Test {}
+
+tasks.withType(JourneyTest) {
     group 'Verification'
     testClassesDirs = sourceSets.journeyTest.output.classesDirs
     classpath = sourceSets.journeyTest.runtimeClasspath
@@ -36,10 +37,26 @@ task journeyTest(type: Test) {
     dependsOn installShadowDist
 
     inputs.files installShadowDist
+}
 
-    if (project.properties.containsKey("windowsContainers")) {
-        include 'batect/journeytests/windowscontainers/**'
-    } else {
-        exclude 'batect/journeytests/windowscontainers/**'
-    }
+task journeyTestWindowsContainers(type: JourneyTest) {
+    description 'Runs the journey tests for Windows containers.'
+
+    include 'batect/journeytests/windowscontainers/**'
+    onlyIf { project.properties.containsKey("windowsContainers") }
+}
+
+task journeyTestLinuxContainers(type: JourneyTest) {
+    description 'Runs the journey tests for Linux containers.'
+
+    exclude 'batect/journeytests/windowscontainers/**'
+    onlyIf { !project.properties.containsKey("windowsContainers") }
+}
+
+task journeyTest {
+    description 'Runs the journey tests.'
+    group 'Verification'
+
+    dependsOn journeyTestWindowsContainers
+    dependsOn journeyTestLinuxContainers
 }

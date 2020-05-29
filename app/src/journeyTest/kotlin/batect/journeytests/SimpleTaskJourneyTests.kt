@@ -26,7 +26,7 @@ import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-abstract class SimpleTaskJourneyTest(val testName: String, val description: String): Spek({
+abstract class SimpleTaskJourneyTest(val testName: String, val description: String) : Spek({
     describe(description) {
         val runner by createForGroup { ApplicationRunner(testName) }
 
@@ -44,17 +44,17 @@ abstract class SimpleTaskJourneyTest(val testName: String, val description: Stri
     }
 })
 
-object SimpleTaskUsingDockerfileJourneyTest : SimpleTaskJourneyTest("simple-task-using-dockerfile", "a simple task that uses a Dockerfile with the command specified on the task in the configuration file")
-object SimpleTaskUsingImageJourneyTest : SimpleTaskJourneyTest("simple-task-using-image", "a simple task that uses an existing image")
-object SimpleTaskUsingCustomDockerfileJourneyTest : SimpleTaskJourneyTest("simple-task-using-custom-dockerfile", "a simple task that uses a Dockerfile in a non-standard location")
-object SimpleTaskUsingDockerfileCommandJourneyTest : SimpleTaskJourneyTest("simple-task-dockerfile-command", "a simple task with the command specified in the Dockerfile")
-object SimpleTaskUsingContainerCommandJourneyTest : SimpleTaskJourneyTest("simple-task-container-command", "a simple task with the command specified on the container in the configuration file")
-object SimpleTaskWithEntrypointOnContainerJourneyTest : SimpleTaskJourneyTest("simple-task-entrypoint-on-container", "a simple task with an entrypoint specified on the container in the configuration file")
-object SimpleTaskWithEntrypointOnTaskJourneyTest : SimpleTaskJourneyTest("simple-task-entrypoint-on-task", "a simple task with an entrypoint specified on the task in the configuration file")
-object SimpleTaskWithEnvironmentJourneyTest : SimpleTaskJourneyTest("simple-task-with-environment", "a simple task with a task-level environment variable")
+object TaskUsingDockerfileJourneyTest : SimpleTaskJourneyTest("simple-task-using-dockerfile", "a task that uses a Dockerfile with the command specified on the task in the configuration file")
+object TaskUsingImageJourneyTest : SimpleTaskJourneyTest("simple-task-using-image", "a task that uses an existing image")
+object ContainerWithCustomDockerfileJourneyTest : SimpleTaskJourneyTest("container-with-custom-dockerfile", "a task that uses a Dockerfile in a non-standard location")
+object TaskUsingDockerfileCommandJourneyTest : SimpleTaskJourneyTest("dockerfile-command", "a task with the command specified in the Dockerfile")
+object TaskUsingContainerCommandJourneyTest : SimpleTaskJourneyTest("container-command", "a task with the command specified on the container in the configuration file")
+object TaskWithEntrypointOnContainerJourneyTest : SimpleTaskJourneyTest("entrypoint-on-container", "a task with an entrypoint specified on the container in the configuration file")
+object TaskWithEntrypointOnTaskJourneyTest : SimpleTaskJourneyTest("entrypoint-on-task", "a task with an entrypoint specified on the task in the configuration file")
+object TaskWithEnvironmentJourneyTest : SimpleTaskJourneyTest("task-with-environment", "a task with a task-level environment variable")
 object ContainerWithHealthCheckOverridesJourneyTest : SimpleTaskJourneyTest("container-with-health-check-overrides", "a task with a dependency container that has a batect-specific health check configuration")
 object BuildImageWithDockerignoreJourneyTest : SimpleTaskJourneyTest("build-image-dockerignore", "a task that builds an image with a .dockerignore file")
-object SimpleTaskUsingDockerfileWithAddFromUrlJourneyTest : SimpleTaskJourneyTest("simple-task-using-dockerfile-with-add-from-url", "a simple task that uses a Dockerfile with an ADD command that downloads a file from a URL")
-object DependencyContainerWithSetupCommandJourneyTest : SimpleTaskJourneyTest("dependency-container-with-setup-command", "a simple task that uses a setup command on a dependency container")
-object TaskContainerWithSetupCommandJourneyTest : SimpleTaskJourneyTest("task-container-with-setup-command", "a simple task that uses a setup command on the task container")
+object DockerfileWithAddFromUrlJourneyTest : SimpleTaskJourneyTest("dockerfile-with-add-from-url", "a task that uses a Dockerfile with an ADD command that downloads a file from a URL")
+object DependencyContainerWithSetupCommandJourneyTest : SimpleTaskJourneyTest("dependency-container-with-setup-command", "a task that uses a setup command on a dependency container")
+object TaskContainerWithSetupCommandJourneyTest : SimpleTaskJourneyTest("task-container-with-setup-command", "a task that uses a setup command on the task container")
 object ConfigWithIncludesJourneyTest : SimpleTaskJourneyTest("config-with-includes", "a configuration file that uses includes")

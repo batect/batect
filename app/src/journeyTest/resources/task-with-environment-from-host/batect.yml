@@ -1,4 +1,4 @@
-project_name: simple-task-with-environment-from-host-task
+project_name: task-with-environment-from-host-task
 
 containers:
   build-env:

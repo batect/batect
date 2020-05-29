@@ -94,13 +94,13 @@ update_configs:
 
   - package_manager: docker
     update_schedule: daily
-    directory: app/src/journeyTest/resources/simple-task-dockerfile-command/build-env
+    directory: app/src/journeyTest/resources/dockerfile-command/build-env
     default_labels:
       - is:dependency-update
 
   - package_manager: docker
     update_schedule: daily
-    directory: app/src/journeyTest/resources/simple-task-using-dockerfile-with-add-from-url/build-env
+    directory: app/src/journeyTest/resources/dockerfile-with-add-from-url/build-env
     default_labels:
       - is:dependency-update
 

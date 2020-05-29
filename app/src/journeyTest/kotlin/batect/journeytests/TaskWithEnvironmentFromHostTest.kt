@@ -26,15 +26,15 @@ import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object SimpleTaskUsingLogDriverTest : Spek({
-    describe("a simple task with a log driver that does not support streaming output") {
-        val runner by createForGroup { ApplicationRunner("simple-task-using-log-driver") }
+object TaskWithEnvironmentFromHostTest : Spek({
+    describe("a task with an environment variable from the host") {
+        val runner by createForGroup { ApplicationRunner("task-with-environment-from-host") }
 
         on("running that task") {
-            val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
+            val result by runBeforeGroup { runner.runApplication(listOf("the-task"), mapOf("MESSAGE" to "This is some output from the environment variable")) }
 
             it("prints the output from that task") {
-                assertThat(result.output, containsSubstring("Error attaching: configured logging driver does not support reading"))
+                assertThat(result.output, containsSubstring("This is some output from the environment variable\nThis is the default message\n"))
             }
 
             it("returns the exit code from that task") {

@@ -1,9 +1,11 @@
-project_name: simple-task-using-custom-dockerfile-test
+project_name: task-using-log-driver-test
 
 containers:
   build-env:
-    build_directory: build-env
-    dockerfile: my-special-dockerfile
+    image: alpine:3.6
+    log_driver: gelf
+    log_options:
+      gelf-address: udp://localhost:12201
 
 tasks:
   the-task:

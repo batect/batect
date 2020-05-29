@@ -1,4 +1,4 @@
-project_name: simple-task-container-command-test
+project_name: container-command-test
 
 containers:
   build-env:

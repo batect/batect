@@ -1,9 +1,8 @@
-project_name: simple-task-entrypoint-on-container
+project_name: entrypoint-on-task
 
 containers:
   build-env:
     image: alpine:3.5
-    entrypoint: sh -c
     command: |
       "echo 'This is some output from the task' && exit 123"
 
@@ -11,3 +10,4 @@ tasks:
   the-task:
     run:
       container: build-env
+      entrypoint: sh -c

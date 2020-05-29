@@ -1,4 +1,4 @@
-project_name: simple-task-with-environment-task
+project_name: task-with-environment-task
 
 containers:
   build-env:

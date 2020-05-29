@@ -1,4 +1,4 @@
-project_name: simple-task-using-dockerfile-with-add-from-url-test
+project_name: dockerfile-with-add-from-url-test
 
 containers:
   build-env:

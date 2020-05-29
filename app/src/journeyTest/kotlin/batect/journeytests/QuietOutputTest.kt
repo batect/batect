@@ -17,8 +17,6 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.journeytests.testutils.itCleansUpAllContainersItCreates
-import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.platformLineSeparator

@@ -39,18 +39,42 @@ tasks.withType(JourneyTest) {
     inputs.files installShadowDist
 }
 
+def windowsTests = 'batect/journeytests/windowscontainers/**'
+def cleanupTests = 'batect/journeytests/cleanup/**'
+
 task journeyTestWindowsContainers(type: JourneyTest) {
     description 'Runs the journey tests for Windows containers.'
 
-    include 'batect/journeytests/windowscontainers/**'
+    include windowsTests
+
     onlyIf { project.properties.containsKey("windowsContainers") }
 }
 
-task journeyTestLinuxContainers(type: JourneyTest) {
+task journeyTestLinuxContainersParallelisable(type: JourneyTest) {
     description 'Runs the journey tests for Linux containers.'
 
-    exclude 'batect/journeytests/windowscontainers/**'
+    exclude windowsTests
+    exclude cleanupTests
+
     onlyIf { !project.properties.containsKey("windowsContainers") }
+
+    maxParallelForks = 2
+}
+
+task journeyTestLinuxContainersNonParallelisable(type: JourneyTest) {
+    description 'Runs the journey tests for Linux containers.'
+
+    include cleanupTests
+
+    onlyIf { !project.properties.containsKey("windowsContainers") }
+}
+
+task journeyTestLinuxContainers {
+    description 'Runs the journey tests for Linux containers.'
+    group 'Verification'
+
+    dependsOn journeyTestLinuxContainersParallelisable
+    dependsOn journeyTestLinuxContainersNonParallelisable
 }
 
 task journeyTest {

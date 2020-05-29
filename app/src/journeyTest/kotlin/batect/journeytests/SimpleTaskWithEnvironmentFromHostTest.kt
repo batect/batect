@@ -42,9 +42,6 @@ object SimpleTaskWithEnvironmentFromHostTest : Spek({
             it("returns the exit code from that task") {
                 assertThat(result.exitCode, equalTo(123))
             }
-
-            itCleansUpAllContainersItCreates { result }
-            itCleansUpAllNetworksItCreates { result }
         }
     }
 })

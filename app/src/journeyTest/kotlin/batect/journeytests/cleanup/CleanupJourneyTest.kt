@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.journeytests
+package batect.journeytests.cleanup
 
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.itCleansUpAllContainersItCreates
@@ -28,20 +28,23 @@ import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object TaskWithSlowHealthyDependencyJourneyTest : Spek({
-    describe("a task with a healthy dependency that takes a long time to become healthy") {
-        val runner by createForGroup { ApplicationRunner("task-with-slow-healthy-dependency") }
+object CleanupJourneyTest : Spek({
+    describe("cleaning up after a task") {
+        val runner by createForGroup { ApplicationRunner("simple-task-using-image") }
 
         on("running that task") {
             val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
-            it("displays the output from that task") {
-                assertThat(result.output, containsSubstring("Started!"))
+            it("prints the output from that task") {
+                assertThat(result.output, containsSubstring("This is some output from the task\n"))
             }
 
             it("returns the exit code from that task") {
-                assertThat(result.exitCode, equalTo(0))
+                assertThat(result.exitCode, equalTo(123))
             }
+
+            itCleansUpAllContainersItCreates { result }
+            itCleansUpAllNetworksItCreates { result }
         }
     }
 })

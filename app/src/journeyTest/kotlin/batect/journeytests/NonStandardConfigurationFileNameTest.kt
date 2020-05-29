@@ -59,9 +59,6 @@ object NonStandardConfigurationFileNameTest : Spek({
             it("returns the exit code from the task") {
                 assertThat(result.exitCode, equalTo(123))
             }
-
-            itCleansUpAllContainersItCreates { result }
-            itCleansUpAllNetworksItCreates { result }
         }
     }
 })

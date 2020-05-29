@@ -52,9 +52,6 @@ object TaskWithUnhealthyDependencyTest : Spek({
             it("returns a non-zero exit code") {
                 assertThat(result.exitCode, !equalTo(0))
             }
-
-            itCleansUpAllContainersItCreates { result }
-            itCleansUpAllNetworksItCreates { result }
         }
     }
 })

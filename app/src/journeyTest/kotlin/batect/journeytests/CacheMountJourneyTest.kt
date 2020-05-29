@@ -71,11 +71,6 @@ object CacheMountJourneyTest : Spek({
                     it("should succeed on the second run") {
                         assertThat(secondResult.exitCode, equalTo(0))
                     }
-
-                    itCleansUpAllContainersItCreates { firstResult }
-                    itCleansUpAllNetworksItCreates { firstResult }
-                    itCleansUpAllContainersItCreates { secondResult }
-                    itCleansUpAllNetworksItCreates { secondResult }
                 }
             }
         }

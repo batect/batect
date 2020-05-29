@@ -47,9 +47,6 @@ object TaskWithOnlyPrerequisiteTest : Spek({
             it("returns a zero exit code") {
                 assertThat(result.exitCode, equalTo(0))
             }
-
-            itCleansUpAllContainersItCreates { result }
-            itCleansUpAllNetworksItCreates { result }
         }
     }
 })

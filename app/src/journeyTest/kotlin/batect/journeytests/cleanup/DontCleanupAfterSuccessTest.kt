@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.journeytests
+package batect.journeytests.cleanup
 
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.DockerUtils
@@ -32,9 +32,9 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.InputStreamReader
 
-object DontCleanupAfterDependencyStartupFailureTest : Spek({
-    describe("a task with an unhealthy dependency") {
-        val runner by createForGroup { ApplicationRunner("task-with-unhealthy-dependency") }
+object DontCleanupAfterSuccessTest : Spek({
+    describe("a task with a prerequisite") {
+        val runner by createForGroup { ApplicationRunner("task-with-prerequisite") }
         val cleanupCommands by createForGroup { mutableListOf<String>() }
         val containersBeforeTest by runBeforeGroup { DockerUtils.getAllCreatedContainers() }
         val networksBeforeTest by runBeforeGroup { DockerUtils.getAllNetworks() }
@@ -59,10 +59,10 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
             assertThat(orphanedNetworks, isEmpty)
         }
 
-        on("running that task with the '--no-cleanup-on-failure' option") {
-            val result by runBeforeGroup { runner.runApplication(listOf("--no-cleanup-after-failure", "--no-color", "the-task")) }
-            val commandsRegex = """For container http-server, view its output by running '(?<logsCommand>docker logs (?<id>.*))', or run a command in the container with 'docker exec -it \2 <command>'\.""".toRegex()
-            val cleanupRegex = """Once you have finished investigating the issue, clean up all temporary resources created by batect by running:$platformLineSeparator(?<command>(.|$platformLineSeparator)+)$platformLineSeparator$platformLineSeparator""".toRegex()
+        on("running that task with the '--no-cleanup-on-success' option") {
+            val result by runBeforeGroup { runner.runApplication(listOf("--no-cleanup-after-success", "--no-color", "do-stuff")) }
+            val commandsRegex = """For container build-env, view its output by running '(?<logsCommand>docker logs (?<id>.*))', or run a command in the container with '(.*)'\.""".toRegex()
+            val cleanupRegex = """Once you have finished using the containers, clean up all temporary resources created by batect by running:$platformLineSeparator(?<command>(.|$platformLineSeparator)+)$platformLineSeparator""".toRegex()
 
             beforeGroup {
                 val cleanupCommand = cleanupRegex.find(result.output)?.groups?.get("command")?.value
@@ -72,15 +72,23 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
                 }
             }
 
-            it("does not execute the task") {
-                assertThat(result.output, !containsSubstring("This task should never be executed!"))
+            it("prints the output from the main task") {
+                assertThat(result.output, containsSubstring("This is some output from the main task\n"))
             }
 
-            it("prints a message explaining what happened and what to do about it") {
-                assertThat(result.output, containsSubstring("Container http-server did not become healthy.${platformLineSeparator}The configured health check did not indicate that the container was healthy within the timeout period."))
+            it("prints the output from the prerequisite task") {
+                assertThat(result.output, containsSubstring("This is some output from the build task\n"))
             }
 
-            it("prints a message explaining how to see the logs of that dependency and how to run a command in the container") {
+            it("returns a non-zero exit code") {
+                assertThat(result.exitCode, !equalTo(0))
+            }
+
+            it("does not return the exit code from the task") {
+                assertThat(result.exitCode, !equalTo(123))
+            }
+
+            it("prints a message explaining how to see the logs of the container and how to run a command in the container") {
                 assertThat(result.output, contains(commandsRegex))
             }
 
@@ -88,7 +96,7 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
                 assertThat(result.output, contains(cleanupRegex))
             }
 
-            it("does not stop the container") {
+            it("does not delete the container") {
                 val containerId = commandsRegex.find(result.output)?.groups?.get("id")?.value
 
                 assertThat(containerId, !absent<String>())
@@ -97,11 +105,10 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
                     .redirectErrorStream(true)
                     .start()
 
-                val output = InputStreamReader(inspectProcess.inputStream).readText().trim()
                 inspectProcess.waitFor()
 
                 assertThat(inspectProcess.exitValue(), equalTo(0))
-                assertThat(output, equalTo("running"))
+                assertThat(InputStreamReader(inspectProcess.inputStream).readText().trim(), equalTo("exited"))
             }
 
             it("the command given to view the logs displays the logs from the container") {
@@ -113,15 +120,10 @@ object DontCleanupAfterDependencyStartupFailureTest : Spek({
                     .redirectErrorStream(true)
                     .start()
 
-                val output = InputStreamReader(logsProcess.inputStream).readText().trim()
                 logsProcess.waitFor()
 
-                assertThat(output, equalTo("This is some output from the HTTP server"))
+                assertThat(InputStreamReader(logsProcess.inputStream).readText().trim(), equalTo("This is some output from the main task"))
                 assertThat(logsProcess.exitValue(), equalTo(0))
-            }
-
-            it("exits with a non-zero code") {
-                assertThat(result.exitCode, !equalTo(0))
             }
         }
     }

@@ -42,9 +42,6 @@ object PrivilegedContainerTest : Spek({
             it("runs successfully") {
                 assertThat(result.exitCode, equalTo(0))
             }
-
-            itCleansUpAllContainersItCreates { result }
-            itCleansUpAllNetworksItCreates { result }
         }
     }
 })

@@ -51,18 +51,18 @@ task journeyTestWindowsContainers(type: JourneyTest) {
 }
 
 task journeyTestLinuxContainersParallelisable(type: JourneyTest) {
-    description 'Runs the journey tests for Linux containers.'
+    description 'Runs the journey tests for Linux containers that can run in parallel.'
 
     exclude windowsTests
     exclude cleanupTests
 
     onlyIf { !project.properties.containsKey("windowsContainers") }
 
-    maxParallelForks = 2
+    maxParallelForks = 4
 }
 
 task journeyTestLinuxContainersNonParallelisable(type: JourneyTest) {
-    description 'Runs the journey tests for Linux containers.'
+    description 'Runs the journey tests for Linux containers that cannot run in parallel.'
 
     include cleanupTests
 

@@ -17,14 +17,14 @@
 package batect.journeytests.windowscontainers
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.journeytests.testutils.itCleansUpAllContainersItCreates
-import batect.journeytests.testutils.itCleansUpAllNetworksItCreates
+import batect.journeytests.testutils.DockerUtils
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.isEmpty
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -33,6 +33,8 @@ object WindowsContainerJourneyTest : Spek({
         val runner by createForGroup { ApplicationRunner("windows-container") }
 
         on("running a task") {
+            val containersBeforeTest by runBeforeGroup { DockerUtils.getAllCreatedContainers() }
+            val networksBeforeTest by runBeforeGroup { DockerUtils.getAllNetworks() }
             val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
             it("prints the output from that task") {
@@ -43,8 +45,19 @@ object WindowsContainerJourneyTest : Spek({
                 assertThat(result.exitCode, equalTo(123))
             }
 
-            itCleansUpAllContainersItCreates { result }
-            itCleansUpAllNetworksItCreates { result }
+            it("cleans up all containers it creates") {
+                val containersAfterTest = DockerUtils.getAllCreatedContainers()
+                val potentiallyOrphanedContainers = containersAfterTest - containersBeforeTest
+
+                assertThat(potentiallyOrphanedContainers, isEmpty)
+            }
+
+            it("cleans up all networks it creates") {
+                val networksAfterTest = DockerUtils.getAllNetworks()
+                val potentiallyOrphanedNetworks = networksAfterTest - networksBeforeTest
+
+                assertThat(potentiallyOrphanedNetworks, isEmpty)
+            }
         }
     }
 })

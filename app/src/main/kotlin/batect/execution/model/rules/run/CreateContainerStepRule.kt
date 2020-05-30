@@ -34,8 +34,7 @@ import batect.execution.model.steps.CreateContainerStep
 
 data class CreateContainerStepRule(
     val container: Container,
-    val config: ContainerRuntimeConfiguration,
-    val allContainersInNetwork: Set<Container>
+    val config: ContainerRuntimeConfiguration
 ) : TaskStepRule() {
     private val needToWaitForCacheInitialisation = container.volumeMounts.any { it is CacheMount }
 
@@ -54,7 +53,6 @@ data class CreateContainerStepRule(
         return TaskStepRuleEvaluationResult.Ready(CreateContainerStep(
             container,
             config,
-            allContainersInNetwork,
             image,
             network
         ))
@@ -77,7 +75,5 @@ data class CreateContainerStepRule(
 
     private fun cachesAreInitialised(pastEvents: Set<TaskEvent>) = pastEvents.contains(CachesInitialisedEvent)
 
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', " +
-        "config: $config, " +
-        "all containers in network: ${allContainersInNetwork.map { "'${it.name}'" }})"
+    override fun toString() = "${this::class.simpleName}(container: '${container.name}', config: $config)"
 }

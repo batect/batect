@@ -21,6 +21,7 @@ import batect.config.Container
 import batect.config.Expression
 import batect.config.PortMapping
 import batect.config.Task
+import batect.utils.mapToSet
 
 data class ContainerDependencyGraph(
     private val config: Configuration,
@@ -33,6 +34,7 @@ data class ContainerDependencyGraph(
 
     val taskContainerNode: ContainerDependencyGraphNode by lazy { nodeFor(config.containers[runConfiguration.container]!!) }
     val allNodes = nodesMap.values
+    val allContainers = allNodes.mapToSet { it.container }
 
     fun nodeFor(container: Container): ContainerDependencyGraphNode {
         val node = nodesMap[container] ?: throw IllegalArgumentException("Container '${container.name}' is not part of this dependency graph.")

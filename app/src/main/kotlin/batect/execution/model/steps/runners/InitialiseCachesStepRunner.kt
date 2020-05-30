@@ -32,12 +32,12 @@ import batect.docker.client.DockerContainerType
 import batect.docker.client.DockerContainersClient
 import batect.docker.client.DockerImagesClient
 import batect.execution.CancellationContext
+import batect.execution.ContainerDependencyGraph
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.VolumeMountResolver
 import batect.execution.model.events.CacheInitialisationFailedEvent
 import batect.execution.model.events.CachesInitialisedEvent
 import batect.execution.model.events.TaskEventSink
-import batect.execution.model.steps.InitialiseCachesStep
 import batect.os.Dimensions
 import batect.utils.Json
 import kotlinx.io.ByteArrayOutputStream
@@ -52,16 +52,17 @@ class InitialiseCachesStepRunner(
     private val cancellationContext: CancellationContext,
     private val containerNameGenerator: DockerContainerNameGenerator,
     private val volumeMountResolver: VolumeMountResolver,
-    private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider
+    private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
+    private val containerDependencyGraph: ContainerDependencyGraph
 ) {
-    fun run(step: InitialiseCachesStep, eventSink: TaskEventSink) {
+    fun run(eventSink: TaskEventSink) {
         if (containerType == DockerContainerType.Windows) {
             eventSink.postEvent(CachesInitialisedEvent)
             return
         }
 
         try {
-            val caches = determineCachesToInitialise(step.allContainersInTask)
+            val caches = determineCachesToInitialise()
 
             if (caches.isEmpty()) {
                 eventSink.postEvent(CachesInitialisedEvent)
@@ -85,31 +86,32 @@ class InitialiseCachesStepRunner(
         }
     }
 
-    private fun determineCachesToInitialise(containers: Set<Container>): Map<DockerVolumeMountSource.Volume, UserAndGroup?> {
+    private fun determineCachesToInitialise(): Map<DockerVolumeMountSource.Volume, UserAndGroup?> {
         val caches = mutableMapOf<DockerVolumeMountSource.Volume, UserAndGroup?>()
         val cacheConfigSource = mutableMapOf<DockerVolumeMountSource.Volume, Container>()
 
-        containers.forEach { container ->
-            val containerCacheMounts = container.volumeMounts.filterIsInstance<CacheMount>()
-            val userAndGroup = runAsCurrentUserConfigurationProvider.determineUserAndGroup(container)
+        containerDependencyGraph.allContainers
+            .forEach { container ->
+                val containerCacheMounts = container.volumeMounts.filterIsInstance<CacheMount>()
+                val userAndGroup = runAsCurrentUserConfigurationProvider.determineUserAndGroup(container)
 
-            containerCacheMounts.forEach { cache ->
-                val volumeMount = volumeMountResolver.resolve(cache)
+                containerCacheMounts.forEach { cache ->
+                    val volumeMount = volumeMountResolver.resolve(cache)
 
-                if (volumeMount.source is DockerVolumeMountSource.Volume) {
-                    val volume = volumeMount.source
+                    if (volumeMount.source is DockerVolumeMountSource.Volume) {
+                        val volume = volumeMount.source
 
-                    if (!caches.containsKey(volume)) {
-                        caches[volume] = userAndGroup
-                        cacheConfigSource[volume] = container
-                    } else if (caches[volume] != userAndGroup) {
-                        val otherContainer = cacheConfigSource.getValue(volume)
+                        if (!caches.containsKey(volume)) {
+                            caches[volume] = userAndGroup
+                            cacheConfigSource[volume] = container
+                        } else if (caches[volume] != userAndGroup) {
+                            val otherContainer = cacheConfigSource.getValue(volume)
 
-                        throw InvalidCacheConfigurationException("Containers '${otherContainer.name}' and '${container.name}' share the '${cache.name}' cache, but one has run as current user enabled and the other does not. Caches can only be shared by containers if they either both have run as current user enabled or both have it disabled.")
+                            throw InvalidCacheConfigurationException("Containers '${otherContainer.name}' and '${container.name}' share the '${cache.name}' cache, but one has run as current user enabled and the other does not. Caches can only be shared by containers if they either both have run as current user enabled or both have it disabled.")
+                        }
                     }
                 }
             }
-        }
 
         return caches
     }

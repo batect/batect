@@ -57,12 +57,11 @@ import org.spekframework.spek2.style.specification.describe
 object CreateContainerStepRunnerSpec : Spek({
     describe("running a 'create container' step") {
         val container = Container("some-container", imageSourceDoesNotMatter())
-        val otherContainer = Container("some-other-container", imageSourceDoesNotMatter())
         val image = DockerImage("some-image")
         val network = DockerNetwork("some-network")
 
         val config = mock<ContainerRuntimeConfiguration>()
-        val step = CreateContainerStep(container, config, setOf(container, otherContainer), image, network)
+        val step = CreateContainerStep(container, config, image, network)
         val request = mock<DockerContainerCreationRequest>()
 
         val containersClient by createForEachTest { mock<DockerContainersClient>() }
@@ -92,7 +91,7 @@ object CreateContainerStepRunnerSpec : Spek({
 
         val creationRequestFactory by createForEachTest {
             mock<DockerContainerCreationRequestFactory> {
-                on { create(container, image, network, config, combinedMounts, runOptions.propagateProxyEnvironmentVariables, runAsCurrentUserConfiguration.userAndGroup, "some-terminal", step.allContainersInNetwork, true, false) } doReturn request
+                on { create(container, image, network, config, combinedMounts, runOptions.propagateProxyEnvironmentVariables, runAsCurrentUserConfiguration.userAndGroup, "some-terminal", true, false) } doReturn request
             }
         }
 

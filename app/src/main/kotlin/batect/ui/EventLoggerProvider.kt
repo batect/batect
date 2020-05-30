@@ -26,7 +26,6 @@ import batect.ui.interleaved.InterleavedEventLogger
 import batect.ui.interleaved.InterleavedOutput
 import batect.ui.quiet.QuietEventLogger
 import batect.ui.simple.SimpleEventLogger
-import batect.utils.mapToSet
 import com.hypirion.io.RevivableInputStream
 import java.io.PrintStream
 
@@ -65,14 +64,13 @@ class EventLoggerProvider(
         FancyEventLogger(failureErrorMessageFormatter, console, errorConsole, startupProgressDisplayProvider.createForDependencyGraph(graph), CleanupProgressDisplay(), graph.taskContainerNode.container, createTaskContainerOnlyIOStreamingOptions(graph))
 
     private fun createSimpleLogger(graph: ContainerDependencyGraph): SimpleEventLogger {
-        val containers = graph.allNodes.mapToSet { it.container }
-        return SimpleEventLogger(containers, graph.taskContainerNode.container, failureErrorMessageFormatter, console, errorConsole, createTaskContainerOnlyIOStreamingOptions(graph))
+        return SimpleEventLogger(graph.allContainers, graph.taskContainerNode.container, failureErrorMessageFormatter, console, errorConsole, createTaskContainerOnlyIOStreamingOptions(graph))
     }
 
     private fun createTaskContainerOnlyIOStreamingOptions(graph: ContainerDependencyGraph) = TaskContainerOnlyIOStreamingOptions(graph.taskContainerNode.container, stdout, stdin, consoleInfo)
 
     private fun createInterleavedLogger(task: Task, graph: ContainerDependencyGraph): InterleavedEventLogger {
-        val containers = graph.allNodes.mapToSet { it.container }
+        val containers = graph.allContainers
         val output = InterleavedOutput(task.name, containers, console)
 
         return InterleavedEventLogger(graph.taskContainerNode.container, containers, output, failureErrorMessageFormatter)

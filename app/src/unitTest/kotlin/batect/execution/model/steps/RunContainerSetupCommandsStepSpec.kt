@@ -30,13 +30,12 @@ object RunContainerSetupCommandsStepSpec : Spek({
     describe("a 'run container setup commands' step") {
         val container = Container("the-container", imageSourceDoesNotMatter())
         val config = ContainerRuntimeConfiguration(null, null, null, emptyMap(), emptySet())
-        val allContainersInNetwork = setOf(container)
         val dockerContainer = DockerContainer("the-container-id")
-        val step = RunContainerSetupCommandsStep(container, config, allContainersInNetwork, dockerContainer)
+        val step = RunContainerSetupCommandsStep(container, config, dockerContainer)
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(step.toString(), equalTo("RunContainerSetupCommandsStep(container: 'the-container', config: $config, all containers in network: ['the-container'], Docker container: 'the-container-id')"))
+                assertThat(step.toString(), equalTo("RunContainerSetupCommandsStep(container: 'the-container', config: $config, Docker container: 'the-container-id')"))
             }
         }
     }

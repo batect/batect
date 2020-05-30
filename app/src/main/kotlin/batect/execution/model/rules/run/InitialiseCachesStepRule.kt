@@ -16,19 +16,15 @@
 
 package batect.execution.model.rules.run
 
-import batect.config.Container
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.InitialiseCachesStep
 
-data class InitialiseCachesStepRule(
-    val allContainersInTask: Set<Container>
-) : TaskStepRule() {
+object InitialiseCachesStepRule : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
-        return TaskStepRuleEvaluationResult.Ready(InitialiseCachesStep(allContainersInTask))
+        return TaskStepRuleEvaluationResult.Ready(InitialiseCachesStep)
     }
 
-    override fun toString(): String = "${this::class.simpleName!!}(" +
-        "all containers in task: ${allContainersInTask.map { "'${it.name}'" }})"
+    override fun toString(): String = this::class.simpleName!!
 }

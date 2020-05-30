@@ -76,9 +76,8 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
         given("the container has no setup commands") {
             val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = emptyList())
             val config = ContainerRuntimeConfiguration(null, null, null, emptyMap(), emptySet())
-            val allContainersInNetwork = setOf(container)
             val dockerContainer = DockerContainer("some-container-id")
-            val step = RunContainerSetupCommandsStep(container, config, allContainersInNetwork, dockerContainer)
+            val step = RunContainerSetupCommandsStep(container, config, dockerContainer)
 
             beforeEachTest { runner.run(step, eventSink) }
 
@@ -96,15 +95,14 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
             val setupCommand = SetupCommand(command)
             val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = listOf(setupCommand), workingDirectory = "/some/work/dir")
             val config = ContainerRuntimeConfiguration(null, null, null, emptyMap(), emptySet())
-            val allContainersInNetwork = setOf(container)
             val dockerContainer = DockerContainer("some-container-id")
-            val step = RunContainerSetupCommandsStep(container, config, allContainersInNetwork, dockerContainer)
+            val step = RunContainerSetupCommandsStep(container, config, dockerContainer)
 
             val environmentVariablesToUse = mapOf("SOME_VAR" to "some value")
             val outputSink by createForEachTest { mock<Sink>() }
 
             beforeEachTest {
-                whenever(environmentVariableProvider.environmentVariablesFor(container, config, runOptions.propagateProxyEnvironmentVariables, null, allContainersInNetwork)).doReturn(environmentVariablesToUse)
+                whenever(environmentVariableProvider.environmentVariablesFor(container, config, runOptions.propagateProxyEnvironmentVariables, null)).doReturn(environmentVariablesToUse)
                 whenever(ioStreamingOptions.stdoutForContainerSetupCommand(container, setupCommand, 0)).thenReturn(outputSink)
             }
 
@@ -209,15 +207,14 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
             val setupCommand = SetupCommand(command, "/some/other/command/work/dir")
             val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = listOf(setupCommand), workingDirectory = "/some/container/work/dir")
             val config = ContainerRuntimeConfiguration(null, null, null, emptyMap(), emptySet())
-            val allContainersInNetwork = setOf(container)
             val dockerContainer = DockerContainer("some-container-id")
-            val step = RunContainerSetupCommandsStep(container, config, allContainersInNetwork, dockerContainer)
+            val step = RunContainerSetupCommandsStep(container, config, dockerContainer)
 
             val environmentVariablesToUse = mapOf("SOME_VAR" to "some value")
             val outputSink by createForEachTest { mock<Sink>() }
 
             beforeEachTest {
-                whenever(environmentVariableProvider.environmentVariablesFor(container, config, runOptions.propagateProxyEnvironmentVariables, null, allContainersInNetwork)).doReturn(environmentVariablesToUse)
+                whenever(environmentVariableProvider.environmentVariablesFor(container, config, runOptions.propagateProxyEnvironmentVariables, null)).doReturn(environmentVariablesToUse)
                 whenever(ioStreamingOptions.stdoutForContainerSetupCommand(container, setupCommand, 0)).thenReturn(outputSink)
             }
 
@@ -252,9 +249,8 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
             val setupCommand3 = SetupCommand(command3)
             val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = listOf(setupCommand1, setupCommand2, setupCommand3), workingDirectory = "/some/work/dir")
             val config = ContainerRuntimeConfiguration(null, null, null, emptyMap(), emptySet())
-            val allContainersInNetwork = setOf(container)
             val dockerContainer = DockerContainer("some-container-id")
-            val step = RunContainerSetupCommandsStep(container, config, allContainersInNetwork, dockerContainer)
+            val step = RunContainerSetupCommandsStep(container, config, dockerContainer)
 
             val environmentVariablesToUse = mapOf("SOME_VAR" to "some value")
             val outputSink1 by createForEachTest { mock<Sink>() }
@@ -262,7 +258,7 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
             val outputSink3 by createForEachTest { mock<Sink>() }
 
             beforeEachTest {
-                whenever(environmentVariableProvider.environmentVariablesFor(container, config, runOptions.propagateProxyEnvironmentVariables, null, allContainersInNetwork)).doReturn(environmentVariablesToUse)
+                whenever(environmentVariableProvider.environmentVariablesFor(container, config, runOptions.propagateProxyEnvironmentVariables, null)).doReturn(environmentVariablesToUse)
                 whenever(ioStreamingOptions.stdoutForContainerSetupCommand(container, setupCommand1, 0)).doReturn(outputSink1)
                 whenever(ioStreamingOptions.stdoutForContainerSetupCommand(container, setupCommand2, 1)).doReturn(outputSink2)
                 whenever(ioStreamingOptions.stdoutForContainerSetupCommand(container, setupCommand3, 2)).doReturn(outputSink3)

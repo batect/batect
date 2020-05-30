@@ -49,8 +49,7 @@ class RunContainerSetupCommandsStepRunner(
             step.container,
             step.config,
             runOptions.propagateProxyEnvironmentVariables,
-            null,
-            step.allContainersInNetwork
+            null
         )
 
         val userAndGroup = runAsCurrentUserConfigurationProvider.determineUserAndGroup(step.container)

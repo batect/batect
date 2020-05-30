@@ -32,18 +32,15 @@ import batect.execution.model.rules.run.RunContainerStepRule
 import batect.execution.model.rules.run.WaitForContainerToBecomeHealthyStepRule
 import batect.logging.Logger
 import batect.utils.flatMapToSet
-import batect.utils.mapToSet
 
 class RunStagePlanner(
     private val graph: ContainerDependencyGraph,
     private val logger: Logger
 ) {
     fun createStage(): RunStage {
-        val allContainersInTask = graph.allNodes.mapToSet { it.container }
-
-        val rules = graph.allNodes.flatMapToSet { executionStepsFor(it, allContainersInTask) } +
+        val rules = graph.allNodes.flatMapToSet { executionStepsFor(it) } +
             CreateTaskNetworkStepRule +
-            InitialiseCachesStepRule(allContainersInTask)
+            InitialiseCachesStepRule
 
         logger.info {
             message("Created run plan.")
@@ -53,12 +50,12 @@ class RunStagePlanner(
         return RunStage(rules, graph.taskContainerNode.container)
     }
 
-    private fun executionStepsFor(node: ContainerDependencyGraphNode, allContainersInNetwork: Set<Container>) = setOf(
+    private fun executionStepsFor(node: ContainerDependencyGraphNode) = setOf(
         imageCreationRuleFor(node.container),
-        CreateContainerStepRule(node.container, node.config, allContainersInNetwork),
+        CreateContainerStepRule(node.container, node.config),
         RunContainerStepRule(node.container, node.dependsOnContainers),
         WaitForContainerToBecomeHealthyStepRule(node.container),
-        RunContainerSetupCommandsStepRule(node.container, node.config, allContainersInNetwork)
+        RunContainerSetupCommandsStepRule(node.container, node.config)
     )
 
     private fun imageCreationRuleFor(container: Container): TaskStepRule = when (container.imageSource) {

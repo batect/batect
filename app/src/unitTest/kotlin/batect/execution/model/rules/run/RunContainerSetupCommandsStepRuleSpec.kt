@@ -37,9 +37,7 @@ object RunContainerSetupCommandsStepRuleSpec : Spek({
     describe("a run container setup commands step rule") {
         val container = Container("the-container", imageSourceDoesNotMatter())
         val config = mock<ContainerRuntimeConfiguration>()
-        val otherContainer = Container("the-other-container", imageSourceDoesNotMatter())
-        val allContainersInNetwork = setOf(container, otherContainer)
-        val rule = RunContainerSetupCommandsStepRule(container, config, allContainersInNetwork)
+        val rule = RunContainerSetupCommandsStepRule(container, config)
 
         given("the container has become healthy") {
             val dockerContainer = DockerContainer("some-container-id")
@@ -59,7 +57,6 @@ object RunContainerSetupCommandsStepRuleSpec : Spek({
                                 RunContainerSetupCommandsStep(
                                     container,
                                     config,
-                                    allContainersInNetwork,
                                     dockerContainer
                                 )
                             )
@@ -70,6 +67,7 @@ object RunContainerSetupCommandsStepRuleSpec : Spek({
         }
 
         given("another container has become healthy") {
+            val otherContainer = Container("the-other-container", imageSourceDoesNotMatter())
             val events = setOf(ContainerBecameHealthyEvent(otherContainer))
 
             on("evaluating the rule") {
@@ -93,7 +91,7 @@ object RunContainerSetupCommandsStepRuleSpec : Spek({
 
         on("toString()") {
             it("returns a human-readable representation of itself") {
-                assertThat(rule.toString(), equalTo("RunContainerSetupCommandsStepRule(container: 'the-container', config: $config, all containers in network: ['the-container', 'the-other-container'])"))
+                assertThat(rule.toString(), equalTo("RunContainerSetupCommandsStepRule(container: 'the-container', config: $config)"))
             }
         }
     }

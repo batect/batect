@@ -20,23 +20,26 @@ import batect.config.Container
 import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
+import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerRuntimeConfiguration
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.utils.mapToSet
 
 class DockerContainerEnvironmentVariableProvider(
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
-    private val expressionEvaluationContext: ExpressionEvaluationContext
+    private val expressionEvaluationContext: ExpressionEvaluationContext,
+    private val containerDependencyGraph: ContainerDependencyGraph
 ) {
+    private val allContainersInNetwork = containerDependencyGraph.allContainers
+
     fun environmentVariablesFor(
         container: Container,
         config: ContainerRuntimeConfiguration,
         propagateProxyEnvironmentVariables: Boolean,
-        terminalType: String?,
-        allContainersInNetwork: Set<Container>
+        terminalType: String?
     ): Map<String, String> =
         terminalEnvironmentVariablesFor(terminalType) +
-            proxyEnvironmentVariables(propagateProxyEnvironmentVariables, allContainersInNetwork) +
+            proxyEnvironmentVariables(propagateProxyEnvironmentVariables) +
             substituteEnvironmentVariables(container.environment + config.additionalEnvironmentVariables)
 
     private fun terminalEnvironmentVariablesFor(terminalType: String?): Map<String, String> = if (terminalType == null) {
@@ -45,7 +48,7 @@ class DockerContainerEnvironmentVariableProvider(
         mapOf("TERM" to terminalType)
     }
 
-    private fun proxyEnvironmentVariables(propagateProxyEnvironmentVariables: Boolean, allContainersInNetwork: Set<Container>): Map<String, String> = if (propagateProxyEnvironmentVariables) {
+    private fun proxyEnvironmentVariables(propagateProxyEnvironmentVariables: Boolean): Map<String, String> = if (propagateProxyEnvironmentVariables) {
         proxyEnvironmentVariablesProvider.getProxyEnvironmentVariables(allContainersInNetwork.mapToSet { it.name })
     } else {
         emptyMap()

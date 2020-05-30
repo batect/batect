@@ -48,7 +48,6 @@ import java.nio.file.Paths
 object CreateContainerStepRuleSpec : Spek({
     describe("a create container step rule") {
         val events by createForEachTest { mutableSetOf<TaskEvent>() }
-        val otherContainer = Container("the-other-container", imageSourceDoesNotMatter())
         val config = mock<ContainerRuntimeConfiguration>()
 
         given("the container uses an existing image") {
@@ -57,8 +56,7 @@ object CreateContainerStepRuleSpec : Spek({
 
             given("the container has no cache mounts") {
                 val container = Container("the-container", imageSource, volumeMounts = setOf(LocalMount(LiteralValue("/some-local-path"), osIndependentPath("/relative-to"), "/some-container-path")))
-                val allContainersInNetwork = setOf(container, otherContainer)
-                val rule = CreateContainerStepRule(container, config, allContainersInNetwork)
+                val rule = CreateContainerStepRule(container, config)
 
                 given("the task network has been created") {
                     val network = DockerNetwork("the-network")
@@ -72,7 +70,7 @@ object CreateContainerStepRuleSpec : Spek({
                             val result by runForEachTest { rule.evaluate(events) }
 
                             it("returns a 'create container' step") {
-                                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, config, allContainersInNetwork, image, network))))
+                                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, config, image, network))))
                             }
                         }
                     }
@@ -113,8 +111,7 @@ object CreateContainerStepRuleSpec : Spek({
 
             given("the container has a cache mount") {
                 val container = Container("the-container", imageSource, volumeMounts = setOf(CacheMount("some-cache", "/some-container-path")))
-                val allContainersInNetwork = setOf(container, otherContainer)
-                val rule = CreateContainerStepRule(container, config, allContainersInNetwork)
+                val rule = CreateContainerStepRule(container, config)
 
                 given("the task network has been created") {
                     val network = DockerNetwork("the-network")
@@ -130,7 +127,7 @@ object CreateContainerStepRuleSpec : Spek({
                             val result by runForEachTest { rule.evaluate(events) }
 
                             it("returns a 'create container' step") {
-                                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, config, allContainersInNetwork, image, network))))
+                                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, config, image, network))))
                             }
                         }
 
@@ -151,8 +148,7 @@ object CreateContainerStepRuleSpec : Spek({
         given("the container uses an image that must be built") {
             val source = BuildImage(Paths.get("/some-image-directory"))
             val container = Container("the-container", source)
-            val allContainersInNetwork = setOf(container, otherContainer)
-            val rule = CreateContainerStepRule(container, config, allContainersInNetwork)
+            val rule = CreateContainerStepRule(container, config)
 
             given("the task network has been created") {
                 val network = DockerNetwork("the-network")
@@ -166,12 +162,13 @@ object CreateContainerStepRuleSpec : Spek({
                         val result by runForEachTest { rule.evaluate(events) }
 
                         it("returns a 'create container' step") {
-                            assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, config, allContainersInNetwork, image, network))))
+                            assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, config, image, network))))
                         }
                     }
                 }
 
                 given("an image has been built for another container") {
+                    val otherContainer = Container("the-other-container", imageSourceDoesNotMatter())
                     beforeEachTest { events.add(ImageBuiltEvent(otherContainer, DockerImage("some-other-image"))) }
 
                     on("evaluating the rule") {
@@ -207,12 +204,10 @@ object CreateContainerStepRuleSpec : Spek({
 
         describe("toString()") {
             val container = Container("the-container", imageSourceDoesNotMatter())
-            val allContainersInNetwork = setOf(container, otherContainer)
-
-            val rule = CreateContainerStepRule(container, config, allContainersInNetwork)
+            val rule = CreateContainerStepRule(container, config)
 
             it("returns a human-readable representation of itself") {
-                assertThat(rule.toString(), equalTo("CreateContainerStepRule(container: 'the-container', config: $config, all containers in network: ['the-container', 'the-other-container'])"))
+                assertThat(rule.toString(), equalTo("CreateContainerStepRule(container: 'the-container', config: $config)"))
             }
         }
     }

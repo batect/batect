@@ -216,7 +216,7 @@ private val dockerModule = Kodein.Module("docker") {
     bind<ContainerTTYManager>() with singletonWithLogger { logger -> ContainerTTYManager(instance(), instance(), logger) }
     bind<ContainerWaiter>() with singleton { ContainerWaiter(instance()) }
     bind<DockerContainerCreationRequestFactory>() with scoped(TaskScope).singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
-    bind<DockerContainerEnvironmentVariableProvider>() with singleton { DockerContainerEnvironmentVariableProvider(instance(), instance()) }
+    bind<DockerContainerEnvironmentVariableProvider>() with scoped(TaskScope).singleton { DockerContainerEnvironmentVariableProvider(instance(), instance(), instance()) }
     bind<DockerContainerNameGenerator>() with scoped(TaskScope).singleton { DockerContainerNameGenerator() }
     bind<DockerfileParser>() with singleton { DockerfileParser() }
     bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
@@ -293,7 +293,7 @@ private val runnersModule = Kodein.Module("execution.model.steps.runners") {
     bind<DeleteTaskNetworkStepRunner>() with scoped(TaskScope).singleton { DeleteTaskNetworkStepRunner(instance()) }
     bind<DeleteTemporaryDirectoryStepRunner>() with scoped(TaskScope).singleton { DeleteTemporaryDirectoryStepRunner() }
     bind<DeleteTemporaryFileStepRunner>() with scoped(TaskScope).singleton { DeleteTemporaryFileStepRunner() }
-    bind<InitialiseCachesStepRunner>() with scoped(TaskScope).singleton { InitialiseCachesStepRunner(instance(), commandLineOptions().linuxCacheInitImageName, instance(), instance(), instance(), instance(), instance(), instance()) }
+    bind<InitialiseCachesStepRunner>() with scoped(TaskScope).singleton { InitialiseCachesStepRunner(instance(), commandLineOptions().linuxCacheInitImageName, instance(), instance(), instance(), instance(), instance(), instance(), instance()) }
     bind<PullImageStepRunner>() with scoped(TaskScope).singleton { PullImageStepRunner(instance(), instance()) }
     bind<RemoveContainerStepRunner>() with scoped(TaskScope).singleton { RemoveContainerStepRunner(instance()) }
     bind<RunContainerSetupCommandsStepRunner>() with scoped(TaskScope).singleton { RunContainerSetupCommandsStepRunner(instance(), instance(), instance(), instance(RunOptionsType.Task), instance(), instance()) }

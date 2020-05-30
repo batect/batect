@@ -19,10 +19,12 @@ package batect.docker
 import batect.config.Container
 import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
-import batect.config.LiteralValue
 import batect.config.ExpressionEvaluationException
+import batect.config.LiteralValue
+import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerRuntimeConfiguration
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
+import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.isEmptyMap
@@ -39,10 +41,14 @@ import org.spekframework.spek2.style.specification.describe
 
 object DockerContainerEnvironmentVariableProviderSpec : Spek({
     describe("a Docker container environment variable provider") {
-        val allContainersInNetwork = setOf(
-            Container("container-1", imageSourceDoesNotMatter()),
-            Container("container-2", imageSourceDoesNotMatter())
-        )
+        val graph by createForEachTest {
+            mock<ContainerDependencyGraph> {
+                on { allContainers } doReturn setOf(
+                    Container("container-1", imageSourceDoesNotMatter()),
+                    Container("container-2", imageSourceDoesNotMatter())
+                )
+            }
+        }
 
         given("the console's type is not provided") {
             val terminalType = null as String?
@@ -53,7 +59,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                     on { getProxyEnvironmentVariables(setOf("container-1", "container-2")) } doReturn mapOf("SOME_PROXY_VAR" to "this should not be used")
                 }
 
-                val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, mock())
+                val provider by createForEachTest { DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, mock(), graph) }
 
                 given("there are no additional environment variables") {
                     val container = Container(
@@ -64,7 +70,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
                     val additionalEnvironmentVariables = emptyMap<String, Expression>()
                     val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
-                    val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
+                    val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType) }
 
                     on("getting environment variables for the container") {
                         it("returns the environment variables from the container") {
@@ -88,7 +94,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         )
 
                         on("getting environment variables for the container") {
-                            val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
+                            val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType) }
 
                             it("returns the environment variables from the container and from the additional environment variables") {
                                 assertThat(
@@ -111,7 +117,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         )
 
                         on("getting environment variables for the container") {
-                            val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
+                            val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType) }
 
                             it("returns the environment variables from the container and from the additional environment variables, with the additional environment variables taking precedence") {
                                 assertThat(
@@ -131,7 +137,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
         given("the console's type is provided") {
             val terminalType = "some-term"
             val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider>()
-            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, mock())
+            val provider by createForEachTest { DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, mock(), graph) }
             val propagateProxyEnvironmentVariables = false
 
             given("a container with no override for the TERM environment variable") {
@@ -145,14 +151,13 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
                 on("getting environment variables for the container") {
                     val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
-                    val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
+                    val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType) }
 
                     it("returns the environment variables from the container and the TERM environment variable from the host") {
                         assertThat(environmentVariables, equalTo(mapOf(
                             "SOME_VAR" to "SOME_VALUE",
                             "TERM" to "some-term"
-                        ))
-                        )
+                        )))
                     }
                 }
             }
@@ -171,7 +176,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
                 on("getting environment variables for the container") {
                     val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
-                    val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
+                    val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType) }
 
                     it("returns the environment variables from the container and the TERM environment variable from the container") {
                         assertThat(environmentVariables, equalTo(mapOf(
@@ -196,7 +201,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
                 on("getting environment variables for the container") {
                     val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
-                    val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
+                    val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType) }
 
                     it("returns the environment variables from the container and the TERM environment variable from the additional environment variables") {
                         assertThat(environmentVariables, equalTo(mapOf(
@@ -222,7 +227,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
                 on("getting environment variables for the container") {
                     val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
-                    val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
+                    val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType) }
 
                     it("returns the environment variables from the container and the TERM environment variable from the additional environment variables") {
                         assertThat(environmentVariables, equalTo(mapOf(
@@ -238,7 +243,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
             val terminalType = null as String?
             val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider>()
             val expressionEvaluationContext = mock<ExpressionEvaluationContext>()
-            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, expressionEvaluationContext)
+            val provider by createForEachTest { DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, expressionEvaluationContext, graph) }
             val propagateProxyEnvironmentVariables = false
 
             val invalidReference = mock<Expression> {
@@ -257,7 +262,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
                     on("getting environment variables for the container") {
                         val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
-                        val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
+                        val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType) }
 
                         it("returns the value of the reference") {
                             assertThat(environmentVariables, equalTo(mapOf(
@@ -278,7 +283,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
 
                         it("throws an appropriate exception") {
-                            assertThat({ provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork) },
+                            assertThat({ provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType) },
                                 throws<ContainerCreationFailedException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: Couldn't evaluate expression."))
                             )
                         }
@@ -297,7 +302,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
                     on("getting environment variables for the container") {
                         val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
-                        val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
+                        val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType) }
 
                         it("returns the overridden value") {
                             assertThat(environmentVariables, equalTo(mapOf(
@@ -319,7 +324,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
 
                         it("throws an appropriate exception") {
-                            assertThat({ provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork) },
+                            assertThat({ provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType) },
                                 throws<ContainerCreationFailedException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: Couldn't evaluate expression."))
                             )
                         }
@@ -337,7 +342,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
                     on("getting environment variables for the container") {
                         val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
-                        val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
+                        val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType) }
 
                         it("returns the overridden value") {
                             assertThat(environmentVariables, equalTo(mapOf(
@@ -358,7 +363,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                 )
             }
 
-            val provider = DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, mock())
+            val provider by createForEachTest { DockerContainerEnvironmentVariableProvider(proxyEnvironmentVariablesProvider, mock(), graph) }
 
             given("propagating proxy environment variables is enabled") {
                 val propagateProxyEnvironmentVariables = true
@@ -373,7 +378,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
                     on("getting environment variables for the container") {
                         val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
-                        val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
+                        val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType) }
 
                         it("returns the proxy environment variables from the host") {
                             assertThat(environmentVariables, equalTo(mapOf(
@@ -398,7 +403,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
                     on("getting environment variables for the container") {
                         val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
-                        val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
+                        val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType) }
 
                         it("returns the proxy environment variables from the host, with overrides from the container") {
                             assertThat(environmentVariables, equalTo(mapOf(
@@ -425,7 +430,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
                     on("getting environment variables for the container") {
                         val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
-                        val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
+                        val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType) }
 
                         it("returns the proxy environment variables from the host, with overrides from the container and additional environment variables") {
                             assertThat(environmentVariables, equalTo(mapOf(
@@ -449,7 +454,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
                     val additionalEnvironmentVariables = emptyMap<String, Expression>()
                     val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
-                    val environmentVariables = provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork)
+                    val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType) }
 
                     it("does not propagate the proxy environment variables") {
                         assertThat(environmentVariables, isEmptyMap())

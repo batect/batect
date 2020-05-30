@@ -62,11 +62,7 @@ object EventLoggerProviderSpec : Spek({
         val taskContainer = Container("task-container", imageSourceDoesNotMatter())
         val task = Task("the-task", TaskRunConfiguration("the-container"))
         val graph = mock<ContainerDependencyGraph> {
-            on { allNodes } doReturn setOf(
-                ContainerDependencyGraphNode(container1, mock(), false, emptySet(), mock()),
-                ContainerDependencyGraphNode(container2, mock(), false, emptySet(), mock())
-            )
-
+            on { allContainers } doReturn setOf(container1, container2)
             on { taskContainerNode } doReturn ContainerDependencyGraphNode(taskContainer, mock(), true, emptySet(), mock())
         }
 

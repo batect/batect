@@ -220,7 +220,7 @@ object InterleavedEventLoggerSpec : Spek({
                     describe("and a 'create container' step has been seen") {
                         on("and that step did not contain a command") {
                             beforeEachTest {
-                                val createContainerStep = CreateContainerStep(taskContainer, ContainerRuntimeConfiguration.withCommand(null), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
+                                val createContainerStep = CreateContainerStep(taskContainer, ContainerRuntimeConfiguration.withCommand(null), DockerImage("some-image"), DockerNetwork("some-network"))
                                 val runContainerStep = RunContainerStep(taskContainer, DockerContainer("not-important"))
 
                                 logger.postEvent(StepStartingEvent(createContainerStep))
@@ -234,7 +234,7 @@ object InterleavedEventLoggerSpec : Spek({
 
                         on("and that step contained a command") {
                             beforeEachTest {
-                                val createContainerStep = CreateContainerStep(taskContainer, ContainerRuntimeConfiguration.withCommand(Command.parse("do-stuff.sh")), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
+                                val createContainerStep = CreateContainerStep(taskContainer, ContainerRuntimeConfiguration.withCommand(Command.parse("do-stuff.sh")), DockerImage("some-image"), DockerNetwork("some-network"))
                                 val runContainerStep = RunContainerStep(taskContainer, DockerContainer("not-important"))
 
                                 logger.postEvent(StepStartingEvent(createContainerStep))

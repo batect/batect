@@ -27,8 +27,7 @@ import batect.execution.model.steps.RunContainerSetupCommandsStep
 
 data class RunContainerSetupCommandsStepRule(
     val container: Container,
-    val config: ContainerRuntimeConfiguration,
-    val allContainersInNetwork: Set<Container>
+    val config: ContainerRuntimeConfiguration
 ) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         if (!containerHasBecomeHealthy(pastEvents)) {
@@ -37,7 +36,7 @@ data class RunContainerSetupCommandsStepRule(
 
         val dockerContainer = findDockerContainer(pastEvents)
 
-        return TaskStepRuleEvaluationResult.Ready(RunContainerSetupCommandsStep(container, config, allContainersInNetwork, dockerContainer))
+        return TaskStepRuleEvaluationResult.Ready(RunContainerSetupCommandsStep(container, config, dockerContainer))
     }
 
     private fun findDockerContainer(pastEvents: Set<TaskEvent>) =
@@ -48,5 +47,5 @@ data class RunContainerSetupCommandsStepRule(
     private fun containerHasBecomeHealthy(pastEvents: Set<TaskEvent>) =
         pastEvents.any { it is ContainerBecameHealthyEvent && it.container == container }
 
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', config: $config, all containers in network: ${allContainersInNetwork.map { "'${it.name}'" }})"
+    override fun toString() = "${this::class.simpleName}(container: '${container.name}', config: $config)"
 }

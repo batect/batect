@@ -93,18 +93,17 @@ object RunStagePlannerSpec : Spek({
                     val container = Container(task.runConfiguration!!.container, PullImage("some-image"))
                     val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                     val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
-                    val allContainersInTask = setOf(container)
 
                     itCreatesStageWithRules(
                         graph,
                         mapOf(
                             "create the task network" to CreateTaskNetworkStepRule,
-                            "initialise caches" to InitialiseCachesStepRule(allContainersInTask),
+                            "initialise caches" to InitialiseCachesStepRule,
                             "pull the image for the task container" to PullImageStepRule(PullImage("some-image")),
-                            "create the task container" to CreateContainerStepRule(container, graph.nodeFor(container).config, allContainersInTask),
+                            "create the task container" to CreateContainerStepRule(container, graph.nodeFor(container).config),
                             "run the task container" to RunContainerStepRule(container, emptySet()),
                             "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(container),
-                            "run setup commands for the task container" to RunContainerSetupCommandsStepRule(container, graph.nodeFor(container).config, allContainersInTask)
+                            "run setup commands for the task container" to RunContainerSetupCommandsStepRule(container, graph.nodeFor(container).config)
                         )
                     )
                 }
@@ -114,18 +113,17 @@ object RunStagePlannerSpec : Spek({
                     val container = Container(task.runConfiguration!!.container, imageSource)
                     val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                     val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
-                    val allContainersInTask = setOf(container)
 
                     itCreatesStageWithRules(
                         graph,
                         mapOf(
                             "create the task network" to CreateTaskNetworkStepRule,
-                            "initialise caches" to InitialiseCachesStepRule(allContainersInTask),
+                            "initialise caches" to InitialiseCachesStepRule,
                             "build the image for the task container" to BuildImageStepRule(container),
-                            "create the task container" to CreateContainerStepRule(container, graph.nodeFor(container).config, allContainersInTask),
+                            "create the task container" to CreateContainerStepRule(container, graph.nodeFor(container).config),
                             "run the task container" to RunContainerStepRule(container, emptySet()),
                             "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(container),
-                            "run setup commands for the task container" to RunContainerSetupCommandsStepRule(container, graph.nodeFor(container).config, allContainersInTask)
+                            "run setup commands for the task container" to RunContainerSetupCommandsStepRule(container, graph.nodeFor(container).config)
                         )
                     )
                 }
@@ -136,18 +134,17 @@ object RunStagePlannerSpec : Spek({
                 val container = Container(task.runConfiguration!!.container, PullImage("some-image"))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                 val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
-                val allContainersInTask = setOf(container)
 
                 itCreatesStageWithRules(
                     graph,
                     mapOf(
                         "create the task network" to CreateTaskNetworkStepRule,
-                        "initialise caches" to InitialiseCachesStepRule(allContainersInTask),
+                        "initialise caches" to InitialiseCachesStepRule,
                         "pull the image for the task container" to PullImageStepRule(PullImage("some-image")),
-                        "create the task container with the additional environment variables" to CreateContainerStepRule(container, graph.nodeFor(container).config, allContainersInTask),
+                        "create the task container with the additional environment variables" to CreateContainerStepRule(container, graph.nodeFor(container).config),
                         "run the task container" to RunContainerStepRule(container, emptySet()),
                         "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(container),
-                        "run setup commands for the task container" to RunContainerSetupCommandsStepRule(container, graph.nodeFor(container).config, allContainersInTask)
+                        "run setup commands for the task container" to RunContainerSetupCommandsStepRule(container, graph.nodeFor(container).config)
                     )
                 )
             }
@@ -157,18 +154,17 @@ object RunStagePlannerSpec : Spek({
                 val container = Container(task.runConfiguration!!.container, PullImage("some-image"))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                 val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
-                val allContainersInTask = setOf(container)
 
                 itCreatesStageWithRules(
                     graph,
                     mapOf(
                         "create the task network" to CreateTaskNetworkStepRule,
-                        "initialise caches" to InitialiseCachesStepRule(allContainersInTask),
+                        "initialise caches" to InitialiseCachesStepRule,
                         "pull the image for the task container" to PullImageStepRule(PullImage("some-image")),
-                        "create the task container with the additional environment variables" to CreateContainerStepRule(container, graph.nodeFor(container).config, allContainersInTask),
+                        "create the task container with the additional environment variables" to CreateContainerStepRule(container, graph.nodeFor(container).config),
                         "run the task container" to RunContainerStepRule(container, emptySet()),
                         "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(container),
-                        "run setup commands for the task container" to RunContainerSetupCommandsStepRule(container, graph.nodeFor(container).config, allContainersInTask)
+                        "run setup commands for the task container" to RunContainerSetupCommandsStepRule(container, graph.nodeFor(container).config)
                     )
                 )
             }
@@ -188,21 +184,20 @@ object RunStagePlannerSpec : Spek({
                 val taskContainer = Container(task.runConfiguration!!.container, taskContainerImageSource, dependencies = setOf(container1.name, container2.name, container3.name))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2, container3))
                 val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
-                val allContainersInTask = setOf(taskContainer, container1, container2, container3)
 
                 itCreatesStageWithRules(
                     graph,
                     mapOf(
                         "create the task network" to CreateTaskNetworkStepRule,
-                        "initialise caches" to InitialiseCachesStepRule(allContainersInTask),
+                        "initialise caches" to InitialiseCachesStepRule,
                         "build the image for the task container" to BuildImageStepRule(taskContainer),
                         "build the image for container 1" to BuildImageStepRule(container1),
                         "pull the image for container 2" to PullImageStepRule(container2ImageSource),
                         "pull the image for container 3" to PullImageStepRule(container3ImageSource),
-                        "create the task container" to CreateContainerStepRule(taskContainer, graph.nodeFor(taskContainer).config, allContainersInTask),
-                        "create the container for container 1" to CreateContainerStepRule(container1, graph.nodeFor(container1).config, allContainersInTask),
-                        "create the container for container 2" to CreateContainerStepRule(container2, graph.nodeFor(container2).config, allContainersInTask),
-                        "create the container for container 3" to CreateContainerStepRule(container3, graph.nodeFor(container3).config, allContainersInTask),
+                        "create the task container" to CreateContainerStepRule(taskContainer, graph.nodeFor(taskContainer).config),
+                        "create the container for container 1" to CreateContainerStepRule(container1, graph.nodeFor(container1).config),
+                        "create the container for container 2" to CreateContainerStepRule(container2, graph.nodeFor(container2).config),
+                        "create the container for container 3" to CreateContainerStepRule(container3, graph.nodeFor(container3).config),
                         "run the task container" to RunContainerStepRule(taskContainer, graph.nodeFor(taskContainer).dependsOnContainers),
                         "run container 1" to RunContainerStepRule(container1, graph.nodeFor(container1).dependsOnContainers),
                         "run container 2" to RunContainerStepRule(container2, graph.nodeFor(container2).dependsOnContainers),
@@ -211,10 +206,10 @@ object RunStagePlannerSpec : Spek({
                         "wait for container 1 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container1),
                         "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2),
                         "wait for container 3 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container3),
-                        "run setup commands for the task container" to RunContainerSetupCommandsStepRule(taskContainer, graph.nodeFor(taskContainer).config, allContainersInTask),
-                        "run setup commands for container 1" to RunContainerSetupCommandsStepRule(container1, graph.nodeFor(container1).config, allContainersInTask),
-                        "run setup commands for container 2" to RunContainerSetupCommandsStepRule(container2, graph.nodeFor(container2).config, allContainersInTask),
-                        "run setup commands for container 3" to RunContainerSetupCommandsStepRule(container3, graph.nodeFor(container3).config, allContainersInTask)
+                        "run setup commands for the task container" to RunContainerSetupCommandsStepRule(taskContainer, graph.nodeFor(taskContainer).config),
+                        "run setup commands for container 1" to RunContainerSetupCommandsStepRule(container1, graph.nodeFor(container1).config),
+                        "run setup commands for container 2" to RunContainerSetupCommandsStepRule(container2, graph.nodeFor(container2).config),
+                        "run setup commands for container 3" to RunContainerSetupCommandsStepRule(container3, graph.nodeFor(container3).config)
                     )
                 )
             }
@@ -227,27 +222,26 @@ object RunStagePlannerSpec : Spek({
                 val taskContainer = Container(task.runConfiguration!!.container, taskContainerImageSource, dependencies = setOf(container1.name, container2.name))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2))
                 val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
-                val allContainersInTask = setOf(taskContainer, container1, container2)
 
                 itCreatesStageWithRules(
                     graph,
                     mapOf(
                         "create the task network" to CreateTaskNetworkStepRule,
-                        "initialise caches" to InitialiseCachesStepRule(allContainersInTask),
+                        "initialise caches" to InitialiseCachesStepRule,
                         "pull the image for the task container" to PullImageStepRule(taskContainerImageSource),
                         "pull the image shared by both container 1 and 2" to PullImageStepRule(sharedImageSource),
-                        "create the task container" to CreateContainerStepRule(taskContainer, graph.nodeFor(taskContainer).config, allContainersInTask),
-                        "create the container for container 1" to CreateContainerStepRule(container1, graph.nodeFor(container1).config, allContainersInTask),
-                        "create the container for container 2" to CreateContainerStepRule(container2, graph.nodeFor(container2).config, allContainersInTask),
+                        "create the task container" to CreateContainerStepRule(taskContainer, graph.nodeFor(taskContainer).config),
+                        "create the container for container 1" to CreateContainerStepRule(container1, graph.nodeFor(container1).config),
+                        "create the container for container 2" to CreateContainerStepRule(container2, graph.nodeFor(container2).config),
                         "run the task container" to RunContainerStepRule(taskContainer, graph.nodeFor(taskContainer).dependsOnContainers),
                         "run container 1" to RunContainerStepRule(container1, graph.nodeFor(container1).dependsOnContainers),
                         "run container 2" to RunContainerStepRule(container2, graph.nodeFor(container2).dependsOnContainers),
                         "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(taskContainer),
                         "wait for container 1 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container1),
                         "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2),
-                        "run setup commands for the task container" to RunContainerSetupCommandsStepRule(taskContainer, graph.nodeFor(taskContainer).config, allContainersInTask),
-                        "run setup commands for container 1" to RunContainerSetupCommandsStepRule(container1, graph.nodeFor(container1).config, allContainersInTask),
-                        "run setup commands for container 2" to RunContainerSetupCommandsStepRule(container2, graph.nodeFor(container2).config, allContainersInTask)
+                        "run setup commands for the task container" to RunContainerSetupCommandsStepRule(taskContainer, graph.nodeFor(taskContainer).config),
+                        "run setup commands for container 1" to RunContainerSetupCommandsStepRule(container1, graph.nodeFor(container1).config),
+                        "run setup commands for container 2" to RunContainerSetupCommandsStepRule(container2, graph.nodeFor(container2).config)
                     )
                 )
             }

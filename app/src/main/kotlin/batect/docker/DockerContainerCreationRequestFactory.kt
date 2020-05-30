@@ -32,7 +32,6 @@ class DockerContainerCreationRequestFactory(
         propagateProxyEnvironmentVariables: Boolean,
         userAndGroup: UserAndGroup?,
         terminalType: String?,
-        allContainersInNetwork: Set<Container>,
         useTTY: Boolean,
         attachStdin: Boolean
     ): DockerContainerCreationRequest {
@@ -45,7 +44,7 @@ class DockerContainerCreationRequestFactory(
             container.name,
             container.additionalHostnames + container.name,
             container.additionalHosts,
-            environmentVariableProvider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork),
+            environmentVariableProvider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType),
             config.workingDirectory,
             volumeMounts,
             container.deviceMounts,

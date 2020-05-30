@@ -35,12 +35,12 @@ import batect.docker.client.DockerContainerType
 import batect.docker.client.DockerContainersClient
 import batect.docker.client.DockerImagesClient
 import batect.execution.CancellationContext
+import batect.execution.ContainerDependencyGraph
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.VolumeMountResolver
 import batect.execution.model.events.CacheInitialisationFailedEvent
 import batect.execution.model.events.CachesInitialisedEvent
 import batect.execution.model.events.TaskEventSink
-import batect.execution.model.steps.InitialiseCachesStep
 import batect.os.Dimensions
 import batect.testutils.createForEachTest
 import batect.testutils.given
@@ -167,16 +167,24 @@ object InitialiseCachesStepRunnerSpec : Spek({
             }
         }
 
+        fun runWithContainers(containerType: DockerContainerType, vararg containers: Container) {
+            val graph = mock<ContainerDependencyGraph> {
+                on { allContainers } doReturn setOf(*containers)
+            }
+
+            val runner = InitialiseCachesStepRunner(containerType, cacheInitImageName, imagesClient, containersClient, cancellationContext, containerNameGenerator, volumeMountResolver, runAsCurrentUserConfigurationProvider, graph)
+
+            runner.run(eventSink)
+        }
+
         given("Linux containers are being used") {
             val containerType = DockerContainerType.Linux
-            val runner by createForEachTest { InitialiseCachesStepRunner(containerType, cacheInitImageName, imagesClient, containersClient, cancellationContext, containerNameGenerator, volumeMountResolver, runAsCurrentUserConfigurationProvider) }
 
             given("no containers have caches") {
                 val container1 = Container("container-1", imageSourceDoesNotMatter())
                 val container2 = Container("container-2", imageSourceDoesNotMatter(), volumeMounts = setOf(LocalMount(LiteralValue("/some-path"), osIndependentPath("/relative-to"), "/container-path")))
-                val step = InitialiseCachesStep(setOf(container1, container2))
 
-                beforeEachTest { runner.run(step, eventSink) }
+                beforeEachTest { runWithContainers(containerType, container1, container2) }
 
                 itEmitsACachesInitialisedEvent()
                 itDoesNotRunTheCacheInitImage()
@@ -185,7 +193,6 @@ object InitialiseCachesStepRunnerSpec : Spek({
             given("a single container with a single cache") {
                 val mount = CacheMount("some-cache", "/cache-mount-point")
                 val container = Container("container-1", imageSourceDoesNotMatter(), volumeMounts = setOf(mount))
-                val step = InitialiseCachesStep(setOf(container))
 
                 given("volumes are being used for caches") {
                     beforeEachTest {
@@ -198,7 +205,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                         }
 
                         given("running the image succeeds") {
-                            beforeEachTest { runner.run(step, eventSink) }
+                            beforeEachTest { runWithContainers(containerType, container) }
 
                             val expectedInput = """{"caches":[{"path":"/caches/0"}]}"""
 
@@ -220,7 +227,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                                 }
                             }
 
-                            beforeEachTest { runner.run(step, eventSink) }
+                            beforeEachTest { runWithContainers(containerType, container) }
 
                             itEmitsACacheInitialisationFailedEvent("Running the cache initialisation container failed: the container exited with exit code 123 and output:\nSomething went wrong.")
                             itRemovesTheCacheInitContainer()
@@ -231,7 +238,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                                 whenever(imagesClient.pull(any(), any(), any())).thenThrow(DockerException("Something went wrong."))
                             }
 
-                            beforeEachTest { runner.run(step, eventSink) }
+                            beforeEachTest { runWithContainers(containerType, container) }
 
                             itEmitsACacheInitialisationFailedEvent("Pulling the cache initialisation image 'batect-cache-init:abc123' failed: Something went wrong.")
                         }
@@ -241,7 +248,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                                 whenever(containersClient.create(any())).thenThrow(DockerException("Something went wrong."))
                             }
 
-                            beforeEachTest { runner.run(step, eventSink) }
+                            beforeEachTest { runWithContainers(containerType, container) }
 
                             itEmitsACacheInitialisationFailedEvent("Creating the cache initialisation container failed: Something went wrong.")
                         }
@@ -251,7 +258,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                                 whenever(containersClient.run(any(), any(), anyOrNull(), any(), any(), any(), any())).thenThrow(DockerException("Something went wrong."))
                             }
 
-                            beforeEachTest { runner.run(step, eventSink) }
+                            beforeEachTest { runWithContainers(containerType, container) }
 
                             itEmitsACacheInitialisationFailedEvent("Running the cache initialisation container failed: Something went wrong.")
                             itRemovesTheCacheInitContainer()
@@ -262,7 +269,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                                 whenever(containersClient.remove(any())).thenThrow(DockerException("Something went wrong."))
                             }
 
-                            beforeEachTest { runner.run(step, eventSink) }
+                            beforeEachTest { runWithContainers(containerType, container) }
 
                             itEmitsACacheInitialisationFailedEvent("Removing the cache initialisation container failed: Something went wrong.")
                         }
@@ -273,7 +280,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                             whenever(runAsCurrentUserConfigurationProvider.determineUserAndGroup(container)).thenReturn(UserAndGroup(123, 456))
                         }
 
-                        beforeEachTest { runner.run(step, eventSink) }
+                        beforeEachTest { runWithContainers(containerType, container) }
 
                         val expectedInput = """{"caches":[{"path":"/caches/0","uid":123,"gid":456}]}"""
 
@@ -290,7 +297,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                         whenever(volumeMountResolver.resolve(mount)).doReturn(DockerVolumeMount(DockerVolumeMountSource.LocalPath("/batect/.caches/some-cache-abc123"), "/cache-mount-point"))
                     }
 
-                    beforeEachTest { runner.run(step, eventSink) }
+                    beforeEachTest { runWithContainers(containerType, container) }
 
                     itEmitsACachesInitialisedEvent()
                     itDoesNotRunTheCacheInitImage()
@@ -301,7 +308,6 @@ object InitialiseCachesStepRunnerSpec : Spek({
                 val mount1 = CacheMount("some-cache", "/cache-mount-point")
                 val mount2 = CacheMount("some-other-cache", "/other-cache-mount-point")
                 val container = Container("container-1", imageSourceDoesNotMatter(), volumeMounts = setOf(mount1, mount2))
-                val step = InitialiseCachesStep(setOf(container))
 
                 beforeEachTest {
                     whenever(volumeMountResolver.resolve(mount1)).doReturn(DockerVolumeMount(DockerVolumeMountSource.Volume("some-cache-abc123"), "/cache-mount-point"))
@@ -309,7 +315,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                     whenever(runAsCurrentUserConfigurationProvider.determineUserAndGroup(container)).thenReturn(null)
                 }
 
-                beforeEachTest { runner.run(step, eventSink) }
+                beforeEachTest { runWithContainers(containerType, container) }
 
                 val expectedInput = """{"caches":[{"path":"/caches/0"},{"path":"/caches/1"}]}"""
 
@@ -325,7 +331,6 @@ object InitialiseCachesStepRunnerSpec : Spek({
                 val container1 = Container("container-1", imageSourceDoesNotMatter(), volumeMounts = setOf(container1Mount))
                 val container2Mount = CacheMount("some-other-cache", "/other-cache-mount-point")
                 val container2 = Container("container-2", imageSourceDoesNotMatter(), volumeMounts = setOf(container2Mount))
-                val step = InitialiseCachesStep(setOf(container1, container2))
 
                 beforeEachTest {
                     whenever(volumeMountResolver.resolve(container1Mount)).doReturn(DockerVolumeMount(DockerVolumeMountSource.Volume("some-cache-abc123"), "/cache-mount-point"))
@@ -335,7 +340,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                     whenever(runAsCurrentUserConfigurationProvider.determineUserAndGroup(container2)).thenReturn(UserAndGroup(123, 456))
                 }
 
-                beforeEachTest { runner.run(step, eventSink) }
+                beforeEachTest { runWithContainers(containerType, container1, container2) }
 
                 val expectedInput = """{"caches":[{"path":"/caches/0"},{"path":"/caches/1","uid":123,"gid":456}]}"""
 
@@ -351,7 +356,6 @@ object InitialiseCachesStepRunnerSpec : Spek({
                 val container1 = Container("container-1", imageSourceDoesNotMatter(), volumeMounts = setOf(container1Mount))
                 val container2Mount = CacheMount("some-cache", "/other-cache-mount-point")
                 val container2 = Container("container-2", imageSourceDoesNotMatter(), volumeMounts = setOf(container2Mount))
-                val step = InitialiseCachesStep(setOf(container1, container2))
 
                 beforeEachTest {
                     whenever(volumeMountResolver.resolve(container1Mount)).doReturn(DockerVolumeMount(DockerVolumeMountSource.Volume("some-cache-abc123"), "/cache-mount-point"))
@@ -364,7 +368,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                         whenever(runAsCurrentUserConfigurationProvider.determineUserAndGroup(container2)).thenReturn(null)
                     }
 
-                    beforeEachTest { runner.run(step, eventSink) }
+                    beforeEachTest { runWithContainers(containerType, container1, container2) }
 
                     val expectedInput = """{"caches":[{"path":"/caches/0"}]}"""
 
@@ -381,7 +385,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                         whenever(runAsCurrentUserConfigurationProvider.determineUserAndGroup(container2)).thenReturn(UserAndGroup(123, 456))
                     }
 
-                    beforeEachTest { runner.run(step, eventSink) }
+                    beforeEachTest { runWithContainers(containerType, container1, container2) }
 
                     val expectedInput = """{"caches":[{"path":"/caches/0","uid":123,"gid":456}]}"""
 
@@ -398,7 +402,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                         whenever(runAsCurrentUserConfigurationProvider.determineUserAndGroup(container2)).thenReturn(UserAndGroup(123, 456))
                     }
 
-                    beforeEachTest { runner.run(step, eventSink) }
+                    beforeEachTest { runWithContainers(containerType, container1, container2) }
 
                     itEmitsACacheInitialisationFailedEvent("Containers 'container-1' and 'container-2' share the 'some-cache' cache, but one has run as current user enabled and the other does not. Caches can only be shared by containers if they either both have run as current user enabled or both have it disabled.")
                     itDoesNotRunTheCacheInitImage()
@@ -408,13 +412,10 @@ object InitialiseCachesStepRunnerSpec : Spek({
 
         given("Windows containers are being used") {
             val containerType = DockerContainerType.Windows
-            val runner by createForEachTest { InitialiseCachesStepRunner(containerType, cacheInitImageName, imagesClient, containersClient, cancellationContext, containerNameGenerator, volumeMountResolver, runAsCurrentUserConfigurationProvider) }
-
             val container1 = Container("container-1", imageSourceDoesNotMatter())
             val container2 = Container("container-2", imageSourceDoesNotMatter())
-            val step = InitialiseCachesStep(setOf(container1, container2))
 
-            beforeEachTest { runner.run(step, eventSink) }
+            beforeEachTest { runWithContainers(containerType, container1, container2) }
 
             itEmitsACachesInitialisedEvent()
             itDoesNotRunTheCacheInitImage()

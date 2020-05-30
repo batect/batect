@@ -234,7 +234,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving a 'creating container' notification") {
                 on("that notification being for this line's container") {
-                    val step = CreateContainerStep(container, ContainerRuntimeConfiguration.withCommand(Command.parse("some-command")), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
+                    val step = CreateContainerStep(container, ContainerRuntimeConfiguration.withCommand(Command.parse("some-command")), DockerImage("some-image"), DockerNetwork("some-network"))
                     beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
@@ -244,7 +244,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val step = CreateContainerStep(otherContainer, ContainerRuntimeConfiguration.withCommand(Command.parse("some-command")), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))
+                    val step = CreateContainerStep(otherContainer, ContainerRuntimeConfiguration.withCommand(Command.parse("some-command")), DockerImage("some-image"), DockerNetwork("some-network"))
                     beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
@@ -472,7 +472,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                         on("and the container does not have a command specified in the configuration file") {
                             beforeEachTest {
-                                taskContainerLine.onEventPosted(StepStartingEvent(CreateContainerStep(container, ContainerRuntimeConfiguration.withCommand(null), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))))
+                                taskContainerLine.onEventPosted(StepStartingEvent(CreateContainerStep(container, ContainerRuntimeConfiguration.withCommand(null), DockerImage("some-image"), DockerNetwork("some-network"))))
                                 taskContainerLine.onEventPosted(StepStartingEvent(step))
                             }
 
@@ -485,7 +485,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                         on("and the container has a command specified in the configuration file") {
                             beforeEachTest {
-                                taskContainerLine.onEventPosted(StepStartingEvent(CreateContainerStep(container, ContainerRuntimeConfiguration.withCommand(Command.parse("some-command")), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))))
+                                taskContainerLine.onEventPosted(StepStartingEvent(CreateContainerStep(container, ContainerRuntimeConfiguration.withCommand(Command.parse("some-command")), DockerImage("some-image"), DockerNetwork("some-network"))))
                                 taskContainerLine.onEventPosted(StepStartingEvent(step))
                             }
 
@@ -498,7 +498,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                         on("and the container has a command specified in the configuration file that contains line breaks") {
                             beforeEachTest {
-                                taskContainerLine.onEventPosted(StepStartingEvent(CreateContainerStep(container, ContainerRuntimeConfiguration.withCommand(Command.parse("some-command\ndo-stuff")), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))))
+                                taskContainerLine.onEventPosted(StepStartingEvent(CreateContainerStep(container, ContainerRuntimeConfiguration.withCommand(Command.parse("some-command\ndo-stuff")), DockerImage("some-image"), DockerNetwork("some-network"))))
                                 taskContainerLine.onEventPosted(StepStartingEvent(step))
                             }
 
@@ -511,7 +511,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                         on("and another container has a command specified in the configuration file") {
                             beforeEachTest {
-                                taskContainerLine.onEventPosted(StepStartingEvent(CreateContainerStep(otherContainer, ContainerRuntimeConfiguration.withCommand(Command.parse("some-command")), emptySet(), DockerImage("some-image"), DockerNetwork("some-network"))))
+                                taskContainerLine.onEventPosted(StepStartingEvent(CreateContainerStep(otherContainer, ContainerRuntimeConfiguration.withCommand(Command.parse("some-command")), DockerImage("some-image"), DockerNetwork("some-network"))))
                                 taskContainerLine.onEventPosted(StepStartingEvent(step))
                             }
 

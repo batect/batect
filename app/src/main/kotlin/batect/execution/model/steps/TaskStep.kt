@@ -26,9 +26,7 @@ import java.nio.file.Path
 
 sealed class TaskStep
 
-data class BuildImageStep(
-    val container: Container
-) : TaskStep() {
+data class BuildImageStep(val container: Container) : TaskStep() {
     override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}')"
 }
 
@@ -40,23 +38,18 @@ object CreateTaskNetworkStep : TaskStep() {
     override fun toString(): String = this.javaClass.simpleName
 }
 
-data class InitialiseCachesStep(
-    val allContainersInTask: Set<Container>
-) : TaskStep() {
-    override fun toString(): String = "${this.javaClass.simpleName}(" +
-        "all containers in task: ${allContainersInTask.map { "'${it.name}'" }})"
+object InitialiseCachesStep : TaskStep() {
+    override fun toString(): String = this.javaClass.simpleName
 }
 
 data class CreateContainerStep(
     val container: Container,
     val config: ContainerRuntimeConfiguration,
-    val allContainersInNetwork: Set<Container>,
     val image: DockerImage,
     val network: DockerNetwork
 ) : TaskStep() {
     override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', " +
         "config: $config, " +
-        "all containers in network: ${allContainersInNetwork.map { "'${it.name}'" }}, " +
         "image: '${image.id}', network: '${network.id}')"
 }
 
@@ -67,12 +60,10 @@ data class RunContainerStep(val container: Container, val dockerContainer: Docke
 data class RunContainerSetupCommandsStep(
     val container: Container,
     val config: ContainerRuntimeConfiguration,
-    val allContainersInNetwork: Set<Container>,
     val dockerContainer: DockerContainer
 ) : TaskStep() {
     override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', " +
         "config: $config, " +
-        "all containers in network: ${allContainersInNetwork.map { "'${it.name}'" }}, " +
         "Docker container: '${dockerContainer.id}')"
 }
 

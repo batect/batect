@@ -277,11 +277,18 @@ batect offers four styles of output:
 
     <asciinema-player src="/assets/outputstyles/quiet.cast" cols="204" rows="20" preload="true" poster="npt:7"></asciinema-player>
 
+There are some differences between these output styles to be aware of:
+
+Output style                 | `fancy`                                                  | `simple`                                        | `quiet`                     | `all`
+---------------------------- | -------------------------------------------------------- | ----------------------------------------------- | --------------------------- | -----------------------------------------------
+Progress information         | Detailed (eg. download % completed, health check status) | Basic (eg. image pull started, container ready) | Errors only                 | Basic (eg. image pull started, container ready)
+Displays output from         | Task container only                                      | Task container only                             | Task container only         | All containers
+stdin connected (if present) | Yes, to task container only                              | Yes, to task container only                     | Yes, to task container only | No
+TTY connected (if present)   | Yes, to task container only                              | Yes, to task container only                     | Yes, to task container only | No
+Image build output shown     | Only on build failure                                    | Only on build failure                           | Only on build failure       | Always
+
 By default, batect will automatically pick an output style that it believes is appropriate for the environment it is running in -
 `fancy` if it believes your environment supports it, or `simple` otherwise.
-
-A TTY (and stdin) are attached to the task container when using `fancy`, `simple` and `quiet` output styles. All other containers
-(and all containers when using `all`) will not have stdin or a TTY attached.
 
 Passing this flag allows you to override what batect believes is appropriate.
 

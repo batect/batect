@@ -1,0 +1,13 @@
+project_name: additional-hosts-test
+
+containers:
+  build-env:
+    image: alpine:3.6
+    additional_hosts:
+      additionalhost.batect.dev: 1.2.3.4
+
+tasks:
+  the-task:
+    run:
+      container: build-env
+      command: getent hosts additionalhost.batect.dev

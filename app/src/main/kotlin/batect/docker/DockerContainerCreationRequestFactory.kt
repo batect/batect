@@ -44,6 +44,7 @@ class DockerContainerCreationRequestFactory(
             if (config.entrypoint != null) config.entrypoint.parsedCommand else emptyList(),
             container.name,
             container.additionalHostnames + container.name,
+            container.additionalHosts,
             environmentVariableProvider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType, allContainersInNetwork),
             config.workingDirectory,
             volumeMounts,

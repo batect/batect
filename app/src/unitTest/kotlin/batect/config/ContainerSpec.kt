@@ -242,6 +242,8 @@ object ContainerSpec : Spek({
                   - KILL
                 additional_hostnames:
                   - extra-name
+                additional_hosts:
+                  does.not.exist: 1.2.3.4
                 setup_commands:
                   - command: /do/the/thing.sh
                   - command: /some/other/thing.sh
@@ -294,6 +296,7 @@ object ContainerSpec : Spek({
                     assertThat(result.capabilitiesToAdd, equalTo(setOf(Capability.NET_ADMIN)))
                     assertThat(result.capabilitiesToDrop, equalTo(setOf(Capability.KILL)))
                     assertThat(result.additionalHostnames, equalTo(setOf("extra-name")))
+                    assertThat(result.additionalHosts, equalTo(mapOf("does.not.exist" to "1.2.3.4")))
                     assertThat(result.setupCommands, equalTo(listOf(
                         SetupCommand(Command.parse("/do/the/thing.sh")),
                         SetupCommand(Command.parse("/some/other/thing.sh"), "/some/dir")

@@ -34,6 +34,7 @@ data class DockerContainerCreationRequest(
     val entrypoint: List<String>,
     val hostname: String,
     val networkAliases: Set<String>,
+    val extraHosts: Map<String, String>,
     val environmentVariables: Map<String, String>,
     val workingDirectory: String?,
     val volumeMounts: Set<DockerVolumeMount>,
@@ -92,6 +93,7 @@ data class DockerContainerCreationRequest(
                     "Type" to logDriver
                     "Config" to logOptions.toJsonObject()
                 }
+                "ExtraHosts" to formatExtraHosts()
             }
 
             "Healthcheck" to json {
@@ -153,6 +155,10 @@ data class DockerContainerCreationRequest(
 
     private fun formatCapabilitySet(set: Set<Capability>): JsonArray = set
         .map { it.toString() }
+        .toJsonArray()
+
+    private fun formatExtraHosts(): JsonArray = extraHosts
+        .map { (host, ip) -> "$host:$ip" }
         .toJsonArray()
 
     private fun PortRange.ports() = this.from..this.to

@@ -115,6 +115,13 @@
           "description": "Hostnames to associate with this container in addition to the default hostname",
           "$ref": "#/definitions/additionalHostnamesList"
         },
+        "additional_hosts": {
+          "description": "Additional hostnames to add to /etc/hosts in the container",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "setup_commands": {
           "description": "Commands to run after the container reports as healthy but before dependency containers start",
           "$ref": "#/definitions/setupCommandsList"

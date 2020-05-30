@@ -118,6 +118,7 @@ object ConfigurationSpec : Spek({
                     setOf(Capability.AUDIT_CONTROL),
                     setOf(Capability.BLOCK_SUSPEND),
                     setOf("other-name"),
+                    mapOf("some-host" to "1.2.3.4"),
                     listOf(SetupCommand(Command.parse("some-command"), "/some/dir")),
                     "the-log-driver",
                     mapOf("option-1" to "value-1")
@@ -176,6 +177,7 @@ object ConfigurationSpec : Spek({
                                     "capabilities_to_add": ["AUDIT_CONTROL"],
                                     "capabilities_to_drop": ["BLOCK_SUSPEND"],
                                     "additional_hostnames": ["other-name"],
+                                    "additional_hosts": { "some-host": "1.2.3.4" },
                                     "setup_commands": [
                                         { "command": ["some-command"], "working_directory": "/some/dir" }
                                     ],
@@ -240,6 +242,7 @@ object ConfigurationSpec : Spek({
                                     "capabilities_to_add": [],
                                     "capabilities_to_drop": [],
                                     "additional_hostnames": [],
+                                    "additional_hosts": {},
                                     "setup_commands": [],
                                     "log_driver": "json-file",
                                     "log_options": {}

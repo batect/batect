@@ -40,6 +40,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 listOf("sh"),
                 "the-hostname",
                 setOf("the-first-network-alias", "the-second-network-alias"),
+                mapOf("does.not.exist.com" to "1.2.3.4", "other.com" to "5.6.7.8"),
                 mapOf("SOME_VAR" to "some value"),
                 "/work-dir",
                 setOf(
@@ -122,7 +123,8 @@ object DockerContainerCreationRequestSpec : Spek({
                         |       "Init": true,
                         |       "CapAdd": ["NET_ADMIN", "KILL"],
                         |       "CapDrop": ["AUDIT_READ", "CHOWN"],
-                        |       "LogConfig": { "Type": "some-log-driver", "Config": { "option-1": "value-1" } }
+                        |       "LogConfig": { "Type": "some-log-driver", "Config": { "option-1": "value-1" } },
+                        |       "ExtraHosts": [ "does.not.exist.com:1.2.3.4", "other.com:5.6.7.8" ]
                         |   },
                         |   "Healthcheck": {
                         |       "Test": ["CMD-SHELL", "exit 0"],
@@ -160,6 +162,7 @@ object DockerContainerCreationRequestSpec : Spek({
                         |    "the-first-network-alias",
                         |    "the-second-network-alias"
                         |  ],
+                        |  "extraHosts": { "does.not.exist.com": "1.2.3.4", "other.com": "5.6.7.8" },
                         |  "environmentVariables": {
                         |    "SOME_VAR": "some value"
                         |  },
@@ -226,6 +229,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 "the-hostname",
                 setOf("the-network-alias"),
                 emptyMap(),
+                emptyMap(),
                 null,
                 emptySet(),
                 emptySet(),
@@ -266,7 +270,8 @@ object DockerContainerCreationRequestSpec : Spek({
                         |       "Init": false,
                         |       "CapAdd": [],
                         |       "CapDrop": [],
-                        |       "LogConfig": { "Type": "json-file", "Config": {} }
+                        |       "LogConfig": { "Type": "json-file", "Config": {} },
+                        |       "ExtraHosts": []
                         |   },
                         |   "Healthcheck": {
                         |       "Test": [],

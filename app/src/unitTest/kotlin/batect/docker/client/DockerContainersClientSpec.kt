@@ -16,8 +16,6 @@
 
 package batect.docker.client
 
-import batect.config.Container
-import batect.config.HealthCheckConfig
 import batect.docker.ContainerHealthCheckException
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerConfiguration
@@ -29,8 +27,6 @@ import batect.docker.DockerContainerState
 import batect.docker.DockerEvent
 import batect.docker.DockerException
 import batect.docker.DockerHealthCheckResult
-import batect.docker.DockerImage
-import batect.docker.DockerNetwork
 import batect.docker.api.ContainerInspectionFailedException
 import batect.docker.api.ContainersAPI
 import batect.docker.run.ContainerIOStreamer
@@ -82,11 +78,7 @@ object DockerContainersClientSpec : Spek({
 
         describe("creating a container") {
             given("a container configuration and a built image") {
-                val image = DockerImage("the-image")
-                val network = DockerNetwork("the-network")
-                val command = listOf("doStuff")
-                val entrypoint = listOf("sh")
-                val request = DockerContainerCreationRequest("the-container-name", image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet(), true, true, Container.defaultLogDriver, emptyMap())
+                val request = mock<DockerContainerCreationRequest>()
 
                 on("creating the container") {
                     beforeEachTest { whenever(api.create(request)).doReturn(DockerContainer("abc123")) }

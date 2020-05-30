@@ -82,6 +82,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     capabilitiesToAdd = setOf(Capability.NET_ADMIN),
                     capabilitiesToDrop = setOf(Capability.KILL),
                     additionalHostnames = setOf("some-alias"),
+                    additionalHosts = mapOf("does.not.exist" to "1.2.3.4"),
                     logDriver = "the-log-driver",
                     logOptions = mapOf("option-1" to "value-1")
                 )
@@ -128,6 +129,10 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
                 it("populates the network aliases on the request with the name of the container and additional hostnames from the container") {
                     assertThat(request.networkAliases, equalTo(setOf(container.name, "some-alias")))
+                }
+
+                it("populates the extra hosts on the request with the additional hosts from the container") {
+                    assertThat(request.extraHosts, equalTo(container.additionalHosts))
                 }
 
                 it("populates the environment variables on the request with the environment variables from the environment variable provider") {

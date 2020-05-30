@@ -331,6 +331,16 @@ of different processes running as PID 1 and why this flag was introduced.
 ## `additional_hostnames`
 List of hostnames to associate with this container, in addition to the default hostname (the name of the container).
 
+## `additional_hosts`
+Additional hostnames to add to `/etc/hosts` in the container. Equivalent to `--add-host` option for `docker run`.
+
+For example, to add an entry to resolve `database.example.com` as `1.2.3.4`:
+
+```yaml
+additional_hosts:
+  database.example.com: 1.2.3.4
+```
+
 ## `log_driver`
 
 The Docker log driver to use when running the container.

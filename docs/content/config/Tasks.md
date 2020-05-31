@@ -21,48 +21,52 @@ If `run` is not provided, then `prerequisites` is required and the tasks listed 
 
 `run` is made up of the following fields:
 
-* `container` [Container](Containers.md) to run for this task. **Required.**
+### `container` 
+[Container](Containers.md) to run for this task. **Required.**
 
-* `command` Command to run for this task.
+### `command` 
+Command to run for this task.
 
-    Overrides any command specified on the container definition and the image's default command. If no command is provided here,
-    [the command specified on the container definition](Containers.md#command) is used if there is one, otherwise the image's default command is used.
+Overrides any command specified on the container definition and the image's default command. If no command is provided here,
+[the command specified on the container definition](Containers.md#command) is used if there is one, otherwise the image's default command is used.
 
-    Just like when specifying a command for a container, this command is passed to the image's `ENTRYPOINT`, if there is one. This can prevent
-    shell syntax features like `$MY_ENVIRONMENT_VARIABLE` and `&&` from working. See the
-    [note about entrypoints in the documentation for containers](Containers.md#command-entrypoint-note) for more information.
+Just like when specifying a command for a container, this command is passed to the image's `ENTRYPOINT`, if there is one. This can prevent
+shell syntax features like `$MY_ENVIRONMENT_VARIABLE` and `&&` from working. See the
+[note about entrypoints in the documentation for containers](Containers.md#command-entrypoint-note) for more information.
 
-<a id="entrypoint"></a>
+### `entrypoint` 
+Entrypoint to use to run the command.
 
-* `entrypoint` Entrypoint to use to run the command.
+Overrides any entrypoint specified on the container definition and the image's default entrypoint. If no entrypoint is provided here,
+[the entrypoint specified on the container definition](Containers.md#entrypoint) is used if there is one, otherwise the image's default entrypoint is used.
 
-    Overrides any entrypoint specified on the container definition and the image's default entrypoint. If no entrypoint is provided here,
-    [the entrypoint specified on the container definition](Containers.md#entrypoint) is used if there is one, otherwise the image's default entrypoint is used.
+Applies to whichever command takes precedence, whether that is the command specified on this task, the [command specified on the container](Containers.md#command),
+or the image's default command.
 
-    Applies to whichever command takes precedence, whether that is the command specified on this task, the [command specified on the container](Containers.md#command),
-    or the image's default command.
+### `environment` 
+List of environment variables (in `name: value` format) to pass to the container, in addition to those defined on the container itself.
 
-* `environment` List of environment variables (in `name: value` format) to pass to the container, in addition to those defined on the
-  container itself.
+If a variable is specified both here and on the container itself, the value given here will override the value defined on the container.
 
-    If a variable is specified both here and on the container itself, the value given here will override the value defined on the container.
+Values can be [expressions](Overview.md#expressions).
 
-    Values can be [expressions](Overview.md#expressions).
+### `ports` 
+List of port mappings to create for the container, in addition to those defined on the container itself.
 
-* `ports` List of port mappings to create for the container, in addition to those defined on the container itself.
+Behaves identically to [specifying a port mapping directly on the container](Containers.md#ports), and supports the same syntax.
 
-    Behaves identically to [specifying a port mapping directly on the container](Containers.md#ports), and supports the same syntax.
+### `working_directory` 
+Working directory to use for this task's container.
 
-* `working_directory` Working directory to use for this task's container.
-
-    Overrides any working directory on the container definition and the image's default working directory. If no working directory is provided here,
-    [the working directory specified on the container definition](Containers.md#working_directory) is used if there is one, otherwise the image's default
-    working directory is used.
+Overrides any working directory on the container definition and the image's default working directory. If no working directory is provided here,
+[the working directory specified on the container definition](Containers.md#working_directory) is used if there is one, otherwise the image's default
+working directory is used.
 
 ## `dependencies`
-List of other containers (not tasks) that should be started and healthy before starting the task container given in `run`.
+List of other containers (not tasks) that should be started and healthy before starting the task container given in `run`, in addition to those defined on the container itself.
 
-The behaviour is the same as if the dependencies were specified for the `dependencies` property of the task's container's definition.
+The behaviour is the same as if the dependencies were specified for the [`dependencies`](Containers.md#dependencies) property of the task's 
+container's definition.
 
 ## `prerequisites`
 List of other tasks that should be run to completion before running this task.

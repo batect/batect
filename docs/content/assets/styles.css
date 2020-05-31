@@ -1,6 +1,16 @@
-h2 {
+.md-typeset h2 {
     padding-bottom: 0.3rem;
     border-bottom: #d0d0d0 solid 1px;
+}
+
+.md-typeset h3 {
+    padding-bottom: 0.3rem;
+    border-bottom: #d0d0d0 dashed 1px;
+    margin-bottom: 0.4rem;
+}
+
+.md-typeset p {
+    margin-top: 0.4rem;
 }
 
 .md-typeset th code {

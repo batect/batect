@@ -30,14 +30,26 @@ There are a number of configuration options for containers:
 * [`log_driver`](#log_driver): Docker log driver to use when running the container
 * [`log_options`](#log_options): additional options for the log driver in use
 
-## `image`
-Image name (in standard Docker image reference format) to use for this container. **One of `image` or `build_directory` is required.**
+## `additional_hostnames`
+List of hostnames to associate with this container, in addition to the default hostname (the name of the container).
 
-The image can be overridden when running a task with [`--override-image`](../CLIReference.md#override-the-image-used-by-a-container-override-image).
+## `additional_hosts`
+Additional hostnames to add to `/etc/hosts` in the container. Equivalent to `--add-host` option for `docker run`.
 
-!!! tip
-    It is highly recommended that you specify a specific image version, and not use `latest`, to ensure that the same image is used
-    everywhere. For example, use `alpine:3.7`, not `alpine` or `alpine:latest`.
+For example, to add an entry to resolve `database.example.com` as `1.2.3.4`:
+
+```yaml
+additional_hosts:
+  database.example.com: 1.2.3.4
+```
+
+## `build_args`
+List of build args (in `name: value` format) to use when building the image in [`build_directory`](#build_directory). Values can be [expressions](Overview.md#expressions).
+
+Each build arg must be defined in the Dockerfile with an `ARG` instruction otherwise the value provided will have no effect.
+
+!!! warning
+    Use caution when using build args for secret values. Build arg values can be revealed by anyone with a copy of the image with the `docker history` command.
 
 ## `build_directory`
 Path (relative to the configuration file's directory) to a directory containing a Dockerfile to build and use as an image for this container.
@@ -48,20 +60,10 @@ with users running on other operating systems, using Unix-style paths is recomme
 
 The image can be overridden when running a task with [`--override-image`](../CLIReference.md#override-the-image-used-by-a-container-override-image).
 
-## `build_args`
-List of build args (in `name: value` format) to use when building the image in [`build_directory`](#build_directory). Values can be [expressions](Overview.md#expressions).
+## `capabilities_to_add` and `capabilities_to_drop`
+List of [capabilities](http://man7.org/linux/man-pages/man7/capabilities.7.html) to add or drop for the container.
 
-Each build arg must be defined in the Dockerfile with an `ARG` instruction otherwise the value provided will have no effect.
-
-!!! warning
-    Use caution when using build args for secret values. Build arg values can be revealed by anyone with a copy of the image with the `docker history` command.
-
-## `dockerfile`
-Dockerfile (relative to [`build_directory`](#build_directory)) to use when building the image in [`build_directory`](#build_directory). Defaults to `Dockerfile` if not set.
-
-The Dockerfile must be within [`build_directory`](#build_directory).
-
-`dockerfile` must always be specified with Unix-style (`path/to/thing`) paths, even when running on Windows.
+This is equivalent to passing [`--cap-add` or `--cap-drop`](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) to `docker run`.
 
 ## `command`
 Command to run when the container starts.
@@ -105,6 +107,49 @@ Both of these can be overridden for an individual task by specifying a [`command
     Note that for both options 3 and 4, you must quote the command so that it is passed to `sh -c` as a single argument (we want the final command line to be `sh -c 'echo hello && echo world'`, not
     `sh -c echo hello && echo world`).
 
+## `dependencies`
+List of other containers that should be started and healthy before starting this container.
+
+If a dependency's image does not contain a [health check](https://docs.docker.com/engine/reference/builder/#healthcheck), then as soon as it has started,
+it is considered to be healthy.
+
+See [this page](../tips/WaitingForDependenciesToBeReady.md) for more information on how to ensure dependencies are ready before starting containers that
+depend on them.
+
+## `devices`
+List of device mounts to create for the container.
+
+Two formats are supported:
+
+* `local:container` or `local:container:options` format
+
+* An expanded format:
+  ```yaml
+  containers:
+    my-container:
+      ...
+      devices:
+      # This is equivalent to /dev/sda:/dev/disk:r
+      - local: /dev/sda
+        container: /dev/disk
+        options: r
+  ```
+
+Note that the `local` device mounts will be different for Windows and Unix-like hosts. See the [Docker guide for adding host devices to containers](https://docs.docker.com/engine/reference/commandline/run/#add-host-device-to-container---device) for more information.
+
+## `dockerfile`
+Dockerfile (relative to [`build_directory`](#build_directory)) to use when building the image in [`build_directory`](#build_directory). Defaults to `Dockerfile` if not set.
+
+The Dockerfile must be within [`build_directory`](#build_directory).
+
+`dockerfile` must always be specified with Unix-style (`path/to/thing`) paths, even when running on Windows.
+
+## `enable_init_process`
+Set to `true` to pass the [`--init`](https://docs.docker.com/engine/reference/run/#specify-an-init-process) flag when running the container.
+This creates the container with a simple PID 1 process to handle the responsibilities of the init system, which is required for some applications to behave correctly.
+
+[Read this article](https://engineeringblog.yelp.com/2016/01/dumb-init-an-init-for-docker.html) if you're interested in more information about the behaviour
+of different processes running as PID 1 and why this flag was introduced.
 
 ## `entrypoint`
 Entrypoint to use to run the [command](#command).
@@ -131,12 +176,155 @@ If a proxy-related environment variable is defined on the container's configurat
 
 See [this page](../tips/Proxies.md) for more information on using batect with proxies.
 
-## `working_directory`
-Working directory to start the container in.
+## `health_check`
+Overrides [health check](https://docs.docker.com/engine/reference/builder/#healthcheck) configuration specified in the image or Dockerfile:
 
-If not provided, the default working directory for the image will be used.
+* `command` The command to run to check the health of the container. If this command exits with code 0, the container is considered healthy, otherwise
+  the container is considered unhealthy. If not provided, the default command specified in the image or Dockerfile is used.
 
-Both of these can be overridden for an individual task by specifying a [`working_directory` at the task level](Tasks.md#run).
+* `retries` The number of times to perform the health check before considering the container unhealthy.
+
+* `interval` The interval between runs of the health check. Accepts values such as `2s` (two seconds) or `1m` (one minute).
+
+* `start_period` The time to wait before failing health checks count against the retry count. The health check is still run during this period,
+  and if the check succeeds, the container is immediately considered healthy. Accepts values such as `2s` (two seconds) or `1m` (one minute).
+
+## `image`
+Image name (in standard Docker image reference format) to use for this container. **One of `image` or `build_directory` is required.**
+
+The image can be overridden when running a task with [`--override-image`](../CLIReference.md#override-the-image-used-by-a-container-override-image).
+
+!!! tip
+    It is highly recommended that you specify a specific image version, and not use `latest`, to ensure that the same image is used
+    everywhere. For example, use `alpine:3.7`, not `alpine` or `alpine:latest`.
+
+## `log_driver`
+
+The Docker log driver to use when running the container.
+
+Defaults to `json-file` if not set.
+
+A full list of built-in log drivers is available in [the logging section of Docker documentation](https://docs.docker.com/config/containers/logging/configure/#supported-logging-drivers),
+and [logging plugins](https://docs.docker.com/config/containers/logging/plugins/) can be used as well.
+
+Options for the log driver can be provided with [`log_options`](#log_options).
+
+!!! warning
+    Some log drivers do not support streaming container output to the console, as described in
+    [the limitations section of Docker's logging documentation](https://docs.docker.com/config/containers/logging/configure/#limitations-of-logging-drivers).
+
+    If the selected log driver does not support streaming container output to the console, you will see error messages similar to
+    `Error attaching: configured logging driver does not support reading` in batect's output. This does not affect the execution of the task, which
+    will run to completion as per normal.
+
+## `log_options`
+
+Options to provide to the Docker log driver used when running the container.
+
+For example, to set [the tag used to identify the container in logs](https://docs.docker.com/config/containers/logging/log_tags/):
+
+```yaml
+log_options:
+  tag: "my-container"
+```
+
+The options available for each log driver are described in the Docker documentation for that log driver, such as [this page](https://docs.docker.com/config/containers/logging/json-file/) for the `json-file` driver.
+
+## `ports`
+List of ports to make available to the host machine.
+
+Three formats are supported:
+
+* `local:container` or `local:container/protocol` format
+
+    For example, `1234:5678` or `1234:5678/tcp` will make TCP port 5678 inside the container available on the host machine at TCP port 1234, and
+    `1234:5678/udp` will make UDP port 5678 inside the container available on the host machine at UDP port 1234.
+
+* `local_from-local_to:container_from:container-to` or `local_from-local_to:container_from:container-to/protocol` format
+
+    For example, `1000-1001:2025-2026` or `1000-1001:2025-2026/tcp` will make TCP port 2025 inside the container available
+    on the host machine at TCP port 1000, and TCP port 2026 inside the container available on the host machine at TCP port 1001.
+
+* An expanded format:
+  ```yaml
+  containers:
+    my-container:
+      ...
+      ports:
+        # This is equivalent to 1234:5678 or 1234:5678/tcp
+        - local: 1234
+          container: 5678
+        # This is equivalent to 3000:4000/udp
+        - local: 3000
+          container: 4000
+          protocol: udp
+        # This is equivalent to 1000-1001:2025-2026 or 1000-1001:2025-2026/tcp
+        - local: 1000-1001
+          container: 2025-2026
+        # This is equivalent to 5000-5001:6025-6026/udp
+        - local: 5000-5001
+          container: 6025-6026
+          protocol: udp
+  ```
+
+All protocols supported by Docker are supported. The default protocol is TCP if none is provided.
+
+!!! tip
+    Exposing ports is only required if you need to access the container from the host machine.
+
+    Any container started as part of a task will be able to access any port on any other container at the address `container_name:container_port`, even if that port
+    is not listed in `ports`.
+
+    For example, if a process running in the `http-server` container listens on port 2000, any other container in the task can access that at `http-server:2000`
+    without port 2000 being listed in `ports` (or an `EXPOSE` Dockerfile instruction).
+
+## `privileged`
+Set to `true` to run the container in [privileged mode](https://docs.docker.com/engine/reference/commandline/run/#full-container-capabilities---privileged).
+
+See also [`capabilities_to_add` and `capabilities_to_drop`](#capabilities_to_add-and-capabilities_to_drop).
+
+## `run_as_current_user`
+Run the container with the same UID and GID as the user running batect (rather than the user the Docker daemon runs as, which is root
+on Linux). This means that any files created by the container will be owned by the user running batect, rather than root.
+
+This is really only useful on Linux. On macOS, the Docker daemon runs as the currently logged-in user and so any files created in the container are owned
+by that user, so this is less of an issue. However, for consistency, the same configuration changes are made on both Linux and macOS.
+
+`run_as_current_user` has the following options:
+
+* `enabled` Defaults to `false`, set to `true` to enable 'run as current user' mode.
+
+* `home_directory` Directory to use as home directory for user inside container. Required if `enabled` is `true`, not allowed if `enabled` is not provided
+  or set to `false`.
+
+  This directory is automatically created by batect with the correct owner and group.
+
+!!! warning
+    If the directory given by `home_directory` already exists inside the image for this container, it is overwritten.
+
+See [this page](../tips/BuildArtifactsOwnedByRoot.md) for more information on the effects of this option and why it is necessary.
+
+## `setup_commands`
+List of commands to run inside the container after it has become healthy but before dependent containers start.
+
+* `command` The command to run. **Required.**
+
+    This command is run in a similar way to the container's [`command`](#command), so the same limitations apply to using shell syntax such as `&&`.
+
+* `working_directory` The working directory to use for the command.
+
+    If no working directory is provided, [`working_directory`](#working_directory) is used if it is set, otherwise the image's default working directory is used.
+    If this container is used as the task container and the task overrides the default working directory, that override is ignored when running setup commands.
+
+The command will inherit the same environment variables as the container's `command` (including any specified on the task if this is the task container), runs as the
+same [user and group](#run_as_current_user) as the container's `command` and inherits the same settings for [privileged status](#privileged) and
+[capabilities](#capabilities_to_add-and-capabilities_to_drop).
+
+See [the task lifecycle](../TaskLifecycle.md) for more information on the effects of this option.
+
+!!! tip
+    It is recommended that you try to include any setup work in your image's Dockerfile wherever possible (and not use setup commands), as setup commands must be
+    run every time the container starts whereas commands included in your image's Dockerfile only run when the image needs to be built.
 
 ## `volumes`
 List of volume mounts to create for the container.
@@ -201,201 +389,12 @@ The following fields are supported:
 * `container`: path to mount the cache directory at inside the container. Required.
 * `options`: standard Docker mount options (such as `ro` for read-only). Optional.
 
-## `devices`
-List of device mounts to create for the container.
+## `working_directory`
+Working directory to start the container in.
 
-Two formats are supported:
+If not provided, the default working directory for the image will be used.
 
-* `local:container` or `local:container:options` format
-
-* An expanded format:
-  ```yaml
-  containers:
-    my-container:
-      ...
-      devices:
-      # This is equivalent to /dev/sda:/dev/disk:r
-      - local: /dev/sda
-        container: /dev/disk
-        options: r
-  ```
-
-Note that the `local` device mounts will be different for Windows and Unix-like hosts. See the [Docker guide for adding host devices to containers](https://docs.docker.com/engine/reference/commandline/run/#add-host-device-to-container---device) for more information.
-
-## `ports`
-List of ports to make available to the host machine.
-
-Three formats are supported:
-
-* `local:container` or `local:container/protocol` format
-
-    For example, `1234:5678` or `1234:5678/tcp` will make TCP port 5678 inside the container available on the host machine at TCP port 1234, and
-    `1234:5678/udp` will make UDP port 5678 inside the container available on the host machine at UDP port 1234.
-
-* `local_from-local_to:container_from:container-to` or `local_from-local_to:container_from:container-to/protocol` format
-
-    For example, `1000-1001:2025-2026` or `1000-1001:2025-2026/tcp` will make TCP port 2025 inside the container available
-    on the host machine at TCP port 1000, and TCP port 2026 inside the container available on the host machine at TCP port 1001.
-
-* An expanded format:
-  ```yaml
-  containers:
-    my-container:
-      ...
-      ports:
-        # This is equivalent to 1234:5678 or 1234:5678/tcp
-        - local: 1234
-          container: 5678
-        # This is equivalent to 3000:4000/udp
-        - local: 3000
-          container: 4000
-          protocol: udp
-        # This is equivalent to 1000-1001:2025-2026 or 1000-1001:2025-2026/tcp
-        - local: 1000-1001
-          container: 2025-2026
-        # This is equivalent to 5000-5001:6025-6026/udp
-        - local: 5000-5001
-          container: 6025-6026
-          protocol: udp
-  ```
-
-All protocols supported by Docker are supported. The default protocol is TCP if none is provided.
-
-!!! tip
-    Exposing ports is only required if you need to access the container from the host machine.
-
-    Any container started as part of a task will be able to access any port on any other container at the address `container_name:container_port`, even if that port
-    is not listed in `ports`.
-
-    For example, if a process running in the `http-server` container listens on port 2000, any other container in the task can access that at `http-server:2000`
-    without port 2000 being listed in `ports` (or an `EXPOSE` Dockerfile instruction).
-
-## `dependencies`
-List of other containers that should be started and healthy before starting this container.
-
-If a dependency's image does not contain a [health check](https://docs.docker.com/engine/reference/builder/#healthcheck), then as soon as it has started,
-it is considered to be healthy.
-
-See [this page](../tips/WaitingForDependenciesToBeReady.md) for more information on how to ensure dependencies are ready before starting containers that
-depend on them.
-
-## `health_check`
-Overrides [health check](https://docs.docker.com/engine/reference/builder/#healthcheck) configuration specified in the image or Dockerfile:
-
-* `command` The command to run to check the health of the container. If this command exits with code 0, the container is considered healthy, otherwise
-  the container is considered unhealthy. If not provided, the default command specified in the image or Dockerfile is used.
-
-* `retries` The number of times to perform the health check before considering the container unhealthy.
-
-* `interval` The interval between runs of the health check. Accepts values such as `2s` (two seconds) or `1m` (one minute).
-
-* `start_period` The time to wait before failing health checks count against the retry count. The health check is still run during this period,
-  and if the check succeeds, the container is immediately considered healthy. Accepts values such as `2s` (two seconds) or `1m` (one minute).
-
-## `run_as_current_user`
-Run the container with the same UID and GID as the user running batect (rather than the user the Docker daemon runs as, which is root
-on Linux). This means that any files created by the container will be owned by the user running batect, rather than root.
-
-This is really only useful on Linux. On macOS, the Docker daemon runs as the currently logged-in user and so any files created in the container are owned
-by that user, so this is less of an issue. However, for consistency, the same configuration changes are made on both Linux and macOS.
-
-`run_as_current_user` has the following options:
-
-* `enabled` Defaults to `false`, set to `true` to enable 'run as current user' mode.
-
-* `home_directory` Directory to use as home directory for user inside container. Required if `enabled` is `true`, not allowed if `enabled` is not provided
-  or set to `false`.
-
-  This directory is automatically created by batect with the correct owner and group.
-
-!!! warning
-    If the directory given by `home_directory` already exists inside the image for this container, it is overwritten.
-
-See [this page](../tips/BuildArtifactsOwnedByRoot.md) for more information on the effects of this option and why it is necessary.
-
-## `setup_commands`
-List of commands to run inside the container after it has become healthy but before dependent containers start.
-
-* `command` The command to run. **Required.**
-
-    This command is run in a similar way to the container's [`command`](#command), so the same limitations apply to using shell syntax such as `&&`.
-
-* `working_directory` The working directory to use for the command.
-
-    If no working directory is provided, [`working_directory`](#working_directory) is used if it is set, otherwise the image's default working directory is used.
-    If this container is used as the task container and the task overrides the default working directory, that override is ignored when running setup commands.
-
-The command will inherit the same environment variables as the container's `command` (including any specified on the task if this is the task container), runs as the
-same [user and group](#run_as_current_user) as the container's `command` and inherits the same settings for [privileged status](#privileged) and
-[capabilities](#capabilities_to_add-and-capabilities_to_drop).
-
-See [the task lifecycle](../TaskLifecycle.md) for more information on the effects of this option.
-
-!!! tip
-    It is recommended that you try to include any setup work in your image's Dockerfile wherever possible (and not use setup commands), as setup commands must be
-    run every time the container starts whereas commands included in your image's Dockerfile only run when the image needs to be built.
-
-## `privileged`
-Set to `true` to run the container in [privileged mode](https://docs.docker.com/engine/reference/commandline/run/#full-container-capabilities---privileged).
-
-See also [`capabilities_to_add` and `capabilities_to_drop`](#capabilities_to_add-and-capabilities_to_drop).
-
-## `capabilities_to_add` and `capabilities_to_drop`
-List of [capabilities](http://man7.org/linux/man-pages/man7/capabilities.7.html) to add or drop for the container.
-
-This is equivalent to passing [`--cap-add` or `--cap-drop`](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) to `docker run`.
-
-## `enable_init_process`
-Set to `true` to pass the [`--init`](https://docs.docker.com/engine/reference/run/#specify-an-init-process) flag when running the container.
-This creates the container with a simple PID 1 process to handle the responsibilities of the init system, which is required for some applications to behave correctly.
-
-[Read this article](https://engineeringblog.yelp.com/2016/01/dumb-init-an-init-for-docker.html) if you're interested in more information about the behaviour
-of different processes running as PID 1 and why this flag was introduced.
-
-## `additional_hostnames`
-List of hostnames to associate with this container, in addition to the default hostname (the name of the container).
-
-## `additional_hosts`
-Additional hostnames to add to `/etc/hosts` in the container. Equivalent to `--add-host` option for `docker run`.
-
-For example, to add an entry to resolve `database.example.com` as `1.2.3.4`:
-
-```yaml
-additional_hosts:
-  database.example.com: 1.2.3.4
-```
-
-## `log_driver`
-
-The Docker log driver to use when running the container.
-
-Defaults to `json-file` if not set.
-
-A full list of built-in log drivers is available in [the logging section of Docker documentation](https://docs.docker.com/config/containers/logging/configure/#supported-logging-drivers),
-and [logging plugins](https://docs.docker.com/config/containers/logging/plugins/) can be used as well.
-
-Options for the log driver can be provided with [`log_options`](#log_options).
-
-!!! warning
-    Some log drivers do not support streaming container output to the console, as described in
-    [the limitations section of Docker's logging documentation](https://docs.docker.com/config/containers/logging/configure/#limitations-of-logging-drivers).
-
-    If the selected log driver does not support streaming container output to the console, you will see error messages similar to
-    `Error attaching: configured logging driver does not support reading` in batect's output. This does not affect the execution of the task, which
-    will run to completion as per normal.
-
-## `log_options`
-
-Options to provide to the Docker log driver used when running the container.
-
-For example, to set [the tag used to identify the container in logs](https://docs.docker.com/config/containers/logging/log_tags/):
-
-```yaml
-log_options:
-  tag: "my-container"
-```
-
-The options available for each log driver are described in the Docker documentation for that log driver, such as [this page](https://docs.docker.com/config/containers/logging/json-file/) for the `json-file` driver.
+Both of these can be overridden for an individual task by specifying a [`working_directory` at the task level](Tasks.md#run).
 
 ## Examples
 

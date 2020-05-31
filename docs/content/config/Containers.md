@@ -323,7 +323,7 @@ See [this page](../tips/Proxies.md) for more information on using batect with pr
 ## `health_check`
 <small>**Equivalent Docker CLI option**: `--health-cmd`, `--health-interval`, `--health-retries` and `--health-start-period` to `docker run`, **equivalent Docker Compose option**: `healthcheck`</small>
 
-Overrides [health check](https://docs.docker.com/engine/reference/builder/#healthcheck) configuration specified in the image:
+Overrides the [health check configuration](https://docs.docker.com/engine/reference/builder/#healthcheck) specified in the image:
 
 ### `command`
 The command to run to check the health of the container.
@@ -492,7 +492,7 @@ container:
 ## `privileged`
 <small>**Equivalent Docker CLI option**: `--privileged` to `docker run`, **equivalent Docker Compose option**: `privileged`</small>
 
-Set to `true` to run the container in [privileged mode](https://docs.docker.com/engine/reference/commandline/run/#full-container-capabilities---privileged).
+Set to `true` to run the container in [privileged mode](https://docs.docker.com/engine/reference/commandline/run/#full-container-capabilities---privileged). Defaults to `false`.
 
 See also [`capabilities_to_add` and `capabilities_to_drop`](#capabilities_to_add-and-capabilities_to_drop).
 
@@ -518,12 +518,12 @@ See [this page](../tips/BuildArtifactsOwnedByRoot.md) for more information on th
 `run_as_current_user` has the following options:
 
 ### `enabled`
-Defaults to `false`, set to `true` to enable 'run as current user' mode.
+Set to `true` to enable 'run as current user' mode. Defaults to `false`.
 
 ### `home_directory`
 Directory to use as home directory for user inside container.
 
-Required if `enabled` is `true`, not allowed if `enabled` is not provided or set to `false`.
+Required if `enabled` is `true`, not allowed if `enabled` is `false`.
 
 This directory is automatically created by batect with the correct owner and group.
 

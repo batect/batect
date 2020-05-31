@@ -4,7 +4,31 @@
     This page reflects the options available in the [most recent version](https://github.com/batect/batect/releases/latest)
     of batect.
 
-Each container definition is made up of:
+There are a number of configuration options for containers:
+
+* [`image`](#image): image to use for this container. **One of `image` or `build_directory` is required.**
+* [`build_directory`](#build_directory): path to a directory containing a Dockerfile to build and use for this container. **One of `image` or `build_directory` is required.**
+* [`build_args`](#build_args): list of build args to use when building the image in `build_directory`
+* [`dockerfile`](#dockerfile): Dockerfile to use when building the image in `build_directory`
+* [`command`](#command): command to run when the container starts
+* [`entrypoint`](#entrypoint): entrypoint to use to run the container's command
+* [`environment`](#environment): environment variables for the container
+* [`working_directory`](#working_directory): working directory for the container's command
+* [`volumes`](#volumes): volume mounts to create for the container
+* [`devices`](#devices): device mounts to create for the container
+* [`ports`](#ports): ports to expose from the container to the host machine
+* [`dependencies`](#dependencies): other containers to start before starting this container
+* [`health_check`](#health_check): health check configuration for the container
+* [`run_as_current_user`](#run_as_current_user): configuration for ['run as current user' mode](../tips/BuildArtifactsOwnedByRoot.md)
+* [`setup_commands`](#setup_commands): commands to run inside the container after it has become healthy but before dependent containers start
+* [`privileged`](#privileged): enable privileged mode for the container
+* [`capabilities_to_add`](#capabilities_to_add-and-capabilities_to_drop): additional capabilities to grant to the container
+* [`capabilities_to_drop`](#capabilities_to_add-and-capabilities_to_drop): additional capabilities to remove from the container
+* [`enable_init_process`](#enable_init_process): enable Docker's init process for the container
+* [`additional_hostnames`](#additional_hostnames): other hostnames to associate with the container, in addition to the container's name
+* [`additional_hosts`](#additional_hosts): extra entries to add to `/etc/hosts` inside the container
+* [`log_driver`](#log_driver): Docker log driver to use when running the container
+* [`log_options`](#log_options): additional options for the log driver in use
 
 ## `image`
 Image name (in standard Docker image reference format) to use for this container. **One of `image` or `build_directory` is required.**

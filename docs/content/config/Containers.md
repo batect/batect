@@ -31,9 +31,13 @@ There are a number of configuration options for containers:
 * [`log_options`](#log_options): additional options for the log driver in use
 
 ## `additional_hostnames`
+<small>**Equivalent Docker CLI option**: `--network-alias` to `docker run`, **equivalent Docker Compose option**: `extra_hosts`</small>
+
 List of hostnames to associate with this container, in addition to the default hostname (the name of the container).
 
 ## `additional_hosts`
+<small>**Equivalent Docker CLI option**: `--add-host` to `docker run`, **equivalent Docker Compose option**: `networks.aliases`</small>
+
 Additional hostnames to add to `/etc/hosts` in the container. Equivalent to `--add-host` option for `docker run`.
 
 For example, to add an entry to resolve `database.example.com` as `1.2.3.4`:
@@ -44,6 +48,8 @@ additional_hosts:
 ```
 
 ## `build_args`
+<small>**Equivalent Docker CLI option**: `--build-arg` to `docker build`, **equivalent Docker Compose option**: `build.args`</small>
+
 List of build args (in `name: value` format) to use when building the image in [`build_directory`](#build_directory). Values can be [expressions](Overview.md#expressions).
 
 Each build arg must be defined in the Dockerfile with an `ARG` instruction otherwise the value provided will have no effect.
@@ -52,6 +58,8 @@ Each build arg must be defined in the Dockerfile with an `ARG` instruction other
     Use caution when using build args for secret values. Build arg values can be revealed by anyone with a copy of the image with the `docker history` command.
 
 ## `build_directory`
+<small>**Equivalent Docker CLI option**: argument to `docker build`, **equivalent Docker Compose option**: `build` or `build.context`</small>
+
 Path (relative to the configuration file's directory) to a directory containing a Dockerfile to build and use as an image for this container.
 **One of `image` or `build_directory` is required.**
 
@@ -61,11 +69,15 @@ with users running on other operating systems, using Unix-style paths is recomme
 The image can be overridden when running a task with [`--override-image`](../CLIReference.md#override-the-image-used-by-a-container-override-image).
 
 ## `capabilities_to_add` and `capabilities_to_drop`
+<small>**Equivalent Docker CLI option**: `--cap-add` / `--cap-drop` to `docker run`, **equivalent Docker Compose option**: `cap_add` / `cap_drop`</small>
+
 List of [capabilities](http://man7.org/linux/man-pages/man7/capabilities.7.html) to add or drop for the container.
 
 This is equivalent to passing [`--cap-add` or `--cap-drop`](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) to `docker run`.
 
 ## `command`
+<small>**Equivalent Docker CLI option**: argument to `docker run`, **equivalent Docker Compose option**: `command`</small>
+
 Command to run when the container starts.
 
 If not provided, the default command for the image will be run.
@@ -108,6 +120,8 @@ Both of these can be overridden for an individual task by specifying a [`command
     `sh -c echo hello && echo world`).
 
 ## `dependencies`
+<small>**Equivalent Docker CLI option**: none, **equivalent Docker Compose option**: `depends_on` (behaviour differs)</small>
+
 List of other containers that should be started and healthy before starting this container.
 
 If a dependency's image does not contain a [health check](https://docs.docker.com/engine/reference/builder/#healthcheck), then as soon as it has started,
@@ -117,6 +131,8 @@ See [this page](../tips/WaitingForDependenciesToBeReady.md) for more information
 depend on them.
 
 ## `devices`
+<small>**Equivalent Docker CLI option**: `--device` to `docker run`, **equivalent Docker Compose option**: `devices`</small>
+
 List of device mounts to create for the container.
 
 Two formats are supported:
@@ -138,6 +154,8 @@ Two formats are supported:
 Note that the `local` device mounts will be different for Windows and Unix-like hosts. See the [Docker guide for adding host devices to containers](https://docs.docker.com/engine/reference/commandline/run/#add-host-device-to-container---device) for more information.
 
 ## `dockerfile`
+<small>**Equivalent Docker CLI option**: `--file` to `docker build`, **equivalent Docker Compose option**: `build.dockerfile`</small>
+
 Dockerfile (relative to [`build_directory`](#build_directory)) to use when building the image in [`build_directory`](#build_directory). Defaults to `Dockerfile` if not set.
 
 The Dockerfile must be within [`build_directory`](#build_directory).
@@ -145,6 +163,8 @@ The Dockerfile must be within [`build_directory`](#build_directory).
 `dockerfile` must always be specified with Unix-style (`path/to/thing`) paths, even when running on Windows.
 
 ## `enable_init_process`
+<small>**Equivalent Docker CLI option**: `--init` to `docker run`, **equivalent Docker Compose option**: `init`</small>
+
 Set to `true` to pass the [`--init`](https://docs.docker.com/engine/reference/run/#specify-an-init-process) flag when running the container.
 This creates the container with a simple PID 1 process to handle the responsibilities of the init system, which is required for some applications to behave correctly.
 
@@ -152,9 +172,11 @@ This creates the container with a simple PID 1 process to handle the responsibil
 of different processes running as PID 1 and why this flag was introduced.
 
 ## `entrypoint`
+<small>**Equivalent Docker CLI option**: `--entrypoint` to `docker run`, **equivalent Docker Compose option**: `entrypoint`</small>
+
 Entrypoint to use to run the [command](#command).
 
-If not provided, the default entrypoint for the container will be used.
+If not provided, the default entrypoint for the image will be used.
 
 Both of these can be overridden for an individual task by specifying an [`entrypoint` at the task level](Tasks.md#entrypoint).
 
@@ -163,6 +185,8 @@ See the Docker docs for [`CMD`](https://docs.docker.com/engine/reference/builder
 batect will always convert the entrypoint provided here to the exec form when passed to Docker.
 
 ## `environment`
+<small>**Equivalent Docker CLI option**: `--env` to `docker run`, **equivalent Docker Compose option**: `environment`</small>
+
 List of environment variables (in `name: value` format) for the container. Values can be [expressions](Overview.md#expressions).
 
 ### `TERM`
@@ -190,6 +214,8 @@ Overrides [health check](https://docs.docker.com/engine/reference/builder/#healt
   and if the check succeeds, the container is immediately considered healthy. Accepts values such as `2s` (two seconds) or `1m` (one minute).
 
 ## `image`
+<small>**Equivalent Docker CLI option**: argument to `docker run`, **equivalent Docker Compose option**: `image`</small>
+
 Image name (in standard Docker image reference format) to use for this container. **One of `image` or `build_directory` is required.**
 
 The image can be overridden when running a task with [`--override-image`](../CLIReference.md#override-the-image-used-by-a-container-override-image).
@@ -199,6 +225,7 @@ The image can be overridden when running a task with [`--override-image`](../CLI
     everywhere. For example, use `alpine:3.7`, not `alpine` or `alpine:latest`.
 
 ## `log_driver`
+<small>**Equivalent Docker CLI option**: `--log-driver` to `docker run`, **equivalent Docker Compose option**: `logging.driver`</small>
 
 The Docker log driver to use when running the container.
 
@@ -218,6 +245,7 @@ Options for the log driver can be provided with [`log_options`](#log_options).
     will run to completion as per normal.
 
 ## `log_options`
+<small>**Equivalent Docker CLI option**: `--log-opt` to `docker run`, **equivalent Docker Compose option**: `logging.options`</small>
 
 Options to provide to the Docker log driver used when running the container.
 
@@ -231,6 +259,8 @@ log_options:
 The options available for each log driver are described in the Docker documentation for that log driver, such as [this page](https://docs.docker.com/config/containers/logging/json-file/) for the `json-file` driver.
 
 ## `ports`
+<small>**Equivalent Docker CLI option**: `--publish` to `docker run`, **equivalent Docker Compose option**: `ports`</small>
+
 List of ports to make available to the host machine.
 
 Three formats are supported:
@@ -279,11 +309,15 @@ All protocols supported by Docker are supported. The default protocol is TCP if 
     without port 2000 being listed in `ports` (or an `EXPOSE` Dockerfile instruction).
 
 ## `privileged`
+<small>**Equivalent Docker CLI option**: `--privileged` to `docker run`, **equivalent Docker Compose option**: `privileged`</small>
+
 Set to `true` to run the container in [privileged mode](https://docs.docker.com/engine/reference/commandline/run/#full-container-capabilities---privileged).
 
 See also [`capabilities_to_add` and `capabilities_to_drop`](#capabilities_to_add-and-capabilities_to_drop).
 
 ## `run_as_current_user`
+<small>**Equivalent Docker CLI option**: none, **equivalent Docker Compose option**: none</small>
+
 Run the container with the same UID and GID as the user running batect (rather than the user the Docker daemon runs as, which is root
 on Linux). This means that any files created by the container will be owned by the user running batect, rather than root.
 
@@ -305,6 +339,8 @@ by that user, so this is less of an issue. However, for consistency, the same co
 See [this page](../tips/BuildArtifactsOwnedByRoot.md) for more information on the effects of this option and why it is necessary.
 
 ## `setup_commands`
+<small>**Equivalent Docker CLI option**: none, **equivalent Docker Compose option**: none</small>
+
 List of commands to run inside the container after it has become healthy but before dependent containers start.
 
 * `command` The command to run. **Required.**
@@ -327,6 +363,8 @@ See [the task lifecycle](../TaskLifecycle.md) for more information on the effect
     run every time the container starts whereas commands included in your image's Dockerfile only run when the image needs to be built.
 
 ## `volumes`
+<small>**Equivalent Docker CLI option**: `--volume` to `docker run`, **equivalent Docker Compose option**: `volumes`</small>
+
 List of volume mounts to create for the container.
 
 Both local mounts (mounting a directory on the host into a container) and [cache mounts](../tips/Performance.md#cache-volumes) are supported:
@@ -390,6 +428,8 @@ The following fields are supported:
 * `options`: standard Docker mount options (such as `ro` for read-only). Optional.
 
 ## `working_directory`
+<small>**Equivalent Docker CLI option**: `--workdir` to `docker run`, **equivalent Docker Compose option**: `working_dir`</small>
+
 Working directory to start the container in.
 
 If not provided, the default working directory for the image will be used.

@@ -23,6 +23,7 @@ theme:
 
 extra_css:
   - assets/3rdparty/asciinema-player.css
+  - assets/styles.css
 
 extra_javascript:
   - assets/3rdparty/asciinema-player.js

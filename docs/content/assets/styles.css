@@ -1,0 +1,10 @@
+h2 {
+    padding-bottom: 0.3rem;
+    border-bottom: #d0d0d0 solid 1px;
+}
+
+.md-typeset th code {
+    background-color: transparent;
+    color: var(--md-default-bg-color);
+    padding-left: 0;
+}

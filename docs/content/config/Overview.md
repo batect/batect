@@ -10,7 +10,42 @@ By convention, this file is called `batect.yml` and is placed in the root of you
 You can use a different name or location and tell `batect` where to find it with the
 [`-f` option](../CLIReference.md#use-a-non-standard-configuration-file-name-config-file-or-f).
 
-The root of the configuration file is made up of:
+The following is a sample "hello world" configuration file:
+
+```yaml
+containers:
+  my-container:
+    image: alpine:3.11.3
+
+tasks:
+  say-hello:
+    description: Say hello to the nice person reading the batect documentation
+    run:
+      container: my-container
+      command: echo 'Hello world!'
+```
+
+Run it with `./batect say-hello`:
+
+```
+$ ./batect say-hello
+Running say-hello...
+my-container: running echo 'Hello world!'
+
+Hello world!
+
+say-hello finished with exit code 0 in 1.2s.
+```
+
+Get a list of available tasks with `./batect --list-tasks`:
+
+```
+$ ./batect --list-tasks
+Available tasks:
+- say-hello: Say hello to the nice person reading the batect README
+```
+
+Configuration files are made up of:
 
 ## `project_name`
 

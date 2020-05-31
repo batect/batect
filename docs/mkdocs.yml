@@ -63,7 +63,7 @@ nav:
 
   - Task lifecycle: "TaskLifecycle.md"
 
-  - Using batect with languages and developer tools:
+  - Working with languages and developer tools:
     - .NET Core: "tools/DotNetCore.md"
     - Docker: "tools/Docker.md"
     - Golang: "tools/Golang.md"
@@ -72,14 +72,14 @@ nav:
     - Ruby: "tools/Ruby.md"
     - Seq: "tools/Seq.md"
 
-  - Using batect with CI systems:
+  - Working with CI systems:
+    - General: "tools/CIGeneral.md"
     - Buildkite: "tools/Buildkite.md"
     - CircleCI: "tools/CircleCI.md"
     - GitHub Actions: "tools/GitHubActions.md"
     - Travis CI: "tools/TravisCI.md"
 
   - Tips and tricks:
-    - CI setup: "tips/CISetup.md"
     - IDE integration: "tips/IDEIntegration.md"
     - Performance: "tips/Performance.md"
     - Build artifacts are owned by root: "tips/BuildArtifactsOwnedByRoot.md"

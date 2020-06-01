@@ -1,4 +1,4 @@
-FROM alpine:3.11.6
+FROM alpine:3.12.0
 
 COPY health-check.sh /tools/
 HEALTHCHECK --interval=0.01s --retries=1 CMD exit 0

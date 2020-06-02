@@ -1,3 +1,3 @@
-FROM nginx:1.17.10
+FROM nginx:1.19.0
 
 COPY index.html /usr/share/nginx/html

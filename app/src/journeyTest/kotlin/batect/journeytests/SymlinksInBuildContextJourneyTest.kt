@@ -17,12 +17,14 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
+import batect.journeytests.testutils.exitCode
+import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.containsSubstring
-import com.natpryce.hamkrest.equalTo
+import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.contains
+import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -34,11 +36,11 @@ object SymlinksInBuildContextJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
             it("prints the output from that task") {
-                assertThat(result.output, containsSubstring("original.txt: This is the file content.\nlink-to-original.txt: This is the file content.\n"))
+                assert(result).output().contains("original.txt: This is the file content.\nlink-to-original.txt: This is the file content.\n")
             }
 
             it("returns the exit code from that task") {
-                assertThat(result.exitCode, equalTo(0))
+                assert(result).exitCode().toBe(0)
             }
         }
     }

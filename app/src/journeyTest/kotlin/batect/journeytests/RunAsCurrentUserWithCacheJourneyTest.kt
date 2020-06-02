@@ -18,12 +18,14 @@ package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.DockerUtils
+import batect.journeytests.testutils.exitCode
+import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.containsSubstring
-import com.natpryce.hamkrest.equalTo
+import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.contains
+import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -47,11 +49,11 @@ object RunAsCurrentUserWithCacheJourneyTest : Spek({
                     "/home/special-place/cache/created-file created"
                 ).joinToString("\n")
 
-                assertThat(result.output, containsSubstring(expectedOutput))
+                assert(result).output().contains(expectedOutput)
             }
 
             it("returns the exit code from that task") {
-                assertThat(result.exitCode, equalTo(0))
+                assert(result).exitCode().toBe(0)
             }
         }
     }

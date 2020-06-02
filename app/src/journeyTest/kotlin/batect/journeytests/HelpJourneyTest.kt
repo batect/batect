@@ -17,12 +17,14 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
+import batect.journeytests.testutils.exitCode
+import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.containsSubstring
-import com.natpryce.hamkrest.equalTo
+import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.contains
+import ch.tutteli.atrium.api.fluent.en_GB.notToBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -34,11 +36,11 @@ object HelpJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--help")) }
 
             it("prints the help header") {
-                assertThat(result.output, containsSubstring("Usage: batect [options] task"))
+                assert(result).output().contains("Usage: batect [options] task")
             }
 
             it("returns a non-zero exit code") {
-                assertThat(result.exitCode, !equalTo(0))
+                assert(result).exitCode().notToBe(0)
             }
         }
     }

@@ -18,16 +18,19 @@ package batect.journeytests.cleanup
 
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.DockerUtils
+import batect.journeytests.testutils.exitCode
+import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.platformLineSeparator
 import batect.testutils.runBeforeGroup
-import com.natpryce.hamkrest.absent
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.contains
-import com.natpryce.hamkrest.containsSubstring
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.isEmpty
+import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.contains
+import ch.tutteli.atrium.api.fluent.en_GB.containsRegex
+import ch.tutteli.atrium.api.fluent.en_GB.isEmpty
+import ch.tutteli.atrium.api.fluent.en_GB.notToBe
+import ch.tutteli.atrium.api.fluent.en_GB.notToBeNull
+import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.InputStreamReader
@@ -47,16 +50,16 @@ object DontCleanupAfterSuccessTest : Spek({
                     .start()
                     .waitFor()
 
-                assertThat(exitCode, equalTo(0))
+                assert(exitCode).toBe(0)
             }
 
             val containersAfterTest = DockerUtils.getAllCreatedContainers()
             val orphanedContainers = containersAfterTest - containersBeforeTest
-            assertThat(orphanedContainers, isEmpty)
+            assert(orphanedContainers).isEmpty()
 
             val networksAfterTest = DockerUtils.getAllNetworks()
             val orphanedNetworks = networksAfterTest - networksBeforeTest
-            assertThat(orphanedNetworks, isEmpty)
+            assert(orphanedNetworks).isEmpty()
         }
 
         on("running that task with the '--no-cleanup-on-success' option") {
@@ -73,57 +76,59 @@ object DontCleanupAfterSuccessTest : Spek({
             }
 
             it("prints the output from the main task") {
-                assertThat(result.output, containsSubstring("This is some output from the main task\n"))
+                assert(result).output().contains("This is some output from the main task\n")
             }
 
             it("prints the output from the prerequisite task") {
-                assertThat(result.output, containsSubstring("This is some output from the build task\n"))
+                assert(result).output().contains("This is some output from the build task\n")
             }
 
             it("returns a non-zero exit code") {
-                assertThat(result.exitCode, !equalTo(0))
+                assert(result).exitCode().notToBe(0)
             }
 
             it("does not return the exit code from the task") {
-                assertThat(result.exitCode, !equalTo(123))
+                assert(result).exitCode().notToBe(123)
             }
 
             it("prints a message explaining how to see the logs of the container and how to run a command in the container") {
-                assertThat(result.output, contains(commandsRegex))
+                assert(result).output().containsRegex(commandsRegex)
             }
 
             it("prints a message explaining how to clean up any containers left behind") {
-                assertThat(result.output, contains(cleanupRegex))
+                assert(result).output().containsRegex(cleanupRegex)
             }
 
             it("does not delete the container") {
                 val containerId = commandsRegex.find(result.output)?.groups?.get("id")?.value
 
-                assertThat(containerId, !absent<String>())
+                assert(containerId).notToBeNull()
 
                 val inspectProcess = ProcessBuilder("docker", "inspect", containerId, "--format", "{{.State.Status}}")
                     .redirectErrorStream(true)
                     .start()
 
                 inspectProcess.waitFor()
+                assert(inspectProcess.exitValue()).toBe(0)
 
-                assertThat(inspectProcess.exitValue(), equalTo(0))
-                assertThat(InputStreamReader(inspectProcess.inputStream).readText().trim(), equalTo("exited"))
+                val output = InputStreamReader(inspectProcess.inputStream).readText().trim()
+                assert(output).toBe("exited")
             }
 
             it("the command given to view the logs displays the logs from the container") {
                 val logsCommand = commandsRegex.find(result.output)?.groups?.get("logsCommand")?.value
 
-                assertThat(logsCommand, !absent<String>())
+                assert(logsCommand).notToBeNull()
 
                 val logsProcess = ProcessBuilder(logsCommand!!.trim().split(" "))
                     .redirectErrorStream(true)
                     .start()
 
                 logsProcess.waitFor()
+                assert(logsProcess.exitValue()).toBe(0)
 
-                assertThat(InputStreamReader(logsProcess.inputStream).readText().trim(), equalTo("This is some output from the main task"))
-                assertThat(logsProcess.exitValue(), equalTo(0))
+                val output = InputStreamReader(logsProcess.inputStream).readText().trim()
+                assert(output).toBe("This is some output from the main task")
             }
         }
     }

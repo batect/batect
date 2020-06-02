@@ -17,12 +17,14 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
+import batect.journeytests.testutils.exitCode
+import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.containsSubstring
-import com.natpryce.hamkrest.equalTo
+import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.contains
+import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -34,11 +36,11 @@ object TaskUsingLogDriverTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
             it("prints the output from that task") {
-                assertThat(result.output, containsSubstring("Error attaching: configured logging driver does not support reading"))
+                assert(result).output().contains("Error attaching: configured logging driver does not support reading")
             }
 
             it("returns the exit code from that task") {
-                assertThat(result.exitCode, equalTo(123))
+                assert(result).exitCode().toBe(123)
             }
         }
     }

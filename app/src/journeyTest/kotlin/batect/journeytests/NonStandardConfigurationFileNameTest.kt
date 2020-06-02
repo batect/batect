@@ -17,13 +17,15 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
+import batect.journeytests.testutils.exitCode
+import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import batect.testutils.withPlatformSpecificLineSeparator
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.containsSubstring
-import com.natpryce.hamkrest.equalTo
+import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.contains
+import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -34,15 +36,15 @@ object NonStandardConfigurationFileNameTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("-f", "another-name.yml", "--list-tasks")) }
 
             it("prints a list of all available tasks") {
-                assertThat(result.output, containsSubstring("""
+                assert(result).output().contains("""
                     |- task-1
                     |- task-2
                     |- task-3
-                    """.trimMargin().withPlatformSpecificLineSeparator()))
+                    """.trimMargin().withPlatformSpecificLineSeparator())
             }
 
             it("returns a zero exit code") {
-                assertThat(result.exitCode, equalTo(0))
+                assert(result).exitCode().toBe(0)
             }
         }
 
@@ -51,11 +53,11 @@ object NonStandardConfigurationFileNameTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("-f", "another-name.yml", "task-1")) }
 
             it("prints the output of the task ") {
-                assertThat(result.output, containsSubstring("This is some output from task 1\n"))
+                assert(result).output().contains("This is some output from task 1\n")
             }
 
             it("returns the exit code from the task") {
-                assertThat(result.exitCode, equalTo(123))
+                assert(result).exitCode().toBe(123)
             }
         }
     }

@@ -18,13 +18,15 @@ package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.deleteDirectoryContents
+import batect.journeytests.testutils.exitCode
+import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
-import batect.testutils.doesNotThrow
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.containsSubstring
-import com.natpryce.hamkrest.equalTo
+import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.contains
+import ch.tutteli.atrium.api.fluent.en_GB.notToThrow
+import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import jnr.ffi.Platform
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -64,7 +66,7 @@ object RunAsCurrentUserJourneyTest : Spek({
                         "Home directory owned by group: $expectedContainerGroupName"
                     ).joinToString("\n")
 
-                    assertThat(result.output, containsSubstring(expectedOutput))
+                    assert(result).output().contains(expectedOutput)
                 }
 
                 if (Platform.getNativePlatform().os != Platform.OS.WINDOWS) {
@@ -73,20 +75,20 @@ object RunAsCurrentUserJourneyTest : Spek({
                     // access, so this test isn't so meaningful.
 
                     it("creates files as the current user, not root") {
-                        assertThat(Files.getOwner(expectedFilePath).name, equalTo(localUserName))
+                        assert(Files.getOwner(expectedFilePath).name).toBe(localUserName)
                     }
                 }
 
                 it("creates files so that the current host user can read, edit and delete them") {
-                    assertThat({
+                    assert {
                         Files.readAllBytes(expectedFilePath)
                         Files.write(expectedFilePath, byteArrayOf(1, 2, 3))
                         Files.delete(expectedFilePath)
-                    }, doesNotThrow())
+                    }.notToThrow()
                 }
 
                 it("returns the exit code from that task") {
-                    assertThat(result.exitCode, equalTo(0))
+                    assert(result).exitCode().toBe(0)
                 }
             }
         }

@@ -18,13 +18,15 @@ package batect.journeytests.windowscontainers
 
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.DockerUtils
+import batect.journeytests.testutils.exitCode
+import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.containsSubstring
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.isEmpty
+import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.contains
+import ch.tutteli.atrium.api.fluent.en_GB.isEmpty
+import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -38,25 +40,25 @@ object WindowsContainerJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
             it("prints the output from that task") {
-                assertThat(result.output, containsSubstring("This is some output from the task"))
+                assert(result).output().contains("This is some output from the task")
             }
 
             it("returns the exit code from that task") {
-                assertThat(result.exitCode, equalTo(123))
+                assert(result).exitCode().toBe(123)
             }
 
             it("cleans up all containers it creates") {
                 val containersAfterTest = DockerUtils.getAllCreatedContainers()
                 val potentiallyOrphanedContainers = containersAfterTest - containersBeforeTest
 
-                assertThat(potentiallyOrphanedContainers, isEmpty)
+                assert(potentiallyOrphanedContainers).isEmpty()
             }
 
             it("cleans up all networks it creates") {
                 val networksAfterTest = DockerUtils.getAllNetworks()
                 val potentiallyOrphanedNetworks = networksAfterTest - networksBeforeTest
 
-                assertThat(potentiallyOrphanedNetworks, isEmpty)
+                assert(potentiallyOrphanedNetworks).isEmpty()
             }
         }
     }

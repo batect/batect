@@ -17,13 +17,15 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
+import batect.journeytests.testutils.exitCode
+import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import batect.testutils.withPlatformSpecificLineSeparator
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.containsSubstring
-import com.natpryce.hamkrest.equalTo
+import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.contains
+import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -35,15 +37,15 @@ object ListTasksJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--list-tasks")) }
 
             it("prints a list of all available tasks") {
-                assertThat(result.output, containsSubstring("""
+                assert(result).output().contains("""
                     |- task-1: do the first thing
                     |- task-2: do the second thing
                     |- task-3: do the third thing
-                    """.trimMargin().withPlatformSpecificLineSeparator()))
+                    """.trimMargin().withPlatformSpecificLineSeparator())
             }
 
             it("returns a zero exit code") {
-                assertThat(result.exitCode, equalTo(0))
+                assert(result).exitCode().toBe(0)
             }
         }
     }

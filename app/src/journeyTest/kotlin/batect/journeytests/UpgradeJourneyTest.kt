@@ -17,12 +17,14 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
+import batect.journeytests.testutils.exitCode
+import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.containsSubstring
-import com.natpryce.hamkrest.equalTo
+import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.contains
+import ch.tutteli.atrium.api.fluent.en_GB.notToBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -39,11 +41,11 @@ object UpgradeJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--upgrade")) }
 
             it("prints a message indicating that the upgrade can only be performed if the wrapper script is used") {
-                assertThat(result.output, containsSubstring("batect was started without using the wrapper script and so cannot upgrade it."))
+                assert(result).output().contains("batect was started without using the wrapper script and so cannot upgrade it.")
             }
 
             it("returns a non-zero exit code") {
-                assertThat(result.exitCode, !equalTo(0))
+                assert(result).exitCode().notToBe(0)
             }
         }
     }

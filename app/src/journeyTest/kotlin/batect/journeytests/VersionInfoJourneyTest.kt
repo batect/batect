@@ -17,10 +17,12 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
+import batect.journeytests.testutils.exitCode
+import batect.journeytests.testutils.output
 import batect.testutils.on
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.containsSubstring
-import com.natpryce.hamkrest.equalTo
+import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.contains
+import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -32,15 +34,15 @@ object VersionInfoJourneyTest : Spek({
             val result = runner.runApplication(listOf("--version"))
 
             it("prints some version info") {
-                assertThat(result.output, containsSubstring("batect version:"))
-                assertThat(result.output, containsSubstring("Built:"))
-                assertThat(result.output, containsSubstring("JVM version:"))
-                assertThat(result.output, containsSubstring("OS version:"))
-                assertThat(result.output, containsSubstring("Docker version:"))
+                assert(result).output().contains("batect version:")
+                assert(result).output().contains("Built:")
+                assert(result).output().contains("JVM version:")
+                assert(result).output().contains("OS version:")
+                assert(result).output().contains("Docker version:")
             }
 
             it("returns a zero exit code") {
-                assertThat(result.exitCode, equalTo(0))
+                assert(result).exitCode().toBe(0)
             }
         }
     }

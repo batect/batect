@@ -17,12 +17,13 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
+import batect.journeytests.testutils.exitCode
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.greaterThan
+import ch.tutteli.atrium.api.fluent.en_GB.isGreaterThan
+import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.File
@@ -38,12 +39,12 @@ object LoggingJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--log-file=$logPath", "--version")) }
 
             it("logs some information to the log file") {
-                assertThat(logPath.exists(), equalTo(true))
-                assertThat(logPath.length(), greaterThan(0L))
+                assert(logPath.exists()).toBe(true)
+                assert(logPath.length()).isGreaterThan(0L)
             }
 
             it("returns a zero exit code") {
-                assertThat(result.exitCode, equalTo(0))
+                assert(result).exitCode().toBe(0)
             }
         }
     }

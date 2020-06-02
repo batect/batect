@@ -19,12 +19,14 @@ package batect.journeytests
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.DockerUtils
 import batect.journeytests.testutils.deleteDirectoryContents
+import batect.journeytests.testutils.exitCode
+import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.containsSubstring
-import com.natpryce.hamkrest.equalTo
+import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.contains
+import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -47,27 +49,27 @@ object CacheMountJourneyTest : Spek({
                     val secondResult by runBeforeGroup { runner.runApplication(listOf(arg, "the-task")) }
 
                     it("should not have access to the file in the cache in the first run and create it") {
-                        assertThat(firstResult.output, containsSubstring("File created in task does not exist, creating it\n"))
+                        assert(firstResult).output().contains("File created in task does not exist, creating it\n")
                     }
 
                     it("should have access to the file in the cache in the second run") {
-                        assertThat(secondResult.output, containsSubstring("File created in task exists\n"))
+                        assert(secondResult).output().contains("File created in task exists\n")
                     }
 
                     it("should not have access to the file from the image in the first run") {
-                        assertThat(firstResult.output, containsSubstring("File created in image does not exist\n"))
+                        assert(firstResult).output().contains("File created in image does not exist\n")
                     }
 
                     it("should not have access to the file from the image in the second run") {
-                        assertThat(secondResult.output, containsSubstring("File created in image does not exist\n"))
+                        assert(secondResult).output().contains("File created in image does not exist\n")
                     }
 
                     it("should succeed on the first run") {
-                        assertThat(firstResult.exitCode, equalTo(0))
+                        assert(firstResult).exitCode().toBe(0)
                     }
 
                     it("should succeed on the second run") {
-                        assertThat(secondResult.exitCode, equalTo(0))
+                        assert(secondResult).exitCode().toBe(0)
                     }
                 }
             }

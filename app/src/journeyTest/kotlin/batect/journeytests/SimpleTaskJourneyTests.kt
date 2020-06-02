@@ -17,16 +17,18 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
+import batect.journeytests.testutils.exitCode
+import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.containsSubstring
-import com.natpryce.hamkrest.equalTo
+import ch.tutteli.atrium.api.fluent.en_GB.contains
+import ch.tutteli.atrium.api.fluent.en_GB.toBe
+import ch.tutteli.atrium.api.verbs.assert
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-abstract class SimpleTaskJourneyTest(val testName: String, val description: String) : Spek({
+abstract class SimpleTaskJourneyTest(private val testName: String, private val description: String) : Spek({
     describe(description) {
         val runner by createForGroup { ApplicationRunner(testName) }
 
@@ -34,11 +36,11 @@ abstract class SimpleTaskJourneyTest(val testName: String, val description: Stri
             val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
             it("prints the output from that task") {
-                assertThat(result.output, containsSubstring("This is some output from the task\n"))
+                assert(result).output().contains("This is some output from the task\n")
             }
 
             it("returns the exit code from that task") {
-                assertThat(result.exitCode, equalTo(123))
+                assert(result).exitCode().toBe(123)
             }
         }
     }

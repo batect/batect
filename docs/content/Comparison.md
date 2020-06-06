@@ -9,15 +9,6 @@
 
 How does batect compare to...
 
-## ...Vagrant?
-
-Vagrant's use of virtual machines means that it is very heavyweight, making it difficult to run multiple projects'
-environments at once. This is especially problematic on CI servers where we'd like to run multiple builds in parallel.
-
-Furthermore, the long-lived nature of virtual machines means that it's very easy for a developer's machine to get out of sync
-with the desired configuration, and nothing automatically re-provisions the machine when the configuration is changed - a
-developer has to remember to re-run the provisioning step if the configuration changes.
-
 ## ...using shell scripts to drive Docker?
 
 While it's certainly possible, it quickly gets unwieldy and is difficult to effectively parallelise tasks that can run in parallel.
@@ -31,16 +22,19 @@ for this purpose has a number of drawbacks.
 
 In particular, Docker Compose is geared towards describing an application and its dependencies and starting this whole stack.
 Its CLI is designed with this purpose in mind, making it frustrating to use day-to-day as a development tool and necessitating
-the use of a higher-level script to automate its usage. Furthermore, Docker Compose has no concept of tasks, further cementing
-the need to use a higher-level script to provide the ability to execute different commands, run prerequisite tasks or setup commands
-and provide the discoverability that comes with a [go script](https://www.thoughtworks.com/insights/blog/praise-go-script-part-i).
+the use of a higher-level script to automate its usage.
+
+Furthermore, Docker Compose has no concept of tasks, further cementing the need to use a higher-level script to provide the ability
+to execute different commands, run prerequisite tasks or setup commands and provide the discoverability that comes with a
+[go script](https://www.thoughtworks.com/insights/blog/praise-go-script-part-i).
 
 Docker Compose is also significantly slower than batect, as it does not parallelise all operations - in one test, batect was 17%
-faster than Docker Compose. It also does not elegantly support pulling together a set of containers in different configurations
-(eg. integration vs functional testing), does not handle [proxies](tips/Proxies.md) or
-[file permission issues on Linux](tips/BuildArtifactsOwnedByRoot.md) automatically and has
-[one long-standing bug](https://github.com/docker/compose/issues/4369) that makes waiting for containers to report as healthy
-difficult.
+faster than Docker Compose.
+
+It also does not elegantly support pulling together a set of containers in different configurations (eg. integration vs functional
+testing), does not handle [proxies](tips/Proxies.md) or [file permission issues on Linux](tips/BuildArtifactsOwnedByRoot.md)
+automatically and does not support [waiting for dependencies to become healthy](tips/WaitingForDependenciesToBeReady.md) as of
+version 3.
 
 ## ...CI tools with a local runner?
 
@@ -94,3 +88,12 @@ Specific drawbacks of these tools compared to using batect include:
 
 * These tools don't have a way to easily codify and share tasks not used in the build but used by developers, such as a task
   that spins up the app with stubbed dependencies.
+
+## ...Vagrant?
+
+Vagrant's use of virtual machines means that it is very heavyweight, making it difficult to run multiple projects'
+environments at once. This is especially problematic on CI servers where we'd like to run multiple builds in parallel.
+
+Furthermore, the long-lived nature of virtual machines means that it's very easy for a developer's machine to get out of sync
+with the desired configuration, and nothing automatically re-provisions the machine when the configuration is changed - a
+developer has to remember to re-run the provisioning step if the configuration changes.

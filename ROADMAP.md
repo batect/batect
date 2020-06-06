@@ -54,24 +54,17 @@ If there's something you're really keen to see, pull requests are always welcome
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * documentation
   * add page explaining basic concepts (eg. explain what a task and a container are)
-  * rename 'quick start' to 'setup'
   * add check for broken internal or external links
   * examples for common languages and scenarios
-    * NodeJS
-      * frontend
-      * backend
-      * run `yarn install` as prerequisite before each task and explain performance benefit of using Yarn over NPM
     * Android app
-    * pushing app to Kubernetes
   * add FAQs
     * when to mount files / directories as a volume, and when to copy them into the image
     * how to run something when the container starts, regardless of the task's command line (eg. `ENTRYPOINT` with shell script and `exec`, similar to the example in [the docs](https://docs.docker.com/engine/reference/builder/#entrypoint))
   * importance of idempotency
-  * improve the getting started guide (it's way too wordy)
   * add note about increasing default CPU and memory limits when using Docker on macOS
   * how to introduce batect to an existing project
   * how to use batect as the basis for a pipeline made up of reusable building blocks
-  * expand comparison with other tools to cover Dogo, Cage and Toast
+  * expand comparison with other tools to cover Dojo, Cage and Toast
   * expand comparison to cover multi-stage builds
 * switch to coroutines for parallel execution?
 * finish configuration code simplification (first three need https://github.com/Kotlin/kotlinx.serialization/issues/315 to be fixed)

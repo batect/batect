@@ -1,5 +1,8 @@
 # Node.js
 
+You can see an example of configuring and using TypeScript and Yarn with batect in the [TypeScript sample project](https://github.com/batect/batect-sample-typescript),
+and an example of using Cypress for UI testing with batect in the [Cypress sample project](https://github.com/batect/batect-sample-cypress).
+
 ## Example configuration
 
 ```yaml

@@ -51,6 +51,8 @@ function main {
     updateProject "batect-sample-cypress" "$latestVersion"
     echo
     updateProject "batect-sample-seq" "$latestVersion"
+    echo
+    updateProject "batect-sample-typescript" "$latestVersion"
 }
 
 main

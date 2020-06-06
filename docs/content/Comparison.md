@@ -36,6 +36,37 @@ testing), does not handle [proxies](tips/Proxies.md) or [file permission issues 
 automatically and does not support [waiting for dependencies to become healthy](tips/WaitingForDependenciesToBeReady.md) as of
 version 3.
 
+## ...Dojo?
+
+[Dojo](https://github.com/kudulab/dojo) was built with very similar goals to batect, but takes a slightly different approach.
+
+There are a number of differences between Dojo and batect:
+
+* Dojo requires local installation, which means different developers can be running different versions of Dojo. Batect uses a wrapper
+  script committed to source control to manage the version of batect and ensure that everyone - developers and CI - use the same version and
+  so have a consistent experience.
+
+* Dojo requires Docker images to conform to [a number of requirements](https://github.com/kudulab/dojo#image-requirements-and-best-practices)
+  to make the most of its features. Batect supports using any Docker image and instead requires some features to be configured in your batect
+  configuration file.
+
+* Dojo does not have built-in support for running multiple containers and instead delegates to Docker Compose to manage multiple containers,
+  with many of the drawbacks described above including noticeably lower performance.
+
+* Dojo does not support using a local Dockerfile. batect supports this as a first-class citizen, which allows developers to easily
+  extend images for their needs without needing to publish them to a Docker image registry.
+
+* Dojo has no concept of tasks and requires documentation such as a readme or a separate script to communicate these to developers.
+  Batect supports tasks and prerequisites, removing the need for a separate [go script](https://www.thoughtworks.com/insights/blog/praise-go-script-part-i).
+
+* Dojo has very verbose and detailed default output. batect omits details that would largely be irrelevant in day-to-day development
+  work by default and instead focuses on output from tasks.
+
+* Dojo does not support Windows or Windows containers, whereas batect does.
+
+* Dojo lacks more advanced features that batect provides to make working with Docker easier and faster, such as
+  [cache volumes](tips/Performance.md#cache-volumes) and automatic configuration of [proxies](tips/Proxies.md).
+
 ## ...CI tools with a local runner?
 
 As an example, both GitLab CI and CircleCI have CLIs that allow you to run your build on your local machine, using the same

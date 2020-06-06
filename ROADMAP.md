@@ -64,7 +64,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * add note about increasing default CPU and memory limits when using Docker on macOS
   * how to introduce batect to an existing project
   * how to use batect as the basis for a pipeline made up of reusable building blocks
-  * expand comparison with other tools to cover Dojo, Cage and Toast
+  * expand comparison with other tools to cover Cage and Toast
   * expand comparison to cover multi-stage builds
 * switch to coroutines for parallel execution?
 * finish configuration code simplification (first three need https://github.com/Kotlin/kotlinx.serialization/issues/315 to be fixed)

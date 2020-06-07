@@ -107,28 +107,44 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             assertThat(userAndGroup, absent())
                         }
                     }
+                }
+            }
 
-                    on("creating missing volume mount directories") {
-                        val directoryThatExists = "/existing/directory"
-                        val fileThatExists = "/existing/file"
-                        val directoryThatDoesNotExist = "/new/directory"
-                        val volumeMounts = setOf(
-                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatExists), "/container/existing-directory", null),
-                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(fileThatExists), "/container/existing-file", null),
-                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatDoesNotExist), "/container/new-directory", null),
-                            DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container/volume", null)
-                        )
+            describe("creating missing volume mount directories") {
+                val directoryThatExists = "/existing/directory"
+                val fileThatExists = "/existing/file"
+                val directoryThatDoesNotExist = "/new/directory"
+                val volumeMounts = setOf(
+                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatExists), "/container/existing-directory", null),
+                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(fileThatExists), "/container/existing-file", null),
+                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatDoesNotExist), "/container/new-directory", null),
+                    DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container/volume", null)
+                )
 
-                        beforeEachTest {
-                            Files.createDirectories(fileSystem.getPath(directoryThatExists))
-                            Files.createFile(fileSystem.getPath(fileThatExists))
-                        }
+                beforeEachTest {
+                    Files.createDirectories(fileSystem.getPath(directoryThatExists))
+                    Files.createFile(fileSystem.getPath(fileThatExists))
+                }
 
-                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+                given("Linux containers are in use") {
+                    val containerType = DockerContainerType.Linux
+                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, containerType) }
 
-                        it("does not create a directory for the volume mount path that does not exist") {
-                            assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(false))
-                        }
+                    beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+
+                    it("does not create a directory for the volume mount path that does not exist") {
+                        assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(false))
+                    }
+                }
+
+                given("Windows containers are in use") {
+                    val containerType = DockerContainerType.Windows
+                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, containerType) }
+
+                    beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+
+                    it("creates a directory for the volume mount path that does not exist") {
+                        assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
                     }
                 }
             }

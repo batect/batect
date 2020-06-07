@@ -160,7 +160,7 @@ class RunAsCurrentUserConfigurationProvider(
     private fun createTempFile(name: String): Path = Files.createTempFile(systemInfo.tempDirectory, "batect-$name-", "")
 
     fun createMissingVolumeMountDirectories(mounts: Set<DockerVolumeMount>, container: Container) {
-        if (container.runAsCurrentUserConfig is RunAsCurrentUserConfig.RunAsDefaultContainerUser) {
+        if (containerType == DockerContainerType.Linux && container.runAsCurrentUserConfig is RunAsCurrentUserConfig.RunAsDefaultContainerUser) {
             return
         }
 

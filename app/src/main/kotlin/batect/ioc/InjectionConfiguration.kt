@@ -62,6 +62,7 @@ import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.execution.CacheManager
 import batect.execution.CancellationContext
+import batect.execution.ConfigVariablesProvider
 import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerDependencyGraphProvider
@@ -271,6 +272,7 @@ private val executionModule = Kodein.Module("execution") {
     bind<CacheManager>() with singleton { CacheManager(instance(), instance(), instance()) }
     bind<CancellationContext>() with scoped(TaskScope).singleton { CancellationContext() }
     bind<CleanupStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> CleanupStagePlanner(instance(), instance(), logger) }
+    bind<ConfigVariablesProvider>() with singleton { ConfigVariablesProvider(commandLineOptions().configVariableOverrides, commandLineOptions().configVariablesSourceFile, instance()) }
     bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance(RunOptionsType.Task)) }
     bind<ContainerDependencyGraph>() with scoped(TaskScope).singleton { instance<ContainerDependencyGraphProvider>().createGraph(instance(), context) }
     bind<ContainerDependencyGraphProvider>() with singletonWithLogger { logger -> ContainerDependencyGraphProvider(instance(), instance(), logger) }

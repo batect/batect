@@ -1,0 +1,12 @@
+containers:
+  build-env:
+    image: alpine:3.6
+    volumes:
+      - local: <{batect.project_directory}/script.sh
+        container: /script.sh
+
+tasks:
+  the-task:
+    run:
+      container: build-env
+      command: /script.sh

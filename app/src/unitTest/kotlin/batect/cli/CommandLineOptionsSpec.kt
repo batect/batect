@@ -16,7 +16,6 @@
 
 package batect.cli
 
-import batect.execution.ConfigVariablesProvider
 import batect.logging.FileLogSink
 import batect.logging.LogMessageWriter
 import batect.logging.LogSink
@@ -26,10 +25,8 @@ import batect.testutils.given
 import batect.testutils.on
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
-import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockitokotlin2.mock
 import org.kodein.di.Kodein
@@ -61,13 +58,6 @@ object CommandLineOptionsSpec : Spek({
 
                 it("adds itself to the Kodein configuration") {
                     assertThat(extendedKodein.instance<CommandLineOptions>(), equalTo(options))
-                }
-
-                it("creates a config variables provider to use") {
-                    assertThat(extendedKodein.instance<ConfigVariablesProvider>(),
-                        has(ConfigVariablesProvider::sourceFile, equalTo(options.configVariablesSourceFile))
-                        and has(ConfigVariablesProvider::commandLineOverrides, equalTo(options.configVariableOverrides))
-                    )
                 }
 
                 it("creates a null log sink to use") {

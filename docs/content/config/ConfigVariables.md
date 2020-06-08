@@ -12,7 +12,7 @@ They are useful for a number of use cases:
 * Simplifying management of developer-specific preferences (eg. a developer's preferred log output level)
 * Simplifying management of sets of environment-specific settings (eg. managing sets of test environment connection settings for a CI server)
 
-Config variables can be used anywhere [expressions](Overview.md#expressions) are supported.
+Config variables can be used anywhere [expressions](Overview.md#expressions) are supported. Reference config variables with the syntax `<name` or `<{name}`.
 
 ## Values
 
@@ -23,6 +23,36 @@ Values for config variables are taken from the following sources, with higher va
 * the default value
 
 If a variable is referenced but no value is available for it, an error occurs.
+
+## Built-in config variables
+
+There is one built-in config variable:
+
+### `batect.project_directory`
+Contains the full path to the directory containing the root configuration file in use.
+
+Normally, this is the directory containing `batect.yml` unless the configuration file has been overridden with the
+[`--config-file` / `-f` command line option](../CLIReference.md#use-a-non-standard-configuration-file-name-config-file-or-f).
+
+This is particularly useful in configuration files imported into the project with `include`. For example, if `/my-project/a.yml` contains:
+
+```yaml
+include:
+  - includes/b.yml
+```
+
+And `/my-project/includes/b.yml` contains:
+
+```yaml
+containers:
+  my-container:
+    image: alpine:1.2.3
+    volumes:
+      - local: <{batect.project_directory}/scripts
+        container: /code/scripts
+```
+
+Then the directory `/my-project/scripts` will be mounted into the `my-container` container at `/code/scripts`.
 
 ## Definition
 

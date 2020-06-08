@@ -19,11 +19,11 @@ package batect.execution
 import batect.config.ConfigVariableDefinition
 import batect.config.ConfigVariableMap
 import batect.config.Configuration
+import batect.config.ProjectPaths
 import batect.config.io.ConfigurationException
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
-import batect.testutils.isEmptyMap
 import batect.testutils.withFileName
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
@@ -39,19 +39,23 @@ import java.nio.file.Path
 
 object ConfigVariablesProviderSpec : Spek({
     describe("a config variables provider") {
+        val fileSystem by createForEachTest { Jimfs.newFileSystem(JimfsConfiguration.unix()) }
+        val projectDirectory by createForEachTest { fileSystem.getPath("/some/project/dir") }
+        val projectPaths by createForEachTest { ProjectPaths(projectDirectory.resolve("batect.yml")) }
+
         given("no command line overrides are provided") {
             val commandLineOverrides = emptyMap<String, String>()
 
             given("no variable file is provided") {
                 val sourceFile = null as Path?
-                val provider by createForEachTest { ConfigVariablesProvider(commandLineOverrides, sourceFile) }
+                val provider by createForEachTest { ConfigVariablesProvider(commandLineOverrides, sourceFile, projectPaths) }
 
                 given("the configuration has no variables defined") {
                     val config = configWithVariables()
                     val configVariableValues by createForEachTest { provider.build(config) }
 
-                    it("returns an empty set of config variables") {
-                        assertThat(configVariableValues, isEmptyMap())
+                    it("returns a set of config variables with only the built-in config variable included") {
+                        assertThat(configVariableValues, equalTo(mapOf("batect.project_directory" to "/some/project/dir")))
                     }
                 }
 
@@ -59,8 +63,8 @@ object ConfigVariablesProviderSpec : Spek({
                     val config = configWithVariables(ConfigVariableDefinition("some_var", "Some description", null))
                     val configVariableValues by createForEachTest { provider.build(config) }
 
-                    it("returns that variable with no value") {
-                        assertThat(configVariableValues, equalTo(mapOf("some_var" to null)))
+                    it("returns that variable with no value in addition to the built-in config variable") {
+                        assertThat(configVariableValues, equalTo(mapOf("some_var" to null, "batect.project_directory" to "/some/project/dir")))
                     }
                 }
 
@@ -68,16 +72,15 @@ object ConfigVariablesProviderSpec : Spek({
                     val config = configWithVariables(ConfigVariableDefinition("some_var", "Some description", "the default value"))
                     val configVariableValues by createForEachTest { provider.build(config) }
 
-                    it("returns that variable with the default value") {
-                        assertThat(configVariableValues, equalTo(mapOf("some_var" to "the default value")))
+                    it("returns that variable with the default value in addition to the built-in config variable") {
+                        assertThat(configVariableValues, equalTo(mapOf("some_var" to "the default value", "batect.project_directory" to "/some/project/dir")))
                     }
                 }
             }
 
             given("a variable file is provided") {
-                val fileSystem by createForEachTest { Jimfs.newFileSystem(JimfsConfiguration.unix()) }
                 val sourceFile by createForEachTest { fileSystem.getPath("/some-values-file.yml") }
-                val provider by createForEachTest { ConfigVariablesProvider(commandLineOverrides, sourceFile) }
+                val provider by createForEachTest { ConfigVariablesProvider(commandLineOverrides, sourceFile, projectPaths) }
 
                 given("the file is well formed") {
                     beforeEachTest { Files.write(sourceFile, listOf("some_var: some value")) }
@@ -99,8 +102,8 @@ object ConfigVariablesProviderSpec : Spek({
                         val config = configWithVariables(ConfigVariableDefinition("some_var", "Some description", null))
                         val configVariableValues by createForEachTest { provider.build(config) }
 
-                        it("returns that variable with the provided value") {
-                            assertThat(configVariableValues, equalTo(mapOf("some_var" to "some value")))
+                        it("returns that variable with the provided value in addition to the built-in config variable") {
+                            assertThat(configVariableValues, equalTo(mapOf("some_var" to "some value", "batect.project_directory" to "/some/project/dir")))
                         }
                     }
 
@@ -108,8 +111,8 @@ object ConfigVariablesProviderSpec : Spek({
                         val config = configWithVariables(ConfigVariableDefinition("some_var", "Some description", "the default value"))
                         val configVariableValues by createForEachTest { provider.build(config) }
 
-                        it("returns that variable with the provided value") {
-                            assertThat(configVariableValues, equalTo(mapOf("some_var" to "some value")))
+                        it("returns that variable with the provided value in addition to the built-in config variable") {
+                            assertThat(configVariableValues, equalTo(mapOf("some_var" to "some value", "batect.project_directory" to "/some/project/dir")))
                         }
                     }
                 }
@@ -134,7 +137,7 @@ object ConfigVariablesProviderSpec : Spek({
 
             given("no variable file is provided") {
                 val sourceFile = null as Path?
-                val provider by createForEachTest { ConfigVariablesProvider(commandLineOverrides, sourceFile) }
+                val provider by createForEachTest { ConfigVariablesProvider(commandLineOverrides, sourceFile, projectPaths) }
 
                 given("the override is for a variable that hasn't been defined") {
                     val config = configWithVariables()
@@ -148,8 +151,8 @@ object ConfigVariablesProviderSpec : Spek({
                     val config = configWithVariables(ConfigVariableDefinition("some_var", "Some description", null))
                     val configVariableValues by createForEachTest { provider.build(config) }
 
-                    it("returns that variable with the provided value") {
-                        assertThat(configVariableValues, equalTo(mapOf("some_var" to "some value")))
+                    it("returns that variable with the provided value in addition to the built-in config variable") {
+                        assertThat(configVariableValues, equalTo(mapOf("some_var" to "some value", "batect.project_directory" to "/some/project/dir")))
                     }
                 }
 
@@ -158,15 +161,14 @@ object ConfigVariablesProviderSpec : Spek({
                     val configVariableValues by createForEachTest { provider.build(config) }
 
                     it("returns that variable with the provided value") {
-                        assertThat(configVariableValues, equalTo(mapOf("some_var" to "some value")))
+                        assertThat(configVariableValues, equalTo(mapOf("some_var" to "some value", "batect.project_directory" to "/some/project/dir")))
                     }
                 }
             }
 
             given("a variable file is provided") {
-                val fileSystem by createForEachTest { Jimfs.newFileSystem(JimfsConfiguration.unix()) }
                 val sourceFile by createForEachTest { fileSystem.getPath("/some-values-file.yml") }
-                val provider by createForEachTest { ConfigVariablesProvider(commandLineOverrides, sourceFile) }
+                val provider by createForEachTest { ConfigVariablesProvider(commandLineOverrides, sourceFile, projectPaths) }
 
                 given("the file also contains a value for the same variable") {
                     val config = configWithVariables(ConfigVariableDefinition("some_var", "Some description", "the default value"))
@@ -175,8 +177,8 @@ object ConfigVariablesProviderSpec : Spek({
 
                     val configVariableValues by createForEachTest { provider.build(config) }
 
-                    it("returns the variable with the value from the command line") {
-                        assertThat(configVariableValues, equalTo(mapOf("some_var" to "some value")))
+                    it("returns the variable with the value from the command line in addition to the built-in config variable") {
+                        assertThat(configVariableValues, equalTo(mapOf("some_var" to "some value", "batect.project_directory" to "/some/project/dir")))
                     }
                 }
             }

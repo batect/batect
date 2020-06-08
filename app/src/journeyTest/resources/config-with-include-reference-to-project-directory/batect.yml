@@ -1,0 +1,4 @@
+project_name: config-with-include-reference-to-project-directory
+
+include:
+  - config/task.yml

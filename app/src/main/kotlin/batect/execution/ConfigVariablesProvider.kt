@@ -18,6 +18,7 @@ package batect.execution
 
 import batect.cli.CommandLineOptionsParser
 import batect.config.Configuration
+import batect.config.ProjectPaths
 import batect.config.io.ConfigurationException
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlException
@@ -33,8 +34,9 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 class ConfigVariablesProvider(
-    val commandLineOverrides: Map<String, String>,
-    val sourceFile: Path?
+    private val commandLineOverrides: Map<String, String>,
+    private val sourceFile: Path?,
+    private val projectPaths: ProjectPaths
 ) {
     fun build(config: Configuration): Map<String, String?> {
         val defaults = defaultValues(config)
@@ -42,7 +44,11 @@ class ConfigVariablesProvider(
 
         validateCommandLineOverrides(config)
 
-        return defaults + fromFile + commandLineOverrides
+        val builtIns = mapOf(
+            "batect.project_directory" to projectPaths.projectRootDirectory.toString()
+        )
+
+        return defaults + fromFile + commandLineOverrides + builtIns
     }
 
     private fun defaultValues(config: Configuration): Map<String, String?> =

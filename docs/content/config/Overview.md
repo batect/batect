@@ -97,9 +97,8 @@ This is useful for breaking up a large project into smaller files, or for sharin
 The format for included files is the same as described on this page. Included files can include further files, but
 cannot include a [project name](#project_name).
 
-Relative paths will be resolved relative to the configuration file's directory.
-
-For example, if `my-project/a.yml` contains:
+### Example
+If `/my-project/a.yml` contains:
 
 ```yaml
 containers:
@@ -107,10 +106,10 @@ containers:
     image: alpine:1.2.3
 
 include:
-  - b.yml
+  - includes/b.yml
 ```
 
-And `my-project/b.yml` contains:
+And `/my-project/includes/b.yml` contains:
 
 ```yaml
 tasks:
@@ -119,7 +118,7 @@ tasks:
       container: my-container
 ```
 
-Then the resulting configuration is as if `a.yml` was:
+Then the resulting configuration is as if `/my-project/a.yml` was:
 
 ```yaml
 containers:
@@ -130,6 +129,23 @@ tasks:
   my-task:
     run:
       container: my-container
+```
+
+### Paths in included files
+
+Relative paths in included files such as in volume mount paths or [build directories](Containers.md#build_directory) will be resolved relative to that file's
+directory (`/my-project` in `a.yml` and `/my-project/includes` in `b.yml` in the example above).
+
+Use the built-in [`batect.project_directory` config variable](ConfigVariables.md#batectproject_directory) to get the path to the root project directory
+(`/my-project` in the example above), for example:
+
+```yaml
+containers:
+  my-other-container:
+    image: alpine:1.2.3
+    volumes:
+      - local: <{batect.project_directory}/scripts
+        container: /code/scripts
 ```
 
 ## `tasks`
@@ -141,6 +157,8 @@ Definitions for each of your tasks, the actions you launch through batect, in `n
 ## Expressions
 
 Some fields support expressions - references to environment variables on the host or [config variables](ConfigVariables.md).
+
+### Environment variables
 
 You can pass environment variables from the host (ie. where you run batect) to the container by using any of the following formats:
 
@@ -160,8 +178,12 @@ You can pass environment variables from the host (ie. where you run batect) to t
 For example, to refer to the value of the `MY_PASSWORD` environment variable on the host, use `$MY_PASSWORD` or
 `${MY_PASSWORD}`. Or, to default to `insecure` if `MY_PASSWORD` is not set, use `${MY_PASSWORD:-insecure}`.
 
+### Config variables
+
 You can refer to the value of a [config variable](ConfigVariables.md) with `<name` or `<{name}`.
 Default values for config variables can be specified with [`default`](ConfigVariables.md#default) when defining them.
+
+### Notes
 
 When given without braces, `name` can only contain letters, numbers and underscores.
 Any other characters are treated as literals (eg. `$MY_VAR, 2, 3` with `MY_VAR` set to `1` results

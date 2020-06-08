@@ -18,6 +18,7 @@ package batect.ui.interleaved
 
 import batect.config.BuildImage
 import batect.config.Container
+import batect.config.LiteralValue
 import batect.config.PullImage
 import batect.config.SetupCommand
 import batect.docker.DockerContainer
@@ -75,7 +76,7 @@ import java.time.Duration
 
 object InterleavedEventLoggerSpec : Spek({
     describe("an interleaved event logger") {
-        val container1ImageSource = BuildImage(Paths.get("/some-image-dir"))
+        val container1ImageSource = BuildImage(LiteralValue("/some-image-dir"), Paths.get("/"))
         val container2And3ImageSource = PullImage("another-image")
         val taskContainerImageSource = PullImage("some-image")
         val taskContainer = Container("task-container", taskContainerImageSource)

@@ -434,10 +434,10 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(config.containers.keys, equalTo(setOf("container-1")))
             }
 
-            it("should load the build directory specified for the container and resolve it to an absolute path") {
+            it("should load the build directory specified for the container") {
                 val container = config.containers["container-1"]!!
                 assertThat(container.name, equalTo("container-1"))
-                assertThat(container.imageSource, equalTo(BuildImage(fileSystem.getPath("/resolved/container-1-build-dir"))))
+                assertThat(container.imageSource, equalTo(BuildImage(LiteralValue("container-1-build-dir"), fileSystem.getPath("/"))))
             }
         }
 
@@ -540,7 +540,7 @@ object ConfigurationLoaderSpec : Spek({
             it("should load all of the configuration specified for the container") {
                 val container = config.containers["container-1"]!!
                 assertThat(container.name, equalTo("container-1"))
-                assertThat(container.imageSource, equalTo(BuildImage(fileSystem.getPath("/resolved/container-1-build-dir"))))
+                assertThat(container.imageSource, equalTo(BuildImage(LiteralValue("container-1-build-dir"), fileSystem.getPath("/"))))
                 assertThat(container.command, equalTo(Command.parse("do-the-thing.sh some-param")))
                 assertThat(container.entrypoint, equalTo(Command.parse("sh")))
                 assertThat(container.environment, equalTo(mapOf(
@@ -589,7 +589,7 @@ object ConfigurationLoaderSpec : Spek({
             it("should load all of the configuration specified for the container") {
                 val container = config.containers["container-1"]!!
                 assertThat(container.name, equalTo("container-1"))
-                assertThat(container.imageSource, equalTo(BuildImage(fileSystem.getPath("/resolved/container-1-build-dir"))))
+                assertThat(container.imageSource, equalTo(BuildImage(LiteralValue("container-1-build-dir"), fileSystem.getPath("/"))))
                 assertThat(container.volumeMounts, equalTo(setOf(
                     LocalMount(LiteralValue("../"), fileSystem.getPath("/"), "/here", null),
                     LocalMount(LiteralValue("/somewhere"), fileSystem.getPath("/"), "/else", "ro")
@@ -624,7 +624,7 @@ object ConfigurationLoaderSpec : Spek({
             it("should load all of the configuration specified for the container") {
                 val container = config.containers["container-1"]!!
                 assertThat(container.name, equalTo("container-1"))
-                assertThat(container.imageSource, equalTo(BuildImage(fileSystem.getPath("/resolved/container-1-build-dir"))))
+                assertThat(container.imageSource, equalTo(BuildImage(LiteralValue("container-1-build-dir"), fileSystem.getPath("/"))))
                 assertThat(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
             }
         }
@@ -1580,7 +1580,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(config.containers.getValue("container-1"), equalTo(
                     Container(
                         "container-1",
-                        BuildImage(fileSystem.getPath("/resolved_relative_to_config/some_build_directory")),
+                        BuildImage(LiteralValue("some_build_directory"), fileSystem.getPath("/resolved_relative_to_config")),
                         volumeMounts = setOf(
                             LocalMount(LiteralValue("some_mount_directory"), fileSystem.getPath("/resolved_relative_to_config"), "/mount")
                         )

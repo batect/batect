@@ -18,6 +18,7 @@ package batect.ui.simple
 
 import batect.config.BuildImage
 import batect.config.Container
+import batect.config.LiteralValue
 import batect.config.PullImage
 import batect.config.SetupCommand
 import batect.docker.DockerContainer
@@ -64,7 +65,7 @@ import java.time.Duration
 object SimpleEventLoggerSpec : Spek({
     describe("a simple event logger") {
         val taskContainer = Container("task-container", PullImage("some-image"))
-        val otherContainer = Container("other-container", BuildImage(Paths.get("/some-image-dir")))
+        val otherContainer = Container("other-container", BuildImage(LiteralValue("/some-image-dir"), Paths.get("/")))
         val containers = setOf(taskContainer, otherContainer)
 
         val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }

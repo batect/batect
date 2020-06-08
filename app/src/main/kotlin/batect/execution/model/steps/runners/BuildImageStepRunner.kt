@@ -31,14 +31,19 @@ import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.BuildImageStep
+import batect.os.PathResolutionResult
+import batect.os.PathResolverFactory
+import batect.os.PathType
 import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.ui.containerio.ContainerIOStreamingOptions
+import java.nio.file.Path
 
 class BuildImageStepRunner(
     private val config: Configuration,
     private val imagesClient: DockerImagesClient,
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
+    private val pathResolverFactory: PathResolverFactory,
     private val expressionEvaluationContext: ExpressionEvaluationContext,
     private val cancellationContext: CancellationContext,
     private val ioStreamingOptions: ContainerIOStreamingOptions,
@@ -56,7 +61,7 @@ class BuildImageStepRunner(
                 substituteBuildArgs(buildConfig.buildArgs)
 
             val image = imagesClient.build(
-                buildConfig.buildDirectory,
+                resolveBuildDirectory(buildConfig),
                 buildArgs,
                 buildConfig.dockerfilePath,
                 setOf(imageTagFor(step)),
@@ -73,6 +78,20 @@ class BuildImageStepRunner(
         }
     }
 
+    private fun resolveBuildDirectory(source: BuildImage): Path {
+        val pathResolver = pathResolverFactory.createResolver(source.relativeTo)
+        val evaluatedBuildDirectory = evaluateBuildDirectory(source.buildDirectory)
+
+        when (val buildDirectory = pathResolver.resolve(evaluatedBuildDirectory)) {
+            is PathResolutionResult.Resolved -> when (buildDirectory.pathType) {
+                PathType.Directory -> return buildDirectory.absolutePath
+                PathType.DoesNotExist -> throw ImageBuildFailedException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') does not exist.")
+                else -> throw ImageBuildFailedException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') is not a directory.")
+            }
+            is PathResolutionResult.InvalidPath -> throw ImageBuildFailedException("Build directory '${buildDirectory.originalPath}' is not a valid path.")
+        }
+    }
+
     private fun substituteBuildArgs(original: Map<String, Expression>): Map<String, String> =
         original.mapValues { (name, value) -> evaluateBuildArgValue(name, value) }
 
@@ -81,6 +100,14 @@ class BuildImageStepRunner(
             return expression.evaluate(expressionEvaluationContext)
         } catch (e: ExpressionEvaluationException) {
             throw ImageBuildFailedException("The value for the build arg '$name' cannot be evaluated: ${e.message}", e)
+        }
+    }
+
+    private fun evaluateBuildDirectory(expression: Expression): String {
+        try {
+            return expression.evaluate(expressionEvaluationContext)
+        } catch (e: ExpressionEvaluationException) {
+            throw ImageBuildFailedException("The value for the build directory cannot be evaluated: ${e.message}", e)
         }
     }
 

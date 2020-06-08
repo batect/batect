@@ -19,6 +19,7 @@ package batect.ui.fancy
 import batect.config.BuildImage
 import batect.config.CacheMount
 import batect.config.Container
+import batect.config.LiteralValue
 import batect.config.PullImage
 import batect.config.SetupCommand
 import batect.docker.DockerContainer
@@ -61,11 +62,11 @@ object ContainerStartupProgressLineSpec : Spek({
         val dependencyA = Container("dependency-a", imageSourceDoesNotMatter())
         val dependencyB = Container("dependency-b", imageSourceDoesNotMatter())
         val dependencyC = Container("dependency-c", imageSourceDoesNotMatter())
-        val otherContainer = Container("other-container", BuildImage(Paths.get("/other-build-dir")))
+        val otherContainer = Container("other-container", BuildImage(LiteralValue("/other-build-dir"), Paths.get("/")))
         val containerName = "some-container"
 
         given("the container's image comes from building an image") {
-            val imageSource = BuildImage(Paths.get("/some-image-dir"))
+            val imageSource = BuildImage(LiteralValue("/some-image-dir"), Paths.get("/"))
             val setupCommands = listOf("a", "b", "c", "d").map { SetupCommand(Command.parse(it)) }
             val container = Container(containerName, imageSource, setupCommands = setupCommands)
 
@@ -703,7 +704,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
         given("the container has one or more cache mounts") {
             given("the container's image is one that needs to be built") {
-                val imageSource = BuildImage(Paths.get("/some-image-dir"))
+                val imageSource = BuildImage(LiteralValue("/some-image-dir"), Paths.get("/"))
                 val container = Container(containerName, imageSource, volumeMounts = setOf(CacheMount("some-cache", "/cache")))
 
                 val line: ContainerStartupProgressLine by createForEachTest {

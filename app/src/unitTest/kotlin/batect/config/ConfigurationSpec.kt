@@ -195,7 +195,8 @@ object ConfigurationSpec : Spek({
                 val container = Container(
                     "the-container",
                     BuildImage(
-                        osIndependentPath("/some/build/dir"),
+                        LiteralValue("/some/build/dir"),
+                        osIndependentPath("/"),
                         mapOf(
                             "SOME_VAR" to LiteralValue("blah")
                         ),
@@ -215,7 +216,7 @@ object ConfigurationSpec : Spek({
                             "tasks": {},
                             "containers": {
                                 "the-container": {
-                                    "build_directory": "/some/build/dir",
+                                    "build_directory": {"type":"LiteralValue", "value":"/some/build/dir"},
                                     "build_args": {
                                         "SOME_VAR": {"type":"LiteralValue", "value":"blah"}
                                     },
@@ -278,7 +279,7 @@ object ConfigurationSpec : Spek({
         }
 
         describe("overriding image sources") {
-            val container1 = Container("container-1", BuildImage(Paths.get("some-build-dir")))
+            val container1 = Container("container-1", BuildImage(LiteralValue("some-build-dir"), Paths.get("/")))
             val container2 = Container("container-2", PullImage("some-image"))
             val originalConfig = createConfiguration(container1, container2)
 

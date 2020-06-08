@@ -26,7 +26,8 @@ import org.spekframework.spek2.style.specification.describe
 object BuildImageSpec : Spek({
     describe("a image build source") {
         val source = BuildImage(
-            osIndependentPath("/image-build-dir"),
+            LiteralValue("/image-build-dir"),
+            osIndependentPath("/"),
             mapOf(
                 "some_arg" to LiteralValue("some_value"),
                 "some_other_arg" to EnvironmentVariableReference("host_var"),
@@ -39,7 +40,8 @@ object BuildImageSpec : Spek({
             it("returns a human-readable representation of itself") {
                 assertThat(source.toString(), equalTo(
                     "BuildImage(" +
-                        "build directory: '/image-build-dir', " +
+                        "build directory: ${source.buildDirectory}, " +
+                        "relative to: '/', " +
                         "build args: [some_arg=LiteralValue(value: 'some_value', original expression: 'some_value'), some_other_arg=EnvironmentVariableReference(reference to: 'host_var', default: null, original expression: '\${host_var}'), some_config_var=ConfigVariableReference(reference to: 'config_var', original expression: '<{config_var}')], " +
                         "Dockerfile path: 'some-Dockerfile-path')"
                 ))

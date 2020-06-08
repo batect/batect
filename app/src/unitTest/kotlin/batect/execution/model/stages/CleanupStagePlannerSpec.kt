@@ -20,6 +20,7 @@ import batect.config.BuildImage
 import batect.config.Configuration
 import batect.config.Container
 import batect.config.ContainerMap
+import batect.config.LiteralValue
 import batect.config.PullImage
 import batect.config.Task
 import batect.config.TaskMap
@@ -77,9 +78,9 @@ object CleanupStagePlannerSpec : Spek({
         }
 
         val task = Task("the-task", TaskRunConfiguration("task-container"))
-        val container1 = Container("container-1", BuildImage(Paths.get("./container-1")))
+        val container1 = Container("container-1", BuildImage(LiteralValue("./container-1"), Paths.get("/")))
         val container2 = Container("container-2", PullImage("image-2"), dependencies = setOf(container1.name))
-        val taskContainer = Container(task.runConfiguration!!.container, BuildImage(Paths.get("./task-container")), dependencies = setOf(container1.name, container2.name))
+        val taskContainer = Container(task.runConfiguration!!.container, BuildImage(LiteralValue("./task-container"), Paths.get("/")), dependencies = setOf(container1.name, container2.name))
         val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2))
         val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
         val events by createForEachTest { mutableSetOf<TaskEvent>() }

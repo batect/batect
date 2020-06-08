@@ -83,6 +83,8 @@ containers:
 Path (relative to the configuration file's directory) to a directory containing a Dockerfile to build and use as an image for this container.
 **One of `image` or `build_directory` is required.**
 
+Value can be an [expression](Overview.md#expressions).
+
 On Windows, `build_directory` can use either Windows-style (`path\to\thing`) or Unix-style (`path/to/thing`) paths, but for compatibility
 with users running on other operating systems, using Unix-style paths is recommended.
 

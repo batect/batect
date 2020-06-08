@@ -161,6 +161,7 @@ Some fields support expressions - references to environment variables on the hos
 Expressions are supported in:
 
 * [`build_args`](Containers.md#build_args) on containers
+* [`build_directory`](Containers.md#build_directory) on containers
 * `environment` on [containers](Containers.md#environment) and [tasks](Tasks.md#environment)
 * the local path in [volume mounts](Containers.md#volumes) on containers
 

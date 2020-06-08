@@ -146,7 +146,7 @@ object CreateContainerStepRuleSpec : Spek({
         }
 
         given("the container uses an image that must be built") {
-            val source = BuildImage(Paths.get("/some-image-directory"))
+            val source = BuildImage(LiteralValue("/some-image-directory"), Paths.get("/"))
             val container = Container("the-container", source)
             val rule = CreateContainerStepRule(container, config)
 

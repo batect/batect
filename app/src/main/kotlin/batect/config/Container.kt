@@ -19,10 +19,10 @@ package batect.config
 import batect.config.io.ConfigurationException
 import batect.config.io.deserializers.DependencySetSerializer
 import batect.config.io.deserializers.EnvironmentSerializer
+import batect.config.io.deserializers.PathDeserializer
 import batect.docker.Capability
 import batect.os.Command
 import batect.os.PathResolutionResult
-import batect.os.PathType
 import com.charleskorn.kaml.Location
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.CompositeDecoder
@@ -38,8 +38,6 @@ import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.list
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.builtins.set
-import kotlinx.serialization.decode
-import java.nio.file.Path
 
 @Serializable
 data class Container(
@@ -150,7 +148,7 @@ data class Container(
         }
 
         private fun deserializeFromObject(input: YamlInput): Container {
-            var buildDirectory: Path? = null
+            var buildDirectory: Expression? = null
             var buildArgs: Map<String, Expression>? = null
             var dockerfilePath: String? = null
             var imageName: String? = null
@@ -177,7 +175,7 @@ data class Container(
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
                     CompositeDecoder.READ_DONE -> break@loop
-                    buildDirectoryFieldIndex -> buildDirectory = input.decodeBuildDirectory()
+                    buildDirectoryFieldIndex -> buildDirectory = input.decodeSerializableElement(descriptor, i, Expression.serializer())
                     buildArgsFieldIndex -> buildArgs = input.decodeSerializableElement(descriptor, i, EnvironmentSerializer)
                     dockerfileFieldIndex -> dockerfilePath = input.decodeStringElement(descriptor, i)
                     imageNameFieldIndex -> imageName = input.decodeStringElement(descriptor, i)
@@ -207,7 +205,7 @@ data class Container(
 
             return Container(
                 "UNNAMED-FROM-CONFIG-FILE",
-                resolveImageSource(buildDirectory, buildArgs, dockerfilePath, imageName, input.node.location),
+                resolveImageSource(input, buildDirectory, buildArgs, dockerfilePath, imageName, input.node.location),
                 command,
                 entrypoint,
                 environment,
@@ -230,27 +228,9 @@ data class Container(
             )
         }
 
-        private fun YamlInput.decodeBuildDirectory(): Path {
-            val loader = this.context.getContextual(PathResolutionResult::class)!!
-            val resolutionResult = this.decode(loader)
-            val location = this.getCurrentLocation()
-
-            return resolveBuildDirectory(resolutionResult, location)
-        }
-
-        private fun resolveBuildDirectory(buildDirectory: PathResolutionResult, location: Location): Path {
-            when (buildDirectory) {
-                is PathResolutionResult.Resolved -> when (buildDirectory.pathType) {
-                    PathType.Directory -> return buildDirectory.absolutePath
-                    PathType.DoesNotExist -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') does not exist.", location.line, location.column)
-                    else -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') is not a directory.", location.line, location.column)
-                }
-                is PathResolutionResult.InvalidPath -> throw ConfigurationException("Build directory '${buildDirectory.originalPath}' is not a valid path.", location.line, location.column)
-            }
-        }
-
         private fun resolveImageSource(
-            buildDirectory: Path?,
+            input: YamlInput,
+            buildDirectory: Expression?,
             buildArgs: Map<String, Expression>?,
             dockerfilePath: String?,
             imageName: String?,
@@ -273,7 +253,10 @@ data class Container(
             }
 
             if (buildDirectory != null) {
-                return BuildImage(buildDirectory, buildArgs ?: emptyMap(), dockerfilePath ?: "Dockerfile")
+                val loader = input.context.getContextual(PathResolutionResult::class)!! as PathDeserializer
+                val relativeTo = loader.pathResolver.relativeTo
+
+                return BuildImage(buildDirectory, relativeTo, buildArgs ?: emptyMap(), dockerfilePath ?: "Dockerfile")
             } else {
                 return PullImage(imageName!!)
             }
@@ -285,7 +268,7 @@ data class Container(
             when (value.imageSource) {
                 is PullImage -> output.encodeStringElement(descriptor, imageNameFieldIndex, value.imageSource.imageName)
                 is BuildImage -> {
-                    output.encodeStringElement(descriptor, buildDirectoryFieldIndex, value.imageSource.buildDirectory.toString())
+                    output.encodeSerializableElement(descriptor, buildDirectoryFieldIndex, Expression.serializer(), value.imageSource.buildDirectory)
                     output.encodeSerializableElement(descriptor, buildArgsFieldIndex, EnvironmentSerializer, value.imageSource.buildArgs)
                     output.encodeSerializableElement(descriptor, dockerfileFieldIndex, String.serializer().nullable, value.imageSource.dockerfilePath)
                 }

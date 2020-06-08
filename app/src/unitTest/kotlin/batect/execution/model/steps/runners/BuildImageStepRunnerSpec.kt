@@ -20,10 +20,10 @@ import batect.config.BuildImage
 import batect.config.Configuration
 import batect.config.Container
 import batect.config.EnvironmentVariableReference
-import batect.config.LiteralValue
 import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
+import batect.config.LiteralValue
 import batect.docker.DockerImage
 import batect.docker.ImageBuildFailedException
 import batect.docker.client.DockerImageBuildProgress
@@ -37,6 +37,10 @@ import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.BuildImageStep
 import batect.os.HostEnvironmentVariables
+import batect.os.PathResolutionResult
+import batect.os.PathResolver
+import batect.os.PathResolverFactory
+import batect.os.PathType
 import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.testutils.createForEachTest
@@ -56,10 +60,12 @@ import java.nio.file.Paths
 
 object BuildImageStepRunnerSpec : Spek({
     describe("running a 'build image' step") {
-        val buildDirectory = Paths.get("/some-build-dir")
+        val buildDirectory = LiteralValue("/some-build-dir")
+        val resolvedBuildDirectory = Paths.get("/resolved/build-dir")
+        val buildDirectoryRelativeTo = Paths.get("/some-resolution-path")
         val buildArgs = mapOf("some_arg" to LiteralValue("some_value"), "SOME_PROXY_CONFIG" to LiteralValue("overridden"), "SOME_HOST_VAR" to EnvironmentVariableReference("SOME_ENV_VAR"))
         val dockerfilePath = "some-Dockerfile-path"
-        val container = Container("some-container", BuildImage(buildDirectory, buildArgs, dockerfilePath))
+        val container = Container("some-container", BuildImage(buildDirectory, buildDirectoryRelativeTo, buildArgs, dockerfilePath))
         val step = BuildImageStep(container)
         val outputSink by createForEachTest { mock<Sink>() }
 
@@ -68,6 +74,18 @@ object BuildImageStepRunnerSpec : Spek({
         val proxyVariables = mapOf("SOME_PROXY_CONFIG" to "some_proxy", "SOME_OTHER_PROXY_CONFIG" to "some_other_value")
         val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider> {
             on { getProxyEnvironmentVariables(emptySet()) } doReturn proxyVariables
+        }
+
+        val pathResolver by createForEachTest {
+            mock<PathResolver> {
+                on { resolve(buildDirectory.value) } doReturn PathResolutionResult.Resolved("/some-build-dir", resolvedBuildDirectory, PathType.Directory)
+            }
+        }
+
+        val pathResolverFactory by createForEachTest {
+            mock<PathResolverFactory> {
+                on { createResolver(buildDirectoryRelativeTo) } doReturn pathResolver
+            }
         }
 
         val cancellationContext by createForEachTest { mock<CancellationContext>() }
@@ -91,6 +109,7 @@ object BuildImageStepRunnerSpec : Spek({
                 config,
                 imagesClient,
                 proxyEnvironmentVariablesProvider,
+                pathResolverFactory,
                 expressionEvaluationContext,
                 cancellationContext,
                 ioStreamingOptions,
@@ -106,7 +125,7 @@ object BuildImageStepRunnerSpec : Spek({
                 val update2 = DockerImageBuildProgress(2, 2, "Second step", null)
 
                 beforeEachTest {
-                    whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(setOf("some-project-some-container")), eq(outputSink), eq(cancellationContext), any()))
+                    whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(setOf("some-project-some-container")), eq(outputSink), eq(cancellationContext), any()))
                         .then { invocation ->
                             @Suppress("UNCHECKED_CAST")
                             val onStatusUpdate = invocation.arguments[6] as (DockerImageBuildProgress) -> Unit
@@ -149,6 +168,7 @@ object BuildImageStepRunnerSpec : Spek({
                         config,
                         imagesClient,
                         proxyEnvironmentVariablesProvider,
+                        pathResolverFactory,
                         expressionEvaluationContext,
                         cancellationContext,
                         ioStreamingOptions,
@@ -158,7 +178,7 @@ object BuildImageStepRunnerSpec : Spek({
                 }
 
                 beforeEachTest {
-                    whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(setOf("some-project-some-container")), eq(outputSink), eq(cancellationContext), any())).thenReturn(image)
+                    whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(setOf("some-project-some-container")), eq(outputSink), eq(cancellationContext), any())).thenReturn(image)
 
                     runnerWithProxyEnvironmentVariablePropagationDisabled.run(step, eventSink)
                 }
@@ -181,7 +201,7 @@ object BuildImageStepRunnerSpec : Spek({
 
         on("when building the image fails") {
             beforeEachTest {
-                whenever(imagesClient.build(eq(buildDirectory), any(), eq(dockerfilePath), eq(setOf("some-project-some-container")), eq(outputSink), eq(cancellationContext), any())).thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
+                whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(setOf("some-project-some-container")), eq(outputSink), eq(cancellationContext), any())).thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
                 runner.run(step, eventSink)
             }
 
@@ -195,7 +215,7 @@ object BuildImageStepRunnerSpec : Spek({
                 on { evaluate(expressionEvaluationContext) } doThrow ExpressionEvaluationException("Couldn't evaluate expression.")
             }
 
-            val imageSourceWithInvalidBuildArgReference = BuildImage(buildDirectory, mapOf("SOME_HOST_VAR" to invalidReference), dockerfilePath)
+            val imageSourceWithInvalidBuildArgReference = BuildImage(buildDirectory, buildDirectoryRelativeTo, mapOf("SOME_HOST_VAR" to invalidReference), dockerfilePath)
             val containerWithInvalidBuildArgReference = Container("some-container", imageSourceWithInvalidBuildArgReference)
 
             val stepWithInvalidBuildArgReference = BuildImageStep(containerWithInvalidBuildArgReference)
@@ -206,6 +226,57 @@ object BuildImageStepRunnerSpec : Spek({
 
             it("emits a 'image build failed' event") {
                 verify(eventSink).postEvent(ImageBuildFailedEvent(containerWithInvalidBuildArgReference, "The value for the build arg 'SOME_HOST_VAR' cannot be evaluated: Couldn't evaluate expression."))
+            }
+        }
+
+        on("when the build directory is not a directory") {
+            beforeEachTest {
+                whenever(pathResolver.resolve(buildDirectory.value)).doReturn(PathResolutionResult.Resolved(buildDirectory.value, resolvedBuildDirectory, PathType.File))
+                runner.run(step, eventSink)
+            }
+
+            it("emits a 'image build failed' event") {
+                verify(eventSink).postEvent(ImageBuildFailedEvent(container, "Build directory '/some-build-dir' (resolved to '/resolved/build-dir') is not a directory."))
+            }
+        }
+
+        on("when the build directory does not exist") {
+            beforeEachTest {
+                whenever(pathResolver.resolve(buildDirectory.value)).doReturn(PathResolutionResult.Resolved(buildDirectory.value, resolvedBuildDirectory, PathType.DoesNotExist))
+                runner.run(step, eventSink)
+            }
+
+            it("emits a 'image build failed' event") {
+                verify(eventSink).postEvent(ImageBuildFailedEvent(container, "Build directory '/some-build-dir' (resolved to '/resolved/build-dir') does not exist."))
+            }
+        }
+
+        on("when the build directory is an invalid path") {
+            beforeEachTest {
+                whenever(pathResolver.resolve(buildDirectory.value)).doReturn(PathResolutionResult.InvalidPath(buildDirectory.value))
+                runner.run(step, eventSink)
+            }
+
+            it("emits a 'image build failed' event") {
+                verify(eventSink).postEvent(ImageBuildFailedEvent(container, "Build directory '/some-build-dir' is not a valid path."))
+            }
+        }
+
+        on("when the build directory expression cannot be evaluated") {
+            val invalidReference = mock<Expression> {
+                on { evaluate(expressionEvaluationContext) } doThrow ExpressionEvaluationException("Couldn't evaluate expression.")
+            }
+
+            val imageSourceWithInvalidBuildDirectory = BuildImage(invalidReference, buildDirectoryRelativeTo)
+            val containerWithInvalidBuildDirectory = Container("some-container", imageSourceWithInvalidBuildDirectory)
+            val stepWithInvalidBuildDirectory = BuildImageStep(containerWithInvalidBuildDirectory)
+
+            beforeEachTest {
+                runner.run(stepWithInvalidBuildDirectory, eventSink)
+            }
+
+            it("emits a 'image build failed' event") {
+                verify(eventSink).postEvent(ImageBuildFailedEvent(containerWithInvalidBuildDirectory, "The value for the build directory cannot be evaluated: Couldn't evaluate expression."))
             }
         }
     }

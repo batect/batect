@@ -21,7 +21,6 @@ import batect.docker.Capability
 import batect.os.Command
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
-import batect.os.PathType
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -35,11 +34,8 @@ import com.charleskorn.kaml.Yaml
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import kotlinx.serialization.builtins.AbstractDecoder
 import kotlinx.serialization.modules.serializersModuleOf
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -56,71 +52,19 @@ object ContainerSpec : Spek({
         val pathDeserializer by createForEachTest {
             mock<PathDeserializer> {
                 on { this.pathResolver } doReturn pathResolver
-
-                on { deserialize(any()) } doAnswer { invocation ->
-                    val input = invocation.arguments[0] as AbstractDecoder
-
-                    when (val path = input.decodeString()) {
-                        "/does_not_exist" -> PathResolutionResult.Resolved(path, osIndependentPath("/some_resolved_path"), PathType.DoesNotExist)
-                        "/file" -> PathResolutionResult.Resolved(path, osIndependentPath("/some_resolved_path"), PathType.File)
-                        "/not_file_or_directory" -> PathResolutionResult.Resolved(path, osIndependentPath("/some_resolved_path"), PathType.Other)
-                        "/invalid" -> PathResolutionResult.InvalidPath(path)
-                        else -> PathResolutionResult.Resolved(path, osIndependentPath("/resolved" + path), PathType.Directory)
-                    }
-                }
             }
         }
 
         val parser by createForEachTest { Yaml(context = serializersModuleOf(PathResolutionResult::class, pathDeserializer)) }
 
         given("the config file has just a build directory") {
-            given("and that directory exists") {
-                val yaml = "build_directory: /some_build_dir"
+            val yaml = "build_directory: /some_build_dir"
 
-                on("loading the configuration from the config file") {
-                    val result by runForEachTest { parser.parse(Container.Companion, yaml) }
+            on("loading the configuration from the config file") {
+                val result by runForEachTest { parser.parse(Container.Companion, yaml) }
 
-                    it("returns the expected container configuration, with the build directory resolved to an absolute path") {
-                        assertThat(result, equalTo(Container("UNNAMED-FROM-CONFIG-FILE", BuildImage(osIndependentPath("/resolved/some_build_dir"), emptyMap(), "Dockerfile"))))
-                    }
-                }
-            }
-
-            data class BuildDirectoryResolutionTestCase(val description: String, val originalPath: String, val expectedMessage: String)
-
-            setOf(
-                BuildDirectoryResolutionTestCase(
-                    "does not exist",
-                    "/does_not_exist",
-                    "Build directory '/does_not_exist' (resolved to '/some_resolved_path') does not exist."
-                ),
-                BuildDirectoryResolutionTestCase(
-                    "is a file",
-                    "/file",
-                    "Build directory '/file' (resolved to '/some_resolved_path') is not a directory."
-                ),
-                BuildDirectoryResolutionTestCase(
-                    "is neither a file or directory",
-                    "/not_file_or_directory",
-                    "Build directory '/not_file_or_directory' (resolved to '/some_resolved_path') is not a directory."
-                ),
-                BuildDirectoryResolutionTestCase(
-                    "is an invalid path",
-                    "/invalid",
-                    "Build directory '/invalid' is not a valid path."
-                )
-            ).forEach { (description, originalPath, expectedMessage) ->
-                given("and that path $description") {
-                    val yaml = "build_directory: $originalPath"
-
-                    on("loading the configuration from the config file") {
-                        it("throws an appropriate exception") {
-                            assertThat(
-                                { parser.parse(Container.Companion, yaml) },
-                                throws(withMessage(expectedMessage) and withLineNumber(1) and withColumn(18))
-                            )
-                        }
-                    }
+                it("returns the expected container configuration") {
+                    assertThat(result, equalTo(Container("UNNAMED-FROM-CONFIG-FILE", BuildImage(LiteralValue("/some_build_dir"), osIndependentPath("/relative-to"), emptyMap(), "Dockerfile"))))
                 }
             }
         }
@@ -257,7 +201,7 @@ object ContainerSpec : Spek({
                 val result by runForEachTest { parser.parse(Container.Companion, yaml) }
 
                 it("returns the expected container configuration") {
-                    assertThat(result.imageSource, equalTo(BuildImage(osIndependentPath("/resolved/container-1-build-dir"), mapOf("SOME_ARG" to LiteralValue("some_value"), "SOME_DYNAMIC_VALUE" to EnvironmentVariableReference("host_var")), "some-Dockerfile")))
+                    assertThat(result.imageSource, equalTo(BuildImage(LiteralValue("/container-1-build-dir"), osIndependentPath("/relative-to"), mapOf("SOME_ARG" to LiteralValue("some_value"), "SOME_DYNAMIC_VALUE" to EnvironmentVariableReference("host_var")), "some-Dockerfile")))
                     assertThat(result.command, equalTo(Command.parse("do-the-thing.sh some-param")))
                     assertThat(result.entrypoint, equalTo(Command.parse("sh")))
                     assertThat(

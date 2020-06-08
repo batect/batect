@@ -45,6 +45,7 @@ import batect.os.SystemInfo
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.testutils.createForEachTest
 import batect.testutils.on
+import batect.testutils.osIndependentPath
 import batect.ui.containerio.ContainerIOStreamingOptions
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
@@ -61,7 +62,7 @@ import java.nio.file.Paths
 object BuildImageStepRunnerSpec : Spek({
     describe("running a 'build image' step") {
         val buildDirectory = LiteralValue("/some-build-dir")
-        val resolvedBuildDirectory = Paths.get("/resolved/build-dir")
+        val resolvedBuildDirectory = osIndependentPath("/resolved/build-dir")
         val buildDirectoryRelativeTo = Paths.get("/some-resolution-path")
         val buildArgs = mapOf("some_arg" to LiteralValue("some_value"), "SOME_PROXY_CONFIG" to LiteralValue("overridden"), "SOME_HOST_VAR" to EnvironmentVariableReference("SOME_ENV_VAR"))
         val dockerfilePath = "some-Dockerfile-path"

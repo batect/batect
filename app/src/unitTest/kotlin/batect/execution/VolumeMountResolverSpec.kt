@@ -39,6 +39,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
@@ -68,7 +69,7 @@ object VolumeMountResolverSpec : Spek({
 
             val expressionEvaluationContext = ExpressionEvaluationContext(HostEnvironmentVariables("INVALID" to "invalid"), emptyMap())
 
-            val resolver by createForEachTest { VolumeMountResolver(pathResolverFactory, expressionEvaluationContext, mock(), mock(), mock()) }
+            val resolver by createForEachTest { VolumeMountResolver(pathResolverFactory, expressionEvaluationContext, mock(), mock()) }
 
             given("a set of volume mounts from the configuration file that resolve to valid paths") {
                 val mounts by createForEachTest {
@@ -150,7 +151,9 @@ object VolumeMountResolverSpec : Spek({
                 )
 
                 given("the current cache type is volumes") {
-                    val resolver by createForEachTest { VolumeMountResolver(mock(), mock(), cacheManager, mock(), CacheType.Volume) }
+                    beforeEachTest { whenever(cacheManager.cacheType) doReturn CacheType.Volume }
+
+                    val resolver by createForEachTest { VolumeMountResolver(mock(), mock(), cacheManager, mock()) }
 
                     it("resolves the mount to a cache volume, preserving the container path and options") {
                         assertThat(
@@ -165,13 +168,15 @@ object VolumeMountResolverSpec : Spek({
                 }
 
                 given("the current cache type is directories") {
+                    beforeEachTest { whenever(cacheManager.cacheType) doReturn CacheType.Directory }
+
                     val projectPaths by createForEachTest {
                         mock<ProjectPaths> {
                             on { cacheDirectory } doReturn fileSystem.getPath("/caches")
                         }
                     }
 
-                    val resolver by createForEachTest { VolumeMountResolver(mock(), mock(), cacheManager, projectPaths, CacheType.Directory) }
+                    val resolver by createForEachTest { VolumeMountResolver(mock(), mock(), cacheManager, projectPaths) }
                     val resolvedMounts by createForEachTest { resolver.resolve(mounts) }
 
                     it("resolves the mount to a cache directory, preserving the container path and options") {

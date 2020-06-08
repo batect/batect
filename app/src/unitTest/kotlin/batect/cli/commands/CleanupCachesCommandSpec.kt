@@ -36,6 +36,9 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
+import org.kodein.di.Kodein
+import org.kodein.di.generic.bind
+import org.kodein.di.generic.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
@@ -51,12 +54,6 @@ object CleanupCachesCommandSpec : Spek({
                     DockerVolume("batect-cache-other-project-abc123"),
                     DockerVolume("something-else")
                 )
-            }
-        }
-
-        val cacheManager by createForEachTest {
-            mock<CacheManager> {
-                on { projectCacheKey } doReturn "this-project"
             }
         }
 
@@ -79,9 +76,20 @@ object CleanupCachesCommandSpec : Spek({
             Files.createFile(fileSystem.getPath("/caches", "file-that-should-not-be-deleted"))
         }
 
+        fun dockerConnectivity(cacheTypeToUse: CacheType): DockerConnectivity {
+            val cacheManager = mock<CacheManager> {
+                on { projectCacheKey } doReturn "this-project"
+                on { cacheType } doReturn cacheTypeToUse
+            }
+
+            return fakeDockerConnectivity(Kodein.direct {
+                bind<CacheManager>() with instance(cacheManager)
+            })
+        }
+
         given("volumes are being used for caches") {
             val cacheType = CacheType.Volume
-            val command by createForEachTest { CleanupCachesCommand(volumesClient, cacheManager, projectPaths, cacheType, console) }
+            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), volumesClient, projectPaths, console) }
             val exitCode by runForEachTest { command.run() }
 
             it("returns a zero exit code") {
@@ -126,7 +134,7 @@ object CleanupCachesCommandSpec : Spek({
 
         given("directories are being used for caches") {
             val cacheType = CacheType.Directory
-            val command by createForEachTest { CleanupCachesCommand(volumesClient, cacheManager, projectPaths, cacheType, console) }
+            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), volumesClient, projectPaths, console) }
             val exitCode by runForEachTest { command.run() }
 
             it("returns a zero exit code") {

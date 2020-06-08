@@ -3,7 +3,7 @@
 ## I/O performance
 
 !!! tip "tl;dr"
-    If you're seeing slow build times under batect on macOS or Windows, using batect's caches as well as volume mount options such as `cached` might help
+    If you're seeing slow build times on macOS or Windows, using batect's caches as well as volume mount options such as `cached` might help
 
 Docker requires features only found in the Linux kernel, and so on macOS and Windows, Docker Desktop runs a lightweight Linux virtual machine
 to host Docker. However, while this works perfectly fine for most situations, there is some overhead involved in operations
@@ -53,10 +53,16 @@ are used.
 file to the volume to prevent this behaviour and ensure that the volume is effectively empty.)
 
 !!! tip
-    To make it easier to share caches between builds on ephemeral CI agents, you can use directories mounted from the project's `.batect/caches` directory
-    instead of volumes and then archive this directory between builds. Run batect with `--cache-type=directory` to enable this behaviour.
+    To make it easier to share caches between builds on ephemeral CI agents, you can instruct batect to use directories instead of volumes, and then use these
+    directories as a starting point for subsequent builds. Run batect with `--cache-type=directory` to enable this behaviour, then save and restore the
+    `.batect/caches` directory between builds.
 
     Using mounted directories instead of volumes has no performance impact on Linux.
+
+#### Windows containers
+
+The performance penalty described above does not apply when mounting directories into Windows containers. batect therefore always uses directory mounts for
+caches on Windows containers, even if `--cache-type=volume` is specified on the command line.
 
 ### Mounts in `cached` mode
 

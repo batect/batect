@@ -18,7 +18,6 @@ package batect.ioc
 
 import batect.config.Configuration
 import batect.config.ExpressionEvaluationContext
-import batect.docker.client.DockerContainerType
 import batect.execution.ConfigVariablesProvider
 import batect.os.HostEnvironmentVariables
 import batect.testutils.createForEachTest
@@ -55,8 +54,7 @@ object SessionKodeinFactorySpec : Spek({
 
         on("creating a task Kodein context") {
             val config by createForEachTest { mock<Configuration>() }
-            val containerType by createForEachTest { mock<DockerContainerType>() }
-            val extendedKodein by runForEachTest { factory.create(config, containerType) }
+            val extendedKodein by runForEachTest { factory.create(config) }
 
             it("includes the configuration from the original instance") {
                 assertThat(extendedKodein.instance<String>("some string"), equalTo("The string value"))
@@ -64,10 +62,6 @@ object SessionKodeinFactorySpec : Spek({
 
             it("includes the configuration") {
                 assertThat(extendedKodein.instance<Configuration>(), equalTo(config))
-            }
-
-            it("includes the container type") {
-                assertThat(extendedKodein.instance<DockerContainerType>(), equalTo(containerType))
             }
 
             it("builds the set of config variables") {

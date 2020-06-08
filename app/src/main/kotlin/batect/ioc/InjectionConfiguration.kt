@@ -21,6 +21,7 @@ import batect.cli.CommandLineOptions
 import batect.cli.CommandLineOptionsParser
 import batect.cli.commands.CleanupCachesCommand
 import batect.cli.commands.CommandFactory
+import batect.cli.commands.DockerConnectivity
 import batect.cli.commands.HelpCommand
 import batect.cli.commands.ListTasksCommand
 import batect.cli.commands.RunTaskCommand
@@ -188,14 +189,14 @@ private val cliModule = Kodein.Module("cli") {
             instance(),
             instance(),
             instance(),
-            instance(),
             instance(StreamType.Output),
             instance(StreamType.Error),
             logger
         )
     }
 
-    bind<CleanupCachesCommand>() with singleton { CleanupCachesCommand(instance(), instance(), instance(), commandLineOptions().cacheType, instance(StreamType.Output)) }
+    bind<DockerConnectivity>() with singleton { DockerConnectivity(instance(), instance(), instance(StreamType.Error)) }
+    bind<CleanupCachesCommand>() with singleton { CleanupCachesCommand(instance(), instance(), instance(), instance(StreamType.Output)) }
     bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(StreamType.Output), instance()) }
     bind<ListTasksCommand>() with singleton { ListTasksCommand(commandLineOptions().configurationFileName, instance(), instance(StreamType.Output)) }
     bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(StreamType.Output), instance(), instance(), instance()) }
@@ -259,6 +260,7 @@ private val dockerClientModule = Kodein.Module("docker.client") {
 }
 
 private val iocModule = Kodein.Module("ioc") {
+    bind<DockerConfigurationKodeinFactory>() with singleton { DockerConfigurationKodeinFactory(dkodein) }
     bind<TaskKodeinFactory>() with singleton { TaskKodeinFactory(dkodein) }
     bind<SessionKodeinFactory>() with singleton { SessionKodeinFactory(dkodein, instance(), instance()) }
 }
@@ -266,7 +268,7 @@ private val iocModule = Kodein.Module("ioc") {
 private val executionModule = Kodein.Module("execution") {
     import(runnersModule)
 
-    bind<CacheManager>() with singleton { CacheManager(instance()) }
+    bind<CacheManager>() with singleton { CacheManager(instance(), instance(), instance()) }
     bind<CancellationContext>() with scoped(TaskScope).singleton { CancellationContext() }
     bind<CleanupStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> CleanupStagePlanner(instance(), instance(), logger) }
     bind<ContainerCommandResolver>() with singleton { ContainerCommandResolver(instance(RunOptionsType.Task)) }
@@ -283,7 +285,7 @@ private val executionModule = Kodein.Module("execution") {
     bind<TaskStateMachine>() with scoped(TaskScope).singletonWithLogger { logger -> TaskStateMachine(instance(), instance(RunOptionsType.Task), instance(), instance(), instance(), instance(), logger) }
     bind<TaskStepRunner>() with scoped(TaskScope).singleton { TaskStepRunner(dkodein) }
     bind<TaskSuggester>() with singleton { TaskSuggester() }
-    bind<VolumeMountResolver>() with scoped(TaskScope).singleton { VolumeMountResolver(instance(), instance(), instance(), instance(), commandLineOptions().cacheType) }
+    bind<VolumeMountResolver>() with scoped(TaskScope).singleton { VolumeMountResolver(instance(), instance(), instance(), instance()) }
 }
 
 private val runnersModule = Kodein.Module("execution.model.steps.runners") {

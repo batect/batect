@@ -20,9 +20,6 @@ import batect.config.Configuration
 import batect.config.PullImage
 import batect.config.Task
 import batect.config.io.ConfigurationLoader
-import batect.docker.client.DockerConnectivityCheckResult
-import batect.docker.client.DockerContainerType
-import batect.docker.client.DockerSystemInfoClient
 import batect.execution.CleanupOption
 import batect.execution.RunOptions
 import batect.execution.TaskExecutionOrderResolutionException
@@ -34,6 +31,7 @@ import batect.ui.Console
 import batect.ui.text.Text
 import batect.updates.UpdateNotifier
 import batect.wrapper.WrapperCacheCleanupTask
+import org.kodein.di.DKodein
 import org.kodein.di.generic.instance
 import java.nio.file.Path
 
@@ -42,10 +40,9 @@ class RunTaskCommand(
     private val runOptions: RunOptions,
     private val configLoader: ConfigurationLoader,
     private val taskExecutionOrderResolver: TaskExecutionOrderResolver,
-    private val sessionKodeinFactory: SessionKodeinFactory,
     private val updateNotifier: UpdateNotifier,
     private val wrapperCacheCleanupTask: WrapperCacheCleanupTask,
-    private val dockerSystemInfoClient: DockerSystemInfoClient,
+    private val dockerConnectivity: DockerConnectivity,
     private val console: Console,
     private val errorConsole: Console,
     private val logger: Logger
@@ -54,14 +51,8 @@ class RunTaskCommand(
     override fun run(): Int {
         val config = loadConfig()
 
-        return when (val connectivityCheckResult = dockerSystemInfoClient.checkConnectivity()) {
-            is DockerConnectivityCheckResult.Failed -> {
-                errorConsole.println(Text.red("Docker is not installed, not running or not compatible with batect: ${connectivityCheckResult.message}"))
-                -1
-            }
-            is DockerConnectivityCheckResult.Succeeded -> {
-                runFromConfig(config, connectivityCheckResult.containerType)
-            }
+        return dockerConnectivity.checkAndRun { kodein ->
+            runFromConfig(kodein, config)
         }
     }
 
@@ -72,14 +63,14 @@ class RunTaskCommand(
         return configFromFile.applyImageOverrides(overrides)
     }
 
-    private fun runFromConfig(config: Configuration, containerType: DockerContainerType): Int {
+    private fun runFromConfig(kodein: DKodein, config: Configuration): Int {
         try {
             val tasks = taskExecutionOrderResolver.resolveExecutionOrder(config, runOptions.taskName)
 
             updateNotifier.run()
             wrapperCacheCleanupTask.start()
 
-            return runTasks(config, tasks, containerType)
+            return runTasks(kodein, config, tasks)
         } catch (e: TaskExecutionOrderResolutionException) {
             logger.error {
                 message("Could not resolve task execution order.")
@@ -91,8 +82,9 @@ class RunTaskCommand(
         }
     }
 
-    private fun runTasks(config: Configuration, tasks: List<Task>, containerType: DockerContainerType): Int {
-        val sessionKodein = sessionKodeinFactory.create(config, containerType)
+    private fun runTasks(kodein: DKodein, config: Configuration, tasks: List<Task>): Int {
+        val sessionKodeinFactory = kodein.instance<SessionKodeinFactory>()
+        val sessionKodein = sessionKodeinFactory.create(config)
         val taskRunner = sessionKodein.instance<TaskRunner>()
 
         for (task in tasks) {

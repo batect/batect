@@ -16,24 +16,18 @@
 
 package batect.ioc
 
-import batect.config.Configuration
-import batect.config.ExpressionEvaluationContext
-import batect.execution.ConfigVariablesProvider
-import batect.os.HostEnvironmentVariables
+import batect.docker.client.DockerContainerType
 import org.kodein.di.Copy
 import org.kodein.di.DKodein
 import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
 
-class SessionKodeinFactory(
-    private val baseKodein: DKodein,
-    private val hostEnvironmentVariables: HostEnvironmentVariables,
-    private val configVariablesProvider: ConfigVariablesProvider
+class DockerConfigurationKodeinFactory(
+    private val baseKodein: DKodein
 ) {
-    fun create(config: Configuration): DKodein = Kodein.direct {
+    fun create(containerType: DockerContainerType): DKodein = Kodein.direct {
         extend(baseKodein, copy = Copy.All)
-        bind<Configuration>() with instance(config)
-        bind<ExpressionEvaluationContext>() with instance(ExpressionEvaluationContext(hostEnvironmentVariables, configVariablesProvider.build(config)))
+        bind<DockerContainerType>() with instance(containerType)
     }
 }

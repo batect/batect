@@ -16,7 +16,9 @@
 
 package batect.execution
 
+import batect.cli.CommandLineOptions
 import batect.config.ProjectPaths
+import batect.docker.client.DockerContainerType
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -27,6 +29,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.matches
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
 import kotlinx.serialization.toUtf8Bytes
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -43,9 +46,11 @@ object CacheManagerSpec : Spek({
             }
         }
 
-        val cacheManager by createForEachTest { CacheManager(projectPaths) }
+        val commandLineOptions by createForEachTest { mock<CommandLineOptions>() }
 
         describe("getting the project cache key") {
+            val cacheManager by createForEachTest { CacheManager(projectPaths, DockerContainerType.Linux, commandLineOptions) }
+
             given("the caches directory does not exist") {
                 val cacheKey by runForEachTest { cacheManager.projectCacheKey }
 
@@ -97,6 +102,26 @@ object CacheManagerSpec : Spek({
                             )
                         )
                     }
+                }
+            }
+        }
+
+        describe("getting the cache type to use") {
+            given("Linux containers are being used") {
+                beforeEachTest { whenever(commandLineOptions.cacheType) doReturn CacheType.Volume }
+
+                val cacheManager by createForEachTest { CacheManager(projectPaths, DockerContainerType.Linux, commandLineOptions) }
+
+                it("returns the cache type specified on the command line") {
+                    assertThat(cacheManager.cacheType, equalTo(CacheType.Volume))
+                }
+            }
+
+            given("Windows containers are being used") {
+                val cacheManager by createForEachTest { CacheManager(projectPaths, DockerContainerType.Windows, commandLineOptions) }
+
+                it("always uses directory caches") {
+                    assertThat(cacheManager.cacheType, equalTo(CacheType.Directory))
                 }
             }
         }

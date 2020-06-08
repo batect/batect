@@ -146,7 +146,7 @@ Example:
 
 ### Customise cache storage mechanism <small>(`--cache-type`)</small>
 
-By default, batect will use a Docker volume for each [cache mount](tips/Performance.md#cache-volumes).
+By default, batect will use a Docker volume for each [cache mount](tips/Performance.md#cache-volumes) for Linux containers.
 Use this option to instruct batect to use a different storage mechanism.
 
 Supported values are:
@@ -156,6 +156,9 @@ Supported values are:
 
 The `BATECT_CACHE_TYPE` environment variable can also be used to set the default cache type. If both the environment
 variable and the `--cache-type` option are set, the value given with `--cache-type` takes precedence.
+
+!!! info
+    This option has no effect on Windows containers. Windows containers always use directory mounts for caches.
 
 Example:
 

@@ -16,13 +16,17 @@
 
 package batect.execution
 
+import batect.cli.CommandLineOptions
 import batect.config.ProjectPaths
+import batect.docker.client.DockerContainerType
 import batect.utils.generateId
 import java.nio.file.Files
 import java.nio.file.Path
 
 class CacheManager(
-    private val projectPaths: ProjectPaths
+    private val projectPaths: ProjectPaths,
+    private val containerType: DockerContainerType,
+    private val commandLineOptions: CommandLineOptions
 ) {
     private val cacheKeyPath: Path by lazy { projectPaths.cacheDirectory.resolve("key") }
 
@@ -48,5 +52,10 @@ class CacheManager(
 
             id
         }
+    }
+
+    val cacheType: CacheType = when (containerType) {
+        DockerContainerType.Linux -> commandLineOptions.cacheType
+        DockerContainerType.Windows -> CacheType.Directory
     }
 }

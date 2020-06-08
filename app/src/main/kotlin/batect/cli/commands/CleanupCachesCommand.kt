@@ -22,26 +22,28 @@ import batect.execution.CacheManager
 import batect.execution.CacheType
 import batect.ui.Console
 import batect.utils.deleteDirectoryContents
+import org.kodein.di.generic.instance
 import java.nio.file.Files
 import kotlin.streams.toList
 
 class CleanupCachesCommand(
+    private val dockerConnectivity: DockerConnectivity,
     private val volumesClient: DockerVolumesClient,
-    private val cacheManager: CacheManager,
     private val projectPaths: ProjectPaths,
-    private val cacheType: CacheType,
     private val console: Console
 ) : Command {
-    override fun run(): Int {
-        when (cacheType) {
-            CacheType.Volume -> runForVolumes()
+    override fun run(): Int = dockerConnectivity.checkAndRun { kodein ->
+        val cacheManager = kodein.instance<CacheManager>()
+
+        when (cacheManager.cacheType) {
+            CacheType.Volume -> runForVolumes(cacheManager)
             CacheType.Directory -> runForDirectories()
         }
 
-        return 0
+        0
     }
 
-    private fun runForVolumes() {
+    private fun runForVolumes(cacheManager: CacheManager) {
         val prefix = "batect-cache-${cacheManager.projectCacheKey}-"
 
         console.println("Checking for cache volumes...")

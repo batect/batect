@@ -16,6 +16,8 @@
 
 package batect.config
 
+import batect.config.io.ConfigurationException
+import com.charleskorn.kaml.Location
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
@@ -33,5 +35,13 @@ class ConfigVariableMap(contents: Iterable<ConfigVariableDefinition>) : NamedObj
         override fun createCollection(elements: Set<ConfigVariableDefinition>): ConfigVariableMap = ConfigVariableMap(elements)
 
         override val descriptor: SerialDescriptor = MapSerializer(keySerializer, elementSerializer).descriptor
+
+        private val validNameRegex = """^[a-zA-Z][a-zA-Z0-9._\\-]*$""".toRegex()
+
+        override fun validateName(name: String, location: Location) {
+            if (name.startsWith("batect", ignoreCase = true) || !validNameRegex.matches(name)) {
+                throw ConfigurationException("Invalid config variable name '$name'. Config variable names must start with a letter, contain only letters, digits, dashes, periods and underscores, and must not start with 'batect'.", location.line, location.column)
+            }
+        }
     }
 }

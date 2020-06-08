@@ -66,7 +66,9 @@ Project names must be valid Docker references:
 
 ## `config_variables`
 
-Definitions for each of the config variables that are used throughout your configuration, in `name: options` format..
+Definitions for each of the config variables that are used throughout your configuration, in `name: options` format.
+
+Config variable names must start with a letter and contain only letters, digits, dashes (`-`), periods (`.`) and underscores (`_`). They must not start with `batect`.
 
 [Detailed reference for `config_variables`](ConfigVariables.md)
 

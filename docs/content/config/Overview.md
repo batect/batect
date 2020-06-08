@@ -158,6 +158,12 @@ Definitions for each of your tasks, the actions you launch through batect, in `n
 
 Some fields support expressions - references to environment variables on the host or [config variables](ConfigVariables.md).
 
+Expressions are supported in:
+
+* [`build_args`](Containers.md#build_args) on containers
+* `environment` on [containers](Containers.md#environment) and [tasks](Tasks.md#environment)
+* the local path in [volume mounts](Containers.md#volumes) on containers
+
 ### Environment variables
 
 You can pass environment variables from the host (ie. where you run batect) to the container by using any of the following formats:

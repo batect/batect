@@ -9,6 +9,7 @@
     # For more information, visit https://github.com/batect/batect.
 
     VERSION="VERSION-GOES-HERE"
+    CHECKSUM="${BATECT_DOWNLOAD_CHECKSUM:-CHECKSUM-GOES-HERE}"
     DOWNLOAD_URL_ROOT=${BATECT_DOWNLOAD_URL_ROOT:-"https://dl.bintray.com/batect/batect"}
     DOWNLOAD_URL=${BATECT_DOWNLOAD_URL:-"$DOWNLOAD_URL_ROOT/$VERSION/bin/batect-$VERSION.jar"}
     QUIET_DOWNLOAD=${BATECT_QUIET_DOWNLOAD:-false}
@@ -24,6 +25,7 @@
             download
         fi
 
+        checkChecksum
         runApplication "$@"
     }
 
@@ -45,6 +47,23 @@
         fi
 
         mv "$temp_file" "$JAR_PATH"
+    }
+
+    function checkChecksum() {
+        local_checksum=$(getLocalChecksum)
+
+        if [[ "$local_checksum" != "$CHECKSUM" ]]; then
+            echo "The downloaded version of batect does not have the expected checksum. Delete '$JAR_PATH' and then re-run this script to download it again."
+            exit 1
+        fi
+    }
+
+    function getLocalChecksum() {
+        if [[ "$(uname)" == "Darwin" ]]; then
+            shasum -a 256 "$JAR_PATH" | cut -d' ' -f1
+        else
+            sha256sum "$JAR_PATH" | cut -d' ' -f1
+        fi
     }
 
     function runApplication() {

@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import hashlib
 import http.server
 import os
 import shutil
@@ -12,11 +13,11 @@ import unittest
 
 class WrapperScriptTests(unittest.TestCase):
     http_port = 8080
-    default_download_url = "http://localhost:" + str(http_port) + "/test/testapp.jar"
 
     minimum_script_dependencies = [
         "/usr/bin/bash",
         "/usr/bin/basename",
+        "/usr/bin/cut",
         "/usr/bin/dirname",
         "/usr/bin/grep",
         "/usr/bin/head",
@@ -24,6 +25,8 @@ class WrapperScriptTests(unittest.TestCase):
         "/usr/bin/mktemp",
         "/usr/bin/mv",
         "/usr/bin/sed",
+        "/usr/bin/sha256sum",
+        "/usr/bin/uname",
     ]
 
     def setUp(self):
@@ -33,6 +36,12 @@ class WrapperScriptTests(unittest.TestCase):
     def tearDown(self):
         self.stop_server()
         shutil.rmtree(self.cache_dir)
+
+    def download_url(self, path):
+        return "http://localhost:" + str(self.http_port) + "/test/" + path
+
+    def default_download_url(self):
+        return self.download_url("testapp.jar")
 
     def test_first_run(self):
         result = self.run_script(["arg 1", "arg 2"])
@@ -65,14 +74,14 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertEqual(first_result.returncode, 0)
 
     def test_download_fails(self):
-        result = self.run_script(["arg 1", "arg 2"], download_url=self.default_download_url + "-does-not-exist")
+        result = self.run_script(["arg 1", "arg 2"], download_url=self.download_url("does-not-exist"))
 
         self.assertIn("Downloading batect", result.stdout.decode())
         self.assertIn("404 File not found", result.stdout.decode())
         self.assertNotEqual(result.returncode, 0)
 
     def test_download_is_not_quiet(self):
-        result = self.run_script([], download_url=self.default_download_url, quiet_download="false")
+        result = self.run_script([], quiet_download="false")
         result_output = result.stdout.decode()
 
         self.assertIn("Downloading batect", result_output)
@@ -83,7 +92,7 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
 
     def test_download_is_quiet(self):
-        result = self.run_script([], download_url=self.default_download_url, quiet_download="true")
+        result = self.run_script([], quiet_download="true")
         result_output = result.stdout.decode()
 
         self.assertIn("Downloading batect", result_output)
@@ -145,6 +154,30 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertNotIn("WARNING: you should never see this", output)
         self.assertEqual(result.returncode, 123)
 
+    def test_corrupt_download(self):
+        result = self.run_script([], download_url=self.download_url("brokenapp.txt"))
+        output = result.stdout.decode()
+
+        self.assertRegex(output, "The downloaded version of batect does not have the expected checksum. Delete '.*' and then re-run this script to download it again.")
+        self.assertNotIn("The Java application has started.", output)
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_corrupt_cached_version(self):
+        result_for_initial_download = self.run_script([])
+        self.assertEqual(result_for_initial_download.returncode, 0)
+
+        self.corrupt_cached_file()
+        result_after_corruption = self.run_script([])
+        output = result_after_corruption.stdout.decode()
+
+        self.assertRegex(output, "The downloaded version of batect does not have the expected checksum. Delete '.*' and then re-run this script to download it again.")
+        self.assertNotIn("The Java application has started.", output)
+        self.assertNotEqual(result_after_corruption.returncode, 0)
+
+    def corrupt_cached_file(self):
+        with open(self.cache_dir + "/VERSION-GOES-HERE/batect-VERSION-GOES-HERE.jar", "a+") as f:
+            f.truncate(10)
+
     def create_limited_path_for_specific_java_version(self, java_version):
         return self.create_limited_path(self.minimum_script_dependencies +
                                         [
@@ -162,10 +195,14 @@ class WrapperScriptTests(unittest.TestCase):
 
         return path_dir
 
-    def run_script(self, args, download_url=default_download_url, path=os.environ["PATH"], quiet_download=None, with_java_tool_options=None):
+    def run_script(self, args, download_url=None, path=os.environ["PATH"], quiet_download=None, with_java_tool_options=None):
+        if download_url is None:
+            download_url = self.default_download_url()
+
         env = {
             "BATECT_CACHE_DIR": self.cache_dir,
             "BATECT_DOWNLOAD_URL": download_url,
+            "BATECT_DOWNLOAD_CHECKSUM": self.get_checksum_of_test_app(),
             "PATH": path
         }
 
@@ -179,6 +216,11 @@ class WrapperScriptTests(unittest.TestCase):
         command = [path] + args
 
         return subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
+
+    def get_checksum_of_test_app(self):
+        with open("test/testapp.jar", "rb") as f:
+            bytes = f.read()
+            return hashlib.sha256(bytes).hexdigest()
 
     def get_script_dir(self):
         return os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "src"))

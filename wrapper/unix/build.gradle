@@ -15,6 +15,17 @@
 */
 
 import java.nio.file.Files
+import org.apache.commons.codec.digest.DigestUtils
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'commons-codec:commons-codec:1.14'
+    }
+}
 
 def templateFilePath = 'src/template.sh'
 def templateFile = project.file templateFilePath
@@ -76,14 +87,20 @@ task build {
 
     def scriptDir = getBuildDir().toPath().resolve("scripts")
     def scriptFile = scriptDir.resolve(rootProject.name)
+    def shadowJarTask = project(":app").getTasksByName("shadowJar", false).first()
 
     inputs.file templateFile
+    inputs.files shadowJarTask
+
     inputs.property("version", { version.toString() })
     outputs.file scriptFile
 
     doLast {
+        def hash = DigestUtils.sha256Hex(shadowJarTask.outputs.files.singleFile.readBytes())
+
         def script = templateFile.text
             .replace("VERSION-GOES-HERE", version.toString())
+            .replace("CHECKSUM-GOES-HERE", hash)
 
         Files.createDirectories scriptDir
         scriptFile.text = script

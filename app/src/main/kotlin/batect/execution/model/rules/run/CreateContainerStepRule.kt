@@ -31,11 +31,16 @@ import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.CreateContainerStep
+import batect.logging.ContainerNameOnlySerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
+@Serializable
 data class CreateContainerStepRule(
-    val container: Container,
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
     val config: ContainerRuntimeConfiguration
 ) : TaskStepRule() {
+    @Transient
     private val needToWaitForCacheInitialisation = container.volumeMounts.any { it is CacheMount }
 
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
@@ -74,6 +79,4 @@ data class CreateContainerStepRule(
     }
 
     private fun cachesAreInitialised(pastEvents: Set<TaskEvent>) = pastEvents.contains(CachesInitialisedEvent)
-
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', config: $config)"
 }

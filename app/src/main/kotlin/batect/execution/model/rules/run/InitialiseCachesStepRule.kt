@@ -20,11 +20,11 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.InitialiseCachesStep
+import kotlinx.serialization.Serializable
 
+@Serializable
 object InitialiseCachesStepRule : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         return TaskStepRuleEvaluationResult.Ready(InitialiseCachesStep)
     }
-
-    override fun toString(): String = this::class.simpleName!!
 }

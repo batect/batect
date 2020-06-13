@@ -17,7 +17,27 @@
 package batect.execution.model.rules
 
 import batect.execution.model.events.TaskEvent
+import batect.execution.model.rules.cleanup.DeleteTaskNetworkStepRule
+import batect.execution.model.rules.cleanup.DeleteTemporaryDirectoryStepRule
+import batect.execution.model.rules.cleanup.DeleteTemporaryFileStepRule
+import batect.execution.model.rules.cleanup.RemoveContainerStepRule
+import batect.execution.model.rules.cleanup.StopContainerStepRule
+import batect.execution.model.rules.run.BuildImageStepRule
+import batect.execution.model.rules.run.CreateContainerStepRule
+import batect.execution.model.rules.run.CreateTaskNetworkStepRule
+import batect.execution.model.rules.run.InitialiseCachesStepRule
+import batect.execution.model.rules.run.PullImageStepRule
+import batect.execution.model.rules.run.RunContainerSetupCommandsStepRule
+import batect.execution.model.rules.run.RunContainerStepRule
+import batect.execution.model.rules.run.WaitForContainerToBecomeHealthyStepRule
+import batect.logging.LogMessageBuilder
+import kotlinx.serialization.Polymorphic
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.set
+import kotlinx.serialization.modules.SerializersModule
 
+@Serializable
+@Polymorphic
 abstract class TaskStepRule {
     abstract fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult
 
@@ -30,3 +50,24 @@ abstract class TaskStepRule {
     protected inline fun <reified T : TaskEvent> Set<TaskEvent>.singleInstanceOrNull(): T? =
         this.filterIsInstance<T>().singleOrNull()
 }
+
+val serializersModule = SerializersModule {
+    polymorphic(TaskStepRule::class) {
+        BuildImageStepRule::class with BuildImageStepRule.serializer()
+        CreateContainerStepRule::class with CreateContainerStepRule.serializer()
+        CreateTaskNetworkStepRule::class with CreateTaskNetworkStepRule.serializer()
+        DeleteTaskNetworkStepRule::class with DeleteTaskNetworkStepRule.serializer()
+        DeleteTemporaryDirectoryStepRule::class with DeleteTemporaryDirectoryStepRule.serializer()
+        DeleteTemporaryFileStepRule::class with DeleteTemporaryFileStepRule.serializer()
+        InitialiseCachesStepRule::class with InitialiseCachesStepRule.serializer()
+        PullImageStepRule::class with PullImageStepRule.serializer()
+        RemoveContainerStepRule::class with RemoveContainerStepRule.serializer()
+        RunContainerSetupCommandsStepRule::class with RunContainerSetupCommandsStepRule.serializer()
+        RunContainerStepRule::class with RunContainerStepRule.serializer()
+        StopContainerStepRule::class with StopContainerStepRule.serializer()
+        WaitForContainerToBecomeHealthyStepRule::class with WaitForContainerToBecomeHealthyStepRule.serializer()
+    }
+}
+
+fun LogMessageBuilder.data(name: String, rules: Set<TaskStepRule>) = this.data(name, rules, TaskStepRule.serializer().set)
+fun LogMessageBuilder.data(name: String, rule: TaskStepRule) = this.data(name, rule, TaskStepRule.serializer())

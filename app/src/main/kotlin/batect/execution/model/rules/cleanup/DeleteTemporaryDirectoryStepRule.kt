@@ -21,10 +21,18 @@ import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.DeleteTemporaryDirectoryStep
+import batect.logging.ContainerNameOnlySerializer
+import batect.logging.PathSerializer
 import batect.os.OperatingSystem
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import java.nio.file.Path
 
-data class DeleteTemporaryDirectoryStepRule(val path: Path, val containerThatMustBeRemovedFirst: Container?) : CleanupTaskStepRule() {
+@Serializable
+data class DeleteTemporaryDirectoryStepRule(
+    @Serializable(with = PathSerializer::class) val path: Path,
+    @Serializable(with = ContainerNameOnlySerializer::class) val containerThatMustBeRemovedFirst: Container?
+) : CleanupTaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         if (containerThatMustBeRemovedFirst == null || containerHasBeenRemoved(pastEvents, containerThatMustBeRemovedFirst)) {
             return TaskStepRuleEvaluationResult.Ready(DeleteTemporaryDirectoryStep(path))
@@ -41,6 +49,6 @@ data class DeleteTemporaryDirectoryStepRule(val path: Path, val containerThatMus
         else -> "rm -rf $path"
     }
 
+    @Transient
     override val manualCleanupSortOrder: ManualCleanupSortOrder = ManualCleanupSortOrder.DeleteTemporaryFiles
-    override fun toString() = "${this::class.simpleName}(path: '$path', container that must be removed first: ${if (containerThatMustBeRemovedFirst == null) "null" else "'${containerThatMustBeRemovedFirst.name}'"})"
 }

@@ -23,8 +23,13 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.WaitForContainerToBecomeHealthyStep
+import batect.logging.ContainerNameOnlySerializer
+import kotlinx.serialization.Serializable
 
-data class WaitForContainerToBecomeHealthyStepRule(val container: Container) : TaskStepRule() {
+@Serializable
+data class WaitForContainerToBecomeHealthyStepRule(
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container
+) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         if (!containerHasStarted(pastEvents)) {
             return TaskStepRuleEvaluationResult.NotReady
@@ -42,6 +47,4 @@ data class WaitForContainerToBecomeHealthyStepRule(val container: Container) : T
 
     private fun containerHasStarted(pastEvents: Set<TaskEvent>) =
         pastEvents.any { it is ContainerStartedEvent && it.container == container }
-
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}')"
 }

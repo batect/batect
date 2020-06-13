@@ -27,9 +27,11 @@ import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -145,15 +147,21 @@ object RunContainerStepRuleSpec : Spek({
             }
         }
 
-        on("toString()") {
+        on("attaching it to a log message") {
             val container = Container("the-container", imageSourceDoesNotMatter())
             val dependency1 = Container("dependency-1", imageSourceDoesNotMatter())
             val dependency2 = Container("dependency-2", imageSourceDoesNotMatter())
             val dependencies = setOf(dependency1, dependency2)
             val rule = RunContainerStepRule(container, dependencies)
 
-            it("returns a human-readable representation of itself") {
-                assertThat(rule.toString(), equalTo("RunContainerStepRule(container: 'the-container', dependencies: ['dependency-1', 'dependency-2'])"))
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(rule), equivalentTo("""
+                    |{
+                    |   "type": "${rule::class.qualifiedName}",
+                    |   "container": "the-container",
+                    |   "dependencies": ["dependency-1", "dependency-2"]
+                    |}
+                """.trimMargin()))
             }
         }
     }

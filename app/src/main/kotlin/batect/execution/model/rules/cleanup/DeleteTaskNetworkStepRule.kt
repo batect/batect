@@ -22,10 +22,17 @@ import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.DeleteTaskNetworkStep
+import batect.logging.ContainerNameSetSerializer
 import batect.os.OperatingSystem
 import batect.utils.mapToSet
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
-data class DeleteTaskNetworkStepRule(val network: DockerNetwork, val containersThatMustBeRemovedFirst: Set<Container>) : CleanupTaskStepRule() {
+@Serializable
+data class DeleteTaskNetworkStepRule(
+    val network: DockerNetwork,
+    @Serializable(with = ContainerNameSetSerializer::class) val containersThatMustBeRemovedFirst: Set<Container>
+) : CleanupTaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         val removedContainers = pastEvents
             .filterIsInstance<ContainerRemovedEvent>()
@@ -39,6 +46,7 @@ data class DeleteTaskNetworkStepRule(val network: DockerNetwork, val containersT
     }
 
     override fun getManualCleanupInstructionForOperatingSystem(operatingSystem: OperatingSystem): String? = "docker network rm ${network.id}"
+
+    @Transient
     override val manualCleanupSortOrder: ManualCleanupSortOrder = ManualCleanupSortOrder.DeleteTaskNetwork
-    override fun toString() = "${this::class.simpleName}(network: '${network.id}', containers that must be removed first: ${containersThatMustBeRemovedFirst.map { "'${it.name}'" }})"
 }

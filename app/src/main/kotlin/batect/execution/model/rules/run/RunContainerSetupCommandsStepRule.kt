@@ -24,9 +24,12 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.RunContainerSetupCommandsStep
+import batect.logging.ContainerNameOnlySerializer
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class RunContainerSetupCommandsStepRule(
-    val container: Container,
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
     val config: ContainerRuntimeConfiguration
 ) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
@@ -46,6 +49,4 @@ data class RunContainerSetupCommandsStepRule(
 
     private fun containerHasBecomeHealthy(pastEvents: Set<TaskEvent>) =
         pastEvents.any { it is ContainerBecameHealthyEvent && it.container == container }
-
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', config: $config)"
 }

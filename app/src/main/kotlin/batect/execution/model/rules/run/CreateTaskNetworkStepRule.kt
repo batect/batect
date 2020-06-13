@@ -20,11 +20,11 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.CreateTaskNetworkStep
+import kotlinx.serialization.Serializable
 
+@Serializable
 object CreateTaskNetworkStepRule : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         return TaskStepRuleEvaluationResult.Ready(CreateTaskNetworkStep)
     }
-
-    override fun toString(): String = this::class.simpleName!!
 }

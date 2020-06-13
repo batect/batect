@@ -16,6 +16,8 @@
 
 package batect.testutils
 
+import batect.execution.model.rules.TaskStepRule
+import batect.execution.model.rules.data
 import batect.execution.model.steps.TaskStep
 import batect.execution.model.steps.data
 import batect.logging.Logger
@@ -29,4 +31,15 @@ fun logRepresentationOf(step: TaskStep): String {
     }
 
     return sink.loggedMessages.single().additionalData.getValue("step").toJSON().toString()
+}
+
+fun logRepresentationOf(rule: TaskStepRule): String {
+    val sink = InMemoryLogSink()
+    val logger = Logger("test logger", sink)
+
+    logger.info {
+        data("rule", rule)
+    }
+
+    return sink.loggedMessages.single().additionalData.getValue("rule").toJSON().toString()
 }

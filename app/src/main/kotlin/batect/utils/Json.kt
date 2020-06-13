@@ -18,9 +18,14 @@ package batect.utils
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
+import kotlinx.serialization.modules.SerializersModule
 
 object Json {
-    val nonstrictParser = Json(JsonConfiguration.Stable.copy(ignoreUnknownKeys = true))
-    val parser = Json(JsonConfiguration.Stable)
-    val withoutDefaults = Json(JsonConfiguration.Stable.copy(encodeDefaults = false))
+    private val module = SerializersModule {
+        include(batect.execution.model.rules.serializersModule)
+    }
+
+    val nonstrictParser = Json(JsonConfiguration.Stable.copy(ignoreUnknownKeys = true), module)
+    val parser = Json(JsonConfiguration.Stable, module)
+    val withoutDefaults = Json(JsonConfiguration.Stable.copy(encodeDefaults = false), module)
 }

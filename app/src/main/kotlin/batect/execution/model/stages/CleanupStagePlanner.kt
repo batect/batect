@@ -30,6 +30,7 @@ import batect.execution.model.rules.cleanup.DeleteTemporaryDirectoryStepRule
 import batect.execution.model.rules.cleanup.DeleteTemporaryFileStepRule
 import batect.execution.model.rules.cleanup.RemoveContainerStepRule
 import batect.execution.model.rules.cleanup.StopContainerStepRule
+import batect.execution.model.rules.data
 import batect.logging.Logger
 import batect.os.SystemInfo
 import batect.utils.filterToSet
@@ -57,7 +58,7 @@ class CleanupStagePlanner(
 
         logger.info {
             message("Created cleanup plan.")
-            data("rules", rules.map { it.toString() })
+            data("rules", rules)
             data("pastEvents", pastEvents.map { it.toString() })
         }
 

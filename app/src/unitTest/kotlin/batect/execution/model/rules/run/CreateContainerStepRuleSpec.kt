@@ -21,6 +21,7 @@ import batect.config.CacheMount
 import batect.config.Container
 import batect.config.LiteralValue
 import batect.config.LocalMount
+import batect.config.PortMapping
 import batect.config.PullImage
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
@@ -32,15 +33,17 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.CreateContainerStep
+import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import batect.testutils.osIndependentPath
 import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
-import com.nhaarman.mockitokotlin2.mock
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Paths
@@ -48,7 +51,7 @@ import java.nio.file.Paths
 object CreateContainerStepRuleSpec : Spek({
     describe("a create container step rule") {
         val events by createForEachTest { mutableSetOf<TaskEvent>() }
-        val config = mock<ContainerRuntimeConfiguration>()
+        val config = ContainerRuntimeConfiguration(Command.parse("blah"), Command.parse("entrypoint"), "/some/work/dir", mapOf("VAR" to LiteralValue("value")), setOf(PortMapping(123, 456)))
 
         given("the container uses an existing image") {
             val imageName = "the-image"
@@ -202,12 +205,26 @@ object CreateContainerStepRuleSpec : Spek({
             }
         }
 
-        describe("toString()") {
+        on("attaching it to a log message") {
             val container = Container("the-container", imageSourceDoesNotMatter())
             val rule = CreateContainerStepRule(container, config)
 
-            it("returns a human-readable representation of itself") {
-                assertThat(rule.toString(), equalTo("CreateContainerStepRule(container: 'the-container', config: $config)"))
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(rule), equivalentTo("""
+                    |{
+                    |   "type": "${rule::class.qualifiedName}",
+                    |   "container": "the-container",
+                    |   "config": {
+                    |       "command": ["blah"],
+                    |       "entrypoint": ["entrypoint"],
+                    |       "workingDirectory": "/some/work/dir",
+                    |       "additionalEnvironmentVariables": {
+                    |           "VAR": {"type":"LiteralValue", "value":"value"}
+                    |       },
+                    |       "additionalPortMappings": [{"local": "123", "container": "456"}]
+                    |   }
+                    |}
+                """.trimMargin()))
             }
         }
     }

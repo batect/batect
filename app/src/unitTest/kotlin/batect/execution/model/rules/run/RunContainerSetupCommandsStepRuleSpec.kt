@@ -17,6 +17,8 @@
 package batect.execution.model.rules.run
 
 import batect.config.Container
+import batect.config.LiteralValue
+import batect.config.PortMapping
 import batect.docker.DockerContainer
 import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.model.events.ContainerBecameHealthyEvent
@@ -24,19 +26,21 @@ import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.RunContainerSetupCommandsStep
+import batect.os.Command
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import com.nhaarman.mockitokotlin2.mock
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object RunContainerSetupCommandsStepRuleSpec : Spek({
     describe("a run container setup commands step rule") {
         val container = Container("the-container", imageSourceDoesNotMatter())
-        val config = mock<ContainerRuntimeConfiguration>()
+        val config = ContainerRuntimeConfiguration(Command.parse("blah"), Command.parse("entrypoint"), "/some/work/dir", mapOf("VAR" to LiteralValue("value")), setOf(PortMapping(123, 456)))
         val rule = RunContainerSetupCommandsStepRule(container, config)
 
         given("the container has become healthy") {
@@ -89,9 +93,23 @@ object RunContainerSetupCommandsStepRuleSpec : Spek({
             }
         }
 
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                assertThat(rule.toString(), equalTo("RunContainerSetupCommandsStepRule(container: 'the-container', config: $config)"))
+        on("attaching it to a log message") {
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(rule), equivalentTo("""
+                    |{
+                    |   "type": "${rule::class.qualifiedName}",
+                    |   "container": "the-container",
+                    |   "config": {
+                    |       "command": ["blah"],
+                    |       "entrypoint": ["entrypoint"],
+                    |       "workingDirectory": "/some/work/dir",
+                    |       "additionalEnvironmentVariables": {
+                    |           "VAR": {"type":"LiteralValue", "value":"value"}
+                    |       },
+                    |       "additionalPortMappings": [{"local": "123", "container": "456"}]
+                    |   }
+                    |}
+                """.trimMargin()))
             }
         }
     }

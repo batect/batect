@@ -22,9 +22,17 @@ import batect.execution.model.events.ContainerStoppedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.RemoveContainerStep
+import batect.logging.ContainerNameOnlySerializer
 import batect.os.OperatingSystem
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
-data class RemoveContainerStepRule(val container: Container, val dockerContainer: DockerContainer, val containerWasStarted: Boolean) : CleanupTaskStepRule() {
+@Serializable
+data class RemoveContainerStepRule(
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
+    val dockerContainer: DockerContainer,
+    val containerWasStarted: Boolean
+) : CleanupTaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         if (containerWasStarted && !containerHasStopped(pastEvents)) {
             return TaskStepRuleEvaluationResult.NotReady
@@ -37,6 +45,7 @@ data class RemoveContainerStepRule(val container: Container, val dockerContainer
         pastEvents.contains(ContainerStoppedEvent(container))
 
     override fun getManualCleanupInstructionForOperatingSystem(operatingSystem: OperatingSystem): String? = "docker rm --force --volumes ${dockerContainer.id}"
+
+    @Transient
     override val manualCleanupSortOrder: ManualCleanupSortOrder = ManualCleanupSortOrder.RemoveContainers
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}', container was started: $containerWasStarted)"
 }

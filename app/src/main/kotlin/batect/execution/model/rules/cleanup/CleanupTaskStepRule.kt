@@ -18,10 +18,12 @@ package batect.execution.model.rules.cleanup
 
 import batect.execution.model.rules.TaskStepRule
 import batect.os.OperatingSystem
+import kotlinx.serialization.Transient
 
 abstract class CleanupTaskStepRule : TaskStepRule() {
     abstract fun getManualCleanupInstructionForOperatingSystem(operatingSystem: OperatingSystem): String?
 
+    @Transient
     abstract val manualCleanupSortOrder: ManualCleanupSortOrder
 }
 

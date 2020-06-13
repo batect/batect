@@ -25,8 +25,10 @@ import batect.os.OperatingSystem
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -86,13 +88,19 @@ object DeleteTaskNetworkStepRuleSpec : Spek({
             }
         }
 
-        on("toString()") {
+        on("attaching it to a log message") {
             val container1 = Container("container-1", imageSourceDoesNotMatter())
             val container2 = Container("container-2", imageSourceDoesNotMatter())
             val rule = DeleteTaskNetworkStepRule(network, setOf(container1, container2))
 
-            it("returns a human-readable representation of itself") {
-                assertThat(rule.toString(), equalTo("DeleteTaskNetworkStepRule(network: 'the-network', containers that must be removed first: ['container-1', 'container-2'])"))
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(rule), equivalentTo("""
+                    |{
+                    |   "type": "${rule::class.qualifiedName}",
+                    |   "network": {"id": "the-network"},
+                    |   "containersThatMustBeRemovedFirst": ["container-1", "container-2"]
+                    |}
+                """.trimMargin()))
             }
         }
     }

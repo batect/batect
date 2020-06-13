@@ -25,8 +25,10 @@ import batect.os.OperatingSystem
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -46,9 +48,16 @@ object StopContainerStepRuleSpec : Spek({
                 }
             }
 
-            on("toString()") {
-                it("returns a human-readable representation of itself") {
-                    assertThat(rule.toString(), equalTo("StopContainerStepRule(container: 'the-container', Docker container: 'some-container-id', containers that must be stopped first: [])"))
+            on("attaching it to a log message") {
+                it("returns a machine-readable representation of itself") {
+                    assertThat(logRepresentationOf(rule), equivalentTo("""
+                        |{
+                        |   "type": "${rule::class.qualifiedName}",
+                        |   "container": "the-container",
+                        |   "dockerContainer": {"id": "some-container-id", "name": null},
+                        |   "containersThatMustBeStoppedFirst": []
+                        |}
+                    """.trimMargin()))
                 }
             }
         }
@@ -83,9 +92,16 @@ object StopContainerStepRuleSpec : Spek({
                 }
             }
 
-            on("toString()") {
-                it("returns a human-readable representation of itself") {
-                    assertThat(rule.toString(), equalTo("StopContainerStepRule(container: 'the-container', Docker container: 'some-container-id', containers that must be stopped first: ['container-1', 'container-2'])"))
+            on("attaching it to a log message") {
+                it("returns a machine-readable representation of itself") {
+                    assertThat(logRepresentationOf(rule), equivalentTo("""
+                        |{
+                        |   "type": "${rule::class.qualifiedName}",
+                        |   "container": "the-container",
+                        |   "dockerContainer": {"id": "some-container-id", "name": null},
+                        |   "containersThatMustBeStoppedFirst": ["container-1", "container-2"]
+                        |}
+                    """.trimMargin()))
                 }
             }
         }

@@ -21,14 +21,14 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.BuildImageStep
+import batect.logging.ContainerNameOnlySerializer
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class BuildImageStepRule(
-    val container: Container
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container
 ) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         return TaskStepRuleEvaluationResult.Ready(BuildImageStep(container))
     }
-
-    override fun toString() = "${this::class.simpleName}(" +
-        "container: '${container.name}')"
 }

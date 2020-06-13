@@ -22,6 +22,7 @@ import batect.config.PullImage
 import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerDependencyGraphNode
 import batect.execution.model.rules.TaskStepRule
+import batect.execution.model.rules.data
 import batect.execution.model.rules.run.BuildImageStepRule
 import batect.execution.model.rules.run.CreateContainerStepRule
 import batect.execution.model.rules.run.CreateTaskNetworkStepRule
@@ -44,7 +45,7 @@ class RunStagePlanner(
 
         logger.info {
             message("Created run plan.")
-            data("rules", rules.map { it.toString() })
+            data("rules", rules)
         }
 
         return RunStage(rules, graph.taskContainerNode.container)

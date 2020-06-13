@@ -19,8 +19,10 @@ package batect.execution.model.rules.run
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.CreateTaskNetworkStep
 import batect.testutils.equalTo
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -36,9 +38,13 @@ object CreateTaskNetworkStepRuleSpec : Spek({
             }
         }
 
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                assertThat(rule.toString(), equalTo("CreateTaskNetworkStepRule"))
+        on("attaching it to a log message") {
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(rule), equivalentTo("""
+                    |{
+                    |   "type": "${rule::class.qualifiedName}"
+                    |}
+                """.trimMargin()))
             }
         }
     }

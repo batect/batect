@@ -21,11 +21,11 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.PullImageStep
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class PullImageStepRule(val source: PullImage) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         return TaskStepRuleEvaluationResult.Ready(PullImageStep(source))
     }
-
-    override fun toString(): String = "${this::class.simpleName}(source: $source)"
 }

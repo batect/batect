@@ -22,10 +22,18 @@ import batect.execution.model.events.ContainerStoppedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.StopContainerStep
+import batect.logging.ContainerNameOnlySerializer
+import batect.logging.ContainerNameSetSerializer
 import batect.os.OperatingSystem
 import batect.utils.mapToSet
+import kotlinx.serialization.Serializable
 
-data class StopContainerStepRule(val container: Container, val dockerContainer: DockerContainer, val containersThatMustBeStoppedFirst: Set<Container>) : CleanupTaskStepRule() {
+@Serializable
+data class StopContainerStepRule(
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
+    val dockerContainer: DockerContainer,
+    @Serializable(with = ContainerNameSetSerializer::class) val containersThatMustBeStoppedFirst: Set<Container>
+) : CleanupTaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         val stoppedContainers = pastEvents
             .filterIsInstance<ContainerStoppedEvent>()
@@ -39,8 +47,7 @@ data class StopContainerStepRule(val container: Container, val dockerContainer: 
     }
 
     override fun getManualCleanupInstructionForOperatingSystem(operatingSystem: OperatingSystem): String? = null
+
     override val manualCleanupSortOrder: ManualCleanupSortOrder
         get() = throw UnsupportedOperationException("This rule has no manual cleanup instruction.")
-
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}', containers that must be stopped first: ${containersThatMustBeStoppedFirst.map { "'${it.name}'" }})"
 }

@@ -23,8 +23,15 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.RunContainerStep
+import batect.logging.ContainerNameOnlySerializer
+import batect.logging.ContainerNameSetSerializer
+import kotlinx.serialization.Serializable
 
-data class RunContainerStepRule(val container: Container, val dependencies: Set<Container>) : TaskStepRule() {
+@Serializable
+data class RunContainerStepRule(
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
+    @Serializable(with = ContainerNameSetSerializer::class) val dependencies: Set<Container>
+) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         val dockerContainer = findDockerContainer(pastEvents)
 
@@ -47,6 +54,4 @@ data class RunContainerStepRule(val container: Container, val dependencies: Set<
 
         return readyContainers.containsAll(dependencies)
     }
-
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', dependencies: ${dependencies.map { "'${it.name}'" }})"
 }

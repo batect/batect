@@ -21,15 +21,12 @@ import java.nio.file.Path
 
 sealed class ImageSource
 
-data class BuildImage(val buildDirectory: Expression, val relativeTo: Path, val buildArgs: Map<String, Expression> = emptyMap(), val dockerfilePath: String = "Dockerfile") : ImageSource() {
-    override fun toString(): String = "${this.javaClass.simpleName}(" +
-        "build directory: $buildDirectory, " +
-        "relative to: '$relativeTo', " +
-        "build args: [${buildArgs.map { "${it.key}=${it.value}" }.joinToString(", ")}], " +
-        "Dockerfile path: '$dockerfilePath')"
-}
+data class BuildImage(
+    val buildDirectory: Expression,
+    val relativeTo: Path,
+    val buildArgs: Map<String, Expression> = emptyMap(),
+    val dockerfilePath: String = "Dockerfile"
+) : ImageSource()
 
 @Serializable
-data class PullImage(val imageName: String) : ImageSource() {
-    override fun toString(): String = "${this.javaClass.simpleName}(image: '$imageName')"
-}
+data class PullImage(val imageName: String) : ImageSource()

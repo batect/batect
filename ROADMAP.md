@@ -118,7 +118,7 @@ If there's something you're really keen to see, pull requests are always welcome
 
 ## Future improvements
 * warn if dependency exits before task finishes (include exit code)
-* running multiple containers at once (eg. stereotypical 'run' configuration that starts up the service with its dependencies)
+* enhancements to running multiple containers at once (eg. stereotypical 'run' configuration that starts up the service with its dependencies)
   * exit options (close all after any container stops, wait for all to stop)
   * return code options (any non-zero, particular container, first to exit)
 * wildcard includes (eg. `include: containers/*.yaml`)
@@ -138,3 +138,5 @@ If there's something you're really keen to see, pull requests are always welcome
 * merge or replace containers or tasks when including files
   * eg. scenario described in [Cam's chat message](https://spectrum.chat/batect/general/workflows-for-making-changes-across-multiple-repos~99e11eee-cc8a-4118-ba4c-52d8e188813a)
 * easy way to run all containers with output going to a tool like Seq (eg. `./batect --output=seq my-task` starts a Seq instance and uses Docker to send all containers' output there)
+* IDE integration
+  * eg. language server (https://microsoft.github.io/language-server-protocol/)

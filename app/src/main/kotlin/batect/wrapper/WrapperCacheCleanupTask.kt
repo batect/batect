@@ -50,7 +50,7 @@ class WrapperCacheCleanupTask(
         logger.info {
             message("Examining candidate version for deletion.")
             data("version", wrapperVersion.version)
-            data("lastUsed", wrapperVersion.lastUsed.toString())
+            data("lastUsed", wrapperVersion.lastUsed)
             data("versionDirectory", wrapperVersion.cacheDirectory)
         }
 

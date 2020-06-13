@@ -27,13 +27,13 @@ class UpdateInfoStorage(private val systemInfo: SystemInfo, private val logger: 
     fun read(): UpdateInfo? {
         logger.info {
             message("Loading cached update information from disk.")
-            data("source", updateInfoPath.toString())
+            data("source", updateInfoPath)
         }
 
         if (!Files.exists(updateInfoPath)) {
             logger.info {
                 message("No cached update information found on disk.")
-                data("source", updateInfoPath.toString())
+                data("source", updateInfoPath)
             }
 
             return null
@@ -54,7 +54,7 @@ class UpdateInfoStorage(private val systemInfo: SystemInfo, private val logger: 
     fun write(updateInfo: UpdateInfo) {
         logger.info {
             message("Writing update information cache to disk.")
-            data("destination", updateInfoPath.toString())
+            data("destination", updateInfoPath)
             data("updateInfo", updateInfo)
         }
 
@@ -65,7 +65,7 @@ class UpdateInfoStorage(private val systemInfo: SystemInfo, private val logger: 
 
         logger.info {
             message("Wrote update information cache to disk.")
-            data("destination", updateInfoPath.toString())
+            data("destination", updateInfoPath)
             data("updateInfo", updateInfo)
         }
     }

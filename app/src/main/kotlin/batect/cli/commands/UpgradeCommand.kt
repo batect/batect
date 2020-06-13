@@ -123,7 +123,7 @@ class UpgradeCommand(
         try {
             logger.info {
                 message("Downloading wrapper script.")
-                data("url", request.url.toString())
+                data("url", request.url)
             }
 
             httpClient.newCall(request).execute().use { response ->
@@ -143,7 +143,7 @@ class UpgradeCommand(
         } catch (e: Throwable) {
             logger.error {
                 message("Downloading wrapper script failed with an exception.")
-                data("url", request.url.toString())
+                data("url", request.url)
                 exception(e)
             }
 

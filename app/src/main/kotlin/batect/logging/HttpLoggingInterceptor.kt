@@ -17,6 +17,7 @@
 package batect.logging
 
 import okhttp3.Interceptor
+import okhttp3.MediaType
 import okhttp3.Response
 
 class HttpLoggingInterceptor(private val logger: Logger) : Interceptor {
@@ -25,24 +26,26 @@ class HttpLoggingInterceptor(private val logger: Logger) : Interceptor {
 
         logger.debug {
             message("HTTP request starting.")
-            data("url", request.url.toString())
+            data("url", request.url)
             data("method", request.method)
             data("contentLength", request.body?.contentLength() ?: 0)
-            data("contentType", request.body?.contentType()?.toString())
+            data("contentType", request.body?.contentType())
         }
 
         val response = chain.proceed(request)
 
         logger.debug {
             message("HTTP response received.")
-            data("url", request.url.toString())
+            data("url", request.url)
             data("method", request.method)
             data("code", response.code)
             data("message", response.message)
             data("contentLength", response.body?.contentLength() ?: 0)
-            data("contentType", response.body?.contentType()?.toString())
+            data("contentType", response.body?.contentType())
         }
 
         return response
     }
+
+    private fun LogMessageBuilder.data(key: String, value: MediaType?) = this.data(key, value?.toString())
 }

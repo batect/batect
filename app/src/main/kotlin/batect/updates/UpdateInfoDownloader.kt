@@ -38,7 +38,7 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
         try {
             logger.info {
                 message("Downloading latest version information.")
-                data("url", request.url.toString())
+                data("url", request.url)
             }
 
             client.newCall(request).execute().use { response ->
@@ -67,7 +67,7 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
         } catch (e: Throwable) {
             logger.info {
                 message("Downloading latest version information failed with an exception.")
-                data("url", request.url.toString())
+                data("url", request.url)
                 exception(e)
             }
 

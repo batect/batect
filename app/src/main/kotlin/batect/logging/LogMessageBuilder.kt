@@ -24,6 +24,7 @@ import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.list
+import okhttp3.HttpUrl
 import java.nio.file.Path
 import java.time.ZonedDateTime
 
@@ -60,7 +61,11 @@ class LogMessageBuilder(val severity: Severity, val loggerAdditionalData: Map<St
     fun data(key: String, value: Version) = data(key, value, Version.Companion)
     fun data(key: String, value: Iterable<String>) = data(key, value.toList(), String.serializer().list)
     fun data(key: String, value: Map<String, String>) = data(key, value, MapSerializer(String.serializer(), String.serializer()))
+    fun data(key: String, value: HttpUrl) = data(key, value.toString())
 
     @JvmName("nullableData")
     fun data(key: String, value: String?) = data(key, value, String.serializer().nullable)
+
+    @JvmName("nullableData")
+    fun data(key: String, value: ZonedDateTime?) = data(key, value, ZonedDateTimeSerializer.nullable)
 }

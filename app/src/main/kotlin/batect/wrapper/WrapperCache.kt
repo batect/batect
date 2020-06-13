@@ -148,7 +148,7 @@ class WrapperCache(
             message("Deleting cached version.")
             data("version", cachedWrapper.version)
             data("versionDirectory", cachedWrapper.cacheDirectory)
-            data("lastUsed", cachedWrapper.lastUsed.toString())
+            data("lastUsed", cachedWrapper.lastUsed)
         }
 
         val contents = Files.list(cachedWrapper.cacheDirectory)

@@ -37,7 +37,7 @@ class DockerRegistryCredentialsConfigurationFile(
     private fun loadConfigFile(): DockerConfigFile {
         logger.info {
             message("Loading Docker configuration file.")
-            data("path", configFilePath.toString())
+            data("path", configFilePath)
         }
 
         if (Files.notExists(configFilePath)) {

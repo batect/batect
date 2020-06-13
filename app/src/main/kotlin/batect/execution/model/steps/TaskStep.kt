@@ -14,6 +14,11 @@
    limitations under the License.
 */
 
+@file:UseSerializers(
+    ContainerNameOnlySerializer::class,
+    PathSerializer::class
+)
+
 package batect.execution.model.steps
 
 import batect.config.Container
@@ -26,15 +31,14 @@ import batect.execution.ContainerRuntimeConfiguration
 import batect.logging.LogMessageBuilder
 import batect.logging.PathSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
 import java.nio.file.Path
 
 @Serializable
 sealed class TaskStep
 
 @Serializable
-data class BuildImageStep(
-    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container
-) : TaskStep()
+data class BuildImageStep(val container: Container) : TaskStep()
 
 @Serializable
 data class PullImageStep(val source: PullImage) : TaskStep()
@@ -47,58 +51,40 @@ object InitialiseCachesStep : TaskStep()
 
 @Serializable
 data class CreateContainerStep(
-    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
+    val container: Container,
     val config: ContainerRuntimeConfiguration,
     val image: DockerImage,
     val network: DockerNetwork
 ) : TaskStep()
 
 @Serializable
-data class RunContainerStep(
-    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
-    val dockerContainer: DockerContainer
-) : TaskStep()
+data class RunContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep()
 
 @Serializable
 data class RunContainerSetupCommandsStep(
-    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
+    val container: Container,
     val config: ContainerRuntimeConfiguration,
     val dockerContainer: DockerContainer
 ) : TaskStep()
 
 @Serializable
-data class WaitForContainerToBecomeHealthyStep(
-    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
-    val dockerContainer: DockerContainer
-) : TaskStep()
+data class WaitForContainerToBecomeHealthyStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep()
 
 sealed class CleanupStep : TaskStep()
 
 @Serializable
-data class StopContainerStep(
-    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
-    val dockerContainer: DockerContainer
-) : CleanupStep()
+data class StopContainerStep(val container: Container, val dockerContainer: DockerContainer) : CleanupStep()
 
 @Serializable
-data class RemoveContainerStep(
-    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
-    val dockerContainer: DockerContainer
-) : CleanupStep()
+data class RemoveContainerStep(val container: Container, val dockerContainer: DockerContainer) : CleanupStep()
 
 @Serializable
-data class DeleteTemporaryFileStep(
-    @Serializable(with = PathSerializer::class) val filePath: Path
-) : CleanupStep()
+data class DeleteTemporaryFileStep(val filePath: Path) : CleanupStep()
 
 @Serializable
-data class DeleteTemporaryDirectoryStep(
-    @Serializable(with = PathSerializer::class) val directoryPath: Path
-) : CleanupStep()
+data class DeleteTemporaryDirectoryStep(val directoryPath: Path) : CleanupStep()
 
 @Serializable
-data class DeleteTaskNetworkStep(
-    val network: DockerNetwork
-) : CleanupStep()
+data class DeleteTaskNetworkStep(val network: DockerNetwork) : CleanupStep()
 
 fun LogMessageBuilder.data(name: String, step: TaskStep) = this.data(name, step, TaskStep.serializer())

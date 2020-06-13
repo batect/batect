@@ -49,10 +49,34 @@ object InterleavedContainerOutputSinkSpec : Spek({
                 }
             }
 
+            describe("when bytes ending a blank line are written") {
+                beforeEachTest { sink.writeText("\n") }
+
+                it("writes a blank line to the output without the trailing new line character and with the prefix prepended") {
+                    verify(output).printForContainer(container, prefix + Text(""))
+                }
+            }
+
             describe("when bytes ending a new line are written") {
                 beforeEachTest { sink.writeText("Some text\n") }
 
                 it("writes the text to the output without the trailing new line character and with the prefix prepended") {
+                    verify(output).printForContainer(container, prefix + Text("Some text"))
+                }
+            }
+
+            describe("when bytes ending a new line and a carriage return are written") {
+                beforeEachTest { sink.writeText("Some text\r\n") }
+
+                it("writes the text to the output without the trailing new line or carriage return characters and with the prefix prepended") {
+                    verify(output).printForContainer(container, prefix + Text("Some text"))
+                }
+            }
+
+            describe("when bytes starting with a carriage return and ending a new line are written") {
+                beforeEachTest { sink.writeText("\rSome text\n") }
+
+                it("writes the text to the output without the leading carriage return or trailing new line character and with the prefix prepended") {
                     verify(output).printForContainer(container, prefix + Text("Some text"))
                 }
             }
@@ -140,6 +164,39 @@ object InterleavedContainerOutputSinkSpec : Spek({
                 }
 
                 it("writes the remaining text to the output with the prefix prepended") {
+                    verify(output).printForContainer(container, prefix + Text("Wait for it..."))
+                }
+            }
+
+            describe("when an incomplete line consisting of a single leading carriage return has been written") {
+                beforeEachTest {
+                    sink.writeText("\r")
+                    sink.close()
+                }
+
+                it("writes an blank line to the output with the prefix prepended and without the carriage return") {
+                    verify(output).printForContainer(container, prefix + Text(""))
+                }
+            }
+
+            describe("when an incomplete line with a leading carriage return has been written") {
+                beforeEachTest {
+                    sink.writeText("\rWait for it...")
+                    sink.close()
+                }
+
+                it("writes the remaining text to the output with the prefix prepended and without the leading carriage return") {
+                    verify(output).printForContainer(container, prefix + Text("Wait for it..."))
+                }
+            }
+
+            describe("when an incomplete line with a trailing carriage return has been written") {
+                beforeEachTest {
+                    sink.writeText("Wait for it...\r")
+                    sink.close()
+                }
+
+                it("writes the remaining text to the output with the prefix prepended and without the trailing carriage return") {
                     verify(output).printForContainer(container, prefix + Text("Wait for it..."))
                 }
             }

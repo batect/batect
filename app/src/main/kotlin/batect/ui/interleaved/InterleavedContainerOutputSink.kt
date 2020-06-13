@@ -32,17 +32,23 @@ data class InterleavedContainerOutputSink(val container: Container, val output: 
 
         while (buffer.contains('\n')) {
             val endOfLine = buffer.indexOf('\n')
-            val line = buffer.substring(0, endOfLine)
-
-            output.printForContainer(container, prefix + Text(line))
-            buffer.delete(0, endOfLine + 1)
+            writeLine(endOfLine)
         }
     }
 
     override fun close() {
         if (buffer.isNotEmpty()) {
-            output.printForContainer(container, prefix + Text(buffer.toString()))
+            writeLine(buffer.lastIndex + 1)
         }
+    }
+
+    private fun writeLine(endOfLine: Int) {
+        val firstIndex = if (buffer[0] == '\r') 1 else 0
+        val lastIndex = if (endOfLine > 0 && buffer[endOfLine - 1] == '\r') endOfLine - 1 else endOfLine
+        val line = if (firstIndex < lastIndex) buffer.substring(firstIndex, lastIndex) else ""
+
+        output.printForContainer(container, prefix + Text(line))
+        buffer.delete(0, endOfLine + 1)
     }
 
     override fun timeout(): Timeout = Timeout.NONE

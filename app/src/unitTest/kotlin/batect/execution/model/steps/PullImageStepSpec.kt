@@ -17,9 +17,10 @@
 package batect.execution.model.steps
 
 import batect.config.PullImage
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -28,9 +29,15 @@ object PullImageStepSpec : Spek({
         val source = PullImage("the-image")
         val step = PullImageStep(source)
 
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                assertThat(step.toString(), equalTo("PullImageStep(source: $source)"))
+        on("attaching it to a log message") {
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(step), equivalentTo("""
+                    |{
+                    |   "type": "${step::class.qualifiedName}",
+                    |   "source": {"imageName": "the-image"}
+                    |}
+                """.trimMargin())
+                )
             }
         }
     }

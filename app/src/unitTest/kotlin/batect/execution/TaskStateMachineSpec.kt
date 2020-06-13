@@ -31,9 +31,9 @@ import batect.execution.model.stages.RunStage
 import batect.execution.model.stages.RunStagePlanner
 import batect.execution.model.stages.StageComplete
 import batect.execution.model.stages.StepReady
-import batect.execution.model.steps.TaskStep
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
+import batect.testutils.createMockTaskStep
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
@@ -105,7 +105,7 @@ object TaskStateMachineSpec : Spek({
                 given("the cleanup stage is active") {
                     beforeEachTest {
                         whenever(runStage.popNextStep(emptySet(), false)).doReturn(StageComplete)
-                        whenever(cleanupStage.popNextStep(emptySet(), false)).doReturn(StepReady(mock()))
+                        whenever(cleanupStage.popNextStep(emptySet(), false)).doReturn(StepReady(createMockTaskStep()))
                         stateMachine.popNextStep(false)
                     }
 
@@ -125,7 +125,7 @@ object TaskStateMachineSpec : Spek({
                 given("the task has not failed") {
                     given("there is a step ready") {
                         regardlessOfWhetherThereAreStepsRunning { stepsStillRunning ->
-                            val step by createForEachTest { mock<TaskStep>() }
+                            val step by createForEachTest { createMockTaskStep() }
                             beforeEachTest { whenever(runStage.popNextStep(any(), eq(stepsStillRunning))).doReturn(StepReady(step)) }
 
                             on("getting the next step to execute") {
@@ -185,7 +185,7 @@ object TaskStateMachineSpec : Spek({
 
                         regardlessOfWhetherThereAreStepsRunning { stepsStillRunning ->
                             beforeEachTest {
-                                val step = mock<TaskStep>()
+                                val step = createMockTaskStep()
 
                                 whenever(runStage.popNextStep(emptySet(), stepsStillRunning)).doReturn(StepReady(step))
                                 whenever(runStage.popNextStep(setOf(event), stepsStillRunning)).doReturn(StageComplete)
@@ -199,7 +199,7 @@ object TaskStateMachineSpec : Spek({
                                 beforeEachTest { whenever(runOptions.behaviourAfterSuccess) doReturn CleanupOption.Cleanup }
 
                                 on("getting the next step to execute") {
-                                    val cleanupStep = mock<TaskStep>()
+                                    val cleanupStep = createMockTaskStep()
                                     beforeEachTest { whenever(cleanupStage.popNextStep(setOf(event), stepsStillRunning)).doReturn(StepReady(cleanupStep)) }
 
                                     val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
@@ -222,7 +222,7 @@ object TaskStateMachineSpec : Spek({
                                         whenever(failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskSuccessWithCleanupDisabled(setOf(event), cleanupCommands)).doReturn(TextRun("Do this to clean up"))
                                     }
 
-                                    val cleanupStepThatShouldNeverBeRun = mock<TaskStep>()
+                                    val cleanupStepThatShouldNeverBeRun = createMockTaskStep()
                                     beforeEachTest { whenever(cleanupStage.popNextStep(setOf(event), stepsStillRunning)).doReturn(StepReady(cleanupStepThatShouldNeverBeRun)) }
 
                                     val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
@@ -279,8 +279,8 @@ object TaskStateMachineSpec : Spek({
                             beforeEachTest { whenever(runOptions.behaviourAfterFailure) doReturn CleanupOption.Cleanup }
 
                             on("getting the next steps to execute") {
-                                val firstCleanupStep = mock<TaskStep>()
-                                val secondCleanupStep = mock<TaskStep>()
+                                val firstCleanupStep = createMockTaskStep()
+                                val secondCleanupStep = createMockTaskStep()
 
                                 beforeEachTest { whenever(cleanupStage.popNextStep(setOf(failureEvent), stepsStillRunning)).doReturn(StepReady(firstCleanupStep), StepReady(secondCleanupStep)) }
 
@@ -310,8 +310,8 @@ object TaskStateMachineSpec : Spek({
 
                             given("no containers have been created") {
                                 on("getting the next steps to execute") {
-                                    val firstCleanupStep = mock<TaskStep>()
-                                    val secondCleanupStep = mock<TaskStep>()
+                                    val firstCleanupStep = createMockTaskStep()
+                                    val secondCleanupStep = createMockTaskStep()
 
                                     beforeEachTest { whenever(cleanupStage.popNextStep(setOf(failureEvent), stepsStillRunning)).doReturn(StepReady(firstCleanupStep), StepReady(secondCleanupStep)) }
 
@@ -353,7 +353,7 @@ object TaskStateMachineSpec : Spek({
                                 }
 
                                 on("getting the next steps to execute") {
-                                    val cleanupStepThatShouldNeverBeRun = mock<TaskStep>()
+                                    val cleanupStepThatShouldNeverBeRun = createMockTaskStep()
                                     beforeEachTest { whenever(cleanupStage.popNextStep(events, stepsStillRunning)).doReturn(StepReady(cleanupStepThatShouldNeverBeRun)) }
 
                                     val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
@@ -390,7 +390,7 @@ object TaskStateMachineSpec : Spek({
 
                     beforeEachTest {
                         whenever(runStage.popNextStep(emptySet(), false)).doReturn(StageComplete)
-                        whenever(cleanupStage.popNextStep(emptySet(), false)).doReturn(StepReady(mock()))
+                        whenever(cleanupStage.popNextStep(emptySet(), false)).doReturn(StepReady(createMockTaskStep()))
                         stateMachine.popNextStep(false)
 
                         previousEvents.forEach { stateMachine.postEvent(it) }
@@ -399,7 +399,7 @@ object TaskStateMachineSpec : Spek({
                     given("cleanup has not failed") {
                         given("there is a step ready") {
                             regardlessOfWhetherThereAreStepsRunning { stepsStillRunning ->
-                                val step by createForEachTest { mock<TaskStep>() }
+                                val step by createForEachTest { createMockTaskStep() }
                                 beforeEachTest { whenever(cleanupStage.popNextStep(previousEvents, stepsStillRunning)).doReturn(StepReady(step)) }
 
                                 on("getting the next step to execute") {
@@ -491,7 +491,7 @@ object TaskStateMachineSpec : Spek({
 
                         given("there is a step ready") {
                             regardlessOfWhetherThereAreStepsRunning { stepsStillRunning ->
-                                val step by createForEachTest { mock<TaskStep>() }
+                                val step by createForEachTest { createMockTaskStep() }
                                 beforeEachTest { whenever(cleanupStage.popNextStep(previousEventsWithFailureEvent, stepsStillRunning)).doReturn(StepReady(step)) }
 
                                 on("getting the next step to execute") {
@@ -567,7 +567,7 @@ object TaskStateMachineSpec : Spek({
                     beforeEachTest {
                         stateMachine.postEvent(failureEvent)
                         whenever(runStage.popNextStep(previousEvents, false)).doReturn(StageComplete)
-                        whenever(cleanupStage.popNextStep(previousEvents, false)).doReturn(StepReady(mock()))
+                        whenever(cleanupStage.popNextStep(previousEvents, false)).doReturn(StepReady(createMockTaskStep()))
                         stateMachine.popNextStep(false)
                     }
 

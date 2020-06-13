@@ -17,78 +17,88 @@
 package batect.execution.model.steps
 
 import batect.config.Container
+import batect.logging.ContainerNameOnlySerializer
 import batect.config.PullImage
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.execution.ContainerRuntimeConfiguration
+import batect.logging.LogMessageBuilder
+import batect.logging.PathSerializer
+import kotlinx.serialization.Serializable
 import java.nio.file.Path
 
+@Serializable
 sealed class TaskStep
 
-data class BuildImageStep(val container: Container) : TaskStep() {
-    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}')"
-}
+@Serializable
+data class BuildImageStep(
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container
+) : TaskStep()
 
-data class PullImageStep(val source: PullImage) : TaskStep() {
-    override fun toString() = "${this.javaClass.simpleName}(source: $source)"
-}
+@Serializable
+data class PullImageStep(val source: PullImage) : TaskStep()
 
-object CreateTaskNetworkStep : TaskStep() {
-    override fun toString(): String = this.javaClass.simpleName
-}
+@Serializable
+object CreateTaskNetworkStep : TaskStep()
 
-object InitialiseCachesStep : TaskStep() {
-    override fun toString(): String = this.javaClass.simpleName
-}
+@Serializable
+object InitialiseCachesStep : TaskStep()
 
+@Serializable
 data class CreateContainerStep(
-    val container: Container,
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
     val config: ContainerRuntimeConfiguration,
     val image: DockerImage,
     val network: DockerNetwork
-) : TaskStep() {
-    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', " +
-        "config: $config, " +
-        "image: '${image.id}', network: '${network.id}')"
-}
+) : TaskStep()
 
-data class RunContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
-    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}')"
-}
+@Serializable
+data class RunContainerStep(
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
+    val dockerContainer: DockerContainer
+) : TaskStep()
 
+@Serializable
 data class RunContainerSetupCommandsStep(
-    val container: Container,
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
     val config: ContainerRuntimeConfiguration,
     val dockerContainer: DockerContainer
-) : TaskStep() {
-    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', " +
-        "config: $config, " +
-        "Docker container: '${dockerContainer.id}')"
-}
+) : TaskStep()
 
-data class WaitForContainerToBecomeHealthyStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep() {
-    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}')"
-}
+@Serializable
+data class WaitForContainerToBecomeHealthyStep(
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
+    val dockerContainer: DockerContainer
+) : TaskStep()
 
 sealed class CleanupStep : TaskStep()
 
-data class StopContainerStep(val container: Container, val dockerContainer: DockerContainer) : CleanupStep() {
-    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}')"
-}
+@Serializable
+data class StopContainerStep(
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
+    val dockerContainer: DockerContainer
+) : CleanupStep()
 
-data class RemoveContainerStep(val container: Container, val dockerContainer: DockerContainer) : CleanupStep() {
-    override fun toString() = "${this.javaClass.simpleName}(container: '${container.name}', Docker container: '${dockerContainer.id}')"
-}
+@Serializable
+data class RemoveContainerStep(
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
+    val dockerContainer: DockerContainer
+) : CleanupStep()
 
-data class DeleteTemporaryFileStep(val filePath: Path) : CleanupStep() {
-    override fun toString() = "${this.javaClass.simpleName}(file path: '$filePath')"
-}
+@Serializable
+data class DeleteTemporaryFileStep(
+    @Serializable(with = PathSerializer::class) val filePath: Path
+) : CleanupStep()
 
-data class DeleteTemporaryDirectoryStep(val directoryPath: Path) : CleanupStep() {
-    override fun toString() = "${this.javaClass.simpleName}(directory path: '$directoryPath')"
-}
+@Serializable
+data class DeleteTemporaryDirectoryStep(
+    @Serializable(with = PathSerializer::class) val directoryPath: Path
+) : CleanupStep()
 
-data class DeleteTaskNetworkStep(val network: DockerNetwork) : CleanupStep() {
-    override fun toString() = "${this.javaClass.simpleName}(network: '${network.id}')"
-}
+@Serializable
+data class DeleteTaskNetworkStep(
+    val network: DockerNetwork
+) : CleanupStep()
+
+fun LogMessageBuilder.data(name: String, step: TaskStep) = this.data(name, step, TaskStep.serializer())

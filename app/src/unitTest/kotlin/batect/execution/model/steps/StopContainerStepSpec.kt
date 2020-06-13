@@ -19,9 +19,10 @@ package batect.execution.model.steps
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -31,9 +32,16 @@ object StopContainerStepSpec : Spek({
         val dockerContainer = DockerContainer("the-container-id")
         val step = StopContainerStep(container, dockerContainer)
 
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                assertThat(step.toString(), equalTo("StopContainerStep(container: 'the-container', Docker container: 'the-container-id')"))
+        on("attaching it to a log message") {
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(step), equivalentTo("""
+                    |{
+                    |   "type": "${step::class.qualifiedName}",
+                    |   "container": "the-container",
+                    |   "dockerContainer": {"id": "the-container-id", "name": null}
+                    |}
+                """.trimMargin())
+                )
             }
         }
     }

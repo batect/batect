@@ -16,9 +16,10 @@
 
 package batect.execution.model.steps
 
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -26,9 +27,14 @@ object InitialiseCachesStepSpec : Spek({
     describe("an 'initialise caches' step") {
         val step = InitialiseCachesStep
 
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                assertThat(step.toString(), equalTo("InitialiseCachesStep"))
+        on("attaching it to a log message") {
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(step), equivalentTo("""
+                    |{
+                    |   "type": "${step::class.qualifiedName}"
+                    |}
+                """.trimMargin())
+                )
             }
         }
     }

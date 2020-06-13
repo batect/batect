@@ -21,10 +21,10 @@ import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskFailedEvent
-import batect.execution.model.steps.TaskStep
 import batect.execution.model.steps.TaskStepRunner
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
+import batect.testutils.createMockTaskStep
 import batect.testutils.given
 import batect.testutils.on
 import batect.ui.EventLogger
@@ -61,7 +61,7 @@ object ParallelExecutionManagerSpec : Spek({
         val executionManager by createForEachTest { ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, logger) }
 
         given("a single step is provided by the state machine") {
-            val step by createForEachTest { mock<TaskStep>() }
+            val step by createForEachTest { createMockTaskStep() }
             beforeEachTest { whenever(stateMachine.popNextStep(false)).doReturn(step, null) }
 
             given("that step runs successfully") {
@@ -93,7 +93,7 @@ object ParallelExecutionManagerSpec : Spek({
                         }
                     }
 
-                    val stepThatShouldNotBeRun by createForEachTest { mock<TaskStep>() }
+                    val stepThatShouldNotBeRun by createForEachTest { createMockTaskStep() }
 
                     beforeEachTest {
                         whenever(taskStepRunner.run(eq(step), eq(executionManager))).then { invocation ->
@@ -131,7 +131,7 @@ object ParallelExecutionManagerSpec : Spek({
                         }
                     }
 
-                    val stepTriggeredByEvent by createForEachTest { mock<TaskStep>() }
+                    val stepTriggeredByEvent by createForEachTest { createMockTaskStep() }
 
                     beforeEachTest {
                         whenever(taskStepRunner.run(eq(step), eq(executionManager))).then { invocation ->
@@ -171,7 +171,7 @@ object ParallelExecutionManagerSpec : Spek({
         }
 
         given("a step throws an exception during execution") {
-            val step = mock<TaskStep>()
+            val step = createMockTaskStep()
 
             beforeEachTest {
                 whenever(stateMachine.popNextStep(false)).doReturn(step, null)
@@ -233,8 +233,8 @@ object ParallelExecutionManagerSpec : Spek({
         }
 
         on("two steps being provided by the state machine initially") {
-            val step1 = mock<TaskStep>()
-            val step2 = mock<TaskStep>()
+            val step1 = createMockTaskStep()
+            val step2 = createMockTaskStep()
 
             var step1SawStep2 = false
             var step2SawStep1 = false
@@ -289,8 +289,8 @@ object ParallelExecutionManagerSpec : Spek({
         }
 
         on("one step being provided by the state machine initially and then another added as a result of the first step") {
-            val step1 = mock<TaskStep>()
-            val step2 = mock<TaskStep>()
+            val step1 = createMockTaskStep()
+            val step2 = createMockTaskStep()
 
             var step2StartedBeforeStep1Ended = false
 

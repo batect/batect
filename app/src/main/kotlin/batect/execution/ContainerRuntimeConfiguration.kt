@@ -19,7 +19,9 @@ package batect.execution
 import batect.config.Expression
 import batect.config.PortMapping
 import batect.os.Command
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class ContainerRuntimeConfiguration(
     val command: Command?,
     val entrypoint: Command?,

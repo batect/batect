@@ -30,6 +30,7 @@ import batect.execution.model.stages.Stage
 import batect.execution.model.stages.StageComplete
 import batect.execution.model.stages.StepReady
 import batect.execution.model.steps.TaskStep
+import batect.execution.model.steps.data
 import batect.logging.Logger
 import batect.ui.FailureErrorMessageFormatter
 import batect.ui.text.TextRun
@@ -95,7 +96,7 @@ class TaskStateMachine(
     private fun handleNextStepReady(result: StepReady): TaskStep {
         logger.info {
             message("Step is ready to execute.")
-            data("step", result.step.toString())
+            data("step", result.step)
         }
 
         return result.step

@@ -16,6 +16,7 @@
 
 package batect.config
 
+import kotlinx.serialization.Serializable
 import java.nio.file.Path
 
 sealed class ImageSource
@@ -28,6 +29,7 @@ data class BuildImage(val buildDirectory: Expression, val relativeTo: Path, val 
         "Dockerfile path: '$dockerfilePath')"
 }
 
+@Serializable
 data class PullImage(val imageName: String) : ImageSource() {
     override fun toString(): String = "${this.javaClass.simpleName}(image: '$imageName')"
 }

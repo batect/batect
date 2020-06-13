@@ -16,10 +16,11 @@
 
 package batect.execution.model.steps
 
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import batect.testutils.osIndependentPath
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -28,9 +29,15 @@ object DeleteTemporaryFileStepSpec : Spek({
         val path = osIndependentPath("/some-file")
         val step = DeleteTemporaryFileStep(path)
 
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                assertThat(step.toString(), equalTo("DeleteTemporaryFileStep(file path: '/some-file')"))
+        on("attaching it to a log message") {
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(step), equivalentTo("""
+                    |{
+                    |   "type": "${step::class.qualifiedName}",
+                    |   "filePath": "/some-file"
+                    |}
+                """.trimMargin())
+                )
             }
         }
     }

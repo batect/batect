@@ -22,6 +22,7 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.TaskStep
 import batect.execution.model.steps.TaskStepRunner
+import batect.execution.model.steps.data
 import batect.logging.Logger
 import batect.ui.EventLogger
 import java.util.concurrent.CountDownLatch
@@ -120,7 +121,7 @@ class ParallelExecutionManager(
             try {
                 logger.info {
                     message("Running step.")
-                    data("step", step.toString())
+                    data("step", step)
                 }
 
                 eventLogger.postEvent(StepStartingEvent(step))
@@ -128,7 +129,7 @@ class ParallelExecutionManager(
 
                 logger.info {
                     message("Step completed.")
-                    data("step", step.toString())
+                    data("step", step)
                 }
             } catch (t: Throwable) {
                 when {
@@ -138,7 +139,7 @@ class ParallelExecutionManager(
                         logger.error {
                             message("Unhandled exception during task step execution.")
                             exception(t)
-                            data("step", step.toString())
+                            data("step", step)
                         }
 
                         postEvent(ExecutionFailedEvent("During execution of step of kind '${step::class.simpleName}': " + t.toString()))
@@ -152,7 +153,7 @@ class ParallelExecutionManager(
         logger.info {
             message("Step was cancelled and threw an exception.")
             exception(ex)
-            data("step", step.toString())
+            data("step", step)
         }
     }
 

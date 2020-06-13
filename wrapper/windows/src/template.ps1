@@ -14,6 +14,7 @@ function getValueOrDefault($value, $default) {
 $DownloadUrlRoot = getValueOrDefault $env:BATECT_DOWNLOAD_URL_ROOT "https://dl.bintray.com/batect/batect"
 $UrlEncodedVersion = [Uri]::EscapeDataString($Version)
 $DownloadUrl = getValueOrDefault $env:BATECT_DOWNLOAD_URL "$DownloadUrlRoot/$UrlEncodedVersion/bin/batect-$UrlEncodedVersion.jar"
+$ExpectedChecksum = getValueOrDefault $env:BATECT_DOWNLOAD_CHECKSUM 'CHECKSUM-GOES-HERE'
 
 $RootCacheDir = getValueOrDefault $env:BATECT_CACHE_DIR "$env:USERPROFILE\.batect\cache"
 $VersionCacheDir = "$RootCacheDir\$Version"
@@ -24,6 +25,7 @@ function main() {
         download
     }
 
+    checkChecksum
     runApplication @args
 }
 
@@ -52,6 +54,15 @@ function download() {
         exit 1
     } finally {
         $ProgressPreference = $oldProgressPreference
+    }
+}
+
+function checkChecksum() {
+    $localChecksum = (Get-FileHash -Algorithm 'SHA256' $JarPath).Hash.ToLower()
+
+    if ($localChecksum -ne $expectedChecksum) {
+        Write-Host -ForegroundColor Red "The downloaded version of batect does not have the expected checksum. Delete '$JarPath' and then re-run this script to download it again."
+        exit 1
     }
 }
 

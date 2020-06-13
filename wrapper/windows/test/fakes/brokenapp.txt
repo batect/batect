@@ -1,0 +1,1 @@
+This file is used to simulate a corrupted download in the tests.

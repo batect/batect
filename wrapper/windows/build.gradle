@@ -15,7 +15,18 @@
 */
 
 import java.nio.file.Files
+import org.apache.commons.codec.digest.DigestUtils
 import org.apache.tools.ant.taskdefs.condition.Os
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'commons-codec:commons-codec:1.14'
+    }
+}
 
 def powershellTemplateFile = project.file 'src/template.ps1'
 def batchTemplateFile = project.file 'src/template.cmd'
@@ -26,15 +37,20 @@ task build {
 
     def scriptDir = getBuildDir().toPath().resolve("scripts")
     def scriptFile = scriptDir.resolve(rootProject.name + ".cmd")
+    def shadowJarTask = project(":app").getTasksByName("shadowJar", false).first()
 
     inputs.file powershellTemplateFile
     inputs.file batchTemplateFile
+    inputs.files shadowJarTask
     inputs.property("version", { version.toString() })
     outputs.file scriptFile
 
     doLast {
+        def hash = DigestUtils.sha256Hex(shadowJarTask.outputs.files.singleFile.readBytes())
+
         def powershellScript = powershellTemplateFile.text
             .replace("VERSION-GOES-HERE", version.toString())
+            .replace("CHECKSUM-GOES-HERE", hash)
 
         def escapedPowershellScript = powershellScript
             .replace('|', '^|')
@@ -67,11 +83,13 @@ task test(type: Exec) {
     inputs.files build
     inputs.files copyTestJar
     inputs.files fileTree(dir: 'test', include: '**/*')
+    inputs.property("version", { version.toString() })
     outputs.file upToDateFile
 
     def executableName = Os.isFamily(Os.FAMILY_WINDOWS) ? 'python' : 'python3'
 
     commandLine executableName, './test/tests.py'
+    environment 'BATECT_VERSION', version.toString()
 
     doLast {
         // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java

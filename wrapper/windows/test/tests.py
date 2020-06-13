@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import hashlib
 import http.server
 import os
 import shutil
@@ -13,7 +14,6 @@ import unittest
 @unittest.skipUnless(sys.platform.startswith("win"), "requires Windows")
 class WrapperScriptTests(unittest.TestCase):
     http_port = 8080
-    default_download_url = "http://localhost:" + str(http_port) + "/test/testapp.jar"
 
     def setUp(self):
         self.start_server()
@@ -22,6 +22,12 @@ class WrapperScriptTests(unittest.TestCase):
     def tearDown(self):
         self.stop_server()
         shutil.rmtree(self.cache_dir)
+
+    def download_url(self, path):
+        return "http://localhost:" + str(self.http_port) + "/test/" + path
+
+    def default_download_url(self):
+        return self.download_url("testapp.jar")
 
     def test_first_run(self):
         result = self.run_script(["arg1", "arg 2"])
@@ -55,7 +61,7 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertEqual(first_result.returncode, 0)
 
     def test_download_fails(self):
-        result = self.run_script(["arg 1", "arg 2"], download_url=self.default_download_url + "-does-not-exist")
+        result = self.run_script(["arg 1", "arg 2"], download_url=self.download_url("does-not-exist"))
 
         self.assertIn("Downloading batect", result.stdout)
         self.assertIn("(404) Not Found", result.stdout)
@@ -150,6 +156,33 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertNotIn("WARNING: you should never see this", output)
         self.assertEqual(result.returncode, 0)
 
+    def test_corrupt_download(self):
+        result = self.run_script([], download_url=self.download_url("fakes/brokenapp.txt"))
+        output = result.stdout
+
+        self.assertRegex(output, "The downloaded version of batect does not have the expected checksum. Delete '.*' and then re-run this script to download it again.")
+        self.assertNotIn("The Java application has started.", output)
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_corrupt_cached_version(self):
+        result_for_initial_download = self.run_script([])
+        self.assertEqual(result_for_initial_download.returncode, 0)
+
+        self.corrupt_cached_file()
+        result_after_corruption = self.run_script([])
+        output = result_after_corruption.stdout
+
+        self.assertRegex(output, "The downloaded version of batect does not have the expected checksum. Delete '.*' and then re-run this script to download it again.")
+        self.assertNotIn("The Java application has started.", output)
+        self.assertNotEqual(result_after_corruption.returncode, 0)
+
+    def corrupt_cached_file(self):
+        version = os.environ["BATECT_VERSION"]
+        jar_path = "{cache_dir}\\{version}\\batect-{version}.jar".format(cache_dir = self.cache_dir, version = version)
+
+        with open(jar_path, "a+") as f:
+            f.truncate(10)
+
     def create_limited_path(self):
         powershellDir = os.path.join(os.environ["SYSTEMROOT"], "System32", "WindowsPowerShell", "v1.0")
 
@@ -163,11 +196,15 @@ class WrapperScriptTests(unittest.TestCase):
             javaDir
         ])
 
-    def run_script(self, args, download_url=default_download_url, path=os.environ["PATH"], with_java_tool_options=None):
+    def run_script(self, args, download_url=None, path=os.environ["PATH"], with_java_tool_options=None):
+        if download_url is None:
+            download_url = self.default_download_url()
+
         env = {
             **os.environ,
             "BATECT_CACHE_DIR": self.cache_dir,
             "BATECT_DOWNLOAD_URL": download_url,
+            "BATECT_DOWNLOAD_CHECKSUM": self.get_checksum_of_test_app(),
             "PATH": path
         }
 
@@ -178,6 +215,11 @@ class WrapperScriptTests(unittest.TestCase):
         command = [path] + args
 
         return subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env, text=True, encoding='utf-8') # utf-16le
+
+    def get_checksum_of_test_app(self):
+        with open("test/testapp.jar", "rb") as f:
+            bytes = f.read()
+            return hashlib.sha256(bytes).hexdigest()
 
     def get_tests_dir(self):
         return os.path.dirname(os.path.realpath(__file__))

@@ -45,6 +45,11 @@ class VolumeMountResolver(
 
     fun resolve(mount: LocalMount): DockerVolumeMount {
         val evaluatedLocalPath = evaluateLocalPath(mount)
+
+        if (evaluatedLocalPath == "/var/run/docker.sock") {
+            return DockerVolumeMount(DockerVolumeMountSource.LocalPath(evaluatedLocalPath), mount.containerPath, mount.options)
+        }
+
         val pathResolver = pathResolverFactory.createResolver(mount.relativeTo)
 
         return when (val resolvedLocalPath = pathResolver.resolve(evaluatedLocalPath)) {

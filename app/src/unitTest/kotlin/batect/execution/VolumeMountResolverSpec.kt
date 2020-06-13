@@ -95,6 +95,24 @@ object VolumeMountResolverSpec : Spek({
                 }
             }
 
+            given("a volume mount for the Docker socket") {
+                val mounts by createForEachTest {
+                    setOf(
+                        LocalMount(LiteralValue("/var/run/docker.sock"), relativeTo, "/container-1", "some-options")
+                    )
+                }
+
+                it("does not attempt to resolve the path and mounts it into the container") {
+                    assertThat(
+                        resolver.resolve(mounts), equalTo(
+                            setOf(
+                                DockerVolumeMount(DockerVolumeMountSource.LocalPath("/var/run/docker.sock"), "/container-1", "some-options")
+                            )
+                        )
+                    )
+                }
+            }
+
             given("a volume mount with an invalid path") {
                 given("the path does not contain an expression") {
                     val mounts by createForEachTest {

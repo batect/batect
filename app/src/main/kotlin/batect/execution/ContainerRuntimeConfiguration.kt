@@ -29,14 +29,6 @@ data class ContainerRuntimeConfiguration(
     val additionalEnvironmentVariables: Map<String, Expression>,
     val additionalPortMappings: Set<PortMapping>
 ) {
-    override fun toString(): String {
-        return "${this::class.simpleName}(command: ${command?.parsedCommand ?: "null"}, " +
-            "entrypoint: ${entrypoint?.parsedCommand ?: "null"}, " +
-            "working directory: ${workingDirectory ?: "null"}, " +
-            "additional environment variables: [${additionalEnvironmentVariables.map { "${it.key}=${it.value}" }.joinToString(", ")}], " +
-            "additional port mappings: $additionalPortMappings)"
-    }
-
     companion object {
         fun withCommand(command: Command?) = ContainerRuntimeConfiguration(command, null, null, emptyMap(), emptySet())
     }

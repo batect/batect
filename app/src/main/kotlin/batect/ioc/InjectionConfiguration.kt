@@ -81,7 +81,7 @@ import batect.execution.model.stages.RunStagePlanner
 import batect.execution.model.steps.TaskStepRunner
 import batect.execution.model.steps.runners.BuildImageStepRunner
 import batect.execution.model.steps.runners.CreateContainerStepRunner
-import batect.execution.model.steps.runners.CreateTaskNetworkStepRunner
+import batect.execution.model.steps.runners.PrepareTaskNetworkStepRunner
 import batect.execution.model.steps.runners.DeleteTaskNetworkStepRunner
 import batect.execution.model.steps.runners.DeleteTemporaryDirectoryStepRunner
 import batect.execution.model.steps.runners.DeleteTemporaryFileStepRunner
@@ -293,7 +293,7 @@ private val executionModule = Kodein.Module("execution") {
 private val runnersModule = Kodein.Module("execution.model.steps.runners") {
     bind<BuildImageStepRunner>() with scoped(TaskScope).singleton { BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
     bind<CreateContainerStepRunner>() with scoped(TaskScope).singleton { CreateContainerStepRunner(instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
-    bind<CreateTaskNetworkStepRunner>() with scoped(TaskScope).singleton { CreateTaskNetworkStepRunner(instance(), instance()) }
+    bind<PrepareTaskNetworkStepRunner>() with scoped(TaskScope).singleton { PrepareTaskNetworkStepRunner(instance(), instance()) }
     bind<DeleteTaskNetworkStepRunner>() with scoped(TaskScope).singleton { DeleteTaskNetworkStepRunner(instance()) }
     bind<DeleteTemporaryDirectoryStepRunner>() with scoped(TaskScope).singleton { DeleteTemporaryDirectoryStepRunner() }
     bind<DeleteTemporaryFileStepRunner>() with scoped(TaskScope).singleton { DeleteTemporaryFileStepRunner() }

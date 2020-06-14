@@ -34,8 +34,8 @@ import com.nhaarman.mockitokotlin2.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object CreateTaskNetworkStepRunnerSpec : Spek({
-    describe("running a 'create task network' step") {
+object PrepareTaskNetworkStepRunnerSpec : Spek({
+    describe("running a 'prepare task network' step") {
         val networksClient by createForEachTest { mock<DockerNetworksClient>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
 
@@ -47,7 +47,7 @@ object CreateTaskNetworkStepRunnerSpec : Spek({
             }
 
             given("the active container type is Linux") {
-                val runner by createForEachTest { CreateTaskNetworkStepRunner(DockerContainerType.Linux, networksClient) }
+                val runner by createForEachTest { PrepareTaskNetworkStepRunner(DockerContainerType.Linux, networksClient) }
 
                 beforeEachTest {
                     runner.run(eventSink)
@@ -63,7 +63,7 @@ object CreateTaskNetworkStepRunnerSpec : Spek({
             }
 
             given("the active container type is Windows") {
-                val runner by createForEachTest { CreateTaskNetworkStepRunner(DockerContainerType.Windows, networksClient) }
+                val runner by createForEachTest { PrepareTaskNetworkStepRunner(DockerContainerType.Windows, networksClient) }
 
                 beforeEachTest {
                     runner.run(eventSink)
@@ -80,7 +80,7 @@ object CreateTaskNetworkStepRunnerSpec : Spek({
         }
 
         given("creating the network fails") {
-            val runner by createForEachTest { CreateTaskNetworkStepRunner(DockerContainerType.Linux, networksClient) }
+            val runner by createForEachTest { PrepareTaskNetworkStepRunner(DockerContainerType.Linux, networksClient) }
 
             beforeEachTest {
                 whenever(networksClient.create(any())).doThrow(NetworkCreationFailedException("Something went wrong."))

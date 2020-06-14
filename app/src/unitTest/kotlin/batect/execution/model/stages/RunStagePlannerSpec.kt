@@ -32,7 +32,7 @@ import batect.execution.ContainerEntrypointResolver
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.run.BuildImageStepRule
 import batect.execution.model.rules.run.CreateContainerStepRule
-import batect.execution.model.rules.run.CreateTaskNetworkStepRule
+import batect.execution.model.rules.run.PrepareTaskNetworkStepRule
 import batect.execution.model.rules.run.InitialiseCachesStepRule
 import batect.execution.model.rules.run.PullImageStepRule
 import batect.execution.model.rules.run.RunContainerSetupCommandsStepRule
@@ -97,7 +97,7 @@ object RunStagePlannerSpec : Spek({
                     itCreatesStageWithRules(
                         graph,
                         mapOf(
-                            "create the task network" to CreateTaskNetworkStepRule,
+                            "prepare the task network" to PrepareTaskNetworkStepRule,
                             "initialise caches" to InitialiseCachesStepRule,
                             "pull the image for the task container" to PullImageStepRule(PullImage("some-image")),
                             "create the task container" to CreateContainerStepRule(container, graph.nodeFor(container).config),
@@ -117,7 +117,7 @@ object RunStagePlannerSpec : Spek({
                     itCreatesStageWithRules(
                         graph,
                         mapOf(
-                            "create the task network" to CreateTaskNetworkStepRule,
+                            "prepare the task network" to PrepareTaskNetworkStepRule,
                             "initialise caches" to InitialiseCachesStepRule,
                             "build the image for the task container" to BuildImageStepRule(container),
                             "create the task container" to CreateContainerStepRule(container, graph.nodeFor(container).config),
@@ -138,7 +138,7 @@ object RunStagePlannerSpec : Spek({
                 itCreatesStageWithRules(
                     graph,
                     mapOf(
-                        "create the task network" to CreateTaskNetworkStepRule,
+                        "prepare the task network" to PrepareTaskNetworkStepRule,
                         "initialise caches" to InitialiseCachesStepRule,
                         "pull the image for the task container" to PullImageStepRule(PullImage("some-image")),
                         "create the task container with the additional environment variables" to CreateContainerStepRule(container, graph.nodeFor(container).config),
@@ -158,7 +158,7 @@ object RunStagePlannerSpec : Spek({
                 itCreatesStageWithRules(
                     graph,
                     mapOf(
-                        "create the task network" to CreateTaskNetworkStepRule,
+                        "prepare the task network" to PrepareTaskNetworkStepRule,
                         "initialise caches" to InitialiseCachesStepRule,
                         "pull the image for the task container" to PullImageStepRule(PullImage("some-image")),
                         "create the task container with the additional environment variables" to CreateContainerStepRule(container, graph.nodeFor(container).config),
@@ -188,7 +188,7 @@ object RunStagePlannerSpec : Spek({
                 itCreatesStageWithRules(
                     graph,
                     mapOf(
-                        "create the task network" to CreateTaskNetworkStepRule,
+                        "prepare the task network" to PrepareTaskNetworkStepRule,
                         "initialise caches" to InitialiseCachesStepRule,
                         "build the image for the task container" to BuildImageStepRule(taskContainer),
                         "build the image for container 1" to BuildImageStepRule(container1),
@@ -226,7 +226,7 @@ object RunStagePlannerSpec : Spek({
                 itCreatesStageWithRules(
                     graph,
                     mapOf(
-                        "create the task network" to CreateTaskNetworkStepRule,
+                        "prepare the task network" to PrepareTaskNetworkStepRule,
                         "initialise caches" to InitialiseCachesStepRule,
                         "pull the image for the task container" to PullImageStepRule(taskContainerImageSource),
                         "pull the image shared by both container 1 and 2" to PullImageStepRule(sharedImageSource),

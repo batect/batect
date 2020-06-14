@@ -14,8 +14,11 @@
    limitations under the License.
 */
 
-package batect.execution.model.steps
+package batect.execution.model.rules.run
 
+import batect.execution.model.rules.TaskStepRuleEvaluationResult
+import batect.execution.model.steps.PrepareTaskNetworkStep
+import batect.testutils.equalTo
 import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
@@ -23,18 +26,25 @@ import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object CreateTaskNetworkStepSpec : Spek({
-    describe("a 'create task network' step") {
-        val step = CreateTaskNetworkStep
+object PrepareTaskNetworkStepRuleSpec : Spek({
+    describe("a 'prepare task network' step rule") {
+        val rule = PrepareTaskNetworkStepRule
+
+        on("evaluating the rule") {
+            val result = rule.evaluate(emptySet())
+
+            it("returns a 'create task network' step") {
+                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(PrepareTaskNetworkStep)))
+            }
+        }
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
-                assertThat(logRepresentationOf(step), equivalentTo("""
+                assertThat(logRepresentationOf(rule), equivalentTo("""
                     |{
-                    |   "type": "${step::class.qualifiedName}"
+                    |   "type": "${rule::class.qualifiedName}"
                     |}
-                """.trimMargin())
-                )
+                """.trimMargin()))
             }
         }
     }

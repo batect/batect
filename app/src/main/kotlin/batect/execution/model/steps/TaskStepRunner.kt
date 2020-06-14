@@ -19,7 +19,7 @@ package batect.execution.model.steps
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.runners.BuildImageStepRunner
 import batect.execution.model.steps.runners.CreateContainerStepRunner
-import batect.execution.model.steps.runners.CreateTaskNetworkStepRunner
+import batect.execution.model.steps.runners.PrepareTaskNetworkStepRunner
 import batect.execution.model.steps.runners.DeleteTaskNetworkStepRunner
 import batect.execution.model.steps.runners.DeleteTemporaryDirectoryStepRunner
 import batect.execution.model.steps.runners.DeleteTemporaryFileStepRunner
@@ -38,7 +38,7 @@ class TaskStepRunner(private val kodein: DKodein) {
         when (step) {
             is BuildImageStep -> kodein.instance<BuildImageStepRunner>().run(step, eventSink)
             is PullImageStep -> kodein.instance<PullImageStepRunner>().run(step, eventSink)
-            is CreateTaskNetworkStep -> kodein.instance<CreateTaskNetworkStepRunner>().run(eventSink)
+            is PrepareTaskNetworkStep -> kodein.instance<PrepareTaskNetworkStepRunner>().run(eventSink)
             is InitialiseCachesStep -> kodein.instance<InitialiseCachesStepRunner>().run(eventSink)
             is CreateContainerStep -> kodein.instance<CreateContainerStepRunner>().run(step, eventSink)
             is RunContainerStep -> kodein.instance<RunContainerStepRunner>().run(step, eventSink)

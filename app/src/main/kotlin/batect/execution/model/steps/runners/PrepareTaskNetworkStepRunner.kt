@@ -23,7 +23,7 @@ import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
 
-class CreateTaskNetworkStepRunner(
+class PrepareTaskNetworkStepRunner(
     private val containerType: DockerContainerType,
     private val networksClient: DockerNetworksClient
 ) {

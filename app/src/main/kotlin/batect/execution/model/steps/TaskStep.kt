@@ -44,7 +44,7 @@ data class BuildImageStep(val container: Container) : TaskStep()
 data class PullImageStep(val source: PullImage) : TaskStep()
 
 @Serializable
-object CreateTaskNetworkStep : TaskStep()
+object PrepareTaskNetworkStep : TaskStep()
 
 @Serializable
 object InitialiseCachesStep : TaskStep()

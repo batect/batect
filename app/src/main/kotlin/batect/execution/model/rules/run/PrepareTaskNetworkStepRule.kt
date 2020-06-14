@@ -19,12 +19,12 @@ package batect.execution.model.rules.run
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
-import batect.execution.model.steps.CreateTaskNetworkStep
+import batect.execution.model.steps.PrepareTaskNetworkStep
 import kotlinx.serialization.Serializable
 
 @Serializable
-object CreateTaskNetworkStepRule : TaskStepRule() {
+object PrepareTaskNetworkStepRule : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
-        return TaskStepRuleEvaluationResult.Ready(CreateTaskNetworkStep)
+        return TaskStepRuleEvaluationResult.Ready(PrepareTaskNetworkStep)
     }
 }

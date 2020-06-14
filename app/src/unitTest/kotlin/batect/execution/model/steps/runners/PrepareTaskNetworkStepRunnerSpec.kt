@@ -16,10 +16,15 @@
 
 package batect.execution.model.steps.runners
 
+import batect.cli.CommandLineOptions
 import batect.docker.DockerNetwork
 import batect.docker.api.NetworkCreationFailedException
+import batect.docker.api.NetworkDoesNotExistException
+import batect.docker.api.NetworkInspectionFailedException
 import batect.docker.client.DockerContainerType
 import batect.docker.client.DockerNetworksClient
+import batect.execution.model.events.CustomTaskNetworkCheckFailedEvent
+import batect.execution.model.events.CustomTaskNetworkCheckedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
@@ -39,57 +44,102 @@ object PrepareTaskNetworkStepRunnerSpec : Spek({
         val networksClient by createForEachTest { mock<DockerNetworksClient>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
 
-        given("creating the network succeeds") {
-            val network = DockerNetwork("some-network")
+        given("no network to use is provided on the command line") {
+            val commandLineOptions = CommandLineOptions(existingNetworkToUse = null)
 
-            beforeEachTest {
-                whenever(networksClient.create(any())).doReturn(network)
-            }
-
-            given("the active container type is Linux") {
-                val runner by createForEachTest { PrepareTaskNetworkStepRunner(DockerContainerType.Linux, networksClient) }
+            given("creating the network succeeds") {
+                val network = DockerNetwork("some-network")
 
                 beforeEachTest {
+                    whenever(networksClient.create(any())).doReturn(network)
+                }
+
+                given("the active container type is Linux") {
+                    val runner by createForEachTest { PrepareTaskNetworkStepRunner(DockerContainerType.Linux, networksClient, commandLineOptions) }
+
+                    beforeEachTest {
+                        runner.run(eventSink)
+                    }
+
+                    it("emits a 'network created' event") {
+                        verify(eventSink).postEvent(TaskNetworkCreatedEvent(network))
+                    }
+
+                    it("creates the network with the 'bridge' driver") {
+                        verify(networksClient).create("bridge")
+                    }
+                }
+
+                given("the active container type is Windows") {
+                    val runner by createForEachTest { PrepareTaskNetworkStepRunner(DockerContainerType.Windows, networksClient, commandLineOptions) }
+
+                    beforeEachTest {
+                        runner.run(eventSink)
+                    }
+
+                    it("emits a 'network created' event") {
+                        verify(eventSink).postEvent(TaskNetworkCreatedEvent(network))
+                    }
+
+                    it("creates the network with the 'nat' driver") {
+                        verify(networksClient).create("nat")
+                    }
+                }
+            }
+
+            given("creating the network fails") {
+                val runner by createForEachTest { PrepareTaskNetworkStepRunner(DockerContainerType.Linux, networksClient, commandLineOptions) }
+
+                beforeEachTest {
+                    whenever(networksClient.create(any())).doThrow(NetworkCreationFailedException("Something went wrong."))
+
                     runner.run(eventSink)
                 }
 
-                it("emits a 'network created' event") {
-                    verify(eventSink).postEvent(TaskNetworkCreatedEvent(network))
-                }
-
-                it("creates the network with the 'bridge' driver") {
-                    verify(networksClient).create("bridge")
-                }
-            }
-
-            given("the active container type is Windows") {
-                val runner by createForEachTest { PrepareTaskNetworkStepRunner(DockerContainerType.Windows, networksClient) }
-
-                beforeEachTest {
-                    runner.run(eventSink)
-                }
-
-                it("emits a 'network created' event") {
-                    verify(eventSink).postEvent(TaskNetworkCreatedEvent(network))
-                }
-
-                it("creates the network with the 'nat' driver") {
-                    verify(networksClient).create("nat")
+                it("emits a 'network creation failed' event") {
+                    verify(eventSink).postEvent(TaskNetworkCreationFailedEvent("Something went wrong."))
                 }
             }
         }
 
-        given("creating the network fails") {
-            val runner by createForEachTest { PrepareTaskNetworkStepRunner(DockerContainerType.Linux, networksClient) }
+        given("a network to use is provided on the command line") {
+            val commandLineOptions = CommandLineOptions(existingNetworkToUse = "my-network")
+            val runner by createForEachTest { PrepareTaskNetworkStepRunner(DockerContainerType.Linux, networksClient, commandLineOptions) }
 
-            beforeEachTest {
-                whenever(networksClient.create(any())).doThrow(NetworkCreationFailedException("Something went wrong."))
+            given("the network exists") {
+                beforeEachTest {
+                    whenever(networksClient.getByNameOrId("my-network")).doReturn(DockerNetwork("the-network-id"))
 
-                runner.run(eventSink)
+                    runner.run(eventSink)
+                }
+
+                it("emits a 'custom network checked' event") {
+                    verify(eventSink).postEvent(CustomTaskNetworkCheckedEvent(DockerNetwork("the-network-id")))
+                }
             }
 
-            it("emits a 'network creation failed' event") {
-                verify(eventSink).postEvent(TaskNetworkCreationFailedEvent("Something went wrong."))
+            given("the network does not exist") {
+                beforeEachTest {
+                    whenever(networksClient.getByNameOrId("my-network")).doThrow(NetworkDoesNotExistException("my-network"))
+
+                    runner.run(eventSink)
+                }
+
+                it("emits a 'custom network check failed' event") {
+                    verify(eventSink).postEvent(CustomTaskNetworkCheckFailedEvent("my-network", "The network 'my-network' does not exist."))
+                }
+            }
+
+            given("getting the network's details fails") {
+                beforeEachTest {
+                    whenever(networksClient.getByNameOrId("my-network")).doThrow(NetworkInspectionFailedException("my-network", "Something went wrong"))
+
+                    runner.run(eventSink)
+                }
+
+                it("emits a 'custom network check failed' event") {
+                    verify(eventSink).postEvent(CustomTaskNetworkCheckFailedEvent("my-network", "Getting details of network 'my-network' failed: Something went wrong"))
+                }
             }
         }
     }

@@ -91,6 +91,17 @@ Example:
 ./batect --no-proxy-vars the-task
 ```
 
+### Use an existing network for tasks <small>(`--use-network`)</small>
+
+By default, batect will create a new Docker network for each task, as described in [the task lifecycle](TaskLifecycle.md).
+Use this option to provide an existing network to use for all tasks.
+
+Example:
+
+```shell
+./batect --use-network=my-existing-network the-task
+```
+
 ## See a list of available tasks <small>(`--list-tasks` or `-T`)</small>
 
 batect can produce a short summary of all tasks in the current configuration file along with their

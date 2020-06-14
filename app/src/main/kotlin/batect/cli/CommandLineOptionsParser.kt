@@ -65,6 +65,7 @@ class CommandLineOptionsParser(
     private val disableColorOutput: Boolean by flagOption(outputOptionsGroup, "no-color", "Disable colored output from batect. Does not affect task command output. Implies --output=simple unless overridden.")
     private val disableUpdateNotification: Boolean by flagOption(executionOptionsGroup, "no-update-notification", "Disable checking for updates to batect and notifying you when a new version is available.")
     private val disableWrapperCacheCleanup: Boolean by flagOption(executionOptionsGroup, "no-wrapper-cache-cleanup", "Disable cleaning up downloaded versions of batect that have not been used recently.")
+    private val existingNetworkToUse: String? by valueOption(executionOptionsGroup, "use-network", "Existing Docker network to use for all tasks. If not set, a new network is created for each task.")
 
     private val configurationFileName: Path by valueOption(
         executionOptionsGroup,
@@ -273,7 +274,8 @@ class CommandLineOptionsParser(
         dockerTLSCertificatePath = resolvePathToDockerCertificate(dockerTLSCertificatePath, dockerTLSCertificatePathOption.valueSource, "cert.pem"),
         dockerTlsCACertificatePath = resolvePathToDockerCertificate(dockerTlsCACertificatePath, dockerTLSCACertificatePathOption.valueSource, "ca.pem"),
         cacheType = cacheType,
-        linuxCacheInitImageName = linuxCacheInitImageName
+        linuxCacheInitImageName = linuxCacheInitImageName,
+        existingNetworkToUse = existingNetworkToUse
     )
 }
 

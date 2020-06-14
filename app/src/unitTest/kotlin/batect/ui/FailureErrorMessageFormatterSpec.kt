@@ -30,6 +30,7 @@ import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRunFailedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ContainerStopFailedEvent
+import batect.execution.model.events.CustomTaskNetworkCheckFailedEvent
 import batect.execution.model.events.ExecutionFailedEvent
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImagePullFailedEvent
@@ -81,6 +82,11 @@ object FailureErrorMessageFormatterSpec : Spek({
                     "task network creation failed",
                     TaskNetworkCreationFailedEvent("Something went wrong."),
                     Text.red(Text.bold("Error: ") + Text("Could not create network for task.\n")) + Text("Something went wrong.")
+                ),
+                Scenario(
+                    "checking custom task network failed",
+                    CustomTaskNetworkCheckFailedEvent("my-network", "Something went wrong."),
+                    Text.red(Text.bold("Error: ") + Text("Could not check details of network ") + Text.bold("my-network") + Text(".\n")) + Text("Something went wrong.")
                 ),
                 Scenario(
                     "cache initialisation failed",

@@ -29,6 +29,7 @@ import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRunFailedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ContainerStopFailedEvent
+import batect.execution.model.events.CustomTaskNetworkCheckFailedEvent
 import batect.execution.model.events.ExecutionFailedEvent
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImagePullFailedEvent
@@ -52,6 +53,7 @@ class FailureErrorMessageFormatter(private val runOptions: RunOptions, systemInf
 
     fun formatErrorMessage(event: TaskFailedEvent): TextRun = when (event) {
         is TaskNetworkCreationFailedEvent -> formatErrorMessage("Could not create network for task", event.message)
+        is CustomTaskNetworkCheckFailedEvent -> formatErrorMessage(Text("Could not check details of network ") + Text.bold(event.networkIdentifier), event.message)
         is CacheInitialisationFailedEvent -> formatErrorMessage("Could not initialise caches for task", event.message)
         is ImageBuildFailedEvent -> formatErrorMessage(Text("Could not build image for container ") + Text.bold(event.container.name), event.message)
         is ImagePullFailedEvent -> formatErrorMessage(Text("Could not pull image ") + Text.bold(event.source.imageName), event.message)

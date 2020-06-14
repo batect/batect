@@ -124,6 +124,9 @@ data class ExecutionFailedEvent(val message: String) : TaskFailedEvent()
 data class TaskNetworkCreationFailedEvent(val message: String) : TaskFailedEvent()
 
 @Serializable
+data class CustomTaskNetworkCheckFailedEvent(val networkIdentifier: String, val message: String) : TaskFailedEvent()
+
+@Serializable
 data class ImageBuildFailedEvent(val container: Container, val message: String) : TaskFailedEvent()
 
 @Serializable

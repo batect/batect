@@ -23,7 +23,6 @@ import batect.docker.ImagePullFailedException
 import batect.docker.build.DockerImageBuildContext
 import batect.docker.build.DockerImageBuildContextRequestBody
 import batect.docker.pull.DockerRegistryCredentials
-import batect.docker.toJsonArray
 import batect.docker.toJsonObject
 import batect.execution.CancellationContext
 import batect.execution.executeInCancellationContext
@@ -32,7 +31,6 @@ import batect.logging.Logger
 import batect.os.SystemInfo
 import batect.utils.Json
 import batect.utils.tee
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.json
 import okhttp3.HttpUrl
@@ -245,13 +243,9 @@ class ImagesAPI(
             data("imageName", imageName)
         }
 
-        val filters = json {
-            "reference" to listOf(imageName).toJsonArray()
-        }
-
         val url = urlForImages.newBuilder()
+            .addPathSegment(imageName)
             .addPathSegment("json")
-            .addQueryParameter("filters", filters.toString())
             .build()
 
         val request = Request.Builder()
@@ -265,13 +259,14 @@ class ImagesAPI(
                     data("error", error)
                 }
 
+                if (error.statusCode == 404) {
+                    return false
+                }
+
                 throw ImagePullFailedException("Checking if image '$imageName' has already been pulled failed: ${error.message}")
             }
 
-            val body = response.body!!.string()
-            val parsedBody = Json.parser.parseJson(body) as JsonArray
-
-            return parsedBody.isNotEmpty()
+            return true
         }
     }
 

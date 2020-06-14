@@ -20,9 +20,10 @@ import batect.config.Container
 import batect.config.SetupCommand
 import batect.os.Command
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -30,11 +31,19 @@ object SetupCommandFailedEventSpec : Spek({
     describe("a 'setup command failed' event") {
         val container = Container("the-container", imageSourceDoesNotMatter())
         val command = SetupCommand(Command.parse("./do the-thing"))
-        val event = SetupCommandFailedEvent(container, command, 123, "Could not do the thing")
+        val event = SetupCommandFailedEvent(container, command, 123, "Something went wrong")
 
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                assertThat(event.toString(), equalTo("SetupCommandFailedEvent(container: 'the-container', command: $command, exit code: 123, output: 'Could not do the thing')"))
+        on("attaching it to a log message") {
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(event), equivalentTo("""
+                    |{
+                    |   "type": "${event::class.qualifiedName}",
+                    |   "container": "the-container",
+                    |   "command": {"command": ["./do", "the-thing"], "working_directory": null},
+                    |   "exitCode": 123,
+                    |   "output": "Something went wrong"
+                    |}
+                """.trimMargin()))
             }
         }
     }

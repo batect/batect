@@ -25,6 +25,7 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TemporaryDirectoryCreatedEvent
 import batect.execution.model.events.TemporaryFileCreatedEvent
+import batect.execution.model.events.data
 import batect.execution.model.rules.cleanup.DeleteTaskNetworkStepRule
 import batect.execution.model.rules.cleanup.DeleteTemporaryDirectoryStepRule
 import batect.execution.model.rules.cleanup.DeleteTemporaryFileStepRule
@@ -59,7 +60,7 @@ class CleanupStagePlanner(
         logger.info {
             message("Created cleanup plan.")
             data("rules", rules)
-            data("pastEvents", pastEvents.map { it.toString() })
+            data("pastEvents", pastEvents)
         }
 
         return CleanupStage(rules, systemInfo.operatingSystem)

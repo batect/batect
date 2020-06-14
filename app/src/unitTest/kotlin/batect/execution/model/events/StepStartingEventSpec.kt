@@ -16,26 +16,26 @@
 
 package batect.execution.model.events
 
-import batect.execution.model.steps.TaskStep
+import batect.execution.model.steps.InitialiseCachesStep
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object StepStartingEventSpec : Spek({
     describe("a 'step starting' event") {
-        val step = mock<TaskStep> {
-            on { toString() } doReturn "TheStepThatIsStarting"
-        }
+        val event = StepStartingEvent(InitialiseCachesStep)
 
-        val event = StepStartingEvent(step)
-
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                assertThat(event.toString(), equalTo("StepStartingEvent(step: TheStepThatIsStarting)"))
+        on("attaching it to a log message") {
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(event), equivalentTo("""
+                    |{
+                    |   "type": "${event::class.qualifiedName}",
+                    |   "step": {"type": "${InitialiseCachesStep::class.qualifiedName}"}
+                    |}
+                """.trimMargin()))
             }
         }
     }

@@ -16,9 +16,10 @@
 
 package batect.execution.model.events
 
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -26,9 +27,13 @@ object CachesInitialisedEventSpec : Spek({
     describe("a 'caches initialised' event") {
         val event = CachesInitialisedEvent
 
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                assertThat(event.toString(), equalTo("CachesInitialisedEvent"))
+        on("attaching it to a log message") {
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(event), equivalentTo("""
+                    |{
+                    |   "type": "${event::class.qualifiedName}"
+                    |}
+                """.trimMargin()))
             }
         }
     }

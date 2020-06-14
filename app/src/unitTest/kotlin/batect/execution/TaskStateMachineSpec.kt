@@ -24,6 +24,7 @@ import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TaskNetworkDeletedEvent
+import batect.execution.model.events.UserInterruptedExecutionEvent
 import batect.execution.model.stages.CleanupStage
 import batect.execution.model.stages.CleanupStagePlanner
 import batect.execution.model.stages.NoStepsReady
@@ -90,7 +91,7 @@ object TaskStateMachineSpec : Spek({
 
         describe("posting events") {
             given("the event is a failure event") {
-                val event = mock<TaskFailedEvent>()
+                val event = createMockTaskFailedEvent()
 
                 given("the run stage is active") {
                     on("posting the event") {
@@ -249,7 +250,7 @@ object TaskStateMachineSpec : Spek({
                 }
 
                 given("the task has failed") {
-                    val failureEvent = mock<TaskFailedEvent>()
+                    val failureEvent = createMockTaskFailedEvent()
                     beforeEachTest { stateMachine.postEvent(failureEvent) }
 
                     given("there are steps still running") {
@@ -480,7 +481,7 @@ object TaskStateMachineSpec : Spek({
                     }
 
                     given("cleanup has failed") {
-                        val event = mock<TaskFailedEvent>()
+                        val event = createMockTaskFailedEvent()
                         val previousEventsWithFailureEvent = previousEvents + event
 
                         beforeEachTest {
@@ -561,7 +562,7 @@ object TaskStateMachineSpec : Spek({
                 }
 
                 given("the task failed") {
-                    val failureEvent = mock<TaskFailedEvent>()
+                    val failureEvent = createMockTaskFailedEvent()
                     val previousEvents = setOf(failureEvent)
 
                     beforeEachTest {
@@ -601,7 +602,7 @@ object TaskStateMachineSpec : Spek({
                     }
 
                     given("cleanup has failed") {
-                        val otherEvent = mock<TaskFailedEvent>()
+                        val otherEvent = createMockTaskFailedEvent()
                         val events = previousEvents + otherEvent
 
                         beforeEachTest {
@@ -702,3 +703,5 @@ fun Suite.regardlessOfWhetherThereAreStepsRunning(check: Suite.(stepsStillRunnin
         }
     }
 }
+
+private fun createMockTaskFailedEvent(): TaskFailedEvent = UserInterruptedExecutionEvent

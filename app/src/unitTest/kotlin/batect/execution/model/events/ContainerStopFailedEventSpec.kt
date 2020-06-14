@@ -18,9 +18,10 @@ package batect.execution.model.events
 
 import batect.config.Container
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -29,9 +30,15 @@ object ContainerStopFailedEventSpec : Spek({
         val container = Container("some-container", imageSourceDoesNotMatter())
         val event = ContainerStopFailedEvent(container, "Something went wrong")
 
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                assertThat(event.toString(), equalTo("ContainerStopFailedEvent(container: 'some-container', message: 'Something went wrong')"))
+        on("attaching it to a log message") {
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(event), equivalentTo("""
+                    |{
+                    |   "type": "${event::class.qualifiedName}",
+                    |   "container": "some-container",
+                    |   "message": "Something went wrong"
+                    |}
+                """.trimMargin()))
             }
         }
     }

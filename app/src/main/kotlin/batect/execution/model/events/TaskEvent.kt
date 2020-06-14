@@ -14,6 +14,11 @@
    limitations under the License.
 */
 
+@file:UseSerializers(
+    ContainerNameOnlySerializer::class,
+    PathSerializer::class
+)
+
 package batect.execution.model.events
 
 import batect.config.Container
@@ -25,162 +30,132 @@ import batect.docker.DockerNetwork
 import batect.docker.client.DockerImageBuildProgress
 import batect.docker.pull.DockerImageProgress
 import batect.execution.model.steps.TaskStep
+import batect.logging.ContainerNameOnlySerializer
+import batect.logging.LogMessageBuilder
+import batect.logging.PathSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+import kotlinx.serialization.UseSerializers
+import kotlinx.serialization.builtins.set
 import java.nio.file.Path
 
-sealed class TaskEvent(val isInformationalEvent: Boolean = false)
+@Serializable
+sealed class TaskEvent(
+    @Transient val isInformationalEvent: Boolean = false
+)
 
-object CachesInitialisedEvent : TaskEvent() {
-    override fun toString() = this::class.simpleName!!
-}
+@Serializable
+object CachesInitialisedEvent : TaskEvent()
 
-data class ContainerBecameHealthyEvent(val container: Container) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}')"
-}
+@Serializable
+data class ContainerBecameHealthyEvent(val container: Container) : TaskEvent()
 
-data class ContainerBecameReadyEvent(val container: Container) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}')"
-}
+@Serializable
+data class ContainerBecameReadyEvent(val container: Container) : TaskEvent()
 
-data class ContainerCreatedEvent(val container: Container, val dockerContainer: DockerContainer) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', Docker container ID: '${dockerContainer.id}')"
-}
+@Serializable
+data class ContainerCreatedEvent(val container: Container, val dockerContainer: DockerContainer) : TaskEvent()
 
-data class ContainerRemovedEvent(val container: Container) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}')"
-}
+@Serializable
+data class ContainerRemovedEvent(val container: Container) : TaskEvent()
 
-data class ContainerStartedEvent(val container: Container) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}')"
-}
+@Serializable
+data class ContainerStartedEvent(val container: Container) : TaskEvent()
 
-data class ContainerStoppedEvent(val container: Container) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}')"
-}
+@Serializable
+data class ContainerStoppedEvent(val container: Container) : TaskEvent()
 
-data class ImageBuildProgressEvent(val container: Container, val buildProgress: DockerImageBuildProgress) : TaskEvent(isInformationalEvent = true) {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', current step: ${buildProgress.currentStep}, total steps: ${buildProgress.totalSteps}, message: '${buildProgress.message}', pull progress: ${formatPullProgress()})"
+@Serializable
+data class ImageBuildProgressEvent(val container: Container, val buildProgress: DockerImageBuildProgress) : TaskEvent(isInformationalEvent = true)
 
-    private fun formatPullProgress() = if (buildProgress.progress == null) {
-        "null"
-    } else {
-        "'" + buildProgress.progress.toStringForDisplay() + "'"
-    }
-}
+@Serializable
+data class ImageBuiltEvent(val container: Container, val image: DockerImage) : TaskEvent()
 
-data class ImageBuiltEvent(val container: Container, val image: DockerImage) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', image: '${image.id}')"
-}
+@Serializable
+data class ImagePulledEvent(val source: PullImage, val image: DockerImage) : TaskEvent()
 
-data class ImagePulledEvent(val source: PullImage, val image: DockerImage) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(source: $source, image: '${image.id}')"
-}
+@Serializable
+data class ImagePullProgressEvent(val source: PullImage, val progress: DockerImageProgress) : TaskEvent(isInformationalEvent = true)
 
-data class ImagePullProgressEvent(val source: PullImage, val progress: DockerImageProgress) : TaskEvent(isInformationalEvent = true) {
-    override fun toString() = "${this::class.simpleName}(source: $source, current operation: '${progress.currentOperation}', completed bytes: ${progress.completedBytes}, total bytes: ${progress.totalBytes})"
-}
+@Serializable
+data class RunningContainerExitedEvent(val container: Container, val exitCode: Long) : TaskEvent()
 
-data class RunningContainerExitedEvent(val container: Container, val exitCode: Long) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', exit code: $exitCode)"
-}
+@Serializable
+data class RunningSetupCommandEvent(val container: Container, val command: SetupCommand, val commandIndex: Int) : TaskEvent()
 
-data class RunningSetupCommandEvent(val container: Container, val command: SetupCommand, val commandIndex: Int) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', command: $command, command index: $commandIndex)"
-}
+@Serializable
+data class SetupCommandsCompletedEvent(val container: Container) : TaskEvent()
 
-data class SetupCommandsCompletedEvent(val container: Container) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}')"
-}
+@Serializable
+data class StepStartingEvent(val step: TaskStep) : TaskEvent(true)
 
-data class StepStartingEvent(val step: TaskStep) : TaskEvent(true) {
-    override fun toString() = "${this::class.simpleName}(step: $step)"
-}
+@Serializable
+data class TaskNetworkCreatedEvent(val network: DockerNetwork) : TaskEvent()
 
-data class TaskNetworkCreatedEvent(val network: DockerNetwork) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(network ID: '${network.id}')"
-}
+@Serializable
+object TaskNetworkDeletedEvent : TaskEvent()
 
-object TaskNetworkDeletedEvent : TaskEvent() {
-    override fun toString() = this::class.simpleName!!
-}
+@Serializable
+data class TemporaryDirectoryCreatedEvent(val container: Container, val directoryPath: Path) : TaskEvent()
 
-data class TemporaryDirectoryCreatedEvent(val container: Container, val directoryPath: Path) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', directory path: '$directoryPath')"
-}
+@Serializable
+data class TemporaryDirectoryDeletedEvent(val directoryPath: Path) : TaskEvent()
 
-data class TemporaryDirectoryDeletedEvent(val directoryPath: Path) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(directory path: '$directoryPath')"
-}
+@Serializable
+data class TemporaryFileCreatedEvent(val container: Container, val filePath: Path) : TaskEvent()
 
-data class TemporaryFileCreatedEvent(val container: Container, val filePath: Path) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', file path: '$filePath')"
-}
-
-data class TemporaryFileDeletedEvent(val filePath: Path) : TaskEvent() {
-    override fun toString() = "${this::class.simpleName}(file path: '$filePath')"
-}
+@Serializable
+data class TemporaryFileDeletedEvent(val filePath: Path) : TaskEvent()
 
 sealed class TaskFailedEvent : TaskEvent()
 
-data class ExecutionFailedEvent(val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(message: '$message')"
-}
+@Serializable
+data class ExecutionFailedEvent(val message: String) : TaskFailedEvent()
 
-data class TaskNetworkCreationFailedEvent(val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(message: '$message')"
-}
+@Serializable
+data class TaskNetworkCreationFailedEvent(val message: String) : TaskFailedEvent()
 
-data class ImageBuildFailedEvent(val container: Container, val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', message: '$message')"
-}
+@Serializable
+data class ImageBuildFailedEvent(val container: Container, val message: String) : TaskFailedEvent()
 
-data class ImagePullFailedEvent(val source: PullImage, val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(source: $source, message: '$message')"
-}
+@Serializable
+data class ImagePullFailedEvent(val source: PullImage, val message: String) : TaskFailedEvent()
 
-data class ContainerCreationFailedEvent(val container: Container, val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', message: '$message')"
-}
+@Serializable
+data class ContainerCreationFailedEvent(val container: Container, val message: String) : TaskFailedEvent()
 
-data class ContainerDidNotBecomeHealthyEvent(val container: Container, val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', message: '$message')"
-}
+@Serializable
+data class ContainerDidNotBecomeHealthyEvent(val container: Container, val message: String) : TaskFailedEvent()
 
-data class ContainerRunFailedEvent(val container: Container, val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', message: '$message')"
-}
+@Serializable
+data class ContainerRunFailedEvent(val container: Container, val message: String) : TaskFailedEvent()
 
-data class ContainerStopFailedEvent(val container: Container, val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', message: '$message')"
-}
+@Serializable
+data class ContainerStopFailedEvent(val container: Container, val message: String) : TaskFailedEvent()
 
-data class ContainerRemovalFailedEvent(val container: Container, val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', message: '$message')"
-}
+@Serializable
+data class ContainerRemovalFailedEvent(val container: Container, val message: String) : TaskFailedEvent()
 
-data class TaskNetworkDeletionFailedEvent(val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(message: '$message')"
-}
+@Serializable
+data class TaskNetworkDeletionFailedEvent(val message: String) : TaskFailedEvent()
 
-data class TemporaryFileDeletionFailedEvent(val filePath: Path, val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(file path: '$filePath', message: '$message')"
-}
+@Serializable
+data class TemporaryFileDeletionFailedEvent(val filePath: Path, val message: String) : TaskFailedEvent()
 
-data class TemporaryDirectoryDeletionFailedEvent(val directoryPath: Path, val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(directory path: '$directoryPath', message: '$message')"
-}
+@Serializable
+data class TemporaryDirectoryDeletionFailedEvent(val directoryPath: Path, val message: String) : TaskFailedEvent()
 
-object UserInterruptedExecutionEvent : TaskFailedEvent() {
-    override fun toString() = this::class.simpleName!!
-}
+@Serializable
+object UserInterruptedExecutionEvent : TaskFailedEvent()
 
-data class SetupCommandExecutionErrorEvent(val container: Container, val command: SetupCommand, val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', command: $command, message: '$message')"
-}
+@Serializable
+data class SetupCommandExecutionErrorEvent(val container: Container, val command: SetupCommand, val message: String) : TaskFailedEvent()
 
-data class SetupCommandFailedEvent(val container: Container, val command: SetupCommand, val exitCode: Int, val output: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(container: '${container.name}', command: $command, exit code: $exitCode, output: '$output')"
-}
+@Serializable
+data class SetupCommandFailedEvent(val container: Container, val command: SetupCommand, val exitCode: Int, val output: String) : TaskFailedEvent()
 
-data class CacheInitialisationFailedEvent(val message: String) : TaskFailedEvent() {
-    override fun toString() = "${this::class.simpleName}(message: '$message')"
-}
+@Serializable
+data class CacheInitialisationFailedEvent(val message: String) : TaskFailedEvent()
+
+fun LogMessageBuilder.data(key: String, value: TaskEvent) = this.data(key, value, TaskEvent.serializer())
+fun LogMessageBuilder.data(key: String, value: Set<TaskEvent>) = this.data(key, value, TaskEvent.serializer().set)

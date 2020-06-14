@@ -19,9 +19,10 @@ package batect.execution.model.events
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -31,9 +32,15 @@ object ContainerCreatedEventSpec : Spek({
         val dockerContainer = DockerContainer("docker-container-1")
         val event = ContainerCreatedEvent(container, dockerContainer)
 
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                assertThat(event.toString(), equalTo("ContainerCreatedEvent(container: 'container-1', Docker container ID: 'docker-container-1')"))
+        on("attaching it to a log message") {
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(event), equivalentTo("""
+                    |{
+                    |   "type": "${event::class.qualifiedName}",
+                    |   "container": "container-1",
+                    |   "dockerContainer": {"id": "docker-container-1", "name": null}
+                    |}
+                """.trimMargin()))
             }
         }
     }

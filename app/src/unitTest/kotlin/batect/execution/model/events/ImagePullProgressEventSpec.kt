@@ -18,8 +18,10 @@ package batect.execution.model.events
 
 import batect.config.PullImage
 import batect.docker.pull.DockerImageProgress
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
-import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.assertion.assertThat
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -28,9 +30,19 @@ object ImagePullProgressEventSpec : Spek({
         val source = PullImage("some-image")
         val event = ImagePullProgressEvent(source, DockerImageProgress("Doing stuff", 10, 30))
 
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImagePullProgressEvent(source: $source, current operation: 'Doing stuff', completed bytes: 10, total bytes: 30)"))
+        on("attaching it to a log message") {
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(event), equivalentTo("""
+                    |{
+                    |   "type": "${event::class.qualifiedName}",
+                    |   "source": {"imageName": "some-image"},
+                    |   "progress": {
+                    |       "currentOperation": "Doing stuff",
+                    |       "completedBytes": 10,
+                    |       "totalBytes": 30
+                    |   }
+                    |}
+                """.trimMargin()))
             }
         }
     }

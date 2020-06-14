@@ -21,6 +21,7 @@ import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskFailedEvent
+import batect.execution.model.events.data
 import batect.execution.model.stages.CleanupStage
 import batect.execution.model.stages.CleanupStagePlanner
 import batect.execution.model.stages.NoStepsReady
@@ -165,7 +166,7 @@ class TaskStateMachine(
         lock.withLock {
             logger.info {
                 message("Event received.")
-                data("event", event.toString())
+                data("event", event)
             }
 
             events.add(event)

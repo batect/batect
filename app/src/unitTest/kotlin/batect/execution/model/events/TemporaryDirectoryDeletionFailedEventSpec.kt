@@ -16,22 +16,29 @@
 
 package batect.execution.model.events
 
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object TemporaryDirectoryDeletionFailedEventSpec : Spek({
     describe("a 'temporary directory deletion failed' event") {
         val directoryPath = Jimfs.newFileSystem(Configuration.unix()).getPath("/some-path")
-        val event = TemporaryDirectoryDeletionFailedEvent(directoryPath, "Something went wrong.")
+        val event = TemporaryDirectoryDeletionFailedEvent(directoryPath, "Something went wrong")
 
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                assertThat(event.toString(), equalTo("TemporaryDirectoryDeletionFailedEvent(directory path: '/some-path', message: 'Something went wrong.')"))
+        on("attaching it to a log message") {
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(event), equivalentTo("""
+                    |{
+                    |   "type": "${event::class.qualifiedName}",
+                    |   "directoryPath": "/some-path",
+                    |   "message": "Something went wrong"
+                    |}
+                """.trimMargin()))
             }
         }
     }

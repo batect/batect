@@ -17,20 +17,29 @@
 package batect.execution.model.events
 
 import batect.config.PullImage
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object ImagePullFailedEventSpec : Spek({
     describe("a 'image pull failed' event") {
         val source = PullImage("some-image")
-        val event = ImagePullFailedEvent(source, "Could not pull image 'some-image': Something went wrong")
+        val event = ImagePullFailedEvent(source, "Something went wrong")
 
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                assertThat(event.toString(), equalTo("ImagePullFailedEvent(source: $source, message: 'Could not pull image 'some-image': Something went wrong')"))
+        on("attaching it to a log message") {
+            it("returns a machine-readable representation of itself") {
+                assertThat(
+                    logRepresentationOf(event), equivalentTo("""
+                    |{
+                    |   "type": "${event::class.qualifiedName}",
+                    |   "source": {"imageName": "some-image"},
+                    |   "message": "Something went wrong"
+                    |}
+                """.trimMargin())
+                )
             }
         }
     }

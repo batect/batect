@@ -18,8 +18,10 @@ package batect.execution.model.events
 
 import batect.config.PullImage
 import batect.docker.DockerImage
+import batect.testutils.logRepresentationOf
 import batect.testutils.on
-import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.assertion.assertThat
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -29,9 +31,15 @@ object ImagePulledEventSpec : Spek({
         val image = DockerImage("image-1-id")
         val event = ImagePulledEvent(source, image)
 
-        on("toString()") {
-            it("returns a human-readable representation of itself") {
-                com.natpryce.hamkrest.assertion.assertThat(event.toString(), equalTo("ImagePulledEvent(source: $source, image: 'image-1-id')"))
+        on("attaching it to a log message") {
+            it("returns a machine-readable representation of itself") {
+                assertThat(logRepresentationOf(event), equivalentTo("""
+                    |{
+                    |   "type": "${event::class.qualifiedName}",
+                    |   "source": {"imageName": "image-1"},
+                    |   "image": {"id": "image-1-id"}
+                    |}
+                """.trimMargin()))
             }
         }
     }

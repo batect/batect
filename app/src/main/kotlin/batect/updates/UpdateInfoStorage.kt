@@ -44,7 +44,7 @@ class UpdateInfoStorage(private val systemInfo: SystemInfo, private val logger: 
 
         logger.info {
             message("Loaded cached update information from disk.")
-            data("source", updateInfoPath.toString())
+            data("source", updateInfoPath)
             data("updateInfo", updateInfo)
         }
 

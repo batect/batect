@@ -29,6 +29,7 @@ import batect.docker.pull.DockerImageProgressReporter
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.execution.CancellationContext
 import batect.logging.Logger
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import okio.Sink
 import java.nio.file.Files
@@ -133,6 +134,7 @@ class DockerImagesClient(
     }
 }
 
+@Serializable
 data class DockerImageBuildProgress(val currentStep: Int, val totalSteps: Int, val message: String, val progress: DockerImageProgress?) {
     companion object {
         private val buildStepLineRegex = """^Step (\d+)/(\d+) : (.*)$""".toRegex()

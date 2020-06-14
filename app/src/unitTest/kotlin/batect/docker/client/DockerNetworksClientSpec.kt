@@ -64,5 +64,15 @@ object DockerNetworksClientSpec : Spek({
                 }
             }
         }
+
+        on("getting a network by name or ID") {
+            beforeEachTest { whenever(api.getByNameOrId("the-network")).doReturn(DockerNetwork("the-network-id")) }
+
+            val result by runForEachTest { client.getByNameOrId("the-network") }
+
+            it("returns the ID of the network") {
+                assertThat(result.id, equalTo("the-network-id"))
+            }
+        }
     }
 })

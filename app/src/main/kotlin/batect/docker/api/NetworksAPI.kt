@@ -25,6 +25,7 @@ import batect.utils.Json
 import kotlinx.serialization.json.json
 import okhttp3.HttpUrl
 import okhttp3.Request
+import okhttp3.Response
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
@@ -63,15 +64,14 @@ class NetworksAPI(
                 throw NetworkCreationFailedException(error.message)
             }
 
-            val parsedResponse = Json.parser.parseJson(response.body!!.string()).jsonObject
-            val networkId = parsedResponse.getValue("Id").primitive.content
+            val network = networkFromResponse(response)
 
             logger.info {
                 message("Network created.")
-                data("networkId", networkId)
+                data("network", network)
             }
 
-            return DockerNetwork(networkId)
+            return network
         }
     }
 
@@ -102,11 +102,56 @@ class NetworksAPI(
         }
     }
 
+    fun getByNameOrId(identifier: String): DockerNetwork {
+        logger.info {
+            message("Getting network.")
+            data("identifier", identifier)
+        }
+
+        val request = Request.Builder()
+            .get()
+            .url(urlForNetwork(identifier))
+            .build()
+
+        httpConfig.client.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Could not get network.")
+                    data("error", error)
+                }
+
+                if (error.statusCode == 404) {
+                    throw NetworkDoesNotExistException(identifier)
+                }
+
+                throw NetworkInspectionFailedException(identifier, error.message)
+            }
+
+            val network = networkFromResponse(response)
+
+            logger.info {
+                message("Network details retrieved.")
+                data("identifier", identifier)
+                data("network", network)
+            }
+
+            return network
+        }
+    }
+
+    private fun networkFromResponse(response: Response): DockerNetwork {
+        val parsedResponse = Json.parser.parseJson(response.body!!.string()).jsonObject
+        val networkId = parsedResponse.getValue("Id").primitive.content
+        return DockerNetwork(networkId)
+    }
+
     private val urlForNetworks: HttpUrl = baseUrl.newBuilder()
         .addPathSegment("networks")
         .build()
 
-    private fun urlForNetwork(network: DockerNetwork): HttpUrl = urlForNetworks.newBuilder()
-        .addPathSegment(network.id)
+    private fun urlForNetwork(network: DockerNetwork): HttpUrl = urlForNetwork(network.id)
+
+    private fun urlForNetwork(identifier: String): HttpUrl = urlForNetworks.newBuilder()
+        .addPathSegment(identifier)
         .build()
 }

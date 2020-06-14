@@ -23,7 +23,9 @@ import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
+import batect.testutils.mock
 import batect.testutils.mockDelete
+import batect.testutils.mockGet
 import batect.testutils.mockPost
 import batect.testutils.on
 import batect.testutils.runForEachTest
@@ -137,6 +139,36 @@ object NetworksAPISpec : Spek({
                     it("throws an appropriate exception") {
                         assertThat({ api.delete(network) }, throws<NetworkDeletionFailedException>(withMessage("Deletion of network 'abc123' failed: $errorMessageWithCorrectLineEndings")))
                     }
+                }
+            }
+        }
+
+        describe("getting a network by name or ID") {
+            val identifier = "abc123"
+            val expectedUrl = "$dockerBaseUrl/v1.37/networks/abc123"
+
+            given("the network exists") {
+                beforeEachTest { httpClient.mockGet(expectedUrl, """{"Id": "7d86d31b1478e7cca9ebed7e73aa0fdeec46c5ca29497431d3007d2d9e15ed99"}""") }
+                val network by createForEachTest { api.getByNameOrId(identifier) }
+
+                it("returns the ID of the network") {
+                    assertThat(network, equalTo(DockerNetwork("7d86d31b1478e7cca9ebed7e73aa0fdeec46c5ca29497431d3007d2d9e15ed99")))
+                }
+            }
+
+            given("the network does not exist") {
+                beforeEachTest { httpClient.mockGet(expectedUrl, errorResponse, 404) }
+
+                it("throws an appropriate exception") {
+                    assertThat({ api.getByNameOrId(identifier) }, throws<NetworkDoesNotExistException>(withMessage("The network 'abc123' does not exist.")))
+                }
+            }
+
+            given("getting the networks fails") {
+                beforeEachTest { httpClient.mockGet(expectedUrl, errorResponse, 418) }
+
+                it("throws an appropriate exception") {
+                    assertThat({ api.getByNameOrId(identifier) }, throws<NetworkInspectionFailedException>(withMessage("Getting details of network 'abc123' failed: $errorMessageWithCorrectLineEndings")))
                 }
             }
         }

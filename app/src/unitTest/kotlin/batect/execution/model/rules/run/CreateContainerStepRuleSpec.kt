@@ -30,7 +30,7 @@ import batect.execution.model.events.CachesInitialisedEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.TaskEvent
-import batect.execution.model.events.TaskNetworkCreatedEvent
+import batect.execution.model.events.TaskNetworkReadyEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.CreateContainerStep
 import batect.os.Command
@@ -43,6 +43,8 @@ import batect.testutils.on
 import batect.testutils.osIndependentPath
 import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -61,9 +63,13 @@ object CreateContainerStepRuleSpec : Spek({
                 val container = Container("the-container", imageSource, volumeMounts = setOf(LocalMount(LiteralValue("/some-local-path"), osIndependentPath("/relative-to"), "/some-container-path")))
                 val rule = CreateContainerStepRule(container, config)
 
-                given("the task network has been created") {
-                    val network = DockerNetwork("the-network")
-                    beforeEachTest { events.add(TaskNetworkCreatedEvent(network)) }
+                given("the task network is ready") {
+                    val dockerNetwork = DockerNetwork("the-network")
+                    val networkReadyEvent = mock<TaskNetworkReadyEvent> {
+                        on { network } doReturn dockerNetwork
+                    }
+
+                    beforeEachTest { events.add(networkReadyEvent) }
 
                     given("the image for the container has been pulled") {
                         val image = DockerImage("some-image-id")
@@ -73,7 +79,7 @@ object CreateContainerStepRuleSpec : Spek({
                             val result by runForEachTest { rule.evaluate(events) }
 
                             it("returns a 'create container' step") {
-                                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, config, image, network))))
+                                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, config, image, dockerNetwork))))
                             }
                         }
                     }
@@ -116,9 +122,13 @@ object CreateContainerStepRuleSpec : Spek({
                 val container = Container("the-container", imageSource, volumeMounts = setOf(CacheMount("some-cache", "/some-container-path")))
                 val rule = CreateContainerStepRule(container, config)
 
-                given("the task network has been created") {
-                    val network = DockerNetwork("the-network")
-                    beforeEachTest { events.add(TaskNetworkCreatedEvent(network)) }
+                given("the task network is ready") {
+                    val dockerNetwork = DockerNetwork("the-network")
+                    val networkReadyEvent = mock<TaskNetworkReadyEvent> {
+                        on { network } doReturn dockerNetwork
+                    }
+
+                    beforeEachTest { events.add(networkReadyEvent) }
 
                     given("the image for the container has been pulled") {
                         val image = DockerImage("some-image-id")
@@ -130,7 +140,7 @@ object CreateContainerStepRuleSpec : Spek({
                             val result by runForEachTest { rule.evaluate(events) }
 
                             it("returns a 'create container' step") {
-                                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, config, image, network))))
+                                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, config, image, dockerNetwork))))
                             }
                         }
 
@@ -153,9 +163,13 @@ object CreateContainerStepRuleSpec : Spek({
             val container = Container("the-container", source)
             val rule = CreateContainerStepRule(container, config)
 
-            given("the task network has been created") {
-                val network = DockerNetwork("the-network")
-                beforeEachTest { events.add(TaskNetworkCreatedEvent(network)) }
+            given("the task network is ready") {
+                val dockerNetwork = DockerNetwork("the-network")
+                val networkReadyEvent = mock<TaskNetworkReadyEvent> {
+                    on { network } doReturn dockerNetwork
+                }
+
+                beforeEachTest { events.add(networkReadyEvent) }
 
                 given("the image for the container has been built") {
                     val image = DockerImage("the-built-image")
@@ -165,7 +179,7 @@ object CreateContainerStepRuleSpec : Spek({
                         val result by runForEachTest { rule.evaluate(events) }
 
                         it("returns a 'create container' step") {
-                            assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, config, image, network))))
+                            assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, config, image, dockerNetwork))))
                         }
                     }
                 }

@@ -90,7 +90,15 @@ data class SetupCommandsCompletedEvent(val container: Container) : TaskEvent()
 data class StepStartingEvent(val step: TaskStep) : TaskEvent(true)
 
 @Serializable
-data class TaskNetworkCreatedEvent(val network: DockerNetwork) : TaskEvent()
+sealed class TaskNetworkReadyEvent : TaskEvent() {
+    abstract val network: DockerNetwork
+}
+
+@Serializable
+data class TaskNetworkCreatedEvent(override val network: DockerNetwork) : TaskNetworkReadyEvent()
+
+@Serializable
+data class CustomTaskNetworkCheckedEvent(override val network: DockerNetwork) : TaskNetworkReadyEvent()
 
 @Serializable
 object TaskNetworkDeletedEvent : TaskEvent()

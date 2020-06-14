@@ -35,7 +35,7 @@ import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.RunningSetupCommandEvent
 import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
-import batect.execution.model.events.TaskNetworkCreatedEvent
+import batect.execution.model.events.TaskNetworkReadyEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.execution.model.steps.CreateContainerStep
 import batect.execution.model.steps.PullImageStep
@@ -60,7 +60,7 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     private var isHealthy = false
     private var isRunning = false
     private var command: Command? = null
-    private var networkHasBeenCreated = false
+    private var networkIsReady = false
     private val needsCacheInitialisation = container.volumeMounts.any { it is CacheMount }
     private var cacheInitialised = false
 
@@ -82,11 +82,11 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
             isStarting -> TextRun("starting container...")
             hasBeenCreated -> descriptionWhenWaitingToStart()
             isCreating -> TextRun("creating container...")
-            (hasBeenPulled || hasBeenBuilt) && networkHasBeenCreated && !cacheInitialised && needsCacheInitialisation -> TextRun("waiting for cache initialisation to finish...")
-            hasBeenBuilt && networkHasBeenCreated && (cacheInitialised || !needsCacheInitialisation) -> TextRun("image built, ready to create container")
-            hasBeenBuilt && !networkHasBeenCreated -> TextRun("image built, waiting for network to be ready...")
-            hasBeenPulled && networkHasBeenCreated && (cacheInitialised || !needsCacheInitialisation) -> TextRun("image pulled, ready to create container")
-            hasBeenPulled && !networkHasBeenCreated -> TextRun("image pulled, waiting for network to be ready...")
+            (hasBeenPulled || hasBeenBuilt) && networkIsReady && !cacheInitialised && needsCacheInitialisation -> TextRun("waiting for cache initialisation to finish...")
+            hasBeenBuilt && networkIsReady && (cacheInitialised || !needsCacheInitialisation) -> TextRun("image built, ready to create container")
+            hasBeenBuilt && !networkIsReady -> TextRun("image built, waiting for network to be ready...")
+            hasBeenPulled && networkIsReady && (cacheInitialised || !needsCacheInitialisation) -> TextRun("image pulled, ready to create container")
+            hasBeenPulled && !networkIsReady -> TextRun("image pulled, waiting for network to be ready...")
             isBuilding && lastBuildProgressUpdate == null -> TextRun("building image...")
             isBuilding && lastBuildProgressUpdate != null -> descriptionWhenBuilding()
             isPulling -> descriptionWhenPulling()
@@ -163,7 +163,7 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
             is ImageBuiltEvent -> onImageBuiltEventPosted(event)
             is ImagePullProgressEvent -> onImagePullProgressEventPosted(event)
             is ImagePulledEvent -> onImagePulledEventPosted(event)
-            is TaskNetworkCreatedEvent -> networkHasBeenCreated = true
+            is TaskNetworkReadyEvent -> networkIsReady = true
             is ContainerCreatedEvent -> onContainerCreatedEventPosted(event)
             is ContainerStartedEvent -> onContainerStartedEventPosted(event)
             is ContainerBecameHealthyEvent -> onContainerBecameHealthyEventPosted(event)

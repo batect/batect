@@ -27,7 +27,7 @@ import batect.execution.model.events.CachesInitialisedEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.TaskEvent
-import batect.execution.model.events.TaskNetworkCreatedEvent
+import batect.execution.model.events.TaskNetworkReadyEvent
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.CreateContainerStep
@@ -64,7 +64,7 @@ data class CreateContainerStepRule(
     }
 
     private fun findNetwork(pastEvents: Set<TaskEvent>): DockerNetwork? =
-        pastEvents.singleInstanceOrNull<TaskNetworkCreatedEvent>()
+        pastEvents.singleInstanceOrNull<TaskNetworkReadyEvent>()
             ?.network
 
     private fun findImage(pastEvents: Set<TaskEvent>): DockerImage? {

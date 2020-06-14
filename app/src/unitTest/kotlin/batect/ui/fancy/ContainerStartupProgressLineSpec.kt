@@ -40,6 +40,7 @@ import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.RunningSetupCommandEvent
 import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
+import batect.execution.model.events.TaskNetworkReadyEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.execution.model.steps.CreateContainerStep
 import batect.execution.model.steps.PullImageStep
@@ -53,6 +54,7 @@ import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.ui.text.Text
 import com.natpryce.hamkrest.assertion.assertThat
+import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Paths
@@ -150,9 +152,9 @@ object ContainerStartupProgressLineSpec : Spek({
                 describe("and that notification being for this line's container") {
                     val event = ImageBuiltEvent(container, DockerImage("some-image"))
 
-                    on("when the task network has already been created") {
+                    on("when the task network is ready") {
                         beforeEachTest {
-                            line.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
+                            line.onEventPosted(mock<TaskNetworkReadyEvent>())
                             line.onEventPosted(event)
                         }
 
@@ -163,7 +165,7 @@ object ContainerStartupProgressLineSpec : Spek({
                         }
                     }
 
-                    on("when the task network has not already been created") {
+                    on("when the task network is not ready") {
                         beforeEachTest { line.onEventPosted(event) }
                         val output by runForEachTest { line.print() }
 
@@ -194,8 +196,8 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
             }
 
-            describe("after receiving a 'task network created' notification") {
-                val event = TaskNetworkCreatedEvent(DockerNetwork("some-network"))
+            describe("after receiving a 'task network ready' notification") {
+                val event = mock<TaskNetworkReadyEvent>()
 
                 on("when the image has not started building yet") {
                     beforeEachTest { line.onEventPosted(event) }

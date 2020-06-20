@@ -340,6 +340,7 @@ class WindowsNativeMethods(
         return when (posix.errno()) {
             ERROR_IO_PENDING -> true
             ERROR_BROKEN_PIPE -> false
+            ERROR_INVALID_HANDLE -> false
             else -> throwNativeMethodFailed(win32::ReadFile)
         }
     }

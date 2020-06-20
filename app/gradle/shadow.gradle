@@ -14,20 +14,12 @@
    limitations under the License.
 */
 
-pluginManagement {
-    plugins {
-        id 'org.jetbrains.kotlin.jvm' version '1.3.72'
-        id 'org.jetbrains.kotlin.plugin.serialization' version '1.3.72'
-        id 'com.github.johnrengelman.shadow' version '6.0.0'
-    }
+// See https://github.com/johnrengelman/shadow/issues/389#issuecomment-440431318 for an explanation of this.
+tasks.withType(AbstractArchiveTask) {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
 }
 
-// From https://stackoverflow.com/a/34121857/1668119
-fileTree('.') {
-    include '**/build.gradle'
-    exclude 'build.gradle'
-    exclude 'buildSrc/build.gradle'
-}.collect { relativePath(it.parent).replace(File.separator, ':') }
-    .each { include(it) }
-
-rootProject.name = 'batect'
+shadowJar {
+    classifier = null
+}

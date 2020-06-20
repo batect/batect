@@ -15,7 +15,7 @@
 */
 
 plugins {
-    id 'com.github.johnrengelman.shadow' version '6.0.0'
+    id 'com.github.johnrengelman.shadow'
     id 'org.jetbrains.kotlin.jvm'
     id 'org.jetbrains.kotlin.plugin.serialization'
     id 'application'
@@ -55,16 +55,6 @@ dependencies {
     testImplementation 'com.squareup.okhttp3:mockwebserver'
 }
 
-shadowJar {
-    classifier = null
-}
-
-// See https://github.com/johnrengelman/shadow/issues/389#issuecomment-440431318 for an explanation of this.
-tasks.withType(AbstractArchiveTask) {
-    preserveFileTimestamps = false
-    reproducibleFileOrder = true
-}
-
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
@@ -81,6 +71,7 @@ apply from: 'gradle/jacoco.gradle'
 apply from: 'gradle/journeyTest.gradle'
 apply from: 'gradle/performanceTest.gradle'
 apply from: 'gradle/profiling.gradle'
+apply from: 'gradle/shadow.gradle'
 apply from: 'gradle/spotless.gradle'
 apply from: 'gradle/unitTest.gradle'
 apply from: 'gradle/versionInfo.gradle'

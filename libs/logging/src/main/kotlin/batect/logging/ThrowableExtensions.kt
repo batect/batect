@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.utils
+package batect.logging
 
 import java.io.PrintWriter
 import java.io.StringWriter

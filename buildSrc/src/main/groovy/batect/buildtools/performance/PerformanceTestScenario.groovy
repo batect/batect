@@ -44,7 +44,7 @@ class PerformanceTestScenario extends DefaultTask {
     List<String> before = []
 
     @InputFile
-    Property<File> executable
+    final Property<File> executable
 
     @Input
     List<String> args
@@ -53,10 +53,10 @@ class PerformanceTestScenario extends DefaultTask {
     String workingDirectory = "."
 
     @Input
-    Property<File> outputDirectory
+    final Property<File> outputDirectory
 
     @OutputFile
-    Property<File> outputFile
+    final Property<File> outputFile
 
     PerformanceTestScenario() {
         executable = project.objects.property(File.class)

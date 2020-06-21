@@ -124,6 +124,7 @@ import batect.updates.UpdateInfoDownloader
 import batect.updates.UpdateInfoStorage
 import batect.updates.UpdateInfoUpdater
 import batect.updates.UpdateNotifier
+import batect.utils.Json
 import batect.wrapper.WrapperCache
 import batect.wrapper.WrapperCacheCleanupTask
 import com.hypirion.io.RevivableInputStream
@@ -310,7 +311,7 @@ private val loggingModule = Kodein.Module("logging") {
     bind<ApplicationInfoLogger>() with singletonWithLogger { logger -> ApplicationInfoLogger(logger, instance(), instance(), instance(), instance(), instance()) }
     bind<HttpLoggingInterceptor>() with singletonWithLogger { logger -> HttpLoggingInterceptor(logger) }
     bind<LoggerFactory>() with singleton { LoggerFactory(instance()) }
-    bind<LogMessageWriter>() with singleton { LogMessageWriter() }
+    bind<LogMessageWriter>() with singleton { LogMessageWriter(Json.forLogging) }
     bind<StandardAdditionalDataSource>() with singleton { StandardAdditionalDataSource(instance()) }
 }
 

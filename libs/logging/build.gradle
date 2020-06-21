@@ -14,24 +14,12 @@
    limitations under the License.
 */
 
-apply plugin: 'com.diffplug.gradle.spotless'
-
-ext.kotlinLicenseHeader = "/*$licenseText*/\n\n"
-
-spotless {
-    kotlin {
-        ktlint("0.30.0")
-
-        licenseHeader kotlinLicenseHeader
-
-        trimTrailingWhitespace()
-        indentWithSpaces()
-        endWithNewline()
-    }
+plugins {
+    id 'batect-kotlin'
 }
 
-project.afterEvaluate {
-    project.tasks.named('spotlessKotlinCheck') {
-        mustRunAfter 'test'
-    }
+dependencies {
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0"
+    implementation 'com.github.jnr:jnr-posix:3.0.57'
 }

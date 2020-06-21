@@ -14,19 +14,10 @@
    limitations under the License.
 */
 
-package batect.utils
+package batect.logging
 
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
-import kotlinx.serialization.modules.SerializersModule
+import batect.utils.Version
+import okhttp3.HttpUrl
 
-object Json {
-    private val loggingModule = SerializersModule {
-        include(batect.execution.model.rules.serializersModule)
-    }
-
-    val nonstrictParser = Json(JsonConfiguration.Stable.copy(ignoreUnknownKeys = true))
-    val parser = Json(JsonConfiguration.Stable)
-    val withoutDefaults = Json(JsonConfiguration.Stable.copy(encodeDefaults = false))
-    val forLogging = Json(JsonConfiguration.Stable, loggingModule)
-}
+fun LogMessageBuilder.data(key: String, value: Version) = data(key, value, Version.Companion)
+fun LogMessageBuilder.data(key: String, value: HttpUrl) = data(key, value.toString())

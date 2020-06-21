@@ -18,6 +18,7 @@ package batect.wrapper
 
 import batect.VersionInfo
 import batect.logging.Logger
+import batect.logging.data
 import batect.os.HostEnvironmentVariables
 import batect.utils.Version
 import batect.utils.VersionParseException

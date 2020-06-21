@@ -16,8 +16,8 @@
 
 package batect.logging
 
-import batect.utils.Json
 import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import java.time.ZonedDateTime
 
@@ -31,9 +31,9 @@ enum class Severity {
 }
 
 interface Jsonable {
-    fun toJSON(): JsonElement
+    fun toJSON(json: Json): JsonElement
 }
 
 data class JsonableObject<T>(val value: T, val serializer: SerializationStrategy<T>) : Jsonable {
-    override fun toJSON(): JsonElement = Json.parser.toJson(serializer, value)
+    override fun toJSON(json: Json): JsonElement = json.toJson(serializer, value)
 }

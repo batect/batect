@@ -19,6 +19,7 @@ package batect.updates
 import batect.VersionInfo
 import batect.cli.CommandLineOptionsParser
 import batect.logging.Logger
+import batect.logging.data
 import batect.ui.Console
 import java.time.ZoneOffset
 import java.time.ZonedDateTime

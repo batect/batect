@@ -32,7 +32,7 @@ fun logRepresentationOf(step: TaskStep): String {
         data("step", step)
     }
 
-    return sink.loggedMessages.single().additionalData.getValue("step").toJSON().toString()
+    return sink.loggedMessages.single().additionalData.getValue("step").toJSON(sink.writer.json).toString()
 }
 
 fun logRepresentationOf(rule: TaskStepRule): String {
@@ -43,7 +43,7 @@ fun logRepresentationOf(rule: TaskStepRule): String {
         data("rule", rule)
     }
 
-    return sink.loggedMessages.single().additionalData.getValue("rule").toJSON().toString()
+    return sink.loggedMessages.single().additionalData.getValue("rule").toJSON(sink.writer.json).toString()
 }
 
 fun logRepresentationOf(event: TaskEvent): String {
@@ -54,5 +54,5 @@ fun logRepresentationOf(event: TaskEvent): String {
         data("event", event)
     }
 
-    return sink.loggedMessages.single().additionalData.getValue("event").toJSON().toString()
+    return sink.loggedMessages.single().additionalData.getValue("event").toJSON(sink.writer.json).toString()
 }

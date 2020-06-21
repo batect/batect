@@ -17,6 +17,7 @@
 package batect.updates
 
 import batect.logging.Logger
+import batect.logging.data
 import batect.utils.Json
 import batect.utils.Version
 import kotlinx.serialization.SerialName

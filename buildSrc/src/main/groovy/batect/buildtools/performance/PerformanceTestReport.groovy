@@ -27,14 +27,14 @@ import java.nio.file.Files
 
 class PerformanceTestReport extends DefaultTask {
     @InputDirectory
-    Property<File> testScenarioResultsDirectory
+    final Property<File> testScenarioResultsDirectory
 
     // This is just @Input because we only care about the value, not the contents of the directory
     @Input
-    Property<File> testResultsDirectory
+    final Property<File> testResultsDirectory
 
     @OutputFile
-    Property<File> reportFile
+    final Property<File> reportFile
 
     PerformanceTestReport() {
         testScenarioResultsDirectory = project.objects.property(File.class)

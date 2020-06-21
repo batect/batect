@@ -16,20 +16,20 @@
 
 package batect.logging
 
-import batect.updates.ZonedDateTimeSerializer
-import batect.utils.Json
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.json.json
 import java.io.OutputStream
 
-class LogMessageWriter {
+class LogMessageWriter(val json: Json = Json(JsonConfiguration.Stable)) {
     fun writeTo(message: LogMessage, outputStream: OutputStream) {
         val json = json {
-            "@timestamp" to Json.parser.toJson(ZonedDateTimeSerializer, message.timestamp)
+            "@timestamp" to json.toJson(ZonedDateTimeSerializer, message.timestamp)
             "@message" to message.message
             "@severity" to message.severity.toString().toLowerCase()
 
             message.additionalData.forEach { (key, value) ->
-                key to value.toJSON()
+                key to value.toJSON(json)
             }
         }
 

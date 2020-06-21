@@ -24,6 +24,7 @@ import batect.logging.LogSink
 import batect.logging.Logger
 import batect.logging.Severity
 import batect.logging.StandardAdditionalDataSource
+import batect.utils.Json
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.dsl.LifecycleAware
@@ -34,9 +35,9 @@ import java.time.ZonedDateTime
 class InMemoryLogSink : LogSink {
     val loggedMessages = mutableListOf<LogMessage>()
     val output = ByteArrayOutputStream()
+    val writer = LogMessageWriter(Json.forLogging)
 
     private val lock = Object()
-    private val writer = LogMessageWriter()
 
     private val additionalDataSource = mock<StandardAdditionalDataSource> {
         on { getAdditionalData() } doReturn emptyMap()

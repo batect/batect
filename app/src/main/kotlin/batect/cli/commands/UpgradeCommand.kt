@@ -18,6 +18,7 @@ package batect.cli.commands
 
 import batect.VersionInfo
 import batect.logging.Logger
+import batect.logging.data
 import batect.os.HostEnvironmentVariables
 import batect.ui.Console
 import batect.ui.text.Text

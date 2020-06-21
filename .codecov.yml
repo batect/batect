@@ -5,6 +5,7 @@ coverage:
         target: auto
         threshold: 0.5
         base: auto
+        informational: true
     patch:
       default:
         target: auto

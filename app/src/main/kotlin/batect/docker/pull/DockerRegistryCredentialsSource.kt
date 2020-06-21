@@ -97,7 +97,7 @@ data class HelperBasedCredentialsSource(val helperName: String, val serverAddres
 
     private fun parseCredentials(credentials: String): JsonObject {
         try {
-            return Json.parser.parseJson(credentials).jsonObject
+            return Json.default.parseJson(credentials).jsonObject
         } catch (e: Throwable) {
             throw DockerRegistryCredentialsException("The credentials returned for '$serverAddress' by the credential helper executable '$helperName' are invalid: ${e.message}", e)
         }

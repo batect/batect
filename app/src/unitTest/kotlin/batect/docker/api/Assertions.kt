@@ -78,7 +78,7 @@ internal fun requestWithJsonBody(predicate: (JsonObject) -> Unit) = com.nhaarman
 
     val buffer = Buffer()
     request.body!!.writeTo(buffer)
-    val parsedBody = Json.parser.parseJson(buffer.readUtf8()).jsonObject
+    val parsedBody = Json.default.parseJson(buffer.readUtf8()).jsonObject
     predicate(parsedBody)
 }
 

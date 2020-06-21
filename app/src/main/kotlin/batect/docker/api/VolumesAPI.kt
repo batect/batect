@@ -55,7 +55,7 @@ class VolumesAPI(
             }
 
             val body = response.body!!.string()
-            val parsedBody = Json.nonstrictParser.parse(VolumesList.serializer(), body)
+            val parsedBody = Json.ignoringUnknownKeys.parse(VolumesList.serializer(), body)
 
             logger.info {
                 message("Retrieved all volumes.")

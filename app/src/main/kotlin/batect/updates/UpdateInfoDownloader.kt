@@ -54,7 +54,7 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
                     throw UpdateInfoDownloadException("The server returned HTTP ${response.code}.")
                 }
 
-                val releaseInfo = Json.nonstrictParser.parse(GitHubReleaseInfo.serializer(), response.body!!.string())
+                val releaseInfo = Json.ignoringUnknownKeys.parse(GitHubReleaseInfo.serializer(), response.body!!.string())
                 val scripts = extractScriptInfo(releaseInfo)
                 val updateInfo = UpdateInfo(Version.parse(releaseInfo.tagName), releaseInfo.htmlUrl, dateTimeProvider(), scripts)
 

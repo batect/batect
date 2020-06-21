@@ -160,7 +160,7 @@ object PortRangeSpec : Spek({
                 }
 
                 it("serializes to the expected JSON value") {
-                    assertThat(Json.parser.stringify(PortRange.serializer(), range), equalTo(""""123""""))
+                    assertThat(Json.default.stringify(PortRange.serializer(), range), equalTo(""""123""""))
                 }
             }
 
@@ -172,7 +172,7 @@ object PortRangeSpec : Spek({
                 }
 
                 it("serializes to the expected JSON value") {
-                    assertThat(Json.parser.stringify(PortRange.serializer(), range), equalTo(""""123-456""""))
+                    assertThat(Json.default.stringify(PortRange.serializer(), range), equalTo(""""123-456""""))
                 }
             }
         }

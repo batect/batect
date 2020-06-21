@@ -25,8 +25,8 @@ object Json {
         include(batect.execution.model.rules.serializersModule)
     }
 
-    val nonstrictParser = Json(JsonConfiguration.Stable.copy(ignoreUnknownKeys = true))
-    val parser = Json(JsonConfiguration.Stable)
+    val ignoringUnknownKeys = Json(JsonConfiguration.Stable.copy(ignoreUnknownKeys = true))
+    val default = Json(JsonConfiguration.Stable)
     val withoutDefaults = Json(JsonConfiguration.Stable.copy(encodeDefaults = false))
     val forLogging = Json(JsonConfiguration.Stable, loggingModule)
 }

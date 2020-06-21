@@ -54,7 +54,7 @@ class SystemInfoAPI(
                 throw DockerVersionInfoRetrievalException("The request failed: ${error.message}")
             }
 
-            val parsedResponse = Json.parser.parseJson(response.body!!.string()).jsonObject
+            val parsedResponse = Json.default.parseJson(response.body!!.string()).jsonObject
             val version = parsedResponse.getValue("Version").primitive.content
             val apiVersion = parsedResponse.getValue("ApiVersion").primitive.content
             val minAPIVersion = parsedResponse.getValue("MinAPIVersion").primitive.content

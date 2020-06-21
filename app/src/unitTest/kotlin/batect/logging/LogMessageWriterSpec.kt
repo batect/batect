@@ -22,7 +22,6 @@ import batect.utils.Json
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.builtins.serializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.ZoneOffset
@@ -38,7 +37,7 @@ object LogMessageWriterSpec : Spek({
             val output = CloseableByteArrayOutputStream()
             writer.writeTo(message, output)
 
-            val parsed = Json.parser.parseJson(output.toString()).jsonObject
+            val parsed = Json.default.parseJson(output.toString()).jsonObject
 
             it("includes the timestamp") {
                 assertThat(parsed.getPrimitive("@timestamp").content, equalTo("2017-09-25T11:55:13.001234Z"))
@@ -83,7 +82,7 @@ object LogMessageWriterSpec : Spek({
             val output = CloseableByteArrayOutputStream()
             writer.writeTo(message, output)
 
-            val parsed = Json.parser.parseJson(output.toString()).jsonObject
+            val parsed = Json.default.parseJson(output.toString()).jsonObject
 
             it("includes the timestamp") {
                 assertThat(parsed.getPrimitive("@timestamp").content, equalTo("2017-09-25T11:55:13.001234Z"))

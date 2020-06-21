@@ -147,7 +147,7 @@ object DockerContainerCreationRequestSpec : Spek({
             }
 
             on("converting it to JSON for logging") {
-                val json = Json.parser.stringify(DockerContainerCreationRequest.serializer(), request)
+                val json = Json.default.stringify(DockerContainerCreationRequest.serializer(), request)
 
                 it("returns a JSON representation of the Kotlin object") {
                     assertThat(json, equivalentTo("""

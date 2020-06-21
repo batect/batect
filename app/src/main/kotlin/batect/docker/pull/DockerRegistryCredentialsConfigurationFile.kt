@@ -49,7 +49,7 @@ class DockerRegistryCredentialsConfigurationFile(
         }
 
         val configFileContent = Files.readAllBytes(configFilePath).toString(Charset.defaultCharset())
-        return Json.nonstrictParser.parse(DockerConfigFile.serializer(), configFileContent)
+        return Json.ignoringUnknownKeys.parse(DockerConfigFile.serializer(), configFileContent)
     }
 
     fun getCredentialsForRegistry(registry: String): DockerRegistryCredentialsSource? {

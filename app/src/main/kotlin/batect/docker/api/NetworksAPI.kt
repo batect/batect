@@ -140,7 +140,7 @@ class NetworksAPI(
     }
 
     private fun networkFromResponse(response: Response): DockerNetwork {
-        val parsedResponse = Json.parser.parseJson(response.body!!.string()).jsonObject
+        val parsedResponse = Json.default.parseJson(response.body!!.string()).jsonObject
         val networkId = parsedResponse.getValue("Id").primitive.content
         return DockerNetwork(networkId)
     }

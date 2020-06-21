@@ -111,7 +111,7 @@ object TaskSpec : Spek({
             )
 
             it("serializes to the expected JSON") {
-                assertThat(Json.parser.stringify(Task.serializer(), task), equivalentTo("""
+                assertThat(Json.default.stringify(Task.serializer(), task), equivalentTo("""
                     {
                         "description": "Does the thing.",
                         "group": "Things",

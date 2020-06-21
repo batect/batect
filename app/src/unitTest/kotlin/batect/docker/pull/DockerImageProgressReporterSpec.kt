@@ -395,7 +395,7 @@ object DockerImageProgressReporterSpec : Spek({
 })
 
 private fun DockerImageProgressReporter.processRawProgressUpdate(json: String): DockerImageProgress? {
-    val parsedJson = Json.parser.parseJson(json).jsonObject
+    val parsedJson = Json.default.parseJson(json).jsonObject
 
     return this.processProgressUpdate(parsedJson)
 }

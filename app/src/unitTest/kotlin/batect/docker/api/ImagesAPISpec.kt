@@ -452,7 +452,7 @@ private class ProgressReceiver {
 private fun receivedAllUpdatesFrom(response: String): Matcher<ProgressReceiver> = receivedAllUpdatesFrom(response.lines())
 
 private fun receivedAllUpdatesFrom(lines: Iterable<String>): Matcher<ProgressReceiver> {
-    val expectedUpdates = lines.map { Json.parser.parseJson(it).jsonObject }
+    val expectedUpdates = lines.map { Json.default.parseJson(it).jsonObject }
 
     return has(ProgressReceiver::updatesReceived, equalTo(expectedUpdates))
 }

@@ -132,7 +132,7 @@ class ImagesAPI(
 
         sink.use {
             response.body!!.charStream().forEachLine { line ->
-                val parsedLine = Json.parser.parseJson(line).jsonObject
+                val parsedLine = Json.default.parseJson(line).jsonObject
                 val output = parsedLine.getPrimitiveOrNull("stream")?.content
                 val error = parsedLine.getPrimitiveOrNull("error")?.content
 
@@ -208,7 +208,7 @@ class ImagesAPI(
                 }
 
                 response.body!!.charStream().forEachLine { line ->
-                    val parsedLine = Json.parser.parseJson(line).jsonObject
+                    val parsedLine = Json.default.parseJson(line).jsonObject
 
                     if (parsedLine.containsKey("error")) {
                         val message = parsedLine.getValue("error").primitive.content

@@ -125,7 +125,7 @@ object CommandSpec : Spek({
             given("a command") {
                 val command = Command.parse("the-command --the-arg")
 
-                val json by createForEachTest { Json.parser.stringify(Command.serializer(), command) }
+                val json by createForEachTest { Json.default.stringify(Command.serializer(), command) }
 
                 it("represents the command as an array") {
                     assertThat(json, equivalentTo("""["the-command", "--the-arg"]"""))

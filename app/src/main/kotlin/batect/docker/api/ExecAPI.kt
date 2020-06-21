@@ -74,7 +74,7 @@ class ExecAPI(
                 throw ExecFailedException("Output from Docker was: ${error.message}")
             }
 
-            val instance = Json.nonstrictParser.parse(DockerExecInstance.serializer(), response.body!!.string())
+            val instance = Json.ignoringUnknownKeys.parse(DockerExecInstance.serializer(), response.body!!.string())
 
             logger.info {
                 message("Exec instance created.")
@@ -157,7 +157,7 @@ class ExecAPI(
                 throw ExecInstanceInspectionFailedException("Could not inspect exec instance '${instance.id}': ${error.message}")
             }
 
-            return Json.nonstrictParser.parse(DockerExecInstanceInfo.serializer(), response.body!!.string())
+            return Json.ignoringUnknownKeys.parse(DockerExecInstanceInfo.serializer(), response.body!!.string())
         }
     }
 

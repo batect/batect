@@ -82,7 +82,7 @@ class ContainersAPI(
                 throw ContainerCreationFailedException("Output from Docker was: ${error.message}")
             }
 
-            val parsedResponse = Json.parser.parseJson(response.body!!.string()).jsonObject
+            val parsedResponse = Json.default.parseJson(response.body!!.string()).jsonObject
             val containerId = parsedResponse.getValue("Id").primitive.content
 
             logger.info {
@@ -149,7 +149,7 @@ class ContainersAPI(
                 throw ContainerInspectionFailedException("Could not inspect container '${container.id}': ${error.message}")
             }
 
-            return Json.nonstrictParser.parse(DockerContainerInfo.serializer(), response.body!!.string())
+            return Json.ignoringUnknownKeys.parse(DockerContainerInfo.serializer(), response.body!!.string())
         }
     }
 
@@ -301,7 +301,7 @@ class ContainersAPI(
                 }
 
                 val responseBody = response.body!!.string()
-                val parsedResponse = Json.parser.parseJson(responseBody).jsonObject
+                val parsedResponse = Json.default.parseJson(responseBody).jsonObject
 
                 logger.info {
                     message("Container exited.")
@@ -519,7 +519,7 @@ class ContainersAPI(
             buffer.append(this.readUtf8CodePoint().toChar())
 
             try {
-                return Json.parser.parseJson(buffer.toString()).jsonObject
+                return Json.default.parseJson(buffer.toString()).jsonObject
             } catch (e: Exception) {
                 when (e) {
                     is JsonDecodingException, is StringIndexOutOfBoundsException -> {} // Haven't read a full JSON object yet, keep reading.

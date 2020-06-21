@@ -191,7 +191,7 @@ object ConsoleInfoSpec : Spek({
 
             val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables(), logger) }
 
-            val json by runForEachTest { Json.parser.stringify(ConsoleInfo.serializer(), consoleInfo) }
+            val json by runForEachTest { Json.default.stringify(ConsoleInfo.serializer(), consoleInfo) }
 
             it("includes all details") {
                 assertThat(json, equivalentTo("""{

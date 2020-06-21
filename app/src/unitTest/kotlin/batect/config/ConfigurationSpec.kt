@@ -61,7 +61,7 @@ object ConfigurationSpec : Spek({
 
                 val configuration = Configuration("the-project", TaskMap(task), ContainerMap())
 
-                val json by createForEachTest { Json.parser.stringify(Configuration.serializer(), configuration) }
+                val json by createForEachTest { Json.default.stringify(Configuration.serializer(), configuration) }
 
                 it("serializes the configuration to the expected value") {
                     assertThat(json, equivalentTo("""
@@ -126,7 +126,7 @@ object ConfigurationSpec : Spek({
 
                 val configuration = Configuration("the-project", TaskMap(), ContainerMap(container))
 
-                val json by createForEachTest { Json.parser.stringify(Configuration.serializer(), configuration) }
+                val json by createForEachTest { Json.default.stringify(Configuration.serializer(), configuration) }
 
                 it("serializes the configuration to the expected value") {
                     assertThat(json, equivalentTo("""
@@ -207,7 +207,7 @@ object ConfigurationSpec : Spek({
 
                 val configuration = Configuration("the-project", TaskMap(), ContainerMap(container))
 
-                val json by createForEachTest { Json.parser.stringify(Configuration.serializer(), configuration) }
+                val json by createForEachTest { Json.default.stringify(Configuration.serializer(), configuration) }
 
                 it("serializes the configuration to the expected value") {
                     assertThat(json, equivalentTo("""
@@ -258,7 +258,7 @@ object ConfigurationSpec : Spek({
             given("a single config variable") {
                 val configVariable = ConfigVariableDefinition("some-variable", "Some description", "Some default")
                 val configuration = Configuration("the-project", TaskMap(), ContainerMap(), ConfigVariableMap(configVariable))
-                val json by createForEachTest { Json.parser.stringify(Configuration.serializer(), configuration) }
+                val json by createForEachTest { Json.default.stringify(Configuration.serializer(), configuration) }
 
                 it("serializes the configuration to the expected value") {
                     assertThat(json, equivalentTo("""

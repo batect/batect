@@ -60,7 +60,7 @@ abstract class APIBase(
             return
         }
 
-        val parsedError = Json.parser.parseJson(responseBody).jsonObject
+        val parsedError = Json.default.parseJson(responseBody).jsonObject
         val message = parsedError.getValue("message").primitive.content
             .correctLineEndings()
 

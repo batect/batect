@@ -175,7 +175,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("serializing system info") {
-            val json by runForEachTest { Json.parser.toJson(SystemInfo.serializer(), SystemInfo(nativeMethods, fileSystem, systemProperties)).jsonObject }
+            val json by runForEachTest { Json.default.toJson(SystemInfo.serializer(), SystemInfo(nativeMethods, fileSystem, systemProperties)).jsonObject }
 
             it("only includes the expected fields") {
                 assertThat(json.keys, equalTo(setOf("operatingSystem", "jvmVersion", "osVersion", "homeDirectory", "lineSeparator", "tempDirectory", "userName")))

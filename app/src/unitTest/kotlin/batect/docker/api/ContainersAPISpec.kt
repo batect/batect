@@ -130,7 +130,7 @@ object ContainersAPISpec : Spek({
 
                     it("creates the container with the expected settings") {
                         verify(clientWithLongTimeout).newCall(requestWithJsonBody { body ->
-                            assertThat(body, equalTo(Json.parser.parseJson(request.toJson())))
+                            assertThat(body, equalTo(Json.default.parseJson(request.toJson())))
                         })
                     }
 

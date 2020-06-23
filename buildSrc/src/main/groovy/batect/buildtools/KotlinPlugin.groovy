@@ -161,9 +161,9 @@ class KotlinPlugin implements Plugin<Project> {
 
         def generateCoverage = System.getProperty("generateCoverage", "false")
 
-        project.tasks.withType(Test).configureEach {
-            jacoco {
-                enabled = generateCoverage == "true" && it.name == "test"
+        project.tasks.withType(Test).configureEach { task ->
+            task.jacoco {
+                enabled = generateCoverage == "true" && task.name == "test"
             }
         }
     }

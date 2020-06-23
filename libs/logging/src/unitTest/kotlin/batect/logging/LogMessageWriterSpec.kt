@@ -17,11 +17,11 @@
 package batect.logging
 
 import batect.testutils.CloseableByteArrayOutputStream
-import batect.testutils.on
-import batect.utils.Json
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonConfiguration
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.ZoneOffset
@@ -32,12 +32,12 @@ object LogMessageWriterSpec : Spek({
         val writer = LogMessageWriter()
         val messageTime = ZonedDateTime.of(2017, 9, 25, 11, 55, 13, 1234 * 1000, ZoneOffset.UTC)
 
-        on("writing a message with no extra data") {
+        describe("writing a message with no extra data") {
             val message = LogMessage(Severity.Info, "This is the message", messageTime, emptyMap())
             val output = CloseableByteArrayOutputStream()
             writer.writeTo(message, output)
 
-            val parsed = Json.default.parseJson(output.toString()).jsonObject
+            val parsed = Json(JsonConfiguration.Stable).parseJson(output.toString()).jsonObject
 
             it("includes the timestamp") {
                 assertThat(parsed.getPrimitive("@timestamp").content, equalTo("2017-09-25T11:55:13.001234Z"))
@@ -68,7 +68,7 @@ object LogMessageWriterSpec : Spek({
             }
         }
 
-        on("writing a message with extra data") {
+        describe("writing a message with extra data") {
             val message = LogMessage(
                 Severity.Info,
                 "This is the message",
@@ -82,7 +82,7 @@ object LogMessageWriterSpec : Spek({
             val output = CloseableByteArrayOutputStream()
             writer.writeTo(message, output)
 
-            val parsed = Json.default.parseJson(output.toString()).jsonObject
+            val parsed = Json(JsonConfiguration.Stable).parseJson(output.toString()).jsonObject
 
             it("includes the timestamp") {
                 assertThat(parsed.getPrimitive("@timestamp").content, equalTo("2017-09-25T11:55:13.001234Z"))

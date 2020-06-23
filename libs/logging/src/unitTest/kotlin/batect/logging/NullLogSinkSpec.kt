@@ -16,7 +16,6 @@
 
 package batect.logging
 
-import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
@@ -26,7 +25,7 @@ object NullLogSinkSpec : Spek({
     describe("a null log sink") {
         val sink = NullLogSink()
 
-        on("receiving a log message") {
+        describe("receiving a log message") {
             var invoked = false
 
             sink.write(Severity.Info, emptyMap()) {

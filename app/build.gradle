@@ -47,20 +47,17 @@ dependencies {
     implementation 'com.hypirion:io:0.3.1'
     implementation project(':libs:logging')
 
+    testCommonImplementation project(':libs:testutils')
     testImplementation 'org.araqnid:hamkrest-json:1.1.2'
-    // We don't use mockito directly, but mockito-kotlin does refer to it, so override it to get the latest version.
-    testImplementation 'org.mockito:mockito-core:3.3.3'
-    testImplementation 'com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0'
     testImplementation 'com.google.jimfs:jimfs:1.1'
     testImplementation 'com.squareup.okhttp3:mockwebserver'
 }
 
-apply from: 'gradle/testCommon.gradle'
+check.dependsOn(':libs:check')
+
 apply from: 'gradle/integrationTest.gradle'
-apply from: 'gradle/jacoco.gradle'
 apply from: 'gradle/journeyTest.gradle'
 apply from: 'gradle/performanceTest.gradle'
 apply from: 'gradle/profiling.gradle'
 apply from: 'gradle/shadow.gradle'
-apply from: 'gradle/unitTest.gradle'
 apply from: 'gradle/versionInfo.gradle'

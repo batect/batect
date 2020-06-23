@@ -16,7 +16,6 @@
 
 package batect.logging
 
-import batect.testutils.on
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
@@ -58,7 +57,7 @@ object FileLogSinkSpec : Spek({
 
         val sink = FileLogSink(path, writer, standardAdditionalDataSource, timestampSource)
 
-        on("writing a log message") {
+        describe("writing a log message") {
             sink.write(Severity.Info, mapOf("someAdditionalInfo" to JsonableObject("someValue", String.serializer()))) {
                 message("This is the message")
                 data("someLocalInfo", 888)

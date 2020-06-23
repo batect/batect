@@ -16,8 +16,6 @@
 
 package batect.logging
 
-import batect.Application
-import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.sameInstance
@@ -28,25 +26,25 @@ import org.spekframework.spek2.style.specification.describe
 object LoggerFactorySpec : Spek({
     describe("a logger factory") {
         describe("creating loggers") {
-            on("creating the first logger for a class") {
+            describe("creating the first logger for a class") {
                 val logSink = mock<LogSink>()
                 val loggerFactory = LoggerFactory(logSink)
-                val logger = loggerFactory.createLoggerForClass(Application::class)
+                val logger = loggerFactory.createLoggerForClass(TestLoggingClass::class)
 
                 it("returns a logger configured with the provided log sink") {
                     assertThat(logger.destination, equalTo(logSink))
                 }
 
                 it("returns a logger configured with the class' fully-qualified name") {
-                    assertThat(logger.sourceName, equalTo("batect.Application"))
+                    assertThat(logger.sourceName, equalTo("batect.logging.TestLoggingClass"))
                 }
             }
 
-            on("creating a second logger for a class") {
+            describe("creating a second logger for a class") {
                 val logSink = mock<LogSink>()
                 val loggerFactory = LoggerFactory(logSink)
-                val firstLogger = loggerFactory.createLoggerForClass(Application::class)
-                val secondLogger = loggerFactory.createLoggerForClass(Application::class)
+                val firstLogger = loggerFactory.createLoggerForClass(TestLoggingClass::class)
+                val secondLogger = loggerFactory.createLoggerForClass(TestLoggingClass::class)
 
                 it("returns the same logger instance both times") {
                     assertThat(secondLogger, sameInstance(firstLogger))
@@ -55,3 +53,5 @@ object LoggerFactorySpec : Spek({
         }
     }
 })
+
+private class TestLoggingClass

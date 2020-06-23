@@ -14,22 +14,11 @@
    limitations under the License.
 */
 
-sourceSets {
-    test {
-        kotlin {
-            srcDirs = ['src/unitTest/kotlin']
-        }
-
-        resources {
-            srcDirs = ['src/unitTest/resources']
-        }
-
-        compileClasspath += testCommon.output
-        runtimeClasspath += testCommon.output
-    }
+plugins {
+    id 'batect-kotlin'
 }
 
-configurations {
-    testImplementation.extendsFrom testCommonImplementation
-    testRuntimeOnly.extendsFrom testCommonRuntimeOnly
+dependencies {
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'org.spekframework.spek2:spek-dsl-jvm:2.0.11'
 }

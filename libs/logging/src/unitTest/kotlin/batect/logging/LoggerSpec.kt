@@ -17,7 +17,6 @@
 package batect.logging
 
 import batect.testutils.createForEachTest
-import batect.testutils.on
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import kotlinx.serialization.builtins.serializer
@@ -32,7 +31,7 @@ object LoggerSpec : Spek({
         val loggerAdditionalInfo = mapOf("@source" to JsonableObject("some.source", String.serializer()))
         val buildFun: LogMessageBuilder.() -> LogMessageBuilder = { this }
 
-        on("logging a debug-level message") {
+        describe("logging a debug-level message") {
             beforeEachTest { logger.debug(buildFun) }
 
             it("forwards the message to the log sink with the name of the source") {
@@ -40,7 +39,7 @@ object LoggerSpec : Spek({
             }
         }
 
-        on("logging a info-level message") {
+        describe("logging a info-level message") {
             beforeEachTest { logger.info(buildFun) }
 
             it("forwards the message to the log sink with the name of the source") {
@@ -48,7 +47,7 @@ object LoggerSpec : Spek({
             }
         }
 
-        on("logging a warning-level message") {
+        describe("logging a warning-level message") {
             beforeEachTest { logger.warn(buildFun) }
 
             it("forwards the message to the log sink with the name of the source") {
@@ -56,7 +55,7 @@ object LoggerSpec : Spek({
             }
         }
 
-        on("logging a error-level message") {
+        describe("logging a error-level message") {
             beforeEachTest { logger.error(buildFun) }
 
             it("forwards the message to the log sink with the name of the source") {

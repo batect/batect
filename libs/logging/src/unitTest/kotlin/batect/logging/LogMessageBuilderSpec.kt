@@ -16,11 +16,10 @@
 
 package batect.logging
 
-import batect.testutils.on
-import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.hasElement
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
@@ -41,7 +40,7 @@ object LogMessageBuilderSpec : Spek({
             on { getAdditionalData() } doReturn mapOf("@something" to JsonableObject(456, Int.serializer()))
         }
 
-        on("building a log message with no message or additional information") {
+        describe("building a log message with no message or additional information") {
             val builder = LogMessageBuilder(Severity.Info)
             val message = builder.build(timestampSource, standardAdditionalDataSource)
 
@@ -64,7 +63,7 @@ object LogMessageBuilderSpec : Spek({
             }
         }
 
-        on("building a log message with a message") {
+        describe("building a log message with a message") {
             val builder = LogMessageBuilder(Severity.Debug)
                 .message("Some message")
 
@@ -89,7 +88,7 @@ object LogMessageBuilderSpec : Spek({
             }
         }
 
-        on("building a log message with some additional data") {
+        describe("building a log message with some additional data") {
             val builder = LogMessageBuilder(Severity.Info)
                 .data("some-key", 123)
                 .data("some-other-data", "value")
@@ -117,7 +116,7 @@ object LogMessageBuilderSpec : Spek({
             }
         }
 
-        on("building a log message with some logger-provided additional data") {
+        describe("building a log message with some logger-provided additional data") {
             val builder = LogMessageBuilder(Severity.Info, mapOf("@source" to JsonableObject("some.class.name", String.serializer())))
                 .data("some-key", 123)
                 .data("some-other-data", "value")
@@ -146,15 +145,15 @@ object LogMessageBuilderSpec : Spek({
             }
         }
 
-        on("building a log message with some additional data with a key that starts with a '@'") {
+        describe("building a log message with some additional data with a key that starts with a '@'") {
             val builder = LogMessageBuilder(Severity.Info)
 
             it("throws an exception when attempting to add that additional data") {
-                assertThat({ builder.data("@some-data", "some-value") }, throws(withMessage("Cannot add additional data with the key '@some-data': keys may not start with '@'.")))
+                assertThat({ builder.data("@some-data", "some-value") }, throws(has(Throwable::message, equalTo("Cannot add additional data with the key '@some-data': keys may not start with '@'."))))
             }
         }
 
-        on("building a log message with an exception") {
+        describe("building a log message with an exception") {
             val exceptionCause = RuntimeException("Something else went wrong")
             val exception = RuntimeException("Something went wrong", exceptionCause)
             val builder = LogMessageBuilder(Severity.Debug)

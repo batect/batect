@@ -28,18 +28,18 @@ build_script:
 
 after_test:
   - ./gradlew --stop
-  - ps: Remove-Item          ${env:GRADLE_USER_HOME}\caches\modules-2\modules-2.lock
-  - ps: Remove-Item -Recurse ${env:GRADLE_USER_HOME}\caches\*\plugin-resolution\
-  - ps: Remove-Item -Recurse ${env:GRADLE_USER_HOME}\caches\*\scripts\
-  - ps: Remove-Item -Recurse ${env:GRADLE_USER_HOME}\caches\*\scripts-remapped\
-  - ps: Remove-Item -Recurse ${env:GRADLE_USER_HOME}\caches\*\fileHashes\
-  - ps: Remove-Item          ${env:GRADLE_USER_HOME}\caches\*\fileContent\*.lock
-  - ps: Remove-Item          ${env:GRADLE_USER_HOME}\caches\*\javaCompile\*.lock
-  - ps: Remove-Item          ${env:GRADLE_USER_HOME}\caches\*\executionHistory\*.lock
-  - ps: Remove-Item          ${env:GRADLE_USER_HOME}\caches\*\generated-gradle-jars\*.lock
-  - ps: Remove-Item          ${env:GRADLE_USER_HOME}\caches\jars-3\*.lock
-  - ps: Remove-Item          ${env:GRADLE_USER_HOME}\caches\journal-1\file-access.bin
-  - ps: Remove-Item          ${env:GRADLE_USER_HOME}\caches\journal-1\*.lock
+  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\modules-2\modules-2.lock
+  - ps: Remove-Item -ErrorAction SilentlyContinue -Recurse ${env:GRADLE_USER_HOME}\caches\*\plugin-resolution\
+  - ps: Remove-Item -ErrorAction SilentlyContinue -Recurse ${env:GRADLE_USER_HOME}\caches\*\scripts\
+  - ps: Remove-Item -ErrorAction SilentlyContinue -Recurse ${env:GRADLE_USER_HOME}\caches\*\scripts-remapped\
+  - ps: Remove-Item -ErrorAction SilentlyContinue -Recurse ${env:GRADLE_USER_HOME}\caches\*\fileHashes\
+  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\*\fileContent\*.lock
+  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\*\javaCompile\*.lock
+  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\*\executionHistory\*.lock
+  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\*\generated-gradle-jars\*.lock
+  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\jars-*\*.lock
+  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\journal-1\file-access.bin
+  - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\journal-1\*.lock
 
 cache:
   - '%GRADLE_USER_HOME%\caches'

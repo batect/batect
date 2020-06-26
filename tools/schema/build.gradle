@@ -115,6 +115,14 @@ tasks.register("validateSampleFilesAgainstSchema") {
             throw new RuntimeException("Schema validation failed for ${failingFiles.size()} file(s).")
         }
     }
+
+    def upToDateFile = getTemporaryDir().toPath().resolve("lastRun")
+    outputs.file upToDateFile
+
+    doLast {
+        // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java
+        upToDateFile.text = System.currentTimeMillis()
+    }
 }
 
 tasks.register("check") {

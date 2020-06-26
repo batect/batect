@@ -16,7 +16,7 @@
 
 apply from: "$rootDir/gradle/utilities.gradle"
 
-task validateVersionMatchesTag {
+tasks.register("validateVersionMatchesTag") {
     description 'Validates that the version currently configured in Gradle matches the current Git commit tag.'
     group 'Verification'
 
@@ -33,7 +33,7 @@ task validateVersionMatchesTag {
     }
 }
 
-task validateIsReleaseBuild {
+tasks.register("validateIsReleaseBuild") {
     description 'Validates that the current build is a release build.'
     group 'Verification'
 
@@ -44,7 +44,7 @@ task validateIsReleaseBuild {
     }
 }
 
-task validateRelease {
+tasks.register("validateRelease") {
     description 'Validates that the current commit is ready to be released.'
     group 'Verification'
 

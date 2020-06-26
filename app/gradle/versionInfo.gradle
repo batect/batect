@@ -52,7 +52,7 @@ String versionInfoFileContents() {
 
 def versionInfoFile = Paths.get("$projectDir/src/main/kotlin/batect/VersionInfo.kt").toFile()
 
-task generateVersionInfoFile {
+tasks.register("generateVersionInfoFile") {
     description 'Generates the version info file that is compiled into the application.'
     group 'Build'
 
@@ -68,13 +68,17 @@ task generateVersionInfoFile {
     }
 }
 
-compileKotlin.dependsOn generateVersionInfoFile
+tasks.named("compileKotlin").configure {
+    dependsOn generateVersionInfoFile
+}
 
-task cleanVersionInfo(type: Delete) {
+tasks.register("cleanVersionInfo", Delete) {
     description 'Removes the generated version info file.'
     group 'Other'
 
     delete versionInfoFile
 }
 
-clean.dependsOn cleanVersionInfo
+tasks.named("clean").configure {
+    dependsOn cleanVersionInfo
+}

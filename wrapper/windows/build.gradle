@@ -31,7 +31,7 @@ buildscript {
 def powershellTemplateFile = project.file 'src/template.ps1'
 def batchTemplateFile = project.file 'src/template.cmd'
 
-task build {
+tasks.register("build") {
     description 'Build the wrapper script.'
     group 'Build'
 
@@ -66,7 +66,7 @@ task build {
     }
 }
 
-task copyTestJar(type: Copy) {
+tasks.register("copyTestJar", Copy) {
     description 'Copies the test application JAR into place for use during the wrapper script tests.'
     group 'Build'
 
@@ -74,7 +74,7 @@ task copyTestJar(type: Copy) {
     into "test"
 }
 
-task test(type: Exec) {
+tasks.register("test", Exec) {
     description 'Runs the unit tests.'
     group 'Verification'
 
@@ -97,7 +97,7 @@ task test(type: Exec) {
     }
 }
 
-task check {
+tasks.register("check") {
     description 'Runs all checks.'
     group 'Verification'
 

@@ -24,25 +24,25 @@ class PerformanceTestPlugin implements Plugin<Project> {
     void apply(Project project) {
         PerformanceTestExtension extension = project.extensions.create("performanceTest", PerformanceTestExtension.class, project)
 
-        def performanceTestScenarios = project.tasks.register("performanceTestScenarios")
+        project.tasks.withType(PerformanceTestScenario.class) { scenario ->
+            scenario.outputDirectory.set(extension.testScenarioResultsDirectory)
+        }
+
+        def performanceTestScenarios = project.tasks.register("performanceTestScenarios") {
+            it.dependsOn(project.tasks.withType(PerformanceTestScenario.class))
+        }
 
         def performanceTestReport = project.tasks.register("performanceTestReport", PerformanceTestReport.class) {
             it.testScenarioResultsDirectory.set(extension.testScenarioResultsDirectory)
             it.testResultsDirectory.set(extension.testResultsDirectory)
 
+            it.mustRunAfter(project.tasks.withType(PerformanceTestScenario.class))
             it.mustRunAfter(performanceTestScenarios)
         }
 
         project.tasks.register("performanceTest") {
             it.dependsOn(performanceTestScenarios)
             it.dependsOn(performanceTestReport)
-        }
-
-        project.tasks.withType(PerformanceTestScenario.class) { scenario ->
-            scenario.outputDirectory = extension.testScenarioResultsDirectory
-
-            performanceTestScenarios.configure { it.dependsOn(scenario) }
-            performanceTestReport.configure { it.mustRunAfter(scenario) }
         }
     }
 }

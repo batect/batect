@@ -53,7 +53,9 @@ dependencies {
     testImplementation 'com.squareup.okhttp3:mockwebserver'
 }
 
-check.dependsOn(':libs:check')
+tasks.named("check").configure {
+    dependsOn ':libs:check'
+}
 
 apply from: 'gradle/integrationTest.gradle'
 apply from: 'gradle/journeyTest.gradle'

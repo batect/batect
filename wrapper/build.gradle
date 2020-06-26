@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-task build(type: Copy) {
+tasks.register("build", Copy) {
     description 'Build the wrapper scripts.'
     group 'Build'
 

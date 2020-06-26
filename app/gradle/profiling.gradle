@@ -16,7 +16,7 @@
 
 // Use this like this: ./gradlew profileApp --args='-f ./src/journeyTest/resources/simple-task-using-image/batect.yml --list-tasks'
 // Note that this is configured for macOS, for Linux change the agentpath argument below.
-task profileApp(type: JavaExec) {
+tasks.register("profileApp", JavaExec) {
     dependsOn jar
 
     classpath = sourceSets.main.runtimeClasspath

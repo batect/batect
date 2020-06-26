@@ -26,7 +26,7 @@ configurations {
     integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
 }
 
-task integrationTest(type: Test) {
+tasks.register("integrationTest", Test) {
     description 'Runs the integration tests.'
     group 'Verification'
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
@@ -35,6 +35,10 @@ task integrationTest(type: Test) {
     mustRunAfter test
 }
 
-check.dependsOn(integrationTestClasses)
+tasks.named("check").configure {
+    dependsOn integrationTestClasses
+}
 
-integrationTestClasses.mustRunAfter(test)
+tasks.named("integrationTestClasses").configure {
+    mustRunAfter test
+}

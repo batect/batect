@@ -30,7 +30,7 @@ buildscript {
 def templateFilePath = 'src/template.sh'
 def templateFile = project.file templateFilePath
 
-task shellcheck(type: Exec) {
+tasks.register("shellcheck", Exec) {
     description 'Runs the shellcheck linter on the wrapper script template.'
     group 'Verification'
 
@@ -50,7 +50,7 @@ task shellcheck(type: Exec) {
     }
 }
 
-task copyTestJar(type: Copy) {
+tasks.register("copyTestJar", Copy) {
     description 'Copies the test application JAR into place for use during the wrapper script tests.'
     group 'Build'
 
@@ -60,7 +60,7 @@ task copyTestJar(type: Copy) {
 
 def testEnvironmentImageName = 'batect-wrapper-test-env'
 
-task buildTestEnvironmentImage(type: Exec) {
+tasks.register("buildTestEnvironmentImage", Exec) {
     description 'Build the Docker image used as a test environment.'
     group 'Verification'
 
@@ -81,7 +81,7 @@ task buildTestEnvironmentImage(type: Exec) {
     }
 }
 
-task build {
+tasks.register("build") {
     description 'Build the wrapper script.'
     group 'Build'
 
@@ -107,7 +107,7 @@ task build {
     }
 }
 
-task test(type: Exec) {
+tasks.register("test", Exec) {
     description 'Runs the unit tests.'
     group 'Verification'
 
@@ -131,7 +131,7 @@ task test(type: Exec) {
     }
 }
 
-task check {
+tasks.register("check") {
     description 'Runs all checks.'
     group 'Verification'
 

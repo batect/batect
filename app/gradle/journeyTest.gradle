@@ -32,7 +32,7 @@ dependencies {
 
 abstract class JourneyTest extends Test {}
 
-tasks.withType(JourneyTest) {
+tasks.withType(JourneyTest).configureEach {
     group 'Verification'
     testClassesDirs = sourceSets.journeyTest.output.classesDirs
     classpath = sourceSets.journeyTest.runtimeClasspath
@@ -46,7 +46,7 @@ tasks.withType(JourneyTest) {
 def windowsTests = 'batect/journeytests/windowscontainers/**'
 def cleanupTests = 'batect/journeytests/cleanup/**'
 
-task journeyTestWindowsContainers(type: JourneyTest) {
+tasks.register("journeyTestWindowsContainers", JourneyTest) {
     description 'Runs the journey tests for Windows containers.'
 
     include windowsTests
@@ -54,7 +54,7 @@ task journeyTestWindowsContainers(type: JourneyTest) {
     onlyIf { project.properties.containsKey("windowsContainers") }
 }
 
-task journeyTestLinuxContainersParallelisable(type: JourneyTest) {
+tasks.register("journeyTestLinuxContainersParallelisable", JourneyTest) {
     description 'Runs the journey tests for Linux containers that can run in parallel.'
 
     exclude windowsTests
@@ -65,7 +65,7 @@ task journeyTestLinuxContainersParallelisable(type: JourneyTest) {
     maxParallelForks = 4
 }
 
-task journeyTestLinuxContainersNonParallelisable(type: JourneyTest) {
+tasks.register("journeyTestLinuxContainersNonParallelisable", JourneyTest) {
     description 'Runs the journey tests for Linux containers that cannot run in parallel.'
 
     include cleanupTests
@@ -73,7 +73,7 @@ task journeyTestLinuxContainersNonParallelisable(type: JourneyTest) {
     onlyIf { !project.properties.containsKey("windowsContainers") }
 }
 
-task journeyTestLinuxContainers {
+tasks.register("journeyTestLinuxContainers") {
     description 'Runs the journey tests for Linux containers.'
     group 'Verification'
 
@@ -81,7 +81,7 @@ task journeyTestLinuxContainers {
     dependsOn journeyTestLinuxContainersNonParallelisable
 }
 
-task journeyTest {
+tasks.register("journeyTest") {
     description 'Runs the journey tests.'
     group 'Verification'
 

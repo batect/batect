@@ -27,7 +27,7 @@ apply from: "$rootDir/gradle/spotless.gradle"
 apply from: "$rootDir/gradle/utilities.gradle"
 apply from: "$rootDir/gradle/versioning.gradle"
 
-task assembleRelease(type: Copy) {
+tasks.register("assembleRelease", Copy) {
     description 'Prepares files for release.'
     group 'Distribution'
 

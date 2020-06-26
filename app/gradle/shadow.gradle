@@ -15,7 +15,7 @@
 */
 
 // See https://github.com/johnrengelman/shadow/issues/389#issuecomment-440431318 for an explanation of this.
-tasks.withType(AbstractArchiveTask) {
+tasks.withType(AbstractArchiveTask).configureEach {
     preserveFileTimestamps = false
     reproducibleFileOrder = true
 }

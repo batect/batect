@@ -17,18 +17,18 @@
 def outputDir = getBuildDir().toPath().resolve("docs")
 def imageName = 'squidfunk/mkdocs-material:5.1.4'
 
-task buildDocs(type: Exec) {
+tasks.register("buildDocs", Exec) {
     commandLine 'docker', 'run', '--rm', '-v', "${project.projectDir}:/docs", '--entrypoint', 'sh', imageName, 'build.sh'
 }
 
-task copyConfigSchema(type: Copy) {
+tasks.register("copyConfigSchema", Copy) {
     from "${rootProject.rootDir}/tools/schema/configSchema.json"
     into outputDir
 
     mustRunAfter buildDocs
 }
 
-task build {
+tasks.register("build") {
     description 'Build the documentation.'
     group 'Build'
 
@@ -36,13 +36,13 @@ task build {
     dependsOn copyConfigSchema
 }
 
-task serve(type: Exec) {
+tasks.register("serve", Exec) {
     description 'Serve the documentation from a local web server and rebuild it when the source changes.'
     group 'Build'
 
     commandLine 'docker', 'run', '--rm', '-i', '-p', '8000:8000', '-v', "${project.projectDir}:/docs", imageName, "serve", "-a", "0.0.0.0:8000"
 }
 
-task clean(type: Delete) {
+tasks.register("clean", Delete) {
     delete outputDir
 }

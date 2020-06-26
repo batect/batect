@@ -87,7 +87,7 @@ void printReport(ProcessingReport report, File sourceFile) {
     }
 }
 
-task validateSampleFilesAgainstSchema {
+tasks.register("validateSampleFilesAgainstSchema") {
     description 'Checks that all sample configuration files are acceptable according to the schema.'
     group 'Verification'
 
@@ -117,7 +117,7 @@ task validateSampleFilesAgainstSchema {
     }
 }
 
-task check {
+tasks.register("check") {
     description 'Runs all checks.'
     group 'Verification'
 

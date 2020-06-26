@@ -18,7 +18,7 @@ import java.nio.file.Paths
 
 def bintrayDescriptorFile = Paths.get("$buildDir/bintray/descriptor.json").toFile()
 
-task generateBintrayDescriptor {
+tasks.register("generateBintrayDescriptor") {
     description 'Generates the manifest file used to upload files to Bintray.'
     group 'Build'
 

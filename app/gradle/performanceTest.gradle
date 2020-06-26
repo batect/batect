@@ -23,7 +23,7 @@ sourceSets {
     performanceTest {}
 }
 
-task versionPerformanceScenario(type: PerformanceTestScenario) {
+tasks.register("versionPerformanceScenario", PerformanceTestScenario) {
     description = "Run ./batect --version"
     args = ["--version"]
 }
@@ -35,49 +35,49 @@ def outputOptions = [
 ]
 
 outputOptions.each { option, name ->
-    task "singleContainerExistingImage${name}OutputScenario"(type: PerformanceTestScenario) {
+    tasks.register("singleContainerExistingImage${name}OutputScenario", PerformanceTestScenario) {
         description = "Run a task that starts a single container (which uses an image that has been pulled) in ${name.toLowerCase()} output mode"
         before = ["docker pull alpine:3.7"]
         args = [option, "the-task"]
         workingDirectory = "src/performanceTest/resources/single-container-existing-image"
     }
 
-    task "singleContainerBuiltImage${name}OutputScenario"(type: PerformanceTestScenario) {
+    tasks.register("singleContainerBuiltImage${name}OutputScenario", PerformanceTestScenario) {
         description = "Run a task that starts a single container (which uses an image that has been built) in ${name.toLowerCase()} output mode"
         before = ["docker build containers/test-env"]
         args = [option, "the-task"]
         workingDirectory = "src/performanceTest/resources/single-container-built-image"
     }
 
-    task "containerChainSameImage${name}OutputScenario"(type: PerformanceTestScenario) {
+    tasks.register("containerChainSameImage${name}OutputScenario", PerformanceTestScenario) {
         description = "Run a task that starts a container which has a chain of dependencies A->B->C (all of which use the same image that has already been pulled) in ${name.toLowerCase()} output mode"
         before = ["docker pull alpine:3.7"]
         args = [option, "the-task"]
         workingDirectory = "src/performanceTest/resources/container-dependency-chain-same-image"
     }
 
-    task "containerChainDifferentImages${name}OutputScenario"(type: PerformanceTestScenario) {
+    tasks.register("containerChainDifferentImages${name}OutputScenario", PerformanceTestScenario) {
         description = "Run a task that starts a container which has a chain of dependencies A->B->C (each of which use different images that have already been pulled) in ${name.toLowerCase()} output mode"
         before = ["docker pull alpine:3.7", "docker pull alpine:3.6", "docker pull alpine:3.5"]
         args = [option, "the-task"]
         workingDirectory = "src/performanceTest/resources/container-dependency-chain-different-images"
     }
 
-    task "containerTwoDependenciesSameImage${name}OutputScenario"(type: PerformanceTestScenario) {
+    tasks.register("containerTwoDependenciesSameImage${name}OutputScenario", PerformanceTestScenario) {
         description = "Run a task that starts a container which has a two direct dependencies B and C (all of which use the same image that has already been pulled) in ${name.toLowerCase()} output mode"
         before = ["docker pull alpine:3.7"]
         args = [option, "the-task"]
         workingDirectory = "src/performanceTest/resources/container-two-dependencies-same-image"
     }
 
-    task "containerTwoDependenciesDifferentImages${name}OutputScenario"(type: PerformanceTestScenario) {
+    tasks.register("containerTwoDependenciesDifferentImages${name}OutputScenario", PerformanceTestScenario) {
         description = "Run a task that starts a container which has a two direct dependencies B and C (each of which use different images that have already been pulled) in ${name.toLowerCase()} output mode"
         before = ["docker pull alpine:3.7", "docker pull alpine:3.6", "docker pull alpine:3.5"]
         args = [option, "the-task"]
         workingDirectory = "src/performanceTest/resources/container-two-dependencies-different-images"
     }
 
-    task "taskWithTwoPrerequisites${name}OutputScenario"(type: PerformanceTestScenario) {
+    tasks.register("taskWithTwoPrerequisites${name}OutputScenario", PerformanceTestScenario) {
         description = "Run a task that has two prerequisites in ${name.toLowerCase()} output mode"
         before = ["docker pull alpine:3.7"]
         args = [option, "the-task"]
@@ -85,7 +85,7 @@ outputOptions.each { option, name ->
     }
 }
 
-tasks.withType(PerformanceTestScenario) {
+tasks.withType(PerformanceTestScenario).configureEach {
     dependsOn "installShadowDist"
     executable = tasks.getByName("installShadowDist").outputs.files.singleFile.toPath().resolve("bin/batect").toFile()
 }

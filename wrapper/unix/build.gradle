@@ -65,6 +65,7 @@ tasks.register("buildTestEnvironmentImage", Exec) {
     group 'Verification'
 
     def imageDirectory = project.file "test/test-env"
+    inputs.dir imageDirectory
 
     standardOutput = new ByteArrayOutputStream()
     errorOutput = standardOutput

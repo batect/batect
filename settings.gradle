@@ -14,12 +14,16 @@
    limitations under the License.
 */
 
-// From https://stackoverflow.com/a/34121857/1668119
-fileTree('.') {
-    include '**/build.gradle'
-    exclude 'build.gradle'
-    exclude 'buildSrc/build.gradle'
-}.collect { relativePath(it.parent).replace(File.separator, ':') }
-    .each { include(it) }
-
 rootProject.name = 'batect'
+
+include ':app'
+include ':docs'
+include ':libs'
+include ':libs:logging'
+include ':libs:testutils'
+include ':tools'
+include ':tools:schema'
+include ':wrapper'
+include ':wrapper:testapp'
+include ':wrapper:unix'
+include ':wrapper:windows'

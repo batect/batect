@@ -46,7 +46,8 @@ spotless {
     format 'gradle', {
         target '**/*.gradle'
 
-        licenseHeader "/*$licenseText*/\n\n", "(buildscript|import|apply|ext|allprojects|task|sourceSets|plugins|def|//|pluginManagement)"
+        // Check what values are really required with: find . -name '*.gradle' -type f -exec sed -n 17p {} \; | cut -d' ' -f1 | sort | uniq
+        licenseHeader "/*$licenseText*/\n\n", "(//|apply|def|ext|import|plugins|rootProject|sourceSets|tasks)"
     }
 
     format 'groovy', {

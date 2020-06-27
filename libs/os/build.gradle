@@ -20,7 +20,7 @@ plugins {
 
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0-1.4.0-dev-5730'
     implementation 'com.github.jnr:jnr-posix:3.0.57'
 
     implementation project(':libs:abstractions')

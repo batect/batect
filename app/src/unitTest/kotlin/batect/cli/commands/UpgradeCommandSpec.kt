@@ -30,7 +30,7 @@ import batect.updates.ScriptInfo
 import batect.updates.UpdateInfo
 import batect.updates.UpdateInfoDownloadException
 import batect.updates.UpdateInfoDownloader
-import batect.utils.Version
+import batect.Version
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat

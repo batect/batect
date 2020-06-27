@@ -16,8 +16,8 @@
 
 package batect.os.proxies
 
+import batect.mapToSet
 import batect.os.HostEnvironmentVariables
-import batect.utils.mapToSet
 import java.util.TreeSet
 
 class ProxyEnvironmentVariablesProvider(
@@ -61,7 +61,7 @@ class ProxyEnvironmentVariablesProvider(
             return extraEntries
         }
 
-        return existingValue + "," + extraEntries
+        return "$existingValue,$extraEntries"
     }
 
     private fun Map<String, String>.getMatchingCaseOrOtherCase(key: String): String? {

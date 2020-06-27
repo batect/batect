@@ -51,7 +51,7 @@ object RunContainerSetupCommandsStepSpec : Spek({
                     |       "additionalEnvironmentVariables": {
                     |           "VAR": {"type":"LiteralValue", "value":"value"}
                     |       },
-                    |       "additionalPortMappings": [{"local": "123", "container": "456"}]
+                    |       "additionalPortMappings": [{"local": "123", "container": "456", "protocol": "tcp"}]
                     |   },
                     |   "dockerContainer": {"id": "the-container-id", "name": null}
                     |}

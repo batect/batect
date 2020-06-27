@@ -17,12 +17,12 @@
 package batect.integrationtests
 
 import batect.config.Container
-import batect.config.DeviceMount
-import batect.config.HealthCheckConfig
-import batect.config.PortMapping
 import batect.docker.DockerContainerCreationRequest
+import batect.docker.DockerDeviceMount
+import batect.docker.DockerHealthCheckConfig
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.docker.DockerPortMapping
 import batect.docker.DockerVolumeMount
 import batect.docker.UserAndGroup
 import java.util.UUID
@@ -32,8 +32,8 @@ fun creationRequestForContainer(
     network: DockerNetwork,
     command: List<String>,
     volumeMounts: Set<DockerVolumeMount> = emptySet(),
-    deviceMounts: Set<DeviceMount> = emptySet(),
-    portMappings: Set<PortMapping> = emptySet(),
+    deviceMounts: Set<DockerDeviceMount> = emptySet(),
+    portMappings: Set<DockerPortMapping> = emptySet(),
     userAndGroup: UserAndGroup? = null,
     useTTY: Boolean = true
 ): DockerContainerCreationRequest {
@@ -51,7 +51,7 @@ fun creationRequestForContainer(
         volumeMounts,
         deviceMounts,
         portMappings,
-        HealthCheckConfig(),
+        DockerHealthCheckConfig(),
         userAndGroup,
         privileged = false,
         init = false,

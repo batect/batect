@@ -24,7 +24,7 @@ import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.DeleteTaskNetworkStep
 import batect.logging.ContainerNameSetSerializer
 import batect.os.OperatingSystem
-import batect.utils.mapToSet
+import batect.mapToSet
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 

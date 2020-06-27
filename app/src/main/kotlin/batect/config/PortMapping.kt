@@ -18,6 +18,7 @@ package batect.config
 
 import batect.config.io.ConfigurationException
 import batect.config.io.deserializers.tryToDeserializeWith
+import batect.docker.DockerPortMapping
 import batect.utils.pluralize
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.CompositeDecoder
@@ -41,6 +42,8 @@ data class PortMapping(
     override fun toString(): String {
         return "$local:$container"
     }
+
+    fun toDockerPortMapping() = DockerPortMapping(local.toDockerPortRange(), container.toDockerPortRange(), protocol)
 
     @Serializer(forClass = PortMapping::class)
     companion object : KSerializer<PortMapping> {
@@ -188,6 +191,7 @@ data class PortMapping(
 
             output.encodeSerializableElement(descriptor, localPortFieldIndex, PortRange.serializer(), value.local)
             output.encodeSerializableElement(descriptor, containerPortFieldIndex, PortRange.serializer(), value.container)
+            output.encodeSerializableElement(descriptor, protocolFieldIndex, String.serializer(), value.protocol)
 
             output.endStructure(descriptor)
         }

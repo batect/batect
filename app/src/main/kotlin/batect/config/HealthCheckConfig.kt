@@ -17,6 +17,7 @@
 package batect.config
 
 import batect.config.io.deserializers.DurationSerializer
+import batect.docker.DockerHealthCheckConfig
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.time.Duration
@@ -27,4 +28,6 @@ data class HealthCheckConfig(
     val retries: Int? = null,
     @SerialName("start_period") @Serializable(with = DurationSerializer::class) val startPeriod: Duration? = null,
     val command: String? = null
-)
+) {
+    fun toDockerHealthCheckConfig() = DockerHealthCheckConfig(interval, retries, startPeriod, command)
+}

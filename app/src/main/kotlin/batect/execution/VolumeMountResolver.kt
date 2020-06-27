@@ -27,7 +27,7 @@ import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
 import batect.os.PathResolutionResult
 import batect.os.PathResolverFactory
-import batect.utils.mapToSet
+import batect.mapToSet
 import java.nio.file.Files
 
 class VolumeMountResolver(

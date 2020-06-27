@@ -176,11 +176,12 @@ class RunAsCurrentUserConfigurationProvider(
             val parentMount = mounts.findClosestParentMount(mount)
 
             if (parentMount != null && parentMount.source is DockerVolumeMountSource.LocalPath) {
+                val source = parentMount.source as DockerVolumeMountSource.LocalPath
                 val thisPath = mount.containerPath.splitToPathSegments()
                 val parentPath = parentMount.containerPath.splitToPathSegments()
 
                 val directoriesToCreate = parentPath.relativePathTo(thisPath)
-                val path = fileSystem.getPath(parentMount.source.path, *directoriesToCreate.toTypedArray())
+                val path = fileSystem.getPath(source.path, *directoriesToCreate.toTypedArray())
                 Files.createDirectories(path)
             }
         }

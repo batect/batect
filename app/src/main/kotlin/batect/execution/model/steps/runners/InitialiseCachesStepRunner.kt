@@ -18,11 +18,11 @@ package batect.execution.model.steps.runners
 
 import batect.config.CacheMount
 import batect.config.Container
-import batect.config.HealthCheckConfig
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerContainerNameGenerator
 import batect.docker.DockerException
+import batect.docker.DockerHealthCheckConfig
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.DockerVolumeMount
@@ -99,7 +99,7 @@ class InitialiseCachesStepRunner(
                     val volumeMount = volumeMountResolver.resolve(cache)
 
                     if (volumeMount.source is DockerVolumeMountSource.Volume) {
-                        val volume = volumeMount.source
+                        val volume = volumeMount.source as DockerVolumeMountSource.Volume
 
                         if (!caches.containsKey(volume)) {
                             caches[volume] = userAndGroup
@@ -107,7 +107,7 @@ class InitialiseCachesStepRunner(
                         } else if (caches[volume] != userAndGroup) {
                             val otherContainer = cacheConfigSource.getValue(volume)
 
-                            throw InvalidCacheConfigurationException("Containers '${otherContainer.name}' and '${container.name}' share the '${cache.name}' cache, but one has run as current user enabled and the other does not. Caches can only be shared by containers if they either both have run as current user enabled or both have it disabled.")
+                            throw InvalidCacheConfigurationException("Containers '${otherContainer.name}' and '${container.name}' share the '${cache.name}' cache, but one container has run as current user enabled and the other does not. Caches can only be shared by containers if they either both have run as current user enabled or both have it disabled.")
                         }
                     }
                 }
@@ -146,7 +146,7 @@ class InitialiseCachesStepRunner(
             mounts,
             emptySet(),
             emptySet(),
-            HealthCheckConfig(),
+            DockerHealthCheckConfig(),
             null,
             false,
             false,

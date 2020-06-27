@@ -26,7 +26,7 @@ import batect.cli.options.OptionValueSource
 import batect.os.Dimensions
 import batect.testutils.given
 import batect.testutils.withPlatformSpecificLineSeparator
-import batect.ui.ConsoleDimensions
+import batect.os.ConsoleDimensions
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.doReturn

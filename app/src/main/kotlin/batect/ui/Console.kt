@@ -16,6 +16,7 @@
 
 package batect.ui
 
+import batect.os.ConsoleDimensions
 import batect.ui.text.Text
 import batect.ui.text.TextRun
 import java.io.PrintStream

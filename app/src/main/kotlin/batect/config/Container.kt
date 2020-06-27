@@ -17,6 +17,7 @@
 package batect.config
 
 import batect.config.io.ConfigurationException
+import batect.config.io.deserializers.CommandSerializer
 import batect.config.io.deserializers.DependencySetSerializer
 import batect.config.io.deserializers.EnvironmentSerializer
 import batect.config.io.deserializers.PathDeserializer
@@ -96,7 +97,7 @@ data class Container(
             element(buildArgsFieldName, EnvironmentSerializer.descriptor, isOptional = true)
             element(dockerfileFieldName, String.serializer().descriptor, isOptional = true)
             element(imageNameFieldName, String.serializer().descriptor, isOptional = true)
-            element(commandFieldName, Command.serializer().descriptor, isOptional = true)
+            element(commandFieldName, CommandSerializer.descriptor, isOptional = true)
             element(entrypointFieldName, String.serializer().descriptor, isOptional = true)
             element(environmentFieldName, EnvironmentSerializer.descriptor, isOptional = true)
             element(workingDirectoryFieldName, String.serializer().descriptor, isOptional = true)
@@ -179,8 +180,8 @@ data class Container(
                     buildArgsFieldIndex -> buildArgs = input.decodeSerializableElement(descriptor, i, EnvironmentSerializer)
                     dockerfileFieldIndex -> dockerfilePath = input.decodeStringElement(descriptor, i)
                     imageNameFieldIndex -> imageName = input.decodeStringElement(descriptor, i)
-                    commandFieldIndex -> command = input.decodeSerializableElement(descriptor, i, Command.Companion)
-                    entrypointFieldIndex -> entrypoint = input.decodeSerializableElement(descriptor, i, Command.Companion)
+                    commandFieldIndex -> command = input.decodeSerializableElement(descriptor, i, CommandSerializer)
+                    entrypointFieldIndex -> entrypoint = input.decodeSerializableElement(descriptor, i, CommandSerializer)
                     environmentFieldIndex -> environment = input.decodeSerializableElement(descriptor, i, EnvironmentSerializer)
                     workingDirectoryFieldIndex -> workingDirectory = input.decodeStringElement(descriptor, i)
                     volumeMountsFieldIndex -> volumeMounts = input.decodeSerializableElement(descriptor, i, VolumeMount.serializer().set)
@@ -274,8 +275,8 @@ data class Container(
                 }
             }
 
-            output.encodeSerializableElement(descriptor, commandFieldIndex, Command.serializer().nullable, value.command)
-            output.encodeSerializableElement(descriptor, entrypointFieldIndex, Command.serializer().nullable, value.entrypoint)
+            output.encodeSerializableElement(descriptor, commandFieldIndex, CommandSerializer.nullable, value.command)
+            output.encodeSerializableElement(descriptor, entrypointFieldIndex, CommandSerializer.nullable, value.entrypoint)
             output.encodeSerializableElement(descriptor, environmentFieldIndex, EnvironmentSerializer, value.environment)
             output.encodeSerializableElement(descriptor, workingDirectoryFieldIndex, String.serializer().nullable, value.workingDirectory)
             output.encodeSerializableElement(descriptor, volumeMountsFieldIndex, VolumeMount.serializer().set, value.volumeMounts)

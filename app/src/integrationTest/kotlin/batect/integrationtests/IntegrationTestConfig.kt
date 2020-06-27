@@ -43,6 +43,7 @@ import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.logging.Logger
+import batect.os.ConsoleDimensions
 import batect.os.ConsoleManager
 import batect.os.HostEnvironmentVariables
 import batect.os.NativeMethods
@@ -54,7 +55,6 @@ import batect.os.unix.UnixConsoleManager
 import batect.os.unix.UnixNativeMethods
 import batect.os.windows.WindowsConsoleManager
 import batect.os.windows.WindowsNativeMethods
-import batect.ui.ConsoleDimensions
 import batect.ui.ConsoleInfo
 import com.nhaarman.mockitokotlin2.mock
 import jnr.ffi.Platform

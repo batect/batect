@@ -106,7 +106,7 @@ object RunContainerSetupCommandsStepRuleSpec : Spek({
                     |       "additionalEnvironmentVariables": {
                     |           "VAR": {"type":"LiteralValue", "value":"value"}
                     |       },
-                    |       "additionalPortMappings": [{"local": "123", "container": "456"}]
+                    |       "additionalPortMappings": [{"local": "123", "container": "456", "protocol": "tcp"}]
                     |   }
                     |}
                 """.trimMargin()))

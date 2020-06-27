@@ -19,7 +19,7 @@ package batect.cli.commands
 import batect.cli.CommandLineOptionsParser
 import batect.cli.options.OptionDefinition
 import batect.cli.options.OptionGroup
-import batect.ui.ConsoleDimensions
+import batect.os.ConsoleDimensions
 import batect.utils.breakAt
 import java.io.PrintStream
 

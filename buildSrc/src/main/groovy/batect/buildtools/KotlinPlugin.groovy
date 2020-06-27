@@ -72,6 +72,10 @@ class KotlinPlugin implements Plugin<Project> {
             project.tasks.named('spotlessKotlinCheck') {
                 mustRunAfter 'test'
             }
+
+            project.tasks.named('spotlessKotlin') {
+                mustRunAfter 'test'
+            }
         }
     }
 

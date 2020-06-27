@@ -16,8 +16,8 @@
 
 package batect.logging
 
-import batect.utils.Version
+import batect.Version
 import okhttp3.HttpUrl
 
-fun LogMessageBuilder.data(key: String, value: Version) = data(key, value, Version.Companion)
 fun LogMessageBuilder.data(key: String, value: HttpUrl) = data(key, value.toString())
+fun LogMessageBuilder.data(key: String, value: Version) = data(key, value, Version.Companion)

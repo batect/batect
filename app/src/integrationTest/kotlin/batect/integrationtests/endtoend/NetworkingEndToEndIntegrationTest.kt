@@ -16,8 +16,8 @@
 
 package batect.integrationtests.endtoend
 
-import batect.config.PortMapping
 import batect.docker.DockerContainer
+import batect.docker.DockerPortMapping
 import batect.integrationtests.build
 import batect.integrationtests.createClient
 import batect.integrationtests.creationRequestForContainer
@@ -60,7 +60,7 @@ object NetworkingEndToEndIntegrationTest : Spek({
 
                     val response by runBeforeGroup {
                         client.withNetwork { network ->
-                            client.withContainer(creationRequestForContainer(image, network, emptyList(), portMappings = setOf(PortMapping(8080, 80)))) { container ->
+                            client.withContainer(creationRequestForContainer(image, network, emptyList(), portMappings = setOf(DockerPortMapping(8080, 80)))) { container ->
                                 runContainerAndGetHttpResponse(container)
                             }
                         }

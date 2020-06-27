@@ -17,23 +17,21 @@
 package batect.config.io.deserializers
 
 import batect.config.io.ConfigurationException
+import batect.logging.DurationLoggingSerializer
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.builtins.serializer
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 
 @Serializer(forClass = Duration::class)
-object DurationSerializer : KSerializer<Duration> {
-    override val descriptor: SerialDescriptor = String.serializer().descriptor
-
+object DurationSerializer : DurationLoggingSerializer() {
     private const val valueRegexString = """((\d+)|(\d+\.\d*)|(\d*\.\d+))(ns|\u00b5s|\u03bcs|us|ms|s|m|h)"""
     private val fullRegex = "^([+-])?(0|($valueRegexString)+)\$".toRegex()
     private val valueRegex = valueRegexString.toRegex()
+
+    override fun serialize(encoder: Encoder, value: Duration) = super.serialize(encoder, value)
 
     override fun deserialize(decoder: Decoder): Duration {
         val text = decoder.decodeString()
@@ -83,38 +81,4 @@ object DurationSerializer : KSerializer<Duration> {
     }
 
     private fun Sequence<Duration>.sum(): Duration = this.reduce { acc, item -> acc + item }
-
-    override fun serialize(encoder: Encoder, value: Duration) {
-        val builder = StringBuilder()
-        val absoluteDuration = value.abs()
-        val micros = (absoluteDuration.toNanos() / 1000)
-
-        builder.appendTimeUnit(absoluteDuration.toHours(), "h")
-        builder.appendTimeUnit(absoluteDuration.toMinutes() - (absoluteDuration.toHours() * 60), "m")
-        builder.appendTimeUnit(absoluteDuration.seconds - (absoluteDuration.toMinutes() * 60), "s")
-        builder.appendTimeUnit(absoluteDuration.toMillis() - (absoluteDuration.seconds * 1000), "ms")
-        builder.appendTimeUnit(micros - (absoluteDuration.toMillis() * 1000), "us")
-        builder.appendTimeUnit(absoluteDuration.toNanos() - (micros * 1000), "ns")
-
-        if (value.isZero) {
-            builder.append("0")
-        }
-
-        if (value.isNegative) {
-            builder.insert(0, "-")
-        }
-
-        encoder.encodeString(builder.toString())
-    }
-
-    private fun StringBuilder.appendTimeUnit(value: Long, abbreviation: String) {
-        if (value != 0L) {
-            if (this.isNotEmpty()) {
-                this.append(" ")
-            }
-
-            this.append(value)
-            this.append(abbreviation)
-        }
-    }
 }

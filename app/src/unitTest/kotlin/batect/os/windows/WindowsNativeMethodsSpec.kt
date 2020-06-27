@@ -19,6 +19,7 @@ package batect.os.windows
 import batect.os.Dimensions
 import batect.os.NativeMethodException
 import batect.os.NoConsoleException
+import batect.os.WindowsNativeMethodException
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given

@@ -18,6 +18,7 @@ package batect.config
 
 import batect.config.io.ConfigurationException
 import batect.config.io.deserializers.tryToDeserializeWith
+import batect.docker.DockerDeviceMount
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.CompositeDecoder
 import kotlinx.serialization.Decoder
@@ -44,6 +45,8 @@ data class DeviceMount(
             return "$localPath:$containerPath:$options"
         }
     }
+
+    fun toDockerMount() = DockerDeviceMount(localPath, containerPath, options)
 
     @Serializer(forClass = DeviceMount::class)
     companion object : KSerializer<DeviceMount> {

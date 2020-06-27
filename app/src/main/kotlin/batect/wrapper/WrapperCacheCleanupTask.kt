@@ -19,7 +19,7 @@ package batect.wrapper
 import batect.VersionInfo
 import batect.logging.Logger
 import batect.logging.data
-import batect.utils.Version
+import batect.Version
 import java.time.ZonedDateTime
 import kotlin.concurrent.thread
 

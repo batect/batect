@@ -23,7 +23,7 @@ import batect.os.SystemInfo
 import batect.testutils.on
 import batect.testutils.withPlatformSpecificLineSeparator
 import batect.updates.UpdateNotifier
-import batect.utils.Version
+import batect.Version
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.doReturn

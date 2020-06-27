@@ -14,12 +14,18 @@
    limitations under the License.
 */
 
+@file:UseSerializers(
+    CommandSerializer::class
+)
+
 package batect.config
 
+import batect.config.io.deserializers.CommandSerializer
 import batect.config.io.deserializers.EnvironmentSerializer
 import batect.os.Command
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
 
 @Serializable
 data class TaskRunConfiguration(

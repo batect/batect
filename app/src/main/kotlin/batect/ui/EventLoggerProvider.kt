@@ -18,6 +18,7 @@ package batect.ui
 
 import batect.config.Task
 import batect.execution.ContainerDependencyGraph
+import batect.os.ConsoleDimensions
 import batect.ui.containerio.TaskContainerOnlyIOStreamingOptions
 import batect.ui.fancy.CleanupProgressDisplay
 import batect.ui.fancy.FancyEventLogger

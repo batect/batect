@@ -18,6 +18,7 @@ package batect.docker
 
 import batect.config.Container
 import batect.execution.ContainerRuntimeConfiguration
+import batect.mapToSet
 
 class DockerContainerCreationRequestFactory(
     private val environmentVariableProvider: DockerContainerEnvironmentVariableProvider,
@@ -47,9 +48,9 @@ class DockerContainerCreationRequestFactory(
             environmentVariableProvider.environmentVariablesFor(container, config, propagateProxyEnvironmentVariables, terminalType),
             config.workingDirectory,
             volumeMounts,
-            container.deviceMounts,
-            container.portMappings + config.additionalPortMappings,
-            container.healthCheckConfig,
+            container.deviceMounts.mapToSet { it.toDockerMount() },
+            (container.portMappings + config.additionalPortMappings).mapToSet { it.toDockerPortMapping() },
+            container.healthCheckConfig.toDockerHealthCheckConfig(),
             userAndGroup,
             container.privileged,
             container.enableInitProcess,

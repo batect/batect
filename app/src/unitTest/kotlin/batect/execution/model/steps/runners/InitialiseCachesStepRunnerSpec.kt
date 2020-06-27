@@ -18,7 +18,6 @@ package batect.execution.model.steps.runners
 
 import batect.config.CacheMount
 import batect.config.Container
-import batect.config.HealthCheckConfig
 import batect.config.LiteralValue
 import batect.config.LocalMount
 import batect.docker.DockerContainer
@@ -26,6 +25,7 @@ import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerContainerNameGenerator
 import batect.docker.DockerContainerRunResult
 import batect.docker.DockerException
+import batect.docker.DockerHealthCheckConfig
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.DockerVolumeMount
@@ -140,7 +140,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                         mounts,
                         emptySet(),
                         emptySet(),
-                        HealthCheckConfig(),
+                        DockerHealthCheckConfig(),
                         null,
                         false,
                         false,
@@ -404,7 +404,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
 
                     beforeEachTest { runWithContainers(containerType, container1, container2) }
 
-                    itEmitsACacheInitialisationFailedEvent("Containers 'container-1' and 'container-2' share the 'some-cache' cache, but one has run as current user enabled and the other does not. Caches can only be shared by containers if they either both have run as current user enabled or both have it disabled.")
+                    itEmitsACacheInitialisationFailedEvent("Containers 'container-1' and 'container-2' share the 'some-cache' cache, but one container has run as current user enabled and the other does not. Caches can only be shared by containers if they either both have run as current user enabled or both have it disabled.")
                     itDoesNotRunTheCacheInitImage()
                 }
             }

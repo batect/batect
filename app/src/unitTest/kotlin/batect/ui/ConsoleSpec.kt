@@ -16,6 +16,7 @@
 
 package batect.ui
 
+import batect.os.ConsoleDimensions
 import batect.os.Dimensions
 import batect.testutils.createForEachTest
 import batect.testutils.given

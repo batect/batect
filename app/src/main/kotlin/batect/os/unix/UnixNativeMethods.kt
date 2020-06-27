@@ -17,9 +17,9 @@
 package batect.os.unix
 
 import batect.os.Dimensions
-import batect.os.NativeMethodException
 import batect.os.NativeMethods
 import batect.os.NoConsoleException
+import batect.os.UnixNativeMethodException
 import jnr.constants.platform.Errno
 import jnr.ffi.LibraryLoader
 import jnr.ffi.Platform
@@ -139,5 +139,3 @@ data class PlatformSpecificConstant<T>(val darwinValue: T, val linuxValue: T) {
         else -> throw UnsupportedOperationException("The platform ${platform.os.name} is not supported.")
     }
 }
-
-class UnixNativeMethodException(method: String, val error: Errno) : NativeMethodException(method, error.name, error.description())

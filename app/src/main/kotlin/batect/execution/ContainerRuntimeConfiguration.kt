@@ -14,12 +14,18 @@
    limitations under the License.
 */
 
+@file:UseSerializers(
+    CommandSerializer::class
+)
+
 package batect.execution
 
 import batect.config.Expression
 import batect.config.PortMapping
+import batect.config.io.deserializers.CommandSerializer
 import batect.os.Command
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
 
 @Serializable
 data class ContainerRuntimeConfiguration(

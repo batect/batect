@@ -19,9 +19,9 @@ package batect.ui.fancy
 import batect.config.Container
 import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerDependencyGraphNode
+import batect.os.ConsoleDimensions
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
-import batect.ui.ConsoleDimensions
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.doReturn

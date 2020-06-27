@@ -17,7 +17,7 @@
 package batect.ui.fancy
 
 import batect.execution.ContainerDependencyGraph
-import batect.ui.ConsoleDimensions
+import batect.os.ConsoleDimensions
 
 class StartupProgressDisplayProvider(private val consoleDimensions: ConsoleDimensions) {
     fun createForDependencyGraph(graph: ContainerDependencyGraph): StartupProgressDisplay {

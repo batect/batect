@@ -16,9 +16,6 @@
 
 package batect.utils
 
-import okio.Buffer
-import okio.Sink
-import okio.Timeout
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -36,16 +33,4 @@ fun deleteDirectoryContents(directory: Path) {
             Files.delete(path)
         }
     }
-}
-
-fun tee(vararg sinks: Sink): Sink = object : Sink {
-    override fun close() = sinks.forEach { it.close() }
-    override fun flush() = sinks.forEach { it.flush() }
-    override fun write(source: Buffer, byteCount: Long) {
-        sinks.forEach { it.write(source.copy(), byteCount) }
-
-        source.skip(byteCount)
-    }
-
-    override fun timeout(): Timeout = throw UnsupportedOperationException()
 }

@@ -28,7 +28,7 @@ import batect.testutils.runForEachTest
 import batect.testutils.withAdditionalData
 import batect.testutils.withLogMessage
 import batect.testutils.withSeverity
-import batect.utils.Version
+import batect.Version
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.and

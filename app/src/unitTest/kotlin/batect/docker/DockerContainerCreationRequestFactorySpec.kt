@@ -142,15 +142,15 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 }
 
                 it("populates the device mounts on the request with the device mounts from the container") {
-                    assertThat(request.deviceMounts, equalTo(container.deviceMounts))
+                    assertThat(request.deviceMounts, equalTo(setOf(DockerDeviceMount("/dev/local", "/dev/container", "options"))))
                 }
 
                 it("populates the port mappings on the request with the port mappings from the container") {
-                    assertThat(request.portMappings, equalTo(container.portMappings))
+                    assertThat(request.portMappings, equalTo(setOf(DockerPortMapping(123, 456))))
                 }
 
                 it("populates the health check configuration on the request with the health check configuration from the container") {
-                    assertThat(request.healthCheckConfig, equalTo(container.healthCheckConfig))
+                    assertThat(request.healthCheckConfig, equalTo(DockerHealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(5))))
                 }
 
                 it("populates the user and group configuration on the request with the provided values") {
@@ -210,8 +210,8 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     assertThat(
                         request.portMappings, equalTo(
                             setOf(
-                                PortMapping(123, 456),
-                                PortMapping(1000, 2000)
+                                DockerPortMapping(123, 456),
+                                DockerPortMapping(1000, 2000)
                             )
                         )
                     )

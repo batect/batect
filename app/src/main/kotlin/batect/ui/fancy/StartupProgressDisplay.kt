@@ -17,9 +17,9 @@
 package batect.ui.fancy
 
 import batect.execution.model.events.TaskEvent
+import batect.os.ConsoleDimensions
 import batect.os.Dimensions
 import batect.ui.Console
-import batect.ui.ConsoleDimensions
 import batect.ui.text.TextRun
 
 class StartupProgressDisplay(

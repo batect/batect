@@ -20,8 +20,8 @@ import batect.docker.client.DockerSystemInfoClient
 import batect.docker.client.DockerVersionInfoRetrievalResult
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
-import batect.utils.Version
-import batect.utils.VersionComparisonMode
+import batect.Version
+import batect.VersionComparisonMode
 
 class DockerHostNameResolver(
     private val systemInfo: SystemInfo,

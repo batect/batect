@@ -23,9 +23,11 @@ import batect.execution.model.rules.data
 import batect.execution.model.steps.TaskStep
 import batect.execution.model.steps.data
 import batect.logging.Logger
+import batect.utils.Json
+import org.spekframework.spek2.dsl.LifecycleAware
 
 fun logRepresentationOf(step: TaskStep): String {
-    val sink = InMemoryLogSink()
+    val sink = InMemoryLogSink(Json.forLogging)
     val logger = Logger("test logger", sink)
 
     logger.info {
@@ -36,7 +38,7 @@ fun logRepresentationOf(step: TaskStep): String {
 }
 
 fun logRepresentationOf(rule: TaskStepRule): String {
-    val sink = InMemoryLogSink()
+    val sink = InMemoryLogSink(Json.forLogging)
     val logger = Logger("test logger", sink)
 
     logger.info {
@@ -47,7 +49,7 @@ fun logRepresentationOf(rule: TaskStepRule): String {
 }
 
 fun logRepresentationOf(event: TaskEvent): String {
-    val sink = InMemoryLogSink()
+    val sink = InMemoryLogSink(Json.forLogging)
     val logger = Logger("test logger", sink)
 
     logger.info {
@@ -56,3 +58,5 @@ fun logRepresentationOf(event: TaskEvent): String {
 
     return sink.loggedMessages.single().additionalData.getValue("event").toJSON(sink.writer.json).toString()
 }
+
+fun LifecycleAware.createLoggerForEachTest() = createForEachTest { Logger("test logger", InMemoryLogSink(Json.forLogging)) }

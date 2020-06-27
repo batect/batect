@@ -16,12 +16,13 @@
 
 package batect.config
 
+import batect.config.io.deserializers.CommandSerializer
 import batect.os.Command
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class SetupCommand(
-    val command: Command,
+    @Serializable(with = CommandSerializer::class) val command: Command,
     @SerialName("working_directory") val workingDirectory: String? = null
 )

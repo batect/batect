@@ -29,7 +29,7 @@ import batect.logging.Logger
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
 import batect.os.PathResolverFactory
-import batect.utils.flatMapToSet
+import batect.flatMapToSet
 import com.charleskorn.kaml.EmptyYamlDocumentException
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlConfiguration

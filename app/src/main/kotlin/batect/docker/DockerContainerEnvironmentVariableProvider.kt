@@ -23,7 +23,7 @@ import batect.config.ExpressionEvaluationException
 import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerRuntimeConfiguration
 import batect.os.proxies.ProxyEnvironmentVariablesProvider
-import batect.utils.mapToSet
+import batect.mapToSet
 
 class DockerContainerEnvironmentVariableProvider(
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,

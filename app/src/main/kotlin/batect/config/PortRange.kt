@@ -17,6 +17,7 @@
 package batect.config
 
 import batect.config.io.ConfigurationException
+import batect.docker.DockerPortRange
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
@@ -41,6 +42,8 @@ data class PortRange(val from: Int, val to: Int) {
     }
 
     val size = to - from + 1
+
+    fun toDockerPortRange() = DockerPortRange(from, to)
 
     override fun toString(): String = if (size == 1) { from.toString() } else { "$from-$to" }
 

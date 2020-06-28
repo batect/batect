@@ -39,3 +39,12 @@ dependencies {
     testImplementation project(':libs:logging-test-utils')
     testImplementation project(':libs:test-utils')
 }
+
+checkUnitTestLayout {
+    ignoreFileNameCheck = fileTree(
+        dir: 'src/unitTest/kotlin',
+        includes: [
+            'batect/docker/api/Assertions.kt'
+        ]
+    )
+}

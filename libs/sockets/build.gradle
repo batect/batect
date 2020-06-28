@@ -29,3 +29,12 @@ dependencies {
 
     testImplementation project(':libs:test-utils')
 }
+
+checkUnitTestLayout {
+    ignoreFileNameCheck = fileTree(
+        dir: 'src/unitTest/kotlin',
+        includes: [
+            'batect/sockets/namedpipes/NamedPipeTestServer.kt',
+        ]
+    )
+}

@@ -82,10 +82,7 @@ class KotlinPlugin implements Plugin<Project> {
     private void configureTesting(Project project) {
         configureCommonTesting(project)
         configureUnitTesting(project)
-
-        def checkUnitTestLayout = project.tasks.register('checkUnitTestLayout', UnitTestLayoutCheck.class) {
-            mustRunAfter 'test'
-        }
+        configureUnitTestLayoutCheck(project)
     }
 
     private void configureCommonTesting(Project project) {
@@ -151,6 +148,21 @@ class KotlinPlugin implements Plugin<Project> {
             // We don't use mockito directly, but mockito-kotlin does refer to it, so override it to get the latest version.
             testImplementation 'org.mockito:mockito-core:3.3.3'
             testImplementation 'com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0'
+        }
+    }
+
+    private void configureUnitTestLayoutCheck(Project project) {
+        def checkUnitTestLayoutExtension = project.extensions.create("checkUnitTestLayout", UnitTestLayoutCheckExtension.class, project)
+
+        def checkUnitTestLayoutTask = project.tasks.register('checkUnitTestLayout', UnitTestLayoutCheckTask.class) {
+            mustRunAfter 'test'
+
+            ignoreFileNameCheck.set(checkUnitTestLayoutExtension.ignoreFileNameCheck)
+            ignoreMissingMainFile.set(checkUnitTestLayoutExtension.ignoreMissingMainFile)
+        }
+
+        project.tasks.named('check') {
+            dependsOn checkUnitTestLayoutTask
         }
     }
 

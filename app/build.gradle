@@ -57,6 +57,24 @@ tasks.named("check").configure {
     dependsOn ':libs:check'
 }
 
+checkUnitTestLayout {
+    ignoreFileNameCheck = fileTree(
+        dir: 'src/unitTest/kotlin',
+        includes: [
+            'batect/cli/commands/FakeDockerConnectivity.kt',
+            'batect/testutils/**',
+        ]
+    )
+
+    ignoreMissingMainFile = fileTree(
+        dir: 'src/unitTest/kotlin',
+        includes: [
+            'batect/execution/model/steps/*.kt',
+            'batect/execution/model/events/*.kt',
+        ]
+    )
+}
+
 apply from: 'gradle/integrationTest.gradle'
 apply from: 'gradle/journeyTest.gradle'
 apply from: 'gradle/performanceTest.gradle'

@@ -1,310 +1,341 @@
+# Generated with https://github.com/charleskorn/dependabot-config-generator
+# Re-generate this file with: npx github:charleskorn/dependabot-config-generator --label is:dependency-update --ignore */build/**
+
 version: 2
 updates:
-- package-ecosystem: gradle
-  directory: "/libs/test-utils"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: gradle
-  directory: "/libs/sockets"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: gradle
-  directory: "/libs/logging-test-utils"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: gradle
-  directory: "/libs/logging"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: gradle
-  directory: "/libs/docker-client"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: gradle
-  directory: "/libs/abstractions"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: gradle
-  directory: "/libs"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/dockerfile-with-add-from-url/build-env"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/dockerfile-command/build-env"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/cache-mount/build-env"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: gradle
-  directory: "/wrapper/windows"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: gradle
-  directory: "/wrapper/unix"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: gradle
-  directory: "/wrapper/testapp"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: gradle
-  directory: "/wrapper"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: gradle
-  directory: "/tools/schema"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/wrapper/unix/test/test-env"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/task-with-unhealthy-dependency/http-server"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/task-with-slow-healthy-dependency/dependency"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/task-with-explicit-dependency/http-server"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/task-with-explicit-dependency/build-env"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/symlinks-in-build-context/build-env"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/proxy-variables/build-env"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/container-with-dependency/http-server"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/container-with-dependency/build-env"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/container-with-dependency-chain/proxy"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/container-with-additional-hostname/http-server"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/task-container-with-setup-command/task-env"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/dependency-container-with-setup-command/task-env"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/performanceTest/resources/single-container-built-image/containers/test-env"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/container-with-additional-hostname/build-env"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: gradle
-  directory: "/docs"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: gradle
-  directory: "/buildSrc"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: gradle
-  directory: "/"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: gradle
-  directory: "/app"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/integrationTest/resources/test-images/basic-image"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/container-with-dependency-chain/build-env"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/integrationTest/resources/test-images/image-with-expose"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/build-arg/build-env"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/integrationTest/resources/test-images/image-without-expose"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/simple-task-using-dockerfile/build-env"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/task-with-healthy-dependency/build-env"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/task-with-healthy-dependency/http-server"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/container-with-dependency-chain/http-server"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
-- package-ecosystem: docker
-  directory: "/app/src/journeyTest/resources/container-with-health-check-overrides/dependency"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - is:dependency-update
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/integrationTest/resources/test-images/basic-image
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/integrationTest/resources/test-images/image-with-expose
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/integrationTest/resources/test-images/image-without-expose
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/build-arg/build-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/cache-mount/build-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/container-with-additional-hostname/build-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/container-with-additional-hostname/http-server
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/container-with-dependency-chain/build-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/container-with-dependency-chain/http-server
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/container-with-dependency-chain/proxy
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/container-with-dependency/build-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/container-with-dependency/http-server
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/container-with-health-check-overrides/dependency
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/dependency-container-with-setup-command/task-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/dockerfile-command/build-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/dockerfile-with-add-from-url/build-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/proxy-variables/build-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/simple-task-using-dockerfile/build-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/symlinks-in-build-context/build-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/task-container-with-setup-command/task-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/task-with-explicit-dependency/build-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/task-with-explicit-dependency/http-server
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/task-with-healthy-dependency/build-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/task-with-healthy-dependency/http-server
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/task-with-slow-healthy-dependency/dependency
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/journeyTest/resources/task-with-unhealthy-dependency/http-server
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app/src/performanceTest/resources/single-container-built-image/containers/test-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: tools/logViewer/controller
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: tools/logViewer/elasticsearch
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: tools/logViewer/kibana
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: wrapper/unix/test/test-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: app
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: /
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: buildSrc
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: docs
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: libs/abstractions
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: libs
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: libs/docker-client
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: libs/logging-test-utils
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: libs/logging
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: libs/os
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: libs/sockets
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: libs/test-utils
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: tools/schema
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: wrapper
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: wrapper/testapp
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: wrapper/unix
+    open-pull-requests-limit: 10
+  - package-ecosystem: gradle
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: wrapper/windows
+    open-pull-requests-limit: 10

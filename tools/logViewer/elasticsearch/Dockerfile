@@ -1,4 +1,4 @@
-FROM docker.elastic.co/elasticsearch/elasticsearch:6.6.2
+FROM docker.elastic.co/elasticsearch/elasticsearch:7.8.0
 
 RUN mkdir -p /tools
 COPY health-check.sh /tools

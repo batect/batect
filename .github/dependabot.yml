@@ -1,5 +1,5 @@
 # Generated with https://github.com/charleskorn/dependabot-config-generator
-# Re-generate this file with: npx github:charleskorn/dependabot-config-generator --label is:dependency-update --ignore */build/**
+# Re-generate this file with: npx github:charleskorn/dependabot-config-generator --label is:dependency-update --ignore */build/** --ignore tools/logViewer/**
 
 version: 2
 updates:
@@ -191,27 +191,6 @@ updates:
     labels:
       - is:dependency-update
     directory: app/src/performanceTest/resources/single-container-built-image/containers/test-env
-    open-pull-requests-limit: 10
-  - package-ecosystem: docker
-    schedule:
-      interval: daily
-    labels:
-      - is:dependency-update
-    directory: tools/logViewer/controller
-    open-pull-requests-limit: 10
-  - package-ecosystem: docker
-    schedule:
-      interval: daily
-    labels:
-      - is:dependency-update
-    directory: tools/logViewer/elasticsearch
-    open-pull-requests-limit: 10
-  - package-ecosystem: docker
-    schedule:
-      interval: daily
-    labels:
-      - is:dependency-update
-    directory: tools/logViewer/kibana
     open-pull-requests-limit: 10
   - package-ecosystem: docker
     schedule:

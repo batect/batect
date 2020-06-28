@@ -25,12 +25,12 @@ import batect.config.TaskRunConfiguration
 import batect.logging.Logger
 import batect.logging.Severity
 import batect.testutils.logging.InMemoryLogSink
-import batect.testutils.hasMessage
+import batect.testutils.logging.hasMessage
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
-import batect.testutils.withAdditionalData
-import batect.testutils.withLogMessage
-import batect.testutils.withSeverity
+import batect.testutils.logging.withAdditionalData
+import batect.testutils.logging.withLogMessage
+import batect.testutils.logging.withSeverity
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.mock

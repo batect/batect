@@ -31,12 +31,12 @@ import batect.os.SystemInfo
 import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.given
-import batect.testutils.hasMessage
+import batect.testutils.logging.hasMessage
 import batect.testutils.on
 import batect.testutils.runForEachTest
-import batect.testutils.withException
+import batect.testutils.logging.withException
 import batect.testutils.withPlatformSpecificLineSeparator
-import batect.testutils.withSeverity
+import batect.testutils.logging.withSeverity
 import batect.ui.Console
 import batect.ui.text.Text
 import batect.wrapper.WrapperCache

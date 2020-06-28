@@ -49,7 +49,6 @@ dependencies {
 
     testImplementation 'org.araqnid:hamkrest-json:1.1.2'
     testImplementation 'com.google.jimfs:jimfs:1.1'
-    testImplementation 'com.squareup.okhttp3:mockwebserver'
     testImplementation project(':libs:test-utils')
     testImplementation project(':libs:logging-test-utils')
 }

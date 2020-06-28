@@ -20,12 +20,13 @@ import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.on
 import batect.testutils.runForEachTest
-import batect.utils.Json
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.json.JsonLiteral
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -175,7 +176,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("serializing system info") {
-            val json by runForEachTest { Json.default.toJson(SystemInfo.serializer(), SystemInfo(nativeMethods, fileSystem, systemProperties)).jsonObject }
+            val json by runForEachTest { Json(JsonConfiguration.Stable).toJson(SystemInfo.serializer(), SystemInfo(nativeMethods, fileSystem, systemProperties)).jsonObject }
 
             it("only includes the expected fields") {
                 assertThat(json.keys, equalTo(setOf("operatingSystem", "jvmVersion", "osVersion", "homeDirectory", "lineSeparator", "tempDirectory", "userName")))

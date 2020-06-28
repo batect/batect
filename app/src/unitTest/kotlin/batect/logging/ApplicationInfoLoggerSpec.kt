@@ -23,11 +23,11 @@ import batect.os.HostEnvironmentVariables
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
 import batect.testutils.logging.InMemoryLogSink
-import batect.testutils.hasMessage
+import batect.testutils.logging.hasMessage
 import batect.testutils.on
-import batect.testutils.withAdditionalData
-import batect.testutils.withLogMessage
-import batect.testutils.withSeverity
+import batect.testutils.logging.withAdditionalData
+import batect.testutils.logging.withLogMessage
+import batect.testutils.logging.withSeverity
 import batect.ui.ConsoleInfo
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs

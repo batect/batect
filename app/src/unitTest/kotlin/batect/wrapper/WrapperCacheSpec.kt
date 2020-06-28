@@ -23,11 +23,11 @@ import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
-import batect.testutils.hasMessage
+import batect.testutils.logging.hasMessage
 import batect.testutils.runForEachTest
-import batect.testutils.withAdditionalData
-import batect.testutils.withLogMessage
-import batect.testutils.withSeverity
+import batect.testutils.logging.withAdditionalData
+import batect.testutils.logging.withLogMessage
+import batect.testutils.logging.withSeverity
 import batect.Version
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs

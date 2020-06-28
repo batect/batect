@@ -82,6 +82,10 @@ class KotlinPlugin implements Plugin<Project> {
     private void configureTesting(Project project) {
         configureCommonTesting(project)
         configureUnitTesting(project)
+
+        def checkUnitTestLayout = project.tasks.register('checkUnitTestLayout', UnitTestLayoutCheck.class) {
+            mustRunAfter 'test'
+        }
     }
 
     private void configureCommonTesting(Project project) {

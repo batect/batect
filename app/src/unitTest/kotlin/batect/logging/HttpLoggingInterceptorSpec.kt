@@ -19,12 +19,12 @@ package batect.logging
 import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
-import batect.testutils.hasMessage
+import batect.testutils.logging.hasMessage
 import batect.testutils.on
 import batect.testutils.runForEachTest
-import batect.testutils.withAdditionalData
-import batect.testutils.withLogMessage
-import batect.testutils.withSeverity
+import batect.testutils.logging.withAdditionalData
+import batect.testutils.logging.withLogMessage
+import batect.testutils.logging.withSeverity
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn

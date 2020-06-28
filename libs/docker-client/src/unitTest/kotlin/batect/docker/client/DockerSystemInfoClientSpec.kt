@@ -20,7 +20,7 @@ import batect.docker.DockerException
 import batect.docker.DockerVersionInfo
 import batect.docker.api.SystemInfoAPI
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTest
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
@@ -38,7 +38,7 @@ import java.io.IOException
 object DockerSystemInfoClientSpec : Spek({
     describe("a Docker system info client") {
         val api by createForEachTest { mock<SystemInfoAPI>() }
-        val logger by createLoggerForEachTest()
+        val logger by createLoggerForEachTestWithoutCustomSerializers()
         val client by createForEachTest { DockerSystemInfoClient(api, logger) }
 
         describe("getting Docker version information") {

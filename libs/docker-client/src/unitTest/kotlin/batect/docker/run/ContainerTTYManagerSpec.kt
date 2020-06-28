@@ -21,7 +21,7 @@ import batect.docker.api.ContainerStoppedException
 import batect.docker.api.ContainersAPI
 import batect.os.Dimensions
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTest
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.doesNotThrow
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -52,7 +52,7 @@ object ContainerTTYManagerSpec : Spek({
             }
         }
 
-        val logger by createLoggerForEachTest()
+        val logger by createLoggerForEachTestWithoutCustomSerializers()
         val manager by createForEachTest { ContainerTTYManager(api, consoleDimensions, logger) }
 
         given("a container") {

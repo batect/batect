@@ -29,7 +29,7 @@ import batect.docker.run.OutputConnection
 import batect.execution.CancellationContext
 import batect.os.Command
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTest
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.equalTo
 import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
@@ -48,7 +48,7 @@ object DockerExecClientSpec : Spek({
     describe("a Docker exec client") {
         val api by createForEachTest { mock<ExecAPI>() }
         val ioStreamer by createForEachTest { mock<ContainerIOStreamer>() }
-        val logger by createLoggerForEachTest()
+        val logger by createLoggerForEachTestWithoutCustomSerializers()
         val client by createForEachTest { DockerExecClient(api, ioStreamer, logger) }
 
         describe("running a command in a running container") {

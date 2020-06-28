@@ -60,4 +60,4 @@ class InMemoryLogSink(private val json: Json) : LogSink {
     }
 }
 
-fun LifecycleAware.createLoggerForEachTest() = createForEachTest { Logger("test logger", InMemoryLogSink()) }
+fun LifecycleAware.createLoggerForEachTestWithoutCustomSerializers() = createForEachTest { Logger("test logger", InMemoryLogSink()) }

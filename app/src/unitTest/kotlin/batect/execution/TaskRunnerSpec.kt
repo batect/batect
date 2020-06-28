@@ -22,7 +22,7 @@ import batect.config.TaskRunConfiguration
 import batect.ioc.TaskKodein
 import batect.ioc.TaskKodeinFactory
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on

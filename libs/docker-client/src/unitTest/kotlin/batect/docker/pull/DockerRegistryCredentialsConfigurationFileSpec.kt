@@ -18,7 +18,7 @@ package batect.docker.pull
 
 import batect.os.ProcessRunner
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTest
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
@@ -37,7 +37,7 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
     describe("a Docker registry credentials configuration file") {
         val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
         val processRunner by createForEachTest { mock<ProcessRunner>() }
-        val logger by createLoggerForEachTest()
+        val logger by createLoggerForEachTestWithoutCustomSerializers()
 
         val properties = Properties()
         properties.setProperty("user.home", "/home/some-user")

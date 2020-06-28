@@ -33,7 +33,7 @@ import batect.execution.model.stages.RunStagePlanner
 import batect.execution.model.stages.StageComplete
 import batect.execution.model.stages.StepReady
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.createMockTaskStep
 import batect.testutils.equalTo
 import batect.testutils.given

@@ -18,7 +18,7 @@ package batect.updates
 
 import batect.VersionInfo
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.on
 import batect.ui.Console
 import batect.Version

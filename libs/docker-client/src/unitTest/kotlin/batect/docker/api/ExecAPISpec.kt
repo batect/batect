@@ -26,7 +26,7 @@ import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerOutputStream
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTest
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.mock
@@ -75,7 +75,7 @@ object ExecAPISpec : Spek({
             }
         }
 
-        val logger by createLoggerForEachTest()
+        val logger by createLoggerForEachTestWithoutCustomSerializers()
         val hijacker by createForEachTest { mock<ConnectionHijacker>() }
         val api by createForEachTest { ExecAPI(httpConfig, systemInfo, logger, { hijacker }) }
 

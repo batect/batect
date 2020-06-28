@@ -17,7 +17,7 @@
 package batect.os
 
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTest
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.runForEachTest
@@ -40,7 +40,7 @@ object ConsoleDimensionsSpec : Spek({
     describe("console dimensions") {
         val nativeMethods by createForEachTest { mock<NativeMethods>() }
         val signalListener by createForEachTest { mock<SignalListener>() }
-        val logger by createLoggerForEachTest()
+        val logger by createLoggerForEachTestWithoutCustomSerializers()
 
         describe("when created") {
             given("the current console dimensions are available") {

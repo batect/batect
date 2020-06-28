@@ -18,7 +18,7 @@ package batect.updates
 
 import batect.logging.Logger
 import batect.logging.Severity
-import batect.testutils.InMemoryLogSink
+import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.hasMessage
 import batect.testutils.on

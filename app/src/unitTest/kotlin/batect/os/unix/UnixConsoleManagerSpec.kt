@@ -19,7 +19,7 @@ package batect.os.unix
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.testutils.createForEachTest
-import batect.testutils.createLoggerForEachTest
+import batect.testutils.logging.createLoggerForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on

@@ -29,7 +29,7 @@ import batect.docker.run.OutputConnection
 import batect.execution.CancellationContext
 import batect.os.Command
 import batect.testutils.createForEachTest
-import batect.testutils.createLoggerForEachTest
+import batect.testutils.logging.createLoggerForEachTest
 import batect.testutils.equalTo
 import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat

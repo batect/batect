@@ -23,6 +23,7 @@ import batect.logging.Severity
 import batect.ui.text.Text
 import batect.ui.text.TextRun
 import batect.logging.toDetailedString
+import batect.testutils.logging.InMemoryLogSink
 import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.describe

@@ -24,7 +24,7 @@ import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.logging.Logger
 import batect.logging.Severity
-import batect.testutils.InMemoryLogSink
+import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.hasMessage
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on

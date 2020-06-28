@@ -21,7 +21,7 @@ import batect.docker.api.ContainerStoppedException
 import batect.docker.api.ContainersAPI
 import batect.os.Dimensions
 import batect.testutils.createForEachTest
-import batect.testutils.createLoggerForEachTest
+import batect.testutils.logging.createLoggerForEachTest
 import batect.testutils.doesNotThrow
 import batect.testutils.equalTo
 import batect.testutils.given

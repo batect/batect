@@ -23,6 +23,7 @@ import batect.execution.model.rules.data
 import batect.execution.model.steps.TaskStep
 import batect.execution.model.steps.data
 import batect.logging.Logger
+import batect.testutils.logging.InMemoryLogSink
 import batect.utils.Json
 import org.spekframework.spek2.dsl.LifecycleAware
 

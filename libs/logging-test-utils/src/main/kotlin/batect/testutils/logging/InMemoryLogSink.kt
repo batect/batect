@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.testutils
+package batect.testutils.logging
 
 import batect.logging.Jsonable
 import batect.logging.LogMessage
@@ -24,6 +24,7 @@ import batect.logging.LogSink
 import batect.logging.Logger
 import batect.logging.Severity
 import batect.logging.StandardAdditionalDataSource
+import batect.testutils.createForEachTest
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import kotlinx.serialization.json.Json

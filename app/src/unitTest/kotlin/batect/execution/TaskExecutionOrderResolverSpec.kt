@@ -23,7 +23,7 @@ import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.logging.Logger
 import batect.logging.Severity
-import batect.testutils.InMemoryLogSink
+import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.hasMessage

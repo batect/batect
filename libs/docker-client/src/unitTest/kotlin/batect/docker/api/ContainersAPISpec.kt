@@ -39,7 +39,7 @@ import batect.execution.CancellationContext
 import batect.os.Dimensions
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
-import batect.testutils.createLoggerForEachTest
+import batect.testutils.logging.createLoggerForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.mock

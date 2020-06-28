@@ -22,7 +22,7 @@ import batect.docker.client.DockerVersionInfoRetrievalResult
 import batect.os.HostEnvironmentVariables
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
-import batect.testutils.InMemoryLogSink
+import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.hasMessage
 import batect.testutils.on
 import batect.testutils.withAdditionalData

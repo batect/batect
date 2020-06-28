@@ -39,7 +39,7 @@ import batect.execution.model.rules.run.RunContainerSetupCommandsStepRule
 import batect.execution.model.rules.run.RunContainerStepRule
 import batect.execution.model.rules.run.WaitForContainerToBecomeHealthyStepRule
 import batect.os.Command
-import batect.testutils.createLoggerForEachTest
+import batect.testutils.logging.createLoggerForEachTest
 import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.runForEachTest

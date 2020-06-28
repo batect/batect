@@ -28,7 +28,7 @@ import batect.logging.LoggerFactory
 import batect.logging.Severity
 import batect.os.ConsoleManager
 import batect.os.SystemInfo
-import batect.testutils.InMemoryLogSink
+import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.hasMessage

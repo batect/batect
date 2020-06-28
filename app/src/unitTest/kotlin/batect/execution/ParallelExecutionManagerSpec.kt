@@ -23,7 +23,7 @@ import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.TaskStepRunner
 import batect.testutils.createForEachTest
-import batect.testutils.createLoggerForEachTest
+import batect.testutils.logging.createLoggerForEachTest
 import batect.testutils.createMockTaskStep
 import batect.testutils.given
 import batect.testutils.on

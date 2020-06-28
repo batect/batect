@@ -1,4 +1,4 @@
-FROM docker.elastic.co/kibana/kibana:6.6.2
+FROM docker.elastic.co/kibana/kibana:7.8.0
 
 RUN curl --fail --location https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 -o /usr/share/kibana/bin/jq
 RUN chmod +x /usr/share/kibana/bin/jq

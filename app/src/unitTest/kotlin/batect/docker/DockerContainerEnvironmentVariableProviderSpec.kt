@@ -23,7 +23,7 @@ import batect.config.ExpressionEvaluationException
 import batect.config.LiteralValue
 import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerRuntimeConfiguration
-import batect.os.proxies.ProxyEnvironmentVariablesProvider
+import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter

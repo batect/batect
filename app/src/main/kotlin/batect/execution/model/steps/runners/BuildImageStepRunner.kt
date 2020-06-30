@@ -35,7 +35,7 @@ import batect.os.PathResolutionResult
 import batect.os.PathResolverFactory
 import batect.os.PathType
 import batect.os.SystemInfo
-import batect.os.proxies.ProxyEnvironmentVariablesProvider
+import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.ui.containerio.ContainerIOStreamingOptions
 import java.nio.file.Path
 

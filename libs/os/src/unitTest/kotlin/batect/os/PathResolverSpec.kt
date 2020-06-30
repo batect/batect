@@ -158,7 +158,13 @@ object PathResolverSpec : Spek({
             val path = "somefile.txt"
 
             it("resolves the path to the absolute path") {
-                assertThat(currentDirectoryResolver.resolve(path), equalTo(PathResolutionResult.Resolved("somefile.txt", fileSystem.getPath("/some-work-dir/somefile.txt"), PathType.DoesNotExist)))
+                assertThat(currentDirectoryResolver.resolve(path), equalTo(
+                    PathResolutionResult.Resolved(
+                        "somefile.txt",
+                        fileSystem.getPath("/some-work-dir/somefile.txt"),
+                        PathType.DoesNotExist
+                    )
+                ))
             }
         }
     }

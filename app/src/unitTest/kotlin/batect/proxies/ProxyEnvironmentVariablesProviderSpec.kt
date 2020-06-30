@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.os.proxies
+package batect.proxies
 
 import batect.os.HostEnvironmentVariables
 import batect.testutils.equalTo

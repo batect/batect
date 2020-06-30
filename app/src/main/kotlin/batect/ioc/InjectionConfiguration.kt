@@ -81,11 +81,11 @@ import batect.execution.model.stages.RunStagePlanner
 import batect.execution.model.steps.TaskStepRunner
 import batect.execution.model.steps.runners.BuildImageStepRunner
 import batect.execution.model.steps.runners.CreateContainerStepRunner
-import batect.execution.model.steps.runners.PrepareTaskNetworkStepRunner
 import batect.execution.model.steps.runners.DeleteTaskNetworkStepRunner
 import batect.execution.model.steps.runners.DeleteTemporaryDirectoryStepRunner
 import batect.execution.model.steps.runners.DeleteTemporaryFileStepRunner
 import batect.execution.model.steps.runners.InitialiseCachesStepRunner
+import batect.execution.model.steps.runners.PrepareTaskNetworkStepRunner
 import batect.execution.model.steps.runners.PullImageStepRunner
 import batect.execution.model.steps.runners.RemoveContainerStepRunner
 import batect.execution.model.steps.runners.RunContainerSetupCommandsStepRunner
@@ -107,13 +107,13 @@ import batect.os.PathResolverFactory
 import batect.os.ProcessRunner
 import batect.os.SignalListener
 import batect.os.SystemInfo
-import batect.os.proxies.ProxyEnvironmentVariablePreprocessor
-import batect.os.proxies.ProxyEnvironmentVariablesProvider
 import batect.os.unix.ApplicationResolver
 import batect.os.unix.UnixConsoleManager
 import batect.os.unix.UnixNativeMethods
 import batect.os.windows.WindowsConsoleManager
 import batect.os.windows.WindowsNativeMethods
+import batect.proxies.ProxyEnvironmentVariablePreprocessor
+import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.EventLoggerProvider
@@ -163,6 +163,7 @@ fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStrea
     import(executionModule)
     import(loggingModule)
     import(osModule)
+    import(proxiesModule)
     import(uiModule)
     import(updatesModule)
     import(wrapperModule)
@@ -320,10 +321,13 @@ private val osModule = Kodein.Module("os") {
     bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), instance(), instance(), logger) }
     bind<HostEnvironmentVariables>() with singleton { HostEnvironmentVariables.current }
     bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }
-    bind<ProxyEnvironmentVariablePreprocessor>() with singletonWithLogger { logger -> ProxyEnvironmentVariablePreprocessor(instance(), logger) }
-    bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider(instance(), instance()) }
     bind<SignalListener>() with singleton { SignalListener(instance()) }
     bind<SystemInfo>() with singleton { SystemInfo(instance(), instance()) }
+}
+
+private val proxiesModule = Kodein.Module("proxies") {
+    bind<ProxyEnvironmentVariablePreprocessor>() with singletonWithLogger { logger -> ProxyEnvironmentVariablePreprocessor(instance(), logger) }
+    bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider(instance(), instance()) }
 }
 
 private val unixModule = Kodein.Module("os.unix") {

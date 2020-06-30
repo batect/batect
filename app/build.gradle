@@ -75,7 +75,6 @@ checkUnitTestLayout {
     )
 }
 
-apply from: 'gradle/integrationTest.gradle'
 apply from: 'gradle/journeyTest.gradle'
 apply from: 'gradle/performanceTest.gradle'
 apply from: 'gradle/profiling.gradle'

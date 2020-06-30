@@ -48,3 +48,5 @@ checkUnitTestLayout {
         ]
     )
 }
+
+apply from: 'gradle/integrationTest.gradle'

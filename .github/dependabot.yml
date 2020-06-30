@@ -8,27 +8,6 @@ updates:
       interval: daily
     labels:
       - is:dependency-update
-    directory: app/src/integrationTest/resources/test-images/basic-image
-    open-pull-requests-limit: 10
-  - package-ecosystem: docker
-    schedule:
-      interval: daily
-    labels:
-      - is:dependency-update
-    directory: app/src/integrationTest/resources/test-images/image-with-expose
-    open-pull-requests-limit: 10
-  - package-ecosystem: docker
-    schedule:
-      interval: daily
-    labels:
-      - is:dependency-update
-    directory: app/src/integrationTest/resources/test-images/image-without-expose
-    open-pull-requests-limit: 10
-  - package-ecosystem: docker
-    schedule:
-      interval: daily
-    labels:
-      - is:dependency-update
     directory: app/src/journeyTest/resources/build-arg/build-env
     open-pull-requests-limit: 10
   - package-ecosystem: docker
@@ -191,6 +170,27 @@ updates:
     labels:
       - is:dependency-update
     directory: app/src/performanceTest/resources/single-container-built-image/containers/test-env
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: libs/docker-client/src/integrationTest/resources/test-images/basic-image
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: libs/docker-client/src/integrationTest/resources/test-images/image-with-expose
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: libs/docker-client/src/integrationTest/resources/test-images/image-without-expose
     open-pull-requests-limit: 10
   - package-ecosystem: docker
     schedule:

@@ -22,6 +22,7 @@ import batect.config.TaskRunConfiguration
 import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerDependencyGraphNode
 import batect.os.ConsoleDimensions
+import batect.os.ConsoleInfo
 import batect.os.Dimensions
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo

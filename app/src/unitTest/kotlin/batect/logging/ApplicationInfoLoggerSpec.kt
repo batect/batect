@@ -19,6 +19,7 @@ package batect.logging
 import batect.VersionInfo
 import batect.docker.client.DockerSystemInfoClient
 import batect.docker.client.DockerVersionInfoRetrievalResult
+import batect.os.ConsoleInfo
 import batect.os.HostEnvironmentVariables
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
@@ -28,7 +29,6 @@ import batect.testutils.on
 import batect.testutils.logging.withAdditionalData
 import batect.testutils.logging.withLogMessage
 import batect.testutils.logging.withSeverity
-import batect.ui.ConsoleInfo
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat

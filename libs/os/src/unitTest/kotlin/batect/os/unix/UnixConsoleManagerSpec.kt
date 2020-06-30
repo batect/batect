@@ -19,13 +19,13 @@ package batect.os.unix
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.testutils.createForEachTest
-import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.withMessage
-import batect.ui.ConsoleInfo
+import batect.os.ConsoleInfo
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
@@ -47,7 +47,7 @@ object UnixConsoleManagerSpec : Spek({
         }
 
         val processRunner by createForEachTest { mock<ProcessRunner>() }
-        val logger by createLoggerForEachTest()
+        val logger by createLoggerForEachTestWithoutCustomSerializers()
         val consoleManager by createForEachTest { UnixConsoleManager(consoleInfo, applicationResolver, processRunner, logger) }
 
         describe("entering and exiting raw mode") {

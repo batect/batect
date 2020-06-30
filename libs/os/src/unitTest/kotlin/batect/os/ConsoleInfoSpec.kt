@@ -14,29 +14,26 @@
    limitations under the License.
 */
 
-package batect.ui
+package batect.os
 
-import batect.os.HostEnvironmentVariables
-import batect.os.NativeMethods
-import batect.os.OperatingSystem
-import batect.os.SystemInfo
 import batect.testutils.createForEachTest
-import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.on
 import batect.testutils.runForEachTest
-import batect.utils.Json
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonConfiguration
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object ConsoleInfoSpec : Spek({
     describe("a console information provider") {
-        val logger by createLoggerForEachTest()
+        val logger by createLoggerForEachTestWithoutCustomSerializers()
         val genericSystemInfo by createForEachTest {
             mock<SystemInfo> {
                 on { operatingSystem } doReturn OperatingSystem.Other
@@ -191,7 +188,7 @@ object ConsoleInfoSpec : Spek({
 
             val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables(), logger) }
 
-            val json by runForEachTest { Json.default.stringify(ConsoleInfo.serializer(), consoleInfo) }
+            val json by runForEachTest { Json(JsonConfiguration.Stable).stringify(ConsoleInfo.serializer(), consoleInfo) }
 
             it("includes all details") {
                 assertThat(json, equivalentTo("""{

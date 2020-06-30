@@ -18,8 +18,8 @@ package batect.ui.containerio
 
 import batect.config.Container
 import batect.config.SetupCommand
+import batect.os.ConsoleInfo
 import batect.os.Dimensions
-import batect.ui.ConsoleInfo
 import com.hypirion.io.RevivableInputStream
 import okio.Sink
 import okio.Source

@@ -17,8 +17,8 @@
 package batect.os.windows
 
 import batect.logging.Logger
+import batect.os.ConsoleInfo
 import batect.os.ConsoleManager
-import batect.ui.ConsoleInfo
 
 class WindowsConsoleManager(
     private val consoleInfo: ConsoleInfo,

@@ -17,12 +17,12 @@
 package batect.os.windows
 
 import batect.testutils.createForEachTest
-import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.on
 import batect.testutils.runForEachTest
-import batect.ui.ConsoleInfo
+import batect.os.ConsoleInfo
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
@@ -37,7 +37,7 @@ object WindowsConsoleManagerSpec : Spek({
     describe("a Windows console manager") {
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
         val nativeMethods by createForEachTest { mock<WindowsNativeMethods>() }
-        val logger by createLoggerForEachTest()
+        val logger by createLoggerForEachTestWithoutCustomSerializers()
         val consoleManager by createForEachTest { WindowsConsoleManager(consoleInfo, nativeMethods, logger) }
 
         describe("enabling console escape sequences") {

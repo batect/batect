@@ -99,6 +99,7 @@ import batect.logging.LoggerFactory
 import batect.logging.StandardAdditionalDataSource
 import batect.logging.singletonWithLogger
 import batect.os.ConsoleDimensions
+import batect.os.ConsoleInfo
 import batect.os.ConsoleManager
 import batect.os.HostEnvironmentVariables
 import batect.os.NativeMethods
@@ -114,7 +115,6 @@ import batect.os.unix.UnixNativeMethods
 import batect.os.windows.WindowsConsoleManager
 import batect.os.windows.WindowsNativeMethods
 import batect.ui.Console
-import batect.ui.ConsoleInfo
 import batect.ui.EventLogger
 import batect.ui.EventLoggerProvider
 import batect.ui.FailureErrorMessageFormatter
@@ -317,6 +317,7 @@ private val loggingModule = Kodein.Module("logging") {
 
 private val osModule = Kodein.Module("os") {
     bind<ConsoleDimensions>() with singletonWithLogger { logger -> ConsoleDimensions(instance(), instance(), logger) }
+    bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), instance(), instance(), logger) }
     bind<HostEnvironmentVariables>() with singleton { HostEnvironmentVariables.current }
     bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }
     bind<ProxyEnvironmentVariablePreprocessor>() with singletonWithLogger { logger -> ProxyEnvironmentVariablePreprocessor(instance(), logger) }
@@ -355,7 +356,6 @@ private val uiModule = Kodein.Module("ui") {
 
     bind<Console>(StreamType.Output) with singleton { Console(instance(StreamType.Output), enableComplexOutput = !commandLineOptions().disableColorOutput && nativeMethods().determineIfStdoutIsTTY(), consoleDimensions = instance()) }
     bind<Console>(StreamType.Error) with singleton { Console(instance(StreamType.Error), enableComplexOutput = !commandLineOptions().disableColorOutput && nativeMethods().determineIfStderrIsTTY(), consoleDimensions = instance()) }
-    bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), instance(), instance(), logger) }
     bind<ContainerIOStreamingOptions>() with scoped(TaskScope).singleton { instance<EventLogger>().ioStreamingOptions }
     bind<EventLogger>() with scoped(TaskScope).singleton { instance<EventLoggerProvider>().getEventLogger(context, instance()) }
     bind<FailureErrorMessageFormatter>() with scoped(TaskScope).singleton { FailureErrorMessageFormatter(instance(RunOptionsType.Task), instance()) }

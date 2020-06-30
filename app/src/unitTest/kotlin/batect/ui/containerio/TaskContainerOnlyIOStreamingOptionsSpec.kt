@@ -17,13 +17,13 @@
 package batect.ui.containerio
 
 import batect.config.Container
+import batect.os.ConsoleInfo
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import batect.testutils.runNullableForEachTest
-import batect.ui.ConsoleInfo
 import com.hypirion.io.RevivableInputStream
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat

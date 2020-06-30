@@ -14,15 +14,10 @@
    limitations under the License.
 */
 
-package batect.ui
+package batect.os
 
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
-import batect.os.HostEnvironmentVariables
-import batect.os.NativeMethods
-import batect.os.OperatingSystem
-import batect.os.SystemInfo
-import batect.os.data
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer

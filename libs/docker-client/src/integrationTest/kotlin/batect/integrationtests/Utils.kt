@@ -16,7 +16,6 @@
 
 package batect.integrationtests
 
-import batect.config.Container
 import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerDeviceMount
 import batect.docker.DockerHealthCheckConfig
@@ -59,7 +58,7 @@ fun creationRequestForContainer(
         capabilitiesToDrop = emptySet(),
         useTTY = useTTY,
         attachStdin = true,
-        logDriver = Container.defaultLogDriver,
+        logDriver = "json-file",
         logOptions = emptyMap()
     )
 }

@@ -17,9 +17,9 @@
 package batect.os.unix
 
 import batect.logging.Logger
+import batect.os.ConsoleInfo
 import batect.os.ConsoleManager
 import batect.os.ProcessRunner
-import batect.ui.ConsoleInfo
 
 class UnixConsoleManager(
     private val consoleInfo: ConsoleInfo,

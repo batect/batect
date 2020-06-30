@@ -19,11 +19,10 @@ package batect.logging
 import batect.VersionInfo
 import batect.data
 import batect.docker.client.DockerSystemInfoClient
+import batect.os.ConsoleInfo
 import batect.os.HostEnvironmentVariables
 import batect.os.SystemInfo
 import batect.os.data
-import batect.ui.ConsoleInfo
-import batect.ui.data
 
 class ApplicationInfoLogger(
     private val logger: Logger,

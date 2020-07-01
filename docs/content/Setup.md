@@ -27,3 +27,5 @@ batect requires Docker 18.03.1 or newer, Java 8 or newer (although this requirem
 * On Windows: Windows 10
 
 batect supports both Linux and Windows containers.
+
+A 64-bit version of Java is required on Windows.

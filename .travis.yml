@@ -39,6 +39,7 @@ jobs:
             - buildSrc/.gradle/
             - buildSrc/build/
             - docs/build/
+            - libs/*/build/
             - wrapper/build/
             - wrapper/testapp/build/
             - wrapper/unix/build/

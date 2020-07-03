@@ -36,6 +36,7 @@ jobs:
             - build/
             - app/build/
             - app/src/main/kotlin/batect/VersionInfo.kt
+            - buildSrc/.gradle/
             - buildSrc/build/
             - docs/build/
             - wrapper/build/

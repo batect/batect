@@ -47,7 +47,7 @@ class GitClient(
             val result = processRunner.runAndCaptureOutput(command)
 
             return when (result.exitCode) {
-                0 -> GitVersionRetrievalResult.Succeeded(result.output.trim())
+                0 -> GitVersionRetrievalResult.Succeeded(result.output.trim().removePrefix("git version "))
                 else -> GitVersionRetrievalResult.Failed("'${command.joinToString(" ")}' exited with code ${result.exitCode}: ${result.output.trim()}")
             }
         } catch (e: ExecutableDoesNotExistException) {

@@ -112,7 +112,7 @@ object GitClientSpec : Spek({
                     val result by runForEachTest { client.getVersion() }
 
                     it("returns the version returned by Git") {
-                        assertThat(result, equalTo(GitVersionRetrievalResult.Succeeded("git version 1.2.3")))
+                        assertThat(result, equalTo(GitVersionRetrievalResult.Succeeded("1.2.3")))
                     }
                 }
 

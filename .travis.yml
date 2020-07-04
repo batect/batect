@@ -64,7 +64,7 @@ jobs:
     - stage: Integration and journey test
       name: Integration test against latest Docker
       before_install: ./travis/install_docker.sh
-      script: ./gradlew --info :libs:docker-client:integrationTest
+      script: ./gradlew :libs:docker-client:integrationTest
       workspaces:
         use:
           - build_workspace

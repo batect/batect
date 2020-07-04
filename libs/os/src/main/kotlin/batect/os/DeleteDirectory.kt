@@ -25,7 +25,7 @@ fun deleteDirectory(directory: Path) {
     }
 
     deleteDirectoryContents(directory)
-    Files.delete(directory)
+    deletePossiblyReadOnlyPath(directory)
 }
 
 fun deleteDirectoryContents(directory: Path) {
@@ -39,7 +39,18 @@ fun deleteDirectoryContents(directory: Path) {
                 deleteDirectoryContents(path)
             }
 
-            Files.delete(path)
+            deletePossiblyReadOnlyPath(path)
         }
+    }
+}
+
+fun deletePossiblyReadOnlyPath(path: Path) {
+    unsetReadOnly(path)
+    Files.delete(path)
+}
+
+fun unsetReadOnly(path: Path) {
+    if (path.fileSystem.supportedFileAttributeViews().contains("dos")) {
+        Files.setAttribute(path, "dos:readonly", false)
     }
 }

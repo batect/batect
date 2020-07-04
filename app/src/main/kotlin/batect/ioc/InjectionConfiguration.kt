@@ -92,6 +92,7 @@ import batect.execution.model.steps.runners.RunContainerSetupCommandsStepRunner
 import batect.execution.model.steps.runners.RunContainerStepRunner
 import batect.execution.model.steps.runners.StopContainerStepRunner
 import batect.execution.model.steps.runners.WaitForContainerToBecomeHealthyStepRunner
+import batect.git.GitClient
 import batect.logging.ApplicationInfoLogger
 import batect.logging.HttpLoggingInterceptor
 import batect.logging.LogMessageWriter
@@ -159,6 +160,7 @@ fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStrea
     import(cliModule)
     import(configModule)
     import(dockerModule)
+    import(gitModule)
     import(iocModule)
     import(executionModule)
     import(loggingModule)
@@ -202,7 +204,7 @@ private val cliModule = Kodein.Module("cli") {
     bind<CleanupCachesCommand>() with singleton { CleanupCachesCommand(instance(), instance(), instance(), instance(StreamType.Output)) }
     bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(StreamType.Output), instance()) }
     bind<ListTasksCommand>() with singleton { ListTasksCommand(commandLineOptions().configurationFileName, instance(), instance(StreamType.Output)) }
-    bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(StreamType.Output), instance(), instance(), instance()) }
+    bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(StreamType.Output), instance(), instance(), instance(), instance()) }
     bind<UpgradeCommand>() with singletonWithLogger { logger -> UpgradeCommand(instance(), instance(), instance(), instance(), instance(StreamType.Output), instance(StreamType.Error), instance(), logger) }
 }
 
@@ -260,6 +262,10 @@ private val dockerClientModule = Kodein.Module("docker.client") {
     bind<DockerSystemInfoClient>() with singletonWithLogger { logger -> DockerSystemInfoClient(instance(), logger) }
     bind<DockerVolumesClient>() with singleton { DockerVolumesClient(instance()) }
     bind<DockerClient>() with singleton { DockerClient(instance(), instance(), instance(), instance(), instance(), instance()) }
+}
+
+private val gitModule = Kodein.Module("git") {
+    bind<GitClient>() with singleton { GitClient(instance()) }
 }
 
 private val iocModule = Kodein.Module("ioc") {

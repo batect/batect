@@ -19,6 +19,7 @@ package batect.cli.commands
 import batect.VersionInfo
 import batect.cli.CommandLineOptionsParser
 import batect.docker.client.DockerSystemInfoClient
+import batect.git.GitClient
 import batect.os.SystemInfo
 import batect.updates.UpdateNotifier
 import java.io.PrintStream
@@ -28,6 +29,7 @@ class VersionInfoCommand(
     private val outputStream: PrintStream,
     private val systemInfo: SystemInfo,
     private val dockerSystemInfoClient: DockerSystemInfoClient,
+    private val gitClient: GitClient,
     private val updateNotifier: UpdateNotifier
 ) : Command {
     override fun run(): Int {
@@ -39,6 +41,7 @@ class VersionInfoCommand(
         outputStream.println("JVM version:       ${systemInfo.jvmVersion}")
         outputStream.println("OS version:        ${systemInfo.osVersion}")
         outputStream.println("Docker version:    ${dockerSystemInfoClient.getDockerVersionInfo()}")
+        outputStream.println("Git version:       ${gitClient.getVersion()}")
         outputStream.println()
         outputStream.println(CommandLineOptionsParser.helpBlurb)
         outputStream.println()

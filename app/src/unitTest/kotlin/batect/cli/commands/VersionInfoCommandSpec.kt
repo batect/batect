@@ -24,6 +24,8 @@ import batect.testutils.on
 import batect.testutils.withPlatformSpecificLineSeparator
 import batect.updates.UpdateNotifier
 import batect.Version
+import batect.git.GitClient
+import batect.git.GitVersionRetrievalResult
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.doReturn
@@ -53,9 +55,13 @@ object VersionInfoCommandSpec : Spek({
                 on { getDockerVersionInfo() } doReturn DockerVersionInfoRetrievalResult.Failed("DOCKER VERSION INFO")
             }
 
+            val gitClient = mock<GitClient> {
+                on { getVersion() } doReturn GitVersionRetrievalResult.Failed("GIT VERSION INFO")
+            }
+
             val outputStream = ByteArrayOutputStream()
             val updateNotifier = mock<UpdateNotifier>()
-            val command = VersionInfoCommand(versionInfo, PrintStream(outputStream), systemInfo, dockerSystemInfoClient, updateNotifier)
+            val command = VersionInfoCommand(versionInfo, PrintStream(outputStream), systemInfo, dockerSystemInfoClient, gitClient, updateNotifier)
             val exitCode = command.run()
             val output = outputStream.toString()
 
@@ -67,6 +73,7 @@ object VersionInfoCommandSpec : Spek({
                     |JVM version:       THE JVM VERSION
                     |OS version:        THE OS VERSION
                     |Docker version:    (DOCKER VERSION INFO)
+                    |Git version:       (GIT VERSION INFO)
                     |
                     |For documentation and further information on batect, visit https://github.com/batect/batect.
                     |

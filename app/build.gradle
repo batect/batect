@@ -44,6 +44,7 @@ dependencies {
     implementation 'com.hypirion:io:0.3.1'
     implementation project(':libs:abstractions')
     implementation project(':libs:docker-client')
+    implementation project(':libs:git-client')
     implementation project(':libs:logging')
     implementation project(':libs:os')
 

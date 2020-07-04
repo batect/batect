@@ -17,9 +17,9 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.testutils.deleteDirectoryContents
 import batect.journeytests.testutils.exitCode
 import batect.journeytests.testutils.output
+import batect.os.deleteDirectoryContents
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup

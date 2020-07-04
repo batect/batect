@@ -87,7 +87,7 @@ The exception's message must not be collected as it may contain sensitive or con
 There are also a number of other considerations:
 
 * Users must be able to opt-out on a per-command and global basis
-* Organisations must be able to block analytics submission or opt-out on a network level
+* Organisations must be able to block telemetry submission or opt-out on a network level
 * Collecting this information must have a minimal performance impact
 * We must not collect any personally identifiable information or collect any potentially sensitive or confidential information such as file names or the names or contents of projects, containers, images or tasks
 
@@ -101,33 +101,33 @@ A privacy policy will be added to the documentation to explain what information 
 
 [Automattic's privacy policy](https://github.com/Automattic/legalmattic/blob/master/Privacy-Policy.md) is available under a Creative Commons license and could be used as a template.
 
-Opting out or blocking collection of analytics information would be supported through three mechanisms:
+Opting out or blocking collection of telemetry information would be supported through three mechanisms:
 
-* `--disable-analytics` command line flag
-* `BATECT_DISABLE_ANALYTICS` environment variable
+* `--disable-telemetry` command line flag
+* `BATECT_DISABLE_TELEMETRY` environment variable
 * Blocking HTTPS traffic to the `api.abacus.batect.dev` domain at a network level (eg. at a proxy)
 
 
 
 ## CLI changes
 
-`./batect --disable-analytics` would disable both collection of analytics information and submission of cached data from previous invocations.
+`./batect --disable-telemetry` would disable both collection of telemetry information and submission of cached data from previous invocations.
 
-Setting the `BATECT_DISABLE_ANALYTICS` environment variable to `1` or `true` would have the same result.
+Setting the `BATECT_DISABLE_TELEMETRY` environment variable to `1` or `true` would have the same result.
 
 
 
 ## Behaviour changes
 
-### On all runs with analytics enabled
+### On all runs with telemetry enabled
 
-Provided `--disable-analytics` or `BATECT_DISABLE_ANALYTICS` is not set, batect would collect the information described above and write it to disk at `~/.batect/analytics` for upload in the background of subsequent runs (see below).
+Provided `--disable-telemetry` or `BATECT_DISABLE_TELEMETRY` is not set, batect would collect the information described above and write it to disk at `~/.batect/telemetry` for upload in the background of subsequent runs (see below).
 
 
 
-### On first run with analytics enabled
+### On first run with telemetry enabled
 
-Provided `--disable-analytics` or `BATECT_DISABLE_ANALYTICS` is not set, and that batect is running with a TTY and does not detect it is running on CI, batect would show the following prompt the first time it is run:
+Provided `--disable-telemetry` or `BATECT_DISABLE_TELEMETRY` is not set, and that batect is running with a TTY and does not detect it is running on CI, batect would show the following prompt the first time it is run:
 
 ```
 batect can collect and report anonymous environment, usage and performance information. This information does not include personal or sensitive information, and is used to help improve batect.
@@ -147,17 +147,17 @@ batect can collect and report anonymous environment, usage and performance infor
 More information, including details of what information is collected and a formal privacy policy, is available at https://batect.dev/Telemetry.html.
 
 It looks like batect is running in a non-interactive session, so it can't ask for permission to collect and report this information.
-* To suppress this message and allow collection and reporting of telemetry data, set the BATECT_ENABLE_ANALYTICS environment variable to 'true'.
-* To suppress this message and prevent collection and reporting of telemetry data, set the BATECT_DISABLE_ANALYTICS environment variable to 'true'.
+* To suppress this message and allow collection and reporting of telemetry data, set the BATECT_ENABLE_TELEMETRY environment variable to 'true'.
+* To suppress this message and prevent collection and reporting of telemetry data, set the BATECT_DISABLE_TELEMETRY environment variable to 'true'.
 
 No data will be collected for this session.
 ```
 
 
 
-### On subsequent runs with analytics enabled
+### On subsequent runs with telemetry enabled
 
-In the background upon startup, batect would check for cached information from previous runs written to `~/.batect/analytics`. If any is present, it will upload each run (one at a time) and delete each run after a successful upload. If a run fails to upload and is less than 30 days old, it is left on disk to be retried as part of a subsequent run. If a run fails to upload and is more than 30 days old, it is deleted.
+In the background upon startup, batect would check for cached information from previous runs written to `~/.batect/telemetry`. If any is present, it will upload each run (one at a time) and delete each run after a successful upload. If a run fails to upload and is less than 30 days old, it is left on disk to be retried as part of a subsequent run. If a run fails to upload and is more than 30 days old, it is deleted.
 
 To prevent a malformed run from preventing other runs from being uploaded, the upload order of the cached runs will be randomised.
 
@@ -165,13 +165,13 @@ All data will be uploaded over a HTTPS connection.
 
 
 
-### On any run with analytics disabled
+### On any run with telemetry disabled
 
-If analytics is disabled with `--disable-analytics` or `BATECT_DISABLE_ANALYTICS`, analytics data will not be written to disk, and any cached information will not be uploaded.
+If telemetry is disabled with `--disable-telemetry` or `BATECT_DISABLE_TELEMETRY`, telemetry data will not be written to disk, and any cached information will not be uploaded.
 
 
 
-### On CI with analytics enabled
+### On CI with telemetry enabled
 
 Many CI systems operate ephemeral agents, with each new build given a clean agent. While this is great for ensuring consistency of builds, it presents problems for the delayed data reporting mechanism described above - data from previous runs would never be uploaded because it is lost when the agent is destroyed.
 

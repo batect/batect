@@ -16,13 +16,13 @@
 
 package batect.updates
 
+import batect.io.ApplicationPaths
 import batect.logging.Logger
-import batect.os.SystemInfo
 import batect.utils.Json
 import java.nio.file.Files
 
-class UpdateInfoStorage(private val systemInfo: SystemInfo, private val logger: Logger) {
-    private val updateInfoPath = systemInfo.homeDirectory.resolve(".batect").resolve("updates").resolve("v2").resolve("latestVersion")
+class UpdateInfoStorage(private val applicationPaths: ApplicationPaths, private val logger: Logger) {
+    private val updateInfoPath = applicationPaths.rootLocalStorageDirectory.resolve("updates").resolve("v2").resolve("latestVersion")
 
     fun read(): UpdateInfo? {
         logger.info {

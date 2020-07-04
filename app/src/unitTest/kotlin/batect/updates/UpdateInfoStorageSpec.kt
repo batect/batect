@@ -16,12 +16,12 @@
 
 package batect.updates
 
-import batect.os.SystemInfo
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.on
 import batect.testutils.runNullableForEachTest
 import batect.Version
+import batect.io.ApplicationPaths
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.absent
@@ -41,19 +41,19 @@ object UpdateInfoStorageSpec : Spek({
     describe("update information storage") {
         val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
 
-        val homeDir by createForEachTest { fileSystem.getPath("/some/home/dir") }
-        val expectedUpdateInfoDirectory by createForEachTest { fileSystem.getPath("$homeDir/.batect/updates/v2") }
+        val batectDir by createForEachTest { fileSystem.getPath("/some/home/dir/.batect") }
+        val expectedUpdateInfoDirectory by createForEachTest { fileSystem.getPath("$batectDir/updates/v2") }
         val expectedUpdateInfoPath by createForEachTest { fileSystem.getPath("$expectedUpdateInfoDirectory/latestVersion") }
 
-        val systemInfo by createForEachTest {
-            mock<SystemInfo> {
-                on { homeDirectory } doReturn homeDir
+        val applicationPaths by createForEachTest {
+            mock<ApplicationPaths> {
+                on { rootLocalStorageDirectory } doReturn batectDir
             }
         }
 
         val logger by createLoggerForEachTest()
 
-        val storage by createForEachTest { UpdateInfoStorage(systemInfo, logger) }
+        val storage by createForEachTest { UpdateInfoStorage(applicationPaths, logger) }
 
         describe("reading update information from disk") {
             on("when no update information has been written to disk") {

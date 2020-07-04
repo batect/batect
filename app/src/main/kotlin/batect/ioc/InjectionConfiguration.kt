@@ -93,6 +93,7 @@ import batect.execution.model.steps.runners.RunContainerStepRunner
 import batect.execution.model.steps.runners.StopContainerStepRunner
 import batect.execution.model.steps.runners.WaitForContainerToBecomeHealthyStepRunner
 import batect.git.GitClient
+import batect.io.ApplicationPaths
 import batect.logging.ApplicationInfoLogger
 import batect.logging.HttpLoggingInterceptor
 import batect.logging.LogMessageWriter
@@ -161,6 +162,7 @@ fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStrea
     import(configModule)
     import(dockerModule)
     import(gitModule)
+    import(ioModule)
     import(iocModule)
     import(executionModule)
     import(loggingModule)
@@ -266,6 +268,10 @@ private val dockerClientModule = Kodein.Module("docker.client") {
 
 private val gitModule = Kodein.Module("git") {
     bind<GitClient>() with singleton { GitClient(instance()) }
+}
+
+private val ioModule = Kodein.Module("io") {
+    bind<ApplicationPaths>() with singleton { ApplicationPaths(instance<SystemInfo>()) }
 }
 
 private val iocModule = Kodein.Module("ioc") {

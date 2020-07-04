@@ -23,12 +23,11 @@ containers:
 ## Caching dependencies
 
 !!! tip "tl;dr"
-    Mount a cache as the `~/.gradle` directory within the container, otherwise you'll have to download your dependencies every time the build
-    runs
+    Mount a cache as the `~/.gradle` directory within the container, otherwise you'll have to download your dependencies every time the build runs
 
-By default, Gradle downloads all of your application's dependencies to the `~/.gradle` directory. However, because batect destroys all of your containers once
-the task finishes, this directory is lost at the end of every task run - which means that Gradle will have to download all of your dependencies again,
-significantly slowing down the build.
+By default, Gradle downloads all of your application's dependencies to the [`~/.gradle` directory](https://docs.gradle.org/current/userguide/directory_layout.html#dir:gradle_user_home).
+However, because batect destroys all of your containers once the task finishes, this directory is lost at the end of every task run - which means that Gradle
+will have to download all of your dependencies again, significantly slowing down the build.
 
 The solution to this is to mount a [cache](../tips/Performance.md#cache-volumes) that persists between builds into the container at `~/.gradle`, so that these
 downloaded dependencies are persisted between builds.

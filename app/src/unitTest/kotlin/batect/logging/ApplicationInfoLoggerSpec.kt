@@ -19,6 +19,8 @@ package batect.logging
 import batect.VersionInfo
 import batect.docker.client.DockerSystemInfoClient
 import batect.docker.client.DockerVersionInfoRetrievalResult
+import batect.git.GitClient
+import batect.git.GitVersionRetrievalResult
 import batect.os.ConsoleInfo
 import batect.os.HostEnvironmentVariables
 import batect.os.OperatingSystem
@@ -52,7 +54,11 @@ object ApplicationInfoLoggerSpec : Spek({
             on { getDockerVersionInfo() } doReturn DockerVersionInfoRetrievalResult.Failed("Docker version 1.2.3.4")
         }
 
-        val infoLogger = ApplicationInfoLogger(logger, versionInfo, systemInfo, consoleInfo, dockerSystemInfoClient, environmentVariables)
+        val gitClient = mock<GitClient> {
+            on { getVersion() } doReturn GitVersionRetrievalResult.Succeeded("1.2.3")
+        }
+
+        val infoLogger = ApplicationInfoLogger(logger, versionInfo, systemInfo, consoleInfo, dockerSystemInfoClient, gitClient, environmentVariables)
 
         on("logging application information") {
             val commandLineArgs = listOf("some", "values")
@@ -88,6 +94,10 @@ object ApplicationInfoLoggerSpec : Spek({
 
             it("includes the Docker version") {
                 assertThat(logSink, hasMessage(withAdditionalData("dockerVersionInfo", "(Docker version 1.2.3.4)")))
+            }
+
+            it("includes the Git version") {
+                assertThat(logSink, hasMessage(withAdditionalData("gitVersion", "1.2.3")))
             }
 
             it("includes environment variables") {

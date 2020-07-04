@@ -146,7 +146,7 @@ On CI, or when stdin is not connected to a TTY, the following message would be s
 batect can collect and report anonymous environment, usage and performance information. This information does not include personal or sensitive information, and is used to help improve batect.
 More information, including details of what information is collected and a formal privacy policy, is available at https://batect.dev/Telemetry.html.
 
-It looks like batect is running in a non-interactive session, so it can't ask for permission to collect and report this information. 
+It looks like batect is running in a non-interactive session, so it can't ask for permission to collect and report this information.
 * To suppress this message and allow collection and reporting of telemetry data, set the BATECT_ENABLE_ANALYTICS environment variable to 'true'.
 * To suppress this message and prevent collection and reporting of telemetry data, set the BATECT_DISABLE_ANALYTICS environment variable to 'true'.
 

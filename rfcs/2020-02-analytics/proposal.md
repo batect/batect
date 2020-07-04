@@ -127,12 +127,30 @@ Provided `--disable-analytics` or `BATECT_DISABLE_ANALYTICS` is not set, batect 
 
 ### On first run with analytics enabled
 
-Provided `--disable-analytics` or `BATECT_DISABLE_ANALYTICS` is not set, and that batect does not detect it is running on CI, batect would show the following informational message the first time it is run:
+Provided `--disable-analytics` or `BATECT_DISABLE_ANALYTICS` is not set, and that batect is running with a TTY and does not detect it is running on CI, batect would show the following prompt the first time it is run:
 
 ```
-Starting with batect v0.xx, batect collects and reports anonymous environment, usage and performance information.
-The data collected during this invocation will not be reported until you run batect again.
-More information, including details on what information is collected, how to opt-opt and a formal privacy policy, is available at https://batect.dev/Analytics.html.
+batect can collect and report anonymous environment, usage and performance information. This information does not include personal or sensitive information, and is used to help improve batect.
+More information, including details of what information is collected and a formal privacy policy, is available at https://batect.dev/Telemetry.html.
+
+Is it OK for batect to collect and report this information? (Y/n)
+```
+
+If the user presses Enter, or enters anything starting with a `y`, batect would store this preference and enable telemetry capture and reporting. If the user enters anything starting with a `n`, batect would store this preference and not prompt the user again. If the user enters anything else, it would repeat the prompt until it receives a valid answer.
+
+
+
+On CI, or when stdin is not connected to a TTY, the following message would be shown:
+
+```
+batect can collect and report anonymous environment, usage and performance information. This information does not include personal or sensitive information, and is used to help improve batect.
+More information, including details of what information is collected and a formal privacy policy, is available at https://batect.dev/Telemetry.html.
+
+It looks like batect is running in a non-interactive session, so it can't ask for permission to collect and report this information. 
+* To suppress this message and allow collection and reporting of telemetry data, set the BATECT_ENABLE_ANALYTICS environment variable to 'true'.
+* To suppress this message and prevent collection and reporting of telemetry data, set the BATECT_DISABLE_ANALYTICS environment variable to 'true'.
+
+No data will be collected for this session.
 ```
 
 

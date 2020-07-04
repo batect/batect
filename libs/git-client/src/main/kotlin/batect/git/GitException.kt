@@ -14,23 +14,6 @@
    limitations under the License.
 */
 
-package batect.utils
+package batect.git
 
-import java.nio.file.Files
-import java.nio.file.Path
-
-fun deleteDirectoryContents(directory: Path) {
-    if (!Files.exists(directory)) {
-        return
-    }
-
-    Files.newDirectoryStream(directory).use { stream ->
-        stream.forEach { path ->
-            if (Files.isDirectory(path)) {
-                deleteDirectoryContents(path)
-            }
-
-            Files.delete(path)
-        }
-    }
-}
+class GitException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

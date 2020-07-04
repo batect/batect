@@ -18,7 +18,7 @@ package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.DockerUtils
-import batect.journeytests.testutils.deleteDirectoryContents
+import batect.testutils.deleteDirectoryContents
 import batect.journeytests.testutils.exitCode
 import batect.journeytests.testutils.output
 import batect.testutils.createForGroup

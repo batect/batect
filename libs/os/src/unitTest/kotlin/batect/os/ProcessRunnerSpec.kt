@@ -42,31 +42,86 @@ object ProcessRunnerSpec : Spek({
         val runner by createForEachTest { ProcessRunner(logger) }
 
         on("running a process with stdin attached") {
-            val command = listOf("bash", "-c", "echo hello world && sleep 0.1 && echo hello error world 1>&2 && sleep 0.1 && echo more non-error output && exit 201")
-            val result by runForEachTest { runner.runWithStdinAttached(command) }
+            given("the executable exists") {
+                val command = listOf("bash", "-c", "echo hello world && sleep 0.1 && echo hello error world 1>&2 && sleep 0.1 && echo more non-error output && exit 201")
+                val result by runForEachTest { runner.runWithStdinAttached(command) }
 
-            it("returns the exit code of the command") {
-                assertThat(result.exitCode, equalTo(201))
+                it("returns the exit code of the command") {
+                    assertThat(result.exitCode, equalTo(201))
+                }
+
+                it("returns the combined standard output and standard error of the command") {
+                    assertThat(result.output, equalTo("hello world\nhello error world\nmore non-error output\n"))
+                }
+
+                it("logs before running the command") {
+                    assertThat(
+                        logSink, hasMessage(
+                            withSeverity(Severity.Debug) and
+                                withLogMessage("Starting process.") and
+                                withAdditionalData("command", command)
+                        )
+                    )
+                }
+
+                it("logs the result of running the command") {
+                    assertThat(
+                        logSink, hasMessage(
+                            withSeverity(Severity.Debug) and
+                                withLogMessage("Process exited.") and
+                                withAdditionalData("command", command) and
+                                withAdditionalData("exitCode", 201)
+                        )
+                    )
+                }
             }
 
-            it("returns the combined standard output and standard error of the command") {
-                assertThat(result.output, equalTo("hello world\nhello error world\nmore non-error output\n"))
+            given("the executable does not exist") {
+                val command = listOf("some-non-existent-app", "--some-arg")
+
+                it("throws an appropriate exception") {
+                    assertThat({ runner.runWithStdinAttached(command) }, throws<ExecutableDoesNotExistException>(withMessage("The executable 'some-non-existent-app' could not be found or is not executable.")))
+                }
+            }
+        }
+
+        on("running a process with the console attached") {
+            given("the executable exists") {
+                val command = listOf("bash", "-c", "exit 201")
+                val exitCode by runForEachTest { runner.runWithConsoleAttached(command) }
+
+                it("returns the exit code of the command") {
+                    assertThat(exitCode, equalTo(201))
+                }
+
+                it("logs before running the command") {
+                    assertThat(
+                        logSink, hasMessage(
+                            withSeverity(Severity.Debug) and
+                                withLogMessage("Starting process.") and
+                                withAdditionalData("command", command)
+                        )
+                    )
+                }
+
+                it("logs the result of running the command") {
+                    assertThat(
+                        logSink, hasMessage(
+                            withSeverity(Severity.Debug) and
+                                withLogMessage("Process exited.") and
+                                withAdditionalData("command", command) and
+                                withAdditionalData("exitCode", 201)
+                        )
+                    )
+                }
             }
 
-            it("logs before running the command") {
-                assertThat(logSink, hasMessage(
-                    withSeverity(Severity.Debug) and
-                        withLogMessage("Starting process.") and
-                        withAdditionalData("command", command)))
-            }
+            given("the executable does not exist") {
+                val command = listOf("some-non-existent-app", "--some-arg")
 
-            it("logs the result of running the command") {
-                assertThat(logSink, hasMessage(
-                    withSeverity(Severity.Debug) and
-                        withLogMessage("Process exited.") and
-                        withAdditionalData("command", command) and
-                        withAdditionalData("exitCode", 201)
-                ))
+                it("throws an appropriate exception") {
+                    assertThat({ runner.runWithStdinAttached(command) }, throws<ExecutableDoesNotExistException>(withMessage("The executable 'some-non-existent-app' could not be found or is not executable.")))
+                }
             }
         }
 

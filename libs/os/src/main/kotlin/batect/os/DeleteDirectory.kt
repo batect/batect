@@ -14,10 +14,19 @@
    limitations under the License.
 */
 
-package batect.journeytests.testutils
+package batect.os
 
 import java.nio.file.Files
 import java.nio.file.Path
+
+fun deleteDirectory(directory: Path) {
+    if (!Files.exists(directory)) {
+        return
+    }
+
+    deleteDirectoryContents(directory)
+    Files.delete(directory)
+}
 
 fun deleteDirectoryContents(directory: Path) {
     if (!Files.exists(directory)) {

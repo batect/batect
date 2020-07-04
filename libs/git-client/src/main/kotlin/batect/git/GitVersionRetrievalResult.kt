@@ -14,22 +14,14 @@
    limitations under the License.
 */
 
-rootProject.name = 'batect'
+package batect.git
 
-include ':app'
-include ':docs'
-include ':libs'
-include ':libs:abstractions'
-include ':libs:docker-client'
-include ':libs:git-client'
-include ':libs:logging'
-include ':libs:logging-test-utils'
-include ':libs:os'
-include ':libs:sockets'
-include ':libs:test-utils'
-include ':tools'
-include ':tools:schema'
-include ':wrapper'
-include ':wrapper:testapp'
-include ':wrapper:unix'
-include ':wrapper:windows'
+sealed class GitVersionRetrievalResult {
+    data class Succeeded(val version: String) : GitVersionRetrievalResult() {
+        override fun toString(): String = version
+    }
+
+    data class Failed(val message: String) : GitVersionRetrievalResult() {
+        override fun toString(): String = "($message)"
+    }
+}

@@ -20,8 +20,8 @@ import batect.config.ProjectPaths
 import batect.docker.client.DockerVolumesClient
 import batect.execution.CacheManager
 import batect.execution.CacheType
+import batect.os.deleteDirectory
 import batect.ui.Console
-import batect.utils.deleteDirectoryContents
 import org.kodein.di.generic.instance
 import java.nio.file.Files
 import kotlin.streams.toList
@@ -72,8 +72,7 @@ class CleanupCachesCommand(
 
         directories.forEach { directory ->
             console.println("Deleting '$directory'...")
-            deleteDirectoryContents(directory)
-            Files.delete(directory)
+            deleteDirectory(directory)
         }
 
         if (directories.count() == 1) {

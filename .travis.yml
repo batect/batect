@@ -27,7 +27,7 @@ jobs:
   include:
     - stage: Build and unit test
       name: Linux
-      script: ./gradlew --parallel build check jacocoTestReport assembleRelease integrationTestClasses journeyTestClasses && bash <(curl -s https://codecov.io/bash) -c -F linux
+      script: ./gradlew --parallel build check jacocoTestReport assembleRelease integrationTestClasses libs:git-client:integrationTest journeyTestClasses && bash <(curl -s https://codecov.io/bash) -c -F linux
       workspaces:
         create:
           name: build_workspace

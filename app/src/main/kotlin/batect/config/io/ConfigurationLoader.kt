@@ -20,6 +20,7 @@ import batect.config.ConfigVariableMap
 import batect.config.Configuration
 import batect.config.ConfigurationFile
 import batect.config.ContainerMap
+import batect.config.FileInclude
 import batect.config.NamedObjectMap
 import batect.config.TaskMap
 import batect.config.io.deserializers.PathDeserializer
@@ -61,19 +62,20 @@ class ConfigurationLoader(
         }
 
         val rootConfigFile = loadConfigFile(absolutePathToRootConfigFile)
-        val filesLoaded = mutableMapOf(absolutePathToRootConfigFile to rootConfigFile)
-        val remainingPathsToLoad = mutableSetOf<Path>()
-        remainingPathsToLoad += rootConfigFile.includes
+        val filesLoaded = mutableMapOf(FileInclude(absolutePathToRootConfigFile) to rootConfigFile)
+        val remainingIncludesToLoad = mutableSetOf<FileInclude>()
+        remainingIncludesToLoad += rootConfigFile.includes
 
-        while (remainingPathsToLoad.isNotEmpty()) {
-            val pathToLoad = remainingPathsToLoad.first()
+        while (remainingIncludesToLoad.isNotEmpty()) {
+            val includeToLoad = remainingIncludesToLoad.first()
+            val pathToLoad = includeToLoad.path
             val file = loadConfigFile(pathToLoad)
             checkForProjectName(file, pathToLoad)
 
-            filesLoaded[pathToLoad] = file
-            remainingPathsToLoad.remove(pathToLoad)
-            remainingPathsToLoad += file.includes
-            remainingPathsToLoad -= filesLoaded.keys
+            filesLoaded[includeToLoad] = file
+            remainingIncludesToLoad.remove(includeToLoad)
+            remainingIncludesToLoad += file.includes
+            remainingIncludesToLoad -= filesLoaded.keys
         }
 
         val projectName = rootConfigFile.projectName ?: inferProjectName(absolutePathToRootConfigFile)
@@ -146,25 +148,25 @@ class ConfigurationLoader(
         return inferredProjectName
     }
 
-    private fun mergeContainers(filesLoaded: Map<Path, ConfigurationFile>): ContainerMap {
+    private fun mergeContainers(filesLoaded: Map<FileInclude, ConfigurationFile>): ContainerMap {
         checkForDuplicateDefinitions("container", filesLoaded) { it.containers }
 
         return ContainerMap(filesLoaded.flatMap { it.value.containers })
     }
 
-    private fun mergeTasks(filesLoaded: Map<Path, ConfigurationFile>): TaskMap {
+    private fun mergeTasks(filesLoaded: Map<FileInclude, ConfigurationFile>): TaskMap {
         checkForDuplicateDefinitions("task", filesLoaded) { it.tasks }
 
         return TaskMap(filesLoaded.flatMap { it.value.tasks })
     }
 
-    private fun mergeConfigVariables(filesLoaded: Map<Path, ConfigurationFile>): ConfigVariableMap {
+    private fun mergeConfigVariables(filesLoaded: Map<FileInclude, ConfigurationFile>): ConfigVariableMap {
         checkForDuplicateDefinitions("config variable", filesLoaded) { it.configVariables }
 
         return ConfigVariableMap(filesLoaded.flatMap { it.value.configVariables })
     }
 
-    private fun <T> checkForDuplicateDefinitions(type: String, filesLoaded: Map<Path, ConfigurationFile>, collectionSelector: (ConfigurationFile) -> NamedObjectMap<T>) {
+    private fun <T> checkForDuplicateDefinitions(type: String, filesLoaded: Map<FileInclude, ConfigurationFile>, collectionSelector: (ConfigurationFile) -> NamedObjectMap<T>) {
         val allNames = filesLoaded.values.flatMapToSet { collectionSelector(it).keys }
 
         allNames.forEach { name ->

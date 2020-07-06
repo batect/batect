@@ -23,8 +23,8 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0'
     implementation 'com.github.jnr:jnr-posix:3.0.57'
 
-    implementation project(':libs:abstractions')
     implementation project(':libs:logging')
+    implementation project(':libs:primitives')
 
     testImplementation 'com.google.jimfs:jimfs:1.1'
     testImplementation 'org.araqnid:hamkrest-json:1.1.2'

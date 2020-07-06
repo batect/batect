@@ -23,7 +23,7 @@ import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.withCause
 import batect.testutils.withMessage
-import batect.Version
+import batect.primitives.Version
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo

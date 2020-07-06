@@ -27,7 +27,7 @@ import batect.docker.data
 import batect.docker.pull.DockerImageProgress
 import batect.docker.pull.DockerImageProgressReporter
 import batect.docker.pull.DockerRegistryCredentialsProvider
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.logging.Logger
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject

@@ -24,7 +24,7 @@ import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
-import batect.Version
+import batect.primitives.Version
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn

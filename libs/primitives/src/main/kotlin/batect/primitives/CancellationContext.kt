@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.execution
+package batect.primitives
 
 import java.util.concurrent.ConcurrentLinkedQueue
 

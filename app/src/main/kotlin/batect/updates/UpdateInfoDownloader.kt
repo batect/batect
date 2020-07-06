@@ -19,7 +19,7 @@ package batect.updates
 import batect.logging.Logger
 import batect.logging.data
 import batect.utils.Json
-import batect.Version
+import batect.primitives.Version
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import okhttp3.OkHttpClient

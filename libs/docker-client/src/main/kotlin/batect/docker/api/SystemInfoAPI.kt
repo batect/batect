@@ -22,7 +22,7 @@ import batect.docker.DockerVersionInfo
 import batect.logging.Logger
 import batect.os.SystemInfo
 import batect.docker.Json
-import batect.Version
+import batect.primitives.Version
 import okhttp3.Request
 
 class SystemInfoAPI(

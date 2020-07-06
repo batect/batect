@@ -26,7 +26,7 @@ import batect.docker.api.ExecAPI
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerOutputStream
 import batect.docker.run.OutputConnection
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers

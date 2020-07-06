@@ -26,7 +26,7 @@ import batect.docker.build.DockerImageBuildContextEntry
 import batect.docker.build.DockerImageBuildContextRequestBody
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.pull.TokenDockerRegistryCredentials
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
 import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers

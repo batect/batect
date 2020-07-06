@@ -18,7 +18,7 @@ package batect.execution.model.steps.runners
 
 import batect.docker.ImagePullFailedException
 import batect.docker.client.DockerImagesClient
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.execution.model.events.ImagePullFailedEvent
 import batect.execution.model.events.ImagePullProgressEvent
 import batect.execution.model.events.ImagePulledEvent

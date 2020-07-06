@@ -31,7 +31,7 @@ import batect.execution.model.rules.run.PullImageStepRule
 import batect.execution.model.rules.run.RunContainerSetupCommandsStepRule
 import batect.execution.model.rules.run.RunContainerStepRule
 import batect.execution.model.rules.run.WaitForContainerToBecomeHealthyStepRule
-import batect.flatMapToSet
+import batect.primitives.flatMapToSet
 import batect.logging.Logger
 
 class RunStagePlanner(

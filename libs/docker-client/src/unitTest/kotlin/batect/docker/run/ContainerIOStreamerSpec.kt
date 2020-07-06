@@ -17,8 +17,8 @@
 package batect.docker.run
 
 import batect.docker.DockerException
-import batect.execution.CancellationCallback
-import batect.execution.CancellationContext
+import batect.primitives.CancellationCallback
+import batect.primitives.CancellationContext
 import batect.testutils.CloseableByteArrayInputStream
 import batect.testutils.CloseableByteArrayOutputStream
 import batect.testutils.createForEachTest

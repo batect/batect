@@ -21,7 +21,7 @@ import batect.config.Container
 import batect.config.Expression
 import batect.config.PortMapping
 import batect.config.Task
-import batect.mapToSet
+import batect.primitives.mapToSet
 
 data class ContainerDependencyGraph(
     private val config: Configuration,

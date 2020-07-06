@@ -34,8 +34,8 @@ import batect.execution.model.rules.cleanup.StopContainerStepRule
 import batect.execution.model.rules.data
 import batect.logging.Logger
 import batect.os.SystemInfo
-import batect.filterToSet
-import batect.mapToSet
+import batect.primitives.filterToSet
+import batect.primitives.mapToSet
 
 class CleanupStagePlanner(
     private val graph: ContainerDependencyGraph,

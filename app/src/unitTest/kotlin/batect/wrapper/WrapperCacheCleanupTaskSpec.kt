@@ -23,7 +23,7 @@ import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.runForEachTest
-import batect.Version
+import batect.primitives.Version
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat

@@ -18,7 +18,7 @@ package batect.docker.run
 
 import batect.docker.DockerContainer
 import batect.docker.api.ContainersAPI
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.on

@@ -21,7 +21,7 @@ import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.on
 import batect.ui.Console
-import batect.Version
+import batect.primitives.Version
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never

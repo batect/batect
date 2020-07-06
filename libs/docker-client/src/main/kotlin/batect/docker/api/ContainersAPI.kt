@@ -29,8 +29,8 @@ import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputDecoder
 import batect.docker.run.ContainerOutputStream
 import batect.docker.toJsonArray
-import batect.execution.CancellationContext
-import batect.execution.executeInCancellationContext
+import batect.primitives.CancellationContext
+import batect.primitives.executeInCancellationContext
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.Dimensions

@@ -33,6 +33,7 @@ import batect.execution.model.stages.StepReady
 import batect.execution.model.steps.TaskStep
 import batect.execution.model.steps.data
 import batect.logging.Logger
+import batect.primitives.CancellationContext
 import batect.ui.FailureErrorMessageFormatter
 import batect.ui.text.TextRun
 import java.util.concurrent.locks.ReentrantLock

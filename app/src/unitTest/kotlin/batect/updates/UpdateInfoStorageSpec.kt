@@ -20,7 +20,7 @@ import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.on
 import batect.testutils.runNullableForEachTest
-import batect.Version
+import batect.primitives.Version
 import batect.io.ApplicationPaths
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs

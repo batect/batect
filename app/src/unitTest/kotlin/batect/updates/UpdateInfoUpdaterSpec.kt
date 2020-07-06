@@ -25,7 +25,7 @@ import batect.testutils.on
 import batect.testutils.logging.withException
 import batect.testutils.logging.withLogMessage
 import batect.testutils.logging.withSeverity
-import batect.Version
+import batect.primitives.Version
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any

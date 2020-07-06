@@ -22,6 +22,7 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.TaskStepRunner
+import batect.primitives.CancellationException
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.createMockTaskStep

@@ -24,8 +24,8 @@ import batect.docker.build.DockerImageBuildContext
 import batect.docker.build.DockerImageBuildContextRequestBody
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.toJsonObject
-import batect.execution.CancellationContext
-import batect.execution.executeInCancellationContext
+import batect.primitives.CancellationContext
+import batect.primitives.executeInCancellationContext
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.SystemInfo

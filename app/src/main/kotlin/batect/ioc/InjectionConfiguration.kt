@@ -61,7 +61,7 @@ import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.execution.CacheManager
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.execution.ConfigVariablesProvider
 import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerDependencyGraph

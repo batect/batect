@@ -27,7 +27,7 @@ import batect.docker.data
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.InputConnection
 import batect.docker.run.OutputConnection
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.logging.Logger
 import batect.os.Command
 import okio.Sink

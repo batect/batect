@@ -19,7 +19,7 @@ package batect.execution.model.steps.runners
 import batect.docker.DockerContainerEnvironmentVariableProvider
 import batect.docker.DockerException
 import batect.docker.client.DockerExecClient
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
 import batect.execution.model.events.ContainerBecameReadyEvent

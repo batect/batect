@@ -21,7 +21,7 @@ import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.client.DockerClient
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.os.Dimensions
 import okio.Sink
 import okio.sink

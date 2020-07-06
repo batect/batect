@@ -32,6 +32,7 @@ String versionInfoFileContents() {
     """ |package batect
         |
         |import batect.logging.LogMessageBuilder
+        |import batect.primitives.Version
         |import kotlinx.serialization.Serializable
         |
         |// This file is generated automatically by the $generateVersionInfoFile.name Gradle task.

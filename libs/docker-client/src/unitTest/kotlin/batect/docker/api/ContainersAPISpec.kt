@@ -35,7 +35,7 @@ import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputDecoder
 import batect.docker.run.ContainerOutputStream
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.os.Dimensions
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest

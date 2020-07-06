@@ -24,7 +24,7 @@ import batect.config.ExpressionEvaluationException
 import batect.docker.ImageBuildFailedException
 import batect.docker.client.DockerImageBuildProgress
 import batect.docker.client.DockerImagesClient
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.execution.RunOptions
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent

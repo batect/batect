@@ -20,7 +20,7 @@ import batect.config.Configuration
 import batect.config.Task
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
-import batect.mapToSet
+import batect.primitives.mapToSet
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.builtins.set

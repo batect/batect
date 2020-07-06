@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect
+package batect.primitives
 
 inline fun <T, V> Iterable<T>.mapToSet(transform: (T) -> V): Set<V> =
     this.mapTo(mutableSetOf(), transform)

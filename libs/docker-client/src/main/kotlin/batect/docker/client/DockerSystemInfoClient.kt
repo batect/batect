@@ -23,8 +23,8 @@ import batect.docker.data
 import batect.docker.minimumDockerAPIVersion
 import batect.docker.minimumDockerVersion
 import batect.logging.Logger
-import batect.Version
-import batect.VersionComparisonMode
+import batect.primitives.Version
+import batect.primitives.VersionComparisonMode
 import java.io.IOException
 
 class DockerSystemInfoClient(

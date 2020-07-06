@@ -19,7 +19,7 @@ package batect.integrationtests.endtoend
 import batect.docker.DockerContainer
 import batect.docker.DockerHealthCheckResult
 import batect.docker.client.HealthStatus
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.integrationtests.build
 import batect.integrationtests.createClient
 import batect.integrationtests.creationRequestForContainer

@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect
+package batect.primitives
 
 import batect.testutils.given
 import batect.testutils.on

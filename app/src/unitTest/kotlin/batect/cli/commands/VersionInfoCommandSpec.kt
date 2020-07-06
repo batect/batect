@@ -23,7 +23,7 @@ import batect.os.SystemInfo
 import batect.testutils.on
 import batect.testutils.withPlatformSpecificLineSeparator
 import batect.updates.UpdateNotifier
-import batect.Version
+import batect.primitives.Version
 import batect.git.GitClient
 import batect.git.GitVersionRetrievalResult
 import com.natpryce.hamkrest.assertion.assertThat

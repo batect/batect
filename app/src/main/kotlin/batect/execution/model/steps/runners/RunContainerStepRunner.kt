@@ -18,7 +18,7 @@ package batect.execution.model.steps.runners
 
 import batect.docker.DockerException
 import batect.docker.client.DockerContainersClient
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.execution.model.events.ContainerRunFailedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.RunningContainerExitedEvent

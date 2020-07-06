@@ -34,7 +34,7 @@ import batect.docker.UserAndGroup
 import batect.docker.client.DockerContainerType
 import batect.docker.client.DockerContainersClient
 import batect.docker.client.DockerImagesClient
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.execution.ContainerDependencyGraph
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.VolumeMountResolver

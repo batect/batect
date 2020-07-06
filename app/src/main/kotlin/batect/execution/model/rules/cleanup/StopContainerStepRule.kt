@@ -25,7 +25,7 @@ import batect.execution.model.steps.StopContainerStep
 import batect.logging.ContainerNameOnlySerializer
 import batect.logging.ContainerNameSetSerializer
 import batect.os.OperatingSystem
-import batect.mapToSet
+import batect.primitives.mapToSet
 import kotlinx.serialization.Serializable
 
 @Serializable

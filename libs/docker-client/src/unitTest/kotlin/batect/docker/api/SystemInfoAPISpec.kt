@@ -27,7 +27,7 @@ import batect.testutils.equalTo
 import batect.testutils.mockGet
 import batect.testutils.on
 import batect.testutils.withMessage
-import batect.Version
+import batect.primitives.Version
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn

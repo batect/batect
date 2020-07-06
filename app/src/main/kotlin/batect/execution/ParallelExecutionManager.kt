@@ -24,6 +24,7 @@ import batect.execution.model.steps.TaskStep
 import batect.execution.model.steps.TaskStepRunner
 import batect.execution.model.steps.data
 import batect.logging.Logger
+import batect.primitives.CancellationException
 import batect.ui.EventLogger
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException

@@ -17,7 +17,7 @@
 package batect.integrationtests
 
 import batect.docker.DockerExecResult
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.os.Command
 import batect.os.Dimensions
 import batect.testutils.createForGroup

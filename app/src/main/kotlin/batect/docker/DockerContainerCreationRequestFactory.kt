@@ -18,7 +18,7 @@ package batect.docker
 
 import batect.config.Container
 import batect.execution.ContainerRuntimeConfiguration
-import batect.mapToSet
+import batect.primitives.mapToSet
 
 class DockerContainerCreationRequestFactory(
     private val environmentVariableProvider: DockerContainerEnvironmentVariableProvider,

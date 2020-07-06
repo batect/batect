@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect
+package batect.primitives
 
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder

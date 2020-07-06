@@ -16,7 +16,7 @@
 
 package batect.wrapper
 
-import batect.Version
+import batect.primitives.Version
 import java.nio.file.Path
 import java.time.ZonedDateTime
 

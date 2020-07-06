@@ -17,7 +17,7 @@
 package batect.docker.build
 
 import batect.docker.ImageBuildFailedException
-import batect.mapToSet
+import batect.primitives.mapToSet
 import java.nio.file.Files
 import java.nio.file.Path
 

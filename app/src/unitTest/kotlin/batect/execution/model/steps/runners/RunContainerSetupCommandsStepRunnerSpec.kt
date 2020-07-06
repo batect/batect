@@ -24,7 +24,7 @@ import batect.docker.DockerException
 import batect.docker.DockerExecResult
 import batect.docker.UserAndGroup
 import batect.docker.client.DockerExecClient
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.execution.CleanupOption
 import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.RunAsCurrentUserConfigurationProvider

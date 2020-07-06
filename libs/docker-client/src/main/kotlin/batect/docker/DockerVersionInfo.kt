@@ -17,7 +17,7 @@
 package batect.docker
 
 import batect.logging.LogMessageBuilder
-import batect.Version
+import batect.primitives.Version
 import kotlinx.serialization.Serializable
 
 @Serializable

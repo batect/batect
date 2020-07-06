@@ -22,7 +22,7 @@ import batect.docker.DockerContainer
 import batect.docker.DockerHealthCheckResult
 import batect.docker.client.DockerContainersClient
 import batect.docker.client.HealthStatus
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
 import batect.execution.model.events.TaskEventSink

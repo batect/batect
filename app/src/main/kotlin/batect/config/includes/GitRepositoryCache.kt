@@ -18,7 +18,7 @@ package batect.config.includes
 
 import batect.git.GitClient
 import batect.io.ApplicationPaths
-import batect.mapToSet
+import batect.primitives.mapToSet
 import batect.os.deleteDirectory
 import batect.utils.Json
 import kotlinx.serialization.json.JsonException

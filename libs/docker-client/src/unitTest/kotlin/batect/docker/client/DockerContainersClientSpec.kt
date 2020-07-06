@@ -36,8 +36,8 @@ import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.docker.run.InputConnection
 import batect.docker.run.OutputConnection
-import batect.execution.CancellationCallback
-import batect.execution.CancellationContext
+import batect.primitives.CancellationCallback
+import batect.primitives.CancellationContext
 import batect.os.ConsoleManager
 import batect.os.Dimensions
 import batect.testutils.createForEachTest

@@ -20,8 +20,8 @@ import batect.VersionInfo
 import batect.logging.Logger
 import batect.logging.data
 import batect.os.HostEnvironmentVariables
-import batect.Version
-import batect.VersionParseException
+import batect.primitives.Version
+import batect.primitives.VersionParseException
 import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path

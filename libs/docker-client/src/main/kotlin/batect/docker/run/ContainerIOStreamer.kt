@@ -17,7 +17,7 @@
 package batect.docker.run
 
 import batect.docker.DockerException
-import batect.execution.CancellationContext
+import batect.primitives.CancellationContext
 import okio.Buffer
 import okio.BufferedSource
 import okio.Sink

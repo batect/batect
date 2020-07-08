@@ -140,7 +140,7 @@ A privacy policy will be added to the documentation to explain what information 
 Opting out or blocking collection of telemetry information would be supported through three mechanisms:
 
 * `--disable-telemetry` command line flag
-* `BATECT_DISABLE_TELEMETRY` environment variable
+* `BATECT_ENABLE_TELEMETRY` environment variable set to `0` or `false`
 * Blocking HTTPS traffic to the `api.abacus.batect.dev` domain at a network level (eg. at a proxy)
 
 
@@ -149,21 +149,15 @@ Opting out or blocking collection of telemetry information would be supported th
 
 `./batect --disable-telemetry` would disable both collection of telemetry information and submission of cached data from previous invocations.
 
-Setting the `BATECT_DISABLE_TELEMETRY` environment variable to `1` or `true` would have the same result.
+Setting the `BATECT_ENABLE_TELEMETRY` environment variable to `0` or `false` would have the same result.
 
 
 
 ## Behaviour changes
 
-### On all runs with telemetry enabled
+### On first run with telemetry not explicitly disabled
 
-Provided `--disable-telemetry` or `BATECT_DISABLE_TELEMETRY` is not set, batect would collect the information described above and write it to disk at `~/.batect/telemetry` for upload in the background of subsequent runs (see below).
-
-
-
-### On first run with telemetry enabled
-
-Provided `--disable-telemetry` or `BATECT_DISABLE_TELEMETRY` is not set, and that batect is running with a TTY and does not detect it is running on CI, batect would show the following prompt the first time it is run:
+Provided telemetry is not explictly disabled through either of the mechanisms listed above, and that batect is running with a TTY and does not detect it is running on CI, batect would show the following prompt the first time it is run:
 
 ```
 batect can collect and report anonymous environment, usage and performance information. This information does not include personal or sensitive information, and is used to help improve batect.
@@ -191,6 +185,12 @@ No data will be collected for this session.
 
 
 
+### On all runs with telemetry enabled
+
+batect would collect the information described above and write it to disk at `~/.batect/telemetry` for upload in the background of subsequent runs (see below).
+
+
+
 ### On subsequent runs with telemetry enabled
 
 In the background upon startup, batect would check for cached information from previous runs written to `~/.batect/telemetry`. If any is present, it will upload each run (one at a time) and delete each run after a successful upload. If a run fails to upload and is less than 30 days old, it is left on disk to be retried as part of a subsequent run. If a run fails to upload and is more than 30 days old, it is deleted.
@@ -203,7 +203,7 @@ All data will be uploaded over a HTTPS connection.
 
 ### On any run with telemetry disabled
 
-If telemetry is disabled with `--disable-telemetry` or `BATECT_DISABLE_TELEMETRY`, telemetry data will not be written to disk, and any cached information will not be uploaded.
+Telemetry data will not be written to disk, and any cached information will not be uploaded.
 
 
 

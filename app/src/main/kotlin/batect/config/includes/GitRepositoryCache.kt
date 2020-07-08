@@ -16,10 +16,11 @@
 
 package batect.config.includes
 
+import batect.VersionInfo
 import batect.git.GitClient
 import batect.io.ApplicationPaths
-import batect.primitives.mapToSet
 import batect.os.deleteDirectory
+import batect.primitives.mapToSet
 import batect.utils.Json
 import kotlinx.serialization.json.JsonException
 import kotlinx.serialization.json.JsonLiteral
@@ -35,6 +36,7 @@ import java.util.stream.Stream
 class GitRepositoryCache(
     private val applicationPaths: ApplicationPaths,
     private val gitClient: GitClient,
+    private val versionInfo: VersionInfo,
     private val timeSource: TimeSource = ZonedDateTime::now
 ) {
     private val gitCacheDirectory = applicationPaths.rootLocalStorageDirectory.resolve("git").toAbsolutePath()
@@ -62,18 +64,18 @@ class GitRepositoryCache(
         val existingContent = if (Files.exists(infoPath)) {
             Json.default.parseJson(Files.readAllBytes(infoPath).toString(Charsets.UTF_8)).jsonObject
         } else {
-            JsonObject(emptyMap())
-        }
-
-        val info = JsonObject(
-            existingContent.content + mapOf(
+            JsonObject(mapOf(
                 "repo" to json {
                     "remote" to repo.remote
                     "ref" to repo.ref
                 },
-                "lastUsed" to JsonLiteral(lastUsed.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
-            )
-        )
+                "clonedWithVersion" to JsonLiteral(versionInfo.version.toString())
+            ))
+        }
+
+        val info = JsonObject(existingContent.content + mapOf(
+            "lastUsed" to JsonLiteral(lastUsed.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+        ))
 
         Files.write(infoPath, info.toString().toByteArray(Charsets.UTF_8))
     }

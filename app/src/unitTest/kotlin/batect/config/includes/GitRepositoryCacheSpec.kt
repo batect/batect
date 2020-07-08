@@ -16,8 +16,10 @@
 
 package batect.config.includes
 
+import batect.VersionInfo
 import batect.git.GitClient
 import batect.io.ApplicationPaths
+import batect.primitives.Version
 import batect.testutils.createForEachTest
 import batect.testutils.doesNotThrow
 import batect.testutils.equalTo
@@ -30,6 +32,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
@@ -48,8 +51,14 @@ object GitRepositoryCacheSpec : Spek({
         val rootLocalStorageDirectory by createForEachTest { fileSystem.getPath("/some/.batect/dir") }
         val paths by createForEachTest { ApplicationPaths(rootLocalStorageDirectory) }
         val gitClient by createForEachTest { mock<GitClient>() }
+        val versionInfo by createForEachTest {
+            mock<VersionInfo> {
+                on { version } doReturn Version(1, 2, 3)
+            }
+        }
+
         val currentTime = ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC)
-        val cache by createForEachTest { GitRepositoryCache(paths, gitClient, { currentTime }) }
+        val cache by createForEachTest { GitRepositoryCache(paths, gitClient, versionInfo, { currentTime }) }
 
         describe("ensuring a repository is cached") {
             val repo = GitRepositoryReference("https://github.com/me/my-bundle.git", "my-tag")
@@ -64,8 +73,14 @@ object GitRepositoryCacheSpec : Spek({
                 Files.createDirectories(expectedInfoFile.parent)
 
                 Files.write(expectedInfoFile, """{
+                    |    "repo": {
+                    |        "remote": "https://github.com/me/my-bundle.git",
+                    |        "ref": "my-tag",
+                    |        "someOtherInfo": "some other value"
+                    |    },
                     |    "lastUsed": "2001-01-01T01:02:03.456789012Z",
-                    |    "otherInfo": "some value"
+                    |    "otherInfo": "some value",
+                    |    "clonedWithVersion": "4.5.6"
                     |}""".trimMargin().toByteArray(Charsets.UTF_8))
             }
 
@@ -95,7 +110,8 @@ object GitRepositoryCacheSpec : Spek({
                         |        "remote": "https://github.com/me/my-bundle.git",
                         |        "ref": "my-tag"
                         |    },
-                        |    "lastUsed": "2020-07-05T01:02:03.456789012Z"
+                        |    "lastUsed": "2020-07-05T01:02:03.456789012Z",
+                        |    "clonedWithVersion": "1.2.3"
                         |}
                         """.trimMargin()))
                 }
@@ -107,10 +123,12 @@ object GitRepositoryCacheSpec : Spek({
                         |{
                         |    "repo": {
                         |        "remote": "https://github.com/me/my-bundle.git",
-                        |        "ref": "my-tag"
+                        |        "ref": "my-tag",
+                        |        "someOtherInfo": "some other value"
                         |    },
                         |    "lastUsed": "2020-07-05T01:02:03.456789012Z",
-                        |    "otherInfo": "some value"
+                        |    "otherInfo": "some value",
+                        |    "clonedWithVersion": "4.5.6"
                         |}
                         """.trimMargin()))
                 }

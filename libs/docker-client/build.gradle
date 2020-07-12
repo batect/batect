@@ -19,7 +19,7 @@ plugins {
 }
 
 dependencies {
-    implementation platform("com.squareup.okhttp3:okhttp-bom:4.7.2")
+    implementation platform("com.squareup.okhttp3:okhttp-bom:4.8.0")
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0'

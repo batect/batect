@@ -41,6 +41,7 @@ import batect.testutils.runForEachTest
 import batect.testutils.logging.withException
 import batect.testutils.logging.withSeverity
 import batect.ui.Console
+import batect.ui.OutputStyle
 import batect.ui.text.Text
 import batect.updates.UpdateNotifier
 import batect.wrapper.WrapperCacheCleanupTask
@@ -113,7 +114,7 @@ object RunTaskCommandSpec : Spek({
                             whenever(taskRunner.run(mainTask, runOptions)).thenReturn(expectedTaskExitCode)
                         }
 
-                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, console, errorConsole, logger) }
+                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, null, console, errorConsole, logger) }
                         val exitCode by runForEachTest { command.run() }
 
                         it("runs the task") {
@@ -152,7 +153,7 @@ object RunTaskCommandSpec : Spek({
                             whenever(taskRunner.run(mainTask, runOptions)).thenReturn(0)
                         }
 
-                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, console, errorConsole, logger) }
+                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, null, console, errorConsole, logger) }
                         val exitCode by runForEachTest { command.run() }
 
                         it("runs the task") {
@@ -195,51 +196,68 @@ object RunTaskCommandSpec : Spek({
                         on { resolveExecutionOrder(configWithImageOverrides, taskName) } doReturn listOf(otherTask, mainTask)
                     }
 
-                    on("and the dependency finishes with an exit code of 0") {
+                    given("the dependency finishes with an exit code of 0") {
                         beforeEachTest {
                             whenever(taskRunner.run(otherTask, runOptionsForOtherTask)).thenReturn(0)
                             whenever(taskRunner.run(mainTask, runOptions)).thenReturn(expectedTaskExitCode)
                         }
 
-                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, console, errorConsole, logger) }
-                        val exitCode by runForEachTest { command.run() }
+                        given("quiet output mode is not being used") {
+                            val outputStyle = OutputStyle.Fancy
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, outputStyle, console, errorConsole, logger) }
+                            val exitCode by runForEachTest { command.run() }
 
-                        it("runs the dependency task with cleanup on success enabled") {
-                            verify(taskRunner).run(otherTask, runOptionsForOtherTask)
-                        }
-
-                        it("runs the main task with cleanup on success matching the preference provided by the user") {
-                            verify(taskRunner).run(mainTask, runOptions)
-                        }
-
-                        it("runs the dependency before the main task, and prints a blank line in between") {
-                            inOrder(taskRunner, console) {
+                            it("runs the dependency task with cleanup on success enabled") {
                                 verify(taskRunner).run(otherTask, runOptionsForOtherTask)
-                                verify(console).println()
+                            }
+
+                            it("runs the main task with cleanup on success matching the preference provided by the user") {
                                 verify(taskRunner).run(mainTask, runOptions)
                             }
-                        }
 
-                        it("returns the exit code of the main task") {
-                            assertThat(exitCode, equalTo(expectedTaskExitCode))
-                        }
+                            it("runs the dependency before the main task, and prints a blank line in between") {
+                                inOrder(taskRunner, console) {
+                                    verify(taskRunner).run(otherTask, runOptionsForOtherTask)
+                                    verify(console).println()
+                                    verify(taskRunner).run(mainTask, runOptions)
+                                }
+                            }
 
-                        it("displays any update notifications before running the task") {
-                            inOrder(taskRunner, updateNotifier) {
-                                verify(updateNotifier).run()
-                                verify(taskRunner, atLeastOnce()).run(any(), any())
+                            it("returns the exit code of the main task") {
+                                assertThat(exitCode, equalTo(expectedTaskExitCode))
+                            }
+
+                            it("displays any update notifications before running the task") {
+                                inOrder(taskRunner, updateNotifier) {
+                                    verify(updateNotifier).run()
+                                    verify(taskRunner, atLeastOnce()).run(any(), any())
+                                }
+                            }
+
+                            it("triggers wrapper cache cleanup before running the task") {
+                                inOrder(wrapperCacheCleanupTask, taskRunner) {
+                                    verify(wrapperCacheCleanupTask).start()
+                                    verify(taskRunner, atLeastOnce()).run(any(), any())
+                                }
+                            }
+
+                            it("does not print anything to the error console") {
+                                verifyZeroInteractions(errorConsole)
                             }
                         }
 
-                        it("triggers wrapper cache cleanup before running the task") {
-                            inOrder(wrapperCacheCleanupTask, taskRunner) {
-                                verify(wrapperCacheCleanupTask).start()
-                                verify(taskRunner, atLeastOnce()).run(any(), any())
-                            }
-                        }
+                        given("quiet output mode is being used") {
+                            val outputStyle = OutputStyle.Quiet
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, outputStyle, console, errorConsole, logger) }
+                            beforeEachTest { command.run() }
 
-                        it("does not print anything to the error console") {
-                            verifyZeroInteractions(errorConsole)
+                            it("runs the dependency before the main task, and does not print a blank line in between") {
+                                inOrder(taskRunner, console) {
+                                    verify(taskRunner).run(otherTask, runOptionsForOtherTask)
+                                    verify(console, never()).println()
+                                    verify(taskRunner).run(mainTask, runOptions)
+                                }
+                            }
                         }
                     }
 
@@ -248,7 +266,7 @@ object RunTaskCommandSpec : Spek({
                             whenever(taskRunner.run(otherTask, runOptionsForOtherTask)).thenReturn(1)
                         }
 
-                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, console, errorConsole, logger) }
+                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, null, console, errorConsole, logger) }
                         val exitCode by runForEachTest { command.run() }
 
                         it("runs the dependency task") {
@@ -289,7 +307,7 @@ object RunTaskCommandSpec : Spek({
                         on { resolveExecutionOrder(configWithImageOverrides, taskName) } doThrow exception
                     }
 
-                    val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, console, errorConsole, logger) }
+                    val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, null, console, errorConsole, logger) }
                     val exitCode by runForEachTest { command.run() }
 
                     it("prints a message to the output") {

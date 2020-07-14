@@ -51,7 +51,7 @@ class KotlinPlugin implements Plugin<Project> {
     }
 
     private void applySpotless(Project project) {
-        project.plugins.apply('com.diffplug.gradle.spotless')
+        project.plugins.apply('com.diffplug.spotless')
 
         def kotlinLicenseHeader = "/*${project.rootProject.licenseText}*/\n\n"
         project.extensions.add("kotlinLicenseHeader", kotlinLicenseHeader)

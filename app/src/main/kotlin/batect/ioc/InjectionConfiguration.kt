@@ -61,7 +61,6 @@ import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.execution.CacheManager
-import batect.primitives.CancellationContext
 import batect.execution.ConfigVariablesProvider
 import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerDependencyGraph
@@ -114,6 +113,7 @@ import batect.os.unix.UnixConsoleManager
 import batect.os.unix.UnixNativeMethods
 import batect.os.windows.WindowsConsoleManager
 import batect.os.windows.WindowsNativeMethods
+import batect.primitives.CancellationContext
 import batect.proxies.ProxyEnvironmentVariablePreprocessor
 import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.ui.Console
@@ -130,6 +130,10 @@ import batect.utils.Json
 import batect.wrapper.WrapperCache
 import batect.wrapper.WrapperCacheCleanupTask
 import com.hypirion.io.RevivableInputStream
+import java.io.InputStream
+import java.io.PrintStream
+import java.nio.file.FileSystem
+import java.nio.file.FileSystems
 import jnr.ffi.Platform
 import jnr.posix.POSIX
 import jnr.posix.POSIXFactory
@@ -140,10 +144,6 @@ import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
 import org.kodein.di.generic.scoped
 import org.kodein.di.generic.singleton
-import java.io.InputStream
-import java.io.PrintStream
-import java.nio.file.FileSystem
-import java.nio.file.FileSystems
 
 fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStream, inputStream: InputStream): DKodein = Kodein.direct {
     bind<FileSystem>() with singleton { FileSystems.getDefault() }

@@ -24,7 +24,6 @@ import batect.docker.DockerException
 import batect.docker.DockerExecResult
 import batect.docker.UserAndGroup
 import batect.docker.client.DockerExecClient
-import batect.primitives.CancellationContext
 import batect.execution.CleanupOption
 import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.RunAsCurrentUserConfigurationProvider
@@ -37,6 +36,7 @@ import batect.execution.model.events.SetupCommandsCompletedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.RunContainerSetupCommandsStep
 import batect.os.Command
+import batect.primitives.CancellationContext
 import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter

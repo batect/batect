@@ -24,7 +24,6 @@ import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.platformLineSeparator
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.verbs.assert
 import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.containsNot
 import ch.tutteli.atrium.api.fluent.en_GB.containsRegex
@@ -32,9 +31,10 @@ import ch.tutteli.atrium.api.fluent.en_GB.isEmpty
 import ch.tutteli.atrium.api.fluent.en_GB.notToBe
 import ch.tutteli.atrium.api.fluent.en_GB.notToBeNull
 import ch.tutteli.atrium.api.fluent.en_GB.toBe
+import ch.tutteli.atrium.api.verbs.assert
+import java.io.InputStreamReader
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.io.InputStreamReader
 
 object DontCleanupAfterDependencyStartupFailureTest : Spek({
     describe("a task with an unhealthy dependency") {

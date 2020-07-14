@@ -29,11 +29,11 @@ import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
+import java.time.Duration
+import java.time.temporal.ChronoUnit
 import kotlinx.serialization.Encoder
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.Duration
-import java.time.temporal.ChronoUnit
 
 object DurationSerializerSpec : Spek({
     describe("a duration deserializer") {

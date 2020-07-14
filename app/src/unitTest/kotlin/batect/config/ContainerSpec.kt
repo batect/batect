@@ -36,10 +36,10 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import java.time.Duration
 import kotlinx.serialization.modules.serializersModuleOf
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.Duration
 
 object ContainerSpec : Spek({
     describe("a container") {

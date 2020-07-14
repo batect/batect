@@ -16,8 +16,8 @@
 
 package batect.docker
 
-import batect.testutils.equalTo
 import batect.primitives.Version
+import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe

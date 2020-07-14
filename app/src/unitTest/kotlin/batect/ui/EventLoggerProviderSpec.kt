@@ -44,10 +44,10 @@ import com.natpryce.hamkrest.isA
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
+import java.io.PrintStream
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
-import java.io.PrintStream
 
 object EventLoggerProviderSpec : Spek({
     describe("an event logger provider") {

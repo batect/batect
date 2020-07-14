@@ -18,8 +18,6 @@ package batect.logging
 
 import jnr.posix.POSIX
 import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.builtins.serializer
 
 class StandardAdditionalDataSource(
     private val posix: POSIX,

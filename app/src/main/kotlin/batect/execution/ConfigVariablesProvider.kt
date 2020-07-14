@@ -23,15 +23,15 @@ import batect.config.io.ConfigurationException
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlException
 import com.charleskorn.kaml.YamlInput
+import java.nio.charset.Charset
+import java.nio.file.Files
+import java.nio.file.Path
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
-import java.nio.charset.Charset
-import java.nio.file.Files
-import java.nio.file.Path
 
 class ConfigVariablesProvider(
     private val commandLineOverrides: Map<String, String>,

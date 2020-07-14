@@ -36,14 +36,14 @@ import batect.testutils.given
 import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import jnr.ffi.Platform
-import jnr.posix.POSIXFactory
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import jnr.ffi.Platform
+import jnr.posix.POSIXFactory
 import kotlin.random.Random
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object FileSystemEndToEndIntegrationTest : Spek({
     describe("using the local filesystem from a Docker container") {

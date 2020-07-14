@@ -16,6 +16,7 @@
 
 package batect.updates
 
+import batect.primitives.Version
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.mockGet
@@ -23,7 +24,6 @@ import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.withCause
 import batect.testutils.withMessage
-import batect.primitives.Version
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -33,13 +33,13 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
+import java.io.IOException
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import okhttp3.Call
 import okhttp3.OkHttpClient
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.io.IOException
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 
 object UpdateInfoDownloaderSpec : Spek({
     describe("an update information downloader") {

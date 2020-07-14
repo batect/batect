@@ -32,8 +32,8 @@ import batect.execution.ContainerEntrypointResolver
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.run.BuildImageStepRule
 import batect.execution.model.rules.run.CreateContainerStepRule
-import batect.execution.model.rules.run.PrepareTaskNetworkStepRule
 import batect.execution.model.rules.run.InitialiseCachesStepRule
+import batect.execution.model.rules.run.PrepareTaskNetworkStepRule
 import batect.execution.model.rules.run.PullImageStepRule
 import batect.execution.model.rules.run.RunContainerSetupCommandsStepRule
 import batect.execution.model.rules.run.RunContainerStepRule
@@ -50,10 +50,10 @@ import com.natpryce.hamkrest.hasSize
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import java.nio.file.Paths
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
 
 object RunStagePlannerSpec : Spek({
     describe("a run stage planner") {

@@ -21,12 +21,12 @@ import batect.docker.DockerImage
 import batect.docker.ImagePullFailedException
 import batect.docker.client.DockerImagesClient
 import batect.docker.pull.DockerImageProgress
-import batect.primitives.CancellationContext
 import batect.execution.model.events.ImagePullFailedEvent
 import batect.execution.model.events.ImagePullProgressEvent
 import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.PullImageStep
+import batect.primitives.CancellationContext
 import batect.testutils.createForEachTest
 import batect.testutils.on
 import com.nhaarman.mockitokotlin2.any

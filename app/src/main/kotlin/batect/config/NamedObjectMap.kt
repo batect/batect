@@ -111,8 +111,8 @@ abstract class NamedObjectMapSerializer<TCollection : Iterable<TElement>, TEleme
         val output = encoder.beginCollection(descriptor, value.count())
 
         value.forEachIndexed { index, element ->
-            output.encodeSerializableElement(descriptor, 2*index, keySerializer, getName(element))
-            output.encodeSerializableElement(descriptor, 2*index + 1, elementSerializer, element)
+            output.encodeSerializableElement(descriptor, 2 * index, keySerializer, getName(element))
+            output.encodeSerializableElement(descriptor, 2 * index + 1, elementSerializer, element)
         }
 
         output.endStructure(descriptor)

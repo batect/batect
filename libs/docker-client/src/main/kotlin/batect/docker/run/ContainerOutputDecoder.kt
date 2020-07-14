@@ -16,6 +16,10 @@
 
 package batect.docker.run
 
+import java.io.InputStream
+import java.nio.ByteBuffer
+import java.nio.charset.Charset
+import kotlin.math.min
 import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
@@ -24,10 +28,6 @@ import okio.Sink
 import okio.Source
 import okio.Timeout
 import okio.buffer
-import java.io.InputStream
-import java.nio.ByteBuffer
-import java.nio.charset.Charset
-import kotlin.math.min
 
 data class ContainerOutputDecoder(val source: BufferedSource) : BufferedSource {
     private val decoded = object : Source {

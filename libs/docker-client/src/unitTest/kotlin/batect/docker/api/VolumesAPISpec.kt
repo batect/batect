@@ -20,9 +20,9 @@ import batect.docker.DockerHttpConfig
 import batect.docker.DockerVolume
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.equalTo
 import batect.testutils.given
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.mockDelete
 import batect.testutils.mockGet
 import batect.testutils.on

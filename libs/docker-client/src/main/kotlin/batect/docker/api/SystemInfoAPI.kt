@@ -19,9 +19,9 @@ package batect.docker.api
 import batect.docker.DockerException
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerVersionInfo
+import batect.docker.Json
 import batect.logging.Logger
 import batect.os.SystemInfo
-import batect.docker.Json
 import batect.primitives.Version
 import okhttp3.Request
 

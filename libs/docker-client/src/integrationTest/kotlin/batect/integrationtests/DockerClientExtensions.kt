@@ -21,13 +21,13 @@ import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.client.DockerClient
-import batect.primitives.CancellationContext
 import batect.os.Dimensions
+import batect.primitives.CancellationContext
+import java.io.ByteArrayInputStream
+import java.nio.file.Path
 import okio.Sink
 import okio.sink
 import okio.source
-import java.io.ByteArrayInputStream
-import java.nio.file.Path
 
 fun <T> DockerClient.withNetwork(action: (DockerNetwork) -> T): T {
     val network = this.networks.create("bridge")

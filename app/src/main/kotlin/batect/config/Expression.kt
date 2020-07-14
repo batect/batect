@@ -18,6 +18,7 @@ package batect.config
 
 import batect.config.io.ConfigurationException
 import com.charleskorn.kaml.YamlInput
+import kotlin.math.min
 import kotlinx.serialization.CompositeEncoder
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
@@ -27,7 +28,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Serializer
 import kotlinx.serialization.builtins.list
 import kotlinx.serialization.builtins.serializer
-import kotlin.math.min
 
 @Serializable(with = Expression.Companion::class)
 sealed class Expression(open val originalExpression: String) {

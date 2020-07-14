@@ -31,8 +31,8 @@ class FileLogSink(
     private val lock = Object()
     private val fileStream = Files.newOutputStream(path, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
 
-    constructor(path: Path, writer: LogMessageWriter, standardAdditionalDataSource: StandardAdditionalDataSource)
-        : this(path, writer, standardAdditionalDataSource, { ZonedDateTime.now(ZoneOffset.UTC) })
+    constructor(path: Path, writer: LogMessageWriter, standardAdditionalDataSource: StandardAdditionalDataSource) :
+        this(path, writer, standardAdditionalDataSource, { ZonedDateTime.now(ZoneOffset.UTC) })
 
     override fun write(severity: Severity, loggerAdditionalData: Map<String, Jsonable>, build: LogMessageBuilder.() -> LogMessageBuilder) {
         val builder = LogMessageBuilder(severity, loggerAdditionalData)

@@ -16,8 +16,8 @@
 
 package batect.config
 
-import kotlinx.serialization.Serializable
 import java.nio.file.Path
+import kotlinx.serialization.Serializable
 
 sealed class ImageSource
 

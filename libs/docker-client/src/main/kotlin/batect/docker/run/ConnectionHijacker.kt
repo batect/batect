@@ -16,13 +16,13 @@
 
 package batect.docker.run
 
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.jvm.isAccessible
 import okhttp3.Interceptor
 import okhttp3.Response
 import okhttp3.internal.connection.RealConnection
 import okio.BufferedSink
 import okio.BufferedSource
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.jvm.isAccessible
 
 class ConnectionHijacker : Interceptor {
     var source: BufferedSource? = null

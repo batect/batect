@@ -24,12 +24,11 @@ import com.natpryce.hamkrest.hasElement
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import kotlinx.serialization.builtins.serializer
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import kotlinx.serialization.builtins.serializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 
 object LogMessageBuilderSpec : Spek({
     describe("a log message builder") {

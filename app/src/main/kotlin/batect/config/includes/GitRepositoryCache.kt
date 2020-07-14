@@ -22,16 +22,16 @@ import batect.io.ApplicationPaths
 import batect.os.deleteDirectory
 import batect.primitives.mapToSet
 import batect.utils.Json
-import kotlinx.serialization.json.JsonException
-import kotlinx.serialization.json.JsonLiteral
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.json
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.stream.Collectors
 import java.util.stream.Stream
+import kotlinx.serialization.json.JsonException
+import kotlinx.serialization.json.JsonLiteral
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.json
 
 class GitRepositoryCache(
     private val applicationPaths: ApplicationPaths,

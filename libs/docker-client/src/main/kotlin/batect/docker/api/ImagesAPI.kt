@@ -20,17 +20,19 @@ import batect.docker.DockerHttpConfig
 import batect.docker.DockerImage
 import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
+import batect.docker.Json
+import batect.docker.Tee
 import batect.docker.build.DockerImageBuildContext
 import batect.docker.build.DockerImageBuildContextRequestBody
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.toJsonObject
-import batect.primitives.CancellationContext
-import batect.primitives.executeInCancellationContext
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.SystemInfo
-import batect.docker.Json
-import batect.docker.Tee
+import batect.primitives.CancellationContext
+import batect.primitives.executeInCancellationContext
+import java.io.ByteArrayOutputStream
+import java.util.Base64
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.json
 import okhttp3.HttpUrl
@@ -39,8 +41,6 @@ import okhttp3.Response
 import okio.Buffer
 import okio.Sink
 import okio.sink
-import java.io.ByteArrayOutputStream
-import java.util.Base64
 
 class ImagesAPI(
     httpConfig: DockerHttpConfig,

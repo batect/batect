@@ -18,9 +18,9 @@ package batect.docker.pull
 
 import batect.os.ProcessRunner
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.equalTo
 import batect.testutils.given
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.on
 import batect.testutils.runNullableForEachTest
 import com.google.common.jimfs.Configuration
@@ -28,10 +28,10 @@ import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.mock
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 import java.util.Properties
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object DockerRegistryCredentialsConfigurationFileSpec : Spek({
     describe("a Docker registry credentials configuration file") {

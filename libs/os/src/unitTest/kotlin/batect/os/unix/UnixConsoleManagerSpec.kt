@@ -16,6 +16,7 @@
 
 package batect.os.unix
 
+import batect.os.ConsoleInfo
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.testutils.createForEachTest
@@ -25,7 +26,6 @@ import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.withMessage
-import batect.os.ConsoleInfo
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any

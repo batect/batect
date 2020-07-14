@@ -30,10 +30,10 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object ConsoleSpec : Spek({
     val ESC = "\u001B"

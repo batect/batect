@@ -31,9 +31,9 @@ import batect.ui.Console
 import batect.ui.text.Text
 import batect.updates.UpdateNotifier
 import batect.wrapper.WrapperCacheCleanupTask
+import java.nio.file.Path
 import org.kodein.di.DKodein
 import org.kodein.di.generic.instance
-import java.nio.file.Path
 
 class RunTaskCommand(
     private val configFile: Path,

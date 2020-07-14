@@ -19,11 +19,11 @@ package batect.config.io.deserializers
 import batect.config.io.ConfigurationException
 import batect.logging.DurationLoggingSerializer
 import com.charleskorn.kaml.YamlInput
+import java.time.Duration
+import java.time.temporal.ChronoUnit
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.Serializer
-import java.time.Duration
-import java.time.temporal.ChronoUnit
 
 @Serializer(forClass = Duration::class)
 object DurationSerializer : DurationLoggingSerializer() {

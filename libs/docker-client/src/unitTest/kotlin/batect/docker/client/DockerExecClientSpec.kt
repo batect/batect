@@ -26,11 +26,11 @@ import batect.docker.api.ExecAPI
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerOutputStream
 import batect.docker.run.OutputConnection
-import batect.primitives.CancellationContext
 import batect.os.Command
+import batect.primitives.CancellationContext
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.equalTo
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
@@ -38,11 +38,11 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
+import java.io.ByteArrayOutputStream
 import okio.Buffer
 import okio.sink
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.io.ByteArrayOutputStream
 
 object DockerExecClientSpec : Spek({
     describe("a Docker exec client") {

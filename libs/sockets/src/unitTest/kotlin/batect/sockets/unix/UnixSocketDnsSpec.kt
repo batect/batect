@@ -22,9 +22,9 @@ import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.throws
+import java.net.InetAddress
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.net.InetAddress
 
 object UnixSocketDnsSpec : Spek({
     describe("a Unix socket DNS provider") {

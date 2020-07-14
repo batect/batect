@@ -19,22 +19,22 @@ package batect.cli.commands
 import batect.VersionInfo
 import batect.docker.client.DockerSystemInfoClient
 import batect.docker.client.DockerVersionInfoRetrievalResult
+import batect.git.GitClient
+import batect.git.GitVersionRetrievalResult
 import batect.os.SystemInfo
+import batect.primitives.Version
 import batect.testutils.on
 import batect.testutils.withPlatformSpecificLineSeparator
 import batect.updates.UpdateNotifier
-import batect.primitives.Version
-import batect.git.GitClient
-import batect.git.GitVersionRetrievalResult
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object VersionInfoCommandSpec : Spek({
     describe("a 'version info' command") {

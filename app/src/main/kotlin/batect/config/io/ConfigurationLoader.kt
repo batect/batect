@@ -35,10 +35,10 @@ import com.charleskorn.kaml.EmptyYamlDocumentException
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlConfiguration
 import com.charleskorn.kaml.YamlException
-import kotlinx.serialization.modules.serializersModuleOf
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlinx.serialization.modules.serializersModuleOf
 
 class ConfigurationLoader(
     private val pathResolverFactory: PathResolverFactory,

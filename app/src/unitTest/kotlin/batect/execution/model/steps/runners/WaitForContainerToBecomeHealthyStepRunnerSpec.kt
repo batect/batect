@@ -22,12 +22,12 @@ import batect.docker.DockerContainer
 import batect.docker.DockerHealthCheckResult
 import batect.docker.client.DockerContainersClient
 import batect.docker.client.HealthStatus
-import batect.primitives.CancellationContext
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.WaitForContainerToBecomeHealthyStep
 import batect.os.SystemInfo
+import batect.primitives.CancellationContext
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on

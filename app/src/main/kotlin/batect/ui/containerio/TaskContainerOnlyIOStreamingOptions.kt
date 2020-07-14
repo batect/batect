@@ -21,9 +21,9 @@ import batect.config.SetupCommand
 import batect.os.ConsoleInfo
 import batect.os.Dimensions
 import com.hypirion.io.RevivableInputStream
+import java.io.PrintStream
 import okio.Sink
 import okio.Source
-import java.io.PrintStream
 
 data class TaskContainerOnlyIOStreamingOptions(
     private val taskContainer: Container,

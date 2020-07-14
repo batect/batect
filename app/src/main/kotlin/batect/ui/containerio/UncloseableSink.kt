@@ -16,9 +16,9 @@
 
 package batect.ui.containerio
 
+import java.io.PrintStream
 import okio.Sink
 import okio.sink
-import java.io.PrintStream
 
 data class UncloseableSink(val destination: PrintStream) : Sink by destination.sink() {
     override fun close() {}

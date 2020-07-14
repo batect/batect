@@ -22,17 +22,17 @@ import batect.docker.DockerExecInstance
 import batect.docker.DockerExecInstanceInfo
 import batect.docker.DockerHttpConfig
 import batect.docker.ExecFailedException
+import batect.docker.Json
 import batect.docker.data
 import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerOutputStream
 import batect.logging.Logger
 import batect.os.SystemInfo
-import batect.docker.Json
+import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.json
 import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
 import okhttp3.Request
-import java.util.concurrent.TimeUnit
 
 // Flow is:
 // - Create exec instance

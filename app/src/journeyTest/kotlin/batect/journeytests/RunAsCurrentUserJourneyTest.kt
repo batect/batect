@@ -23,16 +23,16 @@ import batect.os.deleteDirectoryContents
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.verbs.assert
 import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.notToThrow
 import ch.tutteli.atrium.api.fluent.en_GB.toBe
-import jnr.ffi.Platform
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
+import ch.tutteli.atrium.api.verbs.assert
 import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Paths
+import jnr.ffi.Platform
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object RunAsCurrentUserJourneyTest : Spek({
     mapOf(

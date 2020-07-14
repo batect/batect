@@ -28,15 +28,15 @@ import batect.logging.LoggerFactory
 import batect.logging.Severity
 import batect.os.ConsoleManager
 import batect.os.SystemInfo
-import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.given
+import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.logging.hasMessage
+import batect.testutils.logging.withException
+import batect.testutils.logging.withSeverity
 import batect.testutils.on
 import batect.testutils.runForEachTest
-import batect.testutils.logging.withException
 import batect.testutils.withPlatformSpecificLineSeparator
-import batect.testutils.logging.withSeverity
 import batect.ui.Console
 import batect.ui.text.Text
 import batect.wrapper.WrapperCache
@@ -49,13 +49,13 @@ import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
 
 object ApplicationSpec : Spek({
     describe("an application") {

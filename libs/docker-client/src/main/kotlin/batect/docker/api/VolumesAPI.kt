@@ -18,11 +18,11 @@ package batect.docker.api
 
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerVolume
+import batect.docker.Json
 import batect.docker.data
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.SystemInfo
-import batect.docker.Json
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.set

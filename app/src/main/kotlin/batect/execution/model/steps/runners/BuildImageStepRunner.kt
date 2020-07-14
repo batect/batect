@@ -24,7 +24,6 @@ import batect.config.ExpressionEvaluationException
 import batect.docker.ImageBuildFailedException
 import batect.docker.client.DockerImageBuildProgress
 import batect.docker.client.DockerImagesClient
-import batect.primitives.CancellationContext
 import batect.execution.RunOptions
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
@@ -35,6 +34,7 @@ import batect.os.PathResolutionResult
 import batect.os.PathResolverFactory
 import batect.os.PathType
 import batect.os.SystemInfo
+import batect.primitives.CancellationContext
 import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.ui.containerio.ContainerIOStreamingOptions
 import java.nio.file.Path

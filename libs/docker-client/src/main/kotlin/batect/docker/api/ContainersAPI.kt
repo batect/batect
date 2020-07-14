@@ -23,19 +23,22 @@ import batect.docker.DockerContainerInfo
 import batect.docker.DockerEvent
 import batect.docker.DockerException
 import batect.docker.DockerHttpConfig
+import batect.docker.Json
 import batect.docker.data
 import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputDecoder
 import batect.docker.run.ContainerOutputStream
 import batect.docker.toJsonArray
-import batect.primitives.CancellationContext
-import batect.primitives.executeInCancellationContext
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.Dimensions
 import batect.os.SystemInfo
-import batect.docker.Json
+import batect.primitives.CancellationContext
+import batect.primitives.executeInCancellationContext
+import java.lang.Exception
+import java.time.Duration
+import java.util.concurrent.TimeUnit
 import jnr.constants.platform.Signal
 import kotlinx.serialization.json.JsonDecodingException
 import kotlinx.serialization.json.JsonObject
@@ -44,9 +47,6 @@ import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
 import okhttp3.Request
 import okio.BufferedSource
-import java.lang.Exception
-import java.time.Duration
-import java.util.concurrent.TimeUnit
 
 class ContainersAPI(
     httpConfig: DockerHttpConfig,

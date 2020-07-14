@@ -27,10 +27,10 @@ import batect.os.OperatingSystem
 import batect.os.SystemInfo
 import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.logging.hasMessage
-import batect.testutils.on
 import batect.testutils.logging.withAdditionalData
 import batect.testutils.logging.withLogMessage
 import batect.testutils.logging.withSeverity
+import batect.testutils.on
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat

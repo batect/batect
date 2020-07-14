@@ -103,13 +103,65 @@ object RunTaskCommandSpec : Spek({
                 })
             }
 
-            given("configuration file can be loaded") {
+            given("the configuration file can be loaded") {
                 given("the task has no prerequisites") {
                     val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {
                         on { resolveExecutionOrder(configWithImageOverrides, taskName) } doReturn listOf(mainTask)
                     }
 
-                    on("and that task returns a non-zero exit code") {
+                    given("that task returns a zero exit code") {
+                        beforeEachTest {
+                            whenever(taskRunner.run(mainTask, runOptions)).thenReturn(0)
+                        }
+
+                        given("quiet output mode is not being used") {
+                            val outputMode = OutputStyle.Fancy
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, outputMode, console, errorConsole, logger) }
+                            val exitCode by runForEachTest { command.run() }
+
+                            it("runs the task") {
+                                verify(taskRunner).run(mainTask, runOptions)
+                            }
+
+                            it("returns the exit code of the task") {
+                                assertThat(exitCode, equalTo(0))
+                            }
+
+                            it("does not print any blank lines after the task") {
+                                verify(console, never()).println()
+                            }
+
+                            it("displays any update notifications before running the task") {
+                                inOrder(taskRunner, updateNotifier) {
+                                    verify(updateNotifier).run()
+                                    verify(taskRunner).run(any(), any())
+                                }
+                            }
+
+                            it("triggers wrapper cache cleanup before running the task") {
+                                inOrder(wrapperCacheCleanupTask, taskRunner) {
+                                    verify(wrapperCacheCleanupTask).start()
+                                    verify(taskRunner).run(any(), any())
+                                }
+                            }
+
+                            it("does not print anything to the error console") {
+                                verifyZeroInteractions(errorConsole)
+                            }
+                        }
+
+                        given("quiet output mode is being used") {
+                            val outputMode = OutputStyle.Quiet
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, outputMode, console, errorConsole, logger) }
+                            beforeEachTest { command.run() }
+
+                            it("does not display any update notifications") {
+                                verify(updateNotifier, never()).run()
+                            }
+                        }
+                    }
+
+                    given("that task returns a non-zero exit code") {
                         beforeEachTest {
                             whenever(taskRunner.run(mainTask, runOptions)).thenReturn(expectedTaskExitCode)
                         }
@@ -123,45 +175,6 @@ object RunTaskCommandSpec : Spek({
 
                         it("returns the exit code of the task") {
                             assertThat(exitCode, equalTo(expectedTaskExitCode))
-                        }
-
-                        it("does not print any blank lines after the task") {
-                            verify(console, never()).println()
-                        }
-
-                        it("displays any update notifications before running the task") {
-                            inOrder(taskRunner, updateNotifier) {
-                                verify(updateNotifier).run()
-                                verify(taskRunner).run(any(), any())
-                            }
-                        }
-
-                        it("triggers wrapper cache cleanup before running the task") {
-                            inOrder(wrapperCacheCleanupTask, taskRunner) {
-                                verify(wrapperCacheCleanupTask).start()
-                                verify(taskRunner).run(any(), any())
-                            }
-                        }
-
-                        it("does not print anything to the error console") {
-                            verifyZeroInteractions(errorConsole)
-                        }
-                    }
-
-                    on("and that task returns a zero exit code") {
-                        beforeEachTest {
-                            whenever(taskRunner.run(mainTask, runOptions)).thenReturn(0)
-                        }
-
-                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, null, console, errorConsole, logger) }
-                        val exitCode by runForEachTest { command.run() }
-
-                        it("runs the task") {
-                            verify(taskRunner).run(mainTask, runOptions)
-                        }
-
-                        it("returns the exit code of the task") {
-                            assertThat(exitCode, equalTo(0))
                         }
 
                         it("does not print any blank lines after the task") {

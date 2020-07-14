@@ -265,6 +265,8 @@ batect automatically checks for updates at most once every 24 hours and displays
 
 Passing this flag will disable both the update check and notification.
 
+This flag is automatically enabled if [`--output`](#force-a-particular-output-style-output-or-o) is set to `quiet`.
+
 ### Disable wrapper cache cleanup <small>(`--no-wrapper-cache-cleanup`)</small>
 
 batect automatically removes old versions of itself that have been downloaded and cached locally if they haven't been used in 30 days.
@@ -311,6 +313,8 @@ Example:
 ```shell
 ./batect --output simple the-task
 ```
+
+Passing `--output=quiet` implies [`--no-update-notification`](#disable-update-notification-no-update-notification).
 
 ## General notes
 

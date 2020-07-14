@@ -69,7 +69,10 @@ class RunTaskCommand(
         try {
             val tasks = taskExecutionOrderResolver.resolveExecutionOrder(config, runOptions.taskName)
 
-            updateNotifier.run()
+            if (requestedOutputStyle != OutputStyle.Quiet) {
+                updateNotifier.run()
+            }
+
             wrapperCacheCleanupTask.start()
 
             return runTasks(kodein, config, tasks)

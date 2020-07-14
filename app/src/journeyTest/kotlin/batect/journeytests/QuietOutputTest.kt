@@ -21,9 +21,7 @@ import batect.journeytests.testutils.exitCode
 import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
-import batect.testutils.platformLineSeparator
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import ch.tutteli.atrium.api.verbs.assert
 import org.spekframework.spek2.Spek
@@ -37,7 +35,7 @@ object QuietOutputTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--output=quiet", "do-stuff")) }
 
             it("prints the only the output from the task commands") {
-                assert(result).output().contains("This is some output from the build task\n${platformLineSeparator}This is some output from the main task\n")
+                assert(result).output().toBe("This is some output from the build task\nThis is some output from the main task\n")
             }
 
             it("returns the exit code from that task") {

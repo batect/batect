@@ -28,6 +28,7 @@ import batect.execution.TaskRunner
 import batect.ioc.SessionKodeinFactory
 import batect.logging.Logger
 import batect.ui.Console
+import batect.ui.OutputStyle
 import batect.ui.text.Text
 import batect.updates.UpdateNotifier
 import batect.wrapper.WrapperCacheCleanupTask
@@ -43,6 +44,7 @@ class RunTaskCommand(
     private val updateNotifier: UpdateNotifier,
     private val wrapperCacheCleanupTask: WrapperCacheCleanupTask,
     private val dockerConnectivity: DockerConnectivity,
+    private val requestedOutputStyle: OutputStyle?,
     private val console: Console,
     private val errorConsole: Console,
     private val logger: Logger
@@ -67,7 +69,10 @@ class RunTaskCommand(
         try {
             val tasks = taskExecutionOrderResolver.resolveExecutionOrder(config, runOptions.taskName)
 
-            updateNotifier.run()
+            if (requestedOutputStyle != OutputStyle.Quiet) {
+                updateNotifier.run()
+            }
+
             wrapperCacheCleanupTask.start()
 
             return runTasks(kodein, config, tasks)
@@ -98,7 +103,7 @@ class RunTaskCommand(
                 return exitCode
             }
 
-            if (!isMainTask) {
+            if (!isMainTask && requestedOutputStyle != OutputStyle.Quiet) {
                 console.println()
             }
         }

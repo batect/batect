@@ -20,9 +20,9 @@ import batect.docker.DockerHttpConfig
 import batect.docker.DockerNetwork
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.equalTo
 import batect.testutils.given
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.mockDelete
 import batect.testutils.mockGet
 import batect.testutils.mockPost
@@ -35,13 +35,13 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
+import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.content
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.util.concurrent.TimeUnit
 
 object NetworksAPISpec : Spek({
     describe("a Docker networks API client") {

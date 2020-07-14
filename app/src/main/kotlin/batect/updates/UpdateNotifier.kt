@@ -33,8 +33,8 @@ class UpdateNotifier(
     private val logger: Logger,
     private val timeSource: () -> ZonedDateTime
 ) {
-    constructor(disableUpdateNotification: Boolean, updateInfoStorage: UpdateInfoStorage, updateInfoUpdater: UpdateInfoUpdater, versionInfo: VersionInfo, console: Console, logger: Logger)
-        : this(disableUpdateNotification, updateInfoStorage, updateInfoUpdater, versionInfo, console, logger, { ZonedDateTime.now(ZoneOffset.UTC) })
+    constructor(disableUpdateNotification: Boolean, updateInfoStorage: UpdateInfoStorage, updateInfoUpdater: UpdateInfoUpdater, versionInfo: VersionInfo, console: Console, logger: Logger) :
+        this(disableUpdateNotification, updateInfoStorage, updateInfoUpdater, versionInfo, console, logger, { ZonedDateTime.now(ZoneOffset.UTC) })
 
     fun run() {
         if (disableUpdateNotification) {

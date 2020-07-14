@@ -18,6 +18,7 @@ package batect.cli.commands
 
 import batect.VersionInfo
 import batect.os.HostEnvironmentVariables
+import batect.primitives.Version
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
@@ -30,7 +31,6 @@ import batect.updates.ScriptInfo
 import batect.updates.UpdateInfo
 import batect.updates.UpdateInfoDownloadException
 import batect.updates.UpdateInfoDownloader
-import batect.primitives.Version
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
@@ -43,13 +43,13 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
+import java.io.IOException
+import java.nio.file.Files
+import java.time.ZonedDateTime
 import okhttp3.Call
 import okhttp3.OkHttpClient
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.io.IOException
-import java.nio.file.Files
-import java.time.ZonedDateTime
 
 object UpgradeCommandSpec : Spek({
     describe("an upgrade command") {

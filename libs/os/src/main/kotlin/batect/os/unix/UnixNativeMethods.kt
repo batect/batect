@@ -20,6 +20,7 @@ import batect.os.Dimensions
 import batect.os.NativeMethods
 import batect.os.NoConsoleException
 import batect.os.UnixNativeMethodException
+import java.io.FileDescriptor
 import jnr.constants.platform.Errno
 import jnr.ffi.LibraryLoader
 import jnr.ffi.Platform
@@ -29,7 +30,6 @@ import jnr.ffi.annotations.Out
 import jnr.ffi.annotations.SaveError
 import jnr.ffi.annotations.Transient
 import jnr.posix.POSIX
-import java.io.FileDescriptor
 
 class UnixNativeMethods(
     private val libc: LibC,

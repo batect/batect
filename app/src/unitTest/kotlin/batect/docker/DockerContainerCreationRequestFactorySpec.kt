@@ -17,10 +17,10 @@
 package batect.docker
 
 import batect.config.Container
+import batect.config.DeviceMount
 import batect.config.HealthCheckConfig
 import batect.config.LiteralValue
 import batect.config.PortMapping
-import batect.config.DeviceMount
 import batect.execution.ContainerRuntimeConfiguration
 import batect.os.Command
 import batect.testutils.given
@@ -32,9 +32,9 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
+import java.time.Duration
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.Duration
 
 object DockerContainerCreationRequestFactorySpec : Spek({
     describe("a Docker container creation request factory") {

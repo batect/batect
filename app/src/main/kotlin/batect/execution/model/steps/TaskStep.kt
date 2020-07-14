@@ -22,17 +22,17 @@
 package batect.execution.model.steps
 
 import batect.config.Container
-import batect.logging.ContainerNameOnlySerializer
 import batect.config.PullImage
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.execution.ContainerRuntimeConfiguration
+import batect.logging.ContainerNameOnlySerializer
 import batect.logging.LogMessageBuilder
 import batect.logging.PathSerializer
+import java.nio.file.Path
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
-import java.nio.file.Path
 
 @Serializable
 sealed class TaskStep

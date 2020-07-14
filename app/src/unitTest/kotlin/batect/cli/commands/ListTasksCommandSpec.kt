@@ -31,10 +31,10 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object ListTasksCommandSpec : Spek({
     describe("a 'list tasks' command") {

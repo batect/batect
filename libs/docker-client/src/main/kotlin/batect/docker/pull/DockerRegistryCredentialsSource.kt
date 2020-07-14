@@ -17,12 +17,12 @@
 package batect.docker.pull
 
 import batect.docker.DockerRegistryCredentialsException
+import batect.docker.Json
 import batect.os.ExecutableDoesNotExistException
 import batect.os.ProcessRunner
-import batect.docker.Json
-import kotlinx.serialization.json.JsonObject
 import java.nio.charset.Charset
 import java.util.Base64
+import kotlinx.serialization.json.JsonObject
 
 sealed class DockerRegistryCredentialsSource {
     abstract fun load(): DockerRegistryCredentials?

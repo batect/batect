@@ -18,12 +18,12 @@ package batect.ui.fancy
 
 import batect.docker.DockerNetwork
 import batect.execution.model.events.TaskNetworkCreatedEvent
+import batect.os.ConsoleDimensions
 import batect.os.Dimensions
 import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.on
 import batect.ui.Console
-import batect.os.ConsoleDimensions
 import batect.ui.text.TextRun
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.inOrder

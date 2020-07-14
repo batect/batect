@@ -16,12 +16,12 @@
 
 package batect.docker.pull
 
+import batect.docker.Json
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.runNullableForEachTest
-import batect.docker.Json
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import org.spekframework.spek2.Spek

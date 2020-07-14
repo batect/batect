@@ -36,14 +36,14 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
-import org.araqnid.hamkrest.json.equivalentTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.Suite
-import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import org.araqnid.hamkrest.json.equivalentTo
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.Suite
+import org.spekframework.spek2.style.specification.describe
 
 object GitRepositoryCacheSpec : Spek({
     describe("a cache of Git repositories") {

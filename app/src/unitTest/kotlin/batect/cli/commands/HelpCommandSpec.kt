@@ -23,18 +23,18 @@ import batect.cli.options.OptionGroup
 import batect.cli.options.OptionParser
 import batect.cli.options.OptionParsingResult
 import batect.cli.options.OptionValueSource
+import batect.os.ConsoleDimensions
 import batect.os.Dimensions
 import batect.testutils.given
 import batect.testutils.withPlatformSpecificLineSeparator
-import batect.os.ConsoleDimensions
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object HelpCommandSpec : Spek({
     describe("a help command") {

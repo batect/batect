@@ -31,7 +31,6 @@ import batect.docker.UserAndGroup
 import batect.docker.client.DockerContainerType
 import batect.docker.client.DockerContainersClient
 import batect.docker.client.DockerImagesClient
-import batect.primitives.CancellationContext
 import batect.execution.ContainerDependencyGraph
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.VolumeMountResolver
@@ -39,6 +38,7 @@ import batect.execution.model.events.CacheInitialisationFailedEvent
 import batect.execution.model.events.CachesInitialisedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.os.Dimensions
+import batect.primitives.CancellationContext
 import batect.utils.Json
 import kotlinx.io.ByteArrayOutputStream
 import kotlinx.serialization.Serializable

@@ -32,14 +32,14 @@ import batect.execution.TaskRunner
 import batect.ioc.SessionKodeinFactory
 import batect.logging.Logger
 import batect.logging.Severity
-import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.createForEachTest
 import batect.testutils.given
+import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.logging.hasMessage
-import batect.testutils.on
-import batect.testutils.runForEachTest
 import batect.testutils.logging.withException
 import batect.testutils.logging.withSeverity
+import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.ui.Console
 import batect.ui.OutputStyle
 import batect.ui.text.Text

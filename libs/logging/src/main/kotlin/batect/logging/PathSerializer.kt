@@ -16,13 +16,13 @@
 
 package batect.logging
 
+import java.nio.file.Path
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.PrimitiveDescriptor
 import kotlinx.serialization.PrimitiveKind
 import kotlinx.serialization.SerialDescriptor
-import java.nio.file.Path
 
 class PathSerializer : KSerializer<Path> {
     override val descriptor: SerialDescriptor = PrimitiveDescriptor("path", PrimitiveKind.STRING)

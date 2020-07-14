@@ -22,9 +22,9 @@ import batect.logging.Logger
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.text.Text
-import org.kodein.di.generic.instance
 import java.time.Duration
 import java.time.Instant
+import org.kodein.di.generic.instance
 
 data class TaskRunner(
     private val taskKodeinFactory: TaskKodeinFactory,

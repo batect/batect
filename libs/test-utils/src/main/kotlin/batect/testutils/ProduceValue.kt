@@ -16,9 +16,9 @@
 
 package batect.testutils
 
-import org.spekframework.spek2.dsl.LifecycleAware
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
+import org.spekframework.spek2.dsl.LifecycleAware
 
 private fun <T : Any> LifecycleAware.produceNonNullValueForEachTest(description: String, scope: ValueScope, creator: () -> T): ReadOnlyProperty<Any?, T> {
     val property = object : ReadOnlyProperty<Any?, T> {

@@ -16,17 +16,17 @@
 
 package batect.docker.run
 
-import batect.testutils.given
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import okio.Buffer
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayInputStream
+import okio.Buffer
 import okio.buffer
 import okio.source
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object ContainerOutputDecoderSpec : Spek({
     describe("a container output decoder") {

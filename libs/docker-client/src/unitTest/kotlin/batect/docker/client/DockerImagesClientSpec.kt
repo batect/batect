@@ -31,9 +31,9 @@ import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.primitives.CancellationContext
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.equalTo
 import batect.testutils.given
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.withCause
@@ -51,12 +51,12 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
+import java.nio.file.Files
 import kotlinx.serialization.json.JsonObject
 import okio.Sink
 import org.mockito.invocation.InvocationOnMock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Files
 
 object DockerImagesClientSpec : Spek({
     describe("a Docker images client") {

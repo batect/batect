@@ -51,13 +51,13 @@ import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.Path
 import java.nio.file.attribute.PosixFileAttributes
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object RunAsCurrentUserConfigurationProviderSpec : Spek({
     describe("a 'run as current user' configuration provider") {

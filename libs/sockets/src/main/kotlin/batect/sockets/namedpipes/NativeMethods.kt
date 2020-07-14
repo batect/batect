@@ -17,6 +17,9 @@
 package batect.sockets.namedpipes
 
 import batect.os.throwWindowsNativeMethodFailed
+import java.io.FileNotFoundException
+import java.net.SocketTimeoutException
+import java.time.Duration
 import jnr.ffi.LibraryLoader
 import jnr.ffi.LibraryOption
 import jnr.ffi.Pointer
@@ -33,9 +36,6 @@ import jnr.posix.HANDLE
 import jnr.posix.POSIX
 import jnr.posix.WindowsLibC
 import jnr.posix.util.WindowsHelpers
-import java.io.FileNotFoundException
-import java.net.SocketTimeoutException
-import java.time.Duration
 import kotlin.math.max
 
 internal class NativeMethods(

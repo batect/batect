@@ -19,27 +19,27 @@ package batect.wrapper
 import batect.logging.Logger
 import batect.logging.Severity
 import batect.os.HostEnvironmentVariables
-import batect.testutils.logging.InMemoryLogSink
+import batect.primitives.Version
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
+import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.logging.hasMessage
-import batect.testutils.runForEachTest
 import batect.testutils.logging.withAdditionalData
 import batect.testutils.logging.withLogMessage
 import batect.testutils.logging.withSeverity
-import batect.primitives.Version
+import batect.testutils.runForEachTest
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isEmpty
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object WrapperCacheSpec : Spek({
     describe("a wrapper cache") {

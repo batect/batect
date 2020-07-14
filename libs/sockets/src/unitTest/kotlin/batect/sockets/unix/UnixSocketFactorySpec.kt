@@ -24,12 +24,6 @@ import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
-import jnr.enxio.channels.NativeSelectorProvider
-import jnr.ffi.Platform
-import jnr.unixsocket.UnixServerSocketChannel
-import jnr.unixsocket.UnixSocketAddress
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -38,7 +32,13 @@ import java.nio.channels.AsynchronousCloseException
 import java.nio.channels.SelectionKey
 import java.nio.file.Files
 import java.nio.file.Path
+import jnr.enxio.channels.NativeSelectorProvider
+import jnr.ffi.Platform
+import jnr.unixsocket.UnixServerSocketChannel
+import jnr.unixsocket.UnixSocketAddress
 import kotlin.concurrent.thread
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object UnixSocketFactorySpec : Spek({
     onlyOn(setOf(Platform.OS.LINUX, Platform.OS.DARWIN)) {

@@ -36,13 +36,13 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
+import java.nio.file.Files
+import kotlin.streams.toList
 import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Files
-import kotlin.streams.toList
 
 object CleanupCachesCommandSpec : Spek({
     describe("a cleanup caches command") {

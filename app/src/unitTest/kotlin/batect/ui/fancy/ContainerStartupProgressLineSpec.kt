@@ -24,8 +24,8 @@ import batect.config.PullImage
 import batect.config.SetupCommand
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
-import batect.docker.client.DockerImageBuildProgress
 import batect.docker.DockerNetwork
+import batect.docker.client.DockerImageBuildProgress
 import batect.docker.pull.DockerImageProgress
 import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.model.events.CachesInitialisedEvent
@@ -55,9 +55,9 @@ import batect.testutils.runForEachTest
 import batect.ui.text.Text
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.mock
+import java.nio.file.Paths
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
 
 object ContainerStartupProgressLineSpec : Spek({
     describe("a container startup progress line") {

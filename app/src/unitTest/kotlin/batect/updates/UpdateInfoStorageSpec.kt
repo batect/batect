@@ -16,12 +16,12 @@
 
 package batect.updates
 
+import batect.io.ApplicationPaths
+import batect.primitives.Version
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.on
 import batect.testutils.runNullableForEachTest
-import batect.primitives.Version
-import batect.io.ApplicationPaths
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.absent
@@ -30,12 +30,12 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import org.araqnid.hamkrest.json.equivalentTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import org.araqnid.hamkrest.json.equivalentTo
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object UpdateInfoStorageSpec : Spek({
     describe("update information storage") {

@@ -19,8 +19,8 @@ package batect.updates
 import batect.logging.LogMessageBuilder
 import batect.logging.ZonedDateTimeSerializer
 import batect.primitives.Version
-import kotlinx.serialization.Serializable
 import java.time.ZonedDateTime
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class UpdateInfo(

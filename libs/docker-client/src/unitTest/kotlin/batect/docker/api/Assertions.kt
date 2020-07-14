@@ -23,6 +23,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.nhaarman.mockitokotlin2.argThat
+import java.util.UUID
 import kotlinx.serialization.json.JsonObject
 import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
@@ -31,7 +32,6 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.internal.connection.RealConnectionPool
 import okio.Buffer
-import java.util.UUID
 
 internal val isUUID = Matcher(::validUUID)
 internal fun validUUID(value: String): Boolean {

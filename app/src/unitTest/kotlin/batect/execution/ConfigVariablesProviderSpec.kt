@@ -32,10 +32,10 @@ import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 import java.nio.file.Path
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object ConfigVariablesProviderSpec : Spek({
     describe("a config variables provider") {

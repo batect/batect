@@ -31,17 +31,18 @@ import batect.docker.DockerHealthCheckResult
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.docker.Json
 import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputDecoder
 import batect.docker.run.ContainerOutputStream
-import batect.primitives.CancellationContext
 import batect.os.Dimensions
 import batect.os.SystemInfo
+import batect.primitives.CancellationContext
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.equalTo
 import batect.testutils.given
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.mock
 import batect.testutils.mockDelete
 import batect.testutils.mockGet
@@ -49,7 +50,6 @@ import batect.testutils.mockPost
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.withMessage
-import batect.docker.Json
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
@@ -61,6 +61,8 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
+import java.time.Duration
+import java.util.concurrent.TimeUnit
 import jnr.constants.platform.Signal
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -70,8 +72,6 @@ import okio.BufferedSink
 import okio.BufferedSource
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.Duration
-import java.util.concurrent.TimeUnit
 
 object ContainersAPISpec : Spek({
     describe("a Docker containers API client") {

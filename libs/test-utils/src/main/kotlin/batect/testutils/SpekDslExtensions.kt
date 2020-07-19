@@ -17,7 +17,12 @@
 package batect.testutils
 
 import org.spekframework.spek2.dsl.Skip
+import org.spekframework.spek2.meta.Synonym
+import org.spekframework.spek2.meta.SynonymType
 import org.spekframework.spek2.style.specification.Suite
 
+@Synonym(SynonymType.GROUP, prefix = "given ")
 fun Suite.given(description: String, body: Suite.() -> Unit) = context("given $description", Skip.No, body)
+
+@Synonym(SynonymType.GROUP, prefix = "on ")
 fun Suite.on(description: String, body: Suite.() -> Unit) = describe("on $description", Skip.No, body)

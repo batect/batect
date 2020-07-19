@@ -23,9 +23,11 @@ import kotlinx.serialization.CompositeEncoder
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.PrimitiveKind
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Serializer
+import kotlinx.serialization.UnionKind
 import kotlinx.serialization.builtins.list
 import kotlinx.serialization.builtins.serializer
 
@@ -192,27 +194,40 @@ sealed class Expression(open val originalExpression: String) {
 
         private data class ParseResult(val expression: Expression, val readUntil: Int)
 
-        override val descriptor: SerialDescriptor = SerialDescriptor("VariableExpression") {
+        private val deserializationDescriptor = SerialDescriptor(Expression::class.qualifiedName!!, PrimitiveKind.STRING)
+
+        private val serializationDescriptor = SerialDescriptor(Expression::class.qualifiedName!!) {
             element("type", String.serializer().descriptor)
         }
 
-        override fun deserialize(decoder: Decoder): Expression = try {
-            parse(decoder.decodeString())
-        } catch (e: IllegalArgumentException) {
-            if (decoder is YamlInput) {
-                throw ConfigurationException(e.message ?: "", decoder.node.location.line, decoder.node.location.column, e)
-            } else {
-                throw e
+        override val descriptor: SerialDescriptor = SerialDescriptor(Expression::class.qualifiedName!!, UnionKind.CONTEXTUAL) {
+            element("string", deserializationDescriptor)
+            element("object", serializationDescriptor)
+        }
+
+        override fun deserialize(decoder: Decoder): Expression {
+            try {
+                val input = decoder.beginStructure(deserializationDescriptor) as YamlInput
+                val result = parse(input.decodeString())
+                input.endStructure(deserializationDescriptor)
+
+                return result
+            } catch (e: IllegalArgumentException) {
+                if (decoder is YamlInput) {
+                    throw ConfigurationException(e.message ?: "", decoder.node.location.line, decoder.node.location.column, e)
+                } else {
+                    throw e
+                }
             }
         }
 
         override fun serialize(encoder: Encoder, value: Expression) {
-            val structureEncoder = encoder.beginStructure(descriptor)
+            val structureEncoder = encoder.beginStructure(serializationDescriptor)
 
-            structureEncoder.encodeStringElement(descriptor, 0, value::class.simpleName!!)
+            structureEncoder.encodeStringElement(serializationDescriptor, 0, value::class.simpleName!!)
             value.serialize(structureEncoder)
 
-            structureEncoder.endStructure(descriptor)
+            structureEncoder.endStructure(serializationDescriptor)
         }
     }
 }

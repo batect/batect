@@ -21,10 +21,8 @@ import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.Serializer
 import kotlinx.serialization.builtins.serializer
 
-@Serializer(forClass = Duration::class)
 open class DurationLoggingSerializer : KSerializer<Duration> {
     override val descriptor: SerialDescriptor = String.serializer().descriptor
 

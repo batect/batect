@@ -48,7 +48,7 @@ abstract class StringOrObjectSerializer<T> : KSerializer<T> {
         val input = decoder.beginStructure(descriptor) as YamlInput
 
         val result = when (input.node) {
-            is YamlScalar -> deserializeFromString(input.decodeString(), input)
+            is YamlScalar -> beginAndDecodeString(input)
             is YamlMap -> beginAndDecodeObject(input)
             else -> throw ConfigurationException(neitherStringNorObjectErrorMessage, decoder.node.location.line, decoder.node.location.column)
         }
@@ -56,6 +56,13 @@ abstract class StringOrObjectSerializer<T> : KSerializer<T> {
         input.endStructure(descriptor)
 
         return result
+    }
+
+    private fun beginAndDecodeString(decoder: YamlInput): T {
+        val input = decoder.beginStructure(stringDescriptor) as YamlInput
+        val value = deserializeFromString(input.decodeString(), input)
+        input.endStructure(objectDescriptor)
+        return value
     }
 
     private fun beginAndDecodeObject(decoder: YamlInput): T {

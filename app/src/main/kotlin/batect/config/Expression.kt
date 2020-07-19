@@ -205,13 +205,19 @@ sealed class Expression(open val originalExpression: String) {
             element("object", serializationDescriptor)
         }
 
-        override fun deserialize(decoder: Decoder): Expression = try {
-            parse(decoder.decodeString())
-        } catch (e: IllegalArgumentException) {
-            if (decoder is YamlInput) {
-                throw ConfigurationException(e.message ?: "", decoder.node.location.line, decoder.node.location.column, e)
-            } else {
-                throw e
+        override fun deserialize(decoder: Decoder): Expression {
+            try {
+                val input = decoder.beginStructure(deserializationDescriptor) as YamlInput
+                val result = parse(input.decodeString())
+                input.endStructure(deserializationDescriptor)
+
+                return result
+            } catch (e: IllegalArgumentException) {
+                if (decoder is YamlInput) {
+                    throw ConfigurationException(e.message ?: "", decoder.node.location.line, decoder.node.location.column, e)
+                } else {
+                    throw e
+                }
             }
         }
 

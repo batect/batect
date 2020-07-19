@@ -40,7 +40,7 @@ dependencies {
     implementation 'com.squareup.okio:okio:2.7.0'
     implementation 'com.squareup.okhttp3:okhttp'
     implementation 'com.github.jnr:jnr-posix:3.0.57'
-    implementation 'com.charleskorn.kaml:kaml:0.18.0'
+    implementation 'com.charleskorn.kaml:kaml:0.18.1'
     implementation 'com.hypirion:io:0.3.1'
     implementation 'org.bouncycastle:bcpkix-jdk15on:1.66'
 

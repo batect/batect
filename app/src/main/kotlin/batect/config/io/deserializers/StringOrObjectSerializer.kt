@@ -45,16 +45,24 @@ abstract class StringOrObjectSerializer<T> : KSerializer<T> {
             throw UnsupportedOperationException("Can only deserialize from YAML source.")
         }
 
-        return when (decoder.node) {
-            is YamlScalar -> deserializeFromString(decoder.decodeString(), decoder)
-            is YamlMap -> {
-                val input = decoder.beginStructure(objectDescriptor) as YamlInput
-                val value = deserializeFromObject(input)
-                input.endStructure(objectDescriptor)
-                return value
-            }
+        val input = decoder.beginStructure(descriptor) as YamlInput
+
+        val result = when (input.node) {
+            is YamlScalar -> deserializeFromString(input.decodeString(), input)
+            is YamlMap -> beginAndDecodeObject(input)
             else -> throw ConfigurationException(neitherStringNorObjectErrorMessage, decoder.node.location.line, decoder.node.location.column)
         }
+
+        input.endStructure(descriptor)
+
+        return result
+    }
+
+    private fun beginAndDecodeObject(decoder: YamlInput): T {
+        val input = decoder.beginStructure(objectDescriptor) as YamlInput
+        val value = deserializeFromObject(input)
+        input.endStructure(objectDescriptor)
+        return value
     }
 
     protected abstract fun deserializeFromString(value: String, input: YamlInput): T

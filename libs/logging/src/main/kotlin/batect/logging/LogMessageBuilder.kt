@@ -16,13 +16,13 @@
 
 package batect.logging
 
-import kotlinx.serialization.SerializationStrategy
-import kotlinx.serialization.builtins.MapSerializer
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.builtins.nullable
-import kotlinx.serialization.builtins.list
 import java.nio.file.Path
 import java.time.ZonedDateTime
+import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.list
+import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.builtins.serializer
 
 class LogMessageBuilder(val severity: Severity, val loggerAdditionalData: Map<String, Jsonable> = emptyMap()) {
     private var message: String = ""

@@ -19,10 +19,11 @@ package batect.config.io.deserializers
 import batect.config.io.ConfigurationException
 import batect.logging.DurationLoggingSerializer
 import com.charleskorn.kaml.YamlInput
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
 import java.time.Duration
 import java.time.temporal.ChronoUnit
+import kotlinx.serialization.Decoder
+import kotlinx.serialization.Encoder
+import kotlinx.serialization.Serializer
 
 object DurationSerializer : DurationLoggingSerializer() {
     private const val valueRegexString = """((\d+)|(\d+\.\d*)|(\d*\.\d+))(ns|\u00b5s|\u03bcs|us|ms|s|m|h)"""

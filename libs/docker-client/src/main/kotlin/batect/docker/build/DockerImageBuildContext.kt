@@ -17,10 +17,10 @@
 package batect.docker.build
 
 import batect.logging.PathSerializer
-import kotlinx.serialization.Serializable
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.stream.Collectors
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class DockerImageBuildContext(val entries: Set<DockerImageBuildContextEntry>)

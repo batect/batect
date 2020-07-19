@@ -16,9 +16,9 @@
 
 package batect.primitives
 
+import java.io.IOException
 import okhttp3.Call
 import okhttp3.Response
-import java.io.IOException
 
 inline fun <R> Call.executeInCancellationContext(cancellationContext: CancellationContext, operation: (Response) -> R): R {
     cancellationContext.addCancellationCallback(this::cancel).use {

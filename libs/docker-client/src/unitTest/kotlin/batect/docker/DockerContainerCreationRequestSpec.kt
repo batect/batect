@@ -19,10 +19,10 @@ package batect.docker
 import batect.testutils.given
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
+import java.time.Duration
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.Duration
 
 object DockerContainerCreationRequestSpec : Spek({
     describe("a Docker container creation request") {

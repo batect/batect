@@ -17,13 +17,13 @@
 package batect.wrapper
 
 import batect.VersionInfo
+import batect.primitives.Version
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.runForEachTest
-import batect.primitives.Version
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
@@ -34,10 +34,10 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object WrapperCacheCleanupTaskSpec : Spek({
     describe("a wrapper cache cleanup task") {

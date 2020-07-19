@@ -19,11 +19,11 @@ package batect.execution.model.steps
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.runners.BuildImageStepRunner
 import batect.execution.model.steps.runners.CreateContainerStepRunner
-import batect.execution.model.steps.runners.PrepareTaskNetworkStepRunner
 import batect.execution.model.steps.runners.DeleteTaskNetworkStepRunner
 import batect.execution.model.steps.runners.DeleteTemporaryDirectoryStepRunner
 import batect.execution.model.steps.runners.DeleteTemporaryFileStepRunner
 import batect.execution.model.steps.runners.InitialiseCachesStepRunner
+import batect.execution.model.steps.runners.PrepareTaskNetworkStepRunner
 import batect.execution.model.steps.runners.PullImageStepRunner
 import batect.execution.model.steps.runners.RemoveContainerStepRunner
 import batect.execution.model.steps.runners.RunContainerSetupCommandsStepRunner

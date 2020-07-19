@@ -16,8 +16,8 @@
 
 package batect.docker.pull
 
-import kotlinx.serialization.Serializable
 import kotlin.math.roundToInt
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class DockerImageProgress(val currentOperation: String, val completedBytes: Long, val totalBytes: Long) {

@@ -16,12 +16,6 @@
 
 package batect.docker
 
-import okhttp3.internal.tls.OkHostnameVerifier
-import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
-import org.bouncycastle.cert.X509CertificateHolder
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
-import org.bouncycastle.openssl.PEMKeyPair
-import org.bouncycastle.openssl.PEMParser
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.KeyFactory
@@ -38,6 +32,12 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
+import okhttp3.internal.tls.OkHostnameVerifier
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
+import org.bouncycastle.cert.X509CertificateHolder
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
+import org.bouncycastle.openssl.PEMKeyPair
+import org.bouncycastle.openssl.PEMParser
 
 sealed class DockerTLSConfig {
     abstract val scheme: String

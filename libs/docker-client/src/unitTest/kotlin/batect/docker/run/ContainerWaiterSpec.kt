@@ -27,9 +27,9 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
+import java.util.concurrent.TimeUnit
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.util.concurrent.TimeUnit
 
 object ContainerWaiterSpec : Spek({
     describe("a container waiter") {

@@ -19,7 +19,6 @@ package batect.execution.model.steps.runners
 import batect.docker.DockerContainerEnvironmentVariableProvider
 import batect.docker.DockerException
 import batect.docker.client.DockerExecClient
-import batect.primitives.CancellationContext
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.RunOptions
 import batect.execution.model.events.ContainerBecameReadyEvent
@@ -29,6 +28,7 @@ import batect.execution.model.events.SetupCommandFailedEvent
 import batect.execution.model.events.SetupCommandsCompletedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.RunContainerSetupCommandsStep
+import batect.primitives.CancellationContext
 import batect.ui.containerio.ContainerIOStreamingOptions
 
 class RunContainerSetupCommandsStepRunner(

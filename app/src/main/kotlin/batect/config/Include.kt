@@ -20,6 +20,7 @@ import batect.config.io.ConfigurationException
 import batect.os.PathResolutionResult
 import batect.os.PathType
 import com.charleskorn.kaml.YamlInput
+import java.nio.file.Path
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
@@ -29,7 +30,6 @@ import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Serializer
 import kotlinx.serialization.decode
-import java.nio.file.Path
 
 @Serializable(with = FileInclude.Companion::class)
 data class FileInclude(val path: Path) {

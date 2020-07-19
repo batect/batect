@@ -27,12 +27,12 @@ import batect.docker.data
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.InputConnection
 import batect.docker.run.OutputConnection
-import batect.primitives.CancellationContext
 import batect.logging.Logger
 import batect.os.Command
+import batect.primitives.CancellationContext
+import java.io.ByteArrayOutputStream
 import okio.Sink
 import okio.sink
-import java.io.ByteArrayOutputStream
 
 class DockerExecClient(
     private val api: ExecAPI,

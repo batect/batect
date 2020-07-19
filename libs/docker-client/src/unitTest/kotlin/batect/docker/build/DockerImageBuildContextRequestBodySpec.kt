@@ -27,13 +27,6 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.hasSize
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.isEmptyString
-import jnr.ffi.Platform
-import okhttp3.MediaType.Companion.toMediaType
-import okio.buffer
-import okio.sink
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStreamReader
@@ -42,6 +35,13 @@ import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.Path
 import java.nio.file.attribute.PosixFilePermissions
+import jnr.ffi.Platform
+import okhttp3.MediaType.Companion.toMediaType
+import okio.buffer
+import okio.sink
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 // Unfortunately we can't use Jimfs here to simulate the filesystems on different operating systems -
 // Jimfs does not support Path.toFile(), and we need that in order to create the archive entries.

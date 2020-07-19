@@ -24,8 +24,8 @@ import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializer
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.builtins.list
+import kotlinx.serialization.builtins.serializer
 
 @Serializer(forClass = List::class)
 internal object PrerequisiteListSerializer : KSerializer<List<String>> {

@@ -33,16 +33,16 @@ import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.mock
+import java.io.ByteArrayInputStream
+import java.io.InputStream
+import java.util.concurrent.CountDownLatch
+import kotlin.system.measureTimeMillis
 import okhttp3.Response
 import okio.buffer
 import okio.sink
 import okio.source
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.io.ByteArrayInputStream
-import java.io.InputStream
-import java.util.concurrent.CountDownLatch
-import kotlin.system.measureTimeMillis
 
 object ContainerIOStreamerSpec : Spek({
     describe("a container I/O streamer") {

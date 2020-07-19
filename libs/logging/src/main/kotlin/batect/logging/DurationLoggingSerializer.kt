@@ -16,12 +16,12 @@
 
 package batect.logging
 
+import java.time.Duration
 import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.builtins.serializer
-import java.time.Duration
 
 open class DurationLoggingSerializer : KSerializer<Duration> {
     override val descriptor: SerialDescriptor = String.serializer().descriptor

@@ -21,6 +21,7 @@ import batect.config.io.deserializers.PathDeserializer
 import batect.config.io.deserializers.StringOrObjectSerializer
 import batect.os.PathResolutionResult
 import com.charleskorn.kaml.YamlInput
+import java.nio.file.Path
 import kotlinx.serialization.CompositeDecoder
 import kotlinx.serialization.CompositeEncoder
 import kotlinx.serialization.Encoder
@@ -30,7 +31,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
-import java.nio.file.Path
 
 @Serializable(with = VolumeMount.Companion::class)
 sealed class VolumeMount(

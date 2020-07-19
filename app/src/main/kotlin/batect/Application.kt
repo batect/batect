@@ -29,12 +29,12 @@ import batect.os.SystemInfo
 import batect.ui.Console
 import batect.ui.text.Text
 import batect.wrapper.WrapperCache
-import org.kodein.di.DKodein
-import org.kodein.di.DKodeinAware
-import org.kodein.di.generic.instance
 import java.io.InputStream
 import java.io.PrintStream
 import kotlin.system.exitProcess
+import org.kodein.di.DKodein
+import org.kodein.di.DKodeinAware
+import org.kodein.di.generic.instance
 
 fun main(args: Array<String>) {
     try {

@@ -16,14 +16,14 @@
 
 package batect.docker.pull
 
+import batect.docker.Json
 import batect.logging.Logger
 import batect.os.ProcessRunner
-import batect.docker.Json
-import kotlinx.serialization.Serializable
 import java.nio.charset.Charset
 import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.util.Properties
+import kotlinx.serialization.Serializable
 
 class DockerRegistryCredentialsConfigurationFile(
     fileSystem: FileSystem,

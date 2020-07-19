@@ -17,21 +17,21 @@
 package batect.updates
 
 import batect.VersionInfo
+import batect.primitives.Version
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.on
 import batect.ui.Console
-import batect.primitives.Version
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object UpdateNotifierSpec : Spek({
     describe("an update notifier") {

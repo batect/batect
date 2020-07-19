@@ -18,14 +18,14 @@ package batect.updates
 
 import batect.logging.Logger
 import batect.logging.Severity
-import batect.testutils.logging.InMemoryLogSink
+import batect.primitives.Version
 import batect.testutils.createForEachTest
+import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.logging.hasMessage
-import batect.testutils.on
 import batect.testutils.logging.withException
 import batect.testutils.logging.withLogMessage
 import batect.testutils.logging.withSeverity
-import batect.primitives.Version
+import batect.testutils.on
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
@@ -33,10 +33,10 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object UpdateInfoUpdaterSpec : Spek({
     describe("an update info updater") {

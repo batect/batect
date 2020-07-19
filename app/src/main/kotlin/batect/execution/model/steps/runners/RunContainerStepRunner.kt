@@ -18,12 +18,12 @@ package batect.execution.model.steps.runners
 
 import batect.docker.DockerException
 import batect.docker.client.DockerContainersClient
-import batect.primitives.CancellationContext
 import batect.execution.model.events.ContainerRunFailedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.RunContainerStep
+import batect.primitives.CancellationContext
 import batect.ui.containerio.ContainerIOStreamingOptions
 
 class RunContainerStepRunner(

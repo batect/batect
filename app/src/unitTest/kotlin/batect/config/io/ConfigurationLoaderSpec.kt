@@ -29,8 +29,8 @@ import batect.config.PortMapping
 import batect.config.PullImage
 import batect.config.RunAsCurrentUserConfig
 import batect.config.Task
-import batect.config.TaskRunConfiguration
 import batect.config.TaskMap
+import batect.config.TaskRunConfiguration
 import batect.os.Command
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
@@ -58,12 +58,12 @@ import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import org.mockito.ArgumentMatchers.anyString
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
+import org.mockito.ArgumentMatchers.anyString
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object ConfigurationLoaderSpec : Spek({
     describe("a configuration loader") {

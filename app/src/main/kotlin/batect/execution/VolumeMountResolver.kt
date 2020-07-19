@@ -18,8 +18,8 @@ package batect.execution
 
 import batect.config.CacheMount
 import batect.config.ExpressionEvaluationContext
-import batect.config.LiteralValue
 import batect.config.ExpressionEvaluationException
+import batect.config.LiteralValue
 import batect.config.LocalMount
 import batect.config.ProjectPaths
 import batect.config.VolumeMount

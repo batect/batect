@@ -26,14 +26,14 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
-import kotlinx.serialization.builtins.serializer
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.io.OutputStream
 import java.io.PrintStream
 import java.nio.file.Files
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import kotlinx.serialization.builtins.serializer
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object FileLogSinkSpec : Spek({
     describe("a file log sink") {

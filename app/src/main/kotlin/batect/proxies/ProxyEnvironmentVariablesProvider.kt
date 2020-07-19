@@ -16,8 +16,8 @@
 
 package batect.proxies
 
-import batect.primitives.mapToSet
 import batect.os.HostEnvironmentVariables
+import batect.primitives.mapToSet
 import java.util.TreeSet
 
 class ProxyEnvironmentVariablesProvider(

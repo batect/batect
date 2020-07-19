@@ -20,12 +20,12 @@ import batect.docker.client.DockerSystemInfoClient
 import batect.docker.client.DockerVersionInfoRetrievalResult
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
+import batect.primitives.Version
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.runForEachTest
-import batect.primitives.Version
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock

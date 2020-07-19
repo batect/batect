@@ -36,14 +36,14 @@ import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.docker.run.InputConnection
 import batect.docker.run.OutputConnection
-import batect.primitives.CancellationCallback
-import batect.primitives.CancellationContext
 import batect.os.ConsoleManager
 import batect.os.Dimensions
+import batect.primitives.CancellationCallback
+import batect.primitives.CancellationContext
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.equalTo
 import batect.testutils.given
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.withMessage
@@ -59,12 +59,12 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
+import java.time.Duration
+import java.util.concurrent.CompletableFuture
 import okio.Sink
 import okio.Source
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.Duration
-import java.util.concurrent.CompletableFuture
 
 object DockerContainersClientSpec : Spek({
     describe("a Docker containers client") {

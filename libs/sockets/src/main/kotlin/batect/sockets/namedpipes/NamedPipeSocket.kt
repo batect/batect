@@ -16,7 +16,6 @@
 
 package batect.sockets.namedpipes
 
-import jnr.posix.POSIXFactory
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
@@ -26,6 +25,7 @@ import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketAddress
 import java.nio.channels.SocketChannel
+import jnr.posix.POSIXFactory
 
 class NamedPipeSocket : Socket() {
     private val nativeMethods = NativeMethods(POSIXFactory.getNativePOSIX())

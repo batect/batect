@@ -28,11 +28,11 @@ import batect.utils.Json
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
+import java.nio.file.Paths
+import java.time.Duration
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
-import java.time.Duration
 
 object ConfigurationSpec : Spek({
     describe("a set of configuration") {

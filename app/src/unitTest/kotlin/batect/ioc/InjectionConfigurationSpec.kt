@@ -29,11 +29,11 @@ import batect.testutils.doesNotThrow
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.mock
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 
 object InjectionConfigurationSpec : Spek({
     describe("Kodein injection configuration") {

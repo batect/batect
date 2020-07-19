@@ -17,9 +17,9 @@
 package batect.integrationtests
 
 import batect.docker.DockerExecResult
-import batect.primitives.CancellationContext
 import batect.os.Command
 import batect.os.Dimensions
+import batect.primitives.CancellationContext
 import batect.testutils.createForGroup
 import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat

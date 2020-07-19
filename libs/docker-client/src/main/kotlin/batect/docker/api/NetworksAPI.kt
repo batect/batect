@@ -18,16 +18,16 @@ package batect.docker.api
 
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerNetwork
+import batect.docker.Json
 import batect.docker.data
 import batect.logging.Logger
 import batect.os.SystemInfo
-import batect.docker.Json
+import java.util.UUID
+import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.json
 import okhttp3.HttpUrl
 import okhttp3.Request
 import okhttp3.Response
-import java.util.UUID
-import java.util.concurrent.TimeUnit
 
 class NetworksAPI(
     httpConfig: DockerHttpConfig,

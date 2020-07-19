@@ -28,7 +28,6 @@ import batect.docker.DockerImage
 import batect.docker.ImageBuildFailedException
 import batect.docker.client.DockerImageBuildProgress
 import batect.docker.client.DockerImagesClient
-import batect.primitives.CancellationContext
 import batect.execution.CleanupOption
 import batect.execution.RunOptions
 import batect.execution.model.events.ImageBuildFailedEvent
@@ -42,6 +41,7 @@ import batect.os.PathResolver
 import batect.os.PathResolverFactory
 import batect.os.PathType
 import batect.os.SystemInfo
+import batect.primitives.CancellationContext
 import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.testutils.createForEachTest
 import batect.testutils.on
@@ -54,10 +54,10 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
+import java.nio.file.Paths
 import okio.Sink
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
 
 object BuildImageStepRunnerSpec : Spek({
     describe("running a 'build image' step") {

@@ -27,14 +27,14 @@ import batect.docker.data
 import batect.docker.pull.DockerImageProgress
 import batect.docker.pull.DockerImageProgressReporter
 import batect.docker.pull.DockerRegistryCredentialsProvider
-import batect.primitives.CancellationContext
 import batect.logging.Logger
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonObject
-import okio.Sink
+import batect.primitives.CancellationContext
 import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.Path
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
+import okio.Sink
 
 class DockerImagesClient(
     private val api: ImagesAPI,

@@ -21,13 +21,13 @@ import batect.docker.DockerContainer
 import batect.docker.DockerContainerRunResult
 import batect.docker.DockerException
 import batect.docker.client.DockerContainersClient
-import batect.primitives.CancellationContext
 import batect.execution.model.events.ContainerRunFailedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.RunContainerStep
 import batect.os.Dimensions
+import batect.primitives.CancellationContext
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on

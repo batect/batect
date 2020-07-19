@@ -22,14 +22,14 @@ import batect.logging.FileLogSink
 import batect.logging.LogSink
 import batect.logging.NullLogSink
 import batect.ui.OutputStyle
+import java.nio.file.Path
+import java.nio.file.Paths
 import org.kodein.di.Copy
 import org.kodein.di.DKodein
 import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
 import org.kodein.di.generic.singleton
-import java.nio.file.Path
-import java.nio.file.Paths
 
 data class CommandLineOptions(
     val showHelp: Boolean = false,

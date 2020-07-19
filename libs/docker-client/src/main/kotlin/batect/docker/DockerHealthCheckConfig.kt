@@ -21,9 +21,9 @@
 package batect.docker
 
 import batect.logging.DurationLoggingSerializer
+import java.time.Duration
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
-import java.time.Duration
 
 @Serializable
 data class DockerHealthCheckConfig(

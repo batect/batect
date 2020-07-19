@@ -26,12 +26,12 @@ import batect.docker.build.DockerImageBuildContextEntry
 import batect.docker.build.DockerImageBuildContextRequestBody
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.pull.TokenDockerRegistryCredentials
-import batect.primitives.CancellationContext
 import batect.os.SystemInfo
+import batect.primitives.CancellationContext
 import batect.testutils.createForEachTest
-import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.equalTo
 import batect.testutils.given
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.mock
 import batect.testutils.mockPost
 import batect.testutils.on
@@ -48,6 +48,8 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
+import java.io.ByteArrayOutputStream
+import java.nio.file.Paths
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import okhttp3.Headers
@@ -56,8 +58,6 @@ import okhttp3.OkHttpClient
 import okio.sink
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.io.ByteArrayOutputStream
-import java.nio.file.Paths
 
 object ImagesAPISpec : Spek({
     describe("a Docker images API client") {

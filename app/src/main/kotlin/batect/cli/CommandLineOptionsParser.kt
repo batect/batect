@@ -218,7 +218,7 @@ class CommandLineOptionsParser(
         }
 
         when (remainingArgs.count()) {
-            0 -> return CommandLineOptionsParsingResult.Failed("No task name provided.")
+            0 -> return CommandLineOptionsParsingResult.Failed("No task name provided. (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")
             1 -> {
                 return CommandLineOptionsParsingResult.Succeeded(createOptionsObject(remainingArgs.first(), emptyList()))
             }

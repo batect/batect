@@ -80,7 +80,7 @@ object CommandLineOptionsParserSpec : Spek({
                 val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(emptyList())
 
                 it("returns an error message") {
-                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("No task name provided.")))
+                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("No task name provided. (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")))
                 }
             }
         }

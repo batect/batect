@@ -17,17 +17,14 @@
 package batect.config
 
 import batect.config.io.ConfigurationException
-import batect.config.io.deserializers.tryToDeserializeWith
+import batect.config.io.deserializers.StringOrObjectSerializer
 import batect.docker.DockerDeviceMount
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.CompositeDecoder
-import kotlinx.serialization.Decoder
 import kotlinx.serialization.Encoder
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.Serializer
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.nullable
@@ -48,31 +45,21 @@ data class DeviceMount(
 
     fun toDockerMount() = DockerDeviceMount(localPath, containerPath, options)
 
-    @Serializer(forClass = DeviceMount::class)
-    companion object : KSerializer<DeviceMount> {
-        override val descriptor: SerialDescriptor = SerialDescriptor("DeviceMount") {
+    companion object : StringOrObjectSerializer<DeviceMount>() {
+        override val serialName: String = DeviceMount::class.qualifiedName!!
+        override val neitherStringNorObjectErrorMessage: String = "Device mount definition is invalid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'."
+
+        override val objectDescriptor: SerialDescriptor = SerialDescriptor("DeviceMount") {
             element("local", String.serializer().descriptor)
             element("container", String.serializer().descriptor)
             element("options", String.serializer().descriptor.nullable, isOptional = true)
         }
 
-        private val localPathFieldIndex = descriptor.getElementIndex("local")
-        private val containerPathFieldIndex = descriptor.getElementIndex("container")
-        private val optionsFieldIndex = descriptor.getElementIndex("options")
+        private val localPathFieldIndex = objectDescriptor.getElementIndex("local")
+        private val containerPathFieldIndex = objectDescriptor.getElementIndex("container")
+        private val optionsFieldIndex = objectDescriptor.getElementIndex("options")
 
-        override fun deserialize(decoder: Decoder): DeviceMount {
-            if (decoder !is YamlInput) {
-                throw UnsupportedOperationException("Can only deserialize from YAML source.")
-            }
-
-            return decoder.tryToDeserializeWith(descriptor) { deserializeFromObject(it) }
-                ?: decoder.tryToDeserializeWith(String.serializer().descriptor) { deserializeFromString(it) }
-                ?: throw ConfigurationException("Device mount definition is invalid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'.")
-        }
-
-        private fun deserializeFromString(input: YamlInput): DeviceMount {
-            val value = input.decodeString()
-
+        override fun deserializeFromString(value: String, input: YamlInput): DeviceMount {
             if (value == "") {
                 throw ConfigurationException("Device mount definition cannot be empty.", input.node.location.line, input.node.location.column)
             }
@@ -98,40 +85,40 @@ data class DeviceMount(
                 input.node.location.column
             )
 
-        private fun deserializeFromObject(input: YamlInput): DeviceMount {
+        override fun deserializeFromObject(input: YamlInput): DeviceMount {
             var localPath: String? = null
             var containerPath: String? = null
             var options: String? = null
 
             loop@ while (true) {
-                when (val i = input.decodeElementIndex(descriptor)) {
+                when (val i = input.decodeElementIndex(objectDescriptor)) {
                     CompositeDecoder.READ_DONE -> break@loop
-                    localPathFieldIndex -> localPath = input.decodeStringElement(descriptor, i)
-                    containerPathFieldIndex -> containerPath = input.decodeStringElement(descriptor, i)
-                    optionsFieldIndex -> options = input.decodeStringElement(descriptor, i)
+                    localPathFieldIndex -> localPath = input.decodeStringElement(objectDescriptor, i)
+                    containerPathFieldIndex -> containerPath = input.decodeStringElement(objectDescriptor, i)
+                    optionsFieldIndex -> options = input.decodeStringElement(objectDescriptor, i)
                     else -> throw SerializationException("Unknown index $i")
                 }
             }
 
             if (localPath == null) {
-                throw ConfigurationException("Field '${descriptor.getElementName(localPathFieldIndex)}' is required but it is missing.", input.node.location.line, input.node.location.column)
+                throw ConfigurationException("Field '${objectDescriptor.getElementName(localPathFieldIndex)}' is required but it is missing.", input.node.location.line, input.node.location.column)
             }
 
             if (containerPath == null) {
-                throw ConfigurationException("Field '${descriptor.getElementName(containerPathFieldIndex)}' is required but it is missing.", input.node.location.line, input.node.location.column)
+                throw ConfigurationException("Field '${objectDescriptor.getElementName(containerPathFieldIndex)}' is required but it is missing.", input.node.location.line, input.node.location.column)
             }
 
             return DeviceMount(localPath, containerPath, options)
         }
 
         override fun serialize(encoder: Encoder, value: DeviceMount) {
-            val output = encoder.beginStructure(descriptor)
+            val output = encoder.beginStructure(objectDescriptor)
 
-            output.encodeStringElement(descriptor, localPathFieldIndex, value.localPath)
-            output.encodeStringElement(descriptor, containerPathFieldIndex, value.containerPath)
-            output.encodeSerializableElement(descriptor, optionsFieldIndex, String.serializer().nullable, value.options)
+            output.encodeStringElement(objectDescriptor, localPathFieldIndex, value.localPath)
+            output.encodeStringElement(objectDescriptor, containerPathFieldIndex, value.containerPath)
+            output.encodeSerializableElement(objectDescriptor, optionsFieldIndex, String.serializer().nullable, value.options)
 
-            output.endStructure(descriptor)
+            output.endStructure(objectDescriptor)
         }
     }
 }

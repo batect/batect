@@ -137,9 +137,10 @@ A privacy policy will be added to the documentation to explain what information 
 
 [Automattic's privacy policy](https://github.com/Automattic/legalmattic/blob/master/Privacy-Policy.md) is available under a Creative Commons license and could be used as a template.
 
-Opting out or blocking collection of telemetry information would be supported through three mechanisms:
+Opting out or blocking collection of telemetry information would be supported through multiple mechanisms:
 
-* `--disable-telemetry` command line flag
+* `--disable-telemetry` command line flag to disable telemetry for a single invocation
+* `--permanently-disable-telemetry` command line flag to permanently disable telemetry (equivalent to answering 'no' to the consent prompt below)
 * `BATECT_ENABLE_TELEMETRY` environment variable set to `0` or `false`
 * Blocking HTTPS traffic to the `api.abacus.batect.dev` domain at a network level (eg. at a proxy)
 
@@ -147,9 +148,9 @@ Opting out or blocking collection of telemetry information would be supported th
 
 ## CLI changes
 
-`./batect --disable-telemetry` would disable both collection of telemetry information and submission of cached data from previous invocations.
+`./batect --disable-telemetry <task>` would disable both collection of telemetry data and submission of cached data from previous invocations during just that command line invocation. Setting the `BATECT_ENABLE_TELEMETRY` environment variable to `0` or `false` would have the same result.
 
-Setting the `BATECT_ENABLE_TELEMETRY` environment variable to `0` or `false` would have the same result.
+`./batect --permanently-disable-telemetry` would permanently disable both collection of telemetry data and submission of cached data from previous invocations (equivalent to answering 'no' to the consent prompt below), and delete any cached telemetry data that is yet to be uploaded. `./batect --permanently-enable-telemetry` would re-enable collection and submission of telemetry data.
 
 
 
@@ -157,7 +158,7 @@ Setting the `BATECT_ENABLE_TELEMETRY` environment variable to `0` or `false` wou
 
 ### On first run with telemetry not explicitly disabled
 
-Provided telemetry is not explictly disabled through either of the mechanisms listed above, and that batect is running with a TTY and does not detect it is running on CI, batect would show the following prompt the first time it is run:
+Provided telemetry is not explictly disabled through any of the mechanisms listed above, and that batect is running with a TTY and does not detect it is running on CI, batect would show the following prompt the first time it is run:
 
 ```
 batect can collect and report anonymous environment, usage and performance information. This information does not include personal or sensitive information, and is used to help improve batect.
@@ -177,8 +178,8 @@ batect can collect and report anonymous environment, usage and performance infor
 More information, including details of what information is collected and a formal privacy policy, is available at https://batect.dev/Telemetry.html.
 
 It looks like batect is running in a non-interactive session, so it can't ask for permission to collect and report this information.
-* To suppress this message and allow collection and reporting of telemetry data, set the BATECT_ENABLE_TELEMETRY environment variable to 'true'.
-* To suppress this message and prevent collection and reporting of telemetry data, set the BATECT_DISABLE_TELEMETRY environment variable to 'true'.
+* To suppress this message and allow collection and reporting of telemetry data, set the BATECT_ENABLE_TELEMETRY environment variable to 'true', or run `./batect --permanently-enable-telemetry`.
+* To suppress this message and prevent collection and reporting of telemetry data, set the BATECT_ENABLE_TELEMETRY environment variable to 'false', or run `./batect --permanently-disable-telemetry`.
 
 No data will be collected for this session.
 ```

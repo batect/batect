@@ -1,6 +1,6 @@
 # Problem statement
 
-At present, visibility into users' experience with batect is larely driven by bug reports, feature requests and community chat conversations, making remediation quite reactive and making it difficult to quantify the impact of different decisions. Furthermore, the lack of data on users, their behaviour and environments makes it difficult to make data-driven decisions about features and prioritisation.
+At present, visibility into users' experience with batect is larely driven by bug reports, feature requests and community chat conversations, making remediation of issues reactive and making it difficult to quantify the impact of different decisions. Furthermore, the lack of data on users, their behaviour and environments makes it difficult to make data-driven decisions about features and prioritisation.
 
 
 

@@ -22,11 +22,14 @@ import batect.testutils.runForEachTest
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
+import com.charleskorn.kaml.MissingRequiredPropertyException
 import com.charleskorn.kaml.Yaml
+import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -39,7 +42,7 @@ object DeviceMountSpec : Spek({
 
             describe("deserializing from compact form") {
                 on("parsing a valid device mount definition without options") {
-                    val deviceMount by runForEachTest { parser.parse(DeviceMount.Companion, "'/local:/container'") }
+                    val deviceMount by runForEachTest { parser.parse(DeviceMountConfigSerializer, "'/local:/container'") }
 
                     it("returns the correct local path") {
                         assertThat(deviceMount.localPath, equalTo("/local"))
@@ -59,7 +62,7 @@ object DeviceMountSpec : Spek({
                 }
 
                 on("parsing a valid device mount definition with options") {
-                    val deviceMount by runForEachTest { parser.parse(DeviceMount.Companion, "'/local:/container:some_options'") }
+                    val deviceMount by runForEachTest { parser.parse(DeviceMountConfigSerializer, "'/local:/container:some_options'") }
 
                     it("returns the correct local path") {
                         assertThat(deviceMount.localPath, equalTo("/local"))
@@ -80,7 +83,7 @@ object DeviceMountSpec : Spek({
 
                 on("parsing an empty device mount definition") {
                     it("fails with an appropriate error message") {
-                        assertThat({ parser.parse(DeviceMount.Companion, "''") }, throws(withMessage("Device mount definition cannot be empty.") and withLineNumber(1) and withColumn(1)))
+                        assertThat({ parser.parse(DeviceMountConfigSerializer, "''") }, throws(withMessage("Device mount definition cannot be empty.") and withLineNumber(1) and withColumn(1)))
                     }
                 }
 
@@ -96,7 +99,7 @@ object DeviceMountSpec : Spek({
                     on("parsing the invalid device mount definition '$it'") {
                         it("fails with an appropriate error message") {
                             assertThat(
-                                { parser.parse(DeviceMount.Companion, "'$it'") }, throws(
+                                { parser.parse(DeviceMountConfigSerializer, "'$it'") }, throws(
                                     withMessage("Device mount definition '$it' is invalid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.")
                                         and withLineNumber(1)
                                         and withColumn(1)
@@ -114,7 +117,7 @@ object DeviceMountSpec : Spek({
                             container: /container
                         """.trimIndent()
 
-                    val deviceMount by runForEachTest { parser.parse(DeviceMount.Companion, yaml) }
+                    val deviceMount by runForEachTest { parser.parse(DeviceMountConfigSerializer, yaml) }
 
                     it("returns the correct local path") {
                         assertThat(deviceMount.localPath, equalTo("/local"))
@@ -140,7 +143,7 @@ object DeviceMountSpec : Spek({
                             options: some_options
                         """.trimIndent()
 
-                    val deviceMount by runForEachTest { parser.parse(DeviceMount.Companion, yaml) }
+                    val deviceMount by runForEachTest { parser.parse(DeviceMountConfigSerializer, yaml) }
 
                     it("returns the correct local path") {
                         assertThat(deviceMount.localPath, equalTo("/local"))
@@ -163,13 +166,7 @@ object DeviceMountSpec : Spek({
                     val yaml = "container: /container"
 
                     it("fails with an appropriate error message") {
-                        assertThat(
-                            { parser.parse(DeviceMount.Companion, yaml) }, throws(
-                                withMessage("Field 'local' is required but it is missing.")
-                                    and withLineNumber(1)
-                                    and withColumn(1)
-                            )
-                        )
+                        assertThat({ parser.parse(DeviceMountConfigSerializer, yaml) }, throws<MissingRequiredPropertyException>(withPropertyName("local")))
                     }
                 }
 
@@ -177,13 +174,7 @@ object DeviceMountSpec : Spek({
                     val yaml = "local: /local"
 
                     it("fails with an appropriate error message") {
-                        assertThat(
-                            { parser.parse(DeviceMount.Companion, yaml) }, throws(
-                                withMessage("Field 'container' is required but it is missing.")
-                                    and withLineNumber(1)
-                                    and withColumn(1)
-                            )
-                        )
+                        assertThat({ parser.parse(DeviceMountConfigSerializer, yaml) }, throws<MissingRequiredPropertyException>(withPropertyName("container")))
                     }
                 }
             }
@@ -195,7 +186,7 @@ object DeviceMountSpec : Spek({
 
                 it("fails with an appropriate error message") {
                     assertThat(
-                        { parser.parse(DeviceMount.Companion, yaml) }, throws(
+                        { parser.parse(DeviceMountConfigSerializer, yaml) }, throws(
                             withMessage("Device mount definition is invalid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'.")
                         )
                     )
@@ -204,3 +195,5 @@ object DeviceMountSpec : Spek({
         }
     }
 })
+
+fun withPropertyName(propertyName: String): Matcher<MissingRequiredPropertyException> = has(MissingRequiredPropertyException::propertyName, equalTo(propertyName))

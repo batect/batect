@@ -185,7 +185,7 @@ data class Container(
                     environmentFieldIndex -> environment = input.decodeSerializableElement(descriptor, i, EnvironmentSerializer)
                     workingDirectoryFieldIndex -> workingDirectory = input.decodeStringElement(descriptor, i)
                     volumeMountsFieldIndex -> volumeMounts = input.decodeSerializableElement(descriptor, i, VolumeMount.serializer().set)
-                    deviceMountsFieldIndex -> deviceMounts = input.decodeSerializableElement(descriptor, i, DeviceMount.serializer().set)
+                    deviceMountsFieldIndex -> deviceMounts = input.decodeSerializableElement(descriptor, i, DeviceMountConfigSerializer.set)
                     portMappingsFieldIndex -> portMappings = input.decodeSerializableElement(descriptor, i, PortMapping.serializer().set)
                     dependenciesFieldIndex -> dependencies = input.decodeSerializableElement(descriptor, i, DependencySetSerializer)
                     healthCheckConfigFieldIndex -> healthCheckConfig = input.decodeSerializableElement(descriptor, i, HealthCheckConfig.serializer())

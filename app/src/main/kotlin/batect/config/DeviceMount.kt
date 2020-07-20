@@ -17,10 +17,9 @@
 package batect.config
 
 import batect.config.io.ConfigurationException
-import batect.config.io.deserializers.StringOrObjectSerializer
+import batect.config.io.deserializers.SimpleStringOrObjectSerializer
 import batect.docker.DockerDeviceMount
 import com.charleskorn.kaml.YamlInput
-import kotlinx.serialization.Encoder
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -41,12 +40,8 @@ data class DeviceMount(
     fun toDockerMount() = DockerDeviceMount(localPath, containerPath, options)
 }
 
-object DeviceMountConfigSerializer : StringOrObjectSerializer<DeviceMount>() {
-    override val serialName: String = DeviceMount::class.qualifiedName!!
+object DeviceMountConfigSerializer : SimpleStringOrObjectSerializer<DeviceMount>(DeviceMount.serializer()) {
     override val neitherStringNorObjectErrorMessage: String = "Device mount definition is invalid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'."
-
-    private val objectSerializer = DeviceMount.serializer()
-    override val objectDescriptor = objectSerializer.descriptor
 
     override fun deserializeFromString(value: String, input: YamlInput): DeviceMount {
         if (value == "") {
@@ -73,7 +68,4 @@ object DeviceMountConfigSerializer : StringOrObjectSerializer<DeviceMount>() {
             input.node.location.line,
             input.node.location.column
         )
-
-    override fun deserializeFromObject(input: YamlInput): DeviceMount = objectSerializer.deserialize(input)
-    override fun serialize(encoder: Encoder, value: DeviceMount) = objectSerializer.serialize(encoder, value)
 }

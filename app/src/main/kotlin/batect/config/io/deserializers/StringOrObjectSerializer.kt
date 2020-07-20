@@ -16,12 +16,12 @@
 
 package batect.config.io.deserializers
 
-import batect.config.VolumeMount
 import batect.config.io.ConfigurationException
 import com.charleskorn.kaml.YamlInput
 import com.charleskorn.kaml.YamlMap
 import com.charleskorn.kaml.YamlScalar
 import kotlinx.serialization.Decoder
+import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.PrimitiveKind
 import kotlinx.serialization.SerialDescriptor
@@ -35,8 +35,8 @@ abstract class StringOrObjectSerializer<T> : KSerializer<T> {
 
     final override val descriptor: SerialDescriptor by lazy {
         SerialDescriptor(serialName, UnionKind.CONTEXTUAL) {
-            element("object", VolumeMount.objectDescriptor)
-            element("string", VolumeMount.stringDescriptor)
+            element("object", objectDescriptor)
+            element("string", stringDescriptor)
         }
     }
 
@@ -74,4 +74,11 @@ abstract class StringOrObjectSerializer<T> : KSerializer<T> {
 
     protected abstract fun deserializeFromString(value: String, input: YamlInput): T
     protected abstract fun deserializeFromObject(input: YamlInput): T
+}
+
+abstract class SimpleStringOrObjectSerializer<T>(val objectSerializer: KSerializer<T>) : StringOrObjectSerializer<T>() {
+    override val serialName: String = objectSerializer.descriptor.serialName
+    override val objectDescriptor = objectSerializer.descriptor
+    override fun deserializeFromObject(input: YamlInput): T = objectSerializer.deserialize(input)
+    override fun serialize(encoder: Encoder, value: T) = objectSerializer.serialize(encoder, value)
 }

@@ -17,18 +17,16 @@
 package batect.config
 
 import batect.config.io.ConfigurationException
-import batect.config.io.deserializers.StringOrObjectSerializer
+import batect.config.io.deserializers.SimpleStringOrObjectSerializer
 import batect.docker.DockerPortMapping
 import batect.utils.pluralize
+import com.charleskorn.kaml.Location
 import com.charleskorn.kaml.YamlInput
-import kotlinx.serialization.CompositeDecoder
-import kotlinx.serialization.Encoder
-import kotlinx.serialization.SerialDescriptor
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.builtins.set
 
-@Serializable(with = PortMapping.Companion::class)
+@Serializable
 data class PortMapping(
     val local: PortRange,
     val container: PortRange,
@@ -42,141 +40,76 @@ data class PortMapping(
 
     fun toDockerPortMapping() = DockerPortMapping(local.toDockerPortRange(), container.toDockerPortRange(), protocol)
 
-    companion object : StringOrObjectSerializer<PortMapping>() {
+    companion object {
         const val defaultProtocol = "tcp"
+    }
+}
 
-        override val neitherStringNorObjectErrorMessage: String = "Port mapping definition is invalid. It must either be an object or a literal in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol'."
-        override val serialName: String = PortMapping::class.qualifiedName!!
+object PortMappingConfigSerializer : SimpleStringOrObjectSerializer<PortMapping>(PortMapping.serializer()) {
+    override val neitherStringNorObjectErrorMessage: String = "Port mapping definition is invalid. It must either be an object or a literal in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol'."
 
-        private const val localPortFieldName = "local"
-        private const val containerPortFieldName = "container"
-        private const val protocolFieldName = "protocol"
-
-        override val objectDescriptor: SerialDescriptor = SerialDescriptor(serialName) {
-            element(localPortFieldName, PortRange.descriptor)
-            element(containerPortFieldName, PortRange.descriptor)
-            element(protocolFieldName, String.serializer().descriptor)
+    override fun deserializeFromString(value: String, input: YamlInput): PortMapping {
+        if (value == "") {
+            throw ConfigurationException("Port mapping definition cannot be empty.", input.node.location.line, input.node.location.column)
         }
 
-        private val localPortFieldIndex = objectDescriptor.getElementIndex(localPortFieldName)
-        private val containerPortFieldIndex = objectDescriptor.getElementIndex(containerPortFieldName)
-        private val protocolFieldIndex = objectDescriptor.getElementIndex(protocolFieldName)
+        val portSeparator = ':'
+        val portSeparatorIndex = value.indexOf(portSeparator)
 
-        override fun deserializeFromString(value: String, input: YamlInput): PortMapping {
-            if (value == "") {
-                throw ConfigurationException("Port mapping definition cannot be empty.", input.node.location.line, input.node.location.column)
-            }
-
-            val portSeparator = ':'
-            val portSeparatorIndex = value.indexOf(portSeparator)
-
-            if (portSeparatorIndex == -1) {
-                throw invalidMappingDefinitionException(value, input)
-            }
-
-            val protocolSeparator = '/'
-            val protocolSeparatorIndex = value.indexOf(protocolSeparator, portSeparatorIndex)
-
-            val localString = value.substring(0, portSeparatorIndex)
-
-            val containerString = if (protocolSeparatorIndex != -1) {
-                value.substring(portSeparatorIndex + 1, protocolSeparatorIndex)
-            } else {
-                value.substring(portSeparatorIndex + 1)
-            }
-
-            val protocol = if (protocolSeparatorIndex != -1) {
-                value.substring(protocolSeparatorIndex + 1)
-            } else {
-                defaultProtocol
-            }
-
-            if (localString == "" || containerString == "" || protocol == "") {
-                throw invalidMappingDefinitionException(value, input)
-            }
-
-            try {
-                val localRange = PortRange.parse(localString)
-                val containerRange = PortRange.parse(containerString)
-
-                if (localRange.size != containerRange.size) {
-                    throw ConfigurationException(
-                        "Port mapping definition '$value' is invalid. The local port range has ${pluralize(localRange.size, "port")} and the container port range has ${pluralize(containerRange.size, "port")}, but the ranges must be the same size.",
-                        input.node.location.line,
-                        input.node.location.column
-                    )
-                }
-
-                return PortMapping(localRange, containerRange, protocol)
-            } catch (e: NumberFormatException) {
-                throw invalidMappingDefinitionException(value, input, e)
-            } catch (e: InvalidPortRangeException) {
-                throw invalidMappingDefinitionException(value, input, e)
-            }
+        if (portSeparatorIndex == -1) {
+            throw invalidMappingDefinitionException(value, input)
         }
 
-        private fun invalidMappingDefinitionException(value: String, input: YamlInput, cause: Throwable? = null) =
-            ConfigurationException(
-                "Port mapping definition '$value' is invalid. It must be in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol' and each port must be a positive integer.",
-                input.node.location.line,
-                input.node.location.column,
-                cause
-            )
+        val protocolSeparator = '/'
+        val protocolSeparatorIndex = value.indexOf(protocolSeparator, portSeparatorIndex)
 
-        override fun deserializeFromObject(input: YamlInput): PortMapping {
-            var localRange: PortRange? = null
-            var containerRange: PortRange? = null
-            var protocol = "tcp"
+        val localString = value.substring(0, portSeparatorIndex)
 
-            loop@ while (true) {
-                when (val i = input.decodeElementIndex(objectDescriptor)) {
-                    CompositeDecoder.READ_DONE -> break@loop
-                    localPortFieldIndex -> {
-                        try {
-                            localRange = input.decodeSerializableElement(objectDescriptor, i, PortRange.serializer())
-                        } catch (e: ConfigurationException) {
-                            throw ConfigurationException("Field '$localPortFieldName' is invalid: ${e.message}", input.getCurrentLocation().line, input.getCurrentLocation().column, e)
-                        }
-                    }
-                    containerPortFieldIndex -> {
-                        try {
-                            containerRange = input.decodeSerializableElement(objectDescriptor, i, PortRange.serializer())
-                        } catch (e: ConfigurationException) {
-                            throw ConfigurationException("Field '$containerPortFieldName' is invalid: ${e.message}", input.getCurrentLocation().line, input.getCurrentLocation().column, e)
-                        }
-                    }
-                    protocolFieldIndex -> protocol = input.decodeStringElement(objectDescriptor, i)
-                    else -> throw SerializationException("Unknown index $i")
-                }
-            }
+        val containerString = if (protocolSeparatorIndex != -1) {
+            value.substring(portSeparatorIndex + 1, protocolSeparatorIndex)
+        } else {
+            value.substring(portSeparatorIndex + 1)
+        }
 
-            if (localRange == null) {
-                throw ConfigurationException("Field '$localPortFieldName' is required but it is missing.", input.node.location.line, input.node.location.column)
-            }
+        val protocol = if (protocolSeparatorIndex != -1) {
+            value.substring(protocolSeparatorIndex + 1)
+        } else {
+            PortMapping.defaultProtocol
+        }
 
-            if (containerRange == null) {
-                throw ConfigurationException("Field '$containerPortFieldName' is required but it is missing.", input.node.location.line, input.node.location.column)
-            }
+        if (localString == "" || containerString == "" || protocol == "") {
+            throw invalidMappingDefinitionException(value, input)
+        }
 
-            if (localRange.size != containerRange.size) {
-                throw ConfigurationException(
-                    "Port mapping definition is invalid. The local port range has ${pluralize(localRange.size, "port")} and the container port range has ${pluralize(containerRange.size, "port")}, but the ranges must be the same size.",
-                    input.node.location.line,
-                    input.node.location.column
-                )
-            }
+        try {
+            val localRange = PortRange.parse(localString)
+            val containerRange = PortRange.parse(containerString)
 
             return PortMapping(localRange, containerRange, protocol)
+        } catch (e: NumberFormatException) {
+            throw invalidMappingDefinitionException(value, input, e)
+        } catch (e: InvalidPortRangeException) {
+            throw invalidMappingDefinitionException(value, input, e)
         }
+    }
 
-        override fun serialize(encoder: Encoder, value: PortMapping) {
-            val output = encoder.beginStructure(objectDescriptor)
+    private fun invalidMappingDefinitionException(value: String, input: YamlInput, cause: Throwable? = null) =
+        ConfigurationException(
+            "Port mapping definition '$value' is invalid. It must be in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol' and each port must be a positive integer.",
+            input.node.location.line,
+            input.node.location.column,
+            cause
+        )
 
-            output.encodeSerializableElement(objectDescriptor, localPortFieldIndex, PortRange.serializer(), value.local)
-            output.encodeSerializableElement(objectDescriptor, containerPortFieldIndex, PortRange.serializer(), value.container)
-            output.encodeSerializableElement(objectDescriptor, protocolFieldIndex, String.serializer(), value.protocol)
-
-            output.endStructure(objectDescriptor)
+    override fun validateDeserializedObject(value: PortMapping, location: Location) {
+        if (value.local.size != value.container.size) {
+            throw ConfigurationException(
+                "Port mapping definition is invalid. The local port range has ${pluralize(value.local.size, "port")} and the container port range has ${pluralize(value.container.size, "port")}, but the ranges must be the same size.",
+                location.line,
+                location.column
+            )
         }
     }
 }
+
+object PortMappingConfigSetSerializer : KSerializer<Set<PortMapping>> by PortMappingConfigSerializer.set

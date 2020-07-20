@@ -33,6 +33,6 @@ data class TaskRunConfiguration(
     val command: Command? = null,
     val entrypoint: Command? = null,
     @SerialName("environment") @Serializable(with = EnvironmentSerializer::class) val additionalEnvironmentVariables: Map<String, Expression> = emptyMap(),
-    @SerialName("ports") val additionalPortMappings: Set<PortMapping> = emptySet(),
+    @SerialName("ports") @Serializable(with = PortMappingConfigSetSerializer::class) val additionalPortMappings: Set<PortMapping> = emptySet(),
     @SerialName("working_directory") val workingDiretory: String? = null
 )

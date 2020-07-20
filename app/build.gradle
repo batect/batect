@@ -66,6 +66,7 @@ checkUnitTestLayout {
         includes: [
             'batect/cli/commands/FakeDockerConnectivity.kt',
             'batect/testutils/**',
+            'batect/config/ExceptionMatchers.kt'
         ]
     )
 

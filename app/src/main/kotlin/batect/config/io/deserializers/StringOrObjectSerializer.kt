@@ -17,6 +17,7 @@
 package batect.config.io.deserializers
 
 import batect.config.io.ConfigurationException
+import com.charleskorn.kaml.Location
 import com.charleskorn.kaml.YamlInput
 import com.charleskorn.kaml.YamlMap
 import com.charleskorn.kaml.YamlScalar
@@ -55,6 +56,8 @@ abstract class StringOrObjectSerializer<T> : KSerializer<T> {
 
         input.endStructure(descriptor)
 
+        validateDeserializedObject(result, input.node.location)
+
         return result
     }
 
@@ -74,6 +77,8 @@ abstract class StringOrObjectSerializer<T> : KSerializer<T> {
 
     protected abstract fun deserializeFromString(value: String, input: YamlInput): T
     protected abstract fun deserializeFromObject(input: YamlInput): T
+
+    protected open fun validateDeserializedObject(value: T, location: Location) {}
 }
 
 abstract class SimpleStringOrObjectSerializer<T>(val objectSerializer: KSerializer<T>) : StringOrObjectSerializer<T>() {

@@ -967,7 +967,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Field 'local' is invalid: Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(7) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(7) and withFileName(testFileName)))
             }
         }
 
@@ -984,7 +984,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Field 'container' is invalid: Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(8) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(8) and withFileName(testFileName)))
             }
         }
 
@@ -1018,7 +1018,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Field 'local' is invalid: Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(8) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(8) and withFileName(testFileName)))
             }
         }
 
@@ -1036,7 +1036,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Field 'container' is invalid: Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(9) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(9) and withFileName(testFileName)))
             }
         }
 
@@ -1114,7 +1114,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(configString) }, throws(withMessage("Field 'container' is required but it is missing.") and withLineNumber(5) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Property 'container' is required but it is missing.") and withLineNumber(5) and withFileName(testFileName)))
             }
         }
 
@@ -1128,7 +1128,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(configString) }, throws(withMessage("Field 'local' is required but it is missing.") and withLineNumber(5) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Property 'local' is required but it is missing.") and withLineNumber(5) and withFileName(testFileName)))
             }
         }
 
@@ -1159,7 +1159,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(configString) }, throws(withMessage("Field 'container' is required but it is missing.") and withLineNumber(6) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Property 'container' is required but it is missing.") and withLineNumber(6) and withFileName(testFileName)))
             }
         }
 
@@ -1174,7 +1174,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(configString) }, throws(withMessage("Field 'local' is required but it is missing.") and withLineNumber(6) and withFileName(testFileName)))
+                assertThat({ loadConfiguration(configString) }, throws(withMessage("Property 'local' is required but it is missing.") and withLineNumber(6) and withFileName(testFileName)))
             }
         }
 

@@ -24,12 +24,10 @@ import batect.testutils.withLineNumber
 import batect.testutils.withMessage
 import com.charleskorn.kaml.MissingRequiredPropertyException
 import com.charleskorn.kaml.Yaml
-import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -195,5 +193,3 @@ object DeviceMountSpec : Spek({
         }
     }
 })
-
-fun withPropertyName(propertyName: String): Matcher<MissingRequiredPropertyException> = has(MissingRequiredPropertyException::propertyName, equalTo(propertyName))

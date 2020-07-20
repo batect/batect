@@ -20,6 +20,7 @@ import batect.testutils.on
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
+import com.charleskorn.kaml.MissingRequiredPropertyException
 import com.charleskorn.kaml.Yaml
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
@@ -104,7 +105,7 @@ object PortMappingSpec : Spek({
 
                 on("parsing a port mapping definition with ranges of different sizes") {
                     it("fails with an appropriate error message") {
-                        assertThat({ fromYaml("10-11:20-23") }, throws(withMessage("Port mapping definition '10-11:20-23' is invalid. The local port range has 2 ports and the container port range has 4 ports, but the ranges must be the same size.") and withLineNumber(1) and withColumn(1)))
+                        assertThat({ fromYaml("10-11:20-23") }, throws(withMessage("Port mapping definition is invalid. The local port range has 2 ports and the container port range has 4 ports, but the ranges must be the same size.") and withLineNumber(1) and withColumn(1)))
                     }
                 }
 
@@ -233,7 +234,7 @@ object PortMappingSpec : Spek({
                     it("fails with an appropriate error message") {
                         assertThat(
                             { fromYaml(yaml) }, throws(
-                                withMessage("Field 'local' is invalid: Port range '0' is invalid. Ports must be positive integers.")
+                                withMessage("Port range '0' is invalid. Ports must be positive integers.")
                                     and withLineNumber(1)
                                     and withColumn(8)
                             )
@@ -250,7 +251,7 @@ object PortMappingSpec : Spek({
                     it("fails with an appropriate error message") {
                         assertThat(
                             { fromYaml(yaml) }, throws(
-                                withMessage("Field 'container' is invalid: Port range '0' is invalid. Ports must be positive integers.")
+                                withMessage("Port range '0' is invalid. Ports must be positive integers.")
                                     and withLineNumber(2)
                                     and withColumn(12)
                             )
@@ -262,13 +263,7 @@ object PortMappingSpec : Spek({
                     val yaml = "container: 456"
 
                     it("fails with an appropriate error message") {
-                        assertThat(
-                            { fromYaml(yaml) }, throws(
-                                withMessage("Field 'local' is required but it is missing.")
-                                    and withLineNumber(1)
-                                    and withColumn(1)
-                            )
-                        )
+                        assertThat({ fromYaml(yaml) }, throws<MissingRequiredPropertyException>(withPropertyName("local")))
                     }
                 }
 
@@ -276,13 +271,7 @@ object PortMappingSpec : Spek({
                     val yaml = "local: 123"
 
                     it("fails with an appropriate error message") {
-                        assertThat(
-                            { fromYaml(yaml) }, throws(
-                                withMessage("Field 'container' is required but it is missing.")
-                                    and withLineNumber(1)
-                                    and withColumn(1)
-                            )
-                        )
+                        assertThat({ fromYaml(yaml) }, throws<MissingRequiredPropertyException>(withPropertyName("container")))
                     }
                 }
 
@@ -315,4 +304,4 @@ object PortMappingSpec : Spek({
     }
 })
 
-private fun fromYaml(yaml: String): PortMapping = Yaml.default.parse(PortMapping.Companion, yaml)
+private fun fromYaml(yaml: String): PortMapping = Yaml.default.parse(PortMappingConfigSerializer, yaml)

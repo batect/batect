@@ -32,6 +32,7 @@ import batect.os.PathResolver
 import batect.os.PathResolverFactory
 import batect.primitives.flatMapToSet
 import com.charleskorn.kaml.EmptyYamlDocumentException
+import com.charleskorn.kaml.PolymorphismStyle
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlConfiguration
 import com.charleskorn.kaml.YamlException
@@ -99,7 +100,7 @@ class ConfigurationLoader(
         val pathResolver = pathResolverFor(path)
         val pathDeserializer = PathDeserializer(pathResolver)
         val module = serializersModuleOf(PathResolutionResult::class, pathDeserializer)
-        val config = YamlConfiguration(extensionDefinitionPrefix = ".")
+        val config = YamlConfiguration(extensionDefinitionPrefix = ".", polymorphismStyle = PolymorphismStyle.Property)
         val parser = Yaml(configuration = config, context = module)
 
         try {

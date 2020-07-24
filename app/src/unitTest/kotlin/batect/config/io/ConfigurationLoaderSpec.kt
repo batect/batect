@@ -1289,6 +1289,50 @@ object ConfigurationLoaderSpec : Spek({
             }
         }
 
+        on("loading a configuration file that references another configuration file in expanded format") {
+            val rootConfigPath by createForEachTest { fileSystem.getPath("project/batect.yml") }
+            val files by createForEachTest {
+                mapOf(
+                    rootConfigPath to """
+                        |include:
+                        | - type: file
+                        |   path: 1.yml
+                    """.trimMargin(),
+                    fileSystem.getPath("/resolved/1.yml") to """
+                        |tasks:
+                        |  task-1:
+                        |    run:
+                        |      container: container-1
+                        |
+                        |containers:
+                        |  container-1:
+                        |    image: alpine:1.2.3
+                        |
+                        |config_variables:
+                        |  config-var-1: {}
+                    """.trimMargin()
+                )
+            }
+
+            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+
+            it("should merge the tasks from the referenced files") {
+                assertThat(config.tasks, equalTo(TaskMap(Task("task-1", TaskRunConfiguration("container-1")))))
+            }
+
+            it("should merge the containers from the referenced files") {
+                assertThat(config.containers, equalTo(ContainerMap(Container("container-1", PullImage("alpine:1.2.3")))))
+            }
+
+            it("should merge the config variables from the referenced files") {
+                assertThat(config.configVariables, equalTo(ConfigVariableMap(ConfigVariableDefinition("config-var-1"))))
+            }
+
+            it("should infer the project name based on the root configuration file's directory") {
+                assertThat(config.projectName, equalTo("project"))
+            }
+        }
+
         on("loading a configuration file that references another configuration file which itself references another configuration file") {
             val rootConfigPath by createForEachTest { fileSystem.getPath("project/batect.yml") }
             val files by createForEachTest {

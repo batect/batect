@@ -26,5 +26,5 @@ data class ConfigurationFile(
     val tasks: TaskMap = TaskMap(),
     val containers: ContainerMap = ContainerMap(),
     @SerialName("config_variables") val configVariables: ConfigVariableMap = ConfigVariableMap(),
-    @SerialName("include") val includes: Set<FileInclude> = emptySet()
+    @SerialName("include") @Serializable(with = IncludeSetConfigSerializer::class) val includes: Set<FileInclude> = emptySet()
 )

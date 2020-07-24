@@ -35,7 +35,6 @@ import org.spekframework.spek2.style.specification.describe
 object DeviceMountSpec : Spek({
     describe("a device mount") {
         describe("deserializing from YAML") {
-
             val parser by createForEachTest { Yaml() }
 
             describe("deserializing from compact form") {

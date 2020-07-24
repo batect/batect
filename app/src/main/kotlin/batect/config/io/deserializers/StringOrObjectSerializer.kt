@@ -27,6 +27,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.PrimitiveKind
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.UnionKind
+import kotlinx.serialization.decode
 
 abstract class StringOrObjectSerializer<T> : KSerializer<T> {
     abstract val serialName: String
@@ -84,6 +85,6 @@ abstract class StringOrObjectSerializer<T> : KSerializer<T> {
 abstract class SimpleStringOrObjectSerializer<T>(val objectSerializer: KSerializer<T>) : StringOrObjectSerializer<T>() {
     override val serialName: String = objectSerializer.descriptor.serialName
     override val objectDescriptor = objectSerializer.descriptor
-    override fun deserializeFromObject(input: YamlInput): T = objectSerializer.deserialize(input)
-    override fun serialize(encoder: Encoder, value: T) = objectSerializer.serialize(encoder, value)
+    override fun deserializeFromObject(input: YamlInput): T = input.decode(objectSerializer)
+    override fun serialize(encoder: Encoder, value: T) = encoder.encodeSerializableValue(objectSerializer, value)
 }

@@ -419,7 +419,7 @@ object VolumeMountSpec : Spek({
                 val mount = LocalMount(LiteralValue("/local"), osIndependentPath("/relative-to"), "/container", "ro")
 
                 it("serializes to the expected format") {
-                    assertThat(Json.default.stringify(VolumeMount.serializer(), mount), equivalentTo("""
+                    assertThat(Json.forLogging.stringify(VolumeMount.serializer(), mount), equivalentTo("""
                         |{
                         |   "type": "local",
                         |   "local": {"type":"LiteralValue","value":"/local"},
@@ -435,7 +435,7 @@ object VolumeMountSpec : Spek({
                 val mount = CacheMount("my-cache", "/container", "ro")
 
                 it("serializes to the expected format") {
-                    assertThat(Json.default.stringify(VolumeMount.serializer(), mount), equivalentTo("""
+                    assertThat(Json.forLogging.stringify(VolumeMount.serializer(), mount), equivalentTo("""
                         |{
                         |   "type": "cache",
                         |   "name": "my-cache",

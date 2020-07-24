@@ -25,8 +25,10 @@ object Json {
         include(batect.execution.model.rules.serializersModule)
     }
 
-    val ignoringUnknownKeys = Json(JsonConfiguration.Stable.copy(ignoreUnknownKeys = true))
-    val default = Json(JsonConfiguration.Stable)
-    val withoutDefaults = Json(JsonConfiguration.Stable.copy(encodeDefaults = false))
-    val forLogging = Json(JsonConfiguration.Stable, loggingModule)
+    private val defaultConfiguration = JsonConfiguration.Stable
+
+    val default = Json(defaultConfiguration)
+    val ignoringUnknownKeys = Json(defaultConfiguration.copy(ignoreUnknownKeys = true))
+    val withoutDefaults = Json(defaultConfiguration.copy(encodeDefaults = false))
+    val forLogging = Json(defaultConfiguration, loggingModule)
 }
